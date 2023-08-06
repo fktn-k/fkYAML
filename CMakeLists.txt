@@ -1,0 +1,126 @@
+cmake_minimum_required(VERSION 3.8)
+
+#
+# Project name and version.
+#
+
+project(fkYAML VERSION 0.0.0 LANGUAGES CXX)
+
+#
+# Check if fkYAML is built as a subproject or if it is the main project.
+#
+
+set(FK_YAML_IS_MAIN_PROJECT OFF)
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(FK_YAML_IS_MAIN_PROJECT ON)
+endif()
+
+#
+# Build options.
+#
+
+if(FK_YAML_IS_MAIN_PROJECT OR FK_YAML_BUILD_TEST)
+  set(FK_YAML_BUILD_TEST_INIT ON)
+else()
+  set(FK_YAML_BUILD_TEST_INIT OFF)
+endif()
+option(FK_YAML_BuildTests "Build the unit tests when FK_YAML_BUILD_TEST is enabled or if this library is the main target." ${FK_YAML_BUILD_TEST_INIT})
+option(FK_YAML_Install    "Install CMake targets during install step." ${FK_YAML_IS_MAIN_PROJECT})
+
+#
+# Configurations.
+#
+
+include(GNUInstallDirs)
+
+set(FK_YAML_TARGET_NAME                ${PROJECT_NAME})
+set(FK_YAML_CONFIG_INSTALL_DIR         "${CMAKE_INSTALL_DATA_DIR}/cmake/${PROJECT_NAME}" CACHE INTERNAL "")
+set(FK_YAML_INCLUDE_BUILD_DIR          "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+set(FK_YAML_INCLUDE_INSTALL_DIR        "${CMAKE_INSTALL_INCLUDEDIR}")
+set(FK_YAML_TARGETS_EXPORT_NAME        "${PROJECT_NAME}Targets")
+set(FK_YAML_CMAKE_CONFIG_TEMPLATE      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.cmake.in")
+set(FK_YAML_CMAKE_CONFIG_DIR           "${CMAKE_CURRENT_BINARY_DIR}")
+set(FK_YAML_CMAKE_VERSION_CONFIG_FILE  "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
+set(FK_YAML_CMAKE_PROJECT_CONFIG_FILE  "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Config.cmake")
+set(FK_YAML_CMAKE_PROJECT_TARGETS_FILE "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Targets.cmake")
+set(FK_YAML_PKGCONFIG_INSTALL_DIR      "${CMAKE_INSTALL_DATADIR}/pkgconfig")
+
+#
+# Create target and add include path.
+#
+
+add_library(${FK_YAML_TARGET_NAME} INTERFACE)
+add_library(${PROJECT_NAME}::${FK_YAML_TARGET_NAME} ALIAS ${FK_YAML_TARGET_NAME})
+target_compile_features(${FK_YAML_TARGET_NAME} INTERFACE cxx_std_11)
+
+target_include_directories(
+  ${FK_YAML_TARGET_NAME} INTERFACE
+  $<BUILD_INTERFACE:${FK_YAML_INCLUDE_BUILD_DIR}>
+  $<INSTALL_INTERFACE:${FK_YAML_INCLUDE_INSTALL_DIR}>
+)
+
+#
+# Install a pkg-config file, so other tools can find this library.
+#
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+)
+
+#
+# Create and configure the unit test target.
+#
+
+if(FK_YAML_BuildTests)
+  include(CTest)
+  enable_testing()
+  add_subdirectory(test)
+endif()
+
+#
+# Install header files, generate and install cmake config files for find_package()
+#
+
+include(CMakePackageConfigHelpers)
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/fkYAMLConfigVersion.cmake.in"
+  "${FK_YAML_CMAKE_VERSION_CONFIG_FILE}"
+  @ONLY
+)
+
+configure_file(
+  "${FK_YAML_CMAKE_CONFIG_TEMPLATE}"
+  "${FK_YAML_CMAKE_PROJECT_CONFIG_FILE}"
+  @ONLY
+)
+
+if(FK_YAML_Install)
+  install(
+    DIRECTORY "${FK_YAML_INCLUDE_BUILD_DIR}"
+    DESTINATION include
+  )
+  install(
+    FILES "${FK_YAML_CMAKE_PROJECT_CONFIG_FILE}" "${FK_YAML_CMAKE_VERSION_CONFIG_FILE}"
+    DESTINATION "${FK_YAML_CONFIG_INSTALL_DIR}"
+  )
+  export(
+    TARGETS ${FK_YAML_TARGET_NAME}
+    NAMESPACE ${PROJECT_NAME}::
+    FILE "${FK_YAML_CMAKE_PROJECT_TARGETS_FILE}"
+  )
+  install(
+    TARGETS ${FK_YAML_TARGET_NAME}
+    EXPORT ${FK_YAML_TARGETS_EXPORT_NAME}
+  )
+  install(
+    EXPORT ${FK_YAML_TARGETS_EXPORT_NAME}
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION "${FK_YAML_CONFIG_INSTALL_DIR}"
+  )
+  install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+    DESTINATION "${FK_YAML_PKGCONFIG_INSTALL_DIR}"
+  )
+endif()
