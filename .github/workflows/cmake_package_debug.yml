@@ -44,14 +44,14 @@ jobs:
 
     - name: Install
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target install
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target install
+        ls ${{github.workspace}}/build/package
 
     - name: Package
       shell: bash
       run: |
         ls '${{github.workspace}}/build'
-        cmake --build ${{github.workspace}}/build --target install -DCMAKE_INSTALL_PREFIX="${{github.workspace}}/build/package"
-        ls '${{github.workspace}}/build/package'
         if [[ "${{ matrix.os }}" == "windows-latest" ]]
         then
           7z a ${{matrix.artifact_name}} '${{github.workspace}}/build/package'
