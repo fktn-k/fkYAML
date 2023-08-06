@@ -51,23 +51,3 @@ jobs:
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
-
-    - name: Package
-      shell: bash
-      run: |
-        ls '${{github.workspace}}/build'
-        cmake --build ${{github.workspace}}/build --target install -DCMAKE_INSTALL_PREFIX="${{github.workspace}}/build/package"
-        ls '${{github.workspace}}/build/package'
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]
-        then
-          7z a ${{matrix.artifact_name}} '${{github.workspace}}/build/package'
-        else
-          tar czvf ${{matrix.artifact_name}} '${{github.workspace}}/build/package'
-        fi
-        ls
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{matrix.artifact_name}}
-        path: ${{matrix.artifact_name}}
