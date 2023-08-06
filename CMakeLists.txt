@@ -34,7 +34,7 @@ option(FK_YAML_Install    "Install CMake targets during install step." ${FK_YAML
 include(GNUInstallDirs)
 
 set(FK_YAML_TARGET_NAME                ${PROJECT_NAME})
-set(FK_YAML_CONFIG_INSTALL_DIR         "${CMAKE_INSTALL_DATA_DIR}/cmake/${PROJECT_NAME}" CACHE INTERNAL "")
+set(FK_YAML_CONFIG_INSTALL_DIR         "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE INTERNAL "")
 set(FK_YAML_INCLUDE_BUILD_DIR          "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 set(FK_YAML_INCLUDE_INSTALL_DIR        "${CMAKE_INSTALL_INCLUDEDIR}")
 set(FK_YAML_TARGETS_EXPORT_NAME        "${PROJECT_NAME}Targets")
