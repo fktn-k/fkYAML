@@ -56,7 +56,7 @@ jobs:
       shell: bash
       run: |
         ls '${{github.workspace}}/build'
-        cmake --build ${{github.workspace}}/build --target install -DCMAKE_INSTALL_DIR="${{github.workspace}}/build/package"
+        cmake --build ${{github.workspace}}/build --target install -DCMAKE_INSTALL_PREFIX="${{github.workspace}}/build/package"
         ls '${{github.workspace}}/build/package'
         if [[ "${{ matrix.os }}" == "windows-latest" ]]
         then
