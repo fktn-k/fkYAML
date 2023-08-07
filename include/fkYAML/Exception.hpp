@@ -14,7 +14,7 @@
 namespace fkyaml
 {
 
-class Exception : std::exception
+class Exception : public std::exception
 {
 public:
     Exception()
