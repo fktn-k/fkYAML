@@ -18,6 +18,8 @@ static const std::unordered_map<uint32_t, int(*)()> NODE_TEST_CASE_MAP
 {
     { 0x0000, NodeClassTest::DefaultCtorTest },
     { 0x0001, NodeClassTest::CtorWithBoolTest },
+    { 0x0002, NodeClassTest::CtorWithSequenceTest },
+    { 0x0003, NodeClassTest::CtorWithStringTest },
 };
 
 int main(int argc, char* argv[])

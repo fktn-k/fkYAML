@@ -13,6 +13,8 @@ class NodeClassTest
 public:
     static int DefaultCtorTest();
     static int CtorWithBoolTest();
+    static int CtorWithSequenceTest();
+    static int CtorWithStringTest();
 };
 
 #endif /* FK_YAML_TEST_NODE_CLASS_TEST_HPP_ */

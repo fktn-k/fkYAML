@@ -22,3 +22,5 @@ target_include_directories(NodeClassTest PRIVATE
 
 add_test(NAME NodeClassTest_DefaultCtorTest        COMMAND $<TARGET_FILE:NodeClassTest> 0x0000)
 add_test(NAME NodeClassTest_CtorWithBoolTest       COMMAND $<TARGET_FILE:NodeClassTest> 0x0001)
+add_test(NAME NodeClassTest_CtorWithSequenceTest   COMMAND $<TARGET_FILE:NodeClassTest> 0x0002)
+add_test(NAME NodeClassTest_CtorWithStringTest     COMMAND $<TARGET_FILE:NodeClassTest> 0x0003)
