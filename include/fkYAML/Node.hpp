@@ -88,6 +88,7 @@ private:
         NodeValue& operator=(const NodeSequenceType& seq) noexcept
         {
             sequence = CreateObject<NodeSequenceType>(seq);
+            return *this;
         }
 
         NodeValue(NodeSequenceType&& seq) noexcept
@@ -97,6 +98,7 @@ private:
         NodeValue& operator=(NodeSequenceType&& seq) noexcept
         {
             sequence = CreateObject<NodeSequenceType>(std::move(seq));
+            return *this;
         }
 
         NodeValue(const NodeMappingType& map) noexcept
@@ -106,6 +108,7 @@ private:
         NodeValue& operator=(const NodeMappingType& map) noexcept
         {
             mapping = CreateObject<NodeMappingType>(map);
+            return *this;
         }
 
         NodeValue(NodeMappingType&& map) noexcept
@@ -115,6 +118,7 @@ private:
         NodeValue& operator=(NodeMappingType&& map) noexcept
         {
             mapping = CreateObject<NodeMappingType>(std::move(map));
+            return *this;
         }
 
         NodeValue(const NodeBooleanType bool_val) noexcept
@@ -124,6 +128,7 @@ private:
         NodeValue& operator=(const NodeBooleanType bool_val) noexcept
         {
             boolean = bool_val;
+            return *this;
         }
 
         NodeValue(const NodeSignedIntType int_val) noexcept
@@ -133,6 +138,7 @@ private:
         NodeValue& operator=(const NodeSignedIntType int_val) noexcept
         {
             signed_int = int_val;
+            return *this;
         }
 
         NodeValue(const NodeUnsignedIntType uint_val) noexcept
@@ -142,6 +148,7 @@ private:
         NodeValue& operator=(const NodeUnsignedIntType uint_val) noexcept
         {
             unsigned_int = uint_val;
+            return *this;
         }
 
         NodeValue(const NodeFloatNumberType f_val) noexcept
@@ -152,6 +159,7 @@ private:
         NodeValue& operator=(const NodeFloatNumberType f_val) noexcept
         {
             float_val = f_val;
+            return *this;
         }
 
         NodeValue(const NodeStringType& str_val) noexcept
@@ -161,6 +169,7 @@ private:
         NodeValue& operator=(const NodeStringType& str_val) noexcept
         {
             str = CreateObject<NodeStringType>(str_val);
+            return *this;
         }
 
         NodeValue(NodeStringType&& str_val) noexcept
@@ -170,6 +179,7 @@ private:
         NodeValue& operator=(NodeStringType&& str_val) noexcept
         {
             str = CreateObject<NodeStringType>(std::move(str_val));
+            return *this;
         }
 
         void Destroy(NodeType type) noexcept
