@@ -610,18 +610,6 @@ private:
     NodeValue m_node_value;
 };
 
-template <typename RetType>
-inline Node::RetValueType<RetType> Node::Value()
-{
-    static_assert(false, "invalid temlate instantiation for Node::Value<T>().");
-}
-
-template <typename RetType>
-inline const Node::RetValueType<RetType> Node::Value() const
-{
-    static_assert(false, "invalid template instantiation for Node::Value<T>() const");
-}
-
 template <>
 inline Node::RetValueType<NodeSequenceType> Node::Value<NodeSequenceType>()
 {
