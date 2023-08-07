@@ -223,10 +223,10 @@ private:
         auto deleter = [&](ObjType* obj)
         {
             AllocTraitsType::destroy(alloc, obj);
-            AllocType::deallocate(obj, 1);
+            AllocTraitsType::deallocate(alloc, obj, 1);
         };
 
-        std::unique_ptr<ObjType, decltype(deleter)> object(AllocType::allocate(1), deleter);
+        std::unique_ptr<ObjType, decltype(deleter)> object(AllocTraitsType::allocate(alloc, 1), deleter);
         AllocTraitsType::construct(alloc, object.get(), std::forward<ArgTypes>(args)...);
 
         assert(object != nullptr);
@@ -243,7 +243,7 @@ private:
 
         AllocType alloc;
         AllocTraitsType::destroy(alloc, obj);
-        AllocType::deallocate(obj, 1);
+        AllocTraitsType::deallocate(alloc, obj, 1);
     }
 
 public:
@@ -259,8 +259,65 @@ public:
     {
     }
 
-    template <NodeType, typename ValueType>
-    Node(ValueType val);
+    Node(const NodeSequenceType& sequence)
+        : m_node_type(NodeType::SEQUENCE),
+          m_node_value(sequence)
+    {
+    }
+
+    Node(NodeSequenceType&& sequence)
+        : m_node_type(NodeType::SEQUENCE),
+          m_node_value(std::move(sequence))
+    {
+    }
+
+    Node(const NodeMappingType& mapping)
+        : m_node_type(NodeType::MAPPING),
+          m_node_value(mapping)
+    {
+    }
+
+    Node(NodeMappingType&& mapping)
+        : m_node_type(NodeType::MAPPING),
+          m_node_value(std::move(mapping))
+    {
+    }
+
+    explicit Node(const NodeBooleanType boolean)
+        : m_node_type(NodeType::BOOLEAN),
+          m_node_value(boolean)
+    {
+    }
+
+    explicit Node(const NodeSignedIntType signed_int)
+        : m_node_type(NodeType::SIGNED_INTEGER),
+        m_node_value(signed_int)
+    {
+    }
+
+    explicit Node(const NodeUnsignedIntType unsigned_int)
+        : m_node_type(NodeType::UNSIGNED_INTEGER),
+        m_node_value(unsigned_int)
+    {
+    }
+
+    explicit Node(const NodeFloatNumberType float_val)
+        : m_node_type(NodeType::FLOAT_NUMBER),
+        m_node_value(float_val)
+    {
+    }
+
+    Node(const NodeStringType& str)
+        : m_node_type(NodeType::STRING),
+        m_node_value(str)
+    {
+    }
+
+    Node(NodeStringType&& str)
+        : m_node_type(NodeType::STRING),
+        m_node_value(std::move(str))
+    {
+    }
 
     Node(const Node& rhs)
         : m_node_type(rhs.m_node_type)
@@ -409,6 +466,11 @@ public:
     }
 
 public:
+    NodeType Type() const noexcept
+    {
+        return m_node_type;
+    }
+
     bool IsSequence() const noexcept
     {
         return m_node_type == NodeType::SEQUENCE;
@@ -537,82 +599,6 @@ private:
     NodeType  m_node_type;
     NodeValue m_node_value;
 };
-
-template <NodeType, typename ValueType>
-Node::Node(ValueType val)
-{
-    static_assert(false, "invalid instantiation of template Node constructor.");
-}
-
-template <>
-Node::Node<NodeType::SEQUENCE>(const NodeSequenceType& sequence)
-    : m_node_type(NodeType::SEQUENCE),
-      m_node_value(sequence)
-{
-}
-
-template <>
-Node::Node<NodeType::SEQUENCE>(NodeSequenceType&& sequence)
-    : m_node_type(NodeType::SEQUENCE),
-      m_node_value(std::move(sequence))
-{
-}
-
-template <>
-Node::Node<NodeType::MAPPING>(const NodeMappingType& mapping)
-    : m_node_type(NodeType::MAPPING),
-      m_node_value(mapping)
-{
-}
-
-template <>
-Node::Node<NodeType::MAPPING>(NodeMappingType&& mapping)
-    : m_node_type(NodeType::MAPPING),
-      m_node_value(std::move(mapping))
-{
-}
-
-template <>
-Node::Node<NodeType::BOOLEAN>(const NodeBooleanType boolean)
-    : m_node_type(NodeType::BOOLEAN),
-      m_node_value(boolean)
-{
-}
-
-template <>
-Node::Node<NodeType::SIGNED_INTEGER>(const NodeSignedIntType signed_int)
-    : m_node_type(NodeType::SIGNED_INTEGER),
-      m_node_value(signed_int)
-{
-}
-
-template <>
-Node::Node<NodeType::UNSIGNED_INTEGER>(const NodeUnsignedIntType unsigned_int)
-    : m_node_type(NodeType::UNSIGNED_INTEGER),
-      m_node_value(unsigned_int)
-{
-}
-
-template <>
-Node::Node<NodeType::FLOAT_NUMBER>(const NodeFloatNumberType float_val)
-    : m_node_type(NodeType::FLOAT_NUMBER),
-      m_node_value(float_val)
-{
-}
-
-template <>
-Node::Node<NodeType::STRING>(const NodeStringType& str)
-    : m_node_type(NodeType::STRING),
-      m_node_value(str)
-{
-}
-
-template <>
-Node::Node<NodeType::STRING>(NodeStringType&& str)
-    : m_node_type(NodeType::STRING),
-      m_node_value(std::move(str))
-{
-}
 
 template <typename RetType>
 inline Node::RetValueType<RetType> Node::Value()
