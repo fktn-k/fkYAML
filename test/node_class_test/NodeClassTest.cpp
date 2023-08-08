@@ -75,12 +75,12 @@ int NodeClassTest::MappingNodeFactoryTest()
         return -1;
     }
 
-    if (node["test"].Value<fkyaml::NodeBooleanType>() != true)
+    if (node["test"].ToBoolean() != true)
     {
         std::fprintf(
             stderr,
             "value error of the mapping node value. key=%s, expectation=%s, actual=%s\n",
-            "test", "true", node["test"].Value<fkyaml::NodeBooleanType>() ? "true" : "false"
+            "test", "true", node["test"].ToBoolean() ? "true" : "false"
         );
         return -1;
     }
@@ -98,9 +98,9 @@ int NodeClassTest::BoolNodeFactoryTest()
         return -1;
     }
 
-    if (node.Value<fkyaml::NodeBooleanType>() != true)
+    if (node.ToBoolean() != true)
     {
-        std::fprintf(stderr, "node value error. expectation=%s, actual=%s\n", "true", node.Value<fkyaml::NodeBooleanType>() ? "true" : "false");
+        std::fprintf(stderr, "node value error. expectation=%s, actual=%s\n", "true", node.ToBoolean() ? "true" : "false");
         return -1;
     }
 
@@ -117,9 +117,9 @@ int NodeClassTest::SignedIntNodeFactoryTest()
         return -1;
     }
 
-    if (node.Value<fkyaml::NodeSignedIntType>() != -128)
+    if (node.ToSignedInteger() != -128)
     {
-        std::fprintf(stderr, "node value error. expectation=%d, actual=%lld\n", -128, node.Value<fkyaml::NodeSignedIntType>());
+        std::fprintf(stderr, "node value error. expectation=%d, actual=%lld\n", -128, node.ToSignedInteger());
         return -1;
     }
 
@@ -136,9 +136,9 @@ int NodeClassTest::UnsignedIntNodeFactoryTest()
         return -1;
     }
 
-    if (node.Value<fkyaml::NodeUnsignedIntType>() != 255)
+    if (node.ToUnsignedInteger() != 255)
     {
-        std::fprintf(stderr, "node value error. expectation=%u, actual=%llu", 255, node.Value<fkyaml::NodeUnsignedIntType>());
+        std::fprintf(stderr, "node value error. expectation=%u, actual=%llu", 255, node.ToUnsignedInteger());
         return -1;
     }
 
@@ -155,9 +155,9 @@ int NodeClassTest::FloatNumberNodeFactoryTest()
         return -1;
     }
 
-    if (node.Value<fkyaml::NodeFloatNumberType>() != 3.141952)
+    if (node.ToFloatNumber() != 3.141952)
     {
-        std::fprintf(stderr, "node value error. expectation=%lf, actual=%lf", 3.141952, node.Value<fkyaml::NodeFloatNumberType>());
+        std::fprintf(stderr, "node value error. expectation=%lf, actual=%lf", 3.141952, node.ToFloatNumber());
         return -1;
     }
 
@@ -180,7 +180,7 @@ int NodeClassTest::StringNodeFactoryTest()
         return -1;
     }
 
-    std::string value = node.Value<fkyaml::NodeStringType>();
+    std::string value = node.ToString();
     if (value.compare("test") != 0)
     {
         std::fprintf(stderr, "the content of the string node is not \"test\". actual=%s\n", value.c_str());

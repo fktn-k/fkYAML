@@ -589,26 +589,145 @@ public:
         }
     }
 
-    template <typename T, bool IsPrimitive = std::is_scalar<T>::value>
-    struct RetValue
+    NodeSequenceType& ToSequence()
     {
-        using Type = typename std::remove_reference<T>::type&;
-    };
+        if (!IsSequence())
+        {
+            throw Exception("The target node is not of a sequence type.");
+        }
 
-    template <typename T>
-    struct RetValue<T, true>
+        return *(m_node_value.sequence);
+    }
+
+    const NodeSequenceType& ToSequence() const
     {
-        using Type = typename std::remove_reference<T>::type;
-    };
+        if (!IsSequence())
+        {
+            throw Exception("The target node is not of a sequence type.");
+        }
 
-    template <typename T>
-    using RetValueType = typename RetValue<T>::Type;
+        return *(m_node_value.sequence);
+    }
 
-    template <typename T>
-    RetValueType<T> Value();
+    NodeMappingType& ToMapping()
+    {
+        if (!IsMapping())
+        {
+            throw Exception("The target node is not of a mapping type.");
+        }
 
-    template <typename T>
-    const RetValueType<T> Value() const;
+        return *(m_node_value.mapping);
+    }
+
+    const NodeMappingType& ToMapping() const
+    {
+        if (!IsMapping())
+        {
+            throw Exception("The target node is not of a mapping type.");
+        }
+
+        return *(m_node_value.mapping);
+    }
+
+    NodeBooleanType& ToBoolean()
+    {
+        if (!IsBoolean())
+        {
+            throw Exception("The target node is not of a boolean type.");
+        }
+
+        return m_node_value.boolean;
+    }
+
+    const NodeBooleanType& ToBoolean() const
+    {
+        if (!IsBoolean())
+        {
+            throw Exception("The target node is not of a boolean type.");
+        }
+
+        return m_node_value.boolean;
+    }
+
+    NodeSignedIntType& ToSignedInteger()
+    {
+        if (!IsSignedInteger())
+        {
+            throw Exception("The target node is not of a signed integer type.");
+        }
+
+        return m_node_value.signed_int;
+    }
+
+    const NodeSignedIntType& ToSignedInteger() const
+    {
+        if (!IsSignedInteger())
+        {
+            throw Exception("The target node is not of a signed integer type.");
+        }
+
+        return m_node_value.signed_int;
+    }
+
+    NodeUnsignedIntType& ToUnsignedInteger()
+    {
+        if (!IsUnsignedInteger())
+        {
+            throw Exception("The target node is not of an unsigned integer type.");
+        }
+
+        return m_node_value.unsigned_int;
+    }
+
+    const NodeUnsignedIntType& ToUnsignedInteger() const
+    {
+        if (!IsUnsignedInteger())
+        {
+            throw Exception("The target node is not of an unsigned integer type.");
+        }
+
+        return m_node_value.unsigned_int;
+    }
+
+    NodeFloatNumberType& ToFloatNumber()
+    {
+        if (!IsFloatNumber())
+        {
+            throw Exception("The target node is not of a float number type.");
+        }
+
+        return m_node_value.float_val;
+    }
+
+    const NodeFloatNumberType& ToFloatNumber() const
+    {
+        if (!IsFloatNumber())
+        {
+            throw Exception("The target node is not of a float number type.");
+        }
+
+        return m_node_value.float_val;
+    }
+
+    NodeStringType& ToString()
+    {
+        if (!IsString())
+        {
+            throw Exception("The target node is not of a string type.");
+        }
+
+        return *(m_node_value.str);
+    }
+
+    const NodeStringType& ToString() const
+    {
+        if (!IsString())
+        {
+            throw Exception("The target node is not of a string type.");
+        }
+
+        return *(m_node_value.str);
+    }
 
     void Swap(Node& rhs) noexcept
     {
@@ -616,7 +735,7 @@ public:
         swap(m_node_type, rhs.m_node_type);
 
         NodeValue tmp;
-        std::memcpy(&tmp,           &m_node_value,     sizeof(NodeValue));
+        std::memcpy(&tmp,              &m_node_value,     sizeof(NodeValue));
         std::memcpy(&m_node_value,     &rhs.m_node_value, sizeof(NodeValue));
         std::memcpy(&rhs.m_node_value, &tmp,           sizeof(NodeValue));
     }
@@ -632,286 +751,6 @@ private:
     NodeType  m_node_type;
     NodeValue m_node_value;
 };
-
-template <>
-inline Node::RetValueType<NodeSequenceType> Node::Value<NodeSequenceType>()
-{
-    if (!IsSequence())
-    {
-        throw Exception("The target node is not of a sequence type.");
-    }
-    return *(m_node_value.sequence);
-}
-
-template <>
-inline const Node::RetValueType<NodeSequenceType> Node::Value<NodeSequenceType>() const
-{
-    if (!IsSequence())
-    {
-        throw Exception("The target node is not of a sequence type.");
-    }
-    return *(m_node_value.sequence);
-}
-
-template <>
-inline Node::RetValueType<NodeMappingType> Node::Value<NodeMappingType>()
-{
-    if (!IsMapping())
-    {
-        throw Exception("The target node is not of a mapping type.");
-    }
-    return *(m_node_value.mapping);
-}
-
-template <>
-inline const Node::RetValueType<NodeMappingType> Node::Value<NodeMappingType>() const
-{
-    if (!IsMapping())
-    {
-        throw Exception("The target node is not of a mapping type.");
-    }
-    return *(m_node_value.mapping);
-}
-
-template <>
-inline Node::RetValueType<NodeBooleanType> Node::Value<NodeBooleanType>()
-{
-    if (!IsBoolean())
-    {
-        throw Exception("The target node is not of a boolean type.");
-    }
-    return m_node_value.boolean;
-}
-
-template <>
-inline const Node::RetValueType<NodeBooleanType> Node::Value<NodeBooleanType>() const
-{
-    if (!IsBoolean())
-    {
-        throw Exception("The target node is not of a boolean type.");
-    }
-    return m_node_value.boolean;
-}
-
-template <>
-inline Node::RetValueType<int8_t> Node::Value<int8_t>()
-{
-    if (!IsSignedInteger())
-    {
-        throw Exception("The target node is not of a signed integer type");
-    }
-    return static_cast<int8_t>(m_node_value.signed_int);
-}
-
-template <>
-inline const Node::RetValueType<int8_t> Node::Value<int8_t>() const
-{
-    if (!IsSignedInteger())
-    {
-        throw Exception("The target node is not of a signed integer type");
-    }
-    return static_cast<int8_t>(m_node_value.signed_int);
-}
-
-template <>
-inline Node::RetValueType<int16_t> Node::Value<int16_t>()
-{
-    if (!IsSignedInteger())
-    {
-        throw Exception("The target node is not of a signed integer type.");
-    }
-    return static_cast<int16_t>(m_node_value.signed_int);
-}
-
-template <>
-inline const Node::RetValueType<int16_t> Node::Value<int16_t>() const
-{
-    if (!IsSignedInteger())
-    {
-        throw Exception("The target node is not of a signed integer type.");
-    }
-    return static_cast<int16_t>(m_node_value.signed_int);
-}
-
-template <>
-inline Node::RetValueType<int32_t> Node::Value<int32_t>()
-{
-    if (!IsSignedInteger())
-    {
-        throw Exception("The target node is not of a signed integer type.");
-    }
-    return static_cast<int32_t>(m_node_value.signed_int);
-}
-
-template <>
-inline const Node::RetValueType<int32_t> Node::Value<int32_t>() const
-{
-    if (!IsSignedInteger())
-    {
-        throw Exception("The target node is not of a signed integer type.");
-    }
-    return static_cast<int32_t>(m_node_value.signed_int);
-}
-
-template <>
-inline Node::RetValueType<int64_t> Node::Value<int64_t>()
-{
-    if (!IsSignedInteger())
-    {
-        throw Exception("The target node is not of a signed integer type.");
-    }
-    return static_cast<int64_t>(m_node_value.signed_int);
-}
-
-template <>
-inline const Node::RetValueType<int64_t> Node::Value<int64_t>() const
-{
-    if (!IsSignedInteger())
-    {
-        throw Exception("The target node is not of a signed integer type.");
-    }
-    return static_cast<int64_t>(m_node_value.signed_int);
-}
-
-template <>
-inline Node::RetValueType<uint8_t> Node::Value<uint8_t>()
-{
-    if (!IsUnsignedInteger())
-    {
-        throw Exception("The target node is not of a unsigned integer type");
-    }
-    return static_cast<uint8_t>(m_node_value.unsigned_int);
-}
-
-template <>
-inline const Node::RetValueType<uint8_t> Node::Value<uint8_t>() const
-{
-    if (!IsUnsignedInteger())
-    {
-        throw Exception("The target node is not of a unsigned integer type");
-    }
-    return static_cast<uint8_t>(m_node_value.unsigned_int);
-}
-
-template <>
-inline Node::RetValueType<uint16_t> Node::Value<uint16_t>()
-{
-    if (!IsUnsignedInteger())
-    {
-        throw Exception("The target node is not of a unsigned integer type.");
-    }
-    return static_cast<uint16_t>(m_node_value.unsigned_int);
-}
-
-template <>
-inline const Node::RetValueType<uint16_t> Node::Value<uint16_t>() const
-{
-    if (!IsUnsignedInteger())
-    {
-        throw Exception("The target node is not of a unsigned integer type.");
-    }
-    return static_cast<uint16_t>(m_node_value.unsigned_int);
-}
-
-template <>
-inline Node::RetValueType<uint32_t> Node::Value<uint32_t>()
-{
-    if (!IsUnsignedInteger())
-    {
-        throw Exception("The target node is not of a unsigned integer type.");
-    }
-    return static_cast<uint32_t>(m_node_value.unsigned_int);
-}
-
-template <>
-inline const Node::RetValueType<uint32_t> Node::Value<uint32_t>() const
-{
-    if (!IsUnsignedInteger())
-    {
-        throw Exception("The target node is not of a unsigned integer type.");
-    }
-    return static_cast<uint32_t>(m_node_value.unsigned_int);
-}
-
-template <>
-inline Node::RetValueType<uint64_t> Node::Value<uint64_t>()
-{
-    if (!IsUnsignedInteger())
-    {
-        throw Exception("The target node is not of a unsigned integer type.");
-    }
-    return static_cast<uint64_t>(m_node_value.unsigned_int);
-}
-
-template <>
-inline const Node::RetValueType<uint64_t> Node::Value<uint64_t>() const
-{
-    if (!IsUnsignedInteger())
-    {
-        throw Exception("The target node is not of a unsigned integer type.");
-    }
-    return static_cast<uint64_t>(m_node_value.unsigned_int);
-}
-
-template <>
-inline Node::RetValueType<float> Node::Value<float>()
-{
-    if (!IsFloatNumber())
-    {
-        throw Exception("The target node is not of a floating point type.");
-    }
-    return static_cast<float>(m_node_value.float_val);
-}
-
-template <>
-inline const Node::RetValueType<float> Node::Value<float>() const
-{
-    if (!IsFloatNumber())
-    {
-        throw Exception("The target node is not of a floating point type.");
-    }
-    return static_cast<float>(m_node_value.float_val);
-}
-
-template <>
-inline Node::RetValueType<double> Node::Value<double>()
-{
-    if (!IsFloatNumber())
-    {
-        throw Exception("The target node is not of a floating point type.");
-    }
-    return static_cast<double>(m_node_value.float_val);
-}
-
-template <>
-inline const Node::RetValueType<double> Node::Value<double>() const
-{
-    if (!IsFloatNumber())
-    {
-        throw Exception("The target node is not of a floating point type.");
-    }
-    return static_cast<double>(m_node_value.float_val);
-}
-
-template <>
-inline Node::RetValueType<NodeStringType> Node::Value<NodeStringType>()
-{
-    if (!IsString())
-    {
-        throw Exception("The target node is not of a string type.");
-    }
-    return *(m_node_value.str);
-}
-
-template <>
-inline const Node::RetValueType<NodeStringType> Node::Value<NodeStringType>() const
-{
-    if (!IsString())
-    {
-        throw Exception("The target node is not of a string type.");
-    }
-    return *(m_node_value.str);
-}
 
 } // namespace fkyaml
 
