@@ -269,66 +269,6 @@ public:
     {
     }
 
-    Node(const NodeSequenceType& sequence)
-        : m_node_type(NodeType::SEQUENCE),
-          m_node_value(sequence)
-    {
-    }
-
-    Node(NodeSequenceType&& sequence)
-        : m_node_type(NodeType::SEQUENCE),
-          m_node_value(std::move(sequence))
-    {
-    }
-
-    Node(const NodeMappingType& mapping)
-        : m_node_type(NodeType::MAPPING),
-          m_node_value(mapping)
-    {
-    }
-
-    Node(NodeMappingType&& mapping)
-        : m_node_type(NodeType::MAPPING),
-          m_node_value(std::move(mapping))
-    {
-    }
-
-    explicit Node(const NodeBooleanType boolean)
-        : m_node_type(NodeType::BOOLEAN),
-          m_node_value(boolean)
-    {
-    }
-
-    explicit Node(const NodeSignedIntType signed_int)
-        : m_node_type(NodeType::SIGNED_INTEGER),
-        m_node_value(signed_int)
-    {
-    }
-
-    explicit Node(const NodeUnsignedIntType unsigned_int)
-        : m_node_type(NodeType::UNSIGNED_INTEGER),
-        m_node_value(unsigned_int)
-    {
-    }
-
-    explicit Node(const NodeFloatNumberType float_val)
-        : m_node_type(NodeType::FLOAT_NUMBER),
-        m_node_value(float_val)
-    {
-    }
-
-    Node(const NodeStringType& str)
-        : m_node_type(NodeType::STRING),
-        m_node_value(str)
-    {
-    }
-
-    Node(NodeStringType&& str)
-        : m_node_type(NodeType::STRING),
-        m_node_value(std::move(str))
-    {
-    }
-
     Node(const Node& rhs)
         : m_node_type(rhs.m_node_type)
     {
@@ -400,6 +340,89 @@ public:
     ~Node() noexcept
     {
         Destroy();
+    }
+
+public:
+    // factory methods
+
+    static Node Sequence(const NodeSequenceType& sequence) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::SEQUENCE;
+        node.m_node_value.sequence = CreateObject<NodeSequenceType>(sequence);
+        return node;
+    }
+
+    static Node Sequence(NodeSequenceType&& sequence) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::SEQUENCE;
+        node.m_node_value.sequence = CreateObject<NodeSequenceType>(std::move(sequence));
+        return node;
+    }
+
+    static Node Mapping(const NodeMappingType& mapping) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::MAPPING;
+        node.m_node_value.mapping = CreateObject<NodeMappingType>(mapping);
+        return node;
+    }
+
+    static Node Mapping(NodeMappingType&& mapping) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::MAPPING;
+        node.m_node_value.mapping = CreateObject<NodeMappingType>(std::move(mapping));
+        return node;
+    }
+
+    static Node BooleanScalar(const NodeBooleanType boolean) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::BOOLEAN;
+        node.m_node_value.boolean = boolean;
+        return node;
+    }
+
+    static Node SignedIntegerScalar(const NodeSignedIntType signed_int) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::SIGNED_INTEGER;
+        node.m_node_value.signed_int = signed_int;
+        return node;
+    }
+
+    static Node UnsignedIntegerScalar(const NodeUnsignedIntType unsigned_int) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::UNSIGNED_INTEGER;
+        node.m_node_value.unsigned_int = unsigned_int;
+        return node;
+    }
+
+    static Node FloatNumberScalar(const NodeFloatNumberType float_val) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::FLOAT_NUMBER;
+        node.m_node_value.float_val = float_val;
+        return node;
+    }
+
+    static Node StringScalar(const NodeStringType& str) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::STRING;
+        node.m_node_value.str = CreateObject<NodeStringType>(str);
+        return node;
+    }
+
+    static Node StringScalar(NodeStringType&& str) noexcept
+    {
+        Node node;
+        node.m_node_type = NodeType::STRING;
+        node.m_node_value.str = CreateObject<NodeStringType>(std::move(str));
+        return node;
     }
 
 public:

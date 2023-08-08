@@ -20,7 +20,11 @@ target_include_directories(NodeClassTest PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_test(NAME NodeClassTest_DefaultCtorTest        COMMAND $<TARGET_FILE:NodeClassTest> 0x0000)
-add_test(NAME NodeClassTest_CtorWithBoolTest       COMMAND $<TARGET_FILE:NodeClassTest> 0x0001)
-add_test(NAME NodeClassTest_CtorWithSequenceTest   COMMAND $<TARGET_FILE:NodeClassTest> 0x0002)
-add_test(NAME NodeClassTest_CtorWithStringTest     COMMAND $<TARGET_FILE:NodeClassTest> 0x0003)
+add_test(NAME NodeClassTest_DefaultCtorTest                COMMAND $<TARGET_FILE:NodeClassTest> 0x0000)
+add_test(NAME NodeClassTest_SequenceNodeFactoryTest        COMMAND $<TARGET_FILE:NodeClassTest> 0x0001)
+add_test(NAME NodeClassTest_MappingNodeFactoryTest         COMMAND $<TARGET_FILE:NodeClassTest> 0x0002)
+add_test(NAME NodeClassTest_BoolNodeFactoryTest            COMMAND $<TARGET_FILE:NodeClassTest> 0x0003)
+add_test(NAME NodeClassTest_SignedIntegerNodeFactoryTest   COMMAND $<TARGET_FILE:NodeClassTest> 0x0004)
+add_test(NAME NodeClassTest_UnsignedIntegerNodeFactoryTest COMMAND $<TARGET_FILE:NodeClassTest> 0x0005)
+add_test(NAME NodeClassTest_FloatNumberNodeFactoryTest     COMMAND $<TARGET_FILE:NodeClassTest> 0x0006)
+add_test(NAME NodeClassTest_StringNodeFactoryTest          COMMAND $<TARGET_FILE:NodeClassTest> 0x0007)
