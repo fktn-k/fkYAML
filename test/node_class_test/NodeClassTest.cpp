@@ -189,3 +189,97 @@ int NodeClassTest::StringNodeFactoryTest()
 
     return 0;
 }
+
+int NodeClassTest::SequenceForLoopTest()
+{
+    fkyaml::NodeSequenceType sequence;
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(0));
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(1));
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(2));
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(3));
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(4));
+    fkyaml::Node node = fkyaml::Node::Sequence(std::move(sequence));
+
+    if (!node.IsSequence() || node.Size() != 5)
+    {
+        std::fprintf(
+            stderr,
+            "node initialization failure. type=%d, size=%llu\n",
+            static_cast<int>(node.Type()), node.Size()
+        );
+        return -1;
+    }
+
+    fkyaml::NodeSignedIntType value = 0;
+    for (auto itr = node.Begin(); itr != node.End(); ++itr, ++value)
+    {
+        if (!itr->IsSignedInteger())
+        {
+            std::fprintf(
+                stderr,
+                "value type of the target sequence node is invalid. expectation=%d, actual=%d\n",
+                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER), static_cast<int>(itr->Type())
+            );
+            return -1;
+        }
+
+        if (itr->ToSignedInteger() != value)
+        {
+            std::fprintf(
+                stderr,
+                "value of the target sequence node is invalid. expectation=%lld, actual=%lld\n",
+                value, itr->ToSignedInteger()
+            );
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstSequenceForLoopTest()
+{
+    fkyaml::NodeSequenceType sequence;
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(0));
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(1));
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(2));
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(3));
+    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(4));
+    const fkyaml::Node node = fkyaml::Node::Sequence(std::move(sequence));
+
+    if (!node.IsSequence() || node.Size() != 5)
+    {
+        std::fprintf(
+            stderr,
+            "node initialization failure. type=%d, size=%llu\n",
+            static_cast<int>(node.Type()), node.Size()
+        );
+        return -1;
+    }
+
+    fkyaml::NodeSignedIntType value = 0;
+    for (auto itr = node.Begin(); itr != node.End(); ++itr, ++value)
+    {
+        if (!itr->IsSignedInteger())
+        {
+            std::fprintf(
+                stderr,
+                "value type of the target sequence node is invalid. expectation=%d, actual=%d\n",
+                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER), static_cast<int>(itr->Type())
+            );
+            return -1;
+        }
+
+        if (itr->ToSignedInteger() != value)
+        {
+            std::fprintf(
+                stderr,
+                "value of the target sequence node is invalid. expectation=%lld, actual=%lld\n",
+                value, itr->ToSignedInteger()
+            );
+            return -1;
+        }
+    }
+
+    return 0;
+}

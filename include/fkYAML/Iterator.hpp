@@ -77,6 +77,10 @@ private:
         {
         }
 
+        ~IteratorHolder()
+        {
+        }
+
         typename NodeSequenceType::iterator sequence_iterator;
         typename NodeMappingType::iterator  mapping_iterator;
     };
@@ -120,6 +124,10 @@ public:
             m_iterator_holder.mapping_iterator = std::move(other.m_iterator_holder.mapping_iterator);
             break;
         }
+    }
+
+    ~Iterator()
+    {
     }
 
 public:
@@ -173,6 +181,8 @@ public:
             return &(*(m_iterator_holder.sequence_iterator));
         case InnerIteratorType::MAPPING:
             return &(m_iterator_holder.mapping_iterator->second);
+        default:
+            return nullptr;
         }
     }
 
@@ -274,6 +284,8 @@ public:
             return (m_iterator_holder.sequence_iterator == other.m_iterator_holder.sequence_iterator);
         case InnerIteratorType::MAPPING:
             return (m_iterator_holder.mapping_iterator == other.m_iterator_holder.mapping_iterator);
+        default:
+            return false;
         }
     }
 

@@ -24,6 +24,8 @@ static const std::unordered_map<uint32_t, int(*)()> NODE_TEST_CASE_MAP
     { 0x0005, NodeClassTest::UnsignedIntNodeFactoryTest },
     { 0x0006, NodeClassTest::FloatNumberNodeFactoryTest },
     { 0x0007, NodeClassTest::StringNodeFactoryTest },
+    { 0x0008, NodeClassTest::SequenceForLoopTest },
+    { 0x0009, NodeClassTest::ConstSequenceForLoopTest },
 };
 
 int main(int argc, char* argv[])

@@ -28,3 +28,5 @@ add_test(NAME NodeClassTest_SignedIntegerNodeFactoryTest   COMMAND $<TARGET_FILE
 add_test(NAME NodeClassTest_UnsignedIntegerNodeFactoryTest COMMAND $<TARGET_FILE:NodeClassTest> 0x0005)
 add_test(NAME NodeClassTest_FloatNumberNodeFactoryTest     COMMAND $<TARGET_FILE:NodeClassTest> 0x0006)
 add_test(NAME NodeClassTest_StringNodeFactoryTest          COMMAND $<TARGET_FILE:NodeClassTest> 0x0007)
+add_test(NAME NodeClassTest_SequenceForLoopTest            COMMAND $<TARGET_FILE:NodeClassTest> 0x0008)
+add_test(NAME NodeClassTest_ConstSequenceForLoopTest       COMMAND $<TARGET_FILE:NodeClassTest> 0x0009)

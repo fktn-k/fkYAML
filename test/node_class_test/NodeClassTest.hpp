@@ -19,6 +19,8 @@ public:
     static int UnsignedIntNodeFactoryTest();
     static int FloatNumberNodeFactoryTest();
     static int StringNodeFactoryTest();
+    static int SequenceForLoopTest();
+    static int ConstSequenceForLoopTest();
 };
 
 #endif /* FK_YAML_TEST_NODE_CLASS_TEST_HPP_ */
