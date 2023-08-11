@@ -9,9 +9,13 @@
 #define FK_YAML_NODE_HPP_
 
 #include <cassert>
+#include <cstdint>
 #include <cstring>
+#include <string>
 #include <memory>
 #include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/NodeType.hpp"
@@ -26,6 +30,14 @@ public:
     using iterator = Iterator<Node>;
     using const_iterator = Iterator<const Node>;
 
+    using sequence_type     = std::vector<Node>;
+    using mapping_type      = std::unordered_map<std::string, Node>;
+    using boolean_type      = bool;
+    using signed_int_type   = int64_t;
+    using unsigned_int_type = uint64_t;
+    using float_number_type = double;
+    using string_type       = std::string;
+
 private:
     union NodeValue {
         NodeValue() = default;
@@ -35,130 +47,130 @@ private:
             switch (type)
             {
             case NodeType::SEQUENCE:
-                sequence = CreateObject<NodeSequenceType>();
+                sequence = CreateObject<sequence_type>();
                 break;
             case NodeType::MAPPING:
-                mapping = CreateObject<NodeMappingType>();
+                mapping = CreateObject<mapping_type>();
                 break;
             case NodeType::NULL_OBJECT:
                 mapping = nullptr;
                 break;
             case NodeType::BOOLEAN:
-                boolean = static_cast<NodeBooleanType>(false);
+                boolean = static_cast<boolean_type>(false);
                 break;
             case NodeType::SIGNED_INTEGER:
-                signed_int = static_cast<NodeSignedIntType>(0);
+                signed_int = static_cast<signed_int_type>(0);
                 break;
             case NodeType::UNSIGNED_INTEGER:
-                unsigned_int = static_cast<NodeUnsignedIntType>(0);
+                unsigned_int = static_cast<unsigned_int_type>(0);
                 break;
             case NodeType::FLOAT_NUMBER:
-                float_val = static_cast<NodeFloatNumberType>(0.0);
+                float_val = static_cast<float_number_type>(0.0);
                 break;
             case NodeType::STRING:
-                str = CreateObject<NodeStringType>("");
+                str = CreateObject<string_type>("");
                 break;
             }
         }
 
-        NodeValue(const NodeSequenceType& seq) noexcept
-            : sequence(CreateObject<NodeSequenceType>(seq))
+        NodeValue(const sequence_type& seq) noexcept
+            : sequence(CreateObject<sequence_type>(seq))
         {}
 
-        NodeValue& operator=(const NodeSequenceType& seq) noexcept
+        NodeValue& operator=(const sequence_type& seq) noexcept
         {
-            sequence = CreateObject<NodeSequenceType>(seq);
+            sequence = CreateObject<sequence_type>(seq);
             return *this;
         }
 
-        NodeValue(NodeSequenceType&& seq) noexcept
-            : sequence(CreateObject<NodeSequenceType>(std::move(seq)))
+        NodeValue(sequence_type&& seq) noexcept
+            : sequence(CreateObject<sequence_type>(std::move(seq)))
         {}
 
-        NodeValue& operator=(NodeSequenceType&& seq) noexcept
+        NodeValue& operator=(sequence_type&& seq) noexcept
         {
-            sequence = CreateObject<NodeSequenceType>(std::move(seq));
+            sequence = CreateObject<sequence_type>(std::move(seq));
             return *this;
         }
 
-        NodeValue(const NodeMappingType& map) noexcept
-            : mapping(CreateObject<NodeMappingType>(map))
+        NodeValue(const mapping_type& map) noexcept
+            : mapping(CreateObject<mapping_type>(map))
         {}
 
-        NodeValue& operator=(const NodeMappingType& map) noexcept
+        NodeValue& operator=(const mapping_type& map) noexcept
         {
-            mapping = CreateObject<NodeMappingType>(map);
+            mapping = CreateObject<mapping_type>(map);
             return *this;
         }
 
-        NodeValue(NodeMappingType&& map) noexcept
-            : mapping(CreateObject<NodeMappingType>(std::move(map)))
+        NodeValue(mapping_type&& map) noexcept
+            : mapping(CreateObject<mapping_type>(std::move(map)))
         {}
 
-        NodeValue& operator=(NodeMappingType&& map) noexcept
+        NodeValue& operator=(mapping_type&& map) noexcept
         {
-            mapping = CreateObject<NodeMappingType>(std::move(map));
+            mapping = CreateObject<mapping_type>(std::move(map));
             return *this;
         }
 
-        NodeValue(const NodeBooleanType bool_val) noexcept
+        NodeValue(const boolean_type bool_val) noexcept
             : boolean(bool_val)
         {}
 
-        NodeValue& operator=(const NodeBooleanType bool_val) noexcept
+        NodeValue& operator=(const boolean_type bool_val) noexcept
         {
             boolean = bool_val;
             return *this;
         }
 
-        NodeValue(const NodeSignedIntType int_val) noexcept
+        NodeValue(const signed_int_type int_val) noexcept
             : signed_int(int_val)
         {}
 
-        NodeValue& operator=(const NodeSignedIntType int_val) noexcept
+        NodeValue& operator=(const signed_int_type int_val) noexcept
         {
             signed_int = int_val;
             return *this;
         }
 
-        NodeValue(const NodeUnsignedIntType uint_val) noexcept
+        NodeValue(const unsigned_int_type uint_val) noexcept
             : unsigned_int(uint_val)
         {}
 
-        NodeValue& operator=(const NodeUnsignedIntType uint_val) noexcept
+        NodeValue& operator=(const unsigned_int_type uint_val) noexcept
         {
             unsigned_int = uint_val;
             return *this;
         }
 
-        NodeValue(const NodeFloatNumberType f_val) noexcept
+        NodeValue(const float_number_type f_val) noexcept
             : float_val(f_val)
         {
         }
 
-        NodeValue& operator=(const NodeFloatNumberType f_val) noexcept
+        NodeValue& operator=(const float_number_type f_val) noexcept
         {
             float_val = f_val;
             return *this;
         }
 
-        NodeValue(const NodeStringType& str_val) noexcept
-            : str(CreateObject<NodeStringType>(str_val))
+        NodeValue(const string_type& str_val) noexcept
+            : str(CreateObject<string_type>(str_val))
         {}
 
-        NodeValue& operator=(const NodeStringType& str_val) noexcept
+        NodeValue& operator=(const string_type& str_val) noexcept
         {
-            str = CreateObject<NodeStringType>(str_val);
+            str = CreateObject<string_type>(str_val);
             return *this;
         }
 
-        NodeValue(NodeStringType&& str_val) noexcept
-            : str(CreateObject<NodeStringType>(std::move(str_val)))
+        NodeValue(string_type&& str_val) noexcept
+            : str(CreateObject<string_type>(std::move(str_val)))
         {}
 
-        NodeValue& operator=(NodeStringType&& str_val) noexcept
+        NodeValue& operator=(string_type&& str_val) noexcept
         {
-            str = CreateObject<NodeStringType>(std::move(str_val));
+            str = CreateObject<string_type>(std::move(str_val));
             return *this;
         }
 
@@ -172,7 +184,7 @@ private:
                     item.Destroy();
                 }
                 sequence->clear();
-                DestroyObject<NodeSequenceType>(sequence);
+                DestroyObject<sequence_type>(sequence);
                 sequence = nullptr;
                 break;
             case NodeType::MAPPING:
@@ -181,11 +193,11 @@ private:
                     item.second.Destroy();
                 }
                 mapping->clear();
-                DestroyObject<NodeMappingType>(mapping);
+                DestroyObject<mapping_type>(mapping);
                 mapping = nullptr;
                 break;
             case NodeType::STRING:
-                DestroyObject<NodeStringType>(str);
+                DestroyObject<string_type>(str);
                 str = nullptr;
                 break;
             default:
@@ -193,13 +205,13 @@ private:
             }
         }
 
-        NodeSequenceType*   sequence;
-        NodeMappingType*    mapping;
-        NodeBooleanType     boolean;
-        NodeSignedIntType   signed_int;
-        NodeUnsignedIntType unsigned_int;
-        NodeFloatNumberType float_val;
-        NodeStringType*     str;
+        sequence_type*   sequence;
+        mapping_type*    mapping;
+        boolean_type     boolean;
+        signed_int_type   signed_int;
+        unsigned_int_type unsigned_int;
+        float_number_type float_val;
+        string_type*     str;
     };
 
 private:
@@ -276,7 +288,7 @@ public:
             m_node_value.float_val = rhs.m_node_value.float_val;
             break;
         case NodeType::STRING:
-            m_node_value.str = CreateObject<NodeStringType>(*(rhs.m_node_value.str));
+            m_node_value.str = CreateObject<string_type>(*(rhs.m_node_value.str));
             break;
         }
     }
@@ -325,39 +337,39 @@ public:
 public:
     // factory methods
 
-    static Node Sequence(const NodeSequenceType& sequence) noexcept
+    static Node Sequence(const sequence_type& sequence) noexcept
     {
         Node node;
         node.m_node_type = NodeType::SEQUENCE;
-        node.m_node_value.sequence = CreateObject<NodeSequenceType>(sequence);
+        node.m_node_value.sequence = CreateObject<sequence_type>(sequence);
         return node;
     }
 
-    static Node Sequence(NodeSequenceType&& sequence) noexcept
+    static Node Sequence(sequence_type&& sequence) noexcept
     {
         Node node;
         node.m_node_type = NodeType::SEQUENCE;
-        node.m_node_value.sequence = CreateObject<NodeSequenceType>(std::move(sequence));
+        node.m_node_value.sequence = CreateObject<sequence_type>(std::move(sequence));
         return node;
     }
 
-    static Node Mapping(const NodeMappingType& mapping) noexcept
+    static Node Mapping(const mapping_type& mapping) noexcept
     {
         Node node;
         node.m_node_type = NodeType::MAPPING;
-        node.m_node_value.mapping = CreateObject<NodeMappingType>(mapping);
+        node.m_node_value.mapping = CreateObject<mapping_type>(mapping);
         return node;
     }
 
-    static Node Mapping(NodeMappingType&& mapping) noexcept
+    static Node Mapping(mapping_type&& mapping) noexcept
     {
         Node node;
         node.m_node_type = NodeType::MAPPING;
-        node.m_node_value.mapping = CreateObject<NodeMappingType>(std::move(mapping));
+        node.m_node_value.mapping = CreateObject<mapping_type>(std::move(mapping));
         return node;
     }
 
-    static Node BooleanScalar(const NodeBooleanType boolean) noexcept
+    static Node BooleanScalar(const boolean_type boolean) noexcept
     {
         Node node;
         node.m_node_type = NodeType::BOOLEAN;
@@ -365,7 +377,7 @@ public:
         return node;
     }
 
-    static Node SignedIntegerScalar(const NodeSignedIntType signed_int) noexcept
+    static Node SignedIntegerScalar(const signed_int_type signed_int) noexcept
     {
         Node node;
         node.m_node_type = NodeType::SIGNED_INTEGER;
@@ -373,7 +385,7 @@ public:
         return node;
     }
 
-    static Node UnsignedIntegerScalar(const NodeUnsignedIntType unsigned_int) noexcept
+    static Node UnsignedIntegerScalar(const unsigned_int_type unsigned_int) noexcept
     {
         Node node;
         node.m_node_type = NodeType::UNSIGNED_INTEGER;
@@ -381,7 +393,7 @@ public:
         return node;
     }
 
-    static Node FloatNumberScalar(const NodeFloatNumberType float_val) noexcept
+    static Node FloatNumberScalar(const float_number_type float_val) noexcept
     {
         Node node;
         node.m_node_type = NodeType::FLOAT_NUMBER;
@@ -389,19 +401,19 @@ public:
         return node;
     }
 
-    static Node StringScalar(const NodeStringType& str) noexcept
+    static Node StringScalar(const string_type& str) noexcept
     {
         Node node;
         node.m_node_type = NodeType::STRING;
-        node.m_node_value.str = CreateObject<NodeStringType>(str);
+        node.m_node_value.str = CreateObject<string_type>(str);
         return node;
     }
 
-    static Node StringScalar(NodeStringType&& str) noexcept
+    static Node StringScalar(string_type&& str) noexcept
     {
         Node node;
         node.m_node_type = NodeType::STRING;
-        node.m_node_value.str = CreateObject<NodeStringType>(std::move(str));
+        node.m_node_value.str = CreateObject<string_type>(std::move(str));
         return node;
     }
 
@@ -569,7 +581,7 @@ public:
         }
     }
 
-    NodeSequenceType& ToSequence()
+    sequence_type& ToSequence()
     {
         if (!IsSequence())
         {
@@ -579,7 +591,7 @@ public:
         return *(m_node_value.sequence);
     }
 
-    const NodeSequenceType& ToSequence() const
+    const sequence_type& ToSequence() const
     {
         if (!IsSequence())
         {
@@ -589,7 +601,7 @@ public:
         return *(m_node_value.sequence);
     }
 
-    NodeMappingType& ToMapping()
+    mapping_type& ToMapping()
     {
         if (!IsMapping())
         {
@@ -599,7 +611,7 @@ public:
         return *(m_node_value.mapping);
     }
 
-    const NodeMappingType& ToMapping() const
+    const mapping_type& ToMapping() const
     {
         if (!IsMapping())
         {
@@ -609,7 +621,7 @@ public:
         return *(m_node_value.mapping);
     }
 
-    NodeBooleanType& ToBoolean()
+    boolean_type& ToBoolean()
     {
         if (!IsBoolean())
         {
@@ -619,7 +631,7 @@ public:
         return m_node_value.boolean;
     }
 
-    const NodeBooleanType& ToBoolean() const
+    const boolean_type& ToBoolean() const
     {
         if (!IsBoolean())
         {
@@ -629,7 +641,7 @@ public:
         return m_node_value.boolean;
     }
 
-    NodeSignedIntType& ToSignedInteger()
+    signed_int_type& ToSignedInteger()
     {
         if (!IsSignedInteger())
         {
@@ -639,7 +651,7 @@ public:
         return m_node_value.signed_int;
     }
 
-    const NodeSignedIntType& ToSignedInteger() const
+    const signed_int_type& ToSignedInteger() const
     {
         if (!IsSignedInteger())
         {
@@ -649,7 +661,7 @@ public:
         return m_node_value.signed_int;
     }
 
-    NodeUnsignedIntType& ToUnsignedInteger()
+    unsigned_int_type& ToUnsignedInteger()
     {
         if (!IsUnsignedInteger())
         {
@@ -659,7 +671,7 @@ public:
         return m_node_value.unsigned_int;
     }
 
-    const NodeUnsignedIntType& ToUnsignedInteger() const
+    const unsigned_int_type& ToUnsignedInteger() const
     {
         if (!IsUnsignedInteger())
         {
@@ -669,7 +681,7 @@ public:
         return m_node_value.unsigned_int;
     }
 
-    NodeFloatNumberType& ToFloatNumber()
+    float_number_type& ToFloatNumber()
     {
         if (!IsFloatNumber())
         {
@@ -679,7 +691,7 @@ public:
         return m_node_value.float_val;
     }
 
-    const NodeFloatNumberType& ToFloatNumber() const
+    const float_number_type& ToFloatNumber() const
     {
         if (!IsFloatNumber())
         {
@@ -689,7 +701,7 @@ public:
         return m_node_value.float_val;
     }
 
-    NodeStringType& ToString()
+    string_type& ToString()
     {
         if (!IsString())
         {
@@ -699,7 +711,7 @@ public:
         return *(m_node_value.str);
     }
 
-    const NodeStringType& ToString() const
+    const string_type& ToString() const
     {
         if (!IsString())
         {
@@ -798,6 +810,14 @@ private:
     NodeType  m_node_type;
     NodeValue m_node_value;
 };
+
+using NodeSequenceType    = typename Node::sequence_type;
+using NodeMappingType     = typename Node::mapping_type;
+using NodeBooleanType     = typename Node::boolean_type;
+using NodeSignedIntType   = typename Node::signed_int_type;
+using NodeUnsignedIntType = typename Node::unsigned_int_type;
+using NodeFloatNumberType = typename Node::float_number_type;
+using NodeStringType      = typename Node::string_type;
 
 } // namespace fkyaml
 

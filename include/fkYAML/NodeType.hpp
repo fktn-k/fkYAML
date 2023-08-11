@@ -8,11 +8,6 @@
 #ifndef FK_YAML_NODE_TYPE_HPP_
 #define FK_YAML_NODE_TYPE_HPP_
 
-#include <cstdint>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 namespace fkyaml
 {
 
@@ -27,16 +22,6 @@ enum class NodeType
     FLOAT_NUMBER,
     STRING,
 };
-
-class Node;
-
-using NodeSequenceType    = std::vector<Node>;
-using NodeMappingType     = std::unordered_map<std::string, Node>;
-using NodeBooleanType     = bool;
-using NodeSignedIntType   = int64_t;
-using NodeUnsignedIntType = uint64_t;
-using NodeFloatNumberType = double;
-using NodeStringType      = std::string;
 
 } // namespace fkyaml
 

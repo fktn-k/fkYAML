@@ -12,8 +12,6 @@
 #include <cstddef>
 
 #include "fkYAML/Exception.hpp"
-#include "fkYAML/NodeType.hpp"
-#include "fkYAML/Node.hpp"
 
 namespace fkyaml
 {
@@ -68,12 +66,12 @@ private:
         {
         }
 
-        IteratorHolder(const typename NodeSequenceType::iterator& itr) noexcept
+        IteratorHolder(const typename ValueType::sequence_type::iterator& itr) noexcept
             : sequence_iterator(itr)
         {
         }
 
-        IteratorHolder(const typename NodeMappingType::iterator& itr) noexcept
+        IteratorHolder(const typename ValueType::mapping_type::iterator& itr) noexcept
             : mapping_iterator(itr)
         {
         }
@@ -82,18 +80,18 @@ private:
         {
         }
 
-        typename NodeSequenceType::iterator sequence_iterator;
-        typename NodeMappingType::iterator  mapping_iterator;
+        typename ValueType::sequence_type::iterator sequence_iterator;
+        typename ValueType::mapping_type::iterator  mapping_iterator;
     };
 
 public:
-    Iterator(SequenceIteratorTag, const typename NodeSequenceType::iterator& itr) noexcept
+    Iterator(SequenceIteratorTag, const typename ValueType::sequence_type::iterator& itr) noexcept
         : m_inner_iterator_type(InnerIteratorType::SEQUENCE),
           m_iterator_holder(itr)
     {
     }
 
-    Iterator(MappingIteratorTag, const typename NodeMappingType::iterator& itr) noexcept
+    Iterator(MappingIteratorTag, const typename ValueType::mapping_type::iterator& itr) noexcept
         : m_inner_iterator_type(InnerIteratorType::MAPPING),
           m_iterator_holder(itr)
     {
