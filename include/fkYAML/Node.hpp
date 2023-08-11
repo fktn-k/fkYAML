@@ -14,8 +14,8 @@
 #include <type_traits>
 
 #include "fkYAML/Exception.hpp"
-#include "fkYAML/Iterator.hpp"
 #include "fkYAML/NodeType.hpp"
+#include "fkYAML/Iterator.hpp"
 
 namespace fkyaml
 {

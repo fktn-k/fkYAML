@@ -13,6 +13,7 @@
 
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/NodeType.hpp"
+#include "fkYAML/Node.hpp"
 
 namespace fkyaml
 {
