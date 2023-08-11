@@ -9,43 +9,23 @@
 #define FK_YAML_NODE_HPP_
 
 #include <cassert>
-#include <cstdint>
 #include <cstring>
 #include <memory>
-#include <string>
 #include <type_traits>
-#include <unordered_map>
-#include <vector>
 
 #include "fkYAML/Exception.hpp"
+#include "fkYAML/Iterator.hpp"
+#include "fkYAML/NodeType.hpp"
 
 namespace fkyaml
 {
 
-enum class NodeType
-{
-    SEQUENCE,
-    MAPPING,
-    NULL_OBJECT,
-    BOOLEAN,
-    SIGNED_INTEGER,
-    UNSIGNED_INTEGER,
-    FLOAT_NUMBER,
-    STRING,
-};
-
-class Node;
-
-using NodeSequenceType    = std::vector<Node>;
-using NodeMappingType     = std::unordered_map<std::string, Node>;
-using NodeBooleanType     = bool;
-using NodeSignedIntType   = int64_t;
-using NodeUnsignedIntType = uint64_t;
-using NodeFloatNumberType = double;
-using NodeStringType      = std::string;
-
 class Node
 {
+public:
+    using iterator = Iterator<Node>;
+    using const_iterator = Iterator<const Node>;
+
 private:
     union NodeValue {
         NodeValue() = default;
@@ -738,6 +718,73 @@ public:
         std::memcpy(&tmp,              &m_node_value,     sizeof(NodeValue));
         std::memcpy(&m_node_value,     &rhs.m_node_value, sizeof(NodeValue));
         std::memcpy(&rhs.m_node_value, &tmp,           sizeof(NodeValue));
+    }
+
+    iterator Begin()
+    {
+        switch (m_node_type)
+        {
+        case NodeType::SEQUENCE:
+            return iterator(fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin());
+        case NodeType::MAPPING:
+            return iterator(fkyaml::MappingIteratorTag(), m_node_value.mapping->begin());
+        default:
+            throw Exception("The target node is neither of sequence nor mapping types.");
+        }
+    }
+
+    iterator begin()
+    {
+        return Begin();
+    }
+
+    const_iterator Begin() const
+    {
+        switch (m_node_type)
+        {
+        case NodeType::SEQUENCE:
+            return const_iterator(fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin());
+        case NodeType::MAPPING:
+            return const_iterator(fkyaml::MappingIteratorTag(), m_node_value.mapping->begin());
+        default:
+            throw Exception("The target node is neither of sequence nor mapping types.");
+        }
+    }
+
+    iterator End()
+    {
+        switch (m_node_type)
+        {
+        case NodeType::SEQUENCE:
+            return iterator(fkyaml::SequenceIteratorTag(), m_node_value.sequence->end());
+        case NodeType::MAPPING:
+            return iterator(fkyaml::MappingIteratorTag(), m_node_value.mapping->end());
+        default:
+            throw Exception("The target node is neither of sequence nor mapping types.");
+        }
+    }
+
+    iterator end()
+    {
+        return End();
+    }
+
+    const_iterator End() const
+    {
+        switch (m_node_type)
+        {
+        case NodeType::SEQUENCE:
+            return const_iterator(fkyaml::SequenceIteratorTag(), m_node_value.sequence->end());
+        case NodeType::MAPPING:
+            return const_iterator(fkyaml::MappingIteratorTag(), m_node_value.mapping->end());
+        default:
+            throw Exception("The target node is neither of sequence nor mapping types.");
+        }
+    }
+
+    const_iterator end() const
+    {
+        return end();
     }
 
 private:
