@@ -1,5 +1,6 @@
 #include "NodeClassTest.hpp"
 
+#include <cinttypes>
 #include <cstdio>
 
 #include "fkYAML/Node.hpp"
@@ -29,7 +30,7 @@ int NodeClassTest::SequenceNodeFactoryTest()
 
     if (node.Size() != 3)
     {
-        std::fprintf(stderr, "the size of the sequence node is not 3. actual=%llu\n", node.Size());
+        std::fprintf(stderr, "the size of the sequence node is not 3. actual=%zu\n", node.Size());
         return -1;
     }
 
@@ -61,7 +62,7 @@ int NodeClassTest::MappingNodeFactoryTest()
 
     if (node.Size() != 1)
     {
-        std::fprintf(stderr, "the size of the mapping node is not 1. actual=%llu\n", node.Size());
+        std::fprintf(stderr, "the size of the mapping node is not 1. actual=%zu\n", node.Size());
         return -1;
     }
 
@@ -119,7 +120,7 @@ int NodeClassTest::SignedIntNodeFactoryTest()
 
     if (node.ToSignedInteger() != -128)
     {
-        std::fprintf(stderr, "node value error. expectation=%d, actual=%lld\n", -128, node.ToSignedInteger());
+        std::fprintf(stderr, "node value error. expectation=%d, actual=%" PRId64 "\n", -128, node.ToSignedInteger());
         return -1;
     }
 
@@ -128,7 +129,7 @@ int NodeClassTest::SignedIntNodeFactoryTest()
 
 int NodeClassTest::UnsignedIntNodeFactoryTest()
 {
-    fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(255);
+    fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(255ULL);
 
     if (!node.IsUnsignedInteger())
     {
@@ -136,9 +137,9 @@ int NodeClassTest::UnsignedIntNodeFactoryTest()
         return -1;
     }
 
-    if (node.ToUnsignedInteger() != 255)
+    if (node.ToUnsignedInteger() != 255ULL)
     {
-        std::fprintf(stderr, "node value error. expectation=%u, actual=%llu", 255, node.ToUnsignedInteger());
+        std::fprintf(stderr, "node value error. expectation=%llu, actual=%" PRIu64 "\n", 255ULL, node.ToUnsignedInteger());
         return -1;
     }
 
@@ -176,7 +177,7 @@ int NodeClassTest::StringNodeFactoryTest()
 
     if (node.Size() != 4)
     {
-        std::fprintf(stderr, "the size of the string node is not 4. actual=%llu\n", node.Size());
+        std::fprintf(stderr, "the size of the string node is not 4. actual=%zu\n", node.Size());
         return -1;
     }
 
@@ -204,7 +205,7 @@ int NodeClassTest::SequenceForLoopTest()
     {
         std::fprintf(
             stderr,
-            "node initialization failure. type=%d, size=%llu\n",
+            "node initialization failure. type=%d, size=%zu\n",
             static_cast<int>(node.Type()), node.Size()
         );
         return -1;
@@ -227,7 +228,7 @@ int NodeClassTest::SequenceForLoopTest()
         {
             std::fprintf(
                 stderr,
-                "value of the target sequence node is invalid. expectation=%lld, actual=%lld\n",
+                "value of the target sequence node is invalid. expectation=%" PRId64 ", actual=%" PRId64 "\n",
                 value, itr->ToSignedInteger()
             );
             return -1;
@@ -251,7 +252,7 @@ int NodeClassTest::ConstSequenceForLoopTest()
     {
         std::fprintf(
             stderr,
-            "node initialization failure. type=%d, size=%llu\n",
+            "node initialization failure. type=%d, size=%zu\n",
             static_cast<int>(node.Type()), node.Size()
         );
         return -1;
@@ -274,7 +275,7 @@ int NodeClassTest::ConstSequenceForLoopTest()
         {
             std::fprintf(
                 stderr,
-                "value of the target sequence node is invalid. expectation=%lld, actual=%lld\n",
+                "value of the target sequence node is invalid. expectation=%" PRId64 ", actual=%" PRId64 "\n",
                 value, itr->ToSignedInteger()
             );
             return -1;

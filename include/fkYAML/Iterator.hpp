@@ -193,7 +193,7 @@ public:
         case InnerIteratorType::SEQUENCE:
             return *(m_iterator_holder.sequence_iterator);
         case InnerIteratorType::MAPPING:
-            return m_iterator_holder.mapping_iterator->second;
+            return *(m_iterator_holder.mapping_iterator).second;
         }
     }
 
