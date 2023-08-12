@@ -193,15 +193,9 @@ int NodeClassTest::StringNodeFactoryTest()
 
 int NodeClassTest::SequenceForLoopTest()
 {
-    fkyaml::NodeSequenceType sequence;
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(0));
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(1));
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(2));
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(3));
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(4));
-    fkyaml::Node node = fkyaml::Node::Sequence(std::move(sequence));
+    fkyaml::Node node = fkyaml::Node::Sequence({ fkyaml::Node::SignedIntegerScalar(0), fkyaml::Node::SignedIntegerScalar(1), fkyaml::Node::SignedIntegerScalar(2) });
 
-    if (!node.IsSequence() || node.Size() != 5)
+    if (!node.IsSequence() || node.Size() != 3)
     {
         std::fprintf(
             stderr,
@@ -212,27 +206,29 @@ int NodeClassTest::SequenceForLoopTest()
     }
 
     fkyaml::NodeSignedIntType value = 0;
-    for (auto itr = node.Begin(); itr != node.End(); ++itr, ++value)
+    for (auto&& item : node.ToSequence())
     {
-        if (!itr->IsSignedInteger())
+        if (!item.IsSignedInteger())
         {
             std::fprintf(
                 stderr,
                 "value type of the target sequence node is invalid. expectation=%d, actual=%d\n",
-                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER), static_cast<int>(itr->Type())
+                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER), static_cast<int>(item.Type())
             );
             return -1;
         }
 
-        if (itr->ToSignedInteger() != value)
+        if (item.ToSignedInteger() != value)
         {
             std::fprintf(
                 stderr,
                 "value of the target sequence node is invalid. expectation=%" PRId64 ", actual=%" PRId64 "\n",
-                value, itr->ToSignedInteger()
+                value, item.ToSignedInteger()
             );
             return -1;
         }
+
+        ++value;
     }
 
     return 0;
@@ -240,15 +236,9 @@ int NodeClassTest::SequenceForLoopTest()
 
 int NodeClassTest::ConstSequenceForLoopTest()
 {
-    fkyaml::NodeSequenceType sequence;
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(0));
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(1));
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(2));
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(3));
-    sequence.emplace_back(fkyaml::Node::SignedIntegerScalar(4));
-    const fkyaml::Node node = fkyaml::Node::Sequence(std::move(sequence));
+    const fkyaml::Node node = fkyaml::Node::Sequence({ fkyaml::Node::SignedIntegerScalar(0), fkyaml::Node::SignedIntegerScalar(1), fkyaml::Node::SignedIntegerScalar(2) });
 
-    if (!node.IsSequence() || node.Size() != 5)
+    if (!node.IsSequence() || node.Size() != 3)
     {
         std::fprintf(
             stderr,
@@ -259,27 +249,29 @@ int NodeClassTest::ConstSequenceForLoopTest()
     }
 
     fkyaml::NodeSignedIntType value = 0;
-    for (auto itr = node.Begin(); itr != node.End(); ++itr, ++value)
+    for (auto&& item : node.ToSequence())
     {
-        if (!itr->IsSignedInteger())
+        if (!item.IsSignedInteger())
         {
             std::fprintf(
                 stderr,
                 "value type of the target sequence node is invalid. expectation=%d, actual=%d\n",
-                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER), static_cast<int>(itr->Type())
+                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER), static_cast<int>(item.Type())
             );
             return -1;
         }
 
-        if (itr->ToSignedInteger() != value)
+        if (item.ToSignedInteger() != value)
         {
             std::fprintf(
                 stderr,
                 "value of the target sequence node is invalid. expectation=%" PRId64 ", actual=%" PRId64 "\n",
-                value, itr->ToSignedInteger()
+                value, item.ToSignedInteger()
             );
             return -1;
         }
+
+        ++value;
     }
 
     return 0;
