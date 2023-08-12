@@ -40,7 +40,13 @@ public:
 
 private:
     union NodeValue {
-        NodeValue() = default;
+        NodeValue()
+        {
+        }
+
+        ~NodeValue()
+        {
+        }
 
         NodeValue(NodeType type) noexcept
         {
@@ -176,23 +182,52 @@ private:
 
         void Destroy(NodeType type) noexcept
         {
+            if (type == NodeType::SEQUENCE || type == NodeType::MAPPING)
+            {
+                std::vector<Node> stack;
+
+                if (type == NodeType::SEQUENCE)
+                {
+                    stack.reserve(sequence->size());
+                    std::move(sequence->begin(), sequence->end(), std::back_inserter(stack));
+                }
+                else
+                {
+                    stack.reserve(mapping->size());
+                    for (auto&& it : *mapping)
+                    {
+                        stack.push_back(std::move(it.second));
+                    }
+                }
+
+                while (!stack.empty())
+                {
+                    Node current_node(std::move(stack.back()));
+                    stack.pop_back();
+
+                    if (current_node.IsSequence())
+                    {
+                        std::move(current_node.m_node_value.sequence->begin(), current_node.m_node_value.sequence->end(), std::back_inserter(stack));
+                        current_node.m_node_value.sequence->clear();
+                    }
+                    else if (current_node.IsMapping())
+                    {
+                        for (auto&& it : *current_node.m_node_value.mapping)
+                        {
+                            stack.push_back(std::move(it.second));
+                        }
+                        current_node.m_node_value.mapping->clear();
+                    }
+                }
+            }
+
             switch (type)
             {
             case NodeType::SEQUENCE:
-                for (auto& item : *sequence)
-                {
-                    item.Destroy();
-                }
-                sequence->clear();
                 DestroyObject<sequence_type>(sequence);
                 sequence = nullptr;
                 break;
             case NodeType::MAPPING:
-                for (auto& item : *mapping)
-                {
-                    item.second.Destroy();
-                }
-                mapping->clear();
                 DestroyObject<mapping_type>(mapping);
                 mapping = nullptr;
                 break;
@@ -238,14 +273,11 @@ private:
     template <typename ObjType>
     static void DestroyObject(ObjType* obj) noexcept
     {
-        using AllocType = std::allocator<ObjType>;
-        using AllocTraitsType = std::allocator_traits<AllocType>;
-
         if (!obj) return;
 
-        AllocType alloc;
-        AllocTraitsType::destroy(alloc, obj);
-        AllocTraitsType::deallocate(alloc, obj, 1);
+        std::allocator<ObjType> alloc;
+        std::allocator_traits<decltype(alloc)>::destroy(alloc, obj);
+        std::allocator_traits<decltype(alloc)>::deallocate(alloc, obj, 1);
     }
 
 public:
@@ -300,24 +332,30 @@ public:
         {
         case NodeType::SEQUENCE:
             m_node_value.sequence = rhs.m_node_value.sequence;
+            rhs.m_node_value.sequence = nullptr;
             break;
         case NodeType::MAPPING:
             m_node_value.mapping = rhs.m_node_value.mapping;
+            rhs.m_node_value.mapping = nullptr;
             break;
         case NodeType::NULL_OBJECT:
-            m_node_value.mapping = m_node_value.mapping;
+            m_node_value.mapping = rhs.m_node_value.mapping = nullptr;
             break;
         case NodeType::BOOLEAN:
             m_node_value.boolean = rhs.m_node_value.boolean;
+            rhs.m_node_value.boolean = static_cast<boolean_type>(false);
             break;
         case NodeType::SIGNED_INTEGER:
             m_node_value.signed_int = rhs.m_node_value.signed_int;
+            rhs.m_node_value.signed_int = static_cast<signed_int_type>(0);
             break;
         case NodeType::UNSIGNED_INTEGER:
             m_node_value.unsigned_int = rhs.m_node_value.unsigned_int;
+            rhs.m_node_value.unsigned_int = static_cast<unsigned_int_type>(0);
             break;
         case NodeType::FLOAT_NUMBER:
             m_node_value.float_val = rhs.m_node_value.float_val;
+            rhs.m_node_value.float_val = static_cast<float_number_type>(0.0);
             break;
         case NodeType::STRING:
             m_node_value.str = rhs.m_node_value.str;
@@ -326,7 +364,7 @@ public:
         }
 
         rhs.m_node_type = NodeType::NULL_OBJECT;
-        std::memset(&rhs.m_node_value, 0, sizeof(rhs.m_node_value));
+        rhs.m_node_value.mapping = nullptr;
     }
 
     ~Node() noexcept
