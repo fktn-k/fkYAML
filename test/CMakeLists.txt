@@ -1,0 +1,1 @@
+add_subdirectory(node_class_test)
