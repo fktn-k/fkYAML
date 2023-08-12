@@ -1,5 +1,5 @@
 /**
- * NodeClassTest - declaration of test functions for the Node class
+ * NodeClassTest.hpp - declaration of test functions for the Node class
  * 
  * Copyright (c) 2023 fktn
  * Distributed under the MIT License (https://opensource.org/licenses/MIT)
