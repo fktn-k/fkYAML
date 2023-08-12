@@ -1,6 +1,6 @@
 /**
  * Iterator.hpp - Implementation of the YAML node iterator.
- * 
+ *
  * Copyright (c) 2023 fktn
  * Distributed under the MIT License (https://opensource.org/licenses/MIT)
  */
@@ -8,16 +8,20 @@
 #ifndef FK_YAML_ITERATOR_HPP_
 #define FK_YAML_ITERATOR_HPP_
 
-#include <iterator>
 #include <cstddef>
+#include <iterator>
 
 #include "fkYAML/Exception.hpp"
 
 namespace fkyaml
 {
 
-struct SequenceIteratorTag {};
-struct MappingIteratorTag {};
+struct SequenceIteratorTag
+{
+};
+struct MappingIteratorTag
+{
+};
 
 template <typename ValueType>
 struct IteratorTraits
@@ -81,7 +85,7 @@ private:
         }
 
         typename ValueType::sequence_type::iterator sequence_iterator;
-        typename ValueType::mapping_type::iterator  mapping_iterator;
+        typename ValueType::mapping_type::iterator mapping_iterator;
     };
 
 public:
@@ -230,7 +234,7 @@ public:
         return result;
     }
 
-    Iterator operator++(int)& noexcept
+    Iterator operator++(int) & noexcept
     {
         auto result = *this;
         ++(*this);
@@ -263,7 +267,7 @@ public:
         return *this;
     }
 
-    Iterator operator--(int)& noexcept
+    Iterator operator--(int) & noexcept
     {
         auto result = *this;
         --(*this);
@@ -329,6 +333,6 @@ private:
     mutable IteratorHolder m_iterator_holder;
 };
 
-} // fkyaml
+} // namespace fkyaml
 
 #endif /* FK_YAML_ITERATOR_HPP_ */

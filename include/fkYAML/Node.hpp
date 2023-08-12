@@ -1,6 +1,6 @@
 /**
  * Node.hpp - Implementation of YAML node data structure.
- * 
+ *
  * Copyright (c) 2023 fktn
  * Distributed under the MIT License (https://opensource.org/licenses/MIT)
  */
@@ -11,15 +11,15 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <string>
 #include <memory>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
 
 #include "fkYAML/Exception.hpp"
-#include "fkYAML/NodeType.hpp"
 #include "fkYAML/Iterator.hpp"
+#include "fkYAML/NodeType.hpp"
 
 namespace fkyaml
 {
@@ -30,16 +30,17 @@ public:
     using iterator = Iterator<Node>;
     using const_iterator = Iterator<const Node>;
 
-    using sequence_type     = std::vector<Node>;
-    using mapping_type      = std::unordered_map<std::string, Node>;
-    using boolean_type      = bool;
-    using signed_int_type   = int64_t;
+    using sequence_type = std::vector<Node>;
+    using mapping_type = std::unordered_map<std::string, Node>;
+    using boolean_type = bool;
+    using signed_int_type = int64_t;
     using unsigned_int_type = uint64_t;
     using float_number_type = double;
-    using string_type       = std::string;
+    using string_type = std::string;
 
 private:
-    union NodeValue {
+    union NodeValue
+    {
         NodeValue()
         {
         }
@@ -81,7 +82,8 @@ private:
 
         NodeValue(const sequence_type& seq) noexcept
             : sequence(CreateObject<sequence_type>(seq))
-        {}
+        {
+        }
 
         NodeValue& operator=(const sequence_type& seq) noexcept
         {
@@ -91,7 +93,8 @@ private:
 
         NodeValue(sequence_type&& seq) noexcept
             : sequence(CreateObject<sequence_type>(std::move(seq)))
-        {}
+        {
+        }
 
         NodeValue& operator=(sequence_type&& seq) noexcept
         {
@@ -101,7 +104,8 @@ private:
 
         NodeValue(const mapping_type& map) noexcept
             : mapping(CreateObject<mapping_type>(map))
-        {}
+        {
+        }
 
         NodeValue& operator=(const mapping_type& map) noexcept
         {
@@ -111,7 +115,8 @@ private:
 
         NodeValue(mapping_type&& map) noexcept
             : mapping(CreateObject<mapping_type>(std::move(map)))
-        {}
+        {
+        }
 
         NodeValue& operator=(mapping_type&& map) noexcept
         {
@@ -121,7 +126,8 @@ private:
 
         NodeValue(const boolean_type bool_val) noexcept
             : boolean(bool_val)
-        {}
+        {
+        }
 
         NodeValue& operator=(const boolean_type bool_val) noexcept
         {
@@ -131,7 +137,8 @@ private:
 
         NodeValue(const signed_int_type int_val) noexcept
             : signed_int(int_val)
-        {}
+        {
+        }
 
         NodeValue& operator=(const signed_int_type int_val) noexcept
         {
@@ -141,7 +148,8 @@ private:
 
         NodeValue(const unsigned_int_type uint_val) noexcept
             : unsigned_int(uint_val)
-        {}
+        {
+        }
 
         NodeValue& operator=(const unsigned_int_type uint_val) noexcept
         {
@@ -162,7 +170,8 @@ private:
 
         NodeValue(const string_type& str_val) noexcept
             : str(CreateObject<string_type>(str_val))
-        {}
+        {
+        }
 
         NodeValue& operator=(const string_type& str_val) noexcept
         {
@@ -172,7 +181,8 @@ private:
 
         NodeValue(string_type&& str_val) noexcept
             : str(CreateObject<string_type>(std::move(str_val)))
-        {}
+        {
+        }
 
         NodeValue& operator=(string_type&& str_val) noexcept
         {
@@ -207,7 +217,10 @@ private:
 
                     if (current_node.IsSequence())
                     {
-                        std::move(current_node.m_node_value.sequence->begin(), current_node.m_node_value.sequence->end(), std::back_inserter(stack));
+                        std::move(
+                            current_node.m_node_value.sequence->begin(),
+                            current_node.m_node_value.sequence->end(),
+                            std::back_inserter(stack));
                         current_node.m_node_value.sequence->clear();
                     }
                     else if (current_node.IsMapping())
@@ -240,13 +253,13 @@ private:
             }
         }
 
-        sequence_type*   sequence;
-        mapping_type*    mapping;
-        boolean_type     boolean;
-        signed_int_type   signed_int;
+        sequence_type* sequence;
+        mapping_type* mapping;
+        boolean_type boolean;
+        signed_int_type signed_int;
         unsigned_int_type unsigned_int;
         float_number_type float_val;
-        string_type*     str;
+        string_type* str;
     };
 
 private:
@@ -257,8 +270,7 @@ private:
         using AllocTraitsType = std::allocator_traits<AllocType>;
 
         AllocType alloc;
-        auto deleter = [&](ObjType* obj)
-        {
+        auto deleter = [&](ObjType* obj) {
             AllocTraitsType::destroy(alloc, obj);
             AllocTraitsType::deallocate(alloc, obj, 1);
         };
@@ -273,7 +285,8 @@ private:
     template <typename ObjType>
     static void DestroyObject(ObjType* obj) noexcept
     {
-        if (!obj) return;
+        if (!obj)
+            return;
 
         std::allocator<ObjType> alloc;
         std::allocator_traits<decltype(alloc)>::destroy(alloc, obj);
@@ -765,9 +778,9 @@ public:
         swap(m_node_type, rhs.m_node_type);
 
         NodeValue tmp;
-        std::memcpy(&tmp,              &m_node_value,     sizeof(NodeValue));
-        std::memcpy(&m_node_value,     &rhs.m_node_value, sizeof(NodeValue));
-        std::memcpy(&rhs.m_node_value, &tmp,           sizeof(NodeValue));
+        std::memcpy(&tmp, &m_node_value, sizeof(NodeValue));
+        std::memcpy(&m_node_value, &rhs.m_node_value, sizeof(NodeValue));
+        std::memcpy(&rhs.m_node_value, &tmp, sizeof(NodeValue));
     }
 
     iterator Begin()
@@ -845,17 +858,17 @@ private:
     }
 
 private:
-    NodeType  m_node_type;
+    NodeType m_node_type;
     NodeValue m_node_value;
 };
 
-using NodeSequenceType    = typename Node::sequence_type;
-using NodeMappingType     = typename Node::mapping_type;
-using NodeBooleanType     = typename Node::boolean_type;
-using NodeSignedIntType   = typename Node::signed_int_type;
+using NodeSequenceType = typename Node::sequence_type;
+using NodeMappingType = typename Node::mapping_type;
+using NodeBooleanType = typename Node::boolean_type;
+using NodeSignedIntType = typename Node::signed_int_type;
 using NodeUnsignedIntType = typename Node::unsigned_int_type;
 using NodeFloatNumberType = typename Node::float_number_type;
-using NodeStringType      = typename Node::string_type;
+using NodeStringType = typename Node::string_type;
 
 } // namespace fkyaml
 
@@ -864,8 +877,7 @@ namespace std
 
 template <>
 inline void swap<fkyaml::Node>(fkyaml::Node& lhs, fkyaml::Node& rhs) noexcept(
-    std::is_nothrow_move_constructible<fkyaml::Node>::value
-    && std::is_nothrow_move_assignable<fkyaml::Node>::value)
+    std::is_nothrow_move_constructible<fkyaml::Node>::value&& std::is_nothrow_move_assignable<fkyaml::Node>::value)
 {
     lhs.Swap(rhs);
 }

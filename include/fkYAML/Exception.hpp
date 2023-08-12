@@ -1,6 +1,6 @@
 /**
  * Exception.hpp - implementation of custom exception classes.
- * 
+ *
  * Copyright (c) 2023 fktn
  * Distributed under the MIT License (https://opensource.org/licenses/MIT)
  */
@@ -37,6 +37,6 @@ private:
     std::string m_error_msg;
 };
 
-}
+} // namespace fkyaml
 
 #endif /* FK_YAML_EXCEPTION_HPP_ */
