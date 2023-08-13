@@ -27,6 +27,23 @@ endif()
 option(FK_YAML_BuildTests "Build the unit tests when FK_YAML_BUILD_TEST is enabled or if this library is the main target." ${FK_YAML_BUILD_TEST_INIT})
 option(FK_YAML_Install    "Install CMake targets during install step." ${FK_YAML_IS_MAIN_PROJECT})
 
+if(FK_YAML_RUN_CLANG_FORMAT)
+  set(FK_YAML_RUN_CLANG_FORMAT_INIT ON)
+else()
+  if(FK_YAML_IS_MAIN_PROJECT AND NOT DEFINED )
+    set(FK_YAML_RUN_CLANG_FORMAT_INIT ON)
+  else()
+    set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
+  endif()
+endif()
+
+# disable execution of clang-format during CI.
+if(FK_YAML_CI)
+  set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
+endif()
+
+option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_FORMAT_INIT})
+
 #
 # Configurations.
 #
@@ -44,6 +61,18 @@ set(FK_YAML_CMAKE_VERSION_CONFIG_FILE  "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NA
 set(FK_YAML_CMAKE_PROJECT_CONFIG_FILE  "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Config.cmake")
 set(FK_YAML_CMAKE_PROJECT_TARGETS_FILE "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Targets.cmake")
 set(FK_YAML_PKGCONFIG_INSTALL_DIR      "${CMAKE_INSTALL_DATADIR}/pkgconfig")
+
+#
+# Run clang-format if enabled.
+#
+
+if(FK_YAML_RunClangFormat)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunClangFormat.cmake)
+  run_clang_format(
+    ${FK_YAML_TARGET_NAME}
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/fkYAML/*.hpp"
+  )
+endif()
 
 #
 # Create target and add include path.

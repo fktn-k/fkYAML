@@ -1,6 +1,6 @@
 /**
  * NodeClassTest.cpp - implementation of test functions for the Node class
- * 
+ *
  * Copyright (c) 2023 fktn
  * Distributed under the MIT License (https://opensource.org/licenses/MIT)
  */
@@ -48,8 +48,9 @@ int NodeClassTest::SequenceNodeFactoryTest()
             std::fprintf(
                 stderr,
                 "type error of the sequence node value. index=%d, expectation=%d, actual=%d\n",
-                i, static_cast<int>(fkyaml::NodeType::NULL_OBJECT), static_cast<int>(node[i].Type())
-            );
+                i,
+                static_cast<int>(fkyaml::NodeType::NULL_OBJECT),
+                static_cast<int>(node[i].Type()));
             return -1;
         }
     }
@@ -59,7 +60,8 @@ int NodeClassTest::SequenceNodeFactoryTest()
 
 int NodeClassTest::MappingNodeFactoryTest()
 {
-    fkyaml::Node node = fkyaml::Node::Mapping(fkyaml::NodeMappingType{{std::string("test"), fkyaml::Node::BooleanScalar(true)}});
+    fkyaml::Node node =
+        fkyaml::Node::Mapping(fkyaml::NodeMappingType {{std::string("test"), fkyaml::Node::BooleanScalar(true)}});
 
     if (!node.IsMapping())
     {
@@ -78,8 +80,9 @@ int NodeClassTest::MappingNodeFactoryTest()
         std::fprintf(
             stderr,
             "type error of the mapping node value. key=%s, expectation=%d, actual=%d\n",
-            "test", static_cast<int>(fkyaml::NodeType::BOOLEAN), static_cast<int>(node.Type())
-        );
+            "test",
+            static_cast<int>(fkyaml::NodeType::BOOLEAN),
+            static_cast<int>(node.Type()));
         return -1;
     }
 
@@ -88,8 +91,9 @@ int NodeClassTest::MappingNodeFactoryTest()
         std::fprintf(
             stderr,
             "value error of the mapping node value. key=%s, expectation=%s, actual=%s\n",
-            "test", "true", node["test"].ToBoolean() ? "true" : "false"
-        );
+            "test",
+            "true",
+            node["test"].ToBoolean() ? "true" : "false");
         return -1;
     }
 
@@ -108,7 +112,8 @@ int NodeClassTest::BoolNodeFactoryTest()
 
     if (node.ToBoolean() != true)
     {
-        std::fprintf(stderr, "node value error. expectation=%s, actual=%s\n", "true", node.ToBoolean() ? "true" : "false");
+        std::fprintf(
+            stderr, "node value error. expectation=%s, actual=%s\n", "true", node.ToBoolean() ? "true" : "false");
         return -1;
     }
 
@@ -146,7 +151,8 @@ int NodeClassTest::UnsignedIntNodeFactoryTest()
 
     if (node.ToUnsignedInteger() != 255ULL)
     {
-        std::fprintf(stderr, "node value error. expectation=%llu, actual=%" PRIu64 "\n", 255ULL, node.ToUnsignedInteger());
+        std::fprintf(
+            stderr, "node value error. expectation=%llu, actual=%" PRIu64 "\n", 255ULL, node.ToUnsignedInteger());
         return -1;
     }
 
@@ -200,15 +206,15 @@ int NodeClassTest::StringNodeFactoryTest()
 
 int NodeClassTest::SequenceForLoopTest()
 {
-    fkyaml::Node node = fkyaml::Node::Sequence({ fkyaml::Node::SignedIntegerScalar(0), fkyaml::Node::SignedIntegerScalar(1), fkyaml::Node::SignedIntegerScalar(2) });
+    fkyaml::Node node = fkyaml::Node::Sequence(
+        {fkyaml::Node::SignedIntegerScalar(0),
+         fkyaml::Node::SignedIntegerScalar(1),
+         fkyaml::Node::SignedIntegerScalar(2)});
 
     if (!node.IsSequence() || node.Size() != 3)
     {
         std::fprintf(
-            stderr,
-            "node initialization failure. type=%d, size=%zu\n",
-            static_cast<int>(node.Type()), node.Size()
-        );
+            stderr, "node initialization failure. type=%d, size=%zu\n", static_cast<int>(node.Type()), node.Size());
         return -1;
     }
 
@@ -220,8 +226,8 @@ int NodeClassTest::SequenceForLoopTest()
             std::fprintf(
                 stderr,
                 "value type of the target sequence node is invalid. expectation=%d, actual=%d\n",
-                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER), static_cast<int>(item.Type())
-            );
+                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER),
+                static_cast<int>(item.Type()));
             return -1;
         }
 
@@ -230,8 +236,8 @@ int NodeClassTest::SequenceForLoopTest()
             std::fprintf(
                 stderr,
                 "value of the target sequence node is invalid. expectation=%" PRId64 ", actual=%" PRId64 "\n",
-                value, item.ToSignedInteger()
-            );
+                value,
+                item.ToSignedInteger());
             return -1;
         }
 
@@ -243,15 +249,15 @@ int NodeClassTest::SequenceForLoopTest()
 
 int NodeClassTest::ConstSequenceForLoopTest()
 {
-    const fkyaml::Node node = fkyaml::Node::Sequence({ fkyaml::Node::SignedIntegerScalar(0), fkyaml::Node::SignedIntegerScalar(1), fkyaml::Node::SignedIntegerScalar(2) });
+    const fkyaml::Node node = fkyaml::Node::Sequence(
+        {fkyaml::Node::SignedIntegerScalar(0),
+         fkyaml::Node::SignedIntegerScalar(1),
+         fkyaml::Node::SignedIntegerScalar(2)});
 
     if (!node.IsSequence() || node.Size() != 3)
     {
         std::fprintf(
-            stderr,
-            "node initialization failure. type=%d, size=%zu\n",
-            static_cast<int>(node.Type()), node.Size()
-        );
+            stderr, "node initialization failure. type=%d, size=%zu\n", static_cast<int>(node.Type()), node.Size());
         return -1;
     }
 
@@ -263,8 +269,8 @@ int NodeClassTest::ConstSequenceForLoopTest()
             std::fprintf(
                 stderr,
                 "value type of the target sequence node is invalid. expectation=%d, actual=%d\n",
-                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER), static_cast<int>(item.Type())
-            );
+                static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER),
+                static_cast<int>(item.Type()));
             return -1;
         }
 
@@ -273,8 +279,8 @@ int NodeClassTest::ConstSequenceForLoopTest()
             std::fprintf(
                 stderr,
                 "value of the target sequence node is invalid. expectation=%" PRId64 ", actual=%" PRId64 "\n",
-                value, item.ToSignedInteger()
-            );
+                value,
+                item.ToSignedInteger());
             return -1;
         }
 

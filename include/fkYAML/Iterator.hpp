@@ -1,6 +1,6 @@
 /**
  * Iterator.hpp - Implementation of the YAML node iterator.
- * 
+ *
  * Copyright (c) 2023 fktn
  * Distributed under the MIT License (https://opensource.org/licenses/MIT)
  */
@@ -8,16 +8,21 @@
 #ifndef FK_YAML_ITERATOR_HPP_
 #define FK_YAML_ITERATOR_HPP_
 
-#include <iterator>
 #include <cstddef>
+#include <iterator>
 
 #include "fkYAML/Exception.hpp"
 
 namespace fkyaml
 {
 
-struct SequenceIteratorTag {};
-struct MappingIteratorTag {};
+struct SequenceIteratorTag
+{
+};
+
+struct MappingIteratorTag
+{
+};
 
 template <typename ValueType>
 struct IteratorTraits
@@ -59,42 +64,25 @@ private:
         MAPPING,
     };
 
-    union IteratorHolder
+    using NonConstValueType = typename std::remove_const<ValueType>::type;
+
+    struct IteratorHolder
     {
-        IteratorHolder()
-            : sequence_iterator()
-        {
-        }
-
-        IteratorHolder(const typename ValueType::sequence_type::iterator& itr) noexcept
-            : sequence_iterator(itr)
-        {
-        }
-
-        IteratorHolder(const typename ValueType::mapping_type::iterator& itr) noexcept
-            : mapping_iterator(itr)
-        {
-        }
-
-        ~IteratorHolder()
-        {
-        }
-
-        typename ValueType::sequence_type::iterator sequence_iterator;
-        typename ValueType::mapping_type::iterator  mapping_iterator;
+        typename NonConstValueType::sequence_type::iterator sequence_iterator {};
+        typename NonConstValueType::mapping_type::iterator mapping_iterator {};
     };
 
 public:
-    Iterator(SequenceIteratorTag, const typename ValueType::sequence_type::iterator& itr) noexcept
-        : m_inner_iterator_type(InnerIteratorType::SEQUENCE),
-          m_iterator_holder(itr)
+    Iterator(SequenceIteratorTag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept
+        : m_inner_iterator_type(InnerIteratorType::SEQUENCE)
     {
+        m_iterator_holder.sequence_iterator = itr;
     }
 
-    Iterator(MappingIteratorTag, const typename ValueType::mapping_type::iterator& itr) noexcept
-        : m_inner_iterator_type(InnerIteratorType::MAPPING),
-          m_iterator_holder(itr)
+    Iterator(MappingIteratorTag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
+        : m_inner_iterator_type(InnerIteratorType::MAPPING)
     {
+        m_iterator_holder.mapping_iterator = itr;
     }
 
     Iterator(const Iterator& other) noexcept
@@ -125,12 +113,10 @@ public:
         }
     }
 
-    ~Iterator()
-    {
-    }
+    ~Iterator() = default;
 
 public:
-    Iterator& operator=(const Iterator& other) noexcept
+    Iterator& operator=(const Iterator& other) noexcept // NOLINT(cert-oop54-cpp)
     {
         if (&other == this)
         {
@@ -209,6 +195,13 @@ public:
         return *this;
     }
 
+    Iterator operator+(difference_type i) const
+    {
+        auto result = *this;
+        result += i;
+        return result;
+    }
+
     Iterator& operator++() noexcept
     {
         switch (m_inner_iterator_type)
@@ -223,14 +216,7 @@ public:
         return *this;
     }
 
-    Iterator operator+(difference_type i) const
-    {
-        auto result = *this;
-        result += i;
-        return result;
-    }
-
-    Iterator operator++(int)& noexcept
+    Iterator operator++(int) & noexcept // NOLINT(cert-dcl21-cpp)
     {
         auto result = *this;
         ++(*this);
@@ -263,7 +249,7 @@ public:
         return *this;
     }
 
-    Iterator operator--(int)& noexcept
+    Iterator operator--(int) & noexcept // NOLINT(cert-dcl21-cpp)
     {
         auto result = *this;
         --(*this);
@@ -329,6 +315,6 @@ private:
     mutable IteratorHolder m_iterator_holder;
 };
 
-} // fkyaml
+} // namespace fkyaml
 
 #endif /* FK_YAML_ITERATOR_HPP_ */
