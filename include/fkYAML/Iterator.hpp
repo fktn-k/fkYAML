@@ -19,6 +19,7 @@ namespace fkyaml
 struct SequenceIteratorTag
 {
 };
+
 struct MappingIteratorTag
 {
 };
