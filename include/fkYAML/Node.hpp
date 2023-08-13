@@ -41,15 +41,9 @@ public:
 private:
     union NodeValue
     {
-        NodeValue()
-        {
-        }
+        NodeValue() = default;
 
-        ~NodeValue()
-        {
-        }
-
-        NodeValue(NodeType type) noexcept
+        explicit NodeValue(NodeType type)
         {
             switch (type)
             {
@@ -80,117 +74,7 @@ private:
             }
         }
 
-        NodeValue(const sequence_type& seq) noexcept
-            : sequence(CreateObject<sequence_type>(seq))
-        {
-        }
-
-        NodeValue& operator=(const sequence_type& seq) noexcept
-        {
-            sequence = CreateObject<sequence_type>(seq);
-            return *this;
-        }
-
-        NodeValue(sequence_type&& seq) noexcept
-            : sequence(CreateObject<sequence_type>(std::move(seq)))
-        {
-        }
-
-        NodeValue& operator=(sequence_type&& seq) noexcept
-        {
-            sequence = CreateObject<sequence_type>(std::move(seq));
-            return *this;
-        }
-
-        NodeValue(const mapping_type& map) noexcept
-            : mapping(CreateObject<mapping_type>(map))
-        {
-        }
-
-        NodeValue& operator=(const mapping_type& map) noexcept
-        {
-            mapping = CreateObject<mapping_type>(map);
-            return *this;
-        }
-
-        NodeValue(mapping_type&& map) noexcept
-            : mapping(CreateObject<mapping_type>(std::move(map)))
-        {
-        }
-
-        NodeValue& operator=(mapping_type&& map) noexcept
-        {
-            mapping = CreateObject<mapping_type>(std::move(map));
-            return *this;
-        }
-
-        NodeValue(const boolean_type bool_val) noexcept
-            : boolean(bool_val)
-        {
-        }
-
-        NodeValue& operator=(const boolean_type bool_val) noexcept
-        {
-            boolean = bool_val;
-            return *this;
-        }
-
-        NodeValue(const signed_int_type int_val) noexcept
-            : signed_int(int_val)
-        {
-        }
-
-        NodeValue& operator=(const signed_int_type int_val) noexcept
-        {
-            signed_int = int_val;
-            return *this;
-        }
-
-        NodeValue(const unsigned_int_type uint_val) noexcept
-            : unsigned_int(uint_val)
-        {
-        }
-
-        NodeValue& operator=(const unsigned_int_type uint_val) noexcept
-        {
-            unsigned_int = uint_val;
-            return *this;
-        }
-
-        NodeValue(const float_number_type f_val) noexcept
-            : float_val(f_val)
-        {
-        }
-
-        NodeValue& operator=(const float_number_type f_val) noexcept
-        {
-            float_val = f_val;
-            return *this;
-        }
-
-        NodeValue(const string_type& str_val) noexcept
-            : str(CreateObject<string_type>(str_val))
-        {
-        }
-
-        NodeValue& operator=(const string_type& str_val) noexcept
-        {
-            str = CreateObject<string_type>(str_val);
-            return *this;
-        }
-
-        NodeValue(string_type&& str_val) noexcept
-            : str(CreateObject<string_type>(std::move(str_val)))
-        {
-        }
-
-        NodeValue& operator=(string_type&& str_val) noexcept
-        {
-            str = CreateObject<string_type>(std::move(str_val));
-            return *this;
-        }
-
-        void Destroy(NodeType type) noexcept
+        void Destroy(NodeType type)
         {
             if (type == NodeType::SEQUENCE || type == NodeType::MAPPING)
             {
@@ -264,7 +148,7 @@ private:
 
 private:
     template <typename ObjType, typename... ArgTypes>
-    static ObjType* CreateObject(ArgTypes&&... args) noexcept
+    static ObjType* CreateObject(ArgTypes&&... args)
     {
         using AllocType = std::allocator<ObjType>;
         using AllocTraitsType = std::allocator_traits<AllocType>;
@@ -283,10 +167,12 @@ private:
     }
 
     template <typename ObjType>
-    static void DestroyObject(ObjType* obj) noexcept
+    static void DestroyObject(ObjType* obj)
     {
         if (!obj)
+        {
             return;
+        }
 
         std::allocator<ObjType> alloc;
         std::allocator_traits<decltype(alloc)>::destroy(alloc, obj);
@@ -300,22 +186,22 @@ public:
     {
     }
 
-    Node(const NodeType type) noexcept
+    explicit Node(const NodeType type)
         : m_node_type(type),
           m_node_value(type)
     {
     }
 
-    Node(const Node& rhs)
+    Node(const Node& rhs) 
         : m_node_type(rhs.m_node_type)
     {
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
-            m_node_value = *(rhs.m_node_value.sequence);
+            m_node_value.sequence = CreateObject<sequence_type>(*(rhs.m_node_value.sequence));
             break;
         case NodeType::MAPPING:
-            m_node_value = *(rhs.m_node_value.mapping);
+            m_node_value.mapping = CreateObject<mapping_type>(*(rhs.m_node_value.mapping));
             break;
         case NodeType::NULL_OBJECT:
             m_node_value.mapping = nullptr;
@@ -338,7 +224,7 @@ public:
         }
     }
 
-    Node(Node&& rhs)
+    Node(Node&& rhs) noexcept
         : m_node_type(rhs.m_node_type)
     {
         switch (m_node_type)
@@ -380,15 +266,16 @@ public:
         rhs.m_node_value.mapping = nullptr;
     }
 
-    ~Node() noexcept
+    ~Node() noexcept // NOLINT(bugprone-exception-escape)
     {
-        Destroy();
+        m_node_value.Destroy(m_node_type);
+        m_node_type = NodeType::NULL_OBJECT;
     }
 
 public:
     // factory methods
 
-    static Node Sequence(const sequence_type& sequence) noexcept
+    static Node Sequence(const sequence_type& sequence)
     {
         Node node;
         node.m_node_type = NodeType::SEQUENCE;
@@ -396,7 +283,7 @@ public:
         return node;
     }
 
-    static Node Sequence(sequence_type&& sequence) noexcept
+    static Node Sequence(sequence_type&& sequence)
     {
         Node node;
         node.m_node_type = NodeType::SEQUENCE;
@@ -404,7 +291,7 @@ public:
         return node;
     }
 
-    static Node Mapping(const mapping_type& mapping) noexcept
+    static Node Mapping(const mapping_type& mapping)
     {
         Node node;
         node.m_node_type = NodeType::MAPPING;
@@ -412,7 +299,7 @@ public:
         return node;
     }
 
-    static Node Mapping(mapping_type&& mapping) noexcept
+    static Node Mapping(mapping_type&& mapping)
     {
         Node node;
         node.m_node_type = NodeType::MAPPING;
@@ -452,7 +339,7 @@ public:
         return node;
     }
 
-    static Node StringScalar(const string_type& str) noexcept
+    static Node StringScalar(const string_type& str)
     {
         Node node;
         node.m_node_type = NodeType::STRING;
@@ -460,7 +347,7 @@ public:
         return node;
     }
 
-    static Node StringScalar(string_type&& str) noexcept
+    static Node StringScalar(string_type&& str)
     {
         Node node;
         node.m_node_type = NodeType::STRING;
@@ -469,19 +356,19 @@ public:
     }
 
 public:
-    Node& operator=(const Node& rhs)
+    Node& operator=(const Node& rhs) noexcept
     {
         Node(rhs).Swap(*this);
         return *this;
     }
 
-    Node& operator=(Node&& rhs)
+    Node& operator=(Node&& rhs) noexcept
     {
         Node(std::move(rhs)).Swap(*this);
         return *this;
     }
 
-    Node& operator[](std::size_t index)
+    Node& operator[](std::size_t index) // NOLINT(readability-make-member-function-const)
     {
         if (!IsSequence())
         {
@@ -501,7 +388,7 @@ public:
         return m_node_value.sequence->operator[](index);
     }
 
-    Node& operator[](const std::string& key)
+    Node& operator[](const std::string& key) // NOLINT(readability-make-member-function-const)
     {
         if (!IsMapping())
         {
@@ -511,7 +398,7 @@ public:
         return m_node_value.mapping->operator[](key);
     }
 
-    Node& operator[](std::string&& key)
+    Node& operator[](std::string&& key) // NOLINT(readability-make-member-function-const)
     {
         if (!IsMapping())
         {
@@ -632,7 +519,7 @@ public:
         }
     }
 
-    sequence_type& ToSequence()
+    sequence_type& ToSequence() // NOLINT(readability-make-member-function-const)
     {
         if (!IsSequence())
         {
@@ -652,7 +539,7 @@ public:
         return *(m_node_value.sequence);
     }
 
-    mapping_type& ToMapping()
+    mapping_type& ToMapping() // NOLINT(readability-make-member-function-const)
     {
         if (!IsMapping())
         {
@@ -752,7 +639,7 @@ public:
         return m_node_value.float_val;
     }
 
-    string_type& ToString()
+    string_type& ToString() // NOLINT(readability-make-member-function-const)
     {
         if (!IsString())
         {
@@ -777,7 +664,7 @@ public:
         using std::swap;
         swap(m_node_type, rhs.m_node_type);
 
-        NodeValue tmp;
+        NodeValue tmp{};
         std::memcpy(&tmp, &m_node_value, sizeof(NodeValue));
         std::memcpy(&m_node_value, &rhs.m_node_value, sizeof(NodeValue));
         std::memcpy(&rhs.m_node_value, &tmp, sizeof(NodeValue));
@@ -788,15 +675,15 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
-            return iterator(fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin());
+            return { fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin() };
         case NodeType::MAPPING:
-            return iterator(fkyaml::MappingIteratorTag(), m_node_value.mapping->begin());
+            return { fkyaml::MappingIteratorTag(), m_node_value.mapping->begin() };
         default:
             throw Exception("The target node is neither of sequence nor mapping types.");
         }
     }
 
-    iterator begin()
+    iterator begin() // NOLINT(readability-identifier-naming)
     {
         return Begin();
     }
@@ -806,12 +693,17 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
-            return const_iterator(fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin());
+            return { fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin() };
         case NodeType::MAPPING:
-            return const_iterator(fkyaml::MappingIteratorTag(), m_node_value.mapping->begin());
+            return { fkyaml::MappingIteratorTag(), m_node_value.mapping->begin() };
         default:
             throw Exception("The target node is neither of sequence nor mapping types.");
         }
+    }
+
+    const_iterator begin() const // NOLINT(readability-identifier-naming)
+    {
+        return Begin();
     }
 
     iterator End()
@@ -819,15 +711,15 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
-            return iterator(fkyaml::SequenceIteratorTag(), m_node_value.sequence->end());
+            return { fkyaml::SequenceIteratorTag(), m_node_value.sequence->end() };
         case NodeType::MAPPING:
-            return iterator(fkyaml::MappingIteratorTag(), m_node_value.mapping->end());
+            return { fkyaml::MappingIteratorTag(), m_node_value.mapping->end() };
         default:
             throw Exception("The target node is neither of sequence nor mapping types.");
         }
     }
 
-    iterator end()
+    iterator end() // NOLINT(readability-identifier-naming)
     {
         return End();
     }
@@ -837,29 +729,22 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
-            return const_iterator(fkyaml::SequenceIteratorTag(), m_node_value.sequence->end());
+            return { fkyaml::SequenceIteratorTag(), m_node_value.sequence->end() };
         case NodeType::MAPPING:
-            return const_iterator(fkyaml::MappingIteratorTag(), m_node_value.mapping->end());
+            return { fkyaml::MappingIteratorTag(), m_node_value.mapping->end() };
         default:
             throw Exception("The target node is neither of sequence nor mapping types.");
         }
     }
 
-    const_iterator end() const
+    const_iterator end() const // NOLINT(readability-identifier-naming)
     {
         return end();
     }
 
 private:
-    void Destroy() noexcept
-    {
-        m_node_value.Destroy(m_node_type);
-        m_node_type = NodeType::NULL_OBJECT;
-    }
-
-private:
     NodeType m_node_type;
-    NodeValue m_node_value;
+    NodeValue m_node_value{};
 };
 
 using NodeSequenceType = typename Node::sequence_type;
@@ -876,8 +761,7 @@ namespace std
 {
 
 template <>
-inline void swap<fkyaml::Node>(fkyaml::Node& lhs, fkyaml::Node& rhs) noexcept(
-    std::is_nothrow_move_constructible<fkyaml::Node>::value&& std::is_nothrow_move_assignable<fkyaml::Node>::value)
+inline void swap<fkyaml::Node>(fkyaml::Node& lhs, fkyaml::Node& rhs) noexcept(noexcept(lhs.Swap(rhs)))
 {
     lhs.Swap(rhs);
 }

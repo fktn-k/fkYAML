@@ -1,0 +1,35 @@
+---
+Checks: '*,
+         -altera-struct-pack-align,
+         -altera-unroll-loops,
+         -cppcoreguidelines-pro-type-union-access,
+         -fuchsia-overloaded-operator,
+         -llvm-header-guard,
+         -llvmlibc-*,
+         -misc-no-recursion,
+         -modernize-use-trailing-return-type,
+         -readability-identifier-length,
+         -readability-redundant-access-specifiers'
+WarningsAsErrors: '*'
+HeaderFilterRegex: ''
+CheckOptions:
+  - { key: hicpp-special-member-functions.AllowSoleDefaultDtor, value: 1 }
+  - { key: modernize-use-nullptr.NullMacros, value: 'NULL' }
+
+  - { key: readability-identifier-naming.ClassCase, value: CamelCase }
+  - { key: readability-identifier-naming.StructCase, value: CamelCase }
+  - { key: readability-identifier-naming.UnionCase, value: CamelCase }
+  - { key: readability-identifier-naming.EnumCase, value: CamelCase }
+  - { key: readability-identifier-naming.FunctionCase, value: CamelCase }
+  - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
+  - { key: readability-identifier-naming.ClassMemberPrefix, value: s_ }
+  - { key: readability-identifier-naming.PrivateMemberCase, value: lower_case }
+  - { key: readability-identifier-naming.PrivateMemberPrefix, value: m_ }
+  - { key: readability-identifier-naming.VariableCase, value: lower_case }
+  - { key: readability-identifier-naming.ParameterCase, value: lower_case }
+  - { key: readability-identifier-naming.ConstantParameterCase, value: lower_case }
+  - { key: readability-identifier-naming.ConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.FunctionCase, value: CamelCase }
+  - { key: readability-identifier-naming.TemplateParameter, value: CamelCase }
+  - { key: readability-identifier-naming.Namespace, value: lower_case }
+...

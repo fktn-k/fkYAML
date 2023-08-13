@@ -17,12 +17,9 @@ namespace fkyaml
 class Exception : public std::exception
 {
 public:
-    Exception()
-        : m_error_msg("")
-    {
-    }
+    Exception() = default;
 
-    Exception(const char* msg)
+    explicit Exception(const char* msg)
         : m_error_msg(msg)
     {
     }
