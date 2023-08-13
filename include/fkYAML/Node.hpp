@@ -273,8 +273,6 @@ public:
     }
 
 public:
-    // factory methods
-
     static Node Sequence(const sequence_type& sequence)
     {
         Node node;
