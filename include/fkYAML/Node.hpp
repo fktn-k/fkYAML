@@ -21,8 +21,7 @@
 #include "fkYAML/Iterator.hpp"
 #include "fkYAML/NodeType.hpp"
 
-namespace fkyaml
-{
+namespace fkyaml {
 
 class Node
 {
