@@ -81,7 +81,7 @@ public:
     Iterator(MappingIteratorTag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
         : m_inner_iterator_type(InnerIteratorType::MAPPING)
     {
-          m_iterator_holder.mapping_iterator = itr;
+        m_iterator_holder.mapping_iterator = itr;
     }
 
     Iterator(const Iterator& other) noexcept
