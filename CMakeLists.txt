@@ -27,15 +27,21 @@ endif()
 option(FK_YAML_BuildTests "Build the unit tests when FK_YAML_BUILD_TEST is enabled or if this library is the main target." ${FK_YAML_BUILD_TEST_INIT})
 option(FK_YAML_Install    "Install CMake targets during install step." ${FK_YAML_IS_MAIN_PROJECT})
 
-if (FK_YAML_RUN_CLANG_FORMAT)
+if(FK_YAML_RUN_CLANG_FORMAT)
   set(FK_YAML_RUN_CLANG_FORMAT_INIT ON)
 else()
-  if(FK_YAML_IS_MAIN_PROJECT)
+  if(FK_YAML_IS_MAIN_PROJECT AND NOT DEFINED )
     set(FK_YAML_RUN_CLANG_FORMAT_INIT ON)
   else()
     set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
   endif()
 endif()
+
+# disable execution of clang-format during CI.
+if(FK_YAML_CI)
+  set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
+endif()
+
 option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_FORMAT_INIT})
 
 #

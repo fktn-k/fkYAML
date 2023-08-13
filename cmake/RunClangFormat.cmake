@@ -8,6 +8,7 @@ function(run_clang_format target pattern)
     add_custom_target(
       ${target_for_clang_format}
       ALL
+      COMMAND "${CLANG_FORMAT_EXE}" --version
       COMMAND "${CLANG_FORMAT_EXE}" ${pattern} -i -style=file
     )
   else()
