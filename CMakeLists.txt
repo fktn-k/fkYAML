@@ -27,6 +27,13 @@ endif()
 option(FK_YAML_BuildTests "Build the unit tests when FK_YAML_BUILD_TEST is enabled or if this library is the main target." ${FK_YAML_BUILD_TEST_INIT})
 option(FK_YAML_Install    "Install CMake targets during install step." ${FK_YAML_IS_MAIN_PROJECT})
 
+if(FK_YAML_RUN_DOXYGEN)
+  set(FK_YAML_RUN_DOXYGEN_INIT ON)
+else()
+  set(FK_YAML_RUN_DOXYGEN_INIT OFF)
+endif()
+option(FK_YAML_RunDoxygen "Generate API documentation with doxygen" ${FK_YAML_RUN_DOXYGEN_INIT})
+
 if(FK_YAML_RUN_CLANG_FORMAT)
   set(FK_YAML_RUN_CLANG_FORMAT_INIT ON)
 else()
@@ -51,7 +58,8 @@ option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is
 include(GNUInstallDirs)
 
 set(FK_YAML_TARGET_NAME                ${PROJECT_NAME})
-set(FK_YAML_CONFIG_INSTALL_DIR         "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE INTERNAL "")
+set(FK_YAML_VERSION_STRING             "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+set(FK_YAML_CONFIG_INSTALL_DIR         "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE INTERNAL "Install directory path for config files.")
 set(FK_YAML_INCLUDE_BUILD_DIR          "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 set(FK_YAML_INCLUDE_INSTALL_DIR        "${CMAKE_INSTALL_INCLUDEDIR}")
 set(FK_YAML_TARGETS_EXPORT_NAME        "${PROJECT_NAME}Targets")
@@ -105,6 +113,14 @@ if(FK_YAML_BuildTests)
   include(CTest)
   enable_testing()
   add_subdirectory(test)
+endif()
+
+#
+# Generate API documentation if target == doxygen.
+#
+if(FK_YAML_RunDoxygen)
+  set(FK_YAML_DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
+  add_subdirectory(docs)
 endif()
 
 #
