@@ -11,29 +11,38 @@ else()
 endif()
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(fkYAMLUnitTest
+set(TEST_TARGET "fkYAMLUnitTest")
+
+add_executable(${TEST_TARGET}
   LexicalAnalyzerTest.cpp
   NodeClassTest.cpp
   main.cpp
 )
 
-target_include_directories(fkYAMLUnitTest PRIVATE
+target_include_directories(${TEST_TARGET} PRIVATE
   ${PROJECT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_test(NAME NodeClassTest_DefaultCtorTest                COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0000)
-add_test(NAME NodeClassTest_SequenceNodeFactoryTest        COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0001)
-add_test(NAME NodeClassTest_MappingNodeFactoryTest         COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0002)
-add_test(NAME NodeClassTest_BoolNodeFactoryTest            COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0003)
-add_test(NAME NodeClassTest_SignedIntegerNodeFactoryTest   COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0004)
-add_test(NAME NodeClassTest_UnsignedIntegerNodeFactoryTest COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0005)
-add_test(NAME NodeClassTest_FloatNumberNodeFactoryTest     COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0006)
-add_test(NAME NodeClassTest_StringNodeFactoryTest          COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0007)
-add_test(NAME NodeClassTest_SequenceForLoopTest            COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0008)
-add_test(NAME NodeClassTest_ConstSequenceForLoopTest       COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0009)
+function(add_unit_test CLASS_NAME FUNC_NAME TARGET_NAME ID)
+  add_test(NAME ${CLASS_NAME}_${FUNC_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}> ${ID})
+endfunction()
 
-add_test(NAME LexicalAnalyzerTest_ScanDecimalSignedIntegerTest   COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0100)
-add_test(NAME LexicalAnalyzerTest_ScanUnsignedDecimalIntegerTest COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0101)
-add_test(NAME LexicalAnalyzerTest_ScanSignedFloatNumberTest      COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0102)
-add_test(NAME LexicalAnalyzerTest_ScanUnsignedFloatNumberTest    COMMAND $<TARGET_FILE:fkYAMLUnitTest> 0x0103)
+add_unit_test(NodeClassTest DefaultCtorTest                ${TEST_TARGET} 0x0000)
+add_unit_test(NodeClassTest SequenceNodeFactoryTest        ${TEST_TARGET} 0x0001)
+add_unit_test(NodeClassTest MappingNodeFactoryTest         ${TEST_TARGET} 0x0002)
+add_unit_test(NodeClassTest BoolNodeFactoryTest            ${TEST_TARGET} 0x0003)
+add_unit_test(NodeClassTest SignedIntegerNodeFactoryTest   ${TEST_TARGET} 0x0004)
+add_unit_test(NodeClassTest UnsignedIntegerNodeFactoryTest ${TEST_TARGET} 0x0005)
+add_unit_test(NodeClassTest FloatNumberNodeFactoryTest     ${TEST_TARGET} 0x0006)
+add_unit_test(NodeClassTest StringNodeFactoryTest          ${TEST_TARGET} 0x0007)
+add_unit_test(NodeClassTest SequenceForLoopTest            ${TEST_TARGET} 0x0008)
+add_unit_test(NodeClassTest ConstSequenceForLoopTest       ${TEST_TARGET} 0x0009)
+
+add_unit_test(LexicalAnalyzerTest ScanDecimalSignedIntegerTest    ${TEST_TARGET} 0x0100)
+add_unit_test(LexicalAnalyzerTest ScanUnsignedDecimalIntegerTest  ${TEST_TARGET} 0x0101)
+add_unit_test(LexicalAnalyzerTest ScanOctalIntegerTest            ${TEST_TARGET} 0x0102)
+add_unit_test(LexicalAnalyzerTest ScanHexadecimalIntegerTest      ${TEST_TARGET} 0x0103)
+add_unit_test(LexicalAnalyzerTest ScanSignedFloatNumberTest       ${TEST_TARGET} 0x0104)
+add_unit_test(LexicalAnalyzerTest ScanUnsignedFloatNumberTest     ${TEST_TARGET} 0x0105)
+add_unit_test(LexicalAnalyzerTest ScanFloatNumberWithExponentTest ${TEST_TARGET} 0x0106)

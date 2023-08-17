@@ -29,8 +29,11 @@ static const std::unordered_map<uint32_t, int (*)()> TEST_CASE_MAP {
 
     {0x0100, LexicalAnalyzerTest::ScanSignedDecimalIntegerTest},
     {0x0101, LexicalAnalyzerTest::ScanUnsignedDecimalIntegerTest},
-    {0x0102, LexicalAnalyzerTest::ScanSignedFloatNumberTest},
-    {0x0103, LexicalAnalyzerTest::ScanUnsignedFloatNumberTest},
+    {0x0102, LexicalAnalyzerTest::ScanOctalIntegerTest},
+    {0x0103, LexicalAnalyzerTest::ScanHexadecimalIntegerTest},
+    {0x0104, LexicalAnalyzerTest::ScanSignedFloatNumberTest},
+    {0x0105, LexicalAnalyzerTest::ScanUnsignedFloatNumberTest},
+    {0x0106, LexicalAnalyzerTest::ScanFloatNumberWithExponentTest},
 };
 
 int main(int argc, char* argv[])

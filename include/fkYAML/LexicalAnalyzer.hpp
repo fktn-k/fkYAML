@@ -369,9 +369,8 @@ private:
         {
             m_value_buffer.push_back(next);
             ScanOctalNumber();
-            return LexicalTokenType::UNSIGNED_INT_VALUE;
         }
-        throw Exception("Invalid character found in a token with the octal number prefix(0o).");
+        return LexicalTokenType::UNSIGNED_INT_VALUE;
     }
 
     /**
@@ -387,9 +386,8 @@ private:
         {
             m_value_buffer.push_back(next);
             ScanHexadecimalNumber();
-            return LexicalTokenType::UNSIGNED_INT_VALUE;
         }
-        throw Exception("Invalid character found in a token with the hexadecimal number prefix(0x).");
+        return LexicalTokenType::UNSIGNED_INT_VALUE;
     }
 
     /**

@@ -13,8 +13,11 @@ class LexicalAnalyzerTest
 public:
     static int ScanSignedDecimalIntegerTest();
     static int ScanUnsignedDecimalIntegerTest();
+    static int ScanOctalIntegerTest();
+    static int ScanHexadecimalIntegerTest();
     static int ScanSignedFloatNumberTest();
     static int ScanUnsignedFloatNumberTest();
+    static int ScanFloatNumberWithExponentTest();
 };
 
 #endif /* FK_YAML_TEST_LEXICAL_ANALYZER_TEST_HPP_ */
