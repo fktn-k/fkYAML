@@ -12,9 +12,10 @@
 #include <cstdlib>
 #include <unordered_map>
 
+#include "LexicalAnalyzerTest.hpp"
 #include "NodeClassTest.hpp"
 
-static const std::unordered_map<uint32_t, int (*)()> NODE_TEST_CASE_MAP {
+static const std::unordered_map<uint32_t, int (*)()> TEST_CASE_MAP {
     {0x0000, NodeClassTest::DefaultCtorTest},
     {0x0001, NodeClassTest::SequenceNodeFactoryTest},
     {0x0002, NodeClassTest::MappingNodeFactoryTest},
@@ -25,6 +26,11 @@ static const std::unordered_map<uint32_t, int (*)()> NODE_TEST_CASE_MAP {
     {0x0007, NodeClassTest::StringNodeFactoryTest},
     {0x0008, NodeClassTest::SequenceForLoopTest},
     {0x0009, NodeClassTest::ConstSequenceForLoopTest},
+
+    {0x0100, LexicalAnalyzerTest::ScanSignedDecimalIntegerTest},
+    {0x0101, LexicalAnalyzerTest::ScanUnsignedDecimalIntegerTest},
+    {0x0102, LexicalAnalyzerTest::ScanSignedFloatNumberTest},
+    {0x0103, LexicalAnalyzerTest::ScanUnsignedFloatNumberTest},
 };
 
 int main(int argc, char* argv[])
@@ -44,8 +50,8 @@ int main(int argc, char* argv[])
     }
 
     int ret = 0;
-    auto itr = NODE_TEST_CASE_MAP.find(test_id);
-    if (itr != NODE_TEST_CASE_MAP.end())
+    auto itr = TEST_CASE_MAP.find(test_id);
+    if (itr != TEST_CASE_MAP.end())
     {
         ret = (*(itr->second))();
     }
