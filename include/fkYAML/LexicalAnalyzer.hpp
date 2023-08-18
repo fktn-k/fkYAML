@@ -159,7 +159,7 @@ public:
             std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
             if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
             {
-                m_value_buffer += tmp_str;
+                m_value_buffer = tmp_str;
                 for (int i = 0; i < 4; ++i)
                 {
                     GetNextChar();
@@ -168,7 +168,7 @@ public:
             }
             else if (tmp_str == ".nan" || tmp_str == ".NaN" || tmp_str == ".NAN")
             {
-                m_value_buffer += tmp_str;
+                m_value_buffer = tmp_str;
                 for (int i = 0; i < 4; ++i)
                 {
                     GetNextChar();
@@ -176,6 +176,38 @@ public:
                 return LexicalTokenType::FLOAT_NUMBER_VALUE;
             }
             throw Exception("Invalid character found after a dot(.).");
+        }
+        case 'F':
+        case 'f': {
+            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 5);
+            // YAML specifies that only these words represent the boolean value `false`.
+            // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            if (tmp_str == "false" || tmp_str == "False" || tmp_str == "FALSE")
+            {
+                m_value_buffer = tmp_str;
+                for (int i = 0; i < 5; ++i)
+                {
+                    GetNextChar();
+                }
+                return LexicalTokenType::BOOLEAN_VALUE;
+            }
+            return LexicalTokenType::STRING_VALUE;
+        }
+        case 'T':
+        case 't': {
+            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+            // YAML specifies that only these words represent the boolean value `true`.
+            // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            if (tmp_str == "true" || tmp_str == "True" || tmp_str == "TRUE")
+            {
+                m_value_buffer = tmp_str;
+                for (int i = 0; i < 4; ++i)
+                {
+                    GetNextChar();
+                }
+                return LexicalTokenType::BOOLEAN_VALUE;
+            }
+            return LexicalTokenType::STRING_VALUE;
         }
         default:
             throw Exception("Unsupported lexical token is found.");
@@ -189,11 +221,11 @@ public:
             throw Exception("Value storage is empty.");
         }
 
-        if (m_value_buffer == "true")
+        if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
         {
             return true;
         }
-        else if (m_value_buffer == "false")
+        else if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
         {
             return false;
         }

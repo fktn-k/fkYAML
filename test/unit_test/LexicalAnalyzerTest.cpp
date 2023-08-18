@@ -5,6 +5,276 @@
 
 #include "fkYAML/LexicalAnalyzer.hpp"
 
+int LexicalAnalyzerTest::ScanTrueBooleanTest1()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("true");
+
+    fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
+    try
+    {
+        ret = lexer.GetNextToken();
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "fkYAML internal error: %s\n", e.what());
+        return -1;
+    }
+    catch (const std::exception& e)
+    {
+        std::fprintf(stderr, "unexpected error: %s\n", e.what());
+        return -1;
+    }
+
+    if (ret != fkyaml::LexicalTokenType::BOOLEAN_VALUE)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scan result for signed integers. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::LexicalTokenType::BOOLEAN_VALUE),
+            static_cast<int>(ret));
+        return -1;
+    }
+
+    bool scanned_value = lexer.GetBoolean();
+    if (scanned_value != true)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scanned value. expectated=%s, actual=%s\n",
+            "true",
+            scanned_value ? "true": "false");
+        return -1;
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanTrueBooleanTest2()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("True");
+
+    fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
+    try
+    {
+        ret = lexer.GetNextToken();
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "fkYAML internal error: %s\n", e.what());
+        return -1;
+    }
+    catch (const std::exception& e)
+    {
+        std::fprintf(stderr, "unexpected error: %s\n", e.what());
+        return -1;
+    }
+
+    if (ret != fkyaml::LexicalTokenType::BOOLEAN_VALUE)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scan result for signed integers. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::LexicalTokenType::BOOLEAN_VALUE),
+            static_cast<int>(ret));
+        return -1;
+    }
+
+    bool scanned_value = lexer.GetBoolean();
+    if (scanned_value != true)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scanned value. expectated=%s, actual=%s\n",
+            "true",
+            scanned_value ? "true": "false");
+        return -1;
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanTrueBooleanTest3()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("TRUE");
+
+    fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
+    try
+    {
+        ret = lexer.GetNextToken();
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "fkYAML internal error: %s\n", e.what());
+        return -1;
+    }
+    catch (const std::exception& e)
+    {
+        std::fprintf(stderr, "unexpected error: %s\n", e.what());
+        return -1;
+    }
+
+    if (ret != fkyaml::LexicalTokenType::BOOLEAN_VALUE)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scan result for signed integers. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::LexicalTokenType::BOOLEAN_VALUE),
+            static_cast<int>(ret));
+        return -1;
+    }
+
+    bool scanned_value = lexer.GetBoolean();
+    if (scanned_value != true)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scanned value. expectated=%s, actual=%s\n",
+            "true",
+            scanned_value ? "true": "false");
+        return -1;
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanFalseBooleanTest1()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("false");
+
+    fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
+    try
+    {
+        ret = lexer.GetNextToken();
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "fkYAML internal error: %s\n", e.what());
+        return -1;
+    }
+    catch (const std::exception& e)
+    {
+        std::fprintf(stderr, "unexpected error: %s\n", e.what());
+        return -1;
+    }
+
+    if (ret != fkyaml::LexicalTokenType::BOOLEAN_VALUE)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scan result for signed integers. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::LexicalTokenType::BOOLEAN_VALUE),
+            static_cast<int>(ret));
+        return -1;
+    }
+
+    bool scanned_value = lexer.GetBoolean();
+    if (scanned_value != false)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scanned value. expectated=%s, actual=%s\n",
+            "false",
+            scanned_value ? "true": "false");
+        return -1;
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanFalseBooleanTest2()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("False");
+
+    fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
+    try
+    {
+        ret = lexer.GetNextToken();
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "fkYAML internal error: %s\n", e.what());
+        return -1;
+    }
+    catch (const std::exception& e)
+    {
+        std::fprintf(stderr, "unexpected error: %s\n", e.what());
+        return -1;
+    }
+
+    if (ret != fkyaml::LexicalTokenType::BOOLEAN_VALUE)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scan result for signed integers. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::LexicalTokenType::BOOLEAN_VALUE),
+            static_cast<int>(ret));
+        return -1;
+    }
+
+    bool scanned_value = lexer.GetBoolean();
+    if (scanned_value != false)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scanned value. expectated=%s, actual=%s\n",
+            "false",
+            scanned_value ? "true": "false");
+        return -1;
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanFalseBooleanTest3()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("FALSE");
+
+    fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
+    try
+    {
+        ret = lexer.GetNextToken();
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "fkYAML internal error: %s\n", e.what());
+        return -1;
+    }
+    catch (const std::exception& e)
+    {
+        std::fprintf(stderr, "unexpected error: %s\n", e.what());
+        return -1;
+    }
+
+    if (ret != fkyaml::LexicalTokenType::BOOLEAN_VALUE)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scan result for signed integers. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::LexicalTokenType::BOOLEAN_VALUE),
+            static_cast<int>(ret));
+        return -1;
+    }
+
+    bool scanned_value = lexer.GetBoolean();
+    if (scanned_value != false)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scanned value. expectated=%s, actual=%s\n",
+            "false",
+            scanned_value ? "true": "false");
+        return -1;
+    }
+
+    return 0;
+}
+
 int LexicalAnalyzerTest::ScanSignedDecimalIntegerTest()
 {
     fkyaml::LexicalAnalyzer lexer;
