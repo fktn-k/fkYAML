@@ -216,8 +216,10 @@ public:
             throw Exception("Failed to convert a string to a signed integer.");
         }
 
-        if ((tmp_val == LLONG_MIN || tmp_val == LLONG_MAX) && errno == ERANGE)
+        if ((tmp_val == std::numeric_limits<long long>::min() || tmp_val == std::numeric_limits<long long>::max()) &&
+            errno == ERANGE)
         {
+            ;
             throw Exception("Range error on converting from a string to a signed integer.");
         }
 
@@ -244,7 +246,7 @@ public:
             throw Exception("Failed to convert a string to an unsigned integer.");
         }
 
-        if (tmp_val == ULLONG_MAX && errno == ERANGE)
+        if (tmp_val == std::numeric_limits<unsigned long long>::max() && errno == ERANGE)
         {
             throw Exception("Range error on converting from a string to an unsigned integer.");
         }
