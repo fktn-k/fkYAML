@@ -235,8 +235,8 @@ public:
 
     /**
      * @brief Convert from string to null and get the converted value.
-     * 
-     * @return std::nullptr_t A converted null value if the source string is one of the followings: "null", "Null", "NULL", "~".
+     *
+     * @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
      */
     std::nullptr_t GetNull() const
     {
@@ -255,7 +255,7 @@ public:
 
     /**
      * @brief Convert from string to boolean and get the converted value.
-     * 
+     *
      * @return true  A string token is one of the followings: "true", "True", "TRUE".
      * @return false A string token is one of the followings: "false", "False", "FALSE".
      */
@@ -280,7 +280,7 @@ public:
 
     /**
      * @brief Convert from string to signed integer and get the converted value.
-     * 
+     *
      * @return int64_t A signed integer value converted from the source string.
      */
     int64_t GetSignedInt() const
@@ -315,7 +315,7 @@ public:
 
     /**
      * @brief Convert from string to unsigned integer and get the converted value.
-     * 
+     *
      * @return uint64_t An unsigned integer value converted from the source string.
      */
     uint64_t GetUnsignedInt() const
@@ -348,7 +348,7 @@ public:
 
     /**
      * @brief Convert from string to float number and get the converted value.
-     * 
+     *
      * @return double A float number value converted from the source string.
      */
     double GetFloatNumber() const
