@@ -53,6 +53,8 @@ static const std::unordered_map<uint32_t, int (*)()> TEST_CASE_MAP {
     {0x0117, LexicalAnalyzerTest::ScanNaNTest1},
     {0x0118, LexicalAnalyzerTest::ScanNaNTest2},
     {0x0119, LexicalAnalyzerTest::ScanNaNTest3},
+    {0x011A, LexicalAnalyzerTest::ScanDoubleQuotedEmptyString},
+    {0x011B, LexicalAnalyzerTest::ScanSingleQuotedEmptyString},
 };
 
 int main(int argc, char* argv[])

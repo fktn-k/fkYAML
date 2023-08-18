@@ -37,6 +37,9 @@ public:
     static int ScanNaNTest1();
     static int ScanNaNTest2();
     static int ScanNaNTest3();
+    static int ScanDoubleQuotedEmptyString();
+    static int ScanSingleQuotedEmptyString();
+    
 };
 
 #endif /* FK_YAML_TEST_LEXICAL_ANALYZER_TEST_HPP_ */

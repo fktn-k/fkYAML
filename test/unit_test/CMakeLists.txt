@@ -67,3 +67,5 @@ add_unit_test(LexicalAnalyzerTest ScanNegativeInfinityTest3       ${TEST_TARGET}
 add_unit_test(LexicalAnalyzerTest ScanNaNTest1                    ${TEST_TARGET} 0x0117)
 add_unit_test(LexicalAnalyzerTest ScanNaNTest2                    ${TEST_TARGET} 0x0118)
 add_unit_test(LexicalAnalyzerTest ScanNaNTest3                    ${TEST_TARGET} 0x0119)
+add_unit_test(LexicalAnalyzerTest ScanDoubleQuotedEmptyString     ${TEST_TARGET} 0x011A)
+add_unit_test(LexicalAnalyzerTest ScanSingleQuotedEmptyString     ${TEST_TARGET} 0x011B)

@@ -1110,3 +1110,85 @@ int LexicalAnalyzerTest::ScanNaNTest3()
 
     return 0;
 }
+
+int LexicalAnalyzerTest::ScanDoubleQuotedEmptyString()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("\"\"");
+
+    fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
+    try
+    {
+        ret = lexer.GetNextToken();
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "fkYAML internal error: %s\n", e.what());
+        return -1;
+    }
+    catch (const std::exception& e)
+    {
+        std::fprintf(stderr, "unexpected error: %s\n", e.what());
+        return -1;
+    }
+
+    if (ret != fkyaml::LexicalTokenType::STRING_VALUE)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scan result for signed integers. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::LexicalTokenType::STRING_VALUE),
+            static_cast<int>(ret));
+        return -1;
+    }
+
+    std::string scanned_value = lexer.GetString();
+    if (!scanned_value.empty())
+    {
+        std::fprintf(stderr, "Invalid scanned value. expectated=\"%s\", actual=\"%s\"\n", "", scanned_value.c_str());
+        return -1;
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanSingleQuotedEmptyString()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("\'\'");
+
+    fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
+    try
+    {
+        ret = lexer.GetNextToken();
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "fkYAML internal error: %s\n", e.what());
+        return -1;
+    }
+    catch (const std::exception& e)
+    {
+        std::fprintf(stderr, "unexpected error: %s\n", e.what());
+        return -1;
+    }
+
+    if (ret != fkyaml::LexicalTokenType::STRING_VALUE)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid scan result for signed integers. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::LexicalTokenType::STRING_VALUE),
+            static_cast<int>(ret));
+        return -1;
+    }
+
+    std::string scanned_value = lexer.GetString();
+    if (!scanned_value.empty())
+    {
+        std::fprintf(stderr, "Invalid scanned value. expectated=\"%s\", actual=\"%s\"\n", "", scanned_value.c_str());
+        return -1;
+    }
+
+    return 0;
+}

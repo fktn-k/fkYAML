@@ -142,6 +142,13 @@ public:
             return LexicalTokenType::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
             return LexicalTokenType::MAPPING_FLOW_END;
+        case '@':
+            throw Exception("Any token cannot start with at(@). It is a reserved indicator for YAML.");
+        case '`':
+            throw Exception("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
+        case '\"':
+        case '\'':
+            return ScanString();
         case '~':
             m_value_buffer = current;
             return LexicalTokenType::NULL_VALUE;
@@ -177,7 +184,7 @@ public:
                 }
                 return LexicalTokenType::FLOAT_NUMBER_VALUE;
             }
-            throw Exception("Invalid character found after a dot(.).");
+            return ScanString();
         }
         case 'F':
         case 'f': {
@@ -193,7 +200,7 @@ public:
                 }
                 return LexicalTokenType::BOOLEAN_VALUE;
             }
-            return LexicalTokenType::STRING_VALUE;
+            return ScanString();
         }
         case 'N':
         case 'n': {
@@ -210,7 +217,7 @@ public:
                 }
                 return LexicalTokenType::NULL_VALUE;
             }
-            return LexicalTokenType::STRING_VALUE;
+            return ScanString();
         }
         case 'T':
         case 't': {
@@ -226,10 +233,10 @@ public:
                 }
                 return LexicalTokenType::BOOLEAN_VALUE;
             }
-            return LexicalTokenType::STRING_VALUE;
+            return ScanString();
         }
         default:
-            throw Exception("Unsupported lexical token is found.");
+            return ScanString();
         }
     }
 
@@ -389,6 +396,16 @@ public:
         return value;
     }
 
+    /**
+     * @brief Get a scanned string value.
+     *
+     * @return const std::string& Constant reference to a scanned string.
+     */
+    const std::string& GetString() const
+    {
+        return m_value_buffer;
+    }
+
 private:
     /**
      * @brief Skip until a newline code or a null character is found.
@@ -501,7 +518,7 @@ private:
         case 'o':
             // Do not store 'o' since std::strtoull does not support "0o" but "0" as the prefix for octal numbers.
             // YAML specifies octal values start with the prefix "0o".
-            // See "10.3.2. Node Comparison" section in https://yaml.org/spec/1.2.2/
+            // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
             return ScanOctalNumber();
         case 'x':
             m_value_buffer.push_back(next);
@@ -633,6 +650,242 @@ private:
             ScanHexadecimalNumber();
         }
         return LexicalTokenType::UNSIGNED_INT_VALUE;
+    }
+
+    /**
+     * @brief Scan a string token(unquoted/single-quoted/double-quoted).
+     * @note Multibyte characters(including escaped ones) are currently unsupported.
+     *
+     * @return LexicalTokenType The lexical token type for strings.
+     */
+    LexicalTokenType ScanString()
+    {
+        m_value_buffer.clear();
+
+        bool needs_last_double_quote = (RefCurrentChar() == '\"');
+        bool needs_last_single_quote = (RefCurrentChar() == '\'');
+        char current = (needs_last_double_quote || needs_last_single_quote) ? GetNextChar() : RefCurrentChar();
+
+        for (;; current = GetNextChar())
+        {
+            if (current == '\"')
+            {
+                if (needs_last_double_quote)
+                {
+                    return LexicalTokenType::STRING_VALUE;
+                }
+
+                if (!needs_last_single_quote)
+                {
+                    throw Exception("Invalid double quotation mark found in a string token.");
+                }
+
+                // if the target is a single-quoted string token.
+                m_value_buffer.push_back(current);
+                continue;
+            }
+
+            // handle single quotation marks.
+            if (current == '\'')
+            {
+                if (needs_last_double_quote || !needs_last_single_quote)
+                {
+                    throw Exception("Invalid single quotation mark found in a string token.");
+                }
+
+                // If single quotation marks are repeated twice in a single-quoted string token. they are considered as
+                // an escaped single quotation mark.
+                if (RefNextChar() == '\'')
+                {
+                    m_value_buffer.push_back(GetNextChar());
+                    continue;
+                }
+
+                return LexicalTokenType::STRING_VALUE;
+            }
+
+            // handle newline codes.
+            if (current == '\r' || current == '\n')
+            {
+                if (!needs_last_double_quote && !needs_last_single_quote)
+                {
+                    return LexicalTokenType::STRING_VALUE;
+                }
+
+                SkipWhiteSpaces();
+                continue;
+            }
+
+            // handle the end of input buffer.
+            if (current == '\0' || current == s_eof)
+            {
+                if (needs_last_double_quote)
+                {
+                    throw Exception("Invalid end of input buffer in a double-quoted string token.");
+                }
+
+                if (needs_last_single_quote)
+                {
+                    throw Exception("Invalid end of input buffer in a single-quoted string token.");
+                }
+
+                return LexicalTokenType::STRING_VALUE;
+            }
+
+            // handle escaped characters.
+            // See "5.7. Escaped Characters" section in https://yaml.org/spec/1.2.2/
+            if (current == '\\')
+            {
+                if (!needs_last_double_quote)
+                {
+                    throw Exception("Escaped characters are only available in a double-quoted string token.");
+                }
+
+                current = GetNextChar();
+                switch (current)
+                {
+                case '0':
+                    m_value_buffer.push_back('\0');
+                    break;
+                case 'a':
+                    m_value_buffer.push_back('\a');
+                    break;
+                case 'b':
+                    m_value_buffer.push_back('\b');
+                    break;
+                case 't':
+                    m_value_buffer.push_back('\t');
+                    break;
+                case 'n':
+                    m_value_buffer.push_back('\n');
+                    break;
+                case 'v':
+                    m_value_buffer.push_back('\v');
+                    break;
+                case 'f':
+                    m_value_buffer.push_back('\f');
+                    break;
+                case 'r':
+                    m_value_buffer.push_back('\r');
+                    break;
+                case 'e':
+                    m_value_buffer.push_back('\u001B');
+                    break;
+                case ' ':
+                    m_value_buffer.push_back('\u0020');
+                    break;
+                case '\"':
+                    m_value_buffer.push_back('\"');
+                    break;
+                case '/':
+                    m_value_buffer.push_back('/');
+                    break;
+                case '\\':
+                    m_value_buffer.push_back('\\');
+                    break;
+                case 'x': {
+                    char byte = 0;
+                    for (int i = 1; i >= 0; --i)
+                    {
+                        current = GetNextChar();
+                        if ('0' <= current && current <= '9')
+                        {
+                            byte |= static_cast<char>((current - '0') << (4 * i));
+                        }
+                        else if ('A' <= current && current <= 'F')
+                        {
+                            byte |= static_cast<char>((current - 'A' + 10) << (4 * i));
+                        }
+                        else if ('a' <= current && current <= 'f')
+                        {
+                            byte |= static_cast<char>((current - 'a' + 10) << (4 * i));
+                        }
+                        else
+                        {
+                            throw Exception("Invalid hexadecimal character found after \\x for single byte escaping.");
+                        }
+                    }
+                    m_value_buffer.push_back(byte);
+                }
+                // Multibyte characters are currently unsupported.
+                // Thus \N, \_, \L, \P \uXX, \UXXXX are currently unavailable.
+                default:
+                    throw Exception("Unsupported escape sequence found in a string token.");
+                }
+            }
+
+            // handle unescaped control characters.
+            switch (current)
+            {
+            case 0x00:
+                throw Exception("Control character U+0000 (NUL) must be escaped to \\0 or \\u0000.");
+            case 0x01:
+                throw Exception("Control character U+0001 (SOH) must be escaped to \\u0001.");
+            case 0x02:
+                throw Exception("Control character U+0002 (STX) must be escaped to \\u0002.");
+            case 0x03:
+                throw Exception("Control character U+0003 (ETX) must be escaped to \\u0003.");
+            case 0x04:
+                throw Exception("Control character U+0004 (EOT) must be escaped to \\u0004.");
+            case 0x05:
+                throw Exception("Control character U+0005 (ENQ) must be escaped to \\u0005.");
+            case 0x06:
+                throw Exception("Control character U+0006 (ACK) must be escaped to \\u0006.");
+            case 0x07:
+                throw Exception("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
+            case 0x08:
+                throw Exception("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
+            case 0x09: // HT
+                m_value_buffer.push_back(current);
+                break;
+            // 0x0A(LF) has already been handled above.
+            case 0x0B:
+                throw Exception("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
+            case 0x0C:
+                throw Exception("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
+            // 0x0D(CR) has already been handled above.
+            case 0x0E:
+                throw Exception("Control character U+000E (SO) must be escaped to \\u000E.");
+            case 0x0F:
+                throw Exception("Control character U+000F (SI) must be escaped to \\u000F.");
+            case 0x10:
+                throw Exception("Control character U+0010 (DLE) must be escaped to \\u0010.");
+            case 0x11:
+                throw Exception("Control character U+0011 (DC1) must be escaped to \\u0011.");
+            case 0x12:
+                throw Exception("Control character U+0012 (DC2) must be escaped to \\u0012.");
+            case 0x13:
+                throw Exception("Control character U+0013 (DC3) must be escaped to \\u0013.");
+            case 0x14:
+                throw Exception("Control character U+0014 (DC4) must be escaped to \\u0014.");
+            case 0x15:
+                throw Exception("Control character U+0015 (NAK) must be escaped to \\u0015.");
+            case 0x16:
+                throw Exception("Control character U+0016 (SYN) must be escaped to \\u0016.");
+            case 0x17:
+                throw Exception("Control character U+0017 (ETB) must be escaped to \\u0017.");
+            case 0x18:
+                throw Exception("Control character U+0018 (CAN) must be escaped to \\u0018.");
+            case 0x19:
+                throw Exception("Control character U+0019 (EM) must be escaped to \\u0019.");
+            case 0x1A:
+                throw Exception("Control character U+001A (SUB) must be escaped to \\u001A.");
+            case 0x1B:
+                throw Exception("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
+            case 0x1C:
+                throw Exception("Control character U+001C (FS) must be escaped to \\u001C.");
+            case 0x1D:
+                throw Exception("Control character U+001D (GS) must be escaped to \\u001D.");
+            case 0x1E:
+                throw Exception("Control character U+001E (RS) must be escaped to \\u001E.");
+            case 0x1F:
+                throw Exception("Control character U+001F (US) must be escaped to \\u001F.");
+            // 0x20('0')~0x7E('~') have already been handled above.
+            // 16bit, 32bit characters are currently not supported.
+            default:
+                throw Exception("Unsupported multibytes character found.");
+            }
+        }
     }
 
     /**
