@@ -34,6 +34,15 @@ static const std::unordered_map<uint32_t, int (*)()> TEST_CASE_MAP {
     {0x0104, LexicalAnalyzerTest::ScanSignedFloatNumberTest},
     {0x0105, LexicalAnalyzerTest::ScanUnsignedFloatNumberTest},
     {0x0106, LexicalAnalyzerTest::ScanFloatNumberWithExponentTest},
+    {0x0107, LexicalAnalyzerTest::ScanPositiveInfinityTest1},
+    {0x0108, LexicalAnalyzerTest::ScanPositiveInfinityTest2},
+    {0x0109, LexicalAnalyzerTest::ScanPositiveInfinityTest3},
+    {0x010A, LexicalAnalyzerTest::ScanNegativeInfinityTest1},
+    {0x010B, LexicalAnalyzerTest::ScanNegativeInfinityTest2},
+    {0x010C, LexicalAnalyzerTest::ScanNegativeInfinityTest3},
+    {0x010D, LexicalAnalyzerTest::ScanNaNTest1},
+    {0x010E, LexicalAnalyzerTest::ScanNaNTest2},
+    {0x010F, LexicalAnalyzerTest::ScanNaNTest3},
 };
 
 int main(int argc, char* argv[])

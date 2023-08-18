@@ -25,7 +25,9 @@ target_include_directories(${TEST_TARGET} PRIVATE
 )
 
 function(add_unit_test CLASS_NAME FUNC_NAME TARGET_NAME ID)
-  add_test(NAME ${CLASS_NAME}_${FUNC_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}> ${ID})
+  set(TEST_NAME ${CLASS_NAME}_${FUNC_NAME})
+  add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}> ${ID})
+  set_tests_properties(${TEST_NAME} PROPERTIES LABELS ${CLASS_NAME})
 endfunction()
 
 add_unit_test(NodeClassTest DefaultCtorTest                ${TEST_TARGET} 0x0000)
@@ -46,3 +48,12 @@ add_unit_test(LexicalAnalyzerTest ScanHexadecimalIntegerTest      ${TEST_TARGET}
 add_unit_test(LexicalAnalyzerTest ScanSignedFloatNumberTest       ${TEST_TARGET} 0x0104)
 add_unit_test(LexicalAnalyzerTest ScanUnsignedFloatNumberTest     ${TEST_TARGET} 0x0105)
 add_unit_test(LexicalAnalyzerTest ScanFloatNumberWithExponentTest ${TEST_TARGET} 0x0106)
+add_unit_test(LexicalAnalyzerTest ScanPositiveInfinityTest1       ${TEST_TARGET} 0x0107)
+add_unit_test(LexicalAnalyzerTest ScanPositiveInfinityTest2       ${TEST_TARGET} 0x0108)
+add_unit_test(LexicalAnalyzerTest ScanPositiveInfinityTest3       ${TEST_TARGET} 0x0109)
+add_unit_test(LexicalAnalyzerTest ScanNegativeInfinityTest1       ${TEST_TARGET} 0x010A)
+add_unit_test(LexicalAnalyzerTest ScanNegativeInfinityTest2       ${TEST_TARGET} 0x010B)
+add_unit_test(LexicalAnalyzerTest ScanNegativeInfinityTest3       ${TEST_TARGET} 0x010C)
+add_unit_test(LexicalAnalyzerTest ScanNaNTest1                    ${TEST_TARGET} 0x010D)
+add_unit_test(LexicalAnalyzerTest ScanNaNTest2                    ${TEST_TARGET} 0x010E)
+add_unit_test(LexicalAnalyzerTest ScanNaNTest3                    ${TEST_TARGET} 0x010F)

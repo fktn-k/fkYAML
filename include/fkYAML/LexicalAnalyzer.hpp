@@ -9,7 +9,10 @@
 #ifndef FK_YAML_LEXICAL_ANALIZER_HPP_
 #define FK_YAML_LEXICAL_ANALIZER_HPP_
 
+#include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <limits>
 #include <string>
 
 #include "fkYAML/Exception.hpp"
@@ -47,8 +50,6 @@ enum class LexicalTokenType
     LITERAL_NULL,          //!< the `null`|`Null`|`NULL`|`~` literal
     LITERAL_TRUE,          //!< the `true`|`True`|`TRUE` literal
     LITERAL_FALSE,         //!< the `false`|`False`|`FALSE` literal
-    LITERAL_INF,           //!< the `.inf`|`.Inf`|`.INF` literal
-    LITERAL_NAN,           //!< the `.nan`|`.NaN`|`.NAN` literal
 };
 
 /**
@@ -154,9 +155,144 @@ public:
         case '8':
         case '9':
             return ScanNumber();
+        case '.': {
+            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+            if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
+            {
+                m_value_buffer += tmp_str;
+                for (int i = 0; i < 4; ++i)
+                {
+                    GetNextChar();
+                }
+                return LexicalTokenType::FLOAT_NUMBER_VALUE;
+            }
+            else if (tmp_str == ".nan" || tmp_str == ".NaN" || tmp_str == ".NAN")
+            {
+                m_value_buffer += tmp_str;
+                for (int i = 0; i < 4; ++i)
+                {
+                    GetNextChar();
+                }
+                return LexicalTokenType::FLOAT_NUMBER_VALUE;
+            }
+            throw Exception("Invalid character found after a dot(.).");
+        }
         default:
             throw Exception("Unsupported lexical token is found.");
         }
+    }
+
+    bool GetBoolean() const
+    {
+        if (m_value_buffer.empty())
+        {
+            throw Exception("Value storage is empty.");
+        }
+
+        if (m_value_buffer == "true")
+        {
+            return true;
+        }
+        else if (m_value_buffer == "false")
+        {
+            return false;
+        }
+
+        throw Exception("Invalid request for a boolean value.");
+    }
+
+    int64_t GetSignedInt() const
+    {
+        if (m_value_buffer.empty())
+        {
+            throw Exception("Value storage is empty.");
+        }
+
+        char* endptr = nullptr;
+        const auto tmp_val = std::strtoll(m_value_buffer.data(), &endptr, 0);
+
+        if (endptr != m_value_buffer.data() + m_value_buffer.size())
+        {
+            throw Exception("Failed to convert a string to a signed integer.");
+        }
+
+        if ((tmp_val == LLONG_MIN || tmp_val == LLONG_MAX) && errno == ERANGE)
+        {
+            throw Exception("Range error on converting from a string to a signed integer.");
+        }
+
+        int64_t value_int = static_cast<int64_t>(tmp_val);
+        if (value_int != tmp_val)
+        {
+            throw Exception("Failed to convert from long long to int64_t.");
+        }
+        return value_int;
+    }
+
+    uint64_t GetUnsignedInt() const
+    {
+        if (m_value_buffer.empty())
+        {
+            throw Exception("Value storage is empty.");
+        }
+
+        char* endptr = nullptr;
+        const auto tmp_val = std::strtoull(m_value_buffer.data(), &endptr, 0);
+
+        if (endptr != m_value_buffer.data() + m_value_buffer.size())
+        {
+            throw Exception("Failed to convert a string to an unsigned integer.");
+        }
+
+        if (tmp_val == ULLONG_MAX && errno == ERANGE)
+        {
+            throw Exception("Range error on converting from a string to an unsigned integer.");
+        }
+
+        uint64_t value_int = static_cast<uint64_t>(tmp_val);
+        if (value_int != tmp_val)
+        {
+            throw Exception("Failed to convert from unsigned long long to uint64_t.");
+        }
+        return value_int;
+    }
+
+    double GetFloatNumber() const
+    {
+        if (m_value_buffer.empty())
+        {
+            throw Exception("Value storage is empty.");
+        }
+
+        if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF")
+        {
+            return std::numeric_limits<double>::infinity();
+        }
+        else if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
+        {
+            static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 required.");
+            return -1 * std::numeric_limits<double>::infinity();
+        }
+
+        if (m_value_buffer == ".nan" || m_value_buffer == ".NaN" || m_value_buffer == ".NAN")
+        {
+            return std::nan("");
+        }
+
+        char* endptr = nullptr;
+        double value = std::strtod(m_value_buffer.data(), &endptr);
+
+        if (endptr != m_value_buffer.data() + m_value_buffer.size())
+        {
+            throw Exception("Failed to convert a string to a double.");
+        }
+
+        if ((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
+        {
+            throw Exception("Range error on converting from a string to a double.");
+        }
+
+        return value;
     }
 
 private:
@@ -239,6 +375,19 @@ private:
             return (ret == LexicalTokenType::FLOAT_NUMBER_VALUE) ? ret : LexicalTokenType::SIGNED_INT_VALUE;
         }
 
+        if (next == '.')
+        {
+            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+            if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
+            {
+                m_value_buffer += tmp_str;
+                for (int i = 0; i < 4; ++i)
+                {
+                    GetNextChar();
+                }
+                return LexicalTokenType::FLOAT_NUMBER_VALUE;
+            }
+        }
         throw Exception("Invalid character found in a negative number token.");
     }
 
@@ -256,7 +405,9 @@ private:
             m_value_buffer.push_back(next);
             return ScanDecimalNumberAfterDecimalPoint();
         case 'o':
-            m_value_buffer.push_back(next);
+            // Do not store 'o' since std::strtoull does not support "0o" but "0" as the prefix for octal numbers.
+            // YAML specifies octal values start with the prefix "0o".
+            // See "10.3.2. Node Comparison" section in https://yaml.org/spec/1.2.2/
             return ScanOctalNumber();
         case 'x':
             m_value_buffer.push_back(next);
