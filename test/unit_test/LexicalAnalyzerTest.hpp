@@ -11,6 +11,10 @@
 class LexicalAnalyzerTest
 {
 public:
+    static int ScanNullTest1();
+    static int ScanNullTest2();
+    static int ScanNullTest3();
+    static int ScanNullTest4();
     static int ScanTrueBooleanTest1();
     static int ScanTrueBooleanTest2();
     static int ScanTrueBooleanTest3();

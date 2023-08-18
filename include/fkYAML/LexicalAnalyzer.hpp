@@ -42,14 +42,12 @@ enum class LexicalTokenType
     SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
     MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
     MAPPING_FLOW_END,      //!< the character for mapping end `}`
+    NULL_VALUE,            //!< a null value found. use GetNull() to get a value.
     BOOLEAN_VALUE,         //!< a boolean value found. use GetBoolean() to get a value.
     SIGNED_INT_VALUE,      //!< a signed integer value found. use GetSignedInt() to get a value.
     UNSIGNED_INT_VALUE,    //!< an unsigned integer value found. use GetUnsignedInt() to get a value.
     FLOAT_NUMBER_VALUE,    //!< a float number value found. use GetFloatNumber() to get a value.
     STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
-    LITERAL_NULL,          //!< the `null`|`Null`|`NULL`|`~` literal
-    LITERAL_TRUE,          //!< the `true`|`True`|`TRUE` literal
-    LITERAL_FALSE,         //!< the `false`|`False`|`FALSE` literal
 };
 
 /**
@@ -114,7 +112,8 @@ public:
         const char& current = RefCurrentChar();
         switch (current)
         {
-        case s_eof: // end of buffer
+        case '\0':
+        case s_eof: // end of input buffer
             return LexicalTokenType::END_OF_BUFFER;
         case ':': // key separater
             return LexicalTokenType::KEY_SEPARATOR;
@@ -143,6 +142,9 @@ public:
             return LexicalTokenType::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
             return LexicalTokenType::MAPPING_FLOW_END;
+        case '~':
+            m_value_buffer = current;
+            return LexicalTokenType::NULL_VALUE;
         case '+':
         case '0':
         case '1':
@@ -193,6 +195,23 @@ public:
             }
             return LexicalTokenType::STRING_VALUE;
         }
+        case 'N':
+        case 'n': {
+            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+            // YAML specifies that these words and a tilde represent a null value.
+            // Tildes are already checked above, so no check is needed here.
+            // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            if (tmp_str == "null" || tmp_str == "Null" || tmp_str == "NULL")
+            {
+                m_value_buffer = tmp_str;
+                for (int i = 0; i < 4; ++i)
+                {
+                    GetNextChar();
+                }
+                return LexicalTokenType::NULL_VALUE;
+            }
+            return LexicalTokenType::STRING_VALUE;
+        }
         case 'T':
         case 't': {
             std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
@@ -214,6 +233,32 @@ public:
         }
     }
 
+    /**
+     * @brief Convert from string to null and get the converted value.
+     * 
+     * @return std::nullptr_t A converted null value if the source string is one of the followings: "null", "Null", "NULL", "~".
+     */
+    std::nullptr_t GetNull() const
+    {
+        if (m_value_buffer.empty())
+        {
+            throw Exception("Value storage is empty.");
+        }
+
+        if (m_value_buffer == "null" || m_value_buffer == "Null" || m_value_buffer == "NULL" || m_value_buffer == "~")
+        {
+            return nullptr;
+        }
+
+        throw Exception("Invalid request for a null value.");
+    }
+
+    /**
+     * @brief Convert from string to boolean and get the converted value.
+     * 
+     * @return true  A string token is one of the followings: "true", "True", "TRUE".
+     * @return false A string token is one of the followings: "false", "False", "FALSE".
+     */
     bool GetBoolean() const
     {
         if (m_value_buffer.empty())
@@ -233,6 +278,11 @@ public:
         throw Exception("Invalid request for a boolean value.");
     }
 
+    /**
+     * @brief Convert from string to signed integer and get the converted value.
+     * 
+     * @return int64_t A signed integer value converted from the source string.
+     */
     int64_t GetSignedInt() const
     {
         if (m_value_buffer.empty())
@@ -263,6 +313,11 @@ public:
         return value_int;
     }
 
+    /**
+     * @brief Convert from string to unsigned integer and get the converted value.
+     * 
+     * @return uint64_t An unsigned integer value converted from the source string.
+     */
     uint64_t GetUnsignedInt() const
     {
         if (m_value_buffer.empty())
@@ -291,6 +346,11 @@ public:
         return value_int;
     }
 
+    /**
+     * @brief Convert from string to float number and get the converted value.
+     * 
+     * @return double A float number value converted from the source string.
+     */
     double GetFloatNumber() const
     {
         if (m_value_buffer.empty())
