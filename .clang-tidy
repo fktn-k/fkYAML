@@ -1,14 +1,21 @@
 ---
 Checks: '*,
+         -altera-id-dependent-backward-branch,
          -altera-struct-pack-align,
          -altera-unroll-loops,
+         -cppcoreguidelines-avoid-magic-numbers,
+         -cppcoreguidelines-pro-bounds-pointer-arithmetic,
          -cppcoreguidelines-pro-type-union-access,
+         -fuchsia-default-arguments-calls,
          -fuchsia-overloaded-operator,
+         -hicpp-signed-bitwise,
          -llvm-header-guard,
          -llvmlibc-*,
          -misc-no-recursion,
          -modernize-use-trailing-return-type,
+         -readability-function-cognitive-complexity,
          -readability-identifier-length,
+         -readability-magic-numbers,
          -readability-redundant-access-specifiers'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
@@ -21,6 +28,8 @@ CheckOptions:
   - { key: readability-identifier-naming.UnionCase, value: CamelCase }
   - { key: readability-identifier-naming.EnumCase, value: CamelCase }
   - { key: readability-identifier-naming.FunctionCase, value: CamelCase }
+  - { key: readability-identifier-naming.ClassConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.ClassConstantPrefix, value: s_ }
   - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
   - { key: readability-identifier-naming.ClassMemberPrefix, value: s_ }
   - { key: readability-identifier-naming.PrivateMemberCase, value: lower_case }
@@ -28,6 +37,8 @@ CheckOptions:
   - { key: readability-identifier-naming.VariableCase, value: lower_case }
   - { key: readability-identifier-naming.ParameterCase, value: lower_case }
   - { key: readability-identifier-naming.ConstantParameterCase, value: lower_case }
+  - { key: readability-identifier-naming.StaticConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.LocalConstantCase, value: lower_case }
   - { key: readability-identifier-naming.ConstantCase, value: UPPER_CASE }
   - { key: readability-identifier-naming.FunctionCase, value: CamelCase }
   - { key: readability-identifier-naming.TemplateParameter, value: CamelCase }

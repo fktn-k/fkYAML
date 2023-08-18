@@ -90,7 +90,7 @@ public:
      */
     void SetInputBuffer(const char* const input_buffer)
     {
-        if (!input_buffer || input_buffer[0] == '\0')
+        if (!input_buffer || input_buffer[0] == '\0') // NOLINT(readability-implicit-bool-conversion)
         {
             throw Exception("The input buffer for lexical analysis is nullptr or empty.");
         }
@@ -113,7 +113,7 @@ public:
         switch (current)
         {
         case '\0':
-        case s_eof: // end of input buffer
+        case s_EOF: // end of input buffer
             return LexicalTokenType::END_OF_BUFFER;
         case ':': // key separater
             return LexicalTokenType::KEY_SEPARATOR;
@@ -165,7 +165,8 @@ public:
         case '9':
             return ScanNumber();
         case '.': {
-            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+
             if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
             {
                 m_value_buffer = tmp_str;
@@ -175,7 +176,8 @@ public:
                 }
                 return LexicalTokenType::FLOAT_NUMBER_VALUE;
             }
-            else if (tmp_str == ".nan" || tmp_str == ".NaN" || tmp_str == ".NAN")
+
+            if (tmp_str == ".nan" || tmp_str == ".NaN" || tmp_str == ".NAN")
             {
                 m_value_buffer = tmp_str;
                 for (int i = 0; i < 4; ++i)
@@ -184,11 +186,12 @@ public:
                 }
                 return LexicalTokenType::FLOAT_NUMBER_VALUE;
             }
+
             return ScanString();
         }
         case 'F':
         case 'f': {
-            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 5);
+            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 5);
             // YAML specifies that only these words represent the boolean value `false`.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
             if (tmp_str == "false" || tmp_str == "False" || tmp_str == "FALSE")
@@ -204,7 +207,7 @@ public:
         }
         case 'N':
         case 'n': {
-            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
             // YAML specifies that these words and a tilde represent a null value.
             // Tildes are already checked above, so no check is needed here.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
@@ -221,7 +224,7 @@ public:
         }
         case 'T':
         case 't': {
-            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
             // YAML specifies that only these words represent the boolean value `true`.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
             if (tmp_str == "true" || tmp_str == "True" || tmp_str == "TRUE")
@@ -277,7 +280,8 @@ public:
         {
             return true;
         }
-        else if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
+
+        if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
         {
             return false;
         }
@@ -305,6 +309,7 @@ public:
             throw Exception("Failed to convert a string to a signed integer.");
         }
 
+        // NOLINTNEXTLINE(google-runtime-int)
         if ((tmp_val == std::numeric_limits<long long>::min() || tmp_val == std::numeric_limits<long long>::max()) &&
             errno == ERANGE)
         {
@@ -312,7 +317,7 @@ public:
             throw Exception("Range error on converting from a string to a signed integer.");
         }
 
-        int64_t value_int = static_cast<int64_t>(tmp_val);
+        const auto value_int = static_cast<int64_t>(tmp_val);
         if (value_int != tmp_val)
         {
             throw Exception("Failed to convert from long long to int64_t.");
@@ -340,12 +345,13 @@ public:
             throw Exception("Failed to convert a string to an unsigned integer.");
         }
 
+        // NOLINTNEXTLINE(google-runtime-int)
         if (tmp_val == std::numeric_limits<unsigned long long>::max() && errno == ERANGE)
         {
             throw Exception("Range error on converting from a string to an unsigned integer.");
         }
 
-        uint64_t value_int = static_cast<uint64_t>(tmp_val);
+        const auto value_int = static_cast<uint64_t>(tmp_val);
         if (value_int != tmp_val)
         {
             throw Exception("Failed to convert from unsigned long long to uint64_t.");
@@ -369,7 +375,8 @@ public:
         {
             return std::numeric_limits<double>::infinity();
         }
-        else if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
+
+        if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
         {
             static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 required.");
             return -1 * std::numeric_limits<double>::infinity();
@@ -381,7 +388,7 @@ public:
         }
 
         char* endptr = nullptr;
-        double value = std::strtod(m_value_buffer.data(), &endptr);
+        const double value = std::strtod(m_value_buffer.data(), &endptr);
 
         if (endptr != m_value_buffer.data() + m_value_buffer.size())
         {
@@ -482,13 +489,13 @@ private:
         if ('0' <= next && next <= '9')
         {
             m_value_buffer.push_back(next);
-            LexicalTokenType ret = ScanDecimalNumber();
+            const LexicalTokenType ret = ScanDecimalNumber();
             return (ret == LexicalTokenType::FLOAT_NUMBER_VALUE) ? ret : LexicalTokenType::SIGNED_INT_VALUE;
         }
 
         if (next == '.')
         {
-            std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
             if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
             {
                 m_value_buffer += tmp_str;
@@ -601,7 +608,7 @@ private:
 
         if (next == '.')
         {
-            if (m_value_buffer.find(next) != std::string::npos)
+            if (m_value_buffer.find(next) != std::string::npos) // NOLINT(abseil-string-find-str-contains)
             {
                 throw Exception("Multiple decimal points found in a token.");
             }
@@ -662,8 +669,8 @@ private:
     {
         m_value_buffer.clear();
 
-        bool needs_last_double_quote = (RefCurrentChar() == '\"');
-        bool needs_last_single_quote = (RefCurrentChar() == '\'');
+        const bool needs_last_double_quote = (RefCurrentChar() == '\"');
+        const bool needs_last_single_quote = (RefCurrentChar() == '\'');
         char current = (needs_last_double_quote || needs_last_single_quote) ? GetNextChar() : RefCurrentChar();
 
         for (;; current = GetNextChar())
@@ -717,7 +724,7 @@ private:
             }
 
             // handle the end of input buffer.
-            if (current == '\0' || current == s_eof)
+            if (current == '\0' || current == s_EOF)
             {
                 if (needs_last_double_quote)
                 {
@@ -790,14 +797,17 @@ private:
                         current = GetNextChar();
                         if ('0' <= current && current <= '9')
                         {
+                            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
                             byte |= static_cast<char>((current - '0') << (4 * i));
                         }
                         else if ('A' <= current && current <= 'F')
                         {
+                            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
                             byte |= static_cast<char>((current - 'A' + 10) << (4 * i));
                         }
                         else if ('a' <= current && current <= 'f')
                         {
+                            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
                             byte |= static_cast<char>((current - 'a' + 10) << (4 * i));
                         }
                         else
@@ -948,7 +958,7 @@ private:
 
 private:
     //!< The value of EOF.
-    static constexpr char_int_type s_eof = char_traits_type::eof();
+    static constexpr char_int_type s_EOF = char_traits_type::eof();
 
     //!< An input buffer to be analyzed.
     std::string m_input_buffer {};
