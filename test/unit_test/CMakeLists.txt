@@ -15,6 +15,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(TEST_TARGET "fkYAMLUnitTest")
 
 add_executable(${TEST_TARGET}
+  DeserializerTest.cpp
   LexicalAnalyzerTest.cpp
   NodeClassTest.cpp
   main.cpp
@@ -78,3 +79,6 @@ add_unit_test(LexicalAnalyzerTest ScanKeyStringValuePairTest          ${TEST_TAR
 add_unit_test(LexicalAnalyzerTest ScanFlowSequenceObject1             ${TEST_TARGET} 0x0121)
 add_unit_test(LexicalAnalyzerTest ScanFlowSequenceObject2             ${TEST_TARGET} 0x0122)
 add_unit_test(LexicalAnalyzerTest ScanFlowMappingObject               ${TEST_TARGET} 0x0123)
+
+add_unit_test(DeserializerTest DeserializeFlowSequenceObject1 ${TEST_TARGET} 0x0200)
+add_unit_test(DeserializerTest DeserializeFlowMappingObject1  ${TEST_TARGET} 0x0201)

@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <unordered_map>
 
+#include "DeserializerTest.hpp"
 #include "LexicalAnalyzerTest.hpp"
 #include "NodeClassTest.hpp"
 
@@ -63,6 +64,9 @@ static const std::unordered_map<uint32_t, int (*)()> TEST_CASE_MAP {
     {0x0121, LexicalAnalyzerTest::ScanFlowSequenceObject1},
     {0x0122, LexicalAnalyzerTest::ScanFlowSequenceObject2},
     {0x0123, LexicalAnalyzerTest::ScanFlowMappingObject1},
+
+    {0x0200, DeserializerTest::DeserializeFlowSequenceObject1},
+    {0x0201, DeserializerTest::DeserializeFlowMappingObject1},
 };
 
 int main(int argc, char* argv[])

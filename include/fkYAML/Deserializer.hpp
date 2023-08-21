@@ -49,10 +49,10 @@ public:
         }
 
         m_lexer.SetInputBuffer(source);
-        Node root;
+        Node root = Node::Mapping(NodeMappingType());
+        std::vector<Node*> node_stack;
 
         Node* p_current_node = &root;
-        Node* p_parent_node = p_current_node; // NOLINT(clang-analyzer-deadcode.DeadStores)
 
         LexicalTokenType type = m_lexer.GetNextToken();
         while (type != LexicalTokenType::END_OF_BUFFER)
@@ -60,37 +60,157 @@ public:
             switch (type)
             {
             case LexicalTokenType::KEY_SEPARATOR:
+                if (node_stack.empty() || !node_stack.back()->IsMapping())
+                {
+                    throw Exception("A key separator found while a value token is expected.");
+                }
+                break;
             case LexicalTokenType::VALUE_SEPARATOR:
+                if (!p_current_node->IsSequence() && !p_current_node->IsMapping())
+                {
+                    throw Exception("A value separator must appear in a container node.");
+                }
+                break;
             case LexicalTokenType::ANCHOR_PREFIX:
             case LexicalTokenType::ALIAS_PREFIX:
             case LexicalTokenType::COMMENT_PREFIX:
             case LexicalTokenType::DIRECTIVE_PREFIX:
             case LexicalTokenType::SEQUENCE_BLOCK_PREFIX:
+                break;
             case LexicalTokenType::SEQUENCE_FLOW_BEGIN:
+                if (p_current_node->IsMapping())
+                {
+                    throw Exception("Cannot assign a sequence value as a key.");
+                }
+                *p_current_node = Node::Sequence(NodeSequenceType());
+                break;
             case LexicalTokenType::SEQUENCE_FLOW_END:
+                if (!p_current_node->IsSequence())
+                {
+                    throw Exception("Invalid sequence flow ending found.");
+                }
+                p_current_node = node_stack.back();
+                node_stack.pop_back();
+                break;
             case LexicalTokenType::MAPPING_FLOW_BEGIN:
+                if (p_current_node->IsMapping())
+                {
+                    throw Exception("Cannot assign a mapping value as a key.");
+                }
+                *p_current_node = Node::Mapping(NodeMappingType());
+                break;
             case LexicalTokenType::MAPPING_FLOW_END:
+                if (!p_current_node->IsMapping())
+                {
+                    throw Exception("Invalid mapping flow ending found.");
+                }
+                p_current_node = node_stack.back();
+                node_stack.pop_back();
                 break;
             case LexicalTokenType::NULL_VALUE:
+                if (p_current_node->IsMapping())
+                {
+                    throw Exception("Cannot assign a null value as a key.");
+                }
+
+                // A null value is already assigned in the default Node ctor.
+                // Just make sure that the actual value is really a null value.
                 m_lexer.GetNull();
+
+                if (p_current_node->IsSequence())
+                {
+                    p_current_node->ToSequence().emplace_back();
+                }
+
                 break;
             case LexicalTokenType::BOOLEAN_VALUE:
-                *p_current_node = Node::BooleanScalar(m_lexer.GetBoolean());
+                if (p_current_node->IsMapping())
+                {
+                    throw Exception("Cannot assign a boolean as a key.");
+                }
+
+                if (p_current_node->IsSequence())
+                {
+                    p_current_node->ToSequence().emplace_back(Node::BooleanScalar(m_lexer.GetBoolean()));
+                }
+                else // a scalar node
+                {
+                    *p_current_node = Node::BooleanScalar(m_lexer.GetBoolean());
+                    p_current_node = node_stack.back();
+                    node_stack.pop_back();
+                }
                 break;
             case LexicalTokenType::SIGNED_INT_VALUE:
-                *p_current_node = Node::SignedIntegerScalar(m_lexer.GetSignedInt());
+                if (p_current_node->IsMapping())
+                {
+                    throw Exception("Cannot assign a signed integer as a key.");
+                }
+
+                if (p_current_node->IsSequence())
+                {
+                    p_current_node->ToSequence().emplace_back(Node::SignedIntegerScalar(m_lexer.GetSignedInt()));
+                }
+                else // a scalar node
+                {
+                    *p_current_node = Node::SignedIntegerScalar(m_lexer.GetSignedInt());
+                    p_current_node = node_stack.back();
+                    node_stack.pop_back();
+                }
                 break;
             case LexicalTokenType::UNSIGNED_INT_VALUE:
-                *p_current_node = Node::UnsignedIntegerScalar(m_lexer.GetUnsignedInt());
+                if (p_current_node->IsMapping())
+                {
+                    throw Exception("Cannot assign an unsigned integer as a key.");
+                }
+
+                if (p_current_node->IsSequence())
+                {
+                    p_current_node->ToSequence().emplace_back(Node::UnsignedIntegerScalar(m_lexer.GetUnsignedInt()));
+                }
+                else
+                {
+                    *p_current_node = Node::UnsignedIntegerScalar(m_lexer.GetUnsignedInt());
+                    p_current_node = node_stack.back();
+                    node_stack.pop_back();
+                }
                 break;
             case LexicalTokenType::FLOAT_NUMBER_VALUE:
-                *p_current_node = Node::FloatNumberScalar(m_lexer.GetFloatNumber());
+                if (p_current_node->IsMapping())
+                {
+                    throw Exception("Cannot assign a float number as a key.");
+                }
+
+                if (p_current_node->IsSequence())
+                {
+                    p_current_node->ToSequence().emplace_back(Node::FloatNumberScalar(m_lexer.GetFloatNumber()));
+                }
+                else // a scalar
+                {
+                    *p_current_node = Node::FloatNumberScalar(m_lexer.GetFloatNumber());
+                    p_current_node = node_stack.back();
+                    node_stack.pop_back();
+                }
                 break;
             case LexicalTokenType::STRING_VALUE:
-                *p_current_node = Node::StringScalar(m_lexer.GetString());
+                if (p_current_node->IsMapping())
+                {
+                    p_current_node->ToMapping().emplace(m_lexer.GetString(), Node());
+                    node_stack.push_back(p_current_node);
+                    p_current_node = &(p_current_node->ToMapping().at(m_lexer.GetString()));
+                }
+                else if (p_current_node->IsSequence())
+                {
+                    p_current_node->ToSequence().emplace_back(Node::StringScalar(m_lexer.GetString()));
+                }
+                else // a scalar node
+                {
+                    *p_current_node = Node::StringScalar(m_lexer.GetString());
+                    p_current_node = node_stack.back();
+                    node_stack.pop_back();
+                }
                 break;
             default:
-                break;
+                throw Exception("Unsupported lexical token found.");
             }
 
             type = m_lexer.GetNextToken();
