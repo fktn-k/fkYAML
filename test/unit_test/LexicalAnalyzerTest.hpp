@@ -44,6 +44,9 @@ public:
     static int ScanKeyUnsignedIntegerValuePairTest();
     static int ScanKeyFloatNumberValuePairTest();
     static int ScanKeyStringValuePairTest();
+    static int ScanFlowSequenceObject1();
+    static int ScanFlowSequenceObject2();
+    static int ScanFlowMappingObject1();
 };
 
 #endif /* FK_YAML_TEST_LEXICAL_ANALYZER_TEST_HPP_ */

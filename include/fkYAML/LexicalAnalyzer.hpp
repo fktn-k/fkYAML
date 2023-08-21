@@ -131,6 +131,7 @@ public:
             }
             return LexicalTokenType::KEY_SEPARATOR;
         case ',': // value separater
+            GetNextChar();
             return LexicalTokenType::VALUE_SEPARATOR;
         case '&': // anchor prefix
             return LexicalTokenType::ANCHOR_PREFIX;
@@ -148,12 +149,16 @@ public:
             }
             return ScanNumber();
         case '[': // sequence flow begin
+            GetNextChar();
             return LexicalTokenType::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
+            GetNextChar();
             return LexicalTokenType::SEQUENCE_FLOW_END;
         case '{': // mapping flow begin
+            GetNextChar();
             return LexicalTokenType::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
+            GetNextChar();
             return LexicalTokenType::MAPPING_FLOW_END;
         case '@':
             throw Exception("Any token cannot start with at(@). It is a reserved indicator for YAML.");
@@ -695,7 +700,7 @@ private:
                 continue;
             }
 
-            // handle single quotation marks.
+            // Handle single quotation marks.
             if (current == '\'')
             {
                 if (needs_last_double_quote || !needs_last_single_quote)
@@ -714,6 +719,7 @@ private:
                 return LexicalTokenType::STRING_VALUE;
             }
 
+            // Handle colons.
             if (current == ':')
             {
                 // Just regard a colon as a character if surrounded by quotation marks.
@@ -733,7 +739,58 @@ private:
                 return LexicalTokenType::STRING_VALUE;
             }
 
-            // handle newline codes.
+            // Handle commas.
+            if (current == ',')
+            {
+                // Just regard a comma as a character if surrounded by quotation marks.
+                if (needs_last_double_quote || needs_last_single_quote)
+                {
+                    m_value_buffer.push_back(current);
+                    continue;
+                }
+
+                return LexicalTokenType::STRING_VALUE;
+            }
+
+            // Handle right square brackets.
+            if (current == ']')
+            {
+                // just regard a right square bracket as a character if surrounded by quotation marks.
+                if (needs_last_double_quote || needs_last_single_quote)
+                {
+                    m_value_buffer.push_back(current);
+                    continue;
+                }
+
+                // Trim trailing spaces already added to m_value_buffer.
+                while (m_value_buffer.back() == ' ')
+                {
+                    m_value_buffer.pop_back();
+                }
+
+                return LexicalTokenType::STRING_VALUE;
+            }
+
+            // Handle right curly braces.
+            if (current == '}')
+            {
+                // just regard a right curly brace as a character if surrounded by quotation marks.
+                if (needs_last_double_quote || needs_last_single_quote)
+                {
+                    m_value_buffer.push_back(current);
+                    continue;
+                }
+
+                // Trim trailing spaces already added to m_value_buffer.
+                while (m_value_buffer.back() == ' ')
+                {
+                    m_value_buffer.pop_back();
+                }
+
+                return LexicalTokenType::STRING_VALUE;
+            }
+
+            // Handle newline codes.
             if (current == '\r' || current == '\n')
             {
                 if (!needs_last_double_quote && !needs_last_single_quote)
@@ -745,7 +802,7 @@ private:
                 continue;
             }
 
-            // handle the end of input buffer.
+            // Handle the end of input buffer.
             if (current == '\0' || current == s_EOF)
             {
                 if (needs_last_double_quote)
@@ -761,7 +818,7 @@ private:
                 return LexicalTokenType::STRING_VALUE;
             }
 
-            // handle escaped characters.
+            // Handle escaped characters.
             // See "5.7. Escaped Characters" section in https://yaml.org/spec/1.2.2/
             if (current == '\\')
             {
@@ -846,13 +903,14 @@ private:
                 }
             }
 
+            // Handle ASCII characters except control characters.
             if (0x20 <= current && current <= 0x7E)
             {
                 m_value_buffer.push_back(current);
                 continue;
             }
 
-            // handle unescaped control characters.
+            // Handle unescaped control characters.
             switch (current)
             {
             case 0x00:

@@ -60,6 +60,9 @@ static const std::unordered_map<uint32_t, int (*)()> TEST_CASE_MAP {
     {0x011E, LexicalAnalyzerTest::ScanKeyUnsignedIntegerValuePairTest},
     {0x011F, LexicalAnalyzerTest::ScanKeyFloatNumberValuePairTest},
     {0x0120, LexicalAnalyzerTest::ScanKeyStringValuePairTest},
+    {0x0121, LexicalAnalyzerTest::ScanFlowSequenceObject1},
+    {0x0122, LexicalAnalyzerTest::ScanFlowSequenceObject2},
+    {0x0123, LexicalAnalyzerTest::ScanFlowMappingObject1},
 };
 
 int main(int argc, char* argv[])
