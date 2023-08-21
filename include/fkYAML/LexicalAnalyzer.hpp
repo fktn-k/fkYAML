@@ -423,6 +423,35 @@ public:
 
 private:
     /**
+     * @brief A utility function to convert a hexadecimal character to an integer.
+     *
+     * @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
+     * @return char A integer converted from @a source.
+     */
+    static char ConvertHexCharToByte(char source)
+    {
+        if ('0' <= source && source <= '9')
+        {
+            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+            return static_cast<char>(source - '0');
+        }
+
+        if ('A' <= source && source <= 'F')
+        {
+            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+            return static_cast<char>(source - 'A' + 10);
+        }
+
+        if ('a' <= source && source <= 'f')
+        {
+            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+            return static_cast<char>(source - 'a' + 10);
+        }
+
+        throw Exception("Non-hexadecimal character has been given.");
+    }
+
+    /**
      * @brief Skip until a newline code or a null character is found.
      *
      * @return LexicalTokenType The lexical token type for comments
@@ -873,26 +902,8 @@ private:
                     char byte = 0;
                     for (int i = 1; i >= 0; --i)
                     {
-                        current = GetNextChar();
-                        if ('0' <= current && current <= '9')
-                        {
-                            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-                            byte |= static_cast<char>((current - '0') << (4 * i));
-                        }
-                        else if ('A' <= current && current <= 'F')
-                        {
-                            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-                            byte |= static_cast<char>((current - 'A' + 10) << (4 * i));
-                        }
-                        else if ('a' <= current && current <= 'f')
-                        {
-                            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-                            byte |= static_cast<char>((current - 'a' + 10) << (4 * i));
-                        }
-                        else
-                        {
-                            throw Exception("Invalid hexadecimal character found after \\x for single byte escaping.");
-                        }
+                        char four_bits = ConvertHexCharToByte(GetNextChar());
+                        byte |= static_cast<char>(four_bits << (4 * i));
                     }
                     m_value_buffer.push_back(byte);
                 }
