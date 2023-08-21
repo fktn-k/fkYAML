@@ -15,6 +15,7 @@ Checks: '*,
          -modernize-use-trailing-return-type,
          -readability-function-cognitive-complexity,
          -readability-identifier-length,
+         -readability-implicit-bool-conversion,
          -readability-magic-numbers,
          -readability-redundant-access-specifiers'
 WarningsAsErrors: '*'

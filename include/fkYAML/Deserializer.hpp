@@ -37,13 +37,13 @@ public:
 public:
     /**
      * @brief Deserialize a YAML-formatted source string into a YAML node.
-     * 
+     *
      * @param source A YAML-formatted source string.
      * @return Node A root YAML node deserialized from the source string.
      */
     Node Deserialize(const char* const source)
     {
-        if (!source) // NOLINT(readability-implicit-bool-conversion)
+        if (!source)
         {
             throw Exception("The given source for deserialization is nullptr.");
         }

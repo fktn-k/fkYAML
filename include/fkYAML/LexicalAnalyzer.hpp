@@ -9,6 +9,7 @@
 #ifndef FK_YAML_LEXICAL_ANALIZER_HPP_
 #define FK_YAML_LEXICAL_ANALIZER_HPP_
 
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -90,7 +91,7 @@ public:
      */
     void SetInputBuffer(const char* const input_buffer)
     {
-        if (!input_buffer || input_buffer[0] == '\0') // NOLINT(readability-implicit-bool-conversion)
+        if (!input_buffer || input_buffer[0] == '\0')
         {
             throw Exception("The input buffer for lexical analysis is nullptr or empty.");
         }
@@ -110,6 +111,12 @@ public:
         }
 
         const char& current = RefCurrentChar();
+
+        if (isdigit(current))
+        {
+            return ScanNumber();
+        }
+
         switch (current)
         {
         case '\0':
@@ -153,16 +160,6 @@ public:
             m_value_buffer = current;
             return LexicalTokenType::NULL_VALUE;
         case '+':
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
             return ScanNumber();
         case '.': {
             const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
@@ -486,7 +483,7 @@ private:
     {
         const char& next = GetNextChar();
 
-        if ('0' <= next && next <= '9')
+        if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
             const LexicalTokenType ret = ScanDecimalNumber();
@@ -544,7 +541,7 @@ private:
     {
         const char& next = GetNextChar();
 
-        if ('0' <= next && next <= '9')
+        if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
             ScanDecimalNumber();
@@ -567,7 +564,7 @@ private:
             m_value_buffer.push_back(next);
             ScanDecimalNumberAfterSign();
         }
-        else if ('0' <= next && next <= '9')
+        else if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
             ScanDecimalNumber();
@@ -583,7 +580,7 @@ private:
     LexicalTokenType ScanDecimalNumberAfterSign()
     {
         const char& next = GetNextChar();
-        if ('0' <= next && next <= '9')
+        if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
             return ScanDecimalNumber();
@@ -600,7 +597,7 @@ private:
     {
         const char& next = GetNextChar();
 
-        if ('0' <= next && next <= '9')
+        if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
             return ScanDecimalNumber();
@@ -651,7 +648,7 @@ private:
     LexicalTokenType ScanHexadecimalNumber()
     {
         const char& next = GetNextChar();
-        if (('0' <= next && next <= '9') || ('A' <= next && next <= 'F') || ('a' <= next && next <= 'f'))
+        if (std::isxdigit(next))
         {
             m_value_buffer.push_back(next);
             ScanHexadecimalNumber();
