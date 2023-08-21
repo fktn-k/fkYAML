@@ -110,6 +110,8 @@ public:
             throw Exception("The next token is required before an input buffer is set.");
         }
 
+        SkipWhiteSpaces();
+
         const char& current = RefCurrentChar();
 
         if (isdigit(current))
@@ -123,6 +125,10 @@ public:
         case s_EOF: // end of input buffer
             return LexicalTokenType::END_OF_BUFFER;
         case ':': // key separater
+            if (GetNextChar() != ' ')
+            {
+                throw Exception("At least one half-width space is required after a key separater(:).");
+            }
             return LexicalTokenType::KEY_SEPARATOR;
         case ',': // value separater
             return LexicalTokenType::VALUE_SEPARATOR;
@@ -708,6 +714,25 @@ private:
                 return LexicalTokenType::STRING_VALUE;
             }
 
+            if (current == ':')
+            {
+                // Just regard a colon as a character if surrounded by quotation marks.
+                if (needs_last_double_quote || needs_last_single_quote)
+                {
+                    m_value_buffer.push_back(current);
+                    continue;
+                }
+
+                // A colon as a key separator must be followed by a space.
+                if (RefNextChar() != ' ')
+                {
+                    m_value_buffer.push_back(current);
+                    continue;
+                }
+
+                return LexicalTokenType::STRING_VALUE;
+            }
+
             // handle newline codes.
             if (current == '\r' || current == '\n')
             {
@@ -819,6 +844,12 @@ private:
                 default:
                     throw Exception("Unsupported escape sequence found in a string token.");
                 }
+            }
+
+            if (0x20 <= current && current <= 0x7E)
+            {
+                m_value_buffer.push_back(current);
+                continue;
             }
 
             // handle unescaped control characters.
@@ -940,7 +971,7 @@ private:
     {
         while (true)
         {
-            switch (GetNextChar())
+            switch (RefCurrentChar())
             {
             case ' ':
             case '\t':
@@ -950,6 +981,7 @@ private:
             default:
                 return;
             }
+            GetNextChar();
         }
     }
 

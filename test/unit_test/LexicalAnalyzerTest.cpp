@@ -1111,7 +1111,7 @@ int LexicalAnalyzerTest::ScanNaNTest3()
     return 0;
 }
 
-int LexicalAnalyzerTest::ScanDoubleQuotedEmptyString()
+int LexicalAnalyzerTest::ScanDoubleQuotedEmptyStringTest()
 {
     fkyaml::LexicalAnalyzer lexer;
     lexer.SetInputBuffer("\"\"");
@@ -1152,7 +1152,7 @@ int LexicalAnalyzerTest::ScanDoubleQuotedEmptyString()
     return 0;
 }
 
-int LexicalAnalyzerTest::ScanSingleQuotedEmptyString()
+int LexicalAnalyzerTest::ScanSingleQuotedEmptyStringTest()
 {
     fkyaml::LexicalAnalyzer lexer;
     lexer.SetInputBuffer("\'\'");
@@ -1186,8 +1186,353 @@ int LexicalAnalyzerTest::ScanSingleQuotedEmptyString()
     std::string scanned_value = lexer.GetString();
     if (!scanned_value.empty())
     {
-        std::fprintf(stderr, "Invalid scanned value. expectated=\"%s\", actual=\"%s\"\n", "", scanned_value.c_str());
+        std::fprintf(stderr, "Invalid scanned value. expected=\"%s\", actual=\"%s\"\n", "", scanned_value.c_str());
         return -1;
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanKeyBooleanValuePairTest()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("test: true");
+
+    fkyaml::LexicalTokenType types[] =
+    {
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::BOOLEAN_VALUE,
+        fkyaml::LexicalTokenType::END_OF_BUFFER,
+    };
+    std::string str_value = "test";
+    bool bool_value = true;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        try
+        {
+            fkyaml::LexicalTokenType ret = lexer.GetNextToken();
+            if (ret != types[i])
+            {
+                std::fprintf(
+                    stderr,
+                    "Invalid scan result for mapping object. expect=%d, actual=%d\n",
+                    static_cast<int>(types[i]),
+                    static_cast<int>(ret));
+                return -1;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::STRING_VALUE)
+            {
+                if (lexer.GetString() != str_value)
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value. expect=\"%s\", actual=\"%s\"\n",
+                        str_value.c_str(),
+                        lexer.GetString().c_str());
+                    return -1;
+                }
+            }
+
+            if (ret == fkyaml::LexicalTokenType::BOOLEAN_VALUE)
+            {
+                if (lexer.GetBoolean() != bool_value)
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value. expect=%s, actual=%s\n",
+                        bool_value ? "true" : "false",
+                        lexer.GetBoolean() ? "true" : "false");
+                    return -1;
+                }
+            }
+        }
+        catch (const fkyaml::Exception& e)
+        {
+            std::fprintf(stderr, "fkYAML internal error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+        catch (const std::exception& e)
+        {
+            std::fprintf(stderr, "unexpected error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanKeySignedIntegerValuePairTest()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("test: -5784");
+
+    fkyaml::LexicalTokenType types[] =
+    {
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::SIGNED_INT_VALUE,
+        fkyaml::LexicalTokenType::END_OF_BUFFER,
+    };
+    std::string str_value = "test";
+    int64_t signed_int_value = -5784;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        try
+        {
+            fkyaml::LexicalTokenType ret = lexer.GetNextToken();
+            if (ret != types[i])
+            {
+                std::fprintf(
+                    stderr,
+                    "Invalid scan result for mapping object. expect=%d, actual=%d\n",
+                    static_cast<int>(types[i]),
+                    static_cast<int>(ret));
+                return -1;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::STRING_VALUE)
+            {
+                if (lexer.GetString() != str_value)
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value. expect=\"%s\", actual=\"%s\"\n",
+                        str_value.c_str(),
+                        lexer.GetString().c_str());
+                    return -1;
+                }
+            }
+
+            if (ret == fkyaml::LexicalTokenType::SIGNED_INT_VALUE)
+            {
+                if (lexer.GetSignedInt() != signed_int_value)
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value. expect=%" PRId64 ", actual=%" PRId64 "\n",
+                        signed_int_value,
+                        lexer.GetSignedInt());
+                    return -1;
+                }
+            }
+        }
+        catch (const fkyaml::Exception& e)
+        {
+            std::fprintf(stderr, "fkYAML internal error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+        catch (const std::exception& e)
+        {
+            std::fprintf(stderr, "unexpected error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanKeyUnsignedIntegerValuePairTest()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("test: 47239");
+
+    fkyaml::LexicalTokenType types[] =
+    {
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::UNSIGNED_INT_VALUE,
+        fkyaml::LexicalTokenType::END_OF_BUFFER,
+    };
+    std::string str_value = "test";
+    uint64_t unsigned_int_value = 47239;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        try
+        {
+            fkyaml::LexicalTokenType ret = lexer.GetNextToken();
+            if (ret != types[i])
+            {
+                std::fprintf(
+                    stderr,
+                    "Invalid scan result for mapping object. expect=%d, actual=%d\n",
+                    static_cast<int>(types[i]),
+                    static_cast<int>(ret));
+                return -1;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::STRING_VALUE)
+            {
+                if (lexer.GetString() != str_value)
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value. expect=\"%s\", actual=\"%s\"\n",
+                        str_value.c_str(),
+                        lexer.GetString().c_str());
+                    return -1;
+                }
+            }
+
+            if (ret == fkyaml::LexicalTokenType::UNSIGNED_INT_VALUE)
+            {
+                if (lexer.GetUnsignedInt() != unsigned_int_value)
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value. expect=%" PRIu64 ", actual=%" PRIu64 "\n",
+                        unsigned_int_value,
+                        lexer.GetUnsignedInt());
+                    return -1;
+                }
+            }
+        }
+        catch (const fkyaml::Exception& e)
+        {
+            std::fprintf(stderr, "fkYAML internal error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+        catch (const std::exception& e)
+        {
+            std::fprintf(stderr, "unexpected error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanKeyFloatNumberValuePairTest()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("test: -5.58e-3");
+
+    fkyaml::LexicalTokenType types[] =
+    {
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::FLOAT_NUMBER_VALUE,
+        fkyaml::LexicalTokenType::END_OF_BUFFER,
+    };
+    std::string str_value = "test";
+    double float_value = -5.58e-3;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        try
+        {
+            fkyaml::LexicalTokenType ret = lexer.GetNextToken();
+            if (ret != types[i])
+            {
+                std::fprintf(
+                    stderr,
+                    "Invalid scan result for mapping object. expect=%d, actual=%d\n",
+                    static_cast<int>(types[i]),
+                    static_cast<int>(ret));
+                return -1;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::STRING_VALUE)
+            {
+                if (lexer.GetString() != str_value)
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value. expect=\"%s\", actual=\"%s\"\n",
+                        str_value.c_str(),
+                        lexer.GetString().c_str());
+                    return -1;
+                }
+            }
+
+            if (ret == fkyaml::LexicalTokenType::FLOAT_NUMBER_VALUE)
+            {
+                if (lexer.GetFloatNumber() != float_value)
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value. expect=%lf, actual=%lf\n",
+                        float_value,
+                        lexer.GetFloatNumber());
+                    return -1;
+                }
+            }
+        }
+        catch (const fkyaml::Exception& e)
+        {
+            std::fprintf(stderr, "fkYAML internal error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+        catch (const std::exception& e)
+        {
+            std::fprintf(stderr, "unexpected error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanKeyStringValuePairTest()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("test: some value");
+
+    fkyaml::LexicalTokenType types[] =
+    {
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::END_OF_BUFFER,
+    };
+    std::string values[] =
+    {
+        "test",
+        "some value"
+    };
+
+    for (int i = 0; i < 4; ++i)
+    {
+        try
+        {
+            fkyaml::LexicalTokenType ret = lexer.GetNextToken();
+            if (ret != types[i])
+            {
+                std::fprintf(
+                    stderr,
+                    "Invalid scan result for mapping object. expect=%d, actual=%d\n",
+                    static_cast<int>(types[i]),
+                    static_cast<int>(ret));
+                return -1;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::STRING_VALUE)
+            {
+                if (lexer.GetString() != values[i / 2])
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value. expect=\"%s\", actual=\"%s\"\n",
+                        values[i / 2].c_str(),
+                        lexer.GetString().c_str());
+                    return -1;
+                }
+            }
+        }
+        catch (const fkyaml::Exception& e)
+        {
+            std::fprintf(stderr, "fkYAML internal error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+        catch (const std::exception& e)
+        {
+            std::fprintf(stderr, "unexpected error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
     }
 
     return 0;
