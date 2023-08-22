@@ -47,6 +47,9 @@ public:
     static int ScanFlowSequenceObject1();
     static int ScanFlowSequenceObject2();
     static int ScanFlowMappingObject1();
+    static int ScanBlockSequenceObject1();
+    static int ScanBlockSequenceObject2();
+    static int ScanBlockMappingObject1();
 };
 
 #endif /* FK_YAML_TEST_LEXICAL_ANALYZER_TEST_HPP_ */

@@ -79,6 +79,8 @@ add_unit_test(LexicalAnalyzerTest ScanKeyStringValuePairTest          ${TEST_TAR
 add_unit_test(LexicalAnalyzerTest ScanFlowSequenceObject1             ${TEST_TARGET} 0x0121)
 add_unit_test(LexicalAnalyzerTest ScanFlowSequenceObject2             ${TEST_TARGET} 0x0122)
 add_unit_test(LexicalAnalyzerTest ScanFlowMappingObject               ${TEST_TARGET} 0x0123)
+add_unit_test(LexicalAnalyzerTest ScanBlockSequenceObject1            ${TEST_TARGET} 0x0124)
+add_unit_test(LexicalAnalyzerTest ScanBlockSequenceObject2            ${TEST_TARGET} 0x0125)
 
 add_unit_test(DeserializerTest DeserializeFlowSequenceObject1 ${TEST_TARGET} 0x0200)
 add_unit_test(DeserializerTest DeserializeFlowMappingObject1  ${TEST_TARGET} 0x0201)
