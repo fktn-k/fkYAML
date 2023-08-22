@@ -12,13 +12,27 @@ class NodeClassTest
 {
 public:
     static int DefaultCtorTest();
-    static int SequenceNodeFactoryTest();
-    static int MappingNodeFactoryTest();
+    static int SequenceTypeCtorTest();
+    static int MappingTypeCtorTest();
+    static int NullTypeCtorTest();
+    static int BooleanTypeCtorTest();
+    static int SignedIntTypeCtorTest();
+    static int UnsignedIntTypeCtorTest();
+    static int FloatNumberTypeCtorTest();
+    static int StringTypeCtorTest();
+    static int EmptySequenceNodeFactoryTest();
+    static int LvalueSequenceNodeFactoryTest();
+    static int RvalueSequenceNodeFactoryTest();
+    static int EmptyMappingNodeFactoryTest();
+    static int LvalueMappingNodeFactoryTest();
+    static int RvalueMappingNodeFactoryTest();
     static int BoolNodeFactoryTest();
     static int SignedIntNodeFactoryTest();
     static int UnsignedIntNodeFactoryTest();
     static int FloatNumberNodeFactoryTest();
-    static int StringNodeFactoryTest();
+    static int EmptyStringNodeFactoryTest();
+    static int LvalueStringNodeFactoryTest();
+    static int RvalueStringNodeFactoryTest();
     static int SequenceForLoopTest();
     static int ConstSequenceForLoopTest();
 };

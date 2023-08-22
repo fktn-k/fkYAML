@@ -355,7 +355,20 @@ public:
 
 public:
     /**
-     * @brief A factory method for sequence Node objects.
+     * @brief A factory method for sequence Node objects without sequence_type objects.
+     *
+     * @return Node A constructed Node object of sequence type.
+     */
+    static Node Sequence()
+    {
+        Node node;
+        node.m_node_type = NodeType::SEQUENCE;
+        node.m_node_value.sequence = CreateObject<sequence_type>();
+        return node;
+    }
+
+    /**
+     * @brief A factory method for sequence Node objects with lvalue sequence_type objects.
      *
      * @param[in] sequence A lvalue source of sequence type.
      * @return Node A constructed Node object of sequence type.
@@ -369,7 +382,7 @@ public:
     }
 
     /**
-     * @brief A factory method for sequence Node objects.
+     * @brief A factory method for sequence Node objects with rvalue sequence_type objects.
      *
      * @param[in] sequence A rvalue source of sequence type.
      * @return Node A constructed Node object of sequence type.
@@ -383,9 +396,22 @@ public:
     }
 
     /**
-     * @brief A factory method for mapping Node objects.
+     * @brief A factory method for mapping Node objects without mapping_type objects.
      *
-     * @param mapping A lvalue source of mapping type.
+     * @return Node A constructed Node object of mapping type.
+     */
+    static Node Mapping()
+    {
+        Node node;
+        node.m_node_type = NodeType::MAPPING;
+        node.m_node_value.mapping = CreateObject<mapping_type>();
+        return node;
+    }
+
+    /**
+     * @brief A factory method for mapping Node objects with lvalue mapping_type objects.
+     *
+     * @param[in] mapping A lvalue source of mapping type.
      * @return Node A constructed Node object of mapping type.
      */
     static Node Mapping(const mapping_type& mapping)
@@ -397,7 +423,7 @@ public:
     }
 
     /**
-     * @brief A factory method for mapping Node objects.
+     * @brief A factory method for mapping Node objects with rvalue mapping_type objects.
      *
      * @param[in] mapping A rvalue source of mapping type.
      * @return Node A constructed Node object of mapping type.
@@ -467,7 +493,20 @@ public:
     }
 
     /**
-     * @brief A factory method for string Node objects.
+     * @brief A factory method for string Node objects without string_type objects.
+     *
+     * @return Node A constructed Node object of string type.
+     */
+    static Node StringScalar()
+    {
+        Node node;
+        node.m_node_type = NodeType::STRING;
+        node.m_node_value.str = CreateObject<string_type>();
+        return node;
+    }
+
+    /**
+     * @brief A factory method for string Node objects with lvalue string_type objects.
      *
      * @param[in] str A lvalue source of string type.
      * @return Node A constructed Node object of string type.
@@ -481,7 +520,7 @@ public:
     }
 
     /**
-     * @brief A factory method for string Node objects.
+     * @brief A factory method for string Node objects with rvalue string_type objects.
      *
      * @param[in] str A rvalue source of string type.
      * @return Node A constructed Node object of string type.
@@ -522,7 +561,7 @@ public:
     /**
      * @brief A subscript operator for non-const Node objects.
      *
-     * @param index An index of sequence Node values.
+     * @param[in] index An index of sequence Node values.
      * @return Node& Reference to a Node object located at the specified index.
      */
     Node& operator[](std::size_t index) // NOLINT(readability-make-member-function-const)
