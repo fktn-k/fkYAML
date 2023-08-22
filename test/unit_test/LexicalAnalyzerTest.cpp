@@ -1821,3 +1821,214 @@ int LexicalAnalyzerTest::ScanFlowMappingObject1()
 
     return 0;
 }
+
+int LexicalAnalyzerTest::ScanBlockSequenceObject1()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("test:\n  - foo\n  - bar");
+
+    fkyaml::LexicalTokenType types[] =
+    {
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::SEQUENCE_BLOCK_PREFIX,
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::SEQUENCE_BLOCK_PREFIX,
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::END_OF_BUFFER,
+    };
+    std::string str_values[] =
+    {
+        "test",
+        "foo",
+        "bar",
+    };
+    int str_value_index = 0;
+    uint32_t indent_widths[] =
+    {
+        2,
+        2,
+    };
+    int indent_width_index = 0;
+
+    for (int i = 0; i < 7; ++i)
+    {
+        try
+        {
+            fkyaml::LexicalTokenType ret = lexer.GetNextToken();
+            if (ret != types[i])
+            {
+                std::fprintf(
+                    stderr,
+                    "Invalid scan result for sequence object(i=%d). expect=%d, actual=%d\n",
+                    i,
+                    static_cast<int>(types[i]),
+                    static_cast<int>(ret));
+                return -1;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::SEQUENCE_BLOCK_PREFIX)
+            {
+                if (lexer.GetLatestIndentWidth() != indent_widths[indent_width_index])
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid indent width value(i=%d). expect=%" PRIu32 ", actual=%" PRIu32 "\n",
+                        i,
+                        indent_widths[indent_width_index],
+                        lexer.GetLatestIndentWidth());
+                    return -1;
+                }
+                ++indent_width_index;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::STRING_VALUE)
+            {
+                if (lexer.GetString() != str_values[str_value_index])
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value(i=%d). expect=\"%s\", actual=\"%s\"\n",
+                        i,
+                        str_values[str_value_index].c_str(),
+                        lexer.GetString().c_str());
+                    return -1;
+                }
+                ++str_value_index;
+            }
+        }
+        catch (const fkyaml::Exception& e)
+        {
+            std::fprintf(stderr, "fkYAML internal error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+        catch (const std::exception& e)
+        {
+            std::fprintf(stderr, "unexpected error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int LexicalAnalyzerTest::ScanBlockSequenceObject2()
+{
+    fkyaml::LexicalAnalyzer lexer;
+    lexer.SetInputBuffer("test:\n  - foo: one\n    bar: false\n  - foo: two\n    bar: false");
+
+    fkyaml::LexicalTokenType types[] =
+    {
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::SEQUENCE_BLOCK_PREFIX,
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::BOOLEAN_VALUE,
+        fkyaml::LexicalTokenType::SEQUENCE_BLOCK_PREFIX,
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::STRING_VALUE,
+        fkyaml::LexicalTokenType::KEY_SEPARATOR,
+        fkyaml::LexicalTokenType::BOOLEAN_VALUE,
+        fkyaml::LexicalTokenType::END_OF_BUFFER,
+    };
+    std::string str_values[] =
+    {
+        "test",
+        "foo",
+        "one",
+        "bar",
+        "foo",
+        "two",
+        "bar",
+    };
+    int str_value_index = 0;
+    bool bool_value = false;
+    uint32_t indent_widths[] =
+    {
+        2,
+        2,
+    };
+    int indent_width_index = 0;
+
+    for (int i = 0; i < 17; ++i)
+    {
+        try
+        {
+            fkyaml::LexicalTokenType ret = lexer.GetNextToken();
+            if (ret != types[i])
+            {
+                std::fprintf(
+                    stderr,
+                    "Invalid scan result for sequence object(i=%d). expect=%d, actual=%d\n",
+                    i,
+                    static_cast<int>(types[i]),
+                    static_cast<int>(ret));
+                return -1;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::SEQUENCE_BLOCK_PREFIX)
+            {
+                if (lexer.GetLatestIndentWidth() != indent_widths[indent_width_index])
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid indent width value(i=%d). expect=%" PRIu32 ", actual=%" PRIu32 "\n",
+                        i,
+                        indent_widths[indent_width_index],
+                        lexer.GetLatestIndentWidth());
+                    return -1;
+                }
+                ++indent_width_index;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::STRING_VALUE)
+            {
+                if (lexer.GetString() != str_values[str_value_index])
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value(i=%d). expect=\"%s\", actual=\"%s\"\n",
+                        i,
+                        str_values[str_value_index].c_str(),
+                        lexer.GetString().c_str());
+                    return -1;
+                }
+                ++str_value_index;
+                continue;
+            }
+
+            if (ret == fkyaml::LexicalTokenType::BOOLEAN_VALUE)
+            {
+                if (lexer.GetBoolean() != bool_value)
+                {
+                    std::fprintf(
+                        stderr,
+                        "Invalid scanned value(i=%d). expect=%s, actual=%s\n",
+                        i,
+                        bool_value ? "true" : "false",
+                        lexer.GetBoolean() ? "true" : "false");
+                    return -1;
+                }
+                continue;
+            }
+        }
+        catch (const fkyaml::Exception& e)
+        {
+            std::fprintf(stderr, "fkYAML internal error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+        catch (const std::exception& e)
+        {
+            std::fprintf(stderr, "unexpected error(i=%d): %s\n", i, e.what());
+            return -1;
+        }
+    }
+
+    return 0;
+}

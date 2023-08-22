@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <limits>
 #include <string>
+#include <vector>
 
 #include "fkYAML/Exception.hpp"
 
@@ -112,6 +113,12 @@ public:
 
         SkipWhiteSpaces();
 
+        if (m_needs_update_indent_width)
+        {
+            UpdateIndentWidth();
+            m_needs_update_indent_width = false;
+        }
+
         const char& current = RefCurrentChar();
 
         if (isdigit(current))
@@ -125,9 +132,19 @@ public:
         case s_EOF: // end of input buffer
             return LexicalTokenType::END_OF_BUFFER;
         case ':': // key separater
-            if (GetNextChar() != ' ')
+            switch (GetNextChar())
             {
-                throw Exception("At least one half-width space is required after a key separater(:).");
+            case ' ':
+                break;
+            case '\r':
+                if (RefNextChar() == '\n')
+                {
+                    GetNextChar();
+                }
+            case '\n':
+                break;
+            default:
+                throw Exception("Half-width spaces or newline codes are required after a key separater(:).");
             }
             return LexicalTokenType::KEY_SEPARATOR;
         case ',': // value separater
@@ -145,6 +162,12 @@ public:
         case '-':
             if (RefNextChar() == ' ')
             {
+                UpdateIndentWidth();
+
+                // Move a cursor to the beginning of the next token.
+                GetNextChar();
+                GetNextChar();
+
                 return LexicalTokenType::SEQUENCE_BLOCK_PREFIX;
             }
             return ScanNumber();
@@ -416,9 +439,19 @@ public:
      *
      * @return const std::string& Constant reference to a scanned string.
      */
-    const std::string& GetString() const
+    const std::string& GetString() const noexcept
     {
         return m_value_buffer;
+    }
+
+    /**
+     * @brief Get the latest indent width stored in @a m_indent_width_stack.
+     *
+     * @return uint32_t The latest indent width.
+     */
+    uint32_t GetLatestIndentWidth() const noexcept
+    {
+        return m_indent_width_stack.empty() ? 0 : m_indent_width_stack.back();
     }
 
 private:
@@ -708,6 +741,7 @@ private:
 
         const bool needs_last_double_quote = (RefCurrentChar() == '\"');
         const bool needs_last_single_quote = (RefCurrentChar() == '\'');
+        size_t start_pos_backup = m_position_info.total_read_char_counts;
         char current = (needs_last_double_quote || needs_last_single_quote) ? GetNextChar() : RefCurrentChar();
 
         for (;; current = GetNextChar())
@@ -758,11 +792,19 @@ private:
                     continue;
                 }
 
-                // A colon as a key separator must be followed by a space.
-                if (RefNextChar() != ' ')
+                // A colon as a key separator must be followed by a space or a newline code.
+                if (RefNextChar() != ' ' && RefNextChar() != '\r' && RefNextChar() != '\n')
                 {
                     m_value_buffer.push_back(current);
                     continue;
+                }
+
+                if (RefNextChar() == '\r' || RefNextChar() == '\n')
+                {
+                    size_t current_pos_backup = m_position_info.total_read_char_counts;
+                    m_position_info.total_read_char_counts = start_pos_backup;
+                    UpdateIndentWidth();
+                    m_position_info.total_read_char_counts = current_pos_backup;
                 }
 
                 return LexicalTokenType::STRING_VALUE;
@@ -1022,15 +1064,16 @@ private:
      */
     const char& GetNextChar() noexcept
     {
-        const char& current = m_input_buffer[++m_position_info.total_read_char_counts];
+        const char current = m_input_buffer[m_position_info.total_read_char_counts];
+        const char& next = m_input_buffer[++m_position_info.total_read_char_counts];
         ++m_position_info.read_char_counts_in_line;
-        if (current == '\n')
+        if (current == '\n' || (current == '\r' && next != '\n'))
         {
             ++m_position_info.total_read_line_counts;
             m_position_info.prev_char_counts_in_line = m_position_info.read_char_counts_in_line;
             m_position_info.read_char_counts_in_line = 0;
         }
-        return current;
+        return next;
     }
 
     /**
@@ -1054,6 +1097,65 @@ private:
         }
     }
 
+    /**
+     * @brief Store an indent width of the current line.
+     */
+    void UpdateIndentWidth()
+    {
+        if (m_position_info.total_read_char_counts == 0)
+        {
+            m_indent_width_stack.push_back(0);
+            return;
+        }
+
+        size_t pos = m_position_info.total_read_char_counts - 1;
+        uint32_t indent_width = 0;
+        while (pos > 0 && m_input_buffer[pos] != '\r' && m_input_buffer[pos] != '\n')
+        {
+            --pos;
+            ++indent_width;
+        }
+
+        if (pos == 0)
+        {
+            ++indent_width;
+        }
+
+        // TODO: This is a temporal restriction to accelerate development, and it should therefore be removed later.
+        // An indentation width is not restricted in the YAML specification.
+        // See "6.1. Indentation Spaces" section in https://yaml.org/spec/1.2.2/
+        if (!m_indent_width_stack.empty())
+        {
+            if (m_indent_width_stack.back() < indent_width)
+            {
+                if (indent_width != m_indent_width_stack.back() + 2)
+                {
+                    throw Exception("Indent width must be increased by 2.");
+                }
+                m_indent_width_stack.push_back(indent_width);
+                return;
+            }
+
+            bool found = false;
+            for (int i = 0; i < m_indent_width_stack.size(); ++i)
+            {
+                if (indent_width == m_indent_width_stack.back())
+                {
+                    found = true;
+                    break;
+                }
+                m_indent_width_stack.pop_back();
+            }
+
+            if (!found)
+            {
+                throw Exception("Failed to find matched indent width of a parent node.");
+            }
+        }
+
+        m_indent_width_stack.push_back(indent_width);
+    }
+
 private:
     //!< The value of EOF.
     static constexpr char_int_type s_EOF = char_traits_type::eof();
@@ -1062,10 +1164,12 @@ private:
     std::string m_input_buffer {};
     //!< The information set for the input buffer.
     Position m_position_info {};
-    //!< The current indent width.
-    size_t m_current_indent_width = 0;
     //!< A temporal buffer to store a string to be parsed to an actual datum.
     std::string m_value_buffer {};
+    //!< The flag to signal the need for update of the indent width history.
+    bool m_needs_update_indent_width = false;
+    //!< A stack to store indent width history.
+    std::vector<uint32_t> m_indent_width_stack;
 };
 
 } // namespace fkyaml
