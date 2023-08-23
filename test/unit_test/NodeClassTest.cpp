@@ -1219,6 +1219,129 @@ int NodeClassTest::IsEmptyThrowExceptionTest()
     return 0;
 }
 
+int NodeClassTest::SequenceSizeTest()
+{
+    fkyaml::Node node = fkyaml::Node::Sequence();
+
+    try
+    {
+        size_t size = node.Size();
+        if (size != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid sequence node size. expect=%d, actual=%zu\n",
+                0,
+                node.Size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call Size for a sequence node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::MappingSizeTest()
+{
+    fkyaml::Node node = fkyaml::Node::Mapping();
+
+    try
+    {
+        size_t size = node.Size();
+        if (size != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid mapping node size. expect=%d, actual=%zu\n",
+                0,
+                node.Size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call Size for a mapping node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::StringSizeTest()
+{
+    fkyaml::Node node = fkyaml::Node::StringScalar();
+
+    try
+    {
+        size_t size = node.Size();
+        if (size != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid string node size. expect=%d, actual=%zu\n",
+                0,
+                node.Size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call Size for a string node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::SizeThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+    };
+
+    for (const auto& node : nodes)
+    {
+        try
+        {
+            size_t ret = node.Size();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of Size(). type=%d\n",
+                static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
 int NodeClassTest::SequenceForLoopTest()
 {
     fkyaml::Node node = fkyaml::Node::Sequence(

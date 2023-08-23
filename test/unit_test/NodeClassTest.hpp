@@ -66,6 +66,11 @@ public:
     static int MappingIsEmptyTest();
     static int StringIsEmptyTest();
     static int IsEmptyThrowExceptionTest();
+    // container size getter
+    static int SequenceSizeTest();
+    static int MappingSizeTest();
+    static int StringSizeTest();
+    static int SizeThrowExceptionTest();
     // for-loops
     static int SequenceForLoopTest();
     static int ConstSequenceForLoopTest();
