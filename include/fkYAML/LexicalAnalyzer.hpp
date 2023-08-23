@@ -1137,7 +1137,7 @@ private:
             }
 
             bool found = false;
-            for (int i = 0; i < m_indent_width_stack.size(); ++i)
+            for (size_t i = 0; i < m_indent_width_stack.size(); ++i)
             {
                 if (indent_width == m_indent_width_stack.back())
                 {

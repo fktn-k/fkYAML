@@ -216,7 +216,7 @@ public:
             type = m_lexer.GetNextToken();
         }
 
-        return std::move(root);
+        return root;
     }
 
 private:

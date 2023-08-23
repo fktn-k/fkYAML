@@ -528,9 +528,9 @@ int LexicalAnalyzerTest::ScanUnsignedDecimalIntegerTest()
     }
 
     uint64_t scanned_value = lexer.GetUnsignedInt();
-    if (scanned_value != 5678ULL)
+    if (scanned_value != 5678)
     {
-        std::fprintf(stderr, "Invalid scanned value. expectated=%" PRIu64 ", actual=%" PRIu64 "\n", 5678ULL, scanned_value);
+        std::fprintf(stderr, "Invalid scanned value. expectated=%d, actual=%" PRIu64 "\n", 5678, scanned_value);
         return -1;
     }
 
@@ -569,9 +569,9 @@ int LexicalAnalyzerTest::ScanOctalIntegerTest()
     }
 
     uint64_t scanned_value = lexer.GetUnsignedInt();
-    if (scanned_value != 287ULL)
+    if (scanned_value != 287)
     {
-        std::fprintf(stderr, "Invalid scanned value. expectated=%" PRIu64 ", actual=%" PRIu64 "\n", 287ULL, scanned_value);
+        std::fprintf(stderr, "Invalid scanned value. expectated=%d, actual=%" PRIu64 "\n", 287, scanned_value);
         return -1;
     }
 
@@ -610,9 +610,9 @@ int LexicalAnalyzerTest::ScanHexadecimalIntegerTest()
     }
 
     uint64_t scanned_value = lexer.GetUnsignedInt();
-    if (scanned_value != 41039ULL)
+    if (scanned_value != 41039)
     {
-        std::fprintf(stderr, "Invalid scanned value. expectated=%" PRIu64 ", actual=%" PRIu64 "\n", 41039ULL, scanned_value);
+        std::fprintf(stderr, "Invalid scanned value. expectated=%d, actual=%" PRIu64 "\n", 41039, scanned_value);
         return -1;
     }
 
