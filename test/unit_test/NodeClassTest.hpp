@@ -11,6 +11,7 @@
 class NodeClassTest
 {
 public:
+    // constructors
     static int DefaultCtorTest();
     static int SequenceTypeCtorTest();
     static int MappingTypeCtorTest();
@@ -20,6 +21,7 @@ public:
     static int UnsignedIntTypeCtorTest();
     static int FloatNumberTypeCtorTest();
     static int StringTypeCtorTest();
+    // factory methods
     static int EmptySequenceNodeFactoryTest();
     static int LvalueSequenceNodeFactoryTest();
     static int RvalueSequenceNodeFactoryTest();
@@ -33,12 +35,33 @@ public:
     static int EmptyStringNodeFactoryTest();
     static int LvalueStringNodeFactoryTest();
     static int RvalueStringNodeFactoryTest();
+    // subscript operators
     static int LvalueStringSubscriptOperatorTest();
     static int ConstLvalueStringSubscriptOperatorTest();
     static int RvalueStringSubscriptOperatorTest();
     static int ConstRvalueStringSubscriptOperatorTest();
     static int IntegerSubscriptOperatorTest();
     static int ConstIntegerSubscriptOperatorTest();
+    // type property getter
+    static int SequenceTypeTest();
+    static int MappingTypeTest();
+    static int NullObjectTypeTest();
+    static int BooleanTypeTest();
+    static int SignedIntegerTypeTest();
+    static int UnsignedIntegerTypeTest();
+    static int FloatNumberTypeTest();
+    static int StringTypeTest();
+    // type property checkers
+    static int IsSequenceTest();
+    static int IsMappingTest();
+    static int IsNullTest();
+    static int IsBooleanTest();
+    static int IsSignedIntegerTest();
+    static int IsUnsignedIntegerTest();
+    static int IsFloatNumberTest();
+    static int IsStringTest();
+    static int IsScalarTest();
+    // for-loops
     static int SequenceForLoopTest();
     static int ConstSequenceForLoopTest();
 };

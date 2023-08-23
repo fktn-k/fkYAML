@@ -694,6 +694,327 @@ int NodeClassTest::ConstIntegerSubscriptOperatorTest()
     return 0;
 }
 
+int NodeClassTest::SequenceTypeTest()
+{
+    fkyaml::Node node = fkyaml::Node::Sequence();
+
+    if (node.Type() != fkyaml::NodeType::SEQUENCE)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::SEQUENCE),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::MappingTypeTest()
+{
+    fkyaml::Node node = fkyaml::Node::Mapping();
+
+    if (node.Type() != fkyaml::NodeType::MAPPING)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::MAPPING),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::NullObjectTypeTest()
+{
+    fkyaml::Node node;
+
+    if (node.Type() != fkyaml::NodeType::NULL_OBJECT)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::NULL_OBJECT),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::BooleanTypeTest()
+{
+    fkyaml::Node node = fkyaml::Node::BooleanScalar(false);
+
+    if (node.Type() != fkyaml::NodeType::BOOLEAN)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::BOOLEAN),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::SignedIntegerTypeTest()
+{
+    fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(0);
+
+    if (node.Type() != fkyaml::NodeType::SIGNED_INTEGER)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::UnsignedIntegerTypeTest()
+{
+    fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(0);
+
+    if (node.Type() != fkyaml::NodeType::UNSIGNED_INTEGER)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::UNSIGNED_INTEGER),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::FloatNumberTypeTest()
+{
+    fkyaml::Node node = fkyaml::Node::FloatNumberScalar(0.0);
+
+    if (node.Type() != fkyaml::NodeType::FLOAT_NUMBER)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::FLOAT_NUMBER),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::StringTypeTest()
+{
+    fkyaml::Node node = fkyaml::Node::StringScalar();
+
+    if (node.Type() != fkyaml::NodeType::STRING)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::STRING),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+// FIXME
+
+int NodeClassTest::IsSequenceTest()
+{
+    fkyaml::Node node = fkyaml::Node::Sequence();
+
+    if (!node.IsSequence())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::SEQUENCE),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IsMappingTest()
+{
+    fkyaml::Node node = fkyaml::Node::Mapping();
+
+    if (!node.IsMapping())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::MAPPING),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IsNullTest()
+{
+    fkyaml::Node node;
+
+    if (!node.IsNull())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::NULL_OBJECT),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IsBooleanTest()
+{
+    fkyaml::Node node = fkyaml::Node::BooleanScalar(false);
+
+    if (!node.IsBoolean())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::BOOLEAN),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IsSignedIntegerTest()
+{
+    fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(0);
+
+    if (!node.IsSignedInteger())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IsUnsignedIntegerTest()
+{
+    fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(0);
+
+    if (!node.IsUnsignedInteger())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::UNSIGNED_INTEGER),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IsFloatNumberTest()
+{
+    fkyaml::Node node = fkyaml::Node::FloatNumberScalar(0.0);
+
+    if (!node.IsFloatNumber())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::FLOAT_NUMBER),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IsStringTest()
+{
+    fkyaml::Node node = fkyaml::Node::StringScalar();
+
+    if (!node.IsString())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid node type. expectation=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::STRING),
+            static_cast<int>(node.Type()));
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IsScalarTest()
+{
+    std::vector<fkyaml::Node> container_nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+    };
+    for (const auto& container_node : container_nodes)
+    {
+        if (container_node.IsScalar())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid IsScalar() result. expectation=%s, actual=%s, type=%d\n",
+                "false",
+                container_node.IsScalar() ? "true" : "false",
+                static_cast<int>(container_node.Type()));
+            return -1;
+        }
+    }
+
+    std::vector<fkyaml::Node> scalar_nodes =
+    {
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+    for (const auto& scalar_node : scalar_nodes)
+    {
+        if (!scalar_node.IsScalar())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid IsScalar() result. expectation=%s, actual=%s, type=%d\n",
+                "true",
+                scalar_node.IsScalar() ? "true" : "false",
+                static_cast<int>(scalar_node.Type()));
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 int NodeClassTest::SequenceForLoopTest()
 {
     fkyaml::Node node = fkyaml::Node::Sequence(
