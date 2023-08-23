@@ -575,6 +575,125 @@ int NodeClassTest::RvalueStringNodeFactoryTest()
     return 0;
 }
 
+int NodeClassTest::LvalueStringSubscriptOperatorTest()
+{
+    fkyaml::Node node = fkyaml::Node::Mapping();
+    node.ToMapping().emplace("test", fkyaml::Node());
+
+    try
+    {
+        std::string key = "test";
+        fkyaml::Node test_node = node[key];
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to access mapping node value with a subscript operator\n.");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstLvalueStringSubscriptOperatorTest()
+{
+    fkyaml::Node tmp_node = fkyaml::Node::Mapping();
+    tmp_node.ToMapping().emplace("test", fkyaml::Node());
+    const fkyaml::Node node = std::move(tmp_node);
+
+    try
+    {
+        std::string key = "test";
+        const fkyaml::Node test_node = node[key];
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to access mapping node value with a subscript operator\n.");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::RvalueStringSubscriptOperatorTest()
+{
+    fkyaml::Node node = fkyaml::Node::Mapping();
+    node.ToMapping().emplace("test", fkyaml::Node());
+
+    try
+    {
+        fkyaml::Node test_node = node["test"];
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to access mapping node value with a subscript operator\n.");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstRvalueStringSubscriptOperatorTest()
+{
+    fkyaml::Node tmp_node = fkyaml::Node::Mapping();
+    tmp_node.ToMapping().emplace("test", fkyaml::Node());
+    const fkyaml::Node node = std::move(tmp_node);
+
+    try
+    {
+        const fkyaml::Node test_node = node["test"];
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to access mapping node value with a subscript operator\n.");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IntegerSubscriptOperatorTest()
+{
+    fkyaml::Node node = fkyaml::Node::Sequence();
+    node.ToSequence().emplace_back();
+
+    try
+    {
+        fkyaml::Node test_node = node[0];
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to access sequence node value with a subscript operator\n.");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstIntegerSubscriptOperatorTest()
+{
+    fkyaml::Node tmp_node = fkyaml::Node::Sequence();
+    tmp_node.ToSequence().emplace_back();
+    const fkyaml::Node node = std::move(tmp_node);
+
+    try
+    {
+        const fkyaml::Node test_node = node[0];
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to access sequence node value with a subscript operator\n.");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::SequenceForLoopTest()
 {
     fkyaml::Node node = fkyaml::Node::Sequence(

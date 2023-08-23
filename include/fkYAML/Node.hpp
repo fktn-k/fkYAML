@@ -607,22 +607,6 @@ public:
     }
 
     /**
-     * @brief A subscript operator for non-const Node objects.
-     *
-     * @param[in] key A rvalue key of mapping Node values.
-     * @return Node& Reference to a Node object associated with the specified key.
-     */
-    Node& operator[](std::string&& key) // NOLINT(readability-make-member-function-const)
-    {
-        if (!IsMapping())
-        {
-            throw Exception("The target node is not of a mapping type.");
-        }
-
-        return m_node_value.mapping->operator[](std::move(key));
-    }
-
-    /**
      * @brief A subscript operator for const Node objects.
      *
      * @param[in] key A lvalue key of mapping Node values.
@@ -636,6 +620,22 @@ public:
         }
 
         return m_node_value.mapping->operator[](key);
+    }
+
+    /**
+     * @brief A subscript operator for non-const Node objects.
+     *
+     * @param[in] key A rvalue key of mapping Node values.
+     * @return Node& Reference to a Node object associated with the specified key.
+     */
+    Node& operator[](std::string&& key) // NOLINT(readability-make-member-function-const)
+    {
+        if (!IsMapping())
+        {
+            throw Exception("The target node is not of a mapping type.");
+        }
+
+        return m_node_value.mapping->operator[](std::move(key));
     }
 
     /**

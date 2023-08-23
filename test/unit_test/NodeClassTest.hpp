@@ -33,6 +33,12 @@ public:
     static int EmptyStringNodeFactoryTest();
     static int LvalueStringNodeFactoryTest();
     static int RvalueStringNodeFactoryTest();
+    static int LvalueStringSubscriptOperatorTest();
+    static int ConstLvalueStringSubscriptOperatorTest();
+    static int RvalueStringSubscriptOperatorTest();
+    static int ConstRvalueStringSubscriptOperatorTest();
+    static int IntegerSubscriptOperatorTest();
+    static int ConstIntegerSubscriptOperatorTest();
     static int SequenceForLoopTest();
     static int ConstSequenceForLoopTest();
 };
