@@ -4,35 +4,13 @@ Language:        Cpp
 AccessModifierOffset: -4
 AlignAfterOpenBracket: AlwaysBreak
 AlignArrayOfStructures: None
-AlignConsecutiveAssignments:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  PadOperators:    true
-AlignConsecutiveBitFields:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  PadOperators:    false
-AlignConsecutiveDeclarations:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  PadOperators:    false
-AlignConsecutiveMacros:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  PadOperators:    false
+AlignConsecutiveAssignments: false
+AlignConsecutiveBitFields: false
+AlignConsecutiveDeclarations: false
+AlignConsecutiveMacros: false
 AlignEscapedNewlines: Right
 AlignOperands:   Align
-AlignTrailingComments:
-  Kind:            Always
-  OverEmptyLines:  0
+AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: Never
@@ -70,13 +48,13 @@ BraceWrapping:
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
-BreakAfterAttributes: Never
+# BreakAfterAttributes: Never # since clang-format 16
 BreakAfterJavaFieldAnnotations: false
-BreakArrays:     true
+# BreakArrays:     true # since clang-format 16
 BreakBeforeBinaryOperators: None
-BreakBeforeConceptDeclarations: Always
+BreakBeforeConceptDeclarations: true
 BreakBeforeBraces: Custom
-BreakBeforeInlineASMColon: OnlyMultiline
+# BreakBeforeInlineASMColon: OnlyMultiline # since clang-format 16
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
@@ -122,21 +100,21 @@ IndentCaseLabels: false
 IndentExternBlock: AfterExternBlock
 IndentGotoLabels: true
 IndentPPDirectives: None
-IndentRequiresClause: true
+# IndentRequiresClause: true # since clang-format 15
 IndentWidth:     4
 IndentWrappedFunctionNames: false
-InsertBraces:    false
-InsertNewlineAtEOF: false
+# InsertBraces:    false    # since clang-format 15
+# InsertNewlineAtEOF: false # since clang-format 16
 InsertTrailingCommas: None
-IntegerLiteralSeparator:
-  Binary:          0
-  Decimal:         0
-  Hex:             0
+# IntegerLiteralSeparator: # since clang-format 16
+#   Binary:          0
+#   Decimal:         0
+#   Hex:             0
 JavaScriptQuotes: Leave
 JavaScriptWrapImports: true
 KeepEmptyLinesAtTheStartOfBlocks: true
 LambdaBodyIndentation: Signature
-LineEnding:      DeriveLF
+# LineEnding:      DeriveLF # since clang-format 16
 MacroBlockBegin: ''
 MacroBlockEnd:   ''
 MaxEmptyLinesToKeep: 1
@@ -163,14 +141,14 @@ QualifierAlignment: Leave
 ReferenceAlignment: Pointer
 ReflowComments:  true
 RemoveBracesLLVM: false
-RemoveSemicolon: false
-RequiresClausePosition: OwnLine
-RequiresExpressionIndentation: OuterScope
+# RemoveSemicolon: false                    # since clang-format 16
+# RequiresClausePosition: OwnLine           # since clang-format 15
+# RequiresExpressionIndentation: OuterScope # since clang-format 16
 SeparateDefinitionBlocks: Leave
 ShortNamespaceLines: 1
 SortIncludes:    CaseSensitive
 SortJavaStaticImport: Before
-SortUsingDeclarations: LexicographicNumeric
+SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: true
@@ -188,8 +166,8 @@ SpaceBeforeParensOptions:
   AfterFunctionDeclarationName: false
   AfterIfMacros:   true
   AfterOverloadedOperator: false
-  AfterRequiresInClause: false
-  AfterRequiresInExpression: false
+  # AfterRequiresInClause: false
+  # AfterRequiresInExpression: false
   BeforeNonEmptyParentheses: false
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeSquareBrackets: false
