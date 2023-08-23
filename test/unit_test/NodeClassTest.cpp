@@ -1015,6 +1015,210 @@ int NodeClassTest::IsScalarTest()
     return 0;
 }
 
+int NodeClassTest::SequenceIsEmptyTest()
+{
+    fkyaml::Node node = fkyaml::Node::Sequence();
+
+    try
+    {
+        bool ret = node.IsEmpty();
+        if (!ret)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid IsEmpty() result for an empty sequence node. expectation=%s, actual=%s, size=%zu\n",
+                "true",
+                node.IsEmpty() ? "true" : "false",
+                node.Size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call IsEmpty for a sequence node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    node.ToSequence().emplace_back();
+
+    try
+    {
+        bool ret = node.IsEmpty();
+        if (ret)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid IsEmpty() result for a non-empty sequence node. expectation=%s, actual=%s, size=%zu\n",
+                "false",
+                node.IsEmpty() ? "true" : "false",
+                node.Size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call IsEmpty for a sequence node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::MappingIsEmptyTest()
+{
+    fkyaml::Node node = fkyaml::Node::Mapping();
+
+    try
+    {
+        bool ret = node.IsEmpty();
+        if (!ret)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid IsEmpty() result for an empty mapping node. expectation=%s, actual=%s, size=%zu\n",
+                "true",
+                node.IsEmpty() ? "true" : "false",
+                node.Size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call IsEmpty for a mapping node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    node.ToMapping().emplace("test", fkyaml::Node());
+
+    try
+    {
+        bool ret = node.IsEmpty();
+        if (ret)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid IsEmpty() result for a non-empty mapping node. expectation=%s, actual=%s, size=%zu\n",
+                "false",
+                node.IsEmpty() ? "true" : "false",
+                node.Size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call IsEmpty for a mapping node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::StringIsEmptyTest()
+{
+    fkyaml::Node node = fkyaml::Node::StringScalar();
+
+    try
+    {
+        bool ret = node.IsEmpty();
+        if (!ret)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid IsEmpty() result for an empty string node. expectation=%s, actual=%s, size=%zu\n",
+                "true",
+                node.IsEmpty() ? "true" : "false",
+                node.Size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call IsEmpty for a string node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    node.ToString().append("test");
+
+    try
+    {
+        bool ret = node.IsEmpty();
+        if (ret)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid IsEmpty() result for a non-empty string node. expectation=%s, actual=%s, size=%zu\n",
+                "false",
+                node.IsEmpty() ? "true" : "false",
+                node.Size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call IsEmpty for a string node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::IsEmptyThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+    };
+
+    for (const auto& node : nodes)
+    {
+        try
+        {
+            bool ret = node.IsEmpty();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of IsEmpty(). type=%d\n",
+                static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
 int NodeClassTest::SequenceForLoopTest()
 {
     fkyaml::Node node = fkyaml::Node::Sequence(

@@ -61,6 +61,11 @@ public:
     static int IsFloatNumberTest();
     static int IsStringTest();
     static int IsScalarTest();
+    // empty checker
+    static int SequenceIsEmptyTest();
+    static int MappingIsEmptyTest();
+    static int StringIsEmptyTest();
+    static int IsEmptyThrowExceptionTest();
     // for-loops
     static int SequenceForLoopTest();
     static int ConstSequenceForLoopTest();
