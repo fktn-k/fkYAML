@@ -956,6 +956,7 @@ private:
                     for (int i = 1; i >= 0; --i)
                     {
                         char four_bits = ConvertHexCharToByte(GetNextChar());
+                        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
                         byte |= static_cast<char>(four_bits << (4 * i));
                     }
                     m_value_buffer.push_back(byte);

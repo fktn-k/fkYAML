@@ -42,8 +42,8 @@ namespace fkyaml
  * @tparam StringType A type for string node values.
  */
 template <
-    template <typename, typename...> typename SequenceType = std::vector,
-    template <typename, typename, typename...> typename MappingType = std::unordered_map, typename BooleanType = bool,
+    template <typename, typename...> class SequenceType = std::vector,
+    template <typename, typename, typename...> class MappingType = std::unordered_map, typename BooleanType = bool,
     typename SignedIntegerType = std::int64_t, typename UnsignedIntegerType = std::uint64_t,
     typename FloatNumberType = double, typename StringType = std::string>
 class BasicNode
