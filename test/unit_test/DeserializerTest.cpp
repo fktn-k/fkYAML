@@ -5,7 +5,111 @@
 
 #include "fkYAML/Deserializer.hpp"
 
-int DeserializerTest::DeserializeFlowSequenceObject1()
+int DeserializerTest::DeserializeMappingObject1()
+{
+    fkyaml::Deserializer deserializer;
+    try
+    {
+        fkyaml::Node root = deserializer.Deserialize("foo: one\nbar: true\npi: 3.14");
+
+        if (!root.IsMapping())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid root node type. expect=%d, actual=%d\n",
+                static_cast<int>(fkyaml::NodeType::MAPPING),
+                static_cast<int>(root.Type()));
+            return -1;
+        }
+
+        if (root.Size() != 3)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid root node size. expect=%d, actual=%zu",
+                3,
+                root.Size());
+            return -1;
+        }
+
+        fkyaml::Node& foo_node = root["foo"];
+        if (!foo_node.IsString())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid test node type. expect=%d, actual=%d\n",
+                static_cast<int>(fkyaml::NodeType::STRING),
+                static_cast<int>(foo_node.Type()));
+            return -1;
+        }
+
+        if (foo_node.ToString().compare("one") != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid foo_node value. expect=\"%s\", actual=\"%s\"\n",
+                "one",
+                foo_node.ToString().c_str());
+            return -1;
+        }
+
+        fkyaml::Node& bar_node = root["bar"];
+        if (!bar_node.IsBoolean())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid test node type. expect=%d, actual=%d\n",
+                static_cast<int>(fkyaml::NodeType::BOOLEAN),
+                static_cast<int>(bar_node.Type()));
+            return -1;
+        }
+
+        if (bar_node.ToBoolean() != true)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid bar_node value. expect=%s, actual=%s\n",
+                "true",
+                bar_node.ToBoolean() ? "true" : "false");
+            return -1;
+        }
+
+        fkyaml::Node& pi_node = root["pi"];
+        if (!pi_node.IsFloatNumber())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid test node type. expect=%d, actual=%d\n",
+                static_cast<int>(fkyaml::NodeType::FLOAT_NUMBER),
+                static_cast<int>(pi_node.Type()));
+            return -1;
+        }
+
+        if (pi_node.ToFloatNumber() != 3.14)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid pi_node value. expect=%lf, actual=%lf\n",
+                3.14,
+                pi_node.ToFloatNumber());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "fkYAML internal error: %s\n", e.what());
+        return -1;
+    }
+    catch (const std::exception& e)
+    {
+        std::fprintf(stderr, "unexpected error: %s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int DeserializerTest::DeserializeNestedFlowSequenceObject1()
 {
     fkyaml::Deserializer deserializer;
     try
@@ -109,7 +213,7 @@ int DeserializerTest::DeserializeFlowSequenceObject1()
     return 0;
 }
 
-int DeserializerTest::DeserializeFlowMappingObject1()
+int DeserializerTest::DeserializeNestedFlowMappingObject1()
 {
     fkyaml::Deserializer deserializer;
     try
@@ -234,7 +338,7 @@ int DeserializerTest::DeserializeFlowMappingObject1()
     return 0;
 }
 
-int DeserializerTest::DeserializeBlockSequenceObject1()
+int DeserializerTest::DeserializeNestedBlockSequenceObject1()
 {
     fkyaml::Deserializer deserializer;
     try
@@ -338,7 +442,7 @@ int DeserializerTest::DeserializeBlockSequenceObject1()
     return 0;
 }
 
-int DeserializerTest::DeserializeBlockSequenceObject2()
+int DeserializerTest::DeserializeNestedBlockSequenceObject2()
 {
     fkyaml::Deserializer deserializer;
     try
@@ -526,7 +630,7 @@ int DeserializerTest::DeserializeBlockSequenceObject2()
     return 0;
 }
 
-int DeserializerTest::DeserializeBlockMappingObject1()
+int DeserializerTest::DeserializeNestedBlockMappingObject1()
 {
     fkyaml::Deserializer deserializer;
     try

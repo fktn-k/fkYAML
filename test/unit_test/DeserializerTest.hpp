@@ -11,11 +11,12 @@
 class DeserializerTest
 {
 public:
-    static int DeserializeFlowSequenceObject1();
-    static int DeserializeFlowMappingObject1();
-    static int DeserializeBlockSequenceObject1();
-    static int DeserializeBlockSequenceObject2();
-    static int DeserializeBlockMappingObject1();
+    static int DeserializeMappingObject1();
+    static int DeserializeNestedFlowSequenceObject1();
+    static int DeserializeNestedFlowMappingObject1();
+    static int DeserializeNestedBlockSequenceObject1();
+    static int DeserializeNestedBlockSequenceObject2();
+    static int DeserializeNestedBlockMappingObject1();
 };
 
 #endif /* FK_YAML_TEST_DESERIALIZER_TEST_HPP_ */
