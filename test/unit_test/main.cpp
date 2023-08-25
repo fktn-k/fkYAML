@@ -16,7 +16,7 @@
 #include "LexicalAnalyzerTest.hpp"
 #include "NodeClassTest.hpp"
 
-static const std::unordered_map<uint32_t, int (*)()> TEST_CASE_MAP {
+static const std::unordered_map<unsigned long, int (*)()> TEST_CASE_MAP {
     {0x0000, NodeClassTest::DefaultCtorTest},
     {0x0001, NodeClassTest::SequenceTypeCtorTest},
     {0x0002, NodeClassTest::MappingTypeCtorTest},
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
 
     errno = 0;
 
-    uint32_t test_id = std::strtoul(argv[1], nullptr, 0);
+    unsigned long test_id = std::strtoul(argv[1], nullptr, 0);
     if ((test_id == 0 || test_id == ULONG_MAX) && errno == ERANGE)
     {
         std::fprintf(stderr, "Failed to retrieve test case id.");
