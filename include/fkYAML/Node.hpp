@@ -30,8 +30,16 @@ namespace fkyaml
 {
 
 /**
- * @class Node
+ * @class BasicNode
  * @brief A class to store value of YAML nodes.
+ *
+ * @tparam SequenceType A type for sequence node value containers.
+ * @tparam MappingType A type for mapping node value containers.
+ * @tparam BooleanType A type for boolean node values.
+ * @tparam SignedIntegerType A type for signed integer node values.
+ * @tparam UnsignedIntegerType A type for unsigned integer node values.
+ * @tparam FloatNumberType A type for float number node values.
+ * @tparam StringType A type for string node values.
  */
 template <
     template <typename, typename...> typename SequenceType = std::vector,
@@ -1203,27 +1211,30 @@ private:
     NodeValue m_node_value {};
 };
 
+/**
+ * @brief default YAML node value container.
+ */
 using Node = BasicNode<>;
 
-/** A type for sequence Node values. */
+/** A default type for sequence Node values. */
 using NodeSequenceType = typename Node::sequence_type;
 
-/** A type for mapping Node values. */
+/** A default type for mapping Node values. */
 using NodeMappingType = typename Node::mapping_type;
 
-/** A type for boolean Node values. */
+/** A default type for boolean Node values. */
 using NodeBooleanType = typename Node::boolean_type;
 
-/** A type for signed integer Node values. */
+/** A default type for signed integer Node values. */
 using NodeSignedIntType = typename Node::signed_int_type;
 
-/** A type for unsigned integer Node values. */
+/** A default type for unsigned integer Node values. */
 using NodeUnsignedIntType = typename Node::unsigned_int_type;
 
-/** A type for float number Node values. */
+/** A default type for float number Node values. */
 using NodeFloatNumberType = typename Node::float_number_type;
 
-/** A type for string Node values. */
+/** A default type for string Node values. */
 using NodeStringType = typename Node::string_type;
 
 } // namespace fkyaml
