@@ -149,6 +149,10 @@ add_unit_test(LexicalAnalyzerTest ScanFlowSequenceObject2             ${TEST_TAR
 add_unit_test(LexicalAnalyzerTest ScanFlowMappingObject               ${TEST_TARGET} 0x0123)
 add_unit_test(LexicalAnalyzerTest ScanBlockSequenceObject1            ${TEST_TARGET} 0x0124)
 add_unit_test(LexicalAnalyzerTest ScanBlockSequenceObject2            ${TEST_TARGET} 0x0125)
+add_unit_test(LexicalAnalyzerTest ScanBlockMappingObject1             ${TEST_TARGET} 0x0126)
 
-add_unit_test(DeserializerTest DeserializeFlowSequenceObject1 ${TEST_TARGET} 0x0200)
-add_unit_test(DeserializerTest DeserializeFlowMappingObject1  ${TEST_TARGET} 0x0201)
+add_unit_test(DeserializerTest DeserializeFlowSequenceObject1  ${TEST_TARGET} 0x0200)
+add_unit_test(DeserializerTest DeserializeFlowMappingObject1   ${TEST_TARGET} 0x0201)
+add_unit_test(DeserializerTest DeserializeBlockSequenceObject1 ${TEST_TARGET} 0x0202)
+add_unit_test(DeserializerTest DeserializeBlockSequenceObject2 ${TEST_TARGET} 0x0203)
+add_unit_test(DeserializerTest DeserializeBlockMappingObject1  ${TEST_TARGET} 0x0204)

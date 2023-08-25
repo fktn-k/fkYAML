@@ -134,9 +134,13 @@ static const std::unordered_map<uint32_t, int (*)()> TEST_CASE_MAP {
     {0x0123, LexicalAnalyzerTest::ScanFlowMappingObject1},
     {0x0124, LexicalAnalyzerTest::ScanBlockSequenceObject1},
     {0x0125, LexicalAnalyzerTest::ScanBlockSequenceObject2},
+    {0x0126, LexicalAnalyzerTest::ScanBlockMappingObject1},
 
     {0x0200, DeserializerTest::DeserializeFlowSequenceObject1},
     {0x0201, DeserializerTest::DeserializeFlowMappingObject1},
+    {0x0202, DeserializerTest::DeserializeBlockSequenceObject1},
+    {0x0203, DeserializerTest::DeserializeBlockSequenceObject2},
+    {0x0204, DeserializerTest::DeserializeBlockMappingObject1},
 };
 
 int main(int argc, char* argv[])
