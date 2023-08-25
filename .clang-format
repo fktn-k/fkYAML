@@ -67,6 +67,7 @@ ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true
 DerivePointerAlignment: false
+DeriveLineEnding: true
 DisableFormat:   false
 EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: LogicalBlock
@@ -191,6 +192,7 @@ StatementMacros:
   - QT_REQUIRE_VERSION
 TabWidth:        4
 UseTab:          Never
+UseCRLF: false
 WhitespaceSensitiveMacros:
   - BOOST_PP_STRINGIZE
   - CF_SWIFT_NAME
