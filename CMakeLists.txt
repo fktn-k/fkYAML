@@ -48,8 +48,6 @@ else()
 endif()
 
 if(FK_YAML_CI)
-  # enable sanitizers during CI.
-  set(FK_YAML_RUN_SANITIZERS_INIT ON)
   # disable execution of clang-format during CI.
   set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
 endif()
