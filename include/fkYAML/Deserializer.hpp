@@ -23,25 +23,50 @@ namespace fkyaml
 {
 
 /**
- * @class Deserializer
+ * @class BasicDeserializer
  * @brief A class which provides the feature of deserializing YAML documents.
  */
-class Deserializer
+
+/**
+ * @class BasicDeserializer
+ * @brief A class which provides the feature of deserializing YAML documents.
+ *
+ * @tparam BasicNodeType A type of the container for deserialized YAML values.
+ */
+template <typename BasicNodeType = Node>
+class BasicDeserializer
 {
+    /** A type for sequence node value containers. */
+    using sequence_type = typename BasicNodeType::sequence_type;
+    /** A type for mapping node value containers. */
+    using mapping_type = typename BasicNodeType::mapping_type;
+    /** A type for boolean node values. */
+    using boolean_type = typename BasicNodeType::boolean_type;
+    /** A type for signed integer node values. */
+    using signed_int_type = typename BasicNodeType::signed_int_type;
+    /** A type for unsigned integer node values. */
+    using unsigned_int_type = typename BasicNodeType::unsigned_int_type;
+    /** A type for float number node values. */
+    using float_number_type = typename BasicNodeType::float_number_type;
+    /** A type for string node values. */
+    using string_type = typename BasicNodeType::string_type;
+    /** A type for the lexical analyzer object used by this deserializer. */
+    using lexer_type = LexicalAnalyzer<BasicNodeType>;
+
 public:
     /**
-     * @brief Construct a new Deserializer object.
+     * @brief Construct a new BasicDeserializer object.
      */
-    Deserializer() = default;
+    BasicDeserializer() = default;
 
 public:
     /**
      * @brief Deserialize a YAML-formatted source string into a YAML node.
      *
      * @param source A YAML-formatted source string.
-     * @return Node A root YAML node deserialized from the source string.
+     * @return BasicNodeType A root YAML node deserialized from the source string.
      */
-    Node Deserialize(const char* const source)
+    BasicNodeType Deserialize(const char* const source)
     {
         if (!source)
         {
@@ -49,10 +74,10 @@ public:
         }
 
         m_lexer.SetInputBuffer(source);
-        Node root = Node::Mapping();
-        std::vector<Node*> node_stack;
+        BasicNodeType root = BasicNodeType::Mapping();
+        std::vector<BasicNodeType*> node_stack;
 
-        Node* p_current_node = &root;
+        BasicNodeType* p_current_node = &root;
 
         LexicalTokenType type = m_lexer.GetNextToken();
         while (type != LexicalTokenType::END_OF_BUFFER)
@@ -68,11 +93,11 @@ public:
                     p_current_node->operator[](0).IsString())
                 {
                     // make sequence node to mapping node.
-                    NodeStringType tmp_str = p_current_node->operator[](0).ToString();
-                    p_current_node->operator[](0) = Node::Mapping();
+                    string_type tmp_str = p_current_node->operator[](0).ToString();
+                    p_current_node->operator[](0) = BasicNodeType::Mapping();
                     node_stack.emplace_back(p_current_node);
                     p_current_node = &(p_current_node->operator[](0));
-                    p_current_node->ToMapping().emplace(tmp_str, Node());
+                    p_current_node->ToMapping().emplace(tmp_str, BasicNodeType());
                     node_stack.emplace_back(p_current_node);
                     p_current_node = &(p_current_node->operator[](tmp_str));
                 }
@@ -91,19 +116,19 @@ public:
             case LexicalTokenType::SEQUENCE_BLOCK_PREFIX:
                 if (p_current_node->IsNull())
                 {
-                    *p_current_node = Node::Sequence();
+                    *p_current_node = BasicNodeType::Sequence();
                     break;
                 }
                 if (p_current_node->IsMapping())
                 {
                     if (p_current_node->IsEmpty())
                     {
-                        *p_current_node = Node::Sequence();
+                        *p_current_node = BasicNodeType::Sequence();
                         break;
                     }
 
                     // for the second or later mapping items in a sequence node.
-                    node_stack.back()->ToSequence().emplace_back(Node::Mapping());
+                    node_stack.back()->ToSequence().emplace_back(BasicNodeType::Mapping());
                     p_current_node = &(node_stack.back()->ToSequence().back());
                     break;
                 }
@@ -117,7 +142,7 @@ public:
                 {
                     throw Exception("Cannot assign a sequence value as a key.");
                 }
-                *p_current_node = Node::Sequence();
+                *p_current_node = BasicNodeType::Sequence();
                 break;
             case LexicalTokenType::SEQUENCE_FLOW_END:
                 if (!p_current_node->IsSequence())
@@ -132,14 +157,14 @@ public:
                 {
                     throw Exception("Cannot assign a mapping value as a key.");
                 }
-                *p_current_node = Node::Mapping();
+                *p_current_node = BasicNodeType::Mapping();
                 break;
             case LexicalTokenType::MAPPING_FLOW_BEGIN:
                 if (p_current_node->IsMapping())
                 {
                     throw Exception("Cannot assign a mapping value as a key.");
                 }
-                *p_current_node = Node::Mapping();
+                *p_current_node = BasicNodeType::Mapping();
                 break;
             case LexicalTokenType::MAPPING_FLOW_END:
                 if (!p_current_node->IsMapping())
@@ -173,11 +198,11 @@ public:
 
                 if (p_current_node->IsSequence())
                 {
-                    p_current_node->ToSequence().emplace_back(Node::BooleanScalar(m_lexer.GetBoolean()));
+                    p_current_node->ToSequence().emplace_back(BasicNodeType::BooleanScalar(m_lexer.GetBoolean()));
                 }
                 else // a scalar node
                 {
-                    *p_current_node = Node::BooleanScalar(m_lexer.GetBoolean());
+                    *p_current_node = BasicNodeType::BooleanScalar(m_lexer.GetBoolean());
                     p_current_node = node_stack.back();
                     node_stack.pop_back();
                 }
@@ -190,11 +215,12 @@ public:
 
                 if (p_current_node->IsSequence())
                 {
-                    p_current_node->ToSequence().emplace_back(Node::SignedIntegerScalar(m_lexer.GetSignedInt()));
+                    p_current_node->ToSequence().emplace_back(
+                        BasicNodeType::SignedIntegerScalar(m_lexer.GetSignedInt()));
                 }
                 else // a scalar node
                 {
-                    *p_current_node = Node::SignedIntegerScalar(m_lexer.GetSignedInt());
+                    *p_current_node = BasicNodeType::SignedIntegerScalar(m_lexer.GetSignedInt());
                     p_current_node = node_stack.back();
                     node_stack.pop_back();
                 }
@@ -207,11 +233,12 @@ public:
 
                 if (p_current_node->IsSequence())
                 {
-                    p_current_node->ToSequence().emplace_back(Node::UnsignedIntegerScalar(m_lexer.GetUnsignedInt()));
+                    p_current_node->ToSequence().emplace_back(
+                        BasicNodeType::UnsignedIntegerScalar(m_lexer.GetUnsignedInt()));
                 }
                 else
                 {
-                    *p_current_node = Node::UnsignedIntegerScalar(m_lexer.GetUnsignedInt());
+                    *p_current_node = BasicNodeType::UnsignedIntegerScalar(m_lexer.GetUnsignedInt());
                     p_current_node = node_stack.back();
                     node_stack.pop_back();
                 }
@@ -224,11 +251,12 @@ public:
 
                 if (p_current_node->IsSequence())
                 {
-                    p_current_node->ToSequence().emplace_back(Node::FloatNumberScalar(m_lexer.GetFloatNumber()));
+                    p_current_node->ToSequence().emplace_back(
+                        BasicNodeType::FloatNumberScalar(m_lexer.GetFloatNumber()));
                 }
                 else // a scalar
                 {
-                    *p_current_node = Node::FloatNumberScalar(m_lexer.GetFloatNumber());
+                    *p_current_node = BasicNodeType::FloatNumberScalar(m_lexer.GetFloatNumber());
                     p_current_node = node_stack.back();
                     node_stack.pop_back();
                 }
@@ -236,18 +264,18 @@ public:
             case LexicalTokenType::STRING_VALUE:
                 if (p_current_node->IsMapping())
                 {
-                    p_current_node->ToMapping().emplace(m_lexer.GetString(), Node());
+                    p_current_node->ToMapping().emplace(m_lexer.GetString(), BasicNodeType());
                     node_stack.push_back(p_current_node);
                     p_current_node = &(p_current_node->ToMapping().at(m_lexer.GetString()));
                     break;
                 }
                 if (p_current_node->IsSequence())
                 {
-                    p_current_node->ToSequence().emplace_back(Node::StringScalar(m_lexer.GetString()));
+                    p_current_node->ToSequence().emplace_back(BasicNodeType::StringScalar(m_lexer.GetString()));
                     break;
                 }
                 // a scalar node
-                *p_current_node = Node::StringScalar(m_lexer.GetString());
+                *p_current_node = BasicNodeType::StringScalar(m_lexer.GetString());
                 p_current_node = node_stack.back();
                 node_stack.pop_back();
                 break;
@@ -262,9 +290,14 @@ public:
     }
 
 private:
-    LexicalAnalyzer m_lexer {};
+    lexer_type m_lexer {};
     uint32_t m_current_indent_width = 0;
 };
+
+/**
+ * @brief default YAML document deserializer.
+ */
+using Deserializer = BasicDeserializer<>;
 
 } // namespace fkyaml
 

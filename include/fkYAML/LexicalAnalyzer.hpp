@@ -56,13 +56,24 @@ enum class LexicalTokenType
 /**
  * @class LexicalAnalyzer
  * @brief A class which lexically analizes YAML formatted inputs.
+ *
+ * @tparam BasicNodeType A type of the container for YAML values.
  */
+template <typename BasicNodeType>
 class LexicalAnalyzer
 {
 private:
     using char_traits_type = std::char_traits<char>;
     using char_int_type = typename char_traits_type::int_type;
 
+public:
+    using boolean_type = typename BasicNodeType::boolean_type;
+    using signed_int_type = typename BasicNodeType::signed_int_type;
+    using unsigned_int_type = typename BasicNodeType::unsigned_int_type;
+    using float_number_type = typename BasicNodeType::float_number_type;
+    using string_type = typename BasicNodeType::string_type;
+
+private:
     /**
      * @struct Position
      * @brief Information set of analyzed data counters.
@@ -301,7 +312,7 @@ public:
      * @return true  A string token is one of the followings: "true", "True", "TRUE".
      * @return false A string token is one of the followings: "false", "False", "FALSE".
      */
-    bool GetBoolean() const
+    boolean_type GetBoolean() const
     {
         if (m_value_buffer.empty())
         {
@@ -310,12 +321,12 @@ public:
 
         if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
         {
-            return true;
+            return static_cast<boolean_type>(true);
         }
 
         if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
         {
-            return false;
+            return static_cast<boolean_type>(false);
         }
 
         throw Exception("Invalid request for a boolean value.");
@@ -324,9 +335,9 @@ public:
     /**
      * @brief Convert from string to signed integer and get the converted value.
      *
-     * @return int64_t A signed integer value converted from the source string.
+     * @return signed_int_type A signed integer value converted from the source string.
      */
-    int64_t GetSignedInt() const
+    signed_int_type GetSignedInt() const
     {
         if (m_value_buffer.empty())
         {
@@ -345,14 +356,13 @@ public:
         if ((tmp_val == std::numeric_limits<long long>::min() || tmp_val == std::numeric_limits<long long>::max()) &&
             errno == ERANGE)
         {
-            ;
             throw Exception("Range error on converting from a string to a signed integer.");
         }
 
-        const auto value_int = static_cast<int64_t>(tmp_val);
+        const auto value_int = static_cast<signed_int_type>(tmp_val);
         if (value_int != tmp_val)
         {
-            throw Exception("Failed to convert from long long to int64_t.");
+            throw Exception("Failed to convert from long long to signed_int_type.");
         }
         return value_int;
     }
@@ -360,9 +370,9 @@ public:
     /**
      * @brief Convert from string to unsigned integer and get the converted value.
      *
-     * @return uint64_t An unsigned integer value converted from the source string.
+     * @return unsigned_int_type An unsigned integer value converted from the source string.
      */
-    uint64_t GetUnsignedInt() const
+    unsigned_int_type GetUnsignedInt() const
     {
         if (m_value_buffer.empty())
         {
@@ -383,10 +393,10 @@ public:
             throw Exception("Range error on converting from a string to an unsigned integer.");
         }
 
-        const auto value_int = static_cast<uint64_t>(tmp_val);
+        const auto value_int = static_cast<unsigned_int_type>(tmp_val);
         if (value_int != tmp_val)
         {
-            throw Exception("Failed to convert from unsigned long long to uint64_t.");
+            throw Exception("Failed to convert from unsigned long long to unsigned_int_type.");
         }
         return value_int;
     }
@@ -394,9 +404,9 @@ public:
     /**
      * @brief Convert from string to float number and get the converted value.
      *
-     * @return double A float number value converted from the source string.
+     * @return float_number_type A float number value converted from the source string.
      */
-    double GetFloatNumber() const
+    float_number_type GetFloatNumber() const
     {
         if (m_value_buffer.empty())
         {
@@ -405,13 +415,13 @@ public:
 
         if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF")
         {
-            return std::numeric_limits<double>::infinity();
+            return std::numeric_limits<float_number_type>::infinity();
         }
 
         if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
         {
-            static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 required.");
-            return -1 * std::numeric_limits<double>::infinity();
+            static_assert(std::numeric_limits<float_number_type>::is_iec559, "IEEE 754 required.");
+            return -1 * std::numeric_limits<float_number_type>::infinity();
         }
 
         if (m_value_buffer == ".nan" || m_value_buffer == ".NaN" || m_value_buffer == ".NAN")
@@ -432,15 +442,15 @@ public:
             throw Exception("Range error on converting from a string to a double.");
         }
 
-        return value;
+        return static_cast<float_number_type>(value);
     }
 
     /**
      * @brief Get a scanned string value.
      *
-     * @return const std::string& Constant reference to a scanned string.
+     * @return const string_type& Constant reference to a scanned string.
      */
-    const std::string& GetString() const noexcept
+    const string_type& GetString() const noexcept
     {
         return m_value_buffer;
     }
@@ -1162,11 +1172,11 @@ private:
     static constexpr char_int_type s_EOF = char_traits_type::eof();
 
     //!< An input buffer to be analyzed.
-    std::string m_input_buffer {};
+    string_type m_input_buffer {};
     //!< The information set for the input buffer.
     Position m_position_info {};
     //!< A temporal buffer to store a string to be parsed to an actual datum.
-    std::string m_value_buffer {};
+    string_type m_value_buffer {};
     //!< The flag to signal the need for update of the indent width history.
     bool m_needs_update_indent_width = false;
     //!< A stack to store indent width history.
