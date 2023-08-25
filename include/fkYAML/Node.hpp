@@ -33,46 +33,51 @@ namespace fkyaml
  * @class Node
  * @brief A class to store value of YAML nodes.
  */
-class Node
+template <
+    template <typename, typename...> typename SequenceType = std::vector,
+    template <typename, typename, typename...> typename MappingType = std::unordered_map, typename BooleanType = bool,
+    typename SignedIntegerType = std::int64_t, typename UnsignedIntegerType = std::uint64_t,
+    typename FloatNumberType = double, typename StringType = std::string>
+class BasicNode
 {
 public:
-    /** A type for iterators of Node containers. */
-    using iterator = Iterator<Node>;
-    /** A type for constant iterators of Node containers. */
-    using const_iterator = Iterator<const Node>;
+    /** A type for iterators of BasicNode containers. */
+    using iterator = Iterator<BasicNode>;
+    /** A type for constant iterators of BasicNode containers. */
+    using const_iterator = Iterator<const BasicNode>;
 
-    /** A type for sequence Node values. */
-    using sequence_type = std::vector<Node>;
-    /** A type for mapping Node values. */
-    using mapping_type = std::unordered_map<std::string, Node>;
-    /** A type for boolean Node values. */
-    using boolean_type = bool;
-    /** A type for signed integer Node values. */
-    using signed_int_type = int64_t;
-    /** A type for unsigned integer Node values. */
-    using unsigned_int_type = uint64_t;
-    /** A type for float number Node values. */
-    using float_number_type = double;
-    /** A type for string Npde values. */
-    using string_type = std::string;
+    /** A type for sequence BasicNode values. */
+    using sequence_type = SequenceType<BasicNode, std::allocator<BasicNode>>;
+    /** A type for mapping BasicNode values. */
+    using mapping_type = MappingType<StringType, BasicNode>;
+    /** A type for boolean BasicNode values. */
+    using boolean_type = BooleanType;
+    /** A type for signed integer BasicNode values. */
+    using signed_int_type = SignedIntegerType;
+    /** A type for unsigned integer BasicNode values. */
+    using unsigned_int_type = UnsignedIntegerType;
+    /** A type for float number BasicNode values. */
+    using float_number_type = FloatNumberType;
+    /** A type for string BasicNode values. */
+    using string_type = StringType;
 
 private:
     /**
      * @union NodeValue
-     * @brief The actual storage for a YAML node value of the @ref Node class.
+     * @brief The actual storage for a YAML node value of the @ref BasicNode class.
      * @details This union combines the different sotrage types for the YAML value types defined in @ref NodeType.
      * @note Container types are stored as pointers so that the size of this union should not exceed 64 bits by default.
      */
     union NodeValue
     {
         /**
-         * @brief Construct a new Node Value object for null types.
+         * @brief Construct a new BasicNode Value object for null types.
          */
         NodeValue() = default;
 
         /**
-         * @brief Construct a new Node Value object with Node types. The default value for the specified type will be
-         * assigned.
+         * @brief Construct a new BasicNode Value object with BasicNode types. The default value for the specified type
+         * will be assigned.
          *
          * @param[in] type A Node type.
          */
@@ -117,7 +122,7 @@ private:
         {
             if (type == NodeType::SEQUENCE || type == NodeType::MAPPING)
             {
-                std::vector<Node> stack;
+                std::vector<BasicNode> stack;
 
                 if (type == NodeType::SEQUENCE)
                 {
@@ -135,7 +140,7 @@ private:
 
                 while (!stack.empty())
                 {
-                    Node current_node(std::move(stack.back()));
+                    BasicNode current_node(std::move(stack.back()));
                     stack.pop_back();
 
                     if (current_node.IsSequence())
@@ -241,31 +246,31 @@ private:
 
 public:
     /**
-     * @brief Construct a new Node object of null type.
+     * @brief Construct a new BasicNode object of null type.
      */
-    Node() noexcept
+    BasicNode() noexcept
         : m_node_type(NodeType::NULL_OBJECT),
           m_node_value()
     {
     }
 
     /**
-     * @brief Construct a new Node object with a specified type.
+     * @brief Construct a new BasicNode object with a specified type.
      *
      * @param[in] type A YAML node value type.
      */
-    explicit Node(const NodeType type)
+    explicit BasicNode(const NodeType type)
         : m_node_type(type),
           m_node_value(type)
     {
     }
 
     /**
-     * @brief Copy constructor of the Node class.
+     * @brief Copy constructor of the BasicNode class.
      *
-     * @param[in] rhs A Node object to be copied with.
+     * @param[in] rhs A BasicNode object to be copied with.
      */
-    Node(const Node& rhs)
+    BasicNode(const BasicNode& rhs)
         : m_node_type(rhs.m_node_type)
     {
         switch (m_node_type)
@@ -298,11 +303,11 @@ public:
     }
 
     /**
-     * @brief Move constructor of the Node class.
+     * @brief Move constructor of the BasicNode class.
      *
-     * @param[in] rhs A Node object to be moved from.
+     * @param[in] rhs A BasicNode object to be moved from.
      */
-    Node(Node&& rhs) noexcept
+    BasicNode(BasicNode&& rhs) noexcept
         : m_node_type(rhs.m_node_type)
     {
         switch (m_node_type)
@@ -345,9 +350,9 @@ public:
     }
 
     /**
-     * @brief Destroy the Node object and its value storage.
+     * @brief Destroy the BasicNode object and its value storage.
      */
-    ~Node() noexcept // NOLINT(bugprone-exception-escape)
+    ~BasicNode() noexcept // NOLINT(bugprone-exception-escape)
     {
         m_node_value.Destroy(m_node_type);
         m_node_type = NodeType::NULL_OBJECT;
@@ -355,179 +360,179 @@ public:
 
 public:
     /**
-     * @brief A factory method for sequence Node objects without sequence_type objects.
+     * @brief A factory method for sequence BasicNode objects without sequence_type objects.
      *
-     * @return Node A constructed Node object of sequence type.
+     * @return BasicNode A constructed BasicNode object of sequence type.
      */
-    static Node Sequence()
+    static BasicNode Sequence()
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::SEQUENCE;
         node.m_node_value.sequence = CreateObject<sequence_type>();
         return node;
     }
 
     /**
-     * @brief A factory method for sequence Node objects with lvalue sequence_type objects.
+     * @brief A factory method for sequence BasicNode objects with lvalue sequence_type objects.
      *
      * @param[in] sequence A lvalue source of sequence type.
-     * @return Node A constructed Node object of sequence type.
+     * @return BasicNode A constructed BasicNode object of sequence type.
      */
-    static Node Sequence(const sequence_type& sequence)
+    static BasicNode Sequence(const sequence_type& sequence)
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::SEQUENCE;
         node.m_node_value.sequence = CreateObject<sequence_type>(sequence);
         return node;
     }
 
     /**
-     * @brief A factory method for sequence Node objects with rvalue sequence_type objects.
+     * @brief A factory method for sequence BasicNode objects with rvalue sequence_type objects.
      *
      * @param[in] sequence A rvalue source of sequence type.
-     * @return Node A constructed Node object of sequence type.
+     * @return BasicNode A constructed BasicNode object of sequence type.
      */
-    static Node Sequence(sequence_type&& sequence)
+    static BasicNode Sequence(sequence_type&& sequence)
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::SEQUENCE;
         node.m_node_value.sequence = CreateObject<sequence_type>(std::move(sequence));
         return node;
     }
 
     /**
-     * @brief A factory method for mapping Node objects without mapping_type objects.
+     * @brief A factory method for mapping BasicNode objects without mapping_type objects.
      *
-     * @return Node A constructed Node object of mapping type.
+     * @return BasicNode A constructed BasicNode object of mapping type.
      */
-    static Node Mapping()
+    static BasicNode Mapping()
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::MAPPING;
         node.m_node_value.mapping = CreateObject<mapping_type>();
         return node;
     }
 
     /**
-     * @brief A factory method for mapping Node objects with lvalue mapping_type objects.
+     * @brief A factory method for mapping BasicNode objects with lvalue mapping_type objects.
      *
      * @param[in] mapping A lvalue source of mapping type.
-     * @return Node A constructed Node object of mapping type.
+     * @return BasicNode A constructed BasicNode object of mapping type.
      */
-    static Node Mapping(const mapping_type& mapping)
+    static BasicNode Mapping(const mapping_type& mapping)
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::MAPPING;
         node.m_node_value.mapping = CreateObject<mapping_type>(mapping);
         return node;
     }
 
     /**
-     * @brief A factory method for mapping Node objects with rvalue mapping_type objects.
+     * @brief A factory method for mapping BasicNode objects with rvalue mapping_type objects.
      *
      * @param[in] mapping A rvalue source of mapping type.
-     * @return Node A constructed Node object of mapping type.
+     * @return BasicNode A constructed BasicNode object of mapping type.
      */
-    static Node Mapping(mapping_type&& mapping)
+    static BasicNode Mapping(mapping_type&& mapping)
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::MAPPING;
         node.m_node_value.mapping = CreateObject<mapping_type>(std::move(mapping));
         return node;
     }
 
     /**
-     * @brief A factory method for boolean scalar Node objects.
+     * @brief A factory method for boolean scalar BasicNode objects.
      *
      * @param[in] boolean A source of boolean type.
-     * @return Node A constructed Node object of boolean type.
+     * @return BasicNode A constructed BasicNode object of boolean type.
      */
-    static Node BooleanScalar(const boolean_type boolean) noexcept
+    static BasicNode BooleanScalar(const boolean_type boolean) noexcept
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::BOOLEAN;
         node.m_node_value.boolean = boolean;
         return node;
     }
 
     /**
-     * @brief A factory method for signed integer scalar Node objects.
+     * @brief A factory method for signed integer scalar BasicNode objects.
      *
      * @param[in] signed_int A source of signed integer type.
-     * @return Node A constructed Node object of signed integer type.
+     * @return BasicNode A constructed BasicNode object of signed integer type.
      */
-    static Node SignedIntegerScalar(const signed_int_type signed_int) noexcept
+    static BasicNode SignedIntegerScalar(const signed_int_type signed_int) noexcept
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::SIGNED_INTEGER;
         node.m_node_value.signed_int = signed_int;
         return node;
     }
 
     /**
-     * @brief A factory method for unsigned integer scalar Node objects.
+     * @brief A factory method for unsigned integer scalar BasicNode objects.
      *
      * @param[in] unsigned_int A source of unsigned integer type.
-     * @return Node A constructed Node object of unsigned integer type.
+     * @return BasicNode A constructed BasicNode object of unsigned integer type.
      */
-    static Node UnsignedIntegerScalar(const unsigned_int_type unsigned_int) noexcept
+    static BasicNode UnsignedIntegerScalar(const unsigned_int_type unsigned_int) noexcept
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::UNSIGNED_INTEGER;
         node.m_node_value.unsigned_int = unsigned_int;
         return node;
     }
 
     /**
-     * @brief A factory method for float number scalar Node objects.
+     * @brief A factory method for float number scalar BasicNode objects.
      *
      * @param[in] float_val A source of unsigned integer type.
-     * @return Node A constructed Node object of float number type.
+     * @return BasicNode A constructed BasicNode object of float number type.
      */
-    static Node FloatNumberScalar(const float_number_type float_val) noexcept
+    static BasicNode FloatNumberScalar(const float_number_type float_val) noexcept
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::FLOAT_NUMBER;
         node.m_node_value.float_val = float_val;
         return node;
     }
 
     /**
-     * @brief A factory method for string Node objects without string_type objects.
+     * @brief A factory method for string BasicNode objects without string_type objects.
      *
-     * @return Node A constructed Node object of string type.
+     * @return BasicNode A constructed BasicNode object of string type.
      */
-    static Node StringScalar()
+    static BasicNode StringScalar()
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::STRING;
         node.m_node_value.str = CreateObject<string_type>();
         return node;
     }
 
     /**
-     * @brief A factory method for string Node objects with lvalue string_type objects.
+     * @brief A factory method for string BasicNode objects with lvalue string_type objects.
      *
      * @param[in] str A lvalue source of string type.
-     * @return Node A constructed Node object of string type.
+     * @return BasicNode A constructed BasicNode object of string type.
      */
-    static Node StringScalar(const string_type& str)
+    static BasicNode StringScalar(const string_type& str)
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::STRING;
         node.m_node_value.str = CreateObject<string_type>(str);
         return node;
     }
 
     /**
-     * @brief A factory method for string Node objects with rvalue string_type objects.
+     * @brief A factory method for string BasicNode objects with rvalue string_type objects.
      *
      * @param[in] str A rvalue source of string type.
-     * @return Node A constructed Node object of string type.
+     * @return BasicNode A constructed BasicNode object of string type.
      */
-    static Node StringScalar(string_type&& str)
+    static BasicNode StringScalar(string_type&& str)
     {
-        Node node;
+        BasicNode node;
         node.m_node_type = NodeType::STRING;
         node.m_node_value.str = CreateObject<string_type>(std::move(str));
         return node;
@@ -535,36 +540,36 @@ public:
 
 public:
     /**
-     * @brief A copy assignment operator of the Node class.
+     * @brief A copy assignment operator of the BasicNode class.
      *
-     * @param[in] rhs A lvalue Node object to be copied with.
-     * @return Node& Reference to this Node object.
+     * @param[in] rhs A lvalue BasicNode object to be copied with.
+     * @return BasicNode& Reference to this BasicNode object.
      */
-    Node& operator=(const Node& rhs) noexcept
+    BasicNode& operator=(const BasicNode& rhs) noexcept
     {
-        Node(rhs).Swap(*this);
+        BasicNode(rhs).Swap(*this);
         return *this;
     }
 
     /**
-     * @brief A move assignment operator of the Node class.
+     * @brief A move assignment operator of the BasicNode class.
      *
-     * @param[in] rhs A rvalue Node object to be moved from.
-     * @return Node& Reference to this Node object.
+     * @param[in] rhs A rvalue BasicNode object to be moved from.
+     * @return BasicNode& Reference to this BasicNode object.
      */
-    Node& operator=(Node&& rhs) noexcept
+    BasicNode& operator=(BasicNode&& rhs) noexcept
     {
-        Node(std::move(rhs)).Swap(*this);
+        BasicNode(std::move(rhs)).Swap(*this);
         return *this;
     }
 
     /**
-     * @brief A subscript operator for non-const Node objects.
+     * @brief A subscript operator for non-const BasicNode objects.
      *
-     * @param[in] index An index of sequence Node values.
-     * @return Node& Reference to a Node object located at the specified index.
+     * @param[in] index An index of sequence BasicNode values.
+     * @return BasicNode& Reference to a BasicNode object located at the specified index.
      */
-    Node& operator[](std::size_t index) // NOLINT(readability-make-member-function-const)
+    BasicNode& operator[](std::size_t index) // NOLINT(readability-make-member-function-const)
     {
         if (!IsSequence())
         {
@@ -575,12 +580,12 @@ public:
     }
 
     /**
-     * @brief A subscript operator for const Node objects.
+     * @brief A subscript operator for const BasicNode objects.
      *
-     * @param[in] index An index of sequence Node values.
-     * @return const Node& Constant reference to a Node object located at the specified index.
+     * @param[in] index An index of sequence BasicNode values.
+     * @return const BasicNode& Constant reference to a BasicNode object located at the specified index.
      */
-    const Node& operator[](std::size_t index) const
+    const BasicNode& operator[](std::size_t index) const
     {
         if (!IsSequence())
         {
@@ -591,12 +596,12 @@ public:
     }
 
     /**
-     * @brief A subscript operator for non-const Node objects.
+     * @brief A subscript operator for non-const BasicNode objects.
      *
-     * @param[in] key A lvalue key of mapping Node values.
-     * @return Node& Constant reference to a Node object associated with the specified key.
+     * @param[in] key A lvalue key of mapping BasicNode values.
+     * @return BasicNode& Constant reference to a BasicNode object associated with the specified key.
      */
-    Node& operator[](const std::string& key) // NOLINT(readability-make-member-function-const)
+    BasicNode& operator[](const std::string& key) // NOLINT(readability-make-member-function-const)
     {
         if (!IsMapping())
         {
@@ -607,12 +612,12 @@ public:
     }
 
     /**
-     * @brief A subscript operator for const Node objects.
+     * @brief A subscript operator for const BasicNode objects.
      *
-     * @param[in] key A lvalue key of mapping Node values.
-     * @return const Node& Constant reference to a Node object associated with the specified key.
+     * @param[in] key A lvalue key of mapping BasicNode values.
+     * @return const BasicNode& Constant reference to a BasicNode object associated with the specified key.
      */
-    const Node& operator[](const std::string& key) const
+    const BasicNode& operator[](const std::string& key) const
     {
         if (!IsMapping())
         {
@@ -623,12 +628,12 @@ public:
     }
 
     /**
-     * @brief A subscript operator for non-const Node objects.
+     * @brief A subscript operator for non-const BasicNode objects.
      *
-     * @param[in] key A rvalue key of mapping Node values.
-     * @return Node& Reference to a Node object associated with the specified key.
+     * @param[in] key A rvalue key of mapping BasicNode values.
+     * @return Node& Reference to a BasicNode object associated with the specified key.
      */
-    Node& operator[](std::string&& key) // NOLINT(readability-make-member-function-const)
+    BasicNode& operator[](std::string&& key) // NOLINT(readability-make-member-function-const)
     {
         if (!IsMapping())
         {
@@ -639,12 +644,12 @@ public:
     }
 
     /**
-     * @brief A subscript operator for const Node objects.
+     * @brief A subscript operator for const BasicNode objects.
      *
      * @param[in] key A rvalue key of mapping Node values.
-     * @return const Node& Constant reference to a Node object associated with the specified key.
+     * @return const BasicNode& Constant reference to a BasicNode object associated with the specified key.
      */
-    const Node& operator[](std::string&& key) const
+    const BasicNode& operator[](std::string&& key) const
     {
         if (!IsMapping())
         {
@@ -656,9 +661,9 @@ public:
 
 public:
     /**
-     * @brief Returns the type of the current Node value.
+     * @brief Returns the type of the current BasicNode value.
      *
-     * @return NodeType The type of the current Node value.
+     * @return NodeType The type of the current BasicNode value.
      * @retval NodeType::SEQUENCE         sequence type.
      * @retval NodeType::MAPPINT          mapping type.
      * @retval NodeType::NULL_OBJECT      null type.
@@ -674,11 +679,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value is of sequence type.
+     * @brief Tests whether the current BasicNode value is of sequence type.
      *
-     * @return bool A result of testing whetehre the current Node value is of sequence type.
-     * @retval true  The current Node value is of sequence type.
-     * @return false The current Node value is not of sequence type.
+     * @return bool A result of testing whetehre the current BasicNode value is of sequence type.
+     * @retval true  The current BasicNode value is of sequence type.
+     * @return false The current BasicNode value is not of sequence type.
      */
     bool IsSequence() const noexcept
     {
@@ -686,11 +691,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value is of mapping type.
+     * @brief Tests whether the current BasicNode value is of mapping type.
      *
-     * @return bool A result of testing whetehre the current Node value is of mapping type.
-     * @retval true  The current Node value is of mapping type.
-     * @return false The current Node value is not of mapping type.
+     * @return bool A result of testing whetehre the current BasicNode value is of mapping type.
+     * @retval true  The current BasicNode value is of mapping type.
+     * @return false The current BasicNode value is not of mapping type.
      */
     bool IsMapping() const noexcept
     {
@@ -698,11 +703,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value is of null type.
+     * @brief Tests whether the current BasicNode value is of null type.
      *
-     * @return bool A result of testing whetehre the current Node value is of null type.
-     * @retval true  The current Node value is of null type.
-     * @return false The current Node value is not of null type.
+     * @return bool A result of testing whetehre the current BasicNode value is of null type.
+     * @retval true  The current BasicNode value is of null type.
+     * @return false The current BasicNode value is not of null type.
      */
     bool IsNull() const noexcept
     {
@@ -710,11 +715,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value is of boolean type.
+     * @brief Tests whether the current BasicNode value is of boolean type.
      *
-     * @return bool A result of testing whetehre the current Node value is of boolean type.
-     * @retval true  The current Node value is of boolean type.
-     * @return false The current Node value is not of boolean type.
+     * @return bool A result of testing whetehre the current BasicNode value is of boolean type.
+     * @retval true  The current BasicNode value is of boolean type.
+     * @return false The current BasicNode value is not of boolean type.
      */
     bool IsBoolean() const noexcept
     {
@@ -722,11 +727,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value is of signed integer type.
+     * @brief Tests whether the current BasicNode value is of signed integer type.
      *
-     * @return bool A result of testing whetehre the current Node value is of signed integer type.
-     * @retval true  The current Node value is of signed integer type.
-     * @return false The current Node value is not of signed integer type.
+     * @return bool A result of testing whetehre the current BasicNode value is of signed integer type.
+     * @retval true  The current BasicNode value is of signed integer type.
+     * @return false The current BasicNode value is not of signed integer type.
      */
     bool IsSignedInteger() const noexcept
     {
@@ -734,11 +739,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value is of unsigned integer type.
+     * @brief Tests whether the current BasicNode value is of unsigned integer type.
      *
-     * @return bool A result of testing whetehre the current Node value is of unsigned integer type.
-     * @retval true  The current Node value is of unsigned integer type.
-     * @return false The current Node value is not of unsigned integer type.
+     * @return bool A result of testing whetehre the current BasicNode value is of unsigned integer type.
+     * @retval true  The current BasicNode value is of unsigned integer type.
+     * @return false The current BasicNode value is not of unsigned integer type.
      */
     bool IsUnsignedInteger() const noexcept
     {
@@ -746,11 +751,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value is of float number type.
+     * @brief Tests whether the current BasicNode value is of float number type.
      *
-     * @return bool A result of testing whetehre the current Node value is of float number type.
-     * @retval true  The current Node value is of float number type.
-     * @return false The current Node value is not of float number type.
+     * @return bool A result of testing whetehre the current BasicNode value is of float number type.
+     * @retval true  The current BasicNode value is of float number type.
+     * @return false The current BasicNode value is not of float number type.
      */
     bool IsFloatNumber() const noexcept
     {
@@ -758,11 +763,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value is of string type.
+     * @brief Tests whether the current BasicNode value is of string type.
      *
-     * @return bool A result of testing whetehre the current Node value is of string type.
-     * @retval true  The current Node value is of string type.
-     * @return false The current Node value is not of string type.
+     * @return bool A result of testing whetehre the current BasicNode value is of string type.
+     * @retval true  The current BasicNode value is of string type.
+     * @return false The current BasicNode value is not of string type.
      */
     bool IsString() const noexcept
     {
@@ -770,11 +775,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value is of scalar types.
+     * @brief Tests whether the current BasicNode value is of scalar types.
      *
-     * @return bool A result of testing whetehre the current Node value is of scalar types.
-     * @retval true  The current Node value is of scalar types.
-     * @return false The current Node value is not of scalar types.
+     * @return bool A result of testing whetehre the current BasicNode value is of scalar types.
+     * @retval true  The current BasicNode value is of scalar types.
+     * @return false The current BasicNode value is not of scalar types.
      */
     bool IsScalar() const noexcept
     {
@@ -782,11 +787,11 @@ public:
     }
 
     /**
-     * @brief Tests whether the current Node value (sequence, mapping, string) is empty.
+     * @brief Tests whether the current BasicNode value (sequence, mapping, string) is empty.
      *
-     * @return bool A result of testing whetehre the current Node value is empty.
-     * @retval true  The current Node value is empty.
-     * @return false The current Node value is not empty.
+     * @return bool A result of testing whetehre the current BasicNode value is empty.
+     * @retval true  The current BasicNode value is empty.
+     * @return false The current BasicNode value is not empty.
      */
     bool IsEmpty() const
     {
@@ -804,9 +809,9 @@ public:
     }
 
     /**
-     * @brief Returns the size of the current Node value (sequence, mapping, string).
+     * @brief Returns the size of the current BasicNode value (sequence, mapping, string).
      *
-     * @return std::size_t The size of the current Node value.
+     * @return std::size_t The size of the current BasicNode value.
      */
     std::size_t Size() const
     {
@@ -824,10 +829,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to sequence Node value from a non-const Node object. Throws exception if the Node value
-     * is not of sequence type.
+     * @brief Returns reference to sequence BasicNode value from a non-const BasicNode object. Throws exception if the
+     * BasicNode value is not of sequence type.
      *
-     * @return sequence_type& Reference to sequence Node value.
+     * @return sequence_type& Reference to sequence BasicNode value.
      */
     sequence_type& ToSequence() // NOLINT(readability-make-member-function-const)
     {
@@ -840,10 +845,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to sequence Node value from a const Node object.  Throws exception if the Node value is
-     * not of sequence type.
+     * @brief Returns reference to sequence BasicNode value from a const BasicNode object.  Throws exception if the
+     * BasicNode value is not of sequence type.
      *
-     * @return const sequence_type& Constant reference to sequence Node value.
+     * @return const sequence_type& Constant reference to sequence BasicNode value.
      */
     const sequence_type& ToSequence() const
     {
@@ -856,10 +861,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to mapping Node value from a non-const Node object. Throws exception if the Node value
-     * is not of mapping type.
+     * @brief Returns reference to mapping BasicNode value from a non-const BasicNode object. Throws exception if the
+     * BasicNode value is not of mapping type.
      *
-     * @return mapping_type& Reference to mapping Node value.
+     * @return mapping_type& Reference to mapping BasicNode value.
      */
     mapping_type& ToMapping() // NOLINT(readability-make-member-function-const)
     {
@@ -872,10 +877,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to mapping Node value from a const Node object.  Throws exception if the Node value is
-     * not of mapping type.
+     * @brief Returns reference to mapping BasicNode value from a const BasicNode object.  Throws exception if the
+     * BasicNode value is not of mapping type.
      *
-     * @return const mapping_type& Constant reference to mapping Node value.
+     * @return const mapping_type& Constant reference to mapping BasicNode value.
      */
     const mapping_type& ToMapping() const
     {
@@ -888,10 +893,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to boolean Node value from a non-const Node object. Throws exception if the Node value
-     * is not of boolean type.
+     * @brief Returns reference to boolean BasicNode value from a non-const BasicNode object. Throws exception if the
+     * BasicNode value is not of boolean type.
      *
-     * @return boolean_type& Reference to boolean Node value.
+     * @return boolean_type& Reference to boolean BasicNode value.
      */
     boolean_type& ToBoolean()
     {
@@ -904,10 +909,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to boolean Node value from a const Node object.  Throws exception if the Node value is
-     * not of boolean type.
+     * @brief Returns reference to boolean BasicNode value from a const BasicNode object.  Throws exception if the
+     * BasicNode value is not of boolean type.
      *
-     * @return const boolean_type& Constant reference to boolean Node value.
+     * @return const boolean_type& Constant reference to boolean BasicNode value.
      */
     const boolean_type& ToBoolean() const
     {
@@ -920,10 +925,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to signed integer Node value from a non-const Node object. Throws exception if the Node
-     * value is not of signed integer type.
+     * @brief Returns reference to signed integer BasicNode value from a non-const BasicNode object. Throws exception if
+     * the BasicNode value is not of signed integer type.
      *
-     * @return signed_int_type& Reference to signed integer Node value.
+     * @return signed_int_type& Reference to signed integer BasicNode value.
      */
     signed_int_type& ToSignedInteger()
     {
@@ -936,10 +941,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to signed integer Node value from a const Node object. Throws exception if the Node
-     * value is not of signed integer type.
+     * @brief Returns reference to signed integer BasicNode value from a const BasicNode object. Throws exception if the
+     * BasicNode value is not of signed integer type.
      *
-     * @return const signed_int_type& Constant reference to signed integer Node value.
+     * @return const signed_int_type& Constant reference to signed integer BasicNode value.
      */
     const signed_int_type& ToSignedInteger() const
     {
@@ -952,10 +957,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to unsigned integer Node value from a non-const Node object. Throws exception if the
-     * Node value is not of unsigned integer type.
+     * @brief Returns reference to unsigned integer BasicNode value from a non-const BasicNode object. Throws exception
+     * if the BasicNode value is not of unsigned integer type.
      *
-     * @return unsigned_int_type& Reference to unsigned integer Node value.
+     * @return unsigned_int_type& Reference to unsigned integer BasicNode value.
      */
     unsigned_int_type& ToUnsignedInteger()
     {
@@ -968,10 +973,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to unsigned integer Node value from a const Node object. Throws exception if the Node
-     * value is not of unsigned integer type.
+     * @brief Returns reference to unsigned integer BasicNode value from a const BasicNode object. Throws exception if
+     * the BasicNode value is not of unsigned integer type.
      *
-     * @return const unsigned_int_type& Constant reference to unsigned integer Node value.
+     * @return const unsigned_int_type& Constant reference to unsigned integer BasicNode value.
      */
     const unsigned_int_type& ToUnsignedInteger() const
     {
@@ -984,10 +989,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to float number Node value from a non-const Node object. Throws exception if the Node
-     * value is not of float number type.
+     * @brief Returns reference to float number BasicNode value from a non-const BasicNode object. Throws exception if
+     * the BasicNode value is not of float number type.
      *
-     * @return float_number_type& Reference to float number Node value.
+     * @return float_number_type& Reference to float number BasicNode value.
      */
     float_number_type& ToFloatNumber()
     {
@@ -1000,10 +1005,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to float number Node value from a const Node object. Throws exception if the Node value
-     * is not of float number type.
+     * @brief Returns reference to float number BasicNode value from a const BasicNode object. Throws exception if the
+     * BasicNode value is not of float number type.
      *
-     * @return const float_number_type& Constant reference to float number Node value.
+     * @return const float_number_type& Constant reference to float number BasicNode value.
      */
     const float_number_type& ToFloatNumber() const
     {
@@ -1016,10 +1021,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to string Node value from a non-const Node object. Throws exception if the Node value is
-     * not of string type.
+     * @brief Returns reference to string BasicNode value from a non-const BasicNode object. Throws exception if the
+     * BasicNode value is not of string type.
      *
-     * @return string_type& Reference to string Node value.
+     * @return string_type& Reference to string BasicNode value.
      */
     string_type& ToString() // NOLINT(readability-make-member-function-const)
     {
@@ -1032,10 +1037,10 @@ public:
     }
 
     /**
-     * @brief Returns reference to string Node value from a const Node object. Throws exception if the Node value is not
-     * of string type.
+     * @brief Returns reference to string BasicNode value from a const BasicNode object. Throws exception if the
+     * BasicNode value is not of string type.
      *
-     * @return const string_type& Constant reference to string Node value.
+     * @return const string_type& Constant reference to string BasicNode value.
      */
     const string_type& ToString() const
     {
@@ -1048,11 +1053,11 @@ public:
     }
 
     /**
-     * @brief Swaps data with the specified Node object.
+     * @brief Swaps data with the specified BasicNode object.
      *
-     * @param[in] rhs A Node object to be swapped with.
+     * @param[in] rhs A BasicNode object to be swapped with.
      */
-    void Swap(Node& rhs) noexcept
+    void Swap(BasicNode& rhs) noexcept
     {
         using std::swap;
         swap(m_node_type, rhs.m_node_type);
@@ -1064,10 +1069,10 @@ public:
     }
 
     /**
-     * @brief Returns the first iterator of Node values of container types (sequence or mapping) from a non-const Node
-     * object. Throws exception if the Node value is not of container types.
+     * @brief Returns the first iterator of BasicNode values of container types (sequence or mapping) from a non-const
+     * BasicNode object. Throws exception if the BasicNode value is not of container types.
      *
-     * @return iterator The first iterator of Node values of container types.
+     * @return iterator The first iterator of BasicNode values of container types.
      */
     iterator Begin()
     {
@@ -1083,12 +1088,12 @@ public:
     }
 
     /**
-     * @brief Returns the first iterator of Node values of container types (sequence or mapping) from a non-const Node
-     * object. Throws exception if the Node value is not of container types.
+     * @brief Returns the first iterator of BasicNode values of container types (sequence or mapping) from a non-const
+     * BasicNode object. Throws exception if the BasicNode value is not of container types.
      * @note This is a work-around for range-based for statements, and just a wrapper method of Begin() for non-const
-     * Node objects.
+     * BasicNode objects.
      *
-     * @return iterator The first iterator of Node values of container types.
+     * @return iterator The first iterator of BasicNode values of container types.
      */
     iterator begin() // NOLINT(readability-identifier-naming)
     {
@@ -1096,10 +1101,10 @@ public:
     }
 
     /**
-     * @brief Returns the first iterator of Node values of container types (sequence or mapping) from a const Node
-     * object. Throws exception if the Node value is not of container types.
+     * @brief Returns the first iterator of BasicNode values of container types (sequence or mapping) from a const
+     * BasicNode object. Throws exception if the BasicNode value is not of container types.
      *
-     * @return const_iterator The first iterator of Node values of container types.
+     * @return const_iterator The first iterator of BasicNode values of container types.
      */
     const_iterator Begin() const
     {
@@ -1115,12 +1120,12 @@ public:
     }
 
     /**
-     * @brief Returns the first iterator of Node values of container types (sequence or mapping) from a const Node
-     * object. Throws exception if the Node value is not of container types.
-     * @note This is a work-around for range-based for statements, and just a wrapper method of Begin() for const Node
-     * objects.
+     * @brief Returns the first iterator of BasicNode values of container types (sequence or mapping) from a const
+     * BasicNode object. Throws exception if the BasicNode value is not of container types.
+     * @note This is a work-around for range-based for statements, and just a wrapper method of Begin() for const
+     * BasicNode objects.
      *
-     * @return const_iterator The first iterator of Node values of container types.
+     * @return const_iterator The first iterator of BasicNode values of container types.
      */
     const_iterator begin() const // NOLINT(readability-identifier-naming)
     {
@@ -1128,10 +1133,10 @@ public:
     }
 
     /**
-     * @brief Returns the last iterator of Node values of container types (sequence or mapping) from a non-const Node
-     * object. Throws exception if the Node value is not of container types.
+     * @brief Returns the last iterator of BasicNode values of container types (sequence or mapping) from a non-const
+     * BasicNode object. Throws exception if the BasicNode value is not of container types.
      *
-     * @return iterator The last iterator of Node values of container types.
+     * @return iterator The last iterator of BasicNode values of container types.
      */
     iterator End()
     {
@@ -1147,12 +1152,12 @@ public:
     }
 
     /**
-     * @brief Returns the last iterator of Node values of container types (sequence or mapping) from a non-const Node
-     * object. Throws exception if the Node value is not of container types.
-     * @note This is a work-around for range-based for statements, and just a wrapper method of End() for const Node
-     * objects.
+     * @brief Returns the last iterator of BasicNode values of container types (sequence or mapping) from a non-const
+     * BasicNode object. Throws exception if the BasicNode value is not of container types.
+     * @note This is a work-around for range-based for statements, and just a wrapper method of End() for const
+     * BasicNode objects.
      *
-     * @return iterator The last iterator of Node values of container types.
+     * @return iterator The last iterator of BasicNode values of container types.
      */
     iterator end() // NOLINT(readability-identifier-naming)
     {
@@ -1160,10 +1165,10 @@ public:
     }
 
     /**
-     * @brief Returns the last iterator of Node values of container types (sequence or mapping) from a const Node
-     * object. Throws exception if the Node value is not of container types.
+     * @brief Returns the last iterator of BasicNode values of container types (sequence or mapping) from a const
+     * BasicNode object. Throws exception if the BasicNode value is not of container types.
      *
-     * @return const_iterator The last iterator of Node values of container types.
+     * @return const_iterator The last iterator of BasicNode values of container types.
      */
     const_iterator End() const
     {
@@ -1179,12 +1184,12 @@ public:
     }
 
     /**
-     * @brief Returns the last iterator of Node values of container types (sequence or mapping) from a const Node
-     * object. Throws exception if the Node value is not of container types.
-     * @note This is a work-around for range-based for statements, and just a wrapper method of End() for const Node
-     * objects.
+     * @brief Returns the last iterator of BasicNode values of container types (sequence or mapping) from a const
+     * BasicNode object. Throws exception if the BasicNode value is not of container types.
+     * @note This is a work-around for range-based for statements, and just a wrapper method of End() for const
+     * BasicNode objects.
      *
-     * @return const_iterator The last iterator of Node values of container types.
+     * @return const_iterator The last iterator of BasicNode values of container types.
      */
     const_iterator end() const // NOLINT(readability-identifier-naming)
     {
@@ -1197,6 +1202,8 @@ private:
     /** The current node value. */
     NodeValue m_node_value {};
 };
+
+using Node = BasicNode<>;
 
 /** A type for sequence Node values. */
 using NodeSequenceType = typename Node::sequence_type;
