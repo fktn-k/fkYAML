@@ -4,7 +4,7 @@ function(add_sanitizer_flags ENABLED)
     return()
   endif()
 
-  if(CMAKE_CXX_COMPILER_ID MATCHES "CLANG" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # Common compile/link options for sanitizers
     add_compile_options("-fno-omit-frame-pointer")
     add_link_options("-fno-omit-frame-pointer")
@@ -21,11 +21,7 @@ function(add_sanitizer_flags ENABLED)
     add_compile_options("-fsanitize=bounds")
     add_link_options("-fsanitize=bounds")
 
-    if(CMAKE_CXX_COMPILER_ID MATCHES "CLANG")
-      # MemorySanitizer
-      add_compile_options("-fsanitize=memory")
-      add_link_options("-fsanitize=memory")
-
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       add_compile_options("-fsanitize=integer")
       add_link_options("-fsanitize=integer")
 
