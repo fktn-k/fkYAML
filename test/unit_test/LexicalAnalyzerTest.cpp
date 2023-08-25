@@ -1,13 +1,21 @@
+/**
+ * LexicalAnalyzerTest.cpp - implementation of test functions for the LexicalAnalyzer class
+ *
+ * Copyright (c) 2023 fktn
+ * Distributed under the MIT License (https://opensource.org/licenses/MIT)
+ */
+
 #include "LexicalAnalyzerTest.hpp"
 
 #include <cinttypes>
 #include <cstdio>
 
 #include "fkYAML/LexicalAnalyzer.hpp"
+#include "fkYAML/Node.hpp"
 
 int LexicalAnalyzerTest::ScanNullTest1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("null");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -52,7 +60,7 @@ int LexicalAnalyzerTest::ScanNullTest1()
 
 int LexicalAnalyzerTest::ScanNullTest2()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("Null");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -97,7 +105,7 @@ int LexicalAnalyzerTest::ScanNullTest2()
 
 int LexicalAnalyzerTest::ScanNullTest3()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("NULL");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -142,7 +150,7 @@ int LexicalAnalyzerTest::ScanNullTest3()
 
 int LexicalAnalyzerTest::ScanNullTest4()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("~");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -187,7 +195,7 @@ int LexicalAnalyzerTest::ScanNullTest4()
 
 int LexicalAnalyzerTest::ScanTrueBooleanTest1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("true");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -232,7 +240,7 @@ int LexicalAnalyzerTest::ScanTrueBooleanTest1()
 
 int LexicalAnalyzerTest::ScanTrueBooleanTest2()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("True");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -277,7 +285,7 @@ int LexicalAnalyzerTest::ScanTrueBooleanTest2()
 
 int LexicalAnalyzerTest::ScanTrueBooleanTest3()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("TRUE");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -322,7 +330,7 @@ int LexicalAnalyzerTest::ScanTrueBooleanTest3()
 
 int LexicalAnalyzerTest::ScanFalseBooleanTest1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("false");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -367,7 +375,7 @@ int LexicalAnalyzerTest::ScanFalseBooleanTest1()
 
 int LexicalAnalyzerTest::ScanFalseBooleanTest2()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("False");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -412,7 +420,7 @@ int LexicalAnalyzerTest::ScanFalseBooleanTest2()
 
 int LexicalAnalyzerTest::ScanFalseBooleanTest3()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("FALSE");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -457,7 +465,7 @@ int LexicalAnalyzerTest::ScanFalseBooleanTest3()
 
 int LexicalAnalyzerTest::ScanSignedDecimalIntegerTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("-1234");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -498,7 +506,7 @@ int LexicalAnalyzerTest::ScanSignedDecimalIntegerTest()
 
 int LexicalAnalyzerTest::ScanUnsignedDecimalIntegerTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("5678");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -539,7 +547,7 @@ int LexicalAnalyzerTest::ScanUnsignedDecimalIntegerTest()
 
 int LexicalAnalyzerTest::ScanOctalIntegerTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("0o437");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -580,7 +588,7 @@ int LexicalAnalyzerTest::ScanOctalIntegerTest()
 
 int LexicalAnalyzerTest::ScanHexadecimalIntegerTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("0xA04F");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -621,7 +629,7 @@ int LexicalAnalyzerTest::ScanHexadecimalIntegerTest()
 
 int LexicalAnalyzerTest::ScanSignedFloatNumberTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("-1.234");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -662,7 +670,7 @@ int LexicalAnalyzerTest::ScanSignedFloatNumberTest()
 
 int LexicalAnalyzerTest::ScanUnsignedFloatNumberTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("567.8");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -703,7 +711,7 @@ int LexicalAnalyzerTest::ScanUnsignedFloatNumberTest()
 
 int LexicalAnalyzerTest::ScanFloatNumberWithExponentTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("9.8e-3");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -744,7 +752,7 @@ int LexicalAnalyzerTest::ScanFloatNumberWithExponentTest()
 
 int LexicalAnalyzerTest::ScanPositiveInfinityTest1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer(".inf");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -785,7 +793,7 @@ int LexicalAnalyzerTest::ScanPositiveInfinityTest1()
 
 int LexicalAnalyzerTest::ScanPositiveInfinityTest2()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer(".Inf");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -826,7 +834,7 @@ int LexicalAnalyzerTest::ScanPositiveInfinityTest2()
 
 int LexicalAnalyzerTest::ScanPositiveInfinityTest3()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer(".INF");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -867,7 +875,7 @@ int LexicalAnalyzerTest::ScanPositiveInfinityTest3()
 
 int LexicalAnalyzerTest::ScanNegativeInfinityTest1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("-.inf");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -908,7 +916,7 @@ int LexicalAnalyzerTest::ScanNegativeInfinityTest1()
 
 int LexicalAnalyzerTest::ScanNegativeInfinityTest2()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("-.Inf");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -949,7 +957,7 @@ int LexicalAnalyzerTest::ScanNegativeInfinityTest2()
 
 int LexicalAnalyzerTest::ScanNegativeInfinityTest3()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("-.INF");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -990,7 +998,7 @@ int LexicalAnalyzerTest::ScanNegativeInfinityTest3()
 
 int LexicalAnalyzerTest::ScanNaNTest1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer(".nan");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -1031,7 +1039,7 @@ int LexicalAnalyzerTest::ScanNaNTest1()
 
 int LexicalAnalyzerTest::ScanNaNTest2()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer(".NaN");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -1072,7 +1080,7 @@ int LexicalAnalyzerTest::ScanNaNTest2()
 
 int LexicalAnalyzerTest::ScanNaNTest3()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer(".NAN");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -1113,7 +1121,7 @@ int LexicalAnalyzerTest::ScanNaNTest3()
 
 int LexicalAnalyzerTest::ScanDoubleQuotedEmptyStringTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("\"\"");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -1154,7 +1162,7 @@ int LexicalAnalyzerTest::ScanDoubleQuotedEmptyStringTest()
 
 int LexicalAnalyzerTest::ScanSingleQuotedEmptyStringTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("\'\'");
 
     fkyaml::LexicalTokenType ret = fkyaml::LexicalTokenType::END_OF_BUFFER;
@@ -1195,7 +1203,7 @@ int LexicalAnalyzerTest::ScanSingleQuotedEmptyStringTest()
 
 int LexicalAnalyzerTest::ScanKeyBooleanValuePairTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: true");
 
     fkyaml::LexicalTokenType types[] =
@@ -1266,7 +1274,7 @@ int LexicalAnalyzerTest::ScanKeyBooleanValuePairTest()
 
 int LexicalAnalyzerTest::ScanKeySignedIntegerValuePairTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: -5784");
 
     fkyaml::LexicalTokenType types[] =
@@ -1337,7 +1345,7 @@ int LexicalAnalyzerTest::ScanKeySignedIntegerValuePairTest()
 
 int LexicalAnalyzerTest::ScanKeyUnsignedIntegerValuePairTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: 47239");
 
     fkyaml::LexicalTokenType types[] =
@@ -1408,7 +1416,7 @@ int LexicalAnalyzerTest::ScanKeyUnsignedIntegerValuePairTest()
 
 int LexicalAnalyzerTest::ScanKeyFloatNumberValuePairTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: -5.58e-3");
 
     fkyaml::LexicalTokenType types[] =
@@ -1479,7 +1487,7 @@ int LexicalAnalyzerTest::ScanKeyFloatNumberValuePairTest()
 
 int LexicalAnalyzerTest::ScanKeyStringValuePairTest()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: some value");
 
     fkyaml::LexicalTokenType types[] =
@@ -1540,7 +1548,7 @@ int LexicalAnalyzerTest::ScanKeyStringValuePairTest()
 
 int LexicalAnalyzerTest::ScanFlowSequenceObject1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: [ foo, bar ]");
 
     fkyaml::LexicalTokenType types[] =
@@ -1609,7 +1617,7 @@ int LexicalAnalyzerTest::ScanFlowSequenceObject1()
 
 int LexicalAnalyzerTest::ScanFlowSequenceObject2()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: [ { foo: one, bar: false }, { foo: two, bar: false } ]");
 
     fkyaml::LexicalTokenType types[] =
@@ -1714,7 +1722,7 @@ int LexicalAnalyzerTest::ScanFlowSequenceObject2()
 
 int LexicalAnalyzerTest::ScanFlowMappingObject1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: { bool: true, foo: bar, pi: 3.14 }");
 
     fkyaml::LexicalTokenType types[] =
@@ -1824,7 +1832,7 @@ int LexicalAnalyzerTest::ScanFlowMappingObject1()
 
 int LexicalAnalyzerTest::ScanBlockSequenceObject1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test:\n  - foo\n  - bar");
 
     fkyaml::LexicalTokenType types[] =
@@ -1914,7 +1922,7 @@ int LexicalAnalyzerTest::ScanBlockSequenceObject1()
 
 int LexicalAnalyzerTest::ScanBlockSequenceObject2()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test:\n  - foo: one\n    bar: false\n  - foo: two\n    bar: false");
 
     fkyaml::LexicalTokenType types[] =
@@ -2035,7 +2043,7 @@ int LexicalAnalyzerTest::ScanBlockSequenceObject2()
 
 int LexicalAnalyzerTest::ScanBlockMappingObject1()
 {
-    fkyaml::LexicalAnalyzer lexer;
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test:\n  bool: true\n  foo: bar\n  pi: 3.14");
 
     fkyaml::LexicalTokenType types[] =
