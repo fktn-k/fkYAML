@@ -49,7 +49,7 @@ public:
         }
 
         m_lexer.SetInputBuffer(source);
-        Node root = Node::Mapping(NodeMappingType());
+        Node root = Node::Mapping();
         std::vector<Node*> node_stack;
 
         Node* p_current_node = &root;
@@ -64,6 +64,18 @@ public:
                 {
                     throw Exception("A key separator found while a value token is expected.");
                 }
+                if (p_current_node->IsSequence() && p_current_node->Size() == 1 &&
+                    p_current_node->operator[](0).IsString())
+                {
+                    // make sequence node to mapping node.
+                    NodeStringType tmp_str = p_current_node->operator[](0).ToString();
+                    p_current_node->operator[](0) = Node::Mapping();
+                    node_stack.emplace_back(p_current_node);
+                    p_current_node = &(p_current_node->operator[](0));
+                    p_current_node->ToMapping().emplace(tmp_str, Node());
+                    node_stack.emplace_back(p_current_node);
+                    p_current_node = &(p_current_node->operator[](tmp_str));
+                }
                 break;
             case LexicalTokenType::VALUE_SEPARATOR:
                 if (!p_current_node->IsSequence() && !p_current_node->IsMapping())
@@ -75,14 +87,37 @@ public:
             case LexicalTokenType::ALIAS_PREFIX:
             case LexicalTokenType::COMMENT_PREFIX:
             case LexicalTokenType::DIRECTIVE_PREFIX:
+                break;
             case LexicalTokenType::SEQUENCE_BLOCK_PREFIX:
+                if (p_current_node->IsNull())
+                {
+                    *p_current_node = Node::Sequence();
+                    break;
+                }
+                if (p_current_node->IsMapping())
+                {
+                    if (p_current_node->IsEmpty())
+                    {
+                        *p_current_node = Node::Sequence();
+                        break;
+                    }
+
+                    // for the second or later mapping items in a sequence node.
+                    node_stack.back()->ToSequence().emplace_back(Node::Mapping());
+                    p_current_node = &(node_stack.back()->ToSequence().back());
+                    break;
+                }
+                if (!p_current_node->IsSequence())
+                {
+                    throw Exception("Cannot assign a sequence value to a scalar node.");
+                }
                 break;
             case LexicalTokenType::SEQUENCE_FLOW_BEGIN:
                 if (p_current_node->IsMapping())
                 {
                     throw Exception("Cannot assign a sequence value as a key.");
                 }
-                *p_current_node = Node::Sequence(NodeSequenceType());
+                *p_current_node = Node::Sequence();
                 break;
             case LexicalTokenType::SEQUENCE_FLOW_END:
                 if (!p_current_node->IsSequence())
@@ -92,12 +127,19 @@ public:
                 p_current_node = node_stack.back();
                 node_stack.pop_back();
                 break;
+            case LexicalTokenType::MAPPING_BLOCK_PREFIX:
+                if (!p_current_node->IsNull())
+                {
+                    throw Exception("Cannot assign a mapping value as a key.");
+                }
+                *p_current_node = Node::Mapping();
+                break;
             case LexicalTokenType::MAPPING_FLOW_BEGIN:
                 if (p_current_node->IsMapping())
                 {
                     throw Exception("Cannot assign a mapping value as a key.");
                 }
-                *p_current_node = Node::Mapping(NodeMappingType());
+                *p_current_node = Node::Mapping();
                 break;
             case LexicalTokenType::MAPPING_FLOW_END:
                 if (!p_current_node->IsMapping())
@@ -197,17 +239,17 @@ public:
                     p_current_node->ToMapping().emplace(m_lexer.GetString(), Node());
                     node_stack.push_back(p_current_node);
                     p_current_node = &(p_current_node->ToMapping().at(m_lexer.GetString()));
+                    break;
                 }
-                else if (p_current_node->IsSequence())
+                if (p_current_node->IsSequence())
                 {
                     p_current_node->ToSequence().emplace_back(Node::StringScalar(m_lexer.GetString()));
+                    break;
                 }
-                else // a scalar node
-                {
-                    *p_current_node = Node::StringScalar(m_lexer.GetString());
-                    p_current_node = node_stack.back();
-                    node_stack.pop_back();
-                }
+                // a scalar node
+                *p_current_node = Node::StringScalar(m_lexer.GetString());
+                p_current_node = node_stack.back();
+                node_stack.pop_back();
                 break;
             default:
                 throw Exception("Unsupported lexical token found.");
