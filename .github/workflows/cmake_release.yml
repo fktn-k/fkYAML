@@ -24,17 +24,17 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
-            artifact_name: fkYAML_linux_x64.tgz
+            run_sanitizers: ON
           - os: windows-latest
-            artifact_name: fkYAML_windows_x64.zip
+            run_sanitizers: OFF
           - os: macos-latest
-            artifact_name: fkYAML_mac_darwin.tgz
+            run_sanitizers: OFF
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFK_YAML_CI=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFK_YAML_CI=ON -DFK_YAML_RUN_SANITIZERS=${{matrix.run_sanitizers}}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}

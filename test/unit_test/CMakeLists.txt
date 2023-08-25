@@ -12,6 +12,8 @@ else()
 endif()
 set(CMAKE_CXX_STANDARD 11)
 
+add_sanitizer_flags(${FK_YAML_RunSanitizers})
+
 set(TEST_TARGET "fkYAMLUnitTest")
 
 add_executable(${TEST_TARGET}
