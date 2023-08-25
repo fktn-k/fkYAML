@@ -2009,6 +2009,106 @@ int NodeClassTest::ToStringThrowExceptionTest()
     return 0;
 }
 
+int NodeClassTest::SwapTest()
+{
+    fkyaml::Node lhs_node = fkyaml::Node::BooleanScalar(true);
+    fkyaml::Node rhs_node = fkyaml::Node::SignedIntegerScalar(123);
+
+    lhs_node.Swap(rhs_node);
+
+    if (!lhs_node.IsSignedInteger())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid lhs_node type after swapping. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER),
+            static_cast<int>(lhs_node.Type()));
+        return -1;
+    }
+
+    if (lhs_node.ToSignedInteger() != 123)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid lhs_node value after swapping. expect=%d, actual=%" PRId64 "\n",
+            123,
+            lhs_node.ToSignedInteger());
+        return -1;
+    }
+
+    if (!rhs_node.IsBoolean())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid rhs_node type after swapping. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::BOOLEAN),
+            static_cast<int>(rhs_node.Type()));
+        return -1;
+    }
+
+    if (rhs_node.ToBoolean() != true)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid rhs_node value after swapping. expect=%s, actual=%s\n",
+            "true",
+            rhs_node.ToBoolean() ? "true" : "false");
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::StdSwapTest()
+{
+    fkyaml::Node lhs_node = fkyaml::Node::BooleanScalar(true);
+    fkyaml::Node rhs_node = fkyaml::Node::SignedIntegerScalar(123);
+
+    std::swap(lhs_node, rhs_node);
+
+    if (!lhs_node.IsSignedInteger())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid lhs_node type after swapping. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::SIGNED_INTEGER),
+            static_cast<int>(lhs_node.Type()));
+        return -1;
+    }
+
+    if (lhs_node.ToSignedInteger() != 123)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid lhs_node value after swapping. expect=%d, actual=%" PRId64 "\n",
+            123,
+            lhs_node.ToSignedInteger());
+        return -1;
+    }
+
+    if (!rhs_node.IsBoolean())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid rhs_node type after swapping. expect=%d, actual=%d\n",
+            static_cast<int>(fkyaml::NodeType::BOOLEAN),
+            static_cast<int>(rhs_node.Type()));
+        return -1;
+    }
+
+    if (rhs_node.ToBoolean() != true)
+    {
+        std::fprintf(
+            stderr,
+            "Invalid rhs_node value after swapping. expect=%s, actual=%s\n",
+            "true",
+            rhs_node.ToBoolean() ? "true" : "false");
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::SequenceForLoopTest()
 {
     fkyaml::Node node = fkyaml::Node::Sequence(

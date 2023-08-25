@@ -106,8 +106,10 @@ add_unit_test(NodeClassTest ToFloatNumberThrowExceptionTest        ${TEST_TARGET
 add_unit_test(NodeClassTest ToStringTest                           ${TEST_TARGET} 0x0047)
 add_unit_test(NodeClassTest ConstToStringTest                      ${TEST_TARGET} 0x0048)
 add_unit_test(NodeClassTest ToStringThrowExceptionTest             ${TEST_TARGET} 0x0049)
-add_unit_test(NodeClassTest SequenceForLoopTest                    ${TEST_TARGET} 0x004A)
-add_unit_test(NodeClassTest ConstSequenceForLoopTest               ${TEST_TARGET} 0x004B)
+add_unit_test(NodeClassTest SwapTest                               ${TEST_TARGET} 0x004A)
+add_unit_test(NodeClassTest StdSwapTest                            ${TEST_TARGET} 0x004B)
+add_unit_test(NodeClassTest SequenceForLoopTest                    ${TEST_TARGET} 0x004C)
+add_unit_test(NodeClassTest ConstSequenceForLoopTest               ${TEST_TARGET} 0x004D)
 
 add_unit_test(LexicalAnalyzerTest ScanNullTest1                       ${TEST_TARGET} 0x0100)
 add_unit_test(LexicalAnalyzerTest ScanNullTest2                       ${TEST_TARGET} 0x0101)

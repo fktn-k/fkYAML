@@ -91,8 +91,10 @@ static const std::unordered_map<uint32_t, int (*)()> TEST_CASE_MAP {
     {0x0047, NodeClassTest::ToStringTest},
     {0x0048, NodeClassTest::ConstToStringTest},
     {0x0049, NodeClassTest::ToStringThrowExceptionTest},
-    {0x004A, NodeClassTest::SequenceForLoopTest},
-    {0x004B, NodeClassTest::ConstSequenceForLoopTest},
+    {0x004A, NodeClassTest::SwapTest},
+    {0x004B, NodeClassTest::StdSwapTest},
+    {0x004C, NodeClassTest::SequenceForLoopTest},
+    {0x004D, NodeClassTest::ConstSequenceForLoopTest},
 
     {0x0100, LexicalAnalyzerTest::ScanNullTest1},
     {0x0101, LexicalAnalyzerTest::ScanNullTest2},

@@ -93,6 +93,9 @@ public:
     static int ToStringTest();
     static int ConstToStringTest();
     static int ToStringThrowExceptionTest();
+    // swap
+    static int SwapTest();
+    static int StdSwapTest();
     // for-loops
     static int SequenceForLoopTest();
     static int ConstSequenceForLoopTest();
