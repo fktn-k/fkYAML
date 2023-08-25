@@ -24,32 +24,45 @@ if(FK_YAML_IS_MAIN_PROJECT OR FK_YAML_BUILD_TEST)
 else()
   set(FK_YAML_BUILD_TEST_INIT OFF)
 endif()
-option(FK_YAML_BuildTests "Build the unit tests when FK_YAML_BUILD_TEST is enabled or if this library is the main target." ${FK_YAML_BUILD_TEST_INIT})
-option(FK_YAML_Install    "Install CMake targets during install step." ${FK_YAML_IS_MAIN_PROJECT})
+
+if(FK_YAML_RUN_SANITIZERS)
+  set(FK_YAML_RUN_SANITIZERS_INIT ON)
+else()
+  set(FK_YAML_RUN_SANITIZERS_INIT OFF)
+endif()
 
 if(FK_YAML_RUN_DOXYGEN)
   set(FK_YAML_RUN_DOXYGEN_INIT ON)
 else()
   set(FK_YAML_RUN_DOXYGEN_INIT OFF)
 endif()
-option(FK_YAML_RunDoxygen "Generate API documentation with doxygen" ${FK_YAML_RUN_DOXYGEN_INIT})
 
 if(FK_YAML_RUN_CLANG_FORMAT)
   set(FK_YAML_RUN_CLANG_FORMAT_INIT ON)
 else()
-  if(FK_YAML_IS_MAIN_PROJECT AND NOT DEFINED )
+  if(FK_YAML_IS_MAIN_PROJECT)
     set(FK_YAML_RUN_CLANG_FORMAT_INIT ON)
   else()
     set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
   endif()
 endif()
 
-# disable execution of clang-format during CI.
 if(FK_YAML_CI)
+  # enable sanitizers during CI.
+  set(FK_YAML_RUN_SANITIZERS_INIT ON)
+  # disable execution of clang-format during CI.
   set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
 endif()
 
+option(FK_YAML_BuildTests     "Build the unit tests when FK_YAML_BUILD_TEST is enabled or if this library is the main target." ${FK_YAML_BUILD_TEST_INIT})
+option(FK_YAML_RunSanitizers  "Build the unit tests with sanitizers if FK_YAML_RUN_SANITIZERS is enabled" ${FK_YAML_RUN_SANITIZERS_INIT})
+option(FK_YAML_Install        "Install CMake targets during install step." ${FK_YAML_IS_MAIN_PROJECT})
+option(FK_YAML_RunDoxygen     "Generate API documentation with doxygen" ${FK_YAML_RUN_DOXYGEN_INIT})
 option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_FORMAT_INIT})
+
+if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat)
+  set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+endif()
 
 #
 # Configurations.
@@ -75,7 +88,7 @@ set(FK_YAML_PKGCONFIG_INSTALL_DIR      "${CMAKE_INSTALL_DATADIR}/pkgconfig")
 #
 
 if(FK_YAML_RunClangFormat)
-  include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunClangFormat.cmake)
+  include(RunClangFormat)
   run_clang_format(
     ${FK_YAML_TARGET_NAME}
     "${CMAKE_CURRENT_SOURCE_DIR}/include/fkYAML/*.hpp"
@@ -111,6 +124,7 @@ configure_file(
 
 if(FK_YAML_BuildTests)
   include(CTest)
+  include(AddSanitizers)
   enable_testing()
   add_subdirectory(test)
 endif()
