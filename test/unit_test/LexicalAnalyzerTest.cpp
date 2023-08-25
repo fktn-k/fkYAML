@@ -1,3 +1,10 @@
+/**
+ * LexicalAnalyzerTest.cpp - implementation of test functions for the LexicalAnalyzer class
+ *
+ * Copyright (c) 2023 fktn
+ * Distributed under the MIT License (https://opensource.org/licenses/MIT)
+ */
+
 #include "LexicalAnalyzerTest.hpp"
 
 #include <cinttypes>
