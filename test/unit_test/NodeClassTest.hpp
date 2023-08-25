@@ -71,6 +71,28 @@ public:
     static int MappingSizeTest();
     static int StringSizeTest();
     static int SizeThrowExceptionTest();
+    // value reference getters
+    static int ToSequenceTest();
+    static int ConstToSequenceTest();
+    static int ToSequenceThrowExceptionTest();
+    static int ToMappingTest();
+    static int ConstToMappingTest();
+    static int ToMappingThrowExceptionTest();
+    static int ToBooleanTest();
+    static int ConstToBooleanTest();
+    static int ToBooleanThrowExceptionTest();
+    static int ToSignedIntegerTest();
+    static int ConstToSignedIntegerTest();
+    static int ToSignedIntegerThrowExceptionTest();
+    static int ToUnsignedIntegerTest();
+    static int ConstToUnsignedIntegerTest();
+    static int ToUnsignedIntegerThrowExceptionTest();
+    static int ToFloatNumberTest();
+    static int ConstToFloatNumberTest();
+    static int ToFloatNumberThrowExceptionTest();
+    static int ToStringTest();
+    static int ConstToStringTest();
+    static int ToStringThrowExceptionTest();
     // for-loops
     static int SequenceForLoopTest();
     static int ConstSequenceForLoopTest();

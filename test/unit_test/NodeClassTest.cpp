@@ -1342,6 +1342,673 @@ int NodeClassTest::SizeThrowExceptionTest()
     return 0;
 }
 
+int NodeClassTest::ToSequenceTest()
+{
+    fkyaml::Node node = fkyaml::Node::Sequence();
+
+    try
+    {
+        fkyaml::NodeSequenceType& seq = node.ToSequence();
+        if (seq.size() != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid sequence size. expect=%d, actual=%zu\n",
+                0,
+                seq.size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToSequence for a sequence node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToSequenceTest()
+{
+    const fkyaml::Node node = fkyaml::Node::Sequence();
+
+    try
+    {
+        const fkyaml::NodeSequenceType& seq = node.ToSequence();
+        if (seq.size() != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid sequence size. expect=%d, actual=%zu\n",
+                0,
+                seq.size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToSequence for a sequence node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToSequenceThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (const auto& node : nodes)
+    {
+        try
+        {
+            fkyaml::NodeSequenceType ret = node.ToSequence();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToSequence(). type=%d\n",
+                static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToMappingTest()
+{
+    fkyaml::Node node = fkyaml::Node::Mapping();
+
+    try
+    {
+        fkyaml::NodeMappingType& map = node.ToMapping();
+        if (map.size() != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid mapping size. expect=%d, actual=%zu\n",
+                0,
+                map.size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToMapping for a mapping node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToMappingTest()
+{
+    const fkyaml::Node node = fkyaml::Node::Mapping();
+
+    try
+    {
+        const fkyaml::NodeMappingType& map = node.ToMapping();
+        if (map.size() != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid mapping size. expect=%d, actual=%zu\n",
+                0,
+                map.size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToMapping for a mapping node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToMappingThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (const auto& node : nodes)
+    {
+        try
+        {
+            fkyaml::NodeMappingType ret = node.ToMapping();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToMapping(). type=%d\n",
+                static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToBooleanTest()
+{
+    fkyaml::Node node = fkyaml::Node::BooleanScalar(false);
+
+    try
+    {
+        fkyaml::NodeBooleanType& boolean = node.ToBoolean();
+        if (boolean != false)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=%s, actual=%s\n",
+                "false",
+                boolean ? "true" : "false");
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToBoolean for a boolean node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToBooleanTest()
+{
+    const fkyaml::Node node = fkyaml::Node::BooleanScalar(false);
+
+    try
+    {
+        const fkyaml::NodeBooleanType& boolean = node.ToBoolean();
+        if (boolean != false)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=%s, actual=%s\n",
+                "false",
+                boolean ? "true" : "false");
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToBoolean for a boolean node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToBooleanThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (const auto& node : nodes)
+    {
+        try
+        {
+            fkyaml::NodeBooleanType ret = node.ToBoolean();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToBoolean(). type=%d\n",
+                static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToSignedIntegerTest()
+{
+    fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(0);
+
+    try
+    {
+        fkyaml::NodeSignedIntType& signed_int = node.ToSignedInteger();
+        if (signed_int != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=%d, actual=%" PRId64 "\n",
+                0,
+                signed_int);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToSignedInteger for a signed integer node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToSignedIntegerTest()
+{
+    const fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(0);
+
+    try
+    {
+        const fkyaml::NodeSignedIntType& signed_int = node.ToSignedInteger();
+        if (signed_int != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=%d, actual=%" PRId64 "\n",
+                0,
+                signed_int);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToSignedInteger for a signed integer node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToSignedIntegerThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (const auto& node : nodes)
+    {
+        try
+        {
+            fkyaml::NodeSignedIntType ret = node.ToSignedInteger();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToSignedInteger(). type=%d\n",
+                static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToUnsignedIntegerTest()
+{
+    fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(0);
+
+    try
+    {
+        fkyaml::NodeUnsignedIntType& unsigned_int = node.ToUnsignedInteger();
+        if (unsigned_int != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=%d, actual=%" PRIu64 "\n",
+                0,
+                unsigned_int);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToUnsignedInteger for an unsigned integer node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToUnsignedIntegerTest()
+{
+    const fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(0);
+
+    try
+    {
+        const fkyaml::NodeUnsignedIntType& signed_int = node.ToUnsignedInteger();
+        if (signed_int != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=%d, actual=%" PRId64 "\n",
+                0,
+                signed_int);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToUnsignedInteger for an unsigned integer node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToUnsignedIntegerThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (const auto& node : nodes)
+    {
+        try
+        {
+            fkyaml::NodeSignedIntType ret = node.ToUnsignedInteger();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToUnsignedInteger(). type=%d\n",
+                static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToFloatNumberTest()
+{
+    fkyaml::Node node = fkyaml::Node::FloatNumberScalar(0.0);
+
+    try
+    {
+        fkyaml::NodeFloatNumberType& float_val = node.ToFloatNumber();
+        if (float_val != 0.0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=%lf, actual=%lf\n",
+                0.0,
+                float_val);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToFloatNumber for a float number node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToFloatNumberTest()
+{
+    const fkyaml::Node node = fkyaml::Node::FloatNumberScalar(0.0);
+
+    try
+    {
+        const fkyaml::NodeFloatNumberType& float_val = node.ToFloatNumber();
+        if (float_val != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=%lf, actual=%lf\n",
+                0.0,
+                float_val);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToFloatNumber for a float number node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToFloatNumberThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (const auto& node : nodes)
+    {
+        try
+        {
+            fkyaml::NodeFloatNumberType ret = node.ToFloatNumber();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToFloatNumber(). type=%d\n",
+                static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
+// FIXME
+
+int NodeClassTest::ToStringTest()
+{
+    fkyaml::Node node = fkyaml::Node::StringScalar();
+
+    try
+    {
+        fkyaml::NodeStringType& str = node.ToString();
+        if (!str.empty())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=\"%s\", actual=\"%s\"\n",
+                "",
+                str.c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToString for a string node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToStringTest()
+{
+    const fkyaml::Node node = fkyaml::Node::StringScalar();
+
+    try
+    {
+        const fkyaml::NodeStringType& str = node.ToString();
+        if (!str.empty())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid node value. expect=\"%s\", actual=\"%s\"\n",
+                "",
+                str.c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToString for a string node. type=%d\n",
+            static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToStringThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+    };
+
+    for (const auto& node : nodes)
+    {
+        try
+        {
+            fkyaml::NodeStringType ret = node.ToString();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToString(). type=%d\n",
+                static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
 int NodeClassTest::SequenceForLoopTest()
 {
     fkyaml::Node node = fkyaml::Node::Sequence(
