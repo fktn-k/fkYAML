@@ -1342,6 +1342,221 @@ int NodeClassTest::SizeThrowExceptionTest()
     return 0;
 }
 
+int NodeClassTest::HasAnchorNameTest()
+{
+    fkyaml::Node node;
+
+    if (node.HasAnchorName())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid status of anchor name existence. expect=%s, actual=%s\n",
+            "false",
+            node.HasAnchorName() ? "true" : "false");
+        return -1;
+    }
+
+    node.AddAnchorName("anchor");
+
+    if (!node.HasAnchorName())
+    {
+        std::fprintf(
+            stderr,
+            "Invalid status of anchor name existence. expect=%s, actual=%s\n",
+            "true",
+            node.HasAnchorName() ? "true" : "false");
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::GetAnchorNameTest()
+{
+    fkyaml::Node node;
+
+    try
+    {
+        const std::string& ret = node.GetAnchorName();
+
+        // Should not come here.
+        std::fprintf(
+            stderr,
+            "Unexpected invocation of GetAnchorName() on a Node object without anchor name. ret=\"%s\"\n",
+            ret.c_str());
+        return -1;
+    }
+    catch (const fkyaml::Exception&)
+    {
+    }
+
+    node.AddAnchorName("anchor");
+
+    try
+    {
+        const std::string& anchor_name = node.GetAnchorName();
+        if (anchor_name.compare("anchor") != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid anchor name value. expect=\"%s\", actual=\"%s\"\n",
+                "anchor",
+                anchor_name.c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to invoke GetAnchorName() on a Node object with anchor name.\n");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::FirstAddLvalueAnchorNameTest()
+{
+    fkyaml::Node node;
+    std::string anchor_name = "anchor";
+    node.AddAnchorName(anchor_name);
+
+    try
+    {
+        const std::string& anchor_name_ret = node.GetAnchorName();
+        if (anchor_name_ret != anchor_name)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid anchor name value. expect=\"%s\", actual=\"%s\"\n",
+                anchor_name.c_str(),
+                anchor_name_ret.c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to set anchor name.\n");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::FirstAddRvalueAnchorNameTest()
+{
+    fkyaml::Node node;
+    std::string anchor_name = "anchor";
+    node.AddAnchorName(std::move(anchor_name));
+
+    try
+    {
+        const std::string& anchor_name_ret = node.GetAnchorName();
+        if (anchor_name_ret.compare("anchor") != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid anchor name value. expect=\"%s\", actual=\"%s\"\n",
+                "anchor",
+                anchor_name_ret.c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to set anchor name.\n");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::TwiceAddLvalueAnchorNameTest()
+{
+    fkyaml::Node node;
+    std::string anchor_name_first = "anchor_name_first";
+    node.AddAnchorName(anchor_name_first);
+    std::string anchor_name_second = "anchor_name_second";
+    node.AddAnchorName(anchor_name_second);
+
+    try
+    {
+        const std::string& anchor_name_ret = node.GetAnchorName();
+
+        if (anchor_name_ret == anchor_name_first)
+        {
+            std::fprintf(
+                stderr,
+                "Failed to overwrite anchor name value. expect=\"%s\", actual=\"%s\"\n",
+                anchor_name_second.c_str(),
+                anchor_name_ret.c_str());
+            return -1;
+        }
+
+        if (anchor_name_ret != anchor_name_second)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid anchor name value. expect=\"%s\", actual=\"%s\"\n",
+                anchor_name_second.c_str(),
+                anchor_name_ret.c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to set anchor name.\n");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::TwiceAddRvalueAnchorNameTest()
+{
+    fkyaml::Node node;
+    std::string anchor_name_first = "anchor_name_first";
+    node.AddAnchorName(std::move(anchor_name_first));
+    std::string anchor_name_second = "anchor_name_second";
+    node.AddAnchorName(std::move(anchor_name_second));
+
+    try
+    {
+        const std::string& anchor_name_ret = node.GetAnchorName();
+
+        if (anchor_name_ret.compare("anchor_name_first") == 0)
+        {
+            std::fprintf(
+                stderr,
+                "Failed to overwrite anchor name value. expect=\"%s\", actual=\"%s\"\n",
+                "anchor_name_second",
+                anchor_name_ret.c_str());
+            return -1;
+        }
+
+        if (anchor_name_ret.compare("anchor_name_second") != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid anchor name value. expect=\"%s\", actual=\"%s\"\n",
+                "anchor_name_second",
+                anchor_name_ret.c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to set anchor name.\n");
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ToSequenceTest()
 {
     fkyaml::Node node = fkyaml::Node::Sequence();

@@ -71,6 +71,13 @@ public:
     static int MappingSizeTest();
     static int StringSizeTest();
     static int SizeThrowExceptionTest();
+    // anchor name property checker/getter/setter/
+    static int HasAnchorNameTest();
+    static int GetAnchorNameTest();
+    static int FirstAddLvalueAnchorNameTest();
+    static int FirstAddRvalueAnchorNameTest();
+    static int TwiceAddLvalueAnchorNameTest();
+    static int TwiceAddRvalueAnchorNameTest();
     // value reference getters
     static int ToSequenceTest();
     static int ConstToSequenceTest();
