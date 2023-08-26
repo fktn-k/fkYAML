@@ -571,7 +571,7 @@ public:
      * @param anchor_node An anchor node to be referenced by the newly constructed BasicNode object.
      * @return BasicNode A constructed BasicNode object of alias type.
      */
-    static BasicNode AliasOf(const BasicNode& anchor_node)
+    static BasicNode AliasOf(BasicNode& anchor_node)
     {
         if (!anchor_node.m_anchor_name || anchor_node.m_anchor_name->empty())
         {
@@ -758,6 +758,10 @@ public:
      */
     NodeType Type() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->Type();
+        }
         return m_node_type;
     }
 
@@ -770,6 +774,10 @@ public:
      */
     bool IsSequence() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->IsSequence();
+        }
         return m_node_type == NodeType::SEQUENCE;
     }
 
@@ -782,6 +790,10 @@ public:
      */
     bool IsMapping() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->IsMapping();
+        }
         return m_node_type == NodeType::MAPPING;
     }
 
@@ -794,6 +806,10 @@ public:
      */
     bool IsNull() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->IsNull();
+        }
         return m_node_type == NodeType::NULL_OBJECT;
     }
 
@@ -806,6 +822,10 @@ public:
      */
     bool IsBoolean() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->IsBoolean();
+        }
         return m_node_type == NodeType::BOOLEAN;
     }
 
@@ -818,6 +838,10 @@ public:
      */
     bool IsSignedInteger() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->IsSignedInteger();
+        }
         return m_node_type == NodeType::SIGNED_INTEGER;
     }
 
@@ -830,6 +854,10 @@ public:
      */
     bool IsUnsignedInteger() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->IsUnsignedInteger();
+        }
         return m_node_type == NodeType::UNSIGNED_INTEGER;
     }
 
@@ -842,6 +870,10 @@ public:
      */
     bool IsFloatNumber() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->IsFloatNumber();
+        }
         return m_node_type == NodeType::FLOAT_NUMBER;
     }
 
@@ -854,6 +886,10 @@ public:
      */
     bool IsString() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->IsString();
+        }
         return m_node_type == NodeType::STRING;
     }
 
@@ -866,6 +902,10 @@ public:
      */
     bool IsScalar() const noexcept
     {
+        if (m_node_type == NodeType::ALIAS)
+        {
+            return m_node_value.anchor->IsScalar();
+        }
         return !IsSequence() && !IsMapping();
     }
 

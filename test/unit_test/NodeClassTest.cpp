@@ -575,6 +575,81 @@ int NodeClassTest::RvalueStringNodeFactoryTest()
     return 0;
 }
 
+int NodeClassTest::AliasNodeFactoryTest()
+{
+    fkyaml::Node anchor = fkyaml::Node::StringScalar("alias_test");
+    anchor.AddAnchorName("anchor_name");
+
+    try
+    {
+        fkyaml::Node alias = fkyaml::Node::AliasOf(anchor);
+
+        if (!alias.HasAnchorName())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias name existence. expect=%s, actual=%s\n",
+                "true",
+                alias.HasAnchorName() ? "true" : "false");
+            return -1;
+        }
+
+        if (alias.GetAnchorName().compare("anchor_name") != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias name value. expect=\"%s\", actual=\"%s\"\n",
+                "anchor_name",
+                alias.GetAnchorName().c_str());
+            return -1;
+        }
+
+        if (!alias.IsString())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node type. expect=%d, actual=%d\n",
+                static_cast<int>(fkyaml::NodeType::STRING),
+                static_cast<int>(alias.Type()));
+            return -1;
+        }
+
+        if (alias.ToString().compare("alias_test") != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=\"%s\", actual=\"%s\"\n",
+                "alias_test",
+                alias.ToString().c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(stderr, "Failed to invoke BasicNode::AliasOf() with an anchor node.\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::AliasNodeFactoryThrowExceptionTest()
+{
+    try
+    {
+        fkyaml::Node dummy_node;
+        fkyaml::Node alias = fkyaml::Node::AliasOf(dummy_node);
+    
+        std::fprintf(stderr, "Unexpected invocation of BasicNode::AliasOf() with a non-anchor node.\n");
+        return -1;
+    }
+    catch (const fkyaml::Exception&)
+    {
+    }
+
+    return 0;
+}
+
 int NodeClassTest::LvalueStringSubscriptOperatorTest()
 {
     fkyaml::Node node = fkyaml::Node::Mapping();

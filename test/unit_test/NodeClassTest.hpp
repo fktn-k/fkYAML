@@ -35,6 +35,8 @@ public:
     static int EmptyStringNodeFactoryTest();
     static int LvalueStringNodeFactoryTest();
     static int RvalueStringNodeFactoryTest();
+    static int AliasNodeFactoryTest();
+    static int AliasNodeFactoryThrowExceptionTest();
     // subscript operators
     static int LvalueStringSubscriptOperatorTest();
     static int ConstLvalueStringSubscriptOperatorTest();
