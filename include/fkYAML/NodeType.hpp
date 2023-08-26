@@ -30,6 +30,7 @@ enum class NodeType
     UNSIGNED_INTEGER, //!< unsigned integer value type
     FLOAT_NUMBER,     //!< float number value type
     STRING,           //!< string value type
+    ALIAS,            //!< alias node type
 };
 
 } // namespace fkyaml
