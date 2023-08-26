@@ -80,7 +80,7 @@ public:
     static int IsStringAliasTest();
     static int IsScalarTest();
     static int IsScalarAliasTest();
-    static int IsAliasTest();  // TODO: implementation
+    static int IsAliasTest();
     // empty checker
     static int SequenceIsEmptyTest();
     static int SequenceAliasIsEmptyTest();
@@ -104,26 +104,47 @@ public:
     static int TwiceAddRvalueAnchorNameTest();
     // value reference getters
     static int ToSequenceTest();
+    static int ToSequenceAliasTest();
     static int ConstToSequenceTest();
+    static int ConstToSequenceAliasTest();
     static int ToSequenceThrowExceptionTest();
+    static int ToSequenceAliasThrowExceptionTest();
     static int ToMappingTest();
+    static int ToMappingAliasTest();
     static int ConstToMappingTest();
+    static int ConstToMappingAliasTest();
     static int ToMappingThrowExceptionTest();
+    static int ToMappingAliasThrowExceptionTest();
     static int ToBooleanTest();
+    static int ToBooleanAliasTest();
     static int ConstToBooleanTest();
+    static int ConstToBooleanAliasTest();
     static int ToBooleanThrowExceptionTest();
+    static int ToBooleanAliasThrowExceptionTest();
     static int ToSignedIntegerTest();
+    static int ToSignedIntegerAliasTest();
     static int ConstToSignedIntegerTest();
+    static int ConstToSignedIntegerAliasTest();
     static int ToSignedIntegerThrowExceptionTest();
+    static int ToSignedIntegerAliasThrowExceptionTest();
     static int ToUnsignedIntegerTest();
+    static int ToUnsignedIntegerAliasTest();
     static int ConstToUnsignedIntegerTest();
+    static int ConstToUnsignedIntegerAliasTest();
     static int ToUnsignedIntegerThrowExceptionTest();
+    static int ToUnsignedIntegerAliasThrowExceptionTest();
     static int ToFloatNumberTest();
+    static int ToFloatNumberAliasTest();
     static int ConstToFloatNumberTest();
+    static int ConstToFloatNumberAliasTest();
     static int ToFloatNumberThrowExceptionTest();
+    static int ToFloatNumberAliasThrowExceptionTest();
     static int ToStringTest();
+    static int ToStringAliasTest();
     static int ConstToStringTest();
+    static int ConstToStringAliasTest();
     static int ToStringThrowExceptionTest();
+    static int ToStringAliasThrowExceptionTest();
     // swap
     static int SwapTest();
     static int StdSwapTest();

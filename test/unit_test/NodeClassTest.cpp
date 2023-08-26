@@ -2248,6 +2248,38 @@ int NodeClassTest::ToSequenceTest()
     return 0;
 }
 
+int NodeClassTest::ToSequenceAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::Sequence();
+    node.AddAnchorName("anchor_name");
+    fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        fkyaml::NodeSequenceType& seq = alias.ToSequence();
+        if (seq.size() != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias sequence size. expect=%d, actual=%zu\n",
+                0,
+                seq.size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToSequence for a sequence alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ConstToSequenceTest()
 {
     const fkyaml::Node node = fkyaml::Node::Sequence();
@@ -2271,6 +2303,38 @@ int NodeClassTest::ConstToSequenceTest()
             stderr,
             "Failed to call ToSequence for a sequence node. type=%d\n",
             static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToSequenceAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::Sequence();
+    node.AddAnchorName("anchor_name");
+    const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        const fkyaml::NodeSequenceType& seq = alias.ToSequence();
+        if (seq.size() != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias sequence size. expect=%d, actual=%zu\n",
+                0,
+                seq.size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToSequence for a sequence alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
         std::fprintf(stderr, "%s\n", e.what());
         return -1;
     }
@@ -2313,6 +2377,43 @@ int NodeClassTest::ToSequenceThrowExceptionTest()
     return 0;
 }
 
+int NodeClassTest::ToSequenceAliasThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (auto& node : nodes)
+    {
+        try
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            fkyaml::NodeSequenceType ret = alias.ToSequence();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToSequence(). type=%d\n",
+                static_cast<int>(alias.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ToMappingTest()
 {
     fkyaml::Node node = fkyaml::Node::Mapping();
@@ -2343,6 +2444,38 @@ int NodeClassTest::ToMappingTest()
     return 0;
 }
 
+int NodeClassTest::ToMappingAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::Mapping();
+    node.AddAnchorName("anchor_name");
+    fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        fkyaml::NodeMappingType& map = alias.ToMapping();
+        if (map.size() != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias mapping size. expect=%d, actual=%zu\n",
+                0,
+                map.size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToMapping for a mapping alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ConstToMappingTest()
 {
     const fkyaml::Node node = fkyaml::Node::Mapping();
@@ -2366,6 +2499,38 @@ int NodeClassTest::ConstToMappingTest()
             stderr,
             "Failed to call ToMapping for a mapping node. type=%d\n",
             static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToMappingAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::Mapping();
+    node.AddAnchorName("anchor_name");
+    const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        const fkyaml::NodeMappingType& map = alias.ToMapping();
+        if (map.size() != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias mapping size. expect=%d, actual=%zu\n",
+                0,
+                map.size());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToMapping for a mapping alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
         std::fprintf(stderr, "%s\n", e.what());
         return -1;
     }
@@ -2408,6 +2573,43 @@ int NodeClassTest::ToMappingThrowExceptionTest()
     return 0;
 }
 
+int NodeClassTest::ToMappingAliasThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (auto& node : nodes)
+    {
+        try
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            fkyaml::NodeMappingType ret = alias.ToMapping();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToMapping(). type=%d\n",
+                static_cast<int>(alias.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ToBooleanTest()
 {
     fkyaml::Node node = fkyaml::Node::BooleanScalar(false);
@@ -2438,6 +2640,38 @@ int NodeClassTest::ToBooleanTest()
     return 0;
 }
 
+int NodeClassTest::ToBooleanAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::BooleanScalar(false);
+    node.AddAnchorName("anchor_name");
+    fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        fkyaml::NodeBooleanType& boolean = alias.ToBoolean();
+        if (boolean != false)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=%s, actual=%s\n",
+                "false",
+                boolean ? "true" : "false");
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToBoolean for a boolean alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ConstToBooleanTest()
 {
     const fkyaml::Node node = fkyaml::Node::BooleanScalar(false);
@@ -2461,6 +2695,38 @@ int NodeClassTest::ConstToBooleanTest()
             stderr,
             "Failed to call ToBoolean for a boolean node. type=%d\n",
             static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToBooleanAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::BooleanScalar(false);
+    node.AddAnchorName("anchor_name");
+    const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        const fkyaml::NodeBooleanType& boolean = alias.ToBoolean();
+        if (boolean != false)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=%s, actual=%s\n",
+                "false",
+                boolean ? "true" : "false");
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToBoolean for a boolean alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
         std::fprintf(stderr, "%s\n", e.what());
         return -1;
     }
@@ -2503,6 +2769,43 @@ int NodeClassTest::ToBooleanThrowExceptionTest()
     return 0;
 }
 
+int NodeClassTest::ToBooleanAliasThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (auto& node : nodes)
+    {
+        try
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            fkyaml::NodeBooleanType ret = alias.ToBoolean();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToBoolean(). type=%d\n",
+                static_cast<int>(alias.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ToSignedIntegerTest()
 {
     fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(0);
@@ -2533,6 +2836,38 @@ int NodeClassTest::ToSignedIntegerTest()
     return 0;
 }
 
+int NodeClassTest::ToSignedIntegerAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(0);
+    node.AddAnchorName("anchor_name");
+    fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        fkyaml::NodeSignedIntType& signed_int = alias.ToSignedInteger();
+        if (signed_int != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=%d, actual=%" PRId64 "\n",
+                0,
+                signed_int);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToSignedInteger for a signed integer alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ConstToSignedIntegerTest()
 {
     const fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(0);
@@ -2556,6 +2891,38 @@ int NodeClassTest::ConstToSignedIntegerTest()
             stderr,
             "Failed to call ToSignedInteger for a signed integer node. type=%d\n",
             static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToSignedIntegerAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(0);
+    node.AddAnchorName("anchor_name");
+    const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        const fkyaml::NodeSignedIntType& signed_int = alias.ToSignedInteger();
+        if (signed_int != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=%d, actual=%" PRId64 "\n",
+                0,
+                signed_int);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToSignedInteger for a signed integer alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
         std::fprintf(stderr, "%s\n", e.what());
         return -1;
     }
@@ -2598,6 +2965,43 @@ int NodeClassTest::ToSignedIntegerThrowExceptionTest()
     return 0;
 }
 
+int NodeClassTest::ToSignedIntegerAliasThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (auto& node : nodes)
+    {
+        try
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            fkyaml::NodeSignedIntType ret = alias.ToSignedInteger();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToSignedInteger(). type=%d\n",
+                static_cast<int>(alias.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ToUnsignedIntegerTest()
 {
     fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(0);
@@ -2628,6 +3032,38 @@ int NodeClassTest::ToUnsignedIntegerTest()
     return 0;
 }
 
+int NodeClassTest::ToUnsignedIntegerAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(0);
+    node.AddAnchorName("anchor_name");
+    fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        fkyaml::NodeUnsignedIntType& unsigned_int = alias.ToUnsignedInteger();
+        if (unsigned_int != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=%d, actual=%" PRIu64 "\n",
+                0,
+                unsigned_int);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToUnsignedInteger for an unsigned integer alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ConstToUnsignedIntegerTest()
 {
     const fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(0);
@@ -2651,6 +3087,38 @@ int NodeClassTest::ConstToUnsignedIntegerTest()
             stderr,
             "Failed to call ToUnsignedInteger for an unsigned integer node. type=%d\n",
             static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToUnsignedIntegerAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(0);
+    node.AddAnchorName("anchor_name");
+    const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        const fkyaml::NodeUnsignedIntType& signed_int = alias.ToUnsignedInteger();
+        if (signed_int != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=%d, actual=%" PRId64 "\n",
+                0,
+                signed_int);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToUnsignedInteger for an unsigned integer alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
         std::fprintf(stderr, "%s\n", e.what());
         return -1;
     }
@@ -2693,6 +3161,43 @@ int NodeClassTest::ToUnsignedIntegerThrowExceptionTest()
     return 0;
 }
 
+int NodeClassTest::ToUnsignedIntegerAliasThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (auto& node : nodes)
+    {
+        try
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            fkyaml::NodeSignedIntType ret = alias.ToUnsignedInteger();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToUnsignedInteger(). type=%d\n",
+                static_cast<int>(alias.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ToFloatNumberTest()
 {
     fkyaml::Node node = fkyaml::Node::FloatNumberScalar(0.0);
@@ -2723,6 +3228,38 @@ int NodeClassTest::ToFloatNumberTest()
     return 0;
 }
 
+int NodeClassTest::ToFloatNumberAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::FloatNumberScalar(0.0);
+    node.AddAnchorName("anchor_name");
+    fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        fkyaml::NodeFloatNumberType& float_val = alias.ToFloatNumber();
+        if (float_val != 0.0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=%lf, actual=%lf\n",
+                0.0,
+                float_val);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToFloatNumber for a float number alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ConstToFloatNumberTest()
 {
     const fkyaml::Node node = fkyaml::Node::FloatNumberScalar(0.0);
@@ -2746,6 +3283,38 @@ int NodeClassTest::ConstToFloatNumberTest()
             stderr,
             "Failed to call ToFloatNumber for a float number node. type=%d\n",
             static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ConstToFloatNumberAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::FloatNumberScalar(0.0);
+    node.AddAnchorName("anchor_name");
+    fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        const fkyaml::NodeFloatNumberType& float_val = alias.ToFloatNumber();
+        if (float_val != 0)
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=%lf, actual=%lf\n",
+                0.0,
+                float_val);
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToFloatNumber for a float number alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
         std::fprintf(stderr, "%s\n", e.what());
         return -1;
     }
@@ -2788,7 +3357,42 @@ int NodeClassTest::ToFloatNumberThrowExceptionTest()
     return 0;
 }
 
-// FIXME
+int NodeClassTest::ToFloatNumberAliasThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::StringScalar(),
+    };
+
+    for (auto& node : nodes)
+    {
+        try
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            fkyaml::NodeFloatNumberType ret = alias.ToFloatNumber();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToFloatNumber(). type=%d\n",
+                static_cast<int>(alias.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
 
 int NodeClassTest::ToStringTest()
 {
@@ -2813,6 +3417,38 @@ int NodeClassTest::ToStringTest()
             stderr,
             "Failed to call ToString for a string node. type=%d\n",
             static_cast<int>(node.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToStringAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::StringScalar();
+    node.AddAnchorName("anchor_name");
+    fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        fkyaml::NodeStringType& str = alias.ToString();
+        if (!str.empty())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=\"%s\", actual=\"%s\"\n",
+                "",
+                str.c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToString for a string alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
         std::fprintf(stderr, "%s\n", e.what());
         return -1;
     }
@@ -2850,6 +3486,38 @@ int NodeClassTest::ConstToStringTest()
     return 0;
 }
 
+int NodeClassTest::ConstToStringAliasTest()
+{
+    fkyaml::Node node = fkyaml::Node::StringScalar();
+    node.AddAnchorName("anchor_name");
+    const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+
+    try
+    {
+        const fkyaml::NodeStringType& str = alias.ToString();
+        if (!str.empty())
+        {
+            std::fprintf(
+                stderr,
+                "Invalid alias node value. expect=\"%s\", actual=\"%s\"\n",
+                "",
+                str.c_str());
+            return -1;
+        }
+    }
+    catch (const fkyaml::Exception& e)
+    {
+        std::fprintf(
+            stderr,
+            "Failed to call ToString for a string alias node. type=%d\n",
+            static_cast<int>(alias.Type()));
+        std::fprintf(stderr, "%s\n", e.what());
+        return -1;
+    }
+
+    return 0;
+}
+
 int NodeClassTest::ToStringThrowExceptionTest()
 {
     std::vector<fkyaml::Node> nodes =
@@ -2875,6 +3543,43 @@ int NodeClassTest::ToStringThrowExceptionTest()
                 stderr,
                 "Unexpected invocation of ToString(). type=%d\n",
                 static_cast<int>(node.Type()));
+            return -1;
+        }
+        catch (const fkyaml::Exception&)
+        {
+        }
+    }
+
+    return 0;
+}
+
+int NodeClassTest::ToStringAliasThrowExceptionTest()
+{
+    std::vector<fkyaml::Node> nodes =
+    {
+        fkyaml::Node::Sequence(),
+        fkyaml::Node::Mapping(),
+        fkyaml::Node(),
+        fkyaml::Node::BooleanScalar(false),
+        fkyaml::Node::SignedIntegerScalar(0),
+        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::FloatNumberScalar(0.0),
+    };
+
+    for (auto& node : nodes)
+    {
+        try
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            fkyaml::NodeStringType ret = alias.ToString();
+            (void)ret; // suppress warning against "unused variable"
+
+            // Should not come here.
+            std::fprintf(
+                stderr,
+                "Unexpected invocation of ToString(). type=%d\n",
+                static_cast<int>(alias.Type()));
             return -1;
         }
         catch (const fkyaml::Exception&)
