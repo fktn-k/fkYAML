@@ -46,28 +46,50 @@ public:
     static int ConstIntegerSubscriptOperatorTest();
     // type property getter
     static int SequenceTypeTest();
+    static int SequenceAliasTypeTest();
     static int MappingTypeTest();
+    static int MappingAliasTypeTest();
     static int NullObjectTypeTest();
+    static int NullObjectAliasTypeTest();
     static int BooleanTypeTest();
+    static int BooleanAliasTypeTest();
     static int SignedIntegerTypeTest();
+    static int SignedIntegerAliasTypeTest();
     static int UnsignedIntegerTypeTest();
+    static int UnsignedIntegerAliasTypeTest();
     static int FloatNumberTypeTest();
+    static int FloatNumberAliasTypeTest();
     static int StringTypeTest();
+    static int StringAliasTypeTest();
     // type property checkers
     static int IsSequenceTest();
+    static int IsSequenceAliasTest();
     static int IsMappingTest();
+    static int IsMappingAliasTest();
     static int IsNullTest();
+    static int IsNullAliasTest();
     static int IsBooleanTest();
+    static int IsBooleanAliasTest();
     static int IsSignedIntegerTest();
+    static int IsSignedIntegerAliasTest();
     static int IsUnsignedIntegerTest();
+    static int IsUnsignedIntegerAliasTest();
     static int IsFloatNumberTest();
+    static int IsFloatNumberAliasTest();
     static int IsStringTest();
+    static int IsStringAliasTest();
     static int IsScalarTest();
+    static int IsScalarAliasTest();
+    static int IsAliasTest();  // TODO: implementation
     // empty checker
     static int SequenceIsEmptyTest();
+    static int SequenceAliasIsEmptyTest();
     static int MappingIsEmptyTest();
+    static int MappingAliasIsEmptyTest();
     static int StringIsEmptyTest();
+    static int StringAliasIsEmptyTest();
     static int IsEmptyThrowExceptionTest();
+    static int AliasIsEmptyThrowExceptionTest();
     // container size getter
     static int SequenceSizeTest();
     static int MappingSizeTest();

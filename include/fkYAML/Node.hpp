@@ -910,6 +910,17 @@ public:
     }
 
     /**
+     * @brief Tests whether the current BasicNode value is of alias type.
+     *
+     * @return true The current BasicNode value is of alias type.
+     * @return false The current BasicNode value is not of alias type.
+     */
+    bool IsAlias() const noexcept
+    {
+        return m_node_type == NodeType::ALIAS;
+    }
+
+    /**
      * @brief Tests whether the current BasicNode value (sequence, mapping, string) is empty.
      *
      * @return bool A result of testing whetehre the current BasicNode value is empty.
