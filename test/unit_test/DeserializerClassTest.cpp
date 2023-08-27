@@ -1,5 +1,5 @@
 /**
- * NodeClassTest.cpp - implementation of test functions for the Deserializer class
+ * DeserializerClassTest.cpp - implementation of test functions for the Deserializer class
  *
  * Copyright (c) 2023 fktn
  * Distributed under the MIT License (https://opensource.org/licenses/MIT)

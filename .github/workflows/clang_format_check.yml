@@ -15,6 +15,11 @@ jobs:
   format-check:
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - include/fkYAML
+          - test/unit_test
 
     steps:
     - uses: actions/checkout@v3
@@ -25,4 +30,4 @@ jobs:
       uses: jidicula/clang-format-action@v4.11.0
       with:
         clang-format-version: '14'
-        check-path: include/fkYAML
+        check-path: ${{matrix.path}}
