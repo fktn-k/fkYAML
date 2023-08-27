@@ -60,6 +60,9 @@ option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is
 
 if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat)
   set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+  if(FK_YAML_BuildTests)
+    set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2/contrib")
+  endif()
 endif()
 
 #
@@ -121,6 +124,8 @@ configure_file(
 #
 
 if(FK_YAML_BuildTests)
+  set(CATCH2_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2")
+  add_subdirectory(${CATCH2_ROOT_DIR})
   include(CTest)
   include(AddSanitizers)
   enable_testing()
