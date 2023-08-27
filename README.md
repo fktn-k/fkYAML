@@ -1,7 +1,7 @@
-[![Ubuntu](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AUbuntu)
-[![Windows](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AWindows)
-[![macOS](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AmacOS)
-[![CodeQL](https://github.com/fktn-k/fkYAML/actions?query=workflow%3A%22CodeQL+Analysis%22)
+[![Ubuntu](https://github.com/fktn-k/fkYAML/workflows/Ubuntu/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AUbuntu)
+[![Windows](https://github.com/fktn-k/fkYAML/workflows/Windows/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AWindows)
+[![macOS](https://github.com/fktn-k/fkYAML/workflows/macOS/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AmacOS)
+[![CodeQL](https://github.com/fktn-k/fkYAML/workflows/CodeQL/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3ACodeQL)
 
 # fkYAML
 fkYAML is a C++ header-only C++ library to deal with YAML.  
