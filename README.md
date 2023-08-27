@@ -1,7 +1,13 @@
-# fkYAML
-fkYAML is a header-only C++ library to deal with YAML.
-This library requires only C++11.
+[![Ubuntu](https://github.com/fktn-k/fkYAML/workflows/Ubuntu/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AUbuntu)
+[![Windows](https://github.com/fktn-k/fkYAML/workflows/Windows/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AWindows)
+[![macOS](https://github.com/fktn-k/fkYAML/workflows/macOS/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AmacOS)
+[![CodeQL](https://github.com/fktn-k/fkYAML/workflows/CodeQL/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3ACodeQL)
 
+# fkYAML
+fkYAML is a C++ header-only C++ library to deal with YAML.  
+If you want portability & development speed-up, fkYAML is the way to go.  
+No need to build a library only for a third party project.  
+You can add YAML support into your projects by just including header files where it's needed.  
 
 ## How to Use
 
@@ -13,7 +19,15 @@ Coming soon.
 
 ## How to execute the unit tests
 
-Coming soon.
+You can execute the unit tests with the following commands.  
+If fkYAML is the main target, the unit test app is automatically built with fkYAML library.  
+```bash
+$ cd path/to/fkYAML
+$ mkdir build && cd build
+$ cmake ..
+$ cmake --build .
+$ ctest --output-on-failure
+```
 
 ## License
 
