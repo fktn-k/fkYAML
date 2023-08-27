@@ -940,7 +940,7 @@ private:
                     m_value_buffer.push_back('\u001B');
                     break;
                 case ' ':
-                    m_value_buffer.push_back('\u0020');
+                    m_value_buffer.push_back(' ');
                     break;
                 case '\"':
                     m_value_buffer.push_back('\"');
@@ -960,12 +960,14 @@ private:
                         byte |= static_cast<char>(four_bits << (4 * i));
                     }
                     m_value_buffer.push_back(byte);
+                    break;
                 }
                 // Multibyte characters are currently unsupported.
                 // Thus \N, \_, \L, \P \uXX, \UXXXX are currently unavailable.
                 default:
                     throw Exception("Unsupported escape sequence found in a string token.");
                 }
+                continue;
             }
 
             // Handle ASCII characters except control characters.
