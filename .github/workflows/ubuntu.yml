@@ -53,3 +53,4 @@ jobs:
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         file: ${{github.workspace}}/build_coverage/test/unit_test/fkYAML.info.filtered
+        format: lcov
