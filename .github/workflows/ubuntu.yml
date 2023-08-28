@@ -41,7 +41,7 @@ jobs:
     - name: Generate coverage
       run: |
         sudo apt install lcov
-        CXX=g++ cmake -B ${{github.workspace}}/build_coverage -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_CI=ON -DFK_YAML_CODE_COVERAGE_ON
+        CXX=g++ cmake -B ${{github.workspace}}/build_coverage -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_CI=ON -DFK_YAML_CODE_COVERAGE=ON
         cmake --build ${{github.workspace}}/build_coverage --config Debug --target generate_test_coverage
 
     - name: Upload coverage to Coveralls
