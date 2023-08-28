@@ -52,4 +52,4 @@ jobs:
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
-        file: ${{github.workspace}}/build_coverage/test/unittest/fkYAML.info.filtered
+        file: ${{github.workspace}}/build_coverage/test/unit_test/fkYAML.info.filtered
