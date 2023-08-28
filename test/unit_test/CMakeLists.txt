@@ -47,7 +47,7 @@ if(FK_YAML_GenerateCoverage)
     COMMAND cd ${PROJECT_BINARY_DIR}/test/unit_test/CMakeFiles/${TEST_TARGET}.dir
     COMMAND ${LCOV_TOOL} --directory . --capture --output-file ${PROJECT_NAME}.info --rc lcov_branch_coverage=1
     COMMAND ${LCOV_TOOL} -e ${PROJECT_NAME}.info ${PROJECT_SOURCE_DIR}/include/fkYAML/*.hpp --output-file ${PROJECT_NAME}.info.filtered --rc lcov_branch_coverage=1
-    # COMMAND genhtml --title "fkYAML -- A C++ header-only YAML library" --legend --demangle-cpp --output-directory html --show-details --branch-coverage ${PROJECT_NAME}.info.filtered
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.info.filtered ${PROJECT_BINARY_DIR}/coverage/fkYAML.info
 
     DEPENDS ${TEST_TARGET}
     COMMENT "Execute unit test app with code coverage."
