@@ -31,6 +31,15 @@ else()
   set(FK_YAML_RUN_SANITIZERS_INIT OFF)
 endif()
 
+if(FK_YAML_CODE_COVERAGE)
+  # Code coverage data depends on unit test app.
+  # So force build it.
+  set(FK_YAML_BUILD_TEST_INIT ON)
+  set(FK_YAML_CODE_COVERAGE_INIT ON)
+else()
+  set(FK_YAML_CODE_COVERAGE_INIT OFF)
+endif()
+
 if(FK_YAML_RUN_DOXYGEN)
   set(FK_YAML_RUN_DOXYGEN_INIT ON)
 else()
@@ -53,9 +62,10 @@ if(FK_YAML_CI)
 endif()
 
 option(FK_YAML_BuildTests     "Build the unit tests when FK_YAML_BUILD_TEST is enabled or if this library is the main target." ${FK_YAML_BUILD_TEST_INIT})
-option(FK_YAML_RunSanitizers  "Build the unit tests with sanitizers if FK_YAML_RUN_SANITIZERS is enabled" ${FK_YAML_RUN_SANITIZERS_INIT})
+option(FK_YAML_RunSanitizers  "Build the unit tests with sanitizers if FK_YAML_RUN_SANITIZERS is enabled." ${FK_YAML_RUN_SANITIZERS_INIT})
+option(FK_YAML_GenerateCoverage "Build the unit tests with code coverage data if FK_YAML_CODE_COVERAGE is enabled." ${FK_YAML_CODE_COVERAGE_INIT})
 option(FK_YAML_Install        "Install CMake targets during install step." ${FK_YAML_IS_MAIN_PROJECT})
-option(FK_YAML_RunDoxygen     "Generate API documentation with doxygen" ${FK_YAML_RUN_DOXYGEN_INIT})
+option(FK_YAML_RunDoxygen     "Generate API documentation with doxygen." ${FK_YAML_RUN_DOXYGEN_INIT})
 option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_FORMAT_INIT})
 
 if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat)
@@ -63,6 +73,13 @@ if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat)
   if(FK_YAML_BuildTests)
     set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2/contrib")
   endif()
+endif()
+
+if(FK_YAML_GenerateCoverage)
+  find_program(LCOV_TOOL NAMES lcov REQUIRED)
+  execute_process(COMMAND ${LCOV_TOOL} --version OUTPUT_VARIABLE LCOV_TOOL_VERSION ERROR_VARIABLE LCOV_TOOL_VERSION)
+  string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" LCOV_TOOL_VERSION "${LCOV_TOOL_VERSION}")
+  message(STATUS "lcov ${LCOV_TOOL_VERSION} (${LCOV_TOOL})")
 endif()
 
 #

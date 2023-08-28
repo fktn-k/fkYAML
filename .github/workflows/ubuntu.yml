@@ -32,3 +32,20 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build_${{matrix.build_type}}
       run: ctest -C ${{matrix.build_type}} --output-on-failure
+
+  coverage:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Generate coverage
+      run: |
+        sudo apt install lcov
+        CXX=g++ cmake -B ${{github.workspace}}/build_coverage -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_CI=ON -DFK_YAML_CODE_COVERAGE_ON
+        cmake --build ${{github.workspace}}/build_coverage --config Debug --target generate_test_coverage
+
+    - name: Upload coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        file: ${{github.workspace}}/build_coverage/test/unittest/fkYAML.info.filtered
