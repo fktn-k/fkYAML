@@ -47,7 +47,8 @@ if(FK_YAML_GenerateCoverage)
     COMMAND cd ${PROJECT_BINARY_DIR}/test/unit_test/CMakeFiles/${TEST_TARGET}.dir
     COMMAND ${LCOV_TOOL} --directory . --capture --output-file ${PROJECT_NAME}.info --rc lcov_branch_coverage=1
     COMMAND ${LCOV_TOOL} -e ${PROJECT_NAME}.info ${PROJECT_SOURCE_DIR}/include/fkYAML/*.hpp --output-file ${PROJECT_NAME}.info.filtered --rc lcov_branch_coverage=1
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.info.filtered ${PROJECT_BINARY_DIR}/coverage/fkYAML.info
+    COMMAND ${LCOV_TOOL} -r ${PROJECT_NAME}.info.filtered /usr/include/* --output-file ${PROJECT_NAME}.info.filtered.stl_excluded --rc lcov_branch_coverage=1
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.info.filtered.stl_excluded ${PROJECT_BINARY_DIR}/coverage/fkYAML.info
 
     DEPENDS ${TEST_TARGET}
     COMMENT "Execute unit test app with code coverage."
