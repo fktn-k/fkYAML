@@ -85,7 +85,10 @@ TEST_CASE("NodeClassTest_ThrowingSpecializationTypeCtorTest", "[NodeClassTest]")
 {
     struct String
     {
-        String() { throw fkyaml::Exception(); }
+        String()
+        {
+            throw fkyaml::Exception();
+        }
     };
 
     using NodeType = fkyaml::BasicNode<std::vector, std::map, bool, int64_t, uint64_t, double, String>;
@@ -1864,10 +1867,7 @@ TEST_CASE("NodeClassTest_BeginTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping()
-        );
+        auto node = GENERATE(fkyaml::Node::Sequence(), fkyaml::Node::Mapping());
 
         SECTION("Test non-const non-alias container node.")
         {
@@ -1914,8 +1914,7 @@ TEST_CASE("NodeClassTest_BeginTest", "[NodeClassTest]")
             fkyaml::Node::SignedIntegerScalar(0),
             fkyaml::Node::UnsignedIntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar()
-        );
+            fkyaml::Node::StringScalar());
 
         SECTION("Test non-const throwing node.")
         {
@@ -1934,10 +1933,7 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping()
-        );
+        auto node = GENERATE(fkyaml::Node::Sequence(), fkyaml::Node::Mapping());
 
         SECTION("Test non-const non-alias container node.")
         {
@@ -1984,8 +1980,7 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
             fkyaml::Node::SignedIntegerScalar(0),
             fkyaml::Node::UnsignedIntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar()
-        );
+            fkyaml::Node::StringScalar());
 
         SECTION("Test non-const throwing node.")
         {
