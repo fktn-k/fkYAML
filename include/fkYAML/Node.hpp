@@ -1484,7 +1484,7 @@ public:
      */
     const_iterator end() const // NOLINT(readability-identifier-naming)
     {
-        return end();
+        return End();
     }
 
 private:
