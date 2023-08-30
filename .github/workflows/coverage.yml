@@ -2,7 +2,9 @@ name: Coverage
 
 on:
   push:
-    branches: [ main, develop ]
+    paths:
+      - '**.hpp'
+      - '**.cpp'
   pull_request:
   workflow_dispatch:
 
