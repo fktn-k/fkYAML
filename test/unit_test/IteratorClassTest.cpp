@@ -122,16 +122,30 @@ TEST_CASE("IteratorClassTest_ArrowOperatorTest", "[IteratorClassTest]")
     {
         fkyaml::Node seq = fkyaml::Node::Sequence({fkyaml::Node::StringScalar("test")});
         fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, seq.ToSequence().begin());
-        fkyaml::Node* actual = iterator.operator->();
-        fkyaml::Node* expect = &(seq.ToSequence().operator[](0));
+        REQUIRE(iterator.operator->() == &(seq.ToSequence().operator[](0)));
     }
 
     SECTION("Test mapping iterator.")
     {
         fkyaml::Node map = fkyaml::Node::Mapping({{"key", fkyaml::Node::StringScalar("test")}});
         fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, map.ToMapping().begin());
-        fkyaml::Node* actual = iterator.operator->();
-        fkyaml::Node* expect = &(map.ToMapping().operator[]("key"));
-        REQUIRE(iterator.operator->() == expect);
+        REQUIRE(iterator.operator->() == &(map.ToMapping().operator[]("key")));
+    }
+}
+
+TEST_CASE("IteratorClassTest_DereferenceOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node seq = fkyaml::Node::Sequence({fkyaml::Node::StringScalar("test")});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, seq.ToSequence().begin());
+        REQUIRE(&(iterator.operator*()) == &(seq.ToSequence().operator[](0)));
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node map = fkyaml::Node::Mapping({{"key", fkyaml::Node::StringScalar("test")}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, map.ToMapping().begin());
+        REQUIRE(&(iterator.operator*()) == &(map.ToMapping().operator[]("key")));
     }
 }
