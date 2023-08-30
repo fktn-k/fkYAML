@@ -12,10 +12,10 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <map>
 #include <memory>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 #include "fkYAML/Exception.hpp"
@@ -43,7 +43,7 @@ namespace fkyaml
  */
 template <
     template <typename, typename...> class SequenceType = std::vector,
-    template <typename, typename, typename...> class MappingType = std::unordered_map, typename BooleanType = bool,
+    template <typename, typename, typename...> class MappingType = std::map, typename BooleanType = bool,
     typename SignedIntegerType = std::int64_t, typename UnsignedIntegerType = std::uint64_t,
     typename FloatNumberType = double, typename StringType = std::string>
 class BasicNode
