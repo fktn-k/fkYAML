@@ -79,6 +79,16 @@ struct IteratorTraits<const ValueType>
 };
 
 /**
+ * @enum IteratorType
+ * @brief Definitions of iterator types for iterators internally held.
+ */
+enum class IteratorType
+{
+    SEQUENCE, //!< sequence iterator type.
+    MAPPING,  //!< mapping iterator type.
+};
+
+/**
  * @class Iterator
  * @brief A class which holds iterators either of sequence or mapping type
  *
@@ -105,16 +115,6 @@ public:
     using reference = typename ItrTraitsType::reference;
 
 private:
-    /**
-     * @enum InnerIteratorType
-     * @brief Definitions of iterator types for iterators internally held.
-     */
-    enum class InnerIteratorType
-    {
-        SEQUENCE, //!< sequence iterator type.
-        MAPPING,  //!< mapping iterator type.
-    };
-
     /** A type of non-const version of iterated elements. */
     using NonConstValueType = typename std::remove_const<ValueType>::type;
 
@@ -137,7 +137,7 @@ public:
      * @param[in] itr An sequence iterator object.
      */
     Iterator(SequenceIteratorTag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept
-        : m_inner_iterator_type(InnerIteratorType::SEQUENCE)
+        : m_inner_iterator_type(IteratorType::SEQUENCE)
     {
         m_iterator_holder.sequence_iterator = itr;
     }
@@ -148,7 +148,7 @@ public:
      * @param[in] itr An mapping iterator object.
      */
     Iterator(MappingIteratorTag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
-        : m_inner_iterator_type(InnerIteratorType::MAPPING)
+        : m_inner_iterator_type(IteratorType::MAPPING)
     {
         m_iterator_holder.mapping_iterator = itr;
     }
@@ -163,12 +163,14 @@ public:
     {
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             m_iterator_holder.sequence_iterator = other.m_iterator_holder.sequence_iterator;
             break;
-        case InnerIteratorType::MAPPING:
+        case IteratorType::MAPPING:
             m_iterator_holder.mapping_iterator = other.m_iterator_holder.mapping_iterator;
             break;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
     }
 
@@ -182,12 +184,14 @@ public:
     {
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             m_iterator_holder.sequence_iterator = std::move(other.m_iterator_holder.sequence_iterator);
             break;
-        case InnerIteratorType::MAPPING:
+        case IteratorType::MAPPING:
             m_iterator_holder.mapping_iterator = std::move(other.m_iterator_holder.mapping_iterator);
             break;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
     }
 
@@ -210,12 +214,14 @@ public:
         m_inner_iterator_type = rhs.m_inner_iterator_type;
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             m_iterator_holder.sequence_iterator = rhs.m_iterator_holder.sequence_iterator;
             break;
-        case InnerIteratorType::MAPPING:
+        case IteratorType::MAPPING:
             m_iterator_holder.mapping_iterator = rhs.m_iterator_holder.mapping_iterator;
             break;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
 
         return *this;
@@ -237,19 +243,21 @@ public:
         m_inner_iterator_type = rhs.m_inner_iterator_type;
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             m_iterator_holder.sequence_iterator = std::move(rhs.m_iterator_holder.sequence_iterator);
             break;
-        case InnerIteratorType::MAPPING:
+        case IteratorType::MAPPING:
             m_iterator_holder.mapping_iterator = std::move(rhs.m_iterator_holder.mapping_iterator);
             break;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
 
         return *this;
     }
 
     /**
-     * @brief An arror operator of the Iterator class.
+     * @brief An arrow operator of the Iterator class.
      *
      * @return pointer A pointer to the Node object internally referenced by the actual iterator object.
      */
@@ -257,12 +265,12 @@ public:
     {
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             return &(*(m_iterator_holder.sequence_iterator));
-        case InnerIteratorType::MAPPING:
+        case IteratorType::MAPPING:
             return &(m_iterator_holder.mapping_iterator->second);
-        default:
-            return nullptr;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
     }
 
@@ -275,10 +283,12 @@ public:
     {
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             return *(m_iterator_holder.sequence_iterator);
-        case InnerIteratorType::MAPPING:
-            return *(m_iterator_holder.mapping_iterator).second;
+        case IteratorType::MAPPING:
+            return m_iterator_holder.mapping_iterator->second;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
     }
 
@@ -292,11 +302,14 @@ public:
     {
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             std::advance(m_iterator_holder.sequence_iterator, i);
             break;
-        case InnerIteratorType::MAPPING:
-            throw Exception("Cannot use offsets with operators of the mapping container type.");
+        case IteratorType::MAPPING:
+            std::advance(m_iterator_holder.mapping_iterator, i);
+            break;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
         return *this;
     }
@@ -323,12 +336,14 @@ public:
     {
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             std::advance(m_iterator_holder.sequence_iterator, 1);
             break;
-        case InnerIteratorType::MAPPING:
+        case IteratorType::MAPPING:
             std::advance(m_iterator_holder.mapping_iterator, 1);
             break;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
         return *this;
     }
@@ -378,12 +393,14 @@ public:
     {
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             std::advance(m_iterator_holder.sequence_iterator, -1);
             break;
-        case InnerIteratorType::MAPPING:
+        case IteratorType::MAPPING:
             std::advance(m_iterator_holder.mapping_iterator, -1);
             break;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
         return *this;
     }
@@ -416,12 +433,12 @@ public:
 
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             return (m_iterator_holder.sequence_iterator == rhs.m_iterator_holder.sequence_iterator);
-        case InnerIteratorType::MAPPING:
+        case IteratorType::MAPPING:
             return (m_iterator_holder.mapping_iterator == rhs.m_iterator_holder.mapping_iterator);
-        default:
-            return false;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
     }
 
@@ -453,10 +470,12 @@ public:
 
         switch (m_inner_iterator_type)
         {
-        case InnerIteratorType::SEQUENCE:
+        case IteratorType::SEQUENCE:
             return (m_iterator_holder.sequence_iterator < rhs.m_iterator_holder.sequence_iterator);
-        case InnerIteratorType::MAPPING:
+        case IteratorType::MAPPING:
             throw Exception("Cannot compare order of iterators of the mapping container type");
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
     }
 
@@ -496,9 +515,33 @@ public:
         return !operator<(rhs);
     }
 
+public:
+    IteratorType Type() const noexcept
+    {
+        return m_inner_iterator_type;
+    }
+
+    const std::string& Key() const
+    {
+        switch (m_inner_iterator_type)
+        {
+        case IteratorType::SEQUENCE:
+            throw Exception("Cannot retrieve key from non-mapping iterators.");
+        case IteratorType::MAPPING:
+            return m_iterator_holder.mapping_iterator->first;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
+        }
+    }
+
+    reference Value() noexcept
+    {
+        return operator*();
+    }
+
 private:
     /** A type of the internally-held iterator. */
-    InnerIteratorType m_inner_iterator_type;
+    IteratorType m_inner_iterator_type;
     /** A holder of actual iterators. */
     mutable IteratorHolder m_iterator_holder;
 };

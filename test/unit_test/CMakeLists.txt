@@ -8,7 +8,7 @@ if(MSVC)
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Z7")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-terminate")
 endif()
 set(CMAKE_CXX_STANDARD 11)
 
@@ -25,6 +25,7 @@ endif()
 
 add_executable(${TEST_TARGET}
   NodeClassTest.cpp
+  IteratorClassTest.cpp
   LexicalAnalyzerClassTest.cpp
   DeserializerClassTest.cpp
   main.cpp
