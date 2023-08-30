@@ -304,7 +304,8 @@ public:
             std::advance(m_iterator_holder.sequence_iterator, i);
             break;
         case IteratorType::MAPPING:
-            throw Exception("Cannot use offsets with operators of the mapping container type.");
+            std::advance(m_iterator_holder.mapping_iterator, i);
+            break;
         default:           // LCOV_EXCL_LINE
             assert(false); // LCOV_EXCL_LINE
         }

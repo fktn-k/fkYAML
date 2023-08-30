@@ -57,7 +57,7 @@ TEST_CASE("IteratorClassTest_MappingMoveCtorTest", "[IteratorClassTest]")
 {
     fkyaml::Node mapping = fkyaml::Node::Mapping({{"test", fkyaml::Node()}});
     fkyaml::Iterator<fkyaml::Node> moved(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
-    fkyaml::Iterator<fkyaml::Node> iterator(moved);
+    fkyaml::Iterator<fkyaml::Node> iterator(std::move(moved));
     REQUIRE(iterator.Type() == fkyaml::IteratorType::MAPPING);
     REQUIRE(iterator.Key().compare("test") == 0);
     REQUIRE(iterator.Value().IsNull());
@@ -65,6 +65,15 @@ TEST_CASE("IteratorClassTest_MappingMoveCtorTest", "[IteratorClassTest]")
 
 TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
 {
+    SECTION("Test self assignment.")
+    {
+        fkyaml::Node sequence = fkyaml::Node::Sequence({fkyaml::Node()});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        iterator = iterator;
+        REQUIRE(iterator.Type() == fkyaml::IteratorType::SEQUENCE);
+        REQUIRE(iterator->IsNull());
+    }
+
     SECTION("Test sequence iterators.")
     {
         fkyaml::Node copied_seq = fkyaml::Node::Sequence({fkyaml::Node::StringScalar("test")});
@@ -147,5 +156,199 @@ TEST_CASE("IteratorClassTest_DereferenceOperatorTest", "[IteratorClassTest]")
         fkyaml::Node map = fkyaml::Node::Mapping({{"key", fkyaml::Node::StringScalar("test")}});
         fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, map.ToMapping().begin());
         REQUIRE(&(iterator.operator*()) == &(map.ToMapping().operator[]("key")));
+    }
+}
+
+TEST_CASE("IteratorClassTest_CompoundAssignmentOperatorBySumTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        iterator += 1;
+        REQUIRE(iterator->IsBoolean());
+        REQUIRE(iterator->ToBoolean() == true);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        iterator += 1;
+        REQUIRE(iterator.Key().compare("test1") == 0);
+        REQUIRE(iterator.Value().IsBoolean());
+        REQUIRE(iterator.Value().ToBoolean() == true);
+    }
+}
+
+TEST_CASE("IteratorClassTest_PlusOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Iterator<fkyaml::Node> after_plus_itr = iterator + 1;
+        REQUIRE(after_plus_itr->IsBoolean());
+        REQUIRE(after_plus_itr->ToBoolean() == true);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        fkyaml::Iterator<fkyaml::Node> after_plus_itr = iterator + 1;
+        REQUIRE(after_plus_itr.Key().compare("test1") == 0);
+        REQUIRE(after_plus_itr.Value().IsBoolean());
+        REQUIRE(after_plus_itr.Value().ToBoolean() == true);
+    }
+}
+
+TEST_CASE("IteratorClassTest_PreIncrementOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        ++iterator;
+        REQUIRE(iterator->IsBoolean());
+        REQUIRE(iterator->ToBoolean() == true);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        ++iterator;
+        REQUIRE(iterator.Key().compare("test1") == 0);
+        REQUIRE(iterator.Value().IsBoolean());
+        REQUIRE(iterator.Value().ToBoolean() == true);
+    }
+}
+
+TEST_CASE("IteratorClassTest_PostIncrementOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        iterator++;
+        REQUIRE(iterator->IsBoolean());
+        REQUIRE(iterator->ToBoolean() == true);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        iterator++;
+        REQUIRE(iterator.Key().compare("test1") == 0);
+        REQUIRE(iterator.Value().IsBoolean());
+        REQUIRE(iterator.Value().ToBoolean() == true);
+    }
+}
+
+// FIXME
+
+TEST_CASE("IteratorClassTest_CompoundAssignmentOperatorByDifferenceTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().end());
+        iterator -= 1;
+        REQUIRE(iterator->IsBoolean());
+        REQUIRE(iterator->ToBoolean() == true);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().end());
+        iterator -= 1;
+        REQUIRE(iterator.Key().compare("test1") == 0);
+        REQUIRE(iterator.Value().IsBoolean());
+        REQUIRE(iterator.Value().ToBoolean() == true);
+    }
+}
+
+TEST_CASE("IteratorClassTest_MinusOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().end());
+        fkyaml::Iterator<fkyaml::Node> after_minus_itr = iterator - 1;
+        REQUIRE(after_minus_itr->IsBoolean());
+        REQUIRE(after_minus_itr->ToBoolean() == true);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().end());
+        fkyaml::Iterator<fkyaml::Node> after_minus_itr = iterator - 1;
+        REQUIRE(after_minus_itr.Key().compare("test1") == 0);
+        REQUIRE(after_minus_itr.Value().IsBoolean());
+        REQUIRE(after_minus_itr.Value().ToBoolean() == true);
+    }
+}
+
+TEST_CASE("IteratorClassTest_PreDecrementOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().end());
+        --iterator;
+        REQUIRE(iterator->IsBoolean());
+        REQUIRE(iterator->ToBoolean() == true);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().end());
+        --iterator;
+        REQUIRE(iterator.Key().compare("test1") == 0);
+        REQUIRE(iterator.Value().IsBoolean());
+        REQUIRE(iterator.Value().ToBoolean() == true);
+    }
+}
+
+TEST_CASE("IteratorClassTest_PostDecrementOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().end());
+        iterator--;
+        REQUIRE(iterator->IsBoolean());
+        REQUIRE(iterator->ToBoolean() == true);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().end());
+        iterator--;
+        REQUIRE(iterator.Key().compare("test1") == 0);
+        REQUIRE(iterator.Value().IsBoolean());
+        REQUIRE(iterator.Value().ToBoolean() == true);
     }
 }
