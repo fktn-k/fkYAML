@@ -190,6 +190,8 @@ public:
         case IteratorType::MAPPING:
             m_iterator_holder.mapping_iterator = std::move(other.m_iterator_holder.mapping_iterator);
             break;
+        default:           // LCOV_EXCL_LINE
+            assert(false); // LCOV_EXCL_LINE
         }
     }
 

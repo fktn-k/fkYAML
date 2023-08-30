@@ -69,9 +69,20 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
     {
         fkyaml::Node sequence = fkyaml::Node::Sequence({fkyaml::Node()});
         fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
-        iterator = iterator;
-        REQUIRE(iterator.Type() == fkyaml::IteratorType::SEQUENCE);
-        REQUIRE(iterator->IsNull());
+
+        SECTION("Test lvalue iterator.")
+        {
+            iterator = iterator;
+            REQUIRE(iterator.Type() == fkyaml::IteratorType::SEQUENCE);
+            REQUIRE(iterator->IsNull());
+        }
+
+        SECTION("Test rvalue iterator.")
+        {
+            iterator = std::move(iterator);
+            REQUIRE(iterator.Type() == fkyaml::IteratorType::SEQUENCE);
+            REQUIRE(iterator->IsNull());
+        }
     }
 
     SECTION("Test sequence iterators.")
@@ -350,5 +361,273 @@ TEST_CASE("IteratorClassTest_PostDecrementOperatorTest", "[IteratorClassTest]")
         REQUIRE(iterator.Key().compare("test1") == 0);
         REQUIRE(iterator.Value().IsBoolean());
         REQUIRE(iterator.Value().ToBoolean() == true);
+    }
+}
+
+TEST_CASE("IteratorClassTest_EqualToOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        REQUIRE(lhs == rhs);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE(lhs == rhs);
+    }
+
+    SECTION("Test equality check between different type iterators.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs == rhs, fkyaml::Exception);
+    }
+}
+
+TEST_CASE("IteratorClassTest_NotEqualToOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        ++rhs;
+        REQUIRE(lhs != rhs);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        ++rhs;
+        REQUIRE(lhs != rhs);
+    }
+
+    SECTION("Test equality check between different type iterators.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs == rhs, fkyaml::Exception);
+    }
+}
+
+TEST_CASE("IteratorClassTest_LessThanOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        REQUIRE_FALSE(lhs < rhs);
+        ++rhs;
+        REQUIRE(lhs < rhs);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs < rhs, fkyaml::Exception);
+    }
+
+    SECTION("Test less-than check between different type iterators.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs < rhs, fkyaml::Exception);
+    }
+}
+
+TEST_CASE("IteratorClassTest_LessThanOrEqualToOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        ++lhs;
+        REQUIRE_FALSE(lhs <= rhs);
+        --lhs;
+        REQUIRE(lhs <= rhs);
+        ++rhs;
+        REQUIRE(lhs < rhs);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs <= rhs, fkyaml::Exception);
+    }
+
+    SECTION("Test less-than-or-equal-to check between different type iterators.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs <= rhs, fkyaml::Exception);
+    }
+}
+
+TEST_CASE("IteratorClassTest_GreaterThanOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        REQUIRE_FALSE(lhs > rhs);
+        ++lhs;
+        REQUIRE(lhs > rhs);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs > rhs, fkyaml::Exception);
+    }
+
+    SECTION("Test greater-than check between different type iterators.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs > rhs, fkyaml::Exception);
+    }
+}
+
+TEST_CASE("IteratorClassTest_GreaterThanOrEqualToOperatorTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        ++rhs;
+        REQUIRE_FALSE(lhs >= rhs);
+        --rhs;
+        REQUIRE(lhs >= rhs);
+        ++lhs;
+        REQUIRE(lhs >= rhs);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs >= rhs, fkyaml::Exception);
+    }
+
+    SECTION("Test greater-than-or-equal-to check between different type iterators.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> lhs(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> rhs(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_THROWS_AS(lhs >= rhs, fkyaml::Exception);
+    }
+}
+
+TEST_CASE("IteratorClassTest_TypeGetterTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        REQUIRE(iterator.Type() == fkyaml::IteratorType::SEQUENCE);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE(iterator.Type() == fkyaml::IteratorType::MAPPING);
+    }
+}
+
+TEST_CASE("IteratorClassTest_KeyGetterTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        REQUIRE_THROWS_AS(iterator.Key(), fkyaml::Exception);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE_NOTHROW(iterator.Key());
+        REQUIRE(iterator.Key().compare("test0") == 0);
+    }
+}
+
+TEST_CASE("IteratorClassTest_ValueGetterTest", "[IteratorClassTest]")
+{
+    SECTION("Test sequence iterator.")
+    {
+        fkyaml::Node sequence =
+            fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(false), fkyaml::Node::BooleanScalar(true)});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
+        REQUIRE(iterator.Value().IsBoolean());
+        REQUIRE(iterator.Value().ToBoolean() == false);
+    }
+
+    SECTION("Test mapping iterator.")
+    {
+        fkyaml::Node mapping = fkyaml::Node::Mapping(
+            {{"test0", fkyaml::Node::BooleanScalar(false)}, {"test1", fkyaml::Node::BooleanScalar(true)}});
+        fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
+        REQUIRE(iterator.Value().IsBoolean());
+        REQUIRE(iterator.Value().ToBoolean() == false);
     }
 }
