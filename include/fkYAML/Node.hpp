@@ -972,6 +972,13 @@ public:
         }
     }
 
+    /**
+     * @brief Check whether or not this BasicNode object has a given key in its inner mapping Node value.
+     *
+     * @param key A lvalue key object.
+     * @return true If this BasicNode object has a given key.
+     * @return false If this BasicNode object does not have a given key.
+     */
     bool Contains(const std::string& key) const
     {
         switch (m_node_type)
@@ -987,6 +994,13 @@ public:
         }
     }
 
+    /**
+     * @brief Check whether or not this BasicNode object has a given key in its inner mapping Node value.
+     *
+     * @param key A rvalue key object.
+     * @return true If this BasicNode object has a given key.
+     * @return false If this BasicNode object does not have a given key.
+     */
     bool Contains(std::string&& key) const
     {
         switch (m_node_type)
