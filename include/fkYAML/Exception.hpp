@@ -37,8 +37,11 @@ public:
      * @param msg An error description message.
      */
     explicit Exception(const char* msg)
-        : m_error_msg(msg)
     {
+        if (msg)
+        {
+            m_error_msg = msg;
+        }
     }
 
 public:
@@ -54,7 +57,7 @@ public:
 
 private:
     /** An error message holder. */
-    std::string m_error_msg;
+    std::string m_error_msg {};
 };
 
 } // namespace fkyaml
