@@ -28,6 +28,8 @@ TEST_CASE("ExceptionClassTest_CtorWithMessageTest", "[ExceptionClassTest]")
 
     SECTION("Test null message.")
     {
-        REQUIRE_THROWS(fkyaml::Exception(nullptr));
+        const char* message = nullptr;
+        fkyaml::Exception exception(message);
+        REQUIRE(std::string(exception.what()).empty());
     }
 }
