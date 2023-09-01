@@ -1160,6 +1160,80 @@ TEST_CASE("NodeClassTest_IsEmptyTest", "[NodeClassTest]")
 }
 
 //
+// test cases for mapping key existence checker
+//
+
+TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
+{
+    SECTION("Test mapping node.")
+    {
+        fkyaml::Node node = fkyaml::Node::Mapping({{"test", fkyaml::Node()}});
+        std::string key = "test";
+
+        SECTION("Test non-alias mapping node with lvalue key.")
+        {
+            REQUIRE(node.Contains(key));
+        }
+
+        SECTION("Test alias mapping node with lvalue key.")
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            REQUIRE(node.Contains(key));
+        }
+
+        SECTION("Test non-alias mapping node with rvalue key.")
+        {
+            REQUIRE(node.Contains(std::move(key)));
+        }
+
+        SECTION("Test alias mapping node with rvalue key.")
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            REQUIRE(node.Contains(std::move(key)));
+        }
+    }
+
+    SECTION("Test non-mapping node.")
+    {
+        auto node = GENERATE(
+            fkyaml::Node::Sequence(),
+            fkyaml::Node(),
+            fkyaml::Node::BooleanScalar(false),
+            fkyaml::Node::SignedIntegerScalar(0),
+            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::FloatNumberScalar(0.0),
+            fkyaml::Node::StringScalar());
+        std::string key = "test";
+
+        SECTION("Test non-alias non-mapping node with lvalue key.")
+        {
+            REQUIRE_FALSE(node.Contains(key));
+        }
+
+        SECTION("Test alias non-mapping node with lvalue key.")
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            REQUIRE_FALSE(alias.Contains(key));
+        }
+
+        SECTION("Test non-alias non-mapping node with rvalue key.")
+        {
+            REQUIRE_FALSE(node.Contains(std::move(key)));
+        }
+
+        SECTION("Test alias non-mapping node with rvalue key.")
+        {
+            node.AddAnchorName("anchor_name");
+            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            REQUIRE_FALSE(alias.Contains(std::move(key)));
+        }
+    }
+}
+
+//
 // test cases for container size getter
 //
 
