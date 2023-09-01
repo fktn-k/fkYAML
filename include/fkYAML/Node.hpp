@@ -972,6 +972,36 @@ public:
         }
     }
 
+    bool Contains(const std::string& key) const
+    {
+        switch (m_node_type)
+        {
+        case NodeType::MAPPING: {
+            mapping_type& map = *m_node_value.mapping;
+            return map.find(key) != map.end();
+        }
+        case NodeType::ALIAS:
+            return m_node_value.anchor->Contains(key);
+        default:
+            return false;
+        }
+    }
+
+    bool Contains(std::string&& key) const
+    {
+        switch (m_node_type)
+        {
+        case NodeType::MAPPING: {
+            mapping_type& map = *m_node_value.mapping;
+            return map.find(std::move(key)) != map.end();
+        }
+        case NodeType::ALIAS:
+            return m_node_value.anchor->Contains(std::move(key));
+        default:
+            return false;
+        }
+    }
+
     /**
      * @brief Check whether or not this BasicNode object has already had any anchor name.
      *
