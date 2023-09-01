@@ -24,6 +24,7 @@ if(${FK_YAML_RunClangFormat})
 endif()
 
 add_executable(${TEST_TARGET}
+  ExceptionClassTest.cpp
   NodeClassTest.cpp
   IteratorClassTest.cpp
   LexicalAnalyzerClassTest.cpp
