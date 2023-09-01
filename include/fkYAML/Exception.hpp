@@ -57,7 +57,7 @@ public:
 
 private:
     /** An error message holder. */
-    std::string m_error_msg{};
+    std::string m_error_msg {};
 };
 
 } // namespace fkyaml
