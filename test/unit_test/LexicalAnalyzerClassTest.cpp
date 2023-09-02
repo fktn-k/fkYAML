@@ -253,6 +253,98 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
     }
 }
 
+TEST_CASE("LexicalAnalyzerClassTest_ScanAnchorTokenTest", "[LexicalAnalyzerClassTest]")
+{
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
+    fkyaml::LexicalTokenType token;
+
+    SECTION("Test nothorw expected tokens with an anchor.")
+    {
+        lexer.SetInputBuffer("test: &anchor foo");
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.GetString());
+        REQUIRE(lexer.GetString().compare("test") == 0);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::ANCHOR_PREFIX);
+        REQUIRE_NOTHROW(lexer.GetString());
+        REQUIRE(lexer.GetString().compare("anchor") == 0);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.GetString());
+        REQUIRE(lexer.GetString().compare("foo") == 0);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
+    }
+
+    SECTION("Test nothrow unexpected tokens with an anchor.")
+    {
+        auto buffer =
+            GENERATE(std::string("test: &anchor"), std::string("test: &anchor\r\n"), std::string("test: &anchor\n"));
+        lexer.SetInputBuffer(buffer.c_str());
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.GetString());
+        REQUIRE(lexer.GetString().compare("test") == 0);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::KEY_SEPARATOR);
+
+        REQUIRE_THROWS_AS(token = lexer.GetNextToken(), fkyaml::Exception);
+    }
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanAliasTokenTest", "[LexicalAnalyzerClassTest]")
+{
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
+    fkyaml::LexicalTokenType token;
+
+    SECTION("Test nothrow expected tokens with an alias.")
+    {
+        lexer.SetInputBuffer("test: *anchor");
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.GetString());
+        REQUIRE(lexer.GetString().compare("test") == 0);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::ALIAS_PREFIX);
+        REQUIRE_NOTHROW(lexer.GetString());
+        REQUIRE(lexer.GetString().compare("anchor") == 0);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
+    }
+
+    SECTION("Test nothrow unexpected tokens with an anchor.")
+    {
+        auto buffer = GENERATE(std::string("test: *"), std::string("test: *\r\n"), std::string("test: *\n"));
+        lexer.SetInputBuffer(buffer.c_str());
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.GetString());
+        REQUIRE(lexer.GetString().compare("test") == 0);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::KEY_SEPARATOR);
+
+        REQUIRE_THROWS_AS(token = lexer.GetNextToken(), fkyaml::Exception);
+    }
+}
+
 TEST_CASE("LexicalAnalyzerClassTest_ScanKeyBooleanValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
