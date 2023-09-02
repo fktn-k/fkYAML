@@ -96,6 +96,40 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
         REQUIRE_NOTHROW(test_1_bar_node.ToString());
         REQUIRE(test_1_bar_node.ToString().compare("two") == 0);
     }
+
+    SECTION("Input source No.3.")
+    {
+        REQUIRE_NOTHROW(root = deserializer.Deserialize("test:\n  - &anchor foo\n  - *anchor"));
+
+        REQUIRE(root.IsMapping());
+        REQUIRE_NOTHROW(root.Size());
+        REQUIRE(root.Size() == 1);
+
+        REQUIRE_NOTHROW(root["test"]);
+        fkyaml::Node& test_node = root["test"];
+        REQUIRE(test_node.IsSequence());
+        REQUIRE_NOTHROW(test_node.Size());
+        REQUIRE(test_node.Size() == 2);
+
+        REQUIRE_NOTHROW(test_node[0]);
+        fkyaml::Node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.HasAnchorName());
+        REQUIRE(test_0_node.GetAnchorName().compare("anchor") == 0);
+        REQUIRE(test_0_node.IsString());
+        REQUIRE_NOTHROW(test_0_node.Size());
+        REQUIRE(test_0_node.Size() == 3);
+        REQUIRE_NOTHROW(test_0_node.ToString());
+        REQUIRE(test_0_node.ToString().compare("foo") == 0);
+
+        REQUIRE_NOTHROW(test_node[1]);
+        fkyaml::Node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.IsAlias());
+        REQUIRE(test_1_node.IsString()); // FIXME
+        REQUIRE_NOTHROW(test_1_node.Size());
+        REQUIRE(test_1_node.Size() == 3);
+        REQUIRE_NOTHROW(test_1_node.ToString());
+        REQUIRE(test_1_node.ToString().compare("foo") == 0);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerClassTest]")
