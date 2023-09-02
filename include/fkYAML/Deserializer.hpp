@@ -77,7 +77,7 @@ public:
         m_lexer.SetInputBuffer(source);
         BasicNodeType root = BasicNodeType::Mapping();
         std::vector<BasicNodeType*> node_stack;
-        std::unordered_map<string_type, BasicNodeType*> anchor_table;
+        std::unordered_map<string_type, BasicNodeType> anchor_table;
 
         BasicNodeType* p_current_node = &root;
 
@@ -132,14 +132,14 @@ public:
                 {
                     throw Exception("The given anchor name must appear prior to the alias node.");
                 }
-                BasicNodeType* anchor = anchor_table.at(anchor_name);
-                anchor_name.clear();
                 if (p_current_node->IsSequence())
                 {
-                    p_current_node->ToSequence().emplace_back(BasicNodeType::AliasOf(*anchor));
+                    p_current_node->ToSequence().emplace_back(BasicNodeType::AliasOf(anchor_table.at(anchor_name)));
+                    anchor_name.clear();
                     break;
                 }
-                *p_current_node = BasicNodeType::AliasOf(*anchor);
+                *p_current_node = BasicNodeType::AliasOf(anchor_table.at(anchor_name));
+                anchor_name.clear();
                 break;
             }
             case LexicalTokenType::COMMENT_PREFIX:
@@ -234,7 +234,7 @@ public:
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        anchor_table[anchor_name] = p_current_node->ToSequence().back();
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
@@ -245,7 +245,7 @@ public:
                     if (needs_anchor_impl)
                     {
                         p_current_node->AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = p_current_node;
+                        anchor_table[anchor_name] = *p_current_node;
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
@@ -266,7 +266,7 @@ public:
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        anchor_table[anchor_name] = p_current_node->ToSequence().back();
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
@@ -277,7 +277,7 @@ public:
                     if (needs_anchor_impl)
                     {
                         p_current_node->AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = p_current_node;
+                        anchor_table[anchor_name] = *p_current_node;
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
@@ -298,7 +298,7 @@ public:
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        anchor_table[anchor_name] = p_current_node->ToSequence().back();
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
@@ -309,7 +309,7 @@ public:
                     if (needs_anchor_impl)
                     {
                         p_current_node->AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = p_current_node;
+                        anchor_table[anchor_name] = *p_current_node;
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
@@ -330,7 +330,7 @@ public:
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        anchor_table[anchor_name] = p_current_node->ToSequence().back();
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
@@ -341,7 +341,7 @@ public:
                     if (needs_anchor_impl)
                     {
                         p_current_node->AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = p_current_node;
+                        anchor_table[anchor_name] = *p_current_node;
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
@@ -363,7 +363,7 @@ public:
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        anchor_table[anchor_name] = p_current_node->ToSequence().back();
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
@@ -374,7 +374,7 @@ public:
                 if (needs_anchor_impl)
                 {
                     p_current_node->AddAnchorName(anchor_name);
-                    anchor_table[anchor_name] = p_current_node;
+                    anchor_table[anchor_name] = *p_current_node;
                     needs_anchor_impl = false;
                     anchor_name.clear();
                 }

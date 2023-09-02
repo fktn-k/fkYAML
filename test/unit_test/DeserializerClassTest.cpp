@@ -123,8 +123,7 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
 
         REQUIRE_NOTHROW(test_node[1]);
         fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsAlias());
-        REQUIRE(test_1_node.IsString()); // FIXME
+        REQUIRE(test_1_node.IsString());
         REQUIRE_NOTHROW(test_1_node.Size());
         REQUIRE(test_1_node.Size() == 3);
         REQUIRE_NOTHROW(test_1_node.ToString());
