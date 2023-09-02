@@ -10,7 +10,7 @@
 #include "fkYAML/LexicalAnalyzer.hpp"
 #include "fkYAML/Node.hpp"
 
-TEST_CASE("LexicalAnalyzerTest_ScanNullTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanNullTokenTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer = GENERATE(std::string("null"), std::string("Null"), std::string("NULL"), std::string("~"));
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
@@ -29,7 +29,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanNullTokenTest", "[LexicalAnalyzerTest]")
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanBooleanTrueTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanBooleanTrueTokenTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer = GENERATE(std::string("true"), std::string("True"), std::string("TRUE"));
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
@@ -48,7 +48,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanBooleanTrueTokenTest", "[LexicalAnalyzerTest]
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanBooleanFalseTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanBooleanFalseTokenTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer = GENERATE(std::string("false"), std::string("False"), std::string("FALSE"));
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
@@ -67,7 +67,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanBooleanFalseTokenTest", "[LexicalAnalyzerTest
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanSignedDecimalIntegerTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanSignedDecimalIntegerTokenTest", "[LexicalAnalyzerClassTest]")
 {
     using ValuePair = std::pair<std::string, fkyaml::NodeSignedIntType>;
     auto value_pair = GENERATE(
@@ -90,7 +90,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanSignedDecimalIntegerTokenTest", "[LexicalAnal
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanUnsignedDecimalIntegerTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanUnsignedDecimalIntegerTokenTest", "[LexicalAnalyzerClassTest]")
 {
     using ValuePair = std::pair<std::string, fkyaml::NodeUnsignedIntType>;
     auto value_pair = GENERATE(
@@ -111,7 +111,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanUnsignedDecimalIntegerTokenTest", "[LexicalAn
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanOctalNumberTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanOctalNumberTokenTest", "[LexicalAnalyzerClassTest]")
 {
     using ValuePair = std::pair<std::string, fkyaml::NodeUnsignedIntType>;
     auto value_pair = GENERATE(
@@ -134,7 +134,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanOctalNumberTokenTest", "[LexicalAnalyzerTest]
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanHexadecimalNumberTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanHexadecimalNumberTokenTest", "[LexicalAnalyzerClassTest]")
 {
     using ValuePair = std::pair<std::string, fkyaml::NodeUnsignedIntType>;
     auto value_pair = GENERATE(
@@ -157,7 +157,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanHexadecimalNumberTokenTest", "[LexicalAnalyze
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanFloatNumberTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanFloatNumberTokenTest", "[LexicalAnalyzerClassTest]")
 {
     using ValuePair = std::pair<std::string, fkyaml::NodeFloatNumberType>;
     auto value_pair = GENERATE(
@@ -181,7 +181,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanFloatNumberTokenTest", "[LexicalAnalyzerTest]
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanInfinityTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanInfinityTokenTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer = GENERATE(
         std::string(".inf"),
@@ -206,7 +206,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanInfinityTokenTest", "[LexicalAnalyzerTest]")
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanNaNTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanNaNTokenTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer = GENERATE(std::string(".nan"), std::string(".NaN"), std::string(".NAN"));
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
@@ -225,7 +225,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanNaNTokenTest", "[LexicalAnalyzerTest]")
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanStringTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClassTest]")
 {
     using ValuePair = std::pair<std::string, fkyaml::NodeStringType>;
     auto value_pair = GENERATE(
@@ -253,7 +253,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanStringTokenTest", "[LexicalAnalyzerTest]")
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanKeyBooleanValuePairTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeyBooleanValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: true");
@@ -276,7 +276,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanKeyBooleanValuePairTokenTest", "[LexicalAnaly
     REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanKeySignedIntegerValuePairTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeySignedIntegerValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: -5784");
@@ -299,7 +299,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanKeySignedIntegerValuePairTokenTest", "[Lexica
     REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanKeyUnsignedIntegerValuePairTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeyUnsignedIntegerValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: 47239");
@@ -322,7 +322,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanKeyUnsignedIntegerValuePairTokenTest", "[Lexi
     REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanKeyFloatNumberValuePairTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeyFloatNumberValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: -5.58e-3");
@@ -345,7 +345,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanKeyFloatNumberValuePairTokenTest", "[LexicalA
     REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanKeyStringValuePairTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeyStringValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: some value");
@@ -368,7 +368,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanKeyStringValuePairTokenTest", "[LexicalAnalyz
     REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanFlowSequenceTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanFlowSequenceTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     fkyaml::LexicalTokenType token;
@@ -504,7 +504,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanFlowSequenceTokenTest", "[LexicalAnalyzerTest
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanFlowMappingTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanFlowMappingTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     fkyaml::LexicalTokenType token;
@@ -577,7 +577,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanFlowMappingTokenTest", "[LexicalAnalyzerTest]
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanBlockSequenceTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     fkyaml::LexicalTokenType token;
@@ -689,7 +689,7 @@ TEST_CASE("LexicalAnalyzerTest_ScanBlockSequenceTokenTest", "[LexicalAnalyzerTes
     }
 }
 
-TEST_CASE("LexicalAnalyzerTest_ScanBlockMappingTokenTest", "[LexicalAnalyzerTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanBlockMappingTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     fkyaml::LexicalTokenType token;
