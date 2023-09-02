@@ -381,8 +381,8 @@ public:
                 p_current_node = node_stack.back();
                 node_stack.pop_back();
                 break;
-            default:
-                throw Exception("Unsupported lexical token found.");
+            default:                                                 // LCOV_EXCL_LINE
+                throw Exception("Unsupported lexical token found."); // LCOV_EXCL_LINE
             }
 
             type = m_lexer.GetNextToken();
