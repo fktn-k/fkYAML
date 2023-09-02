@@ -169,8 +169,8 @@ public:
         case IteratorType::MAPPING:
             m_iterator_holder.mapping_iterator = other.m_iterator_holder.mapping_iterator;
             break;
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
     }
 
@@ -190,8 +190,8 @@ public:
         case IteratorType::MAPPING:
             m_iterator_holder.mapping_iterator = std::move(other.m_iterator_holder.mapping_iterator);
             break;
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
     }
 
@@ -220,8 +220,8 @@ public:
         case IteratorType::MAPPING:
             m_iterator_holder.mapping_iterator = rhs.m_iterator_holder.mapping_iterator;
             break;
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
 
         return *this;
@@ -249,8 +249,8 @@ public:
         case IteratorType::MAPPING:
             m_iterator_holder.mapping_iterator = std::move(rhs.m_iterator_holder.mapping_iterator);
             break;
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
 
         return *this;
@@ -269,8 +269,8 @@ public:
             return &(*(m_iterator_holder.sequence_iterator));
         case IteratorType::MAPPING:
             return &(m_iterator_holder.mapping_iterator->second);
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
     }
 
@@ -287,8 +287,8 @@ public:
             return *(m_iterator_holder.sequence_iterator);
         case IteratorType::MAPPING:
             return m_iterator_holder.mapping_iterator->second;
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
     }
 
@@ -308,8 +308,8 @@ public:
         case IteratorType::MAPPING:
             std::advance(m_iterator_holder.mapping_iterator, i);
             break;
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
         return *this;
     }
@@ -342,8 +342,8 @@ public:
         case IteratorType::MAPPING:
             std::advance(m_iterator_holder.mapping_iterator, 1);
             break;
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
         return *this;
     }
@@ -399,8 +399,8 @@ public:
         case IteratorType::MAPPING:
             std::advance(m_iterator_holder.mapping_iterator, -1);
             break;
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
         return *this;
     }
@@ -437,8 +437,8 @@ public:
             return (m_iterator_holder.sequence_iterator == rhs.m_iterator_holder.sequence_iterator);
         case IteratorType::MAPPING:
             return (m_iterator_holder.mapping_iterator == rhs.m_iterator_holder.mapping_iterator);
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
     }
 
@@ -474,8 +474,8 @@ public:
             return (m_iterator_holder.sequence_iterator < rhs.m_iterator_holder.sequence_iterator);
         case IteratorType::MAPPING:
             throw Exception("Cannot compare order of iterators of the mapping container type");
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
     }
 
@@ -529,8 +529,8 @@ public:
             throw Exception("Cannot retrieve key from non-mapping iterators.");
         case IteratorType::MAPPING:
             return m_iterator_holder.mapping_iterator->first;
-        default:           // LCOV_EXCL_LINE
-            assert(false); // LCOV_EXCL_LINE
+        default:                                                 // LCOV_EXCL_LINE
+            throw Exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
     }
 

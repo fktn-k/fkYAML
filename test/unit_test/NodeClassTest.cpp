@@ -76,11 +76,6 @@ TEST_CASE("NodeClassTest_StringTypeCtorTest", "[NodeClassTest]")
     REQUIRE(node.Size() == 0);
 }
 
-TEST_CASE("NodeClassTest_AliasTypeCtorTest", "[NodeClassTest]")
-{
-    REQUIRE_THROWS_AS(fkyaml::Node(fkyaml::NodeType::ALIAS), fkyaml::Exception);
-}
-
 TEST_CASE("NodeClassTest_ThrowingSpecializationTypeCtorTest", "[NodeClassTest]")
 {
     struct String
@@ -194,7 +189,6 @@ TEST_CASE("NodeClassTest_AliasCopyCtorTest", "[NodeClassTest]")
     fkyaml::Node tmp_alias = fkyaml::Node::AliasOf(tmp);
     fkyaml::Node alias(tmp_alias);
     REQUIRE(alias.IsBoolean());
-    REQUIRE(alias.IsAlias());
     REQUIRE_NOTHROW(alias.ToBoolean());
     REQUIRE(alias.ToBoolean() == true);
 }
@@ -298,7 +292,6 @@ TEST_CASE("NodeClassTest_AliasMoveCtorTest", "[NodeClassTest]")
     fkyaml::Node tmp_alias = fkyaml::Node::AliasOf(tmp);
     fkyaml::Node alias(std::move(tmp_alias));
     REQUIRE(alias.IsBoolean());
-    REQUIRE(alias.IsAlias());
     REQUIRE_NOTHROW(alias.ToBoolean());
     REQUIRE(alias.ToBoolean() == true);
 }
@@ -1064,12 +1057,6 @@ TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
     {
         node.AddAnchorName("anchor_name");
         fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-        REQUIRE(alias.IsAlias());
-    }
-
-    SECTION("Test non-alias node types.")
-    {
-        REQUIRE_FALSE(node.IsAlias());
     }
 }
 
