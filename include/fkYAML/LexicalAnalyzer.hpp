@@ -162,10 +162,40 @@ public:
         case ',': // value separater
             GetNextChar();
             return LexicalTokenType::VALUE_SEPARATOR;
-        case '&': // anchor prefix
+        case '&': { // anchor prefix
+            m_value_buffer.clear();
+            while (true)
+            {
+                const char next = GetNextChar();
+                if (next == '\0' || next == '\r' || next == '\n')
+                {
+                    throw Exception("An anchor label must be followed by some value.");
+                }
+                if (next == ' ')
+                {
+                    break;
+                }
+                m_value_buffer.push_back(next);
+            }
             return LexicalTokenType::ANCHOR_PREFIX;
-        case '*': // alias prefix
+        }
+        case '*': { // alias prefix
+            m_value_buffer.clear();
+            while (true)
+            {
+                const char next = GetNextChar();
+                if (next == ' ' || next == '\r' || next == '\n' || next == '\0')
+                {
+                    if (m_value_buffer.empty())
+                    {
+                        throw Exception("An alias prefix must be followed by some anchor name.");
+                    }
+                    break;
+                }
+                m_value_buffer.push_back(next);
+            }
             return LexicalTokenType::ALIAS_PREFIX;
+        }
         case '#': // comment prefix
             ScanComment();
             return LexicalTokenType::COMMENT_PREFIX;

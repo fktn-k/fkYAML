@@ -7,6 +7,7 @@
  */
 
 #include <cstdint>
+#include <unordered_map>
 
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/LexicalAnalyzer.hpp"
@@ -76,8 +77,12 @@ public:
         m_lexer.SetInputBuffer(source);
         BasicNodeType root = BasicNodeType::Mapping();
         std::vector<BasicNodeType*> node_stack;
+        std::unordered_map<string_type, BasicNodeType*> anchor_table;
 
         BasicNodeType* p_current_node = &root;
+
+        string_type anchor_name;
+        bool needs_anchor_impl = false;
 
         LexicalTokenType type = m_lexer.GetNextToken();
         while (type != LexicalTokenType::END_OF_BUFFER)
@@ -108,8 +113,35 @@ public:
                     throw Exception("A value separator must appear in a container node.");
                 }
                 break;
-            case LexicalTokenType::ANCHOR_PREFIX:
-            case LexicalTokenType::ALIAS_PREFIX:
+            case LexicalTokenType::ANCHOR_PREFIX: {
+                if (p_current_node->IsMapping())
+                {
+                    throw Exception("A mapping node cannot be an anchor.");
+                }
+                anchor_name = m_lexer.GetString();
+                needs_anchor_impl = true;
+                break;
+            }
+            case LexicalTokenType::ALIAS_PREFIX: {
+                if (p_current_node->IsMapping())
+                {
+                    throw Exception("Cannot apply alias to a mapping node.");
+                }
+                anchor_name = m_lexer.GetString();
+                if (anchor_table.find(anchor_name) == anchor_table.end())
+                {
+                    throw Exception("The given anchor name must appear prior to the alias node.");
+                }
+                BasicNodeType* anchor = anchor_table.at(anchor_name);
+                anchor_name.clear();
+                if (p_current_node->IsSequence())
+                {
+                    p_current_node->ToSequence().emplace_back(BasicNodeType::AliasOf(*anchor));
+                    break;
+                }
+                *p_current_node = BasicNodeType::AliasOf(*anchor);
+                break;
+            }
             case LexicalTokenType::COMMENT_PREFIX:
             case LexicalTokenType::DIRECTIVE_PREFIX:
                 break;
@@ -199,10 +231,24 @@ public:
                 if (p_current_node->IsSequence())
                 {
                     p_current_node->ToSequence().emplace_back(BasicNodeType::BooleanScalar(m_lexer.GetBoolean()));
+                    if (needs_anchor_impl)
+                    {
+                        p_current_node->ToSequence().back().AddAnchorName(anchor_name);
+                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        needs_anchor_impl = false;
+                        anchor_name.clear();
+                    }
                 }
                 else // a scalar node
                 {
                     *p_current_node = BasicNodeType::BooleanScalar(m_lexer.GetBoolean());
+                    if (needs_anchor_impl)
+                    {
+                        p_current_node->AddAnchorName(anchor_name);
+                        anchor_table[anchor_name] = p_current_node;
+                        needs_anchor_impl = false;
+                        anchor_name.clear();
+                    }
                     p_current_node = node_stack.back();
                     node_stack.pop_back();
                 }
@@ -217,10 +263,24 @@ public:
                 {
                     p_current_node->ToSequence().emplace_back(
                         BasicNodeType::SignedIntegerScalar(m_lexer.GetSignedInt()));
+                    if (needs_anchor_impl)
+                    {
+                        p_current_node->ToSequence().back().AddAnchorName(anchor_name);
+                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        needs_anchor_impl = false;
+                        anchor_name.clear();
+                    }
                 }
                 else // a scalar node
                 {
                     *p_current_node = BasicNodeType::SignedIntegerScalar(m_lexer.GetSignedInt());
+                    if (needs_anchor_impl)
+                    {
+                        p_current_node->AddAnchorName(anchor_name);
+                        anchor_table[anchor_name] = p_current_node;
+                        needs_anchor_impl = false;
+                        anchor_name.clear();
+                    }
                     p_current_node = node_stack.back();
                     node_stack.pop_back();
                 }
@@ -235,10 +295,24 @@ public:
                 {
                     p_current_node->ToSequence().emplace_back(
                         BasicNodeType::UnsignedIntegerScalar(m_lexer.GetUnsignedInt()));
+                    if (needs_anchor_impl)
+                    {
+                        p_current_node->ToSequence().back().AddAnchorName(anchor_name);
+                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        needs_anchor_impl = false;
+                        anchor_name.clear();
+                    }
                 }
                 else
                 {
                     *p_current_node = BasicNodeType::UnsignedIntegerScalar(m_lexer.GetUnsignedInt());
+                    if (needs_anchor_impl)
+                    {
+                        p_current_node->AddAnchorName(anchor_name);
+                        anchor_table[anchor_name] = p_current_node;
+                        needs_anchor_impl = false;
+                        anchor_name.clear();
+                    }
                     p_current_node = node_stack.back();
                     node_stack.pop_back();
                 }
@@ -253,10 +327,24 @@ public:
                 {
                     p_current_node->ToSequence().emplace_back(
                         BasicNodeType::FloatNumberScalar(m_lexer.GetFloatNumber()));
+                    if (needs_anchor_impl)
+                    {
+                        p_current_node->ToSequence().back().AddAnchorName(anchor_name);
+                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        needs_anchor_impl = false;
+                        anchor_name.clear();
+                    }
                 }
                 else // a scalar
                 {
                     *p_current_node = BasicNodeType::FloatNumberScalar(m_lexer.GetFloatNumber());
+                    if (needs_anchor_impl)
+                    {
+                        p_current_node->AddAnchorName(anchor_name);
+                        anchor_table[anchor_name] = p_current_node;
+                        needs_anchor_impl = false;
+                        anchor_name.clear();
+                    }
                     p_current_node = node_stack.back();
                     node_stack.pop_back();
                 }
@@ -272,10 +360,24 @@ public:
                 if (p_current_node->IsSequence())
                 {
                     p_current_node->ToSequence().emplace_back(BasicNodeType::StringScalar(m_lexer.GetString()));
+                    if (needs_anchor_impl)
+                    {
+                        p_current_node->ToSequence().back().AddAnchorName(anchor_name);
+                        anchor_table[anchor_name] = &(p_current_node->ToSequence().back());
+                        needs_anchor_impl = false;
+                        anchor_name.clear();
+                    }
                     break;
                 }
                 // a scalar node
                 *p_current_node = BasicNodeType::StringScalar(m_lexer.GetString());
+                if (needs_anchor_impl)
+                {
+                    p_current_node->AddAnchorName(anchor_name);
+                    anchor_table[anchor_name] = p_current_node;
+                    needs_anchor_impl = false;
+                    anchor_name.clear();
+                }
                 p_current_node = node_stack.back();
                 node_stack.pop_back();
                 break;
