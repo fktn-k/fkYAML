@@ -17,7 +17,9 @@
 #include <string>
 #include <vector>
 
+#include "fkYAML/Assert.hpp"
 #include "fkYAML/Exception.hpp"
+#include "fkYAML/NodeTypeTraits.hpp"
 
 /**
  * @namespace fkyaml
@@ -63,6 +65,8 @@ template <typename BasicNodeType>
 class LexicalAnalyzer
 {
 private:
+    static_assert(is_basic_node<BasicNodeType>::value, "LexicalAnalyzer only accepts (const) BasicNode<...>");
+
     using char_traits_type = std::char_traits<char>;
     using char_int_type = typename char_traits_type::int_type;
 
@@ -323,10 +327,7 @@ public:
      */
     std::nullptr_t GetNull() const
     {
-        if (m_value_buffer.empty())
-        {
-            throw Exception("Value storage is empty.");
-        }
+        FK_YAML_ASSERT(!m_value_buffer.empty());
 
         if (m_value_buffer == "null" || m_value_buffer == "Null" || m_value_buffer == "NULL" || m_value_buffer == "~")
         {
@@ -344,10 +345,7 @@ public:
      */
     boolean_type GetBoolean() const
     {
-        if (m_value_buffer.empty())
-        {
-            throw Exception("Value storage is empty.");
-        }
+        FK_YAML_ASSERT(!m_value_buffer.empty());
 
         if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
         {
@@ -369,10 +367,7 @@ public:
      */
     signed_int_type GetSignedInt() const
     {
-        if (m_value_buffer.empty())
-        {
-            throw Exception("Value storage is empty.");
-        }
+        FK_YAML_ASSERT(!m_value_buffer.empty());
 
         char* endptr = nullptr;
         const auto tmp_val = std::strtoll(m_value_buffer.data(), &endptr, 0);
@@ -404,10 +399,7 @@ public:
      */
     unsigned_int_type GetUnsignedInt() const
     {
-        if (m_value_buffer.empty())
-        {
-            throw Exception("Value storage is empty.");
-        }
+        FK_YAML_ASSERT(!m_value_buffer.empty());
 
         char* endptr = nullptr;
         const auto tmp_val = std::strtoull(m_value_buffer.data(), &endptr, 0);
@@ -438,10 +430,7 @@ public:
      */
     float_number_type GetFloatNumber() const
     {
-        if (m_value_buffer.empty())
-        {
-            throw Exception("Value storage is empty.");
-        }
+        FK_YAML_ASSERT(!m_value_buffer.empty());
 
         if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF")
         {
@@ -532,10 +521,7 @@ private:
      */
     LexicalTokenType ScanComment()
     {
-        if (RefCurrentChar() != '#')
-        {
-            throw Exception("Not the beginning of a comment section.");
-        }
+        FK_YAML_ASSERT(RefCurrentChar() != '#');
 
         while (true)
         {
@@ -1088,6 +1074,7 @@ private:
      */
     const char& RefCurrentChar() const noexcept
     {
+        FK_YAML_ASSERT(m_position_info.total_read_char_counts <= m_input_buffer.size());
         return m_input_buffer[m_position_info.total_read_char_counts];
     }
 
@@ -1098,6 +1085,7 @@ private:
      */
     const char& RefNextChar() const noexcept
     {
+        FK_YAML_ASSERT(m_position_info.total_read_char_counts + 1 <= m_input_buffer.size());
         return m_input_buffer[m_position_info.total_read_char_counts + 1];
     }
 
@@ -1108,6 +1096,8 @@ private:
      */
     const char& GetNextChar() noexcept
     {
+        FK_YAML_ASSERT(m_position_info.total_read_char_counts + 1 <= m_input_buffer.size());
+
         const char current = m_input_buffer[m_position_info.total_read_char_counts];
         const char& next = m_input_buffer[++m_position_info.total_read_char_counts];
         ++m_position_info.read_char_counts_in_line;
@@ -1153,6 +1143,7 @@ private:
         }
 
         size_t pos = m_position_info.total_read_char_counts - 1;
+        FK_YAML_ASSERT(pos < m_input_buffer.size());
         uint32_t indent_width = 0;
         while (pos > 0 && m_input_buffer[pos] != '\r' && m_input_buffer[pos] != '\n')
         {
