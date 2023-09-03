@@ -372,10 +372,7 @@ public:
         char* endptr = nullptr;
         const auto tmp_val = std::strtoll(m_value_buffer.data(), &endptr, 0);
 
-        if (endptr != m_value_buffer.data() + m_value_buffer.size())
-        {
-            throw Exception("Failed to convert a string to a signed integer.");
-        }
+        FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
 
         // NOLINTNEXTLINE(google-runtime-int)
         if ((tmp_val == std::numeric_limits<long long>::min() || tmp_val == std::numeric_limits<long long>::max()) &&
@@ -404,10 +401,7 @@ public:
         char* endptr = nullptr;
         const auto tmp_val = std::strtoull(m_value_buffer.data(), &endptr, 0);
 
-        if (endptr != m_value_buffer.data() + m_value_buffer.size())
-        {
-            throw Exception("Failed to convert a string to an unsigned integer.");
-        }
+        FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
 
         // NOLINTNEXTLINE(google-runtime-int)
         if (tmp_val == std::numeric_limits<unsigned long long>::max() && errno == ERANGE)
@@ -451,10 +445,7 @@ public:
         char* endptr = nullptr;
         const double value = std::strtod(m_value_buffer.data(), &endptr);
 
-        if (endptr != m_value_buffer.data() + m_value_buffer.size())
-        {
-            throw Exception("Failed to convert a string to a double.");
-        }
+        FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
 
         if ((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
         {
@@ -521,14 +512,14 @@ private:
      */
     LexicalTokenType ScanComment()
     {
-        FK_YAML_ASSERT(RefCurrentChar() != '#');
+        FK_YAML_ASSERT(RefCurrentChar() == '#');
 
         while (true)
         {
             switch (GetNextChar())
             {
             case '\r':
-                if (RefNextChar() == '\r')
+                if (RefNextChar() == '\n')
                 {
                     GetNextChar();
                 }
@@ -555,6 +546,8 @@ private:
         case '-':
             m_value_buffer.push_back(RefCurrentChar());
             return ScanNegativeNumber();
+        case '+':
+            return ScanDecimalNumber();
         case '0':
             m_value_buffer.push_back(RefCurrentChar());
             return ScanNumberAfterZeroAtFirst();
