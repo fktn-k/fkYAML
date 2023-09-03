@@ -9,7 +9,6 @@
 #ifndef FK_YAML_NODE_HPP_
 #define FK_YAML_NODE_HPP_
 
-#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <map>
@@ -18,6 +17,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "fkYAML/Assert.hpp"
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/Iterator.hpp"
 #include "fkYAML/NodeType.hpp"
@@ -231,7 +231,7 @@ private:
         std::unique_ptr<ObjType, decltype(deleter)> object(AllocTraitsType::allocate(alloc, 1), deleter);
         AllocTraitsType::construct(alloc, object.get(), std::forward<ArgTypes>(args)...);
 
-        assert(object != nullptr);
+        FK_YAML_ASSERT(object != nullptr);
         return object.release();
     }
 
@@ -284,9 +284,11 @@ public:
         {
         case NodeType::SEQUENCE:
             m_node_value.sequence = CreateObject<sequence_type>(*(rhs.m_node_value.sequence));
+            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
             break;
         case NodeType::MAPPING:
             m_node_value.mapping = CreateObject<mapping_type>(*(rhs.m_node_value.mapping));
+            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             break;
         case NodeType::NULL_OBJECT:
             m_node_value.mapping = nullptr;
@@ -305,6 +307,7 @@ public:
             break;
         case NodeType::STRING:
             m_node_value.str = CreateObject<string_type>(*(rhs.m_node_value.str));
+            FK_YAML_ASSERT(m_node_value.str != nullptr);
             break;
         default:                                               // LCOV_EXCL_LINE
             throw Exception("Not supported node value type."); // LCOV_EXCL_LINE
@@ -314,6 +317,7 @@ public:
         {
             DestroyObject<std::string>(m_anchor_name);
             m_anchor_name = CreateObject<std::string>(*(rhs.m_anchor_name));
+            FK_YAML_ASSERT(m_anchor_name != nullptr);
         }
     }
 
@@ -329,15 +333,18 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
+            FK_YAML_ASSERT(rhs.m_node_value.sequence != nullptr);
             m_node_value.sequence = rhs.m_node_value.sequence;
             rhs.m_node_value.sequence = nullptr;
             break;
         case NodeType::MAPPING:
+            FK_YAML_ASSERT(rhs.m_node_value.mapping != nullptr);
             m_node_value.mapping = rhs.m_node_value.mapping;
             rhs.m_node_value.mapping = nullptr;
             break;
         case NodeType::NULL_OBJECT:
-            m_node_value.mapping = rhs.m_node_value.mapping = nullptr;
+            FK_YAML_ASSERT(rhs.m_node_value.mapping == nullptr);
+            m_node_value.mapping = rhs.m_node_value.mapping;
             break;
         case NodeType::BOOLEAN:
             m_node_value.boolean = rhs.m_node_value.boolean;
@@ -356,6 +363,7 @@ public:
             rhs.m_node_value.float_val = static_cast<float_number_type>(0.0);
             break;
         case NodeType::STRING:
+            FK_YAML_ASSERT(rhs.m_node_value.str != nullptr);
             m_node_value.str = rhs.m_node_value.str;
             rhs.m_node_value.str = nullptr;
             break;
@@ -390,6 +398,7 @@ public:
         BasicNode node;
         node.m_node_type = NodeType::SEQUENCE;
         node.m_node_value.sequence = CreateObject<sequence_type>();
+        FK_YAML_ASSERT(node.m_node_value.sequence != nullptr);
         return node;
     }
 
@@ -404,6 +413,7 @@ public:
         BasicNode node;
         node.m_node_type = NodeType::SEQUENCE;
         node.m_node_value.sequence = CreateObject<sequence_type>(sequence);
+        FK_YAML_ASSERT(node.m_node_value.sequence != nullptr);
         return node;
     }
 
@@ -418,6 +428,7 @@ public:
         BasicNode node;
         node.m_node_type = NodeType::SEQUENCE;
         node.m_node_value.sequence = CreateObject<sequence_type>(std::move(sequence));
+        FK_YAML_ASSERT(node.m_node_value.sequence != nullptr);
         return node;
     }
 
@@ -431,6 +442,7 @@ public:
         BasicNode node;
         node.m_node_type = NodeType::MAPPING;
         node.m_node_value.mapping = CreateObject<mapping_type>();
+        FK_YAML_ASSERT(node.m_node_value.mapping != nullptr);
         return node;
     }
 
@@ -445,6 +457,7 @@ public:
         BasicNode node;
         node.m_node_type = NodeType::MAPPING;
         node.m_node_value.mapping = CreateObject<mapping_type>(mapping);
+        FK_YAML_ASSERT(node.m_node_value.mapping != nullptr);
         return node;
     }
 
@@ -459,6 +472,7 @@ public:
         BasicNode node;
         node.m_node_type = NodeType::MAPPING;
         node.m_node_value.mapping = CreateObject<mapping_type>(std::move(mapping));
+        FK_YAML_ASSERT(node.m_node_value.mapping != nullptr);
         return node;
     }
 
@@ -528,6 +542,7 @@ public:
         BasicNode node;
         node.m_node_type = NodeType::STRING;
         node.m_node_value.str = CreateObject<string_type>();
+        FK_YAML_ASSERT(node.m_node_value.str != nullptr);
         return node;
     }
 
@@ -542,6 +557,7 @@ public:
         BasicNode node;
         node.m_node_type = NodeType::STRING;
         node.m_node_value.str = CreateObject<string_type>(str);
+        FK_YAML_ASSERT(node.m_node_value.str != nullptr);
         return node;
     }
 
@@ -556,6 +572,7 @@ public:
         BasicNode node;
         node.m_node_type = NodeType::STRING;
         node.m_node_value.str = CreateObject<string_type>(std::move(str));
+        FK_YAML_ASSERT(node.m_node_value.str != nullptr);
         return node;
     }
 
@@ -615,6 +632,8 @@ public:
             throw Exception("The target node is not of a sequence type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.sequence != nullptr);
+        FK_YAML_ASSERT(index < m_node_value.sequence->size());
         return m_node_value.sequence->operator[](index);
     }
 
@@ -631,6 +650,8 @@ public:
             throw Exception("The target node is not of a sequence type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.sequence != nullptr);
+        FK_YAML_ASSERT(index < m_node_value.sequence->size());
         return m_node_value.sequence->operator[](index);
     }
 
@@ -647,6 +668,7 @@ public:
             throw Exception("The target node is not of a mapping type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
         return m_node_value.mapping->operator[](key);
     }
 
@@ -663,6 +685,7 @@ public:
             throw Exception("The target node is not of a mapping type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
         return m_node_value.mapping->operator[](key);
     }
 
@@ -679,6 +702,7 @@ public:
             throw Exception("The target node is not of a mapping type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
         return m_node_value.mapping->operator[](std::move(key));
     }
 
@@ -695,6 +719,7 @@ public:
             throw Exception("The target node is not of a mapping type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
         return m_node_value.mapping->operator[](std::move(key));
     }
 
@@ -837,10 +862,13 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
             return m_node_value.sequence->empty();
         case NodeType::MAPPING:
+            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             return m_node_value.mapping->empty();
         case NodeType::STRING:
+            FK_YAML_ASSERT(m_node_value.str != nullptr);
             return m_node_value.str->empty();
         default:
             throw Exception("The target node is not of a container type.");
@@ -857,10 +885,13 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
             return m_node_value.sequence->size();
         case NodeType::MAPPING:
+            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             return m_node_value.mapping->size();
         case NodeType::STRING:
+            FK_YAML_ASSERT(m_node_value.str != nullptr);
             return m_node_value.str->size();
         default:
             throw Exception("The target node is not of a container type.");
@@ -879,6 +910,7 @@ public:
         switch (m_node_type)
         {
         case NodeType::MAPPING: {
+            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             mapping_type& map = *m_node_value.mapping;
             return map.find(key) != map.end();
         }
@@ -899,6 +931,7 @@ public:
         switch (m_node_type)
         {
         case NodeType::MAPPING: {
+            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             mapping_type& map = *m_node_value.mapping;
             return map.find(std::move(key)) != map.end();
         }
@@ -944,6 +977,7 @@ public:
     {
         DestroyObject<std::string>(m_anchor_name);
         m_anchor_name = CreateObject<std::string>(anchor_name);
+        FK_YAML_ASSERT(m_anchor_name != nullptr);
     }
 
     /**
@@ -956,6 +990,7 @@ public:
     {
         DestroyObject<std::string>(m_anchor_name);
         m_anchor_name = CreateObject<std::string>(std::move(anchor_name));
+        FK_YAML_ASSERT(m_anchor_name != nullptr);
     }
 
     /**
@@ -971,6 +1006,7 @@ public:
             throw Exception("The target node is not of a sequence type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.sequence != nullptr);
         return *(m_node_value.sequence);
     }
 
@@ -987,6 +1023,7 @@ public:
             throw Exception("The target node is not of a sequence type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.sequence != nullptr);
         return *(m_node_value.sequence);
     }
 
@@ -1003,6 +1040,7 @@ public:
             throw Exception("The target node is not of a mapping type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
         return *(m_node_value.mapping);
     }
 
@@ -1019,6 +1057,7 @@ public:
             throw Exception("The target node is not of a mapping type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
         return *(m_node_value.mapping);
     }
 
@@ -1163,6 +1202,7 @@ public:
             throw Exception("The target node is not of a string type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.str != nullptr);
         return *(m_node_value.str);
     }
 
@@ -1179,6 +1219,7 @@ public:
             throw Exception("The target node is not of a string type.");
         }
 
+        FK_YAML_ASSERT(m_node_value.str != nullptr);
         return *(m_node_value.str);
     }
 
@@ -1211,8 +1252,10 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
             return {fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin()};
         case NodeType::MAPPING:
+            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             return {fkyaml::MappingIteratorTag(), m_node_value.mapping->begin()};
         default:
             throw Exception("The target node is neither of sequence nor mapping types.");
@@ -1243,8 +1286,10 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
             return {fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin()};
         case NodeType::MAPPING:
+            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             return {fkyaml::MappingIteratorTag(), m_node_value.mapping->begin()};
         default:
             throw Exception("The target node is neither of sequence nor mapping types.");
@@ -1275,8 +1320,10 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
             return {fkyaml::SequenceIteratorTag(), m_node_value.sequence->end()};
         case NodeType::MAPPING:
+            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             return {fkyaml::MappingIteratorTag(), m_node_value.mapping->end()};
         default:
             throw Exception("The target node is neither of sequence nor mapping types.");
@@ -1307,8 +1354,10 @@ public:
         switch (m_node_type)
         {
         case NodeType::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
             return {fkyaml::SequenceIteratorTag(), m_node_value.sequence->end()};
         case NodeType::MAPPING:
+            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             return {fkyaml::MappingIteratorTag(), m_node_value.mapping->end()};
         default:
             throw Exception("The target node is neither of sequence nor mapping types.");
