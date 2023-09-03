@@ -387,7 +387,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanAliasTokenTest", "[LexicalAnalyzerClassT
 
     SECTION("Test nothrow unexpected tokens with an anchor.")
     {
-        auto buffer = GENERATE(std::string("test: *"), std::string("test: *\r\n"), std::string("test: *\n"), std::string("test: * "));
+        auto buffer = GENERATE(
+            std::string("test: *"), std::string("test: *\r\n"), std::string("test: *\n"), std::string("test: * "));
         lexer.SetInputBuffer(buffer.c_str());
 
         REQUIRE_NOTHROW(token = lexer.GetNextToken());
@@ -404,7 +405,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanAliasTokenTest", "[LexicalAnalyzerClassT
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanCommentTokenTest", "[LexicalAnalyzerClassTest]")
 {
-    auto buffer = GENERATE(std::string("# comment\r\n"), std::string("# comment\n"), std::string("# comment"));
+    auto buffer = GENERATE(
+        std::string("# comment\r"), std::string("# comment\r\n"), std::string("# comment\n"), std::string("# comment"));
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer(buffer.c_str());
     fkyaml::LexicalTokenType token;
