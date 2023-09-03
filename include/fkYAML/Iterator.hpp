@@ -13,6 +13,7 @@
 #include <iterator>
 
 #include "fkYAML/Exception.hpp"
+#include "fkYAML/NodeTypeTraits.hpp"
 
 /**
  * @namespace fkyaml
@@ -117,6 +118,8 @@ public:
 private:
     /** A type of non-const version of iterated elements. */
     using NonConstValueType = typename std::remove_const<ValueType>::type;
+
+    static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts (const) BasicNode<...>");
 
     /**
      * @struct IteratorHolder

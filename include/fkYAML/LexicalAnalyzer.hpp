@@ -19,6 +19,7 @@
 
 #include "fkYAML/Assert.hpp"
 #include "fkYAML/Exception.hpp"
+#include "fkYAML/NodeTypeTraits.hpp"
 
 /**
  * @namespace fkyaml
@@ -64,6 +65,8 @@ template <typename BasicNodeType>
 class LexicalAnalyzer
 {
 private:
+    static_assert(is_basic_node<BasicNodeType>::value, "LexicalAnalyzer only accepts (const) BasicNode<...>");
+
     using char_traits_type = std::char_traits<char>;
     using char_int_type = typename char_traits_type::int_type;
 

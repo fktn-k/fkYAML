@@ -12,6 +12,7 @@
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/LexicalAnalyzer.hpp"
 #include "fkYAML/Node.hpp"
+#include "fkYAML/NodeTypeTraits.hpp"
 
 #ifndef FK_YAML_DESERIALIZER_HPP_
 #define FK_YAML_DESERIALIZER_HPP_
@@ -37,6 +38,8 @@ namespace fkyaml
 template <typename BasicNodeType = Node>
 class BasicDeserializer
 {
+    static_assert(is_basic_node<BasicNodeType>::value, "BasicDeserializer only accepts (const) BasicNode<...>");
+
     /** A type for sequence node value containers. */
     using sequence_type = typename BasicNodeType::sequence_type;
     /** A type for mapping node value containers. */
