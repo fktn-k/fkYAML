@@ -675,6 +675,7 @@ private:
         {
             if (m_value_buffer.find(next) != std::string::npos) // NOLINT(abseil-string-find-str-contains)
             {
+                // TODO: support this use case (e.g. version info like 1.0.0)
                 throw Exception("Multiple decimal points found in a token.");
             }
             m_value_buffer.push_back(next);
@@ -847,12 +848,6 @@ private:
                     continue;
                 }
 
-                // Trim trailing spaces already added to m_value_buffer.
-                while (m_value_buffer.back() == ' ')
-                {
-                    m_value_buffer.pop_back();
-                }
-
                 return LexicalTokenType::STRING_VALUE;
             }
 
@@ -896,9 +891,6 @@ private:
                 current = GetNextChar();
                 switch (current)
                 {
-                case '0':
-                    m_value_buffer.push_back('\0');
-                    break;
                 case 'a':
                     m_value_buffer.push_back('\a');
                     break;
@@ -964,8 +956,7 @@ private:
             // Handle unescaped control characters.
             switch (current)
             {
-            case 0x00:
-                throw Exception("Control character U+0000 (NUL) must be escaped to \\0 or \\u0000.");
+            // 0x00(NULL) has already been handled above.
             case 0x01:
                 throw Exception("Control character U+0001 (SOH) must be escaped to \\u0001.");
             case 0x02:
