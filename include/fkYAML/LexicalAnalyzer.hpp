@@ -131,7 +131,7 @@ public:
 
         const char& current = RefCurrentChar();
 
-        if (isdigit(current))
+        if (0x00 <= current && current <= 0x7F && isdigit(current))
         {
             return ScanNumber();
         }
