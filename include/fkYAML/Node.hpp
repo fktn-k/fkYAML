@@ -400,7 +400,7 @@ public:
         node.m_node_value.sequence = CreateObject<sequence_type>();
         FK_YAML_ASSERT(node.m_node_value.sequence != nullptr);
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * @brief A factory method for sequence BasicNode objects with lvalue sequence_type objects.
@@ -415,7 +415,7 @@ public:
         node.m_node_value.sequence = CreateObject<sequence_type>(sequence);
         FK_YAML_ASSERT(node.m_node_value.sequence != nullptr);
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * @brief A factory method for sequence BasicNode objects with rvalue sequence_type objects.
@@ -430,7 +430,7 @@ public:
         node.m_node_value.sequence = CreateObject<sequence_type>(std::move(sequence));
         FK_YAML_ASSERT(node.m_node_value.sequence != nullptr);
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * @brief A factory method for mapping BasicNode objects without mapping_type objects.
@@ -444,7 +444,7 @@ public:
         node.m_node_value.mapping = CreateObject<mapping_type>();
         FK_YAML_ASSERT(node.m_node_value.mapping != nullptr);
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * @brief A factory method for mapping BasicNode objects with lvalue mapping_type objects.
@@ -459,7 +459,7 @@ public:
         node.m_node_value.mapping = CreateObject<mapping_type>(mapping);
         FK_YAML_ASSERT(node.m_node_value.mapping != nullptr);
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * @brief A factory method for mapping BasicNode objects with rvalue mapping_type objects.
@@ -474,7 +474,7 @@ public:
         node.m_node_value.mapping = CreateObject<mapping_type>(std::move(mapping));
         FK_YAML_ASSERT(node.m_node_value.mapping != nullptr);
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * @brief A factory method for boolean scalar BasicNode objects.
@@ -544,7 +544,7 @@ public:
         node.m_node_value.str = CreateObject<string_type>();
         FK_YAML_ASSERT(node.m_node_value.str != nullptr);
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * @brief A factory method for string BasicNode objects with lvalue string_type objects.
@@ -559,7 +559,7 @@ public:
         node.m_node_value.str = CreateObject<string_type>(str);
         FK_YAML_ASSERT(node.m_node_value.str != nullptr);
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * @brief A factory method for string BasicNode objects with rvalue string_type objects.
@@ -574,7 +574,7 @@ public:
         node.m_node_value.str = CreateObject<string_type>(std::move(str));
         FK_YAML_ASSERT(node.m_node_value.str != nullptr);
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
     /**
      * @brief A factory method for alias BasicNode objects referencing the given anchor BasicNode object.
