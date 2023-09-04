@@ -447,6 +447,12 @@ TEST_CASE("NodeClassTest_AliasNodeFactoryTest", "[NodeClassTest]")
         REQUIRE_THROWS_AS(fkyaml::Node::AliasOf(anchor), fkyaml::Exception);
     }
 
+    SECTION("Make sure BasicNode::AliasOf() throws an exception with an empty anchor name.")
+    {
+        anchor.AddAnchorName("");
+        REQUIRE_THROWS_AS(fkyaml::Node::AliasOf(anchor), fkyaml::Exception);
+    }
+
     SECTION("Check if BasicNode::AliasOf() does not throw any exception.")
     {
         anchor.AddAnchorName("anchor_name");

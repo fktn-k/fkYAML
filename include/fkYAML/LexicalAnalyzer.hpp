@@ -129,15 +129,9 @@ public:
 
         SkipWhiteSpaces();
 
-        if (m_needs_update_indent_width)
-        {
-            UpdateIndentWidth();
-            m_needs_update_indent_width = false;
-        }
-
         const char& current = RefCurrentChar();
 
-        if (isdigit(current))
+        if (0x00 <= current && current <= 0x7F && isdigit(current))
         {
             return ScanNumber();
         }
@@ -372,24 +366,9 @@ public:
         char* endptr = nullptr;
         const auto tmp_val = std::strtoll(m_value_buffer.data(), &endptr, 0);
 
-        if (endptr != m_value_buffer.data() + m_value_buffer.size())
-        {
-            throw Exception("Failed to convert a string to a signed integer.");
-        }
+        FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
 
-        // NOLINTNEXTLINE(google-runtime-int)
-        if ((tmp_val == std::numeric_limits<long long>::min() || tmp_val == std::numeric_limits<long long>::max()) &&
-            errno == ERANGE)
-        {
-            throw Exception("Range error on converting from a string to a signed integer.");
-        }
-
-        const auto value_int = static_cast<signed_int_type>(tmp_val);
-        if (value_int != tmp_val)
-        {
-            throw Exception("Failed to convert from long long to signed_int_type.");
-        }
-        return value_int;
+        return static_cast<signed_int_type>(tmp_val);
     }
 
     /**
@@ -404,23 +383,9 @@ public:
         char* endptr = nullptr;
         const auto tmp_val = std::strtoull(m_value_buffer.data(), &endptr, 0);
 
-        if (endptr != m_value_buffer.data() + m_value_buffer.size())
-        {
-            throw Exception("Failed to convert a string to an unsigned integer.");
-        }
+        FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
 
-        // NOLINTNEXTLINE(google-runtime-int)
-        if (tmp_val == std::numeric_limits<unsigned long long>::max() && errno == ERANGE)
-        {
-            throw Exception("Range error on converting from a string to an unsigned integer.");
-        }
-
-        const auto value_int = static_cast<unsigned_int_type>(tmp_val);
-        if (value_int != tmp_val)
-        {
-            throw Exception("Failed to convert from unsigned long long to unsigned_int_type.");
-        }
-        return value_int;
+        return static_cast<unsigned_int_type>(tmp_val);
     }
 
     /**
@@ -451,15 +416,7 @@ public:
         char* endptr = nullptr;
         const double value = std::strtod(m_value_buffer.data(), &endptr);
 
-        if (endptr != m_value_buffer.data() + m_value_buffer.size())
-        {
-            throw Exception("Failed to convert a string to a double.");
-        }
-
-        if ((value == HUGE_VAL || value == -HUGE_VAL) && errno == ERANGE)
-        {
-            throw Exception("Range error on converting from a string to a double.");
-        }
+        FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
 
         return static_cast<float_number_type>(value);
     }
@@ -521,14 +478,14 @@ private:
      */
     LexicalTokenType ScanComment()
     {
-        FK_YAML_ASSERT(RefCurrentChar() != '#');
+        FK_YAML_ASSERT(RefCurrentChar() == '#');
 
         while (true)
         {
             switch (GetNextChar())
             {
             case '\r':
-                if (RefNextChar() == '\r')
+                if (RefNextChar() == '\n')
                 {
                     GetNextChar();
                 }
@@ -550,13 +507,19 @@ private:
     LexicalTokenType ScanNumber()
     {
         m_value_buffer.clear();
-        switch (RefCurrentChar())
+
+        const char current = RefCurrentChar();
+        FK_YAML_ASSERT(std::isdigit(current) || current == '-' || current == '+');
+
+        switch (current)
         {
         case '-':
-            m_value_buffer.push_back(RefCurrentChar());
+            m_value_buffer.push_back(current);
             return ScanNegativeNumber();
+        case '+':
+            return ScanDecimalNumber();
         case '0':
-            m_value_buffer.push_back(RefCurrentChar());
+            m_value_buffer.push_back(current);
             return ScanNumberAfterZeroAtFirst();
         case '1':
         case '2':
@@ -567,10 +530,10 @@ private:
         case '7':
         case '8':
         case '9':
-            m_value_buffer.push_back(RefCurrentChar());
+            m_value_buffer.push_back(current);
             return ScanDecimalNumber();
-        default:
-            throw Exception("Invalid character found in a number token.");
+        default:                                                           // LCOV_EXCL_LINE
+            throw Exception("Invalid character found in a number token."); // LCOV_EXCL_LINE
         }
     }
 
@@ -581,7 +544,8 @@ private:
      */
     LexicalTokenType ScanNegativeNumber()
     {
-        const char& next = GetNextChar();
+        const char next = GetNextChar();
+        FK_YAML_ASSERT(std::isdigit(next) || next == '.');
 
         if (std::isdigit(next))
         {
@@ -603,7 +567,7 @@ private:
                 return LexicalTokenType::FLOAT_NUMBER_VALUE;
             }
         }
-        throw Exception("Invalid character found in a negative number token.");
+        throw Exception("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
     }
 
     /**
@@ -640,6 +604,7 @@ private:
     LexicalTokenType ScanDecimalNumberAfterDecimalPoint()
     {
         const char& next = GetNextChar();
+        FK_YAML_ASSERT(std::isdigit(next));
 
         if (std::isdigit(next))
         {
@@ -648,7 +613,7 @@ private:
             return LexicalTokenType::FLOAT_NUMBER_VALUE;
         }
 
-        throw Exception("Invalid character found after a decimal point.");
+        throw Exception("Invalid character found after a decimal point."); // LCOV_EXCL_LINE
     }
 
     /**
@@ -680,12 +645,15 @@ private:
     LexicalTokenType ScanDecimalNumberAfterSign()
     {
         const char& next = GetNextChar();
+        FK_YAML_ASSERT(std::isdigit(next));
+
         if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
             return ScanDecimalNumber();
         }
-        throw Exception("Non-numeric character found after a sign(+/-) after exponent(e/E).");
+
+        throw Exception("Non-numeric character found after a sign(+/-) after exponent(e/E)."); // LCOV_EXCL_LINE
     }
 
     /**
@@ -707,6 +675,7 @@ private:
         {
             if (m_value_buffer.find(next) != std::string::npos) // NOLINT(abseil-string-find-str-contains)
             {
+                // TODO: support this use case (e.g. version info like 1.0.0)
                 throw Exception("Multiple decimal points found in a token.");
             }
             m_value_buffer.push_back(next);
@@ -879,12 +848,6 @@ private:
                     continue;
                 }
 
-                // Trim trailing spaces already added to m_value_buffer.
-                while (m_value_buffer.back() == ' ')
-                {
-                    m_value_buffer.pop_back();
-                }
-
                 return LexicalTokenType::STRING_VALUE;
             }
 
@@ -928,9 +891,6 @@ private:
                 current = GetNextChar();
                 switch (current)
                 {
-                case '0':
-                    m_value_buffer.push_back('\0');
-                    break;
                 case 'a':
                     m_value_buffer.push_back('\a');
                     break;
@@ -996,8 +956,7 @@ private:
             // Handle unescaped control characters.
             switch (current)
             {
-            case 0x00:
-                throw Exception("Control character U+0000 (NUL) must be escaped to \\0 or \\u0000.");
+            // 0x00(NULL) has already been handled above.
             case 0x01:
                 throw Exception("Control character U+0001 (SOH) must be escaped to \\u0001.");
             case 0x02:
@@ -1201,8 +1160,6 @@ private:
     Position m_position_info {};
     //!< A temporal buffer to store a string to be parsed to an actual datum.
     string_type m_value_buffer {};
-    //!< The flag to signal the need for update of the indent width history.
-    bool m_needs_update_indent_width = false;
     //!< A stack to store indent width history.
     std::vector<uint32_t> m_indent_width_stack;
 };
