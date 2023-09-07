@@ -22,7 +22,7 @@ template <
 class BasicNode;
 
 template <typename T>
-struct is_basic_node : std::false_type
+struct IsBasicNode : std::false_type
 {
 };
 
@@ -30,7 +30,7 @@ template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename SignedIntegerType, typename UnsignedIntegerType, typename FloatNumberType,
     typename StringType>
-struct is_basic_node<BasicNode<
+struct IsBasicNode<BasicNode<
     SequenceType, MappingType, BooleanType, SignedIntegerType, UnsignedIntegerType, FloatNumberType, StringType>>
     : std::true_type
 {
