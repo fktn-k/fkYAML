@@ -38,7 +38,7 @@ namespace fkyaml
 template <typename BasicNodeType = Node>
 class BasicDeserializer
 {
-    static_assert(is_basic_node<BasicNodeType>::value, "BasicDeserializer only accepts (const) BasicNode<...>");
+    static_assert(IsBasicNode<BasicNodeType>::value, "BasicDeserializer only accepts (const) BasicNode<...>");
 
     /** A type for sequence node value containers. */
     using sequence_type = typename BasicNodeType::sequence_type;
@@ -79,12 +79,12 @@ public:
 
         m_lexer.SetInputBuffer(source);
         BasicNodeType root = BasicNodeType::Mapping();
-        std::vector<BasicNodeType*> node_stack;
-        std::unordered_map<string_type, BasicNodeType> anchor_table;
+        std::vector<BasicNodeType*> node_stack {};
+        std::unordered_map<string_type, BasicNodeType> anchor_table {};
 
         BasicNodeType* p_current_node = &root;
 
-        string_type anchor_name;
+        string_type anchor_name {};
         bool needs_anchor_impl = false;
 
         LexicalTokenType type = m_lexer.GetNextToken();

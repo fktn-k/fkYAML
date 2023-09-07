@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  ubuntu-latest:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     strategy:
@@ -32,3 +32,18 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build_${{matrix.build_type}}
       run: ctest -C ${{matrix.build_type}} --output-on-failure
+
+  ci-clang_tidy_check:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build_clang_tidy
+
+    - name: Clang-Tidy check
+      run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy

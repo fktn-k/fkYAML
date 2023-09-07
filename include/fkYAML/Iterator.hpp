@@ -119,7 +119,7 @@ private:
     /** A type of non-const version of iterated elements. */
     using NonConstValueType = typename std::remove_const<ValueType>::type;
 
-    static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts (const) BasicNode<...>");
+    static_assert(IsBasicNode<NonConstValueType>::value, "Iterator only accepts (const) BasicNode<...>");
 
     /**
      * @struct IteratorHolder
@@ -161,7 +161,7 @@ public:
      *
      * @param other An Iterator object to be copied with.
      */
-    Iterator(const Iterator& other) noexcept
+    Iterator(const Iterator& other) noexcept // NOLINT(bugprone-exception-escape)
         : m_inner_iterator_type(other.m_inner_iterator_type)
     {
         switch (m_inner_iterator_type)
@@ -182,7 +182,7 @@ public:
      *
      * @param other An Iterator object to be moved from.
      */
-    Iterator(Iterator&& other) noexcept
+    Iterator(Iterator&& other) noexcept // NOLINT(bugprone-exception-escape)
         : m_inner_iterator_type(other.m_inner_iterator_type)
     {
         switch (m_inner_iterator_type)
@@ -207,7 +207,7 @@ public:
      * @param rhs An Iterator object to be copied with.
      * @return Iterator& Reference to this Iterator object.
      */
-    Iterator& operator=(const Iterator& rhs) noexcept // NOLINT(cert-oop54-cpp)
+    Iterator& operator=(const Iterator& rhs) noexcept // NOLINT(cert-oop54-cpp,bugprone-exception-escape)
     {
         if (&rhs == this)
         {
@@ -236,7 +236,7 @@ public:
      * @param rhs An Iterator object to be moved from.
      * @return Iterator& Reference to this Iterator object.
      */
-    Iterator& operator=(Iterator&& rhs) noexcept
+    Iterator& operator=(Iterator&& rhs) noexcept // NOLINT(bugprone-exception-escape)
     {
         if (&rhs == this)
         {
@@ -264,7 +264,7 @@ public:
      *
      * @return pointer A pointer to the Node object internally referenced by the actual iterator object.
      */
-    pointer operator->() noexcept
+    pointer operator->() noexcept // NOLINT(bugprone-exception-escape)
     {
         switch (m_inner_iterator_type)
         {
@@ -282,7 +282,7 @@ public:
      *
      * @return reference Reference to the Node object internally referenced by the actual iterator object.
      */
-    reference operator*() noexcept
+    reference operator*() noexcept // NOLINT(bugprone-exception-escape)
     {
         switch (m_inner_iterator_type)
         {
@@ -301,7 +301,7 @@ public:
      * @param i The difference from this Iterator object with which it moves forward.
      * @return Iterator& Reference to this Iterator object.
      */
-    Iterator& operator+=(difference_type i)
+    Iterator& operator+=(difference_type i) noexcept // NOLINT(bugprone-exception-escape)
     {
         switch (m_inner_iterator_type)
         {
@@ -323,7 +323,7 @@ public:
      * @param i The difference from this Iterator object.
      * @return Iterator An Iterator object which has been added @a i.
      */
-    Iterator operator+(difference_type i) const
+    Iterator operator+(difference_type i) const noexcept
     {
         auto result = *this;
         result += i;
@@ -335,7 +335,7 @@ public:
      *
      * @return Iterator& Reference to this Iterator object.
      */
-    Iterator& operator++() noexcept
+    Iterator& operator++() noexcept // NOLINT(bugprone-exception-escape)
     {
         switch (m_inner_iterator_type)
         {
@@ -369,7 +369,7 @@ public:
      * @param i The difference from this Iterator object with which it moves backward.
      * @return Iterator& Reference to this Iterator object.
      */
-    Iterator& operator-=(difference_type i)
+    Iterator& operator-=(difference_type i) noexcept // NOLINT(bugprone-exception-escape)
     {
         return operator+=(-i);
     }
@@ -380,7 +380,7 @@ public:
      * @param i The difference from this Iterator object.
      * @return Iterator An Iterator object from which has been subtracted @ i.
      */
-    Iterator operator-(difference_type i)
+    Iterator operator-(difference_type i) noexcept
     {
         auto result = *this;
         result -= i;
@@ -392,7 +392,7 @@ public:
      *
      * @return Iterator& Reference to this Iterator object.
      */
-    Iterator& operator--() noexcept
+    Iterator& operator--() noexcept // NOLINT(bugprone-exception-escape)
     {
         switch (m_inner_iterator_type)
         {
@@ -537,7 +537,7 @@ public:
         }
     }
 
-    reference Value() noexcept
+    reference Value() noexcept // NOLINT(bugprone-exception-escape)
     {
         return operator*();
     }

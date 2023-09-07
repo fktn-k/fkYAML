@@ -65,7 +65,7 @@ template <typename BasicNodeType>
 class LexicalAnalyzer
 {
 private:
-    static_assert(is_basic_node<BasicNodeType>::value, "LexicalAnalyzer only accepts (const) BasicNode<...>");
+    static_assert(IsBasicNode<BasicNodeType>::value, "LexicalAnalyzer only accepts (const) BasicNode<...>");
 
     using char_traits_type = std::char_traits<char>;
     using char_int_type = typename char_traits_type::int_type;

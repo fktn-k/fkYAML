@@ -16,13 +16,6 @@ add_sanitizer_flags(${FK_YAML_RunSanitizers})
 
 set(TEST_TARGET "fkYAMLUnitTest")
 
-if(${FK_YAML_RunClangFormat})
-  run_clang_format(
-    ${TEST_TARGET}
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-  )
-endif()
-
 add_executable(${TEST_TARGET}
   ExceptionClassTest.cpp
   NodeClassTest.cpp
@@ -31,6 +24,27 @@ add_executable(${TEST_TARGET}
   DeserializerClassTest.cpp
   main.cpp
 )
+
+target_include_directories(${TEST_TARGET} PRIVATE
+  ${PROJECT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${TEST_TARGET}
+  Catch2::Catch2
+)
+
+include(Catch)
+catch_discover_tests(${TEST_TARGET})
+
+add_dependencies(${TEST_TARGET} build_library)
+
+if(${FK_YAML_RunClangFormat})
+  run_clang_format(
+    ${TEST_TARGET}
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+  )
+endif()
 
 if(FK_YAML_GenerateCoverage)
   target_compile_options(${TEST_TARGET} PRIVATE
@@ -56,15 +70,3 @@ if(FK_YAML_GenerateCoverage)
     COMMENT "Execute unit test app with code coverage."
   )
 endif()
-
-target_include_directories(${TEST_TARGET} PRIVATE
-  ${PROJECT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-target_link_libraries(${TEST_TARGET}
-  Catch2::Catch2
-)
-
-include(Catch)
-catch_discover_tests(${TEST_TARGET})

@@ -326,7 +326,7 @@ public:
      *
      * @param[in] rhs A BasicNode object to be moved from.
      */
-    BasicNode(BasicNode&& rhs) noexcept
+    BasicNode(BasicNode&& rhs) noexcept // NOLINT(bugprone-exception-escape)
         : m_node_type(rhs.m_node_type),
           m_anchor_name(rhs.m_anchor_name)
     {
