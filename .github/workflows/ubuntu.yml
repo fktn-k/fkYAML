@@ -46,4 +46,4 @@ jobs:
       run: cmake -B ${{github.workspace}}/build_clang_tidy
 
     - name: Clang-Tidy check
-      run: cmake --build ${{github.workflow}}/build_clang_tidy --target run_clang_tidy
+      run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
