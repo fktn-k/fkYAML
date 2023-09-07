@@ -40,7 +40,9 @@ enum class LexicalTokenType
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
     ALIAS_PREFIX,          //!< the character for alias prefix `*`
     COMMENT_PREFIX,        //!< the character for comment prefix `#`
-    DIRECTIVE_PREFIX,      //!< the character for directive prefix `%`
+    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use GetYamlVersion() to get a value.
+    TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
+    INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
     SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
     SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
     SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
@@ -198,7 +200,7 @@ public:
             ScanComment();
             return LexicalTokenType::COMMENT_PREFIX;
         case '%': // directive prefix
-            return LexicalTokenType::DIRECTIVE_PREFIX;
+            return ScanDirective();
         case '-':
             if (RefNextChar() == ' ')
             {
@@ -431,6 +433,14 @@ public:
         return m_value_buffer;
     }
 
+    const string_type& GetYamlVersion() const
+    {
+        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
+        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
+
+        return m_value_buffer;
+    }
+
     /**
      * @brief Get the latest indent width stored in @a m_indent_width_stack.
      *
@@ -496,6 +506,130 @@ private:
                 break;
             }
         }
+    }
+
+    LexicalTokenType ScanDirective()
+    {
+        FK_YAML_ASSERT(RefCurrentChar() == '%');
+
+        switch (GetNextChar())
+        {
+        case 'T': {
+            if (GetNextChar() != 'A' || GetNextChar() != 'G')
+            {
+                while (true)
+                {
+                    // skip reading until the end of input buffer or the next line.
+                    switch (RefCurrentChar())
+                    {
+                    case '\r':
+                        if (RefNextChar() == '\n')
+                        {
+                            GetNextChar();
+                        }
+                    case '\n':
+                        GetNextChar();
+                    case '\0':
+                        return LexicalTokenType::INVALID_DIRECTIVE;
+                    }
+                    GetNextChar();
+                }
+            }
+            if (GetNextChar() != ' ')
+            {
+                throw Exception("There must be a half-width space between \"%TAG\" and tag info.");
+            }
+            // TODO: parse tag directives' information
+            return LexicalTokenType::TAG_DIRECTIVE;
+        }
+        case 'Y':
+            if (GetNextChar() != 'A' || GetNextChar() != 'M' || GetNextChar() != 'L')
+            {
+                while (true)
+                {
+                    // skip reading until the next line or the end of input buffer.
+                    switch (RefCurrentChar())
+                    {
+                    case '\r':
+                        if (RefNextChar() == '\n')
+                        {
+                            GetNextChar();
+                        }
+                    case '\n':
+                        GetNextChar();
+                    case '\0':
+                        return LexicalTokenType::INVALID_DIRECTIVE;
+                    }
+                    GetNextChar();
+                }
+            }
+            if (GetNextChar() != ' ')
+            {
+                throw Exception("There must be a half-width space between \"%YAML\" and a version number.");
+            }
+            return ScanYamlVersionDirective();
+        default:
+            while (true)
+            {
+                // skip reading until the next line or the end of input buffer.
+                switch (RefCurrentChar())
+                {
+                case '\r':
+                    if (RefNextChar() == '\n')
+                    {
+                        GetNextChar();
+                    }
+                case '\n':
+                    GetNextChar();
+                case '\0':
+                    return LexicalTokenType::INVALID_DIRECTIVE;
+                }
+                GetNextChar();
+            }
+        }
+    }
+
+    LexicalTokenType ScanYamlVersionDirective()
+    {
+        m_value_buffer.clear();
+
+        if (GetNextChar() != '1')
+        {
+            throw Exception("Invalid YAML major version found.");
+        }
+        m_value_buffer.push_back(RefCurrentChar());
+
+        if (GetNextChar() != '.')
+        {
+            throw Exception("A period must be followed after the YAML major version.");
+        }
+        m_value_buffer.push_back(RefCurrentChar());
+
+        switch (GetNextChar())
+        {
+        case '1':
+        case '2':
+            m_value_buffer.push_back(RefCurrentChar());
+            break;
+        case '0':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            throw Exception("Unsupported YAML version.");
+        default:
+            throw Exception("YAML version must be specified with digits and periods.");
+        }
+
+        if (GetNextChar() != ' ' && RefCurrentChar() != '\r' && RefCurrentChar() != '\n')
+        {
+            throw Exception("Only YAML version 1.1/1.2 are supported.");
+        }
+
+        return LexicalTokenType::YAML_VER_DIRECTIVE;
     }
 
     /**

@@ -87,6 +87,8 @@ public:
         string_type anchor_name {};
         bool needs_anchor_impl = false;
 
+        string_type yaml_version {};
+
         LexicalTokenType type = m_lexer.GetNextToken();
         while (type != LexicalTokenType::END_OF_BUFFER)
         {
@@ -146,7 +148,19 @@ public:
                 break;
             }
             case LexicalTokenType::COMMENT_PREFIX:
-            case LexicalTokenType::DIRECTIVE_PREFIX:
+                break;
+            case LexicalTokenType::YAML_VER_DIRECTIVE: {
+                if (!yaml_version.empty())
+                {
+                    throw Exception("YAML version cannot be specified more than once in the same YAML document.");
+                }
+                yaml_version = m_lexer.GetYamlVersion();
+                break;
+            }
+            case LexicalTokenType::TAG_DIRECTIVE:
+                // TODO: implement tag directive deserialization.
+            case LexicalTokenType::INVALID_DIRECTIVE:
+                // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case LexicalTokenType::SEQUENCE_BLOCK_PREFIX:
                 if (p_current_node->IsNull())

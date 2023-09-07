@@ -30,6 +30,77 @@ TEST_CASE("LexicalAnalyzerClassTest_SetInputBufferTest", "[LexicalAnalyzerClassT
     }
 }
 
+TEST_CASE("LexicalAnalyzerClassTest_ScanYamlVersionDirectiveTest", "[LexicalAnalyzerClassTest]")
+{
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
+    fkyaml::LexicalTokenType token;
+
+    SECTION("Test nothrow expected tokens.")
+    {
+        using ValuePair = std::pair<std::string, std::string>;
+        auto value_pair = GENERATE(
+            ValuePair(std::string("%YAML 1.1\r"), std::string("1.1")),
+            ValuePair(std::string("%YAML 1.2\n"), std::string("1.2")),
+            ValuePair(std::string("%YAML 1.2 "), std::string("1.2")));
+
+        lexer.SetInputBuffer(value_pair.first.c_str());
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::YAML_VER_DIRECTIVE);
+        REQUIRE(lexer.GetYamlVersion() == value_pair.second);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
+    }
+
+    SECTION("Test nothrow expected tokens with invalid content.")
+    {
+        auto buffer = GENERATE(
+            std::string("%YUML 1.2"),
+            std::string("%YANL 1.2  \r"),
+            std::string("%YANR 1.2 \r\n"),
+            std::string("%YANL 1.2    \n"));
+
+        lexer.SetInputBuffer(buffer.c_str());
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::INVALID_DIRECTIVE);
+
+        REQUIRE_NOTHROW(token = lexer.GetNextToken());
+        REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
+    }
+
+    SECTION("Test nothrow unexpected tokens.")
+    {
+        auto buffer = GENERATE(
+            std::string("%YAML 1.1"),
+            std::string("%YAML 1.2"),
+            std::string("%YAML 1.3\n"),
+            std::string("%YAML 2.0\n"),
+            std::string("%YAML 12"),
+            std::string("%YAML 1.A"),
+            std::string("%YAML1.2 "),
+            std::string("%YAML AbC"));
+
+        lexer.SetInputBuffer(buffer.c_str());
+        REQUIRE_THROWS_AS(lexer.GetNextToken(), fkyaml::Exception);
+    }
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanReservedDirectiveTest", "[LexicalAnalyzerClassTest]")
+{
+    auto buffer =
+        GENERATE(std::string("%TEST"), std::string("%1984\n"), std::string("%TEST4LIB\r"), std::string("%%ERROR\r\n"));
+
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
+    fkyaml::LexicalTokenType token;
+    lexer.SetInputBuffer(buffer.c_str());
+    REQUIRE_NOTHROW(token = lexer.GetNextToken());
+    REQUIRE(token == fkyaml::LexicalTokenType::INVALID_DIRECTIVE);
+
+    REQUIRE_NOTHROW(token = lexer.GetNextToken());
+    REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
+}
+
 TEST_CASE("LexicalAnalyzerClassTest_ScanBeforeInputBufferSetTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
