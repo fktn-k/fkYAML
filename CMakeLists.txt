@@ -56,9 +56,20 @@ else()
   endif()
 endif()
 
+if(FK_YAML_RUN_CLANG_TIDY)
+  set(FK_YAML_RUN_CLANG_TIDY_INIT ON)
+else()
+  if(FK_YAML_IS_MAIN_PROJECT)
+    set(FK_YAML_RUN_CLANG_TIDY_INIT ON)
+  else()
+    set(FK_YAML_RUN_CLANG_TIDY_INIT OFF)
+  endif()
+endif()
+
 if(FK_YAML_CI)
-  # disable execution of clang-format during CI.
+  # disable execution of clang-format/clang-tidy by default during CI.
   set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
+  set(FK_YAML_RUN_CLANG_TIDY_INIT OFF)
 endif()
 
 option(FK_YAML_BuildTests     "Build the unit tests when FK_YAML_BUILD_TEST is enabled or if this library is the main target." ${FK_YAML_BUILD_TEST_INIT})
@@ -67,8 +78,9 @@ option(FK_YAML_GenerateCoverage "Build the unit tests with code coverage data if
 option(FK_YAML_Install        "Install CMake targets during install step." ${FK_YAML_IS_MAIN_PROJECT})
 option(FK_YAML_RunDoxygen     "Generate API documentation with doxygen." ${FK_YAML_RUN_DOXYGEN_INIT})
 option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_FORMAT_INIT})
+option(FK_YAML_RunClangTidy   "Run clang-tidy when FK_YAML_RUN_CLANG_TIDY is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_TIDY_INIT})
 
-if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat)
+if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat OR FK_YAML_RunClangTidy)
   set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
   if(FK_YAML_BuildTests)
     set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2/contrib")
@@ -102,18 +114,6 @@ set(FK_YAML_CMAKE_PROJECT_TARGETS_FILE "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NA
 set(FK_YAML_PKGCONFIG_INSTALL_DIR      "${CMAKE_INSTALL_DATADIR}/pkgconfig")
 
 #
-# Run clang-format if enabled.
-#
-
-if(FK_YAML_RunClangFormat)
-  include(RunClangFormat)
-  run_clang_format(
-    ${FK_YAML_TARGET_NAME}
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/fkYAML/*.hpp"
-  )
-endif()
-
-#
 # Create target and add include path.
 #
 
@@ -127,6 +127,24 @@ target_include_directories(
   $<INSTALL_INTERFACE:${FK_YAML_INCLUDE_INSTALL_DIR}>
 )
 
+# configure clang-format if enabled.
+if(FK_YAML_RunClangFormat)
+  set(FK_YAML_ClangFormatTargetPrefix "run_clang_format_for_")
+  include(RunClangFormat)
+  run_clang_format(
+    ${FK_YAML_TARGET_NAME}
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/fkYAML/*.hpp"
+  )
+endif()
+
+# Configure clang-tidy if enabled.
+# **DO NOT** put the following lines before configuring clang-format for fkYAML library sources
+# to make sure that correctly formatted source files will be tested by clang-tidy.
+if(FK_YAML_RunClangTidy)
+  add_subdirectory(clang_tidy)
+  add_dependencies(ClangTidyHelper "${FK_YAML_ClangFormatTargetPrefix}${FK_YAML_TARGET_NAME}")
+endif()
+
 #
 # Install a pkg-config file, so other tools can find this library.
 #
@@ -135,6 +153,8 @@ configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
 )
+
+add_custom_target(build_library ALL DEPENDS ${FK_YAML_TARGET_NAME})
 
 #
 # Create and configure the unit test target.
