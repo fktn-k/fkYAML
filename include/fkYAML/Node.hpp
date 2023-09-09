@@ -21,6 +21,7 @@
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/Iterator.hpp"
 #include "fkYAML/NodeType.hpp"
+#include "fkYAML/YAMLVersionType.hpp"
 
 /**
  * @namespace fkyaml
@@ -583,7 +584,7 @@ public:
      * @param anchor_node An anchor node to be referenced by the newly constructed BasicNode object.
      * @return BasicNode A constructed BasicNode object of alias type.
      */
-    static BasicNode AliasOf(BasicNode& anchor_node)
+    static BasicNode AliasOf(const BasicNode& anchor_node)
     {
         if (!anchor_node.m_anchor_name || anchor_node.m_anchor_name->empty())
         {
@@ -938,6 +939,26 @@ public:
         default:
             return false;
         }
+    }
+
+    /**
+     * @brief Get the YAML version specification for this BasicNode object.
+     *
+     * @return YamlVersionType The YAML version specification.
+     */
+    YamlVersionType GetVersion() const noexcept
+    {
+        return m_yaml_version_type;
+    }
+
+    /**
+     * @brief Set the YAML version specification for this BasicNode object.
+     *
+     * @param version The YAML version specification.
+     */
+    void SetVersion(const YamlVersionType version) noexcept
+    {
+        m_yaml_version_type = version;
     }
 
     /**
@@ -1380,6 +1401,8 @@ public:
 private:
     /** The current node value type. */
     NodeType m_node_type {NodeType::NULL_OBJECT};
+    /** The YAML version specification. */
+    YamlVersionType m_yaml_version_type {YamlVersionType::VER_1_2};
     /** The current node value. */
     NodeValue m_node_value {};
     /** The anchor name for this node. */

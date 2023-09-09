@@ -9,6 +9,8 @@
 #ifndef FK_YAML_NODE_TYPE_HPP_
 #define FK_YAML_NODE_TYPE_HPP_
 
+#include <cstdint>
+
 /**
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
@@ -20,7 +22,7 @@ namespace fkyaml
  * @enum NodeType
  * @brief Definition of node value types.
  */
-enum class NodeType
+enum class NodeType : std::uint32_t
 {
     SEQUENCE,         //!< sequence value type
     MAPPING,          //!< mapping value type

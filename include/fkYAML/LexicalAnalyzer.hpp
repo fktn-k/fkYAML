@@ -435,7 +435,7 @@ public:
 
     /**
      * @brief Get the YAML version specification.
-     * 
+     *
      * @return const string_type& A YAML version specification.
      */
     const string_type& GetYamlVersion() const
@@ -502,7 +502,7 @@ private:
     /**
      * @brief Scan directives starting with the prefix '%'
      * @note Currently, only %YAML directive is supported. If not, returns invalid or throws an exception.
-     * 
+     *
      * @return LexicalTokenType The lexical token type for directives.
      */
     LexicalTokenType ScanDirective()
@@ -544,7 +544,7 @@ private:
     /**
      * @brief Scan a YAML version directive.
      * @note Only 1.1 and 1.2 are supported. If not, throws an exception.
-     * 
+     *
      * @return LexicalTokenType The lexical token type for YAML version directives.
      */
     LexicalTokenType ScanYamlVersionDirective()
