@@ -18,6 +18,10 @@
 namespace fkyaml
 {
 
+/**
+ * @enum YamlVersionType
+ * @brief Definition of YAML version types.
+ */
 enum class YamlVersionType : std::uint32_t
 {
     VER_1_1, //!< YAML version 1.1
