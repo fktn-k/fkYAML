@@ -21,6 +21,7 @@
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/Iterator.hpp"
 #include "fkYAML/NodeType.hpp"
+#include "fkYAML/YAMLVersionType.hpp"
 
 /**
  * @namespace fkyaml
@@ -278,7 +279,8 @@ public:
      * @param[in] rhs A BasicNode object to be copied with.
      */
     BasicNode(const BasicNode& rhs)
-        : m_node_type(rhs.m_node_type)
+        : m_node_type(rhs.m_node_type),
+          m_yaml_version_type(rhs.m_yaml_version_type)
     {
         switch (m_node_type)
         {
@@ -328,7 +330,8 @@ public:
      */
     BasicNode(BasicNode&& rhs) noexcept // NOLINT(bugprone-exception-escape)
         : m_node_type(rhs.m_node_type),
-          m_anchor_name(rhs.m_anchor_name)
+          m_anchor_name(rhs.m_anchor_name),
+          m_yaml_version_type(rhs.m_yaml_version_type)
     {
         switch (m_node_type)
         {
@@ -372,6 +375,7 @@ public:
         }
 
         rhs.m_node_type = NodeType::NULL_OBJECT;
+        rhs.m_yaml_version_type = YamlVersionType::VER_1_2;
         rhs.m_node_value.mapping = nullptr;
         rhs.m_anchor_name = nullptr;
     }
@@ -583,7 +587,7 @@ public:
      * @param anchor_node An anchor node to be referenced by the newly constructed BasicNode object.
      * @return BasicNode A constructed BasicNode object of alias type.
      */
-    static BasicNode AliasOf(BasicNode& anchor_node)
+    static BasicNode AliasOf(const BasicNode& anchor_node)
     {
         if (!anchor_node.m_anchor_name || anchor_node.m_anchor_name->empty())
         {
@@ -941,6 +945,26 @@ public:
     }
 
     /**
+     * @brief Get the YAML version specification for this BasicNode object.
+     *
+     * @return YamlVersionType The YAML version specification.
+     */
+    YamlVersionType GetVersion() const noexcept
+    {
+        return m_yaml_version_type;
+    }
+
+    /**
+     * @brief Set the YAML version specification for this BasicNode object.
+     *
+     * @param version The YAML version specification.
+     */
+    void SetVersion(const YamlVersionType version) noexcept
+    {
+        m_yaml_version_type = version;
+    }
+
+    /**
      * @brief Check whether or not this BasicNode object has already had any anchor name.
      *
      * @return true If this BasicNode object has already had any anchor name.
@@ -1232,6 +1256,7 @@ public:
     {
         using std::swap;
         swap(m_node_type, rhs.m_node_type);
+        swap(m_yaml_version_type, rhs.m_yaml_version_type);
 
         NodeValue tmp {};
         std::memcpy(&tmp, &m_node_value, sizeof(NodeValue));
@@ -1380,6 +1405,8 @@ public:
 private:
     /** The current node value type. */
     NodeType m_node_type {NodeType::NULL_OBJECT};
+    /** The YAML version specification. */
+    YamlVersionType m_yaml_version_type {YamlVersionType::VER_1_2};
     /** The current node value. */
     NodeValue m_node_value {};
     /** The anchor name for this node. */

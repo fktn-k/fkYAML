@@ -1306,6 +1306,29 @@ TEST_CASE("NodeClassTest_SizeGetterTest", "[NodeClassTest]")
 }
 
 //
+// test cases for YAML version property getter/setter
+//
+
+TEST_CASE("NodeClassTest_SetVersionTest", "[NodeClassTest]")
+{
+    fkyaml::Node node;
+    node.SetVersion(fkyaml::YamlVersionType::VER_1_1);
+    REQUIRE(node.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+
+    node.SetVersion(fkyaml::YamlVersionType::VER_1_2);
+    REQUIRE(node.GetVersion() == fkyaml::YamlVersionType::VER_1_2);
+}
+
+TEST_CASE("NodeClassTest_GetVersionTest", "[NodeClassTest]")
+{
+    fkyaml::Node node;
+    REQUIRE(node.GetVersion() == fkyaml::YamlVersionType::VER_1_2);
+
+    node.SetVersion(fkyaml::YamlVersionType::VER_1_1);
+    REQUIRE(node.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+}
+
+//
 // test cases for anchor name property checker/getter/setter
 //
 

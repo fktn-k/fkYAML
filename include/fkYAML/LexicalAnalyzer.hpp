@@ -40,7 +40,9 @@ enum class LexicalTokenType
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
     ALIAS_PREFIX,          //!< the character for alias prefix `*`
     COMMENT_PREFIX,        //!< the character for comment prefix `#`
-    DIRECTIVE_PREFIX,      //!< the character for directive prefix `%`
+    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use GetYamlVersion() to get a value.
+    TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
+    INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
     SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
     SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
     SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
@@ -198,7 +200,7 @@ public:
             ScanComment();
             return LexicalTokenType::COMMENT_PREFIX;
         case '%': // directive prefix
-            return LexicalTokenType::DIRECTIVE_PREFIX;
+            return ScanDirective();
         case '-':
             if (RefNextChar() == ' ')
             {
@@ -432,6 +434,19 @@ public:
     }
 
     /**
+     * @brief Get the YAML version specification.
+     *
+     * @return const string_type& A YAML version specification.
+     */
+    const string_type& GetYamlVersion() const
+    {
+        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
+        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
+
+        return m_value_buffer;
+    }
+
+    /**
      * @brief Get the latest indent width stored in @a m_indent_width_stack.
      *
      * @return uint32_t The latest indent width.
@@ -480,22 +495,99 @@ private:
     {
         FK_YAML_ASSERT(RefCurrentChar() == '#');
 
-        while (true)
+        SkipUntilLineEnd();
+        return LexicalTokenType::COMMENT_PREFIX;
+    }
+
+    /**
+     * @brief Scan directives starting with the prefix '%'
+     * @note Currently, only %YAML directive is supported. If not, returns invalid or throws an exception.
+     *
+     * @return LexicalTokenType The lexical token type for directives.
+     */
+    LexicalTokenType ScanDirective()
+    {
+        FK_YAML_ASSERT(RefCurrentChar() == '%');
+
+        switch (GetNextChar())
         {
-            switch (GetNextChar())
+        case 'T': {
+            if (GetNextChar() != 'A' || GetNextChar() != 'G')
             {
-            case '\r':
-                if (RefNextChar() == '\n')
-                {
-                    GetNextChar();
-                }
-            case '\n':
-            case '\0':
-                return LexicalTokenType::COMMENT_PREFIX;
-            default:
-                break;
+                SkipUntilLineEnd();
+                return LexicalTokenType::INVALID_DIRECTIVE;
             }
+            if (GetNextChar() != ' ')
+            {
+                throw Exception("There must be a half-width space between \"%TAG\" and tag info.");
+            }
+            // TODO: parse tag directives' information
+            return LexicalTokenType::TAG_DIRECTIVE;
         }
+        case 'Y':
+            if (GetNextChar() != 'A' || GetNextChar() != 'M' || GetNextChar() != 'L')
+            {
+                SkipUntilLineEnd();
+                return LexicalTokenType::INVALID_DIRECTIVE;
+            }
+            if (GetNextChar() != ' ')
+            {
+                throw Exception("There must be a half-width space between \"%YAML\" and a version number.");
+            }
+            return ScanYamlVersionDirective();
+        default:
+            SkipUntilLineEnd();
+            return LexicalTokenType::INVALID_DIRECTIVE;
+        }
+    }
+
+    /**
+     * @brief Scan a YAML version directive.
+     * @note Only 1.1 and 1.2 are supported. If not, throws an exception.
+     *
+     * @return LexicalTokenType The lexical token type for YAML version directives.
+     */
+    LexicalTokenType ScanYamlVersionDirective()
+    {
+        m_value_buffer.clear();
+
+        if (GetNextChar() != '1')
+        {
+            throw Exception("Invalid YAML major version found.");
+        }
+        m_value_buffer.push_back(RefCurrentChar());
+
+        if (GetNextChar() != '.')
+        {
+            throw Exception("A period must be followed after the YAML major version.");
+        }
+        m_value_buffer.push_back(RefCurrentChar());
+
+        switch (GetNextChar())
+        {
+        case '1':
+        case '2':
+            m_value_buffer.push_back(RefCurrentChar());
+            break;
+        case '0':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            throw Exception("Unsupported YAML version.");
+        default:
+            throw Exception("YAML version must be specified with digits and periods.");
+        }
+
+        if (GetNextChar() != ' ' && RefCurrentChar() != '\r' && RefCurrentChar() != '\n')
+        {
+            throw Exception("Only YAML version 1.1/1.2 are supported.");
+        }
+
+        return LexicalTokenType::YAML_VER_DIRECTIVE;
     }
 
     /**
@@ -554,18 +646,15 @@ private:
             return (ret == LexicalTokenType::FLOAT_NUMBER_VALUE) ? ret : LexicalTokenType::SIGNED_INT_VALUE;
         }
 
-        if (next == '.')
+        const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+        if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
         {
-            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
-            if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
+            m_value_buffer += tmp_str;
+            for (int i = 0; i < 4; ++i)
             {
-                m_value_buffer += tmp_str;
-                for (int i = 0; i < 4; ++i)
-                {
-                    GetNextChar();
-                }
-                return LexicalTokenType::FLOAT_NUMBER_VALUE;
+                GetNextChar();
             }
+            return LexicalTokenType::FLOAT_NUMBER_VALUE;
         }
         throw Exception("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
     }
@@ -742,10 +831,21 @@ private:
 
         for (;; current = GetNextChar())
         {
+            if (current == ' ')
+            {
+                if (!needs_last_double_quote && !needs_last_single_quote)
+                {
+                    return LexicalTokenType::STRING_VALUE;
+                }
+                m_value_buffer.push_back(current);
+                continue;
+            }
+
             if (current == '\"')
             {
                 if (needs_last_double_quote)
                 {
+                    GetNextChar();
                     return LexicalTokenType::STRING_VALUE;
                 }
 
@@ -1084,6 +1184,29 @@ private:
             case '\r':
                 break;
             default:
+                return;
+            }
+            GetNextChar();
+        }
+    }
+
+    /**
+     * @brief Skip reading in the current line.
+     */
+    void SkipUntilLineEnd()
+    {
+        while (true)
+        {
+            switch (RefCurrentChar())
+            {
+            case '\r':
+                if (RefNextChar() == '\n')
+                {
+                    GetNextChar();
+                }
+            case '\n':
+                GetNextChar();
+            case '\0':
                 return;
             }
             GetNextChar();

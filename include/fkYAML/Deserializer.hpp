@@ -87,6 +87,8 @@ public:
         string_type anchor_name {};
         bool needs_anchor_impl = false;
 
+        YamlVersionType yaml_version {YamlVersionType::VER_1_2};
+
         LexicalTokenType type = m_lexer.GetNextToken();
         while (type != LexicalTokenType::END_OF_BUFFER)
         {
@@ -105,9 +107,11 @@ public:
                     p_current_node->operator[](0) = BasicNodeType::Mapping();
                     node_stack.emplace_back(p_current_node);
                     p_current_node = &(p_current_node->operator[](0));
+                    p_current_node->SetVersion(yaml_version);
                     p_current_node->ToMapping().emplace(tmp_str, BasicNodeType());
                     node_stack.emplace_back(p_current_node);
                     p_current_node = &(p_current_node->operator[](tmp_str));
+                    p_current_node->SetVersion(yaml_version);
                 }
                 break;
             case LexicalTokenType::VALUE_SEPARATOR:
@@ -138,6 +142,7 @@ public:
                 if (p_current_node->IsSequence())
                 {
                     p_current_node->ToSequence().emplace_back(BasicNodeType::AliasOf(anchor_table.at(anchor_name)));
+                    p_current_node->ToSequence().back().SetVersion(yaml_version);
                     anchor_name.clear();
                     break;
                 }
@@ -146,12 +151,23 @@ public:
                 break;
             }
             case LexicalTokenType::COMMENT_PREFIX:
-            case LexicalTokenType::DIRECTIVE_PREFIX:
+                break;
+            case LexicalTokenType::YAML_VER_DIRECTIVE: {
+                FK_YAML_ASSERT(p_current_node == &root);
+                yaml_version = ConvertToVersionType(m_lexer.GetYamlVersion());
+                p_current_node->SetVersion(yaml_version);
+                break;
+            }
+            case LexicalTokenType::TAG_DIRECTIVE:
+                // TODO: implement tag directive deserialization.
+            case LexicalTokenType::INVALID_DIRECTIVE:
+                // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case LexicalTokenType::SEQUENCE_BLOCK_PREFIX:
                 if (p_current_node->IsNull())
                 {
                     *p_current_node = BasicNodeType::Sequence();
+                    p_current_node->SetVersion(yaml_version);
                     break;
                 }
                 if (p_current_node->IsMapping())
@@ -165,6 +181,7 @@ public:
                     // for the second or later mapping items in a sequence node.
                     node_stack.back()->ToSequence().emplace_back(BasicNodeType::Mapping());
                     p_current_node = &(node_stack.back()->ToSequence().back());
+                    p_current_node->SetVersion(yaml_version);
                     break;
                 }
                 if (!p_current_node->IsSequence())
@@ -178,6 +195,7 @@ public:
                     throw Exception("Cannot assign a sequence value as a key.");
                 }
                 *p_current_node = BasicNodeType::Sequence();
+                p_current_node->SetVersion(yaml_version);
                 break;
             case LexicalTokenType::SEQUENCE_FLOW_END:
                 if (!p_current_node->IsSequence())
@@ -193,6 +211,7 @@ public:
                     throw Exception("Cannot assign a mapping value as a key.");
                 }
                 *p_current_node = BasicNodeType::Mapping();
+                p_current_node->SetVersion(yaml_version);
                 break;
             case LexicalTokenType::MAPPING_FLOW_BEGIN:
                 if (p_current_node->IsMapping())
@@ -200,6 +219,7 @@ public:
                     throw Exception("Cannot assign a mapping value as a key.");
                 }
                 *p_current_node = BasicNodeType::Mapping();
+                p_current_node->SetVersion(yaml_version);
                 break;
             case LexicalTokenType::MAPPING_FLOW_END:
                 if (!p_current_node->IsMapping())
@@ -222,8 +242,13 @@ public:
                 if (p_current_node->IsSequence())
                 {
                     p_current_node->ToSequence().emplace_back();
+                    p_current_node->ToSequence().back().SetVersion(yaml_version);
+                    break;
                 }
 
+                p_current_node->SetVersion(yaml_version);
+                p_current_node = node_stack.back();
+                node_stack.pop_back();
                 break;
             case LexicalTokenType::BOOLEAN_VALUE:
                 if (p_current_node->IsMapping())
@@ -234,6 +259,7 @@ public:
                 if (p_current_node->IsSequence())
                 {
                     p_current_node->ToSequence().emplace_back(BasicNodeType::BooleanScalar(m_lexer.GetBoolean()));
+                    p_current_node->ToSequence().back().SetVersion(yaml_version);
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
@@ -241,20 +267,20 @@ public:
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
+                    break;
                 }
-                else // a scalar node
+                // a scalar node
+                *p_current_node = BasicNodeType::BooleanScalar(m_lexer.GetBoolean());
+                p_current_node->SetVersion(yaml_version);
+                if (needs_anchor_impl)
                 {
-                    *p_current_node = BasicNodeType::BooleanScalar(m_lexer.GetBoolean());
-                    if (needs_anchor_impl)
-                    {
-                        p_current_node->AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = *p_current_node;
-                        needs_anchor_impl = false;
-                        anchor_name.clear();
-                    }
-                    p_current_node = node_stack.back();
-                    node_stack.pop_back();
+                    p_current_node->AddAnchorName(anchor_name);
+                    anchor_table[anchor_name] = *p_current_node;
+                    needs_anchor_impl = false;
+                    anchor_name.clear();
                 }
+                p_current_node = node_stack.back();
+                node_stack.pop_back();
                 break;
             case LexicalTokenType::SIGNED_INT_VALUE:
                 if (p_current_node->IsMapping())
@@ -266,6 +292,7 @@ public:
                 {
                     p_current_node->ToSequence().emplace_back(
                         BasicNodeType::SignedIntegerScalar(m_lexer.GetSignedInt()));
+                    p_current_node->ToSequence().back().SetVersion(yaml_version);
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
@@ -273,20 +300,20 @@ public:
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
+                    break;
                 }
-                else // a scalar node
+                // a scalar node
+                *p_current_node = BasicNodeType::SignedIntegerScalar(m_lexer.GetSignedInt());
+                p_current_node->SetVersion(yaml_version);
+                if (needs_anchor_impl)
                 {
-                    *p_current_node = BasicNodeType::SignedIntegerScalar(m_lexer.GetSignedInt());
-                    if (needs_anchor_impl)
-                    {
-                        p_current_node->AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = *p_current_node;
-                        needs_anchor_impl = false;
-                        anchor_name.clear();
-                    }
-                    p_current_node = node_stack.back();
-                    node_stack.pop_back();
+                    p_current_node->AddAnchorName(anchor_name);
+                    anchor_table[anchor_name] = *p_current_node;
+                    needs_anchor_impl = false;
+                    anchor_name.clear();
                 }
+                p_current_node = node_stack.back();
+                node_stack.pop_back();
                 break;
             case LexicalTokenType::UNSIGNED_INT_VALUE:
                 if (p_current_node->IsMapping())
@@ -298,6 +325,7 @@ public:
                 {
                     p_current_node->ToSequence().emplace_back(
                         BasicNodeType::UnsignedIntegerScalar(m_lexer.GetUnsignedInt()));
+                    p_current_node->ToSequence().back().SetVersion(yaml_version);
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
@@ -305,20 +333,19 @@ public:
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
+                    break;
                 }
-                else
+                // a scalar node
+                *p_current_node = BasicNodeType::UnsignedIntegerScalar(m_lexer.GetUnsignedInt());
+                if (needs_anchor_impl)
                 {
-                    *p_current_node = BasicNodeType::UnsignedIntegerScalar(m_lexer.GetUnsignedInt());
-                    if (needs_anchor_impl)
-                    {
-                        p_current_node->AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = *p_current_node;
-                        needs_anchor_impl = false;
-                        anchor_name.clear();
-                    }
-                    p_current_node = node_stack.back();
-                    node_stack.pop_back();
+                    p_current_node->AddAnchorName(anchor_name);
+                    anchor_table[anchor_name] = *p_current_node;
+                    needs_anchor_impl = false;
+                    anchor_name.clear();
                 }
+                p_current_node = node_stack.back();
+                node_stack.pop_back();
                 break;
             case LexicalTokenType::FLOAT_NUMBER_VALUE:
                 if (p_current_node->IsMapping())
@@ -330,6 +357,7 @@ public:
                 {
                     p_current_node->ToSequence().emplace_back(
                         BasicNodeType::FloatNumberScalar(m_lexer.GetFloatNumber()));
+                    p_current_node->ToSequence().back().SetVersion(yaml_version);
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
@@ -337,20 +365,20 @@ public:
                         needs_anchor_impl = false;
                         anchor_name.clear();
                     }
+                    break;
                 }
-                else // a scalar
+                // a scalar node
+                *p_current_node = BasicNodeType::FloatNumberScalar(m_lexer.GetFloatNumber());
+                p_current_node->SetVersion(yaml_version);
+                if (needs_anchor_impl)
                 {
-                    *p_current_node = BasicNodeType::FloatNumberScalar(m_lexer.GetFloatNumber());
-                    if (needs_anchor_impl)
-                    {
-                        p_current_node->AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = *p_current_node;
-                        needs_anchor_impl = false;
-                        anchor_name.clear();
-                    }
-                    p_current_node = node_stack.back();
-                    node_stack.pop_back();
+                    p_current_node->AddAnchorName(anchor_name);
+                    anchor_table[anchor_name] = *p_current_node;
+                    needs_anchor_impl = false;
+                    anchor_name.clear();
                 }
+                p_current_node = node_stack.back();
+                node_stack.pop_back();
                 break;
             case LexicalTokenType::STRING_VALUE:
                 if (p_current_node->IsMapping())
@@ -363,6 +391,7 @@ public:
                 if (p_current_node->IsSequence())
                 {
                     p_current_node->ToSequence().emplace_back(BasicNodeType::StringScalar(m_lexer.GetString()));
+                    p_current_node->ToSequence().back().SetVersion(yaml_version);
                     if (needs_anchor_impl)
                     {
                         p_current_node->ToSequence().back().AddAnchorName(anchor_name);
@@ -374,6 +403,7 @@ public:
                 }
                 // a scalar node
                 *p_current_node = BasicNodeType::StringScalar(m_lexer.GetString());
+                p_current_node->SetVersion(yaml_version);
                 if (needs_anchor_impl)
                 {
                     p_current_node->AddAnchorName(anchor_name);
@@ -392,6 +422,22 @@ public:
         }
 
         return root;
+    }
+
+private:
+    /**
+     * @brief Convert a YAML version string to YAMLVersionType object.
+     *
+     * @param version_str A YAML version string.
+     * @return YamlVersionType A converted YAMLVersionType object.
+     */
+    YamlVersionType ConvertToVersionType(const string_type& version_str) const noexcept
+    {
+        if (version_str == "1.1")
+        {
+            return YamlVersionType::VER_1_1;
+        }
+        return YamlVersionType::VER_1_2;
     }
 
 private:
