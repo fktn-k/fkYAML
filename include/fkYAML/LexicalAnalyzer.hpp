@@ -490,22 +490,8 @@ private:
     {
         FK_YAML_ASSERT(RefCurrentChar() == '#');
 
-        while (true)
-        {
-            switch (GetNextChar())
-            {
-            case '\r':
-                if (RefNextChar() == '\n')
-                {
-                    GetNextChar();
-                }
-            case '\n':
-            case '\0':
-                return LexicalTokenType::COMMENT_PREFIX;
-            default:
-                break;
-            }
-        }
+        SkipUntilLineEnd();
+        return LexicalTokenType::COMMENT_PREFIX;
     }
 
     LexicalTokenType ScanDirective()
@@ -517,23 +503,8 @@ private:
         case 'T': {
             if (GetNextChar() != 'A' || GetNextChar() != 'G')
             {
-                while (true)
-                {
-                    // skip reading until the end of input buffer or the next line.
-                    switch (RefCurrentChar())
-                    {
-                    case '\r':
-                        if (RefNextChar() == '\n')
-                        {
-                            GetNextChar();
-                        }
-                    case '\n':
-                        GetNextChar();
-                    case '\0':
-                        return LexicalTokenType::INVALID_DIRECTIVE;
-                    }
-                    GetNextChar();
-                }
+                SkipUntilLineEnd();
+                return LexicalTokenType::INVALID_DIRECTIVE;
             }
             if (GetNextChar() != ' ')
             {
@@ -545,23 +516,8 @@ private:
         case 'Y':
             if (GetNextChar() != 'A' || GetNextChar() != 'M' || GetNextChar() != 'L')
             {
-                while (true)
-                {
-                    // skip reading until the next line or the end of input buffer.
-                    switch (RefCurrentChar())
-                    {
-                    case '\r':
-                        if (RefNextChar() == '\n')
-                        {
-                            GetNextChar();
-                        }
-                    case '\n':
-                        GetNextChar();
-                    case '\0':
-                        return LexicalTokenType::INVALID_DIRECTIVE;
-                    }
-                    GetNextChar();
-                }
+                SkipUntilLineEnd();
+                return LexicalTokenType::INVALID_DIRECTIVE;
             }
             if (GetNextChar() != ' ')
             {
@@ -569,23 +525,8 @@ private:
             }
             return ScanYamlVersionDirective();
         default:
-            while (true)
-            {
-                // skip reading until the next line or the end of input buffer.
-                switch (RefCurrentChar())
-                {
-                case '\r':
-                    if (RefNextChar() == '\n')
-                    {
-                        GetNextChar();
-                    }
-                case '\n':
-                    GetNextChar();
-                case '\0':
-                    return LexicalTokenType::INVALID_DIRECTIVE;
-                }
-                GetNextChar();
-            }
+            SkipUntilLineEnd();
+            return LexicalTokenType::INVALID_DIRECTIVE;
         }
     }
 
@@ -1218,6 +1159,26 @@ private:
             case '\r':
                 break;
             default:
+                return;
+            }
+            GetNextChar();
+        }
+    }
+
+    void SkipUntilLineEnd()
+    {
+        while (true)
+        {
+            switch (RefCurrentChar())
+            {
+            case '\r':
+                if (RefNextChar() == '\n')
+                {
+                    GetNextChar();
+                }
+            case '\n':
+                GetNextChar();
+            case '\0':
                 return;
             }
             GetNextChar();
