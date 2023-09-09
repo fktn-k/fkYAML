@@ -494,6 +494,39 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
     }
 }
 
+TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[DeserializerClassTest]")
+{
+    fkyaml::Deserializer deserializer;
+    fkyaml::Node root;
+
+    REQUIRE_NOTHROW(root = deserializer.Deserialize("%YAML 1.1\nfoo: one\nbar: true\npi: 3.14"));
+
+    REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+    REQUIRE(root.IsMapping());
+    REQUIRE(root.Size() == 3);
+
+    REQUIRE_NOTHROW(root["foo"]);
+    fkyaml::Node& foo_node = root["foo"];
+    REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+    REQUIRE(foo_node.IsString());
+    REQUIRE_NOTHROW(foo_node.ToString());
+    REQUIRE(foo_node.ToString().compare("one") == 0);
+
+    REQUIRE_NOTHROW(root["bar"]);
+    fkyaml::Node& bar_node = root["bar"];
+    REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+    REQUIRE(bar_node.IsBoolean());
+    REQUIRE_NOTHROW(bar_node.ToBoolean());
+    REQUIRE(bar_node.ToBoolean() == true);
+
+    REQUIRE_NOTHROW(root["pi"]);
+    fkyaml::Node& pi_node = root["pi"];
+    REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+    REQUIRE(pi_node.IsFloatNumber());
+    REQUIRE_NOTHROW(pi_node.ToFloatNumber());
+    REQUIRE(pi_node.ToFloatNumber() == 3.14);
+}
+
 TEST_CASE("DeserializerClassTest_DeserializeNoMachingAnchorTest", "[DeserializerClassTest]")
 {
     fkyaml::Deserializer deserializer;

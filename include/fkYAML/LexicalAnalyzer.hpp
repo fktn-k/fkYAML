@@ -646,18 +646,15 @@ private:
             return (ret == LexicalTokenType::FLOAT_NUMBER_VALUE) ? ret : LexicalTokenType::SIGNED_INT_VALUE;
         }
 
-        if (next == '.')
+        const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
+        if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
         {
-            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
-            if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
+            m_value_buffer += tmp_str;
+            for (int i = 0; i < 4; ++i)
             {
-                m_value_buffer += tmp_str;
-                for (int i = 0; i < 4; ++i)
-                {
-                    GetNextChar();
-                }
-                return LexicalTokenType::FLOAT_NUMBER_VALUE;
+                GetNextChar();
             }
+            return LexicalTokenType::FLOAT_NUMBER_VALUE;
         }
         throw Exception("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
     }

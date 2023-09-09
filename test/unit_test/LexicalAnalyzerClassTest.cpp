@@ -346,6 +346,14 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanNaNTokenTest", "[LexicalAnalyzerClassTes
     }
 }
 
+TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidNumberTokenTest", "[LexicalAnalyzerClassTest]")
+{
+    auto buffer = GENERATE(std::string("-.test"), std::string("1.0.0"));
+    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
+    lexer.SetInputBuffer(buffer.c_str());
+    REQUIRE_THROWS_AS(lexer.GetNextToken(), fkyaml::Exception);
+}
+
 TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClassTest]")
 {
     using ValuePair = std::pair<std::string, fkyaml::NodeStringType>;

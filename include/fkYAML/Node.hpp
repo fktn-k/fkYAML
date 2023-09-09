@@ -279,7 +279,8 @@ public:
      * @param[in] rhs A BasicNode object to be copied with.
      */
     BasicNode(const BasicNode& rhs)
-        : m_node_type(rhs.m_node_type)
+        : m_node_type(rhs.m_node_type),
+          m_yaml_version_type(rhs.m_yaml_version_type)
     {
         switch (m_node_type)
         {
@@ -329,7 +330,8 @@ public:
      */
     BasicNode(BasicNode&& rhs) noexcept // NOLINT(bugprone-exception-escape)
         : m_node_type(rhs.m_node_type),
-          m_anchor_name(rhs.m_anchor_name)
+          m_anchor_name(rhs.m_anchor_name),
+          m_yaml_version_type(rhs.m_yaml_version_type)
     {
         switch (m_node_type)
         {
@@ -373,6 +375,7 @@ public:
         }
 
         rhs.m_node_type = NodeType::NULL_OBJECT;
+        rhs.m_yaml_version_type = YamlVersionType::VER_1_2;
         rhs.m_node_value.mapping = nullptr;
         rhs.m_anchor_name = nullptr;
     }
@@ -1253,6 +1256,7 @@ public:
     {
         using std::swap;
         swap(m_node_type, rhs.m_node_type);
+        swap(m_yaml_version_type, rhs.m_yaml_version_type);
 
         NodeValue tmp {};
         std::memcpy(&tmp, &m_node_value, sizeof(NodeValue));
