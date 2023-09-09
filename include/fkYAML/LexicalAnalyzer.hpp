@@ -831,10 +831,21 @@ private:
 
         for (;; current = GetNextChar())
         {
+            if (current == ' ')
+            {
+                if (!needs_last_double_quote && !needs_last_single_quote)
+                {
+                    return LexicalTokenType::STRING_VALUE;
+                }
+                m_value_buffer.push_back(current);
+                continue;
+            }
+
             if (current == '\"')
             {
                 if (needs_last_double_quote)
                 {
+                    GetNextChar();
                     return LexicalTokenType::STRING_VALUE;
                 }
 

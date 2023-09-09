@@ -9,6 +9,14 @@
 
 #include "fkYAML/Deserializer.hpp"
 
+TEST_CASE("DeserializerClassTest_InputStringTest", "[DeserializerClassTest]")
+{
+    fkyaml::Deserializer deserializer;
+
+    REQUIRE_NOTHROW(deserializer.Deserialize("test: hoge"));
+    REQUIRE_THROWS_AS(deserializer.Deserialize(nullptr), fkyaml::Exception);
+}
+
 TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerClassTest]")
 {
     fkyaml::Deserializer deserializer;
@@ -492,6 +500,35 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
         REQUIRE_NOTHROW(test_pi_node.ToFloatNumber());
         REQUIRE(test_pi_node.ToFloatNumber() == 3.14);
     }
+}
+
+TEST_CASE("DeserializerClassTest_DeserializeInputWithCommentTest", "[DeserializerClassTest]")
+{
+    fkyaml::Deserializer deserializer;
+    fkyaml::Node root;
+
+    REQUIRE_NOTHROW(root = deserializer.Deserialize("foo: one # comment\nbar: true\npi: 3.14"));
+
+    REQUIRE(root.IsMapping());
+    REQUIRE(root.Size() == 3);
+
+    REQUIRE_NOTHROW(root["foo"]);
+    fkyaml::Node& foo_node = root["foo"];
+    REQUIRE(foo_node.IsString());
+    REQUIRE_NOTHROW(foo_node.ToString());
+    REQUIRE(foo_node.ToString().compare("one") == 0);
+
+    REQUIRE_NOTHROW(root["bar"]);
+    fkyaml::Node& bar_node = root["bar"];
+    REQUIRE(bar_node.IsBoolean());
+    REQUIRE_NOTHROW(bar_node.ToBoolean());
+    REQUIRE(bar_node.ToBoolean() == true);
+
+    REQUIRE_NOTHROW(root["pi"]);
+    fkyaml::Node& pi_node = root["pi"];
+    REQUIRE(pi_node.IsFloatNumber());
+    REQUIRE_NOTHROW(pi_node.ToFloatNumber());
+    REQUIRE(pi_node.ToFloatNumber() == 3.14);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[DeserializerClassTest]")
