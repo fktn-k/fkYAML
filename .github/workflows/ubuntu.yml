@@ -65,8 +65,8 @@ jobs:
           cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-10
           cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-11
           cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-12
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-11
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-12
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-13
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-14
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-15
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-11
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-12
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-13
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-14
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-15
