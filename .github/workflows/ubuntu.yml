@@ -48,7 +48,7 @@ jobs:
     - name: Clang-Tidy check
       run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
 
-  variout-compiler-tests:
+  various-compiler-tests:
     runs-on: self-hosted
 
     steps:
