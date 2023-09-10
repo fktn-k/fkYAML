@@ -57,7 +57,7 @@ jobs:
           submodules: recursive
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build_compiler_tests
+        run: cmake -B ${{github.workspace}}/build_compiler_tests -DFK_YAML_CI=ON
 
       - name: Run builds & tests
         run: |
