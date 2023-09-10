@@ -80,7 +80,7 @@ option(FK_YAML_RunDoxygen     "Generate API documentation with doxygen." ${FK_YA
 option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_FORMAT_INIT})
 option(FK_YAML_RunClangTidy   "Run clang-tidy when FK_YAML_RUN_CLANG_TIDY is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_TIDY_INIT})
 
-if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat OR FK_YAML_RunClangTidy)
+if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat OR FK_YAML_RunClangTidy OR FK_YAML_CI)
   set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
   if(FK_YAML_BuildTests)
     set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2/contrib")
@@ -143,6 +143,11 @@ endif()
 if(FK_YAML_RunClangTidy)
   add_subdirectory(clang_tidy)
   add_dependencies(ClangTidyHelper "${FK_YAML_ClangFormatTargetPrefix}${FK_YAML_TARGET_NAME}")
+endif()
+
+# Configure targets for CI.
+if(FK_YAML_CI)
+  include(ci)
 endif()
 
 #

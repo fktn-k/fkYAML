@@ -47,3 +47,26 @@ jobs:
 
     - name: Clang-Tidy check
       run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
+
+  variout-compiler-tests:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build_compiler_tests
+
+      - name: Run builds & tests
+        run: |
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-9
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-10
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-11
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-12
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-11
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-12
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-13
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-14
+          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang-15
