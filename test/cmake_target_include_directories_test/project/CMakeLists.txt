@@ -3,4 +3,4 @@ cmake_minimum_required(VERSION 3.1)
 project(CMakeTargetIncludeDirectoriesTestProject)
 
 add_executable(CMakeTargetIncludeDirectoriesTest main.cpp)
-target_include_directories(CMakeTargetIncludeDirectoriesTest PUBLIC ${fkYAML_source_dir})
+target_include_directories(CMakeTargetIncludeDirectoriesTest PUBLIC ${fkYAML_source_dir}/include)
