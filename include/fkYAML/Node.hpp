@@ -259,7 +259,13 @@ public:
     /**
      * @brief Construct a new BasicNode object of null type.
      */
-    BasicNode() = default;
+    BasicNode() noexcept
+        : m_node_type(NodeType::NULL_OBJECT),
+          m_yaml_version_type(YamlVersionType::VER_1_2),
+          m_node_value(),
+          m_anchor_name(nullptr)
+    {
+    }
 
     /**
      * @brief Construct a new BasicNode object with a specified type.
@@ -269,7 +275,9 @@ public:
      */
     explicit BasicNode(const NodeType type)
         : m_node_type(type),
-          m_node_value(type)
+          m_yaml_version_type(YamlVersionType::VER_1_2),
+          m_node_value(type),
+          m_anchor_name(nullptr)
     {
     }
 
@@ -280,7 +288,8 @@ public:
      */
     BasicNode(const BasicNode& rhs)
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type)
+          m_yaml_version_type(rhs.m_yaml_version_type),
+          m_anchor_name(nullptr)
     {
         switch (m_node_type)
         {
@@ -330,8 +339,8 @@ public:
      */
     BasicNode(BasicNode&& rhs) noexcept // NOLINT(bugprone-exception-escape)
         : m_node_type(rhs.m_node_type),
-          m_anchor_name(rhs.m_anchor_name),
-          m_yaml_version_type(rhs.m_yaml_version_type)
+          m_yaml_version_type(rhs.m_yaml_version_type),
+          m_anchor_name(rhs.m_anchor_name)
     {
         switch (m_node_type)
         {
@@ -1404,13 +1413,13 @@ public:
 
 private:
     /** The current node value type. */
-    NodeType m_node_type {NodeType::NULL_OBJECT};
+    NodeType m_node_type;
     /** The YAML version specification. */
-    YamlVersionType m_yaml_version_type {YamlVersionType::VER_1_2};
+    YamlVersionType m_yaml_version_type;
     /** The current node value. */
-    NodeValue m_node_value {};
+    NodeValue m_node_value;
     /** The anchor name for this node. */
-    std::string* m_anchor_name {nullptr};
+    std::string* m_anchor_name;
 };
 
 /**
