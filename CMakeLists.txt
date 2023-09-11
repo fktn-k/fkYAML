@@ -66,8 +66,9 @@ else()
   endif()
 endif()
 
-if(FK_YAML_CI)
+if(FK_YAML_DEFAULT_CI OR FK_YAML_CUSTOM_CI)
   # disable execution of clang-format/clang-tidy by default during CI.
+  # these checks will be executed separately.
   set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
   set(FK_YAML_RUN_CLANG_TIDY_INIT OFF)
 endif()
@@ -80,7 +81,7 @@ option(FK_YAML_RunDoxygen     "Generate API documentation with doxygen." ${FK_YA
 option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_FORMAT_INIT})
 option(FK_YAML_RunClangTidy   "Run clang-tidy when FK_YAML_RUN_CLANG_TIDY is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_TIDY_INIT})
 
-if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat OR FK_YAML_RunClangTidy OR FK_YAML_CI)
+if(FK_YAML_BuildTests OR FK_YAML_RunClangFormat OR FK_YAML_RunClangTidy OR FK_YAML_CUSTOM_CI)
   set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
   if(FK_YAML_BuildTests)
     set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2/contrib")
@@ -146,7 +147,7 @@ if(FK_YAML_RunClangTidy)
 endif()
 
 # Configure targets for CI.
-if(FK_YAML_CI)
+if(FK_YAML_CUSTOM_CI)
   include(ci)
 endif()
 

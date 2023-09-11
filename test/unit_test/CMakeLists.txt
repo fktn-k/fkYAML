@@ -1,4 +1,4 @@
-if(MSVC)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
     string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   else()
@@ -7,10 +7,16 @@ if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /utf-8 /permissive-")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Z7")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
-else()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-terminate")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 endif()
-set(CMAKE_CXX_STANDARD 11)
+
+if("${FK_YAML_TestTargetCxxStandard}" STREQUAL "")
+  # Apply minimum required C++ standard check by default.
+  set(FK_YAML_TestTargetCxxStandard 11)
+endif()
 
 add_sanitizer_flags(${FK_YAML_RunSanitizers})
 
@@ -32,6 +38,12 @@ target_include_directories(${TEST_TARGET} PRIVATE
 
 target_link_libraries(${TEST_TARGET}
   Catch2::Catch2
+)
+
+# set and require the target C++ standard. (defaults to C++11)
+set_target_properties(${TEST_TARGET} PROPERTIES
+  CXX_STANDARD ${FK_YAML_TestTargetCxxStandard}
+  CXX_STANDARD_REQUIRED ON
 )
 
 include(Catch)

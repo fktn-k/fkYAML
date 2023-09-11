@@ -24,7 +24,7 @@ jobs:
         submodules: recursive
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_CI=ON -DFK_YAML_RUN_SANITIZERS=ON
+      run: cmake -B ${{github.workspace}}/build_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_DEFAULT_CI=ON -DFK_YAML_RUN_SANITIZERS=ON
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build_${{matrix.build_type}} --config ${{matrix.build_type}}
@@ -48,8 +48,30 @@ jobs:
     - name: Clang-Tidy check
       run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
 
-  various-compiler-tests:
+  tests-for-self-hosted-runner:
     runs-on: self-hosted
+    strategy:
+      matrix:
+        target:
+          - ci_test_compiler_clang++-11
+          - ci_test_compiler_clang++-12
+          - ci_test_compiler_clang++-13
+          - ci_test_compiler_clang++-14
+          - ci_test_compiler_clang++-15
+          - ci_test_compiler_g++-9
+          - ci_test_compiler_g++-10
+          - ci_test_compiler_g++-11
+          - ci_test_compiler_g++-12
+          - ci_test_clangxx_cxx11
+          - ci_test_clangxx_cxx14
+          - ci_test_clangxx_cxx17
+          - ci_test_clangxx_cxx20
+          - ci_test_clangxx_cxx23
+          - ci_test_gxx_cxx11
+          - ci_test_gxx_cxx14
+          - ci_test_gxx_cxx17
+          - ci_test_gxx_cxx20
+          - ci_test_gxx_cxx23
 
     steps:
       - uses: actions/checkout@v3
@@ -57,16 +79,11 @@ jobs:
           submodules: recursive
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build_compiler_tests -DFK_YAML_CI=ON
+        run: cmake -B ${{github.workspace}}/build -DFK_YAML_CUSTOM_CI=ON
 
-      - name: Run builds & tests
+      - name: Run builds & tests for the test target
         run: |
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-9
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-10
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-11
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_g++-12
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-11
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-12
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-13
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-14
-          cmake --build ${{github.workspace}}/build_compiler_tests --target ci_test_compiler_clang++-15
+          cmake --build ${{github.workspace}}/build --target ${{matrix.target}}
+
+      - name: Clean up build directories
+        run: rm -rf ${{github.workspace}}/build
