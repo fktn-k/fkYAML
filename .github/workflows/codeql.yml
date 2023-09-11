@@ -64,7 +64,7 @@ jobs:
     #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
 
     - run: |
-        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DFK_YAML_CI=ON
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DFK_YAML_DEFAULT_CI=ON
         cmake --build ${{github.workspace}}/build --config Release
 
     - name: Perform CodeQL Analysis
