@@ -48,7 +48,7 @@ jobs:
     - name: Clang-Tidy check
       run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
 
-  tests-for-self-hosted-runner:
+  tests-with-self-hosted-runner:
     runs-on: self-hosted
     strategy:
       matrix:
