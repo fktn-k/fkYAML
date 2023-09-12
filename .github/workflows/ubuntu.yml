@@ -48,8 +48,8 @@ jobs:
     - name: Clang-Tidy check
       run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
 
-  tests-with-self-hosted-runner:
-    runs-on: self-hosted
+  clang-tests-with-self-hosted-runner:
+    runs-on: [self-hosted, Linux, X64, clang]
     strategy:
       matrix:
         target:
@@ -58,15 +58,33 @@ jobs:
           - ci_test_compiler_clang++-13
           - ci_test_compiler_clang++-14
           - ci_test_compiler_clang++-15
-          - ci_test_compiler_g++-9
-          - ci_test_compiler_g++-10
-          - ci_test_compiler_g++-11
-          - ci_test_compiler_g++-12
           - ci_test_clang++_c++11
           - ci_test_clang++_c++14
           - ci_test_clang++_c++17
           - ci_test_clang++_c++20
           - ci_test_clang++_c++23
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DFK_YAML_CUSTOM_CI=ON
+
+      - name: Run builds & tests for the test target
+        run: |
+          cmake --build ${{github.workspace}}/build --target ${{matrix.target}}
+
+  gcc-tests-with-self-hosted-runner:
+    runs-on: [self-hosted, linux, x64, gcc]
+    strategy:
+      matrix:
+        target:
+          - ci_test_compiler_g++-9
+          - ci_test_compiler_g++-10
+          - ci_test_compiler_g++-11
+          - ci_test_compiler_g++-12
           - ci_test_g++_c++11
           - ci_test_g++_c++14
           - ci_test_g++_c++17
@@ -84,6 +102,3 @@ jobs:
       - name: Run builds & tests for the test target
         run: |
           cmake --build ${{github.workspace}}/build --target ${{matrix.target}}
-
-      - name: Clean up build directories
-        run: rm -rf ${{github.workspace}}/build
