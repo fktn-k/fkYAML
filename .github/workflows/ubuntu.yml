@@ -48,7 +48,7 @@ jobs:
     - name: Clang-Tidy check
       run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
 
-  tests-for-self-hosted-runner:
+  tests-with-self-hosted-runner:
     runs-on: self-hosted
     strategy:
       matrix:
@@ -62,16 +62,16 @@ jobs:
           - ci_test_compiler_g++-10
           - ci_test_compiler_g++-11
           - ci_test_compiler_g++-12
-          - ci_test_clangxx_cxx11
-          - ci_test_clangxx_cxx14
-          - ci_test_clangxx_cxx17
-          - ci_test_clangxx_cxx20
-          - ci_test_clangxx_cxx23
-          - ci_test_gxx_cxx11
-          - ci_test_gxx_cxx14
-          - ci_test_gxx_cxx17
-          - ci_test_gxx_cxx20
-          - ci_test_gxx_cxx23
+          - ci_test_clang++_c++11
+          - ci_test_clang++_c++14
+          - ci_test_clang++_c++17
+          - ci_test_clang++_c++20
+          - ci_test_clang++_c++23
+          - ci_test_g++_c++11
+          - ci_test_g++_c++14
+          - ci_test_g++_c++17
+          - ci_test_g++_c++20
+          - ci_test_g++_c++23
 
     steps:
       - uses: actions/checkout@v3

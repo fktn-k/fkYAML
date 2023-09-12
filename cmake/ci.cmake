@@ -23,7 +23,7 @@ foreach(COMPILER clang++-11 clang++-12 clang++-13 clang++-14 clang++-15 g++-9 g+
   find_program(COMPILER_TOOL NAMES ${COMPILER})
   if(COMPILER_TOOL)
     add_custom_target(ci_test_compiler_${COMPILER}
-      COMMAND CXX=${COMPILER} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_DEFAULT_CI=ON
+      COMMAND CXX=${COMPILER} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_CUSTOM_CI=ON
         -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_compiler_${COMPILER}
       COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_compiler_${COMPILER} --config Debug
       COMMAND cd ${PROJECT_BINARY_DIR}/build_compiler_${COMPILER} && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
@@ -38,21 +38,21 @@ endforeach()
 ###################################################################
 
 foreach(TARGET_CXX_STANDARD 11 14 17 20 23)
-  add_custom_target(ci_test_clangxx_cxx${TARGET_CXX_STANDARD}
-    COMMAND CXX=${CLANGXX_TOOL} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_DEFAULT_CI=ON
+  add_custom_target(ci_test_clang++_c++${TARGET_CXX_STANDARD}
+    COMMAND CXX=${CLANGXX_TOOL} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_CUSTOM_CI=ON
       -DFK_YAML_TestTargetCxxStandard=${TARGET_CXX_STANDARD}
-      -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_clangxx_cxx${TARGET_CXX_STANDARD}
-    COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_clangxx_cxx${TARGET_CXX_STANDARD} --config Debug
-    COMMAND cd ${PROJECT_BINARY_DIR}/build_clangxx_cxx${TARGET_CXX_STANDARD} && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
+      -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_clang++_c++${TARGET_CXX_STANDARD}
+    COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_clang++_c++${TARGET_CXX_STANDARD} --config Debug
+    COMMAND cd ${PROJECT_BINARY_DIR}/build_clang++_c++${TARGET_CXX_STANDARD} && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
     COMMENT "Compile and test with clang++ for C++${TARGET_CXX_STANDARD}"
   )
 
-  add_custom_target(ci_test_gxx_cxx${TARGET_CXX_STANDARD}
-    COMMAND CXX=${GXX_TOOL} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_DEFAULT_CI=ON
+  add_custom_target(ci_test_g++_c++${TARGET_CXX_STANDARD}
+    COMMAND CXX=${GXX_TOOL} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_CUSTOM_CI=ON
       -DFK_YAML_TestTargetCxxStandard=${TARGET_CXX_STANDARD}
-      -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_gxx_cxx${TARGET_CXX_STANDARD}
-    COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_gxx_cxx${TARGET_CXX_STANDARD} --config Debug
-    COMMAND cd ${PROJECT_BINARY_DIR}/build_gxx_cxx${TARGET_CXX_STANDARD} && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
+      -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_g++_c++${TARGET_CXX_STANDARD}
+    COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_g++_c++${TARGET_CXX_STANDARD} --config Debug
+    COMMAND cd ${PROJECT_BINARY_DIR}/build_g++_c++${TARGET_CXX_STANDARD} && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
     COMMENT "Compile and test with g++ for C++${CXX_STANDARD}"
   )
 endforeach()
