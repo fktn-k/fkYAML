@@ -147,7 +147,7 @@ RemoveBracesLLVM: false
 # RequiresExpressionIndentation: OuterScope # since clang-format 16
 SeparateDefinitionBlocks: Leave
 ShortNamespaceLines: 1
-SortIncludes:    CaseSensitive
+SortIncludes: Never
 SortJavaStaticImport: Before
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false

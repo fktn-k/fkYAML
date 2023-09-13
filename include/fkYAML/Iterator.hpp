@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <iterator>
 
+#include "fkYAML/VersioningMacros.hpp"
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/NodeTypeTraits.hpp"
 
@@ -19,8 +20,7 @@
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
  */
-namespace fkyaml
-{
+FK_YAML_NAMESPACE_BEGIN
 
 /**
  * @struct SequenceIteratorTag
@@ -549,6 +549,6 @@ private:
     mutable IteratorHolder m_iterator_holder;
 };
 
-} // namespace fkyaml
+FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_ITERATOR_HPP_ */

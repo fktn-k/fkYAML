@@ -17,6 +17,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "fkYAML/VersioningMacros.hpp"
 #include "fkYAML/Assert.hpp"
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/Iterator.hpp"
@@ -27,8 +28,7 @@
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
  */
-namespace fkyaml
-{
+FK_YAML_NAMESPACE_BEGIN
 
 /**
  * @class BasicNode
@@ -1448,7 +1448,7 @@ using NodeFloatNumberType = typename Node::float_number_type;
 /** A default type for string Node values. */
 using NodeStringType = typename Node::string_type;
 
-} // namespace fkyaml
+FK_YAML_NAMESPACE_END
 
 namespace std
 {

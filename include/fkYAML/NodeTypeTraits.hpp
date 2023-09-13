@@ -11,8 +11,13 @@
 
 #include <type_traits>
 
-namespace fkyaml
-{
+#include "fkYAML/VersioningMacros.hpp"
+
+/**
+ * @namespace fkyaml
+ * @brief namespace for fkYAML library.
+ */
+FK_YAML_NAMESPACE_BEGIN
 
 // forward declaration for fkyaml::BasicNode<...>
 template <
@@ -36,6 +41,6 @@ struct IsBasicNode<BasicNode<
 {
 };
 
-} // namespace fkyaml
+FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_NODE_TYPE_TRAITS_HPP_ */
