@@ -11,12 +11,13 @@
 
 #include <cstdint>
 
+#include "fkYAML/VersioningMacros.hpp"
+
 /**
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
  */
-namespace fkyaml
-{
+FK_YAML_NAMESPACE_BEGIN
 
 /**
  * @enum YamlVersionType
@@ -28,6 +29,6 @@ enum class YamlVersionType : std::uint32_t
     VER_1_2, //!< YAML version 1.2
 };
 
-}; // namespace fkyaml
+FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_YAML_VERSION_TYPE_HPP_ */

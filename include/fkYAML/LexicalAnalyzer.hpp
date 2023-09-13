@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "fkYAML/VersioningMacros.hpp"
 #include "fkYAML/Assert.hpp"
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/NodeTypeTraits.hpp"
@@ -25,8 +26,7 @@
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
  */
-namespace fkyaml
-{
+FK_YAML_NAMESPACE_BEGIN
 
 /**
  * @enum LexicalTokenType
@@ -1287,6 +1287,6 @@ private:
     std::vector<uint32_t> m_indent_width_stack;
 };
 
-} // namespace fkyaml
+FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_LEXICAL_ANALIZER_HPP_ */

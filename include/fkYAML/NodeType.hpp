@@ -11,12 +11,13 @@
 
 #include <cstdint>
 
+#include "fkYAML/VersioningMacros.hpp"
+
 /**
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
  */
-namespace fkyaml
-{
+FK_YAML_NAMESPACE_BEGIN
 
 /**
  * @enum NodeType
@@ -34,6 +35,6 @@ enum class NodeType : std::uint32_t
     STRING,           //!< string value type
 };
 
-} // namespace fkyaml
+FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_NODE_TYPE_HPP_ */

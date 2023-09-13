@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <unordered_map>
 
+#include "fkYAML/VersioningMacros.hpp"
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/LexicalAnalyzer.hpp"
 #include "fkYAML/Node.hpp"
@@ -21,8 +22,7 @@
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
  */
-namespace fkyaml
-{
+FK_YAML_NAMESPACE_BEGIN
 
 /**
  * @class BasicDeserializer
@@ -450,6 +450,6 @@ private:
  */
 using Deserializer = BasicDeserializer<>;
 
-} // namespace fkyaml
+FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DESERIALIZER_HPP_ */
