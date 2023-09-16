@@ -28,6 +28,7 @@ add_executable(${TEST_TARGET}
   IteratorClassTest.cpp
   LexicalAnalyzerClassTest.cpp
   DeserializerClassTest.cpp
+  SerializerClassTest.cpp
   main.cpp
 )
 
