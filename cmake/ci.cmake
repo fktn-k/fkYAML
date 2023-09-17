@@ -62,7 +62,7 @@ endforeach()
 ##############################################
 
 set(CLANGXX_SANITIZER_FLAGS
-    "-g -O1 -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize=integer -fsanitize=nullability -fno-sanitize-recover=all -fno-sanitize=unsigned-integer-overflow -fno-sanitize=unsigned-shift-base")
+    "-g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined,bounds,integer,nullability -fno-sanitize-recover=all -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base")
 
 add_custom_target(ci_test_clang++_sanitizer
   COMMAND CXX=${CLANGXX_TOOL} CXXFLAGS=${CLANGXX_SANITIZER_FLAGS} ${CMAKE_COMMAND}
