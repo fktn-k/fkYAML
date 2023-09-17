@@ -66,7 +66,7 @@ set(CLANGXX_SANITIZER_FLAGS
 
 add_custom_target(ci_test_clang++_sanitizer
   COMMAND CXX=${CLANGXX_TOOL} CXXFLAGS=${CLANGXX_SANITIZER_FLAGS} ${CMAKE_COMMAND}
-    -DCMAKE_BUILD_TYPE=Debug -GNinja =DFK_YAML_CUSTOM_CI=ON
+    -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_CUSTOM_CI=ON
     -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_clang++_sanitizer
   COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_clang++_sanitizer --config Debug
   COMMAND cd ${PROJECT_BINARY_DIR}/build_clang++_sanitizer && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
