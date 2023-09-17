@@ -11,7 +11,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <map>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -22,6 +21,7 @@
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/Iterator.hpp"
 #include "fkYAML/NodeType.hpp"
+#include "fkYAML/OrderedMap.hpp"
 #include "fkYAML/YAMLVersionType.hpp"
 
 /**
@@ -44,7 +44,7 @@ FK_YAML_NAMESPACE_BEGIN
  */
 template <
     template <typename, typename...> class SequenceType = std::vector,
-    template <typename, typename, typename...> class MappingType = std::map, typename BooleanType = bool,
+    template <typename, typename, typename...> class MappingType = OrderedMap, typename BooleanType = bool,
     typename SignedIntegerType = std::int64_t, typename UnsignedIntegerType = std::uint64_t,
     typename FloatNumberType = double, typename StringType = std::string>
 class BasicNode

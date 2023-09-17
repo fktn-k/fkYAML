@@ -40,7 +40,7 @@ public:
     }
 
 private:
-    void SerializeNode(BasicNodeType& node, const uint32_t cur_indent, std::string& str, bool is_seq_item = false)
+    void SerializeNode(BasicNodeType& node, const uint32_t cur_indent, std::string& str)
     {
         switch (node.Type())
         {
@@ -52,13 +52,13 @@ private:
                 if (seq_item.IsScalar())
                 {
                     str += " ";
-                    SerializeNode(seq_item, cur_indent, str, true);
+                    SerializeNode(seq_item, cur_indent, str);
                     str += "\n";
                 }
                 else
                 {
                     str += "\n";
-                    SerializeNode(seq_item, cur_indent + 2, str, true);
+                    SerializeNode(seq_item, cur_indent + 2, str);
                 }
             }
             break;
@@ -66,7 +66,7 @@ private:
             for (auto itr = node.Begin(); itr != node.End(); ++itr)
             {
                 InsertIndentation(cur_indent, str);
-                SerializeKey(itr.Key(), cur_indent, str);
+                SerializeKey(itr.Key(), str);
                 if (itr->IsScalar())
                 {
                     str += " ";
@@ -132,7 +132,7 @@ private:
         }
     }
 
-    void SerializeKey(const std::string& key, const uint32_t cur_indent, std::string& str)
+    void SerializeKey(const std::string& key, std::string& str)
     {
         str += key + ":";
     }
