@@ -56,3 +56,19 @@ foreach(TARGET_CXX_STANDARD 11 14 17 20 23)
     COMMENT "Compile and test with g++ for C++${CXX_STANDARD}"
   )
 endforeach()
+
+##############################################
+#  Execute unit tests with clang sanitizers  #
+##############################################
+
+set(CLANGXX_SANITIZER_FLAGS
+    "-g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined,bounds,integer,nullability -fno-sanitize-recover=all -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base")
+
+add_custom_target(ci_test_clang++_sanitizer
+  COMMAND CXX=${CLANGXX_TOOL} CXXFLAGS=${CLANGXX_SANITIZER_FLAGS} ${CMAKE_COMMAND}
+    -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_CUSTOM_CI=ON
+    -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_clang++_sanitizer
+  COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_clang++_sanitizer --config Debug
+  COMMAND cd ${PROJECT_BINARY_DIR}/build_clang++_sanitizer && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
+  COMMENT "Compile and test with clang++ & sanitizers"
+)

@@ -18,8 +18,6 @@ if("${FK_YAML_TestTargetCxxStandard}" STREQUAL "")
   set(FK_YAML_TestTargetCxxStandard 11)
 endif()
 
-add_sanitizer_flags(${FK_YAML_RunSanitizers})
-
 set(TEST_TARGET "fkYAMLUnitTest")
 
 add_executable(${TEST_TARGET}
