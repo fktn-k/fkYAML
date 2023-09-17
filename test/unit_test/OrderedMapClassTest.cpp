@@ -51,6 +51,8 @@ TEST_CASE("OrderedMapClassTest_EmplaceTest", "[OrderedMapClassTest]")
     REQUIRE(map.emplace("foo", true).second == true);
     REQUIRE(map.emplace("foo", false).second == false);
     REQUIRE(map["foo"] == true);
+    REQUIRE(map.emplace("bar", false).second == true);
+    REQUIRE(map["bar"] == false);
 }
 
 TEST_CASE("OrderedMapClassTest_NonConstAtTest", "[OrderedMapClassTest]")
@@ -60,6 +62,7 @@ TEST_CASE("OrderedMapClassTest_NonConstAtTest", "[OrderedMapClassTest]")
     map.emplace("foo", true);
     REQUIRE_NOTHROW(map.at("foo"));
     REQUIRE(map.at("foo") == true);
+    REQUIRE_THROWS_AS(map.at("bar"), fkyaml::Exception);
 }
 
 TEST_CASE("OrderedMapClassTest_ConstAtTest", "[OrderedMapClassTest]")
@@ -71,6 +74,7 @@ TEST_CASE("OrderedMapClassTest_ConstAtTest", "[OrderedMapClassTest]")
     const fkyaml::OrderedMap<std::string, bool> map__ = map_;
     REQUIRE_NOTHROW(map__.at("foo"));
     REQUIRE(map__.at("foo") == true);
+    REQUIRE_THROWS_AS(map.at("bar"), fkyaml::Exception);
 }
 
 TEST_CASE("OrderedMapClassTest_NonConstFindTest", "[OrderedMapClassTest]")
@@ -81,6 +85,7 @@ TEST_CASE("OrderedMapClassTest_NonConstFindTest", "[OrderedMapClassTest]")
     REQUIRE(map.find("foo") != map.end());
     REQUIRE(map.find("foo")->first == "foo");
     REQUIRE(map.find("foo")->second == true);
+    REQUIRE(map.find("bar") == map.end());
 }
 
 TEST_CASE("OrderedMapClassTest_ConstFindTest", "[OrderedMapClassTest]")
@@ -93,4 +98,5 @@ TEST_CASE("OrderedMapClassTest_ConstFindTest", "[OrderedMapClassTest]")
     REQUIRE(map__.find("foo") != map__.end());
     REQUIRE(map__.find("foo")->first == "foo");
     REQUIRE(map__.find("foo")->second == true);
+    REQUIRE(map__.find("bar") == map__.end());
 }
