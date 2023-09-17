@@ -6,6 +6,10 @@
 #include "fkYAML/Node.hpp"
 #include "fkYAML/NodeType.hpp"
 #include "fkYAML/NodeTypeTraits.hpp"
+#include "fkYAML/OrderedMap.hpp"
+#include "fkYAML/Serializer.hpp"
+#include "fkYAML/VersioningMacros.hpp"
+#include "fkYAML/YAMLVersionType.hpp"
 
 // This is just a dummy main function for compilation.
 int main()

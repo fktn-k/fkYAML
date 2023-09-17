@@ -24,6 +24,7 @@ set(TEST_TARGET "fkYAMLUnitTest")
 
 add_executable(${TEST_TARGET}
   ExceptionClassTest.cpp
+  OrderedMapClassTest.cpp
   NodeClassTest.cpp
   IteratorClassTest.cpp
   LexicalAnalyzerClassTest.cpp
