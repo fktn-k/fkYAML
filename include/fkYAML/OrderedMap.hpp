@@ -34,7 +34,7 @@ FK_YAML_NAMESPACE_BEGIN
  */
 template <
     typename Key, typename Value, typename IgnoredCompare = std::less<Key>,
-    typename Allocator = std::allocator<std::pair<Key, Value>>>
+    typename Allocator = std::allocator<std::pair<const Key, Value>>>
 class OrderedMap : public std::vector<std::pair<const Key, Value>, Allocator>
 {
 public:
