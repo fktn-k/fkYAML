@@ -20,10 +20,9 @@ You can add YAML support into your projects by just including header files where
   - [Build YAML nodes programatically](#build-yaml-nodes-programatically)
 - [How to execute the unit tests](#how-to-execute-the-unit-tests)
 - [Supported compilers](#supported-compilers)
-- [Used third-party tools](#used-third-party-tools)
 - [License](#license)
 - [Contact](#contact)
-- [How to contribute](#how-to-contribute)
+- [Used third-party tools](#used-third-party-tools)
 
 ## Design Goals
 There are a lot of YAML library out there, and each may have its reason to exist.  
@@ -256,6 +255,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  
 SOFTWARE.  
 
+## Contact
+
+If you have questions regarding the fkYAML library, feel free to [open an issue](https://github.com/fktn-k/fkYAML/issues) at GitHub.  
+Please describe your request, problem, or question as detailed as possible, and also mention the version of the library you are using as well as the version of your compiler and operating system.  
+Opening an issue at GitHub allows other users and contributors to this library to collabolate.  
+If you want to make a private report (e.g., for a vulnerability or to attach an example that is not meant to be published), please send an email to <fktn.dev@gmail.com>.  
+
 ## Used third-party tools
 
 The fkYAML library itself depends only on C++ standards and licensed under the MIT licence.  
@@ -268,10 +274,3 @@ However, it is built, tested and documented with a lot of third-party tools and 
 - [**Doxygen**](https://www.doxygen.nl/) as the API documentation generator.
 - [**include-what-you-use**](https://github.com/include-what-you-use/include-what-you-use) to check the fkYAML library source files are each self-contained.
 - [**lcov**](https://ltp.sourceforge.net/coverage/lcov.php) to process coverage information and create an HTML result view.
-
-## Contact
-
-If you have questions regarding the fkYAML library, feel free to [open an issue](https://github.com/fktn-k/fkYAML/issues) at GitHub.  
-Please describe your request, problem, or question as detailed as possible, and also mention the version of the library you are using as well as the version of your compiler and operating system.  
-Opening an issue at GitHub allows other users and contributors to this library to collabolate.  
-If you want to make a private report (e.g., for a vulnerability or to attach an example that is not meant to be published), please send an email to <fktn.dev@gmail.com>.
