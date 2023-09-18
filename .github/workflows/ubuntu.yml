@@ -64,6 +64,7 @@ jobs:
           - ci_test_clang++_c++20
           - ci_test_clang++_c++23
           - ci_test_clang++_sanitizer
+          - ci_test_iwyu
 
     steps:
       - uses: actions/checkout@v3

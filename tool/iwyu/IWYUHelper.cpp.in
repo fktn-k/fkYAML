@@ -1,0 +1,6 @@
+#include "fkYAML/@REL_SRC_FILE@" // IWYU pragma: keep
+
+int main()
+{
+    return 0;
+}

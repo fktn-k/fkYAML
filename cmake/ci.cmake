@@ -10,6 +10,11 @@ execute_process(COMMAND ${GXX_TOOL} --version OUTPUT_VARIABLE GXX_TOOL_VERSION E
 string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" GXX_TOOL_VERSION "${GXX_TOOL_VERSION}")
 message(STATUS "# g++ # version: ${GXX_TOOL_VERSION} path: ${GXX_TOOL}")
 
+find_program(IWYU_TOOL NAMES include-what-you-use iwyu REQUIRED)
+execute_process(COMMAND ${IWYU_TOOL} --version OUTPUT_VARIABLE IWYU_TOOL_VERSION ERROR_VARIABLE IWYU_TOOL_VERSION)
+string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" IWYU_TOOL_VERSION "${IWYU_TOOL_VERSION}")
+message(STATUS "# iwyu # version: ${IWYU_TOOL_VERSION} path: ${IWYU_TOOL}")
+
 find_program(NINJA_TOOL NAMES ninja REQUIRED)
 execute_process(COMMAND ${NINJA_TOOL} --version OUTPUT_VARIABLE NINJA_TOOL_VERSION ERROR_VARIABLE NINJA_TOOL_VERSION)
 string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" NINJA_TOOL_VERSION "${NINJA_TOOL_VERSION}")
@@ -71,4 +76,15 @@ add_custom_target(ci_test_clang++_sanitizer
   COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_clang++_sanitizer --config Debug
   COMMAND cd ${PROJECT_BINARY_DIR}/build_clang++_sanitizer && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
   COMMENT "Compile and test with clang++ & sanitizers"
+)
+
+########################################################################
+#  Check if header files are self-contained with include-what-you-use  #
+########################################################################
+
+add_custom_target(ci_test_iwyu
+  COMMAND ${CMAKE_COMMAND} -GNinja -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RunIWYU=ON -DFK_YAML_DEFAULT_CI=ON
+    -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_iwyu
+  COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_iwyu --config Debug --target run_iwyu
+  COMMENT "Check if header files are self-contained with include-what-you-use"
 )
