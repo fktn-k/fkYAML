@@ -28,7 +28,7 @@ foreach(COMPILER clang++-11 clang++-12 clang++-13 clang++-14 clang++-15 g++-9 g+
   find_program(COMPILER_TOOL NAMES ${COMPILER})
   if(COMPILER_TOOL)
     add_custom_target(ci_test_compiler_${COMPILER}
-      COMMAND CXX=${COMPILER} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_CUSTOM_CI=ON
+      COMMAND CXX=${COMPILER} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_BUILD_ALL_TEST=ON
         -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_compiler_${COMPILER}
       COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_compiler_${COMPILER} --config Debug
       COMMAND cd ${PROJECT_BINARY_DIR}/build_compiler_${COMPILER} && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
@@ -44,8 +44,8 @@ endforeach()
 
 foreach(TARGET_CXX_STANDARD 11 14 17 20 23)
   add_custom_target(ci_test_clang++_c++${TARGET_CXX_STANDARD}
-    COMMAND CXX=${CLANGXX_TOOL} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_CUSTOM_CI=ON
-      -DFK_YAML_TestTargetCxxStandard=${TARGET_CXX_STANDARD}
+    COMMAND CXX=${CLANGXX_TOOL} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_BUILD_ALL_TEST=ON
+      -DFK_YAML_TEST_TARGET_CXX_STANDARD=${TARGET_CXX_STANDARD}
       -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_clang++_c++${TARGET_CXX_STANDARD}
     COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_clang++_c++${TARGET_CXX_STANDARD} --config Debug
     COMMAND cd ${PROJECT_BINARY_DIR}/build_clang++_c++${TARGET_CXX_STANDARD} && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
@@ -53,8 +53,8 @@ foreach(TARGET_CXX_STANDARD 11 14 17 20 23)
   )
 
   add_custom_target(ci_test_g++_c++${TARGET_CXX_STANDARD}
-    COMMAND CXX=${GXX_TOOL} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_CUSTOM_CI=ON
-      -DFK_YAML_TestTargetCxxStandard=${TARGET_CXX_STANDARD}
+    COMMAND CXX=${GXX_TOOL} ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_BUILD_ALL_TEST=ON
+      -DFK_YAML_TEST_TARGET_CXX_STANDARD=${TARGET_CXX_STANDARD}
       -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_g++_c++${TARGET_CXX_STANDARD}
     COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_g++_c++${TARGET_CXX_STANDARD} --config Debug
     COMMAND cd ${PROJECT_BINARY_DIR}/build_g++_c++${TARGET_CXX_STANDARD} && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
@@ -71,7 +71,7 @@ set(CLANGXX_SANITIZER_FLAGS
 
 add_custom_target(ci_test_clang++_sanitizer
   COMMAND CXX=${CLANGXX_TOOL} CXXFLAGS=${CLANGXX_SANITIZER_FLAGS} ${CMAKE_COMMAND}
-    -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_CUSTOM_CI=ON
+    -DCMAKE_BUILD_TYPE=Debug -GNinja -DFK_YAML_BUILD_TEST=ON
     -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_clang++_sanitizer
   COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_clang++_sanitizer --config Debug
   COMMAND cd ${PROJECT_BINARY_DIR}/build_clang++_sanitizer && ${CMAKE_CTEST_COMMAND} -C Debug --output-on-failure
@@ -83,7 +83,7 @@ add_custom_target(ci_test_clang++_sanitizer
 ########################################################################
 
 add_custom_target(ci_test_iwyu
-  COMMAND ${CMAKE_COMMAND} -GNinja -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RunIWYU=ON -DFK_YAML_DEFAULT_CI=ON
+  COMMAND ${CMAKE_COMMAND} -GNinja -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RUN_IWYU=ON
     -S${PROJECT_SOURCE_DIR} -B${PROJECT_BINARY_DIR}/build_iwyu
   COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR}/build_iwyu --config Debug --target run_iwyu
   COMMENT "Check if header files are self-contained with include-what-you-use"

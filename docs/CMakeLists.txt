@@ -1,20 +1,14 @@
-cmake_minimum_required(VERSION 3.8)
+find_package(Doxygen REQUIRED)
 
-find_package(Doxygen)
+set(FK_YAML_DOXYFILE_IN  "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in")
+set(FK_YAML_DOXYFILE_OUT "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
+set(FK_YAML_DOXYGEN_INPUT_DIR "${FK_YAML_INCLUDE_BUILD_DIR}")
 
-if(DOXYGEN_FOUND)
-  set(FK_YAML_DOXYFILE_IN  "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in")
-  set(FK_YAML_DOXYFILE_OUT "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
-  set(FK_YAML_DOXYGEN_INPUT_DIR "${FK_YAML_INCLUDE_BUILD_DIR}")
+configure_file("${FK_YAML_DOXYFILE_IN}" "${FK_YAML_DOXYFILE_OUT}" @ONLY)
 
-  configure_file("${FK_YAML_DOXYFILE_IN}" "${FK_YAML_DOXYFILE_OUT}" @ONLY)
-
-  add_custom_target(doxygen
-    COMMAND "${DOXYGEN_EXECUTABLE}" "${FK_YAML_DOXYFILE_OUT}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-    COMMENT "Generating API documentation with doxygen."
-    VERBATIM
-  )
-else()
-  message(FATAL "Failed to find doxygen.exe")
-endif()
+add_custom_target(doxygen
+  COMMAND "${DOXYGEN_EXECUTABLE}" "${FK_YAML_DOXYFILE_OUT}"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  COMMENT "Generating API documentation with doxygen."
+  VERBATIM
+)
