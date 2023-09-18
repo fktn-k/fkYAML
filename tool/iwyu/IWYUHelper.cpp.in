@@ -1,5 +1,6 @@
 #include "fkYAML/@REL_SRC_FILE@" // IWYU pragma: keep
 
+// This is just a dummy main function for compilation.
 int main()
 {
     return 0;

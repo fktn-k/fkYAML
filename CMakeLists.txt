@@ -133,7 +133,7 @@ endif()
 # **DO NOT** put the following lines before configuring clang-format for fkYAML library sources
 # to make sure that correctly formatted source files will be tested by clang-tidy.
 if(FK_YAML_RunClangTidy)
-  add_subdirectory(clang_tidy)
+  add_subdirectory(tool/clang_tidy)
   add_dependencies(ClangTidyHelper "${FK_YAML_ClangFormatTargetPrefix}${FK_YAML_TARGET_NAME}")
 endif()
 
