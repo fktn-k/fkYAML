@@ -1,3 +1,10 @@
+if(FK_YAML_CODE_COVERAGE)
+  find_program(LCOV_TOOL NAMES lcov REQUIRED)
+  execute_process(COMMAND ${LCOV_TOOL} --version OUTPUT_VARIABLE LCOV_TOOL_VERSION ERROR_VARIABLE LCOV_TOOL_VERSION)
+  string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" LCOV_TOOL_VERSION "${LCOV_TOOL_VERSION}")
+  message(STATUS "lcov ${LCOV_TOOL_VERSION} (${LCOV_TOOL})")
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
     string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -13,9 +20,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 endif()
 
-if("${FK_YAML_TestTargetCxxStandard}" STREQUAL "")
+if("${FK_YAML_TEST_TARGET_CXX_STANDARD}" STREQUAL "")
   # Apply minimum required C++ standard check by default.
-  set(FK_YAML_TestTargetCxxStandard 11)
+  set(FK_YAML_TEST_TARGET_CXX_STANDARD 11)
 endif()
 
 set(TEST_TARGET "fkYAMLUnitTest")
@@ -42,23 +49,23 @@ target_link_libraries(${TEST_TARGET}
 
 # set and require the target C++ standard. (defaults to C++11)
 set_target_properties(${TEST_TARGET} PROPERTIES
-  CXX_STANDARD ${FK_YAML_TestTargetCxxStandard}
+  CXX_STANDARD ${FK_YAML_TEST_TARGET_CXX_STANDARD}
   CXX_STANDARD_REQUIRED ON
 )
 
 include(Catch)
 catch_discover_tests(${TEST_TARGET})
 
-add_dependencies(${TEST_TARGET} build_library)
+add_dependencies(${TEST_TARGET} ${FK_YAML_TARGET_NAME})
 
-if(${FK_YAML_RunClangFormat})
+if(${FK_YAML_RUN_CLANG_FORMAT})
   run_clang_format(
     ${TEST_TARGET}
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
   )
 endif()
 
-if(FK_YAML_GenerateCoverage)
+if(FK_YAML_CODE_COVERAGE)
   target_compile_options(${TEST_TARGET} PRIVATE
     -O0        # no optimization
     -g         # generate debug info

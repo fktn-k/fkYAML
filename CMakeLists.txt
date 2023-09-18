@@ -7,83 +7,39 @@ cmake_minimum_required(VERSION 3.8)
 project(fkYAML VERSION 0.0.0 LANGUAGES CXX)
 
 #
-# Check if fkYAML is built as a subproject or if it is the main project.
+# Preparations depending on the specified build options.
 #
 
-set(FK_YAML_IS_MAIN_PROJECT OFF)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-  set(FK_YAML_IS_MAIN_PROJECT ON)
-endif()
-
-#
-# Build options.
-#
-
-if(FK_YAML_IS_MAIN_PROJECT OR FK_YAML_BUILD_TEST)
-  set(FK_YAML_BUILD_TEST_INIT ON)
-else()
-  set(FK_YAML_BUILD_TEST_INIT OFF)
+  # Configure installation of the fkYAML library if this project is the main project.
+  set(FK_YAML_INSTALL ON)
 endif()
 
 if(FK_YAML_CODE_COVERAGE)
-  # Code coverage data depends on unit test app.
+  # Generating code coverage depends on the unit test app.
   # So force build it.
-  set(FK_YAML_BUILD_TEST_INIT ON)
-  set(FK_YAML_CODE_COVERAGE_INIT ON)
-else()
-  set(FK_YAML_CODE_COVERAGE_INIT OFF)
+  set(FK_YAML_BUILD_TEST ON)
 endif()
 
-if(FK_YAML_RUN_DOXYGEN)
-  set(FK_YAML_RUN_DOXYGEN_INIT ON)
-else()
-  set(FK_YAML_RUN_DOXYGEN_INIT OFF)
-endif()
-
-if(FK_YAML_RUN_CLANG_FORMAT)
-  set(FK_YAML_RUN_CLANG_FORMAT_INIT ON)
-else()
-  if(FK_YAML_IS_MAIN_PROJECT)
-    set(FK_YAML_RUN_CLANG_FORMAT_INIT ON)
-  else()
-    set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
-  endif()
-endif()
-
-if(FK_YAML_RUN_CLANG_TIDY)
-  set(FK_YAML_RUN_CLANG_TIDY_INIT ON)
-else()
-  if(FK_YAML_IS_MAIN_PROJECT)
-    set(FK_YAML_RUN_CLANG_TIDY_INIT ON)
-  else()
-    set(FK_YAML_RUN_CLANG_TIDY_INIT OFF)
-  endif()
-endif()
-
-if(FK_YAML_DEFAULT_CI OR FK_YAML_CUSTOM_CI)
-  # disable execution of clang-format/clang-tidy by default during CI.
-  # these checks will be executed separately.
-  set(FK_YAML_RUN_CLANG_FORMAT_INIT OFF)
-  set(FK_YAML_RUN_CLANG_TIDY_INIT OFF)
-endif()
-
-option(FK_YAML_BuildTests     "Build the unit tests when FK_YAML_BUILD_TEST is enabled or if this library is the main target." ${FK_YAML_BUILD_TEST_INIT})
-option(FK_YAML_GenerateCoverage "Build the unit tests with code coverage data if FK_YAML_CODE_COVERAGE is enabled." ${FK_YAML_CODE_COVERAGE_INIT})
-option(FK_YAML_Install        "Install CMake targets during install step." ${FK_YAML_IS_MAIN_PROJECT})
-option(FK_YAML_RunDoxygen     "Generate API documentation with doxygen." ${FK_YAML_RUN_DOXYGEN_INIT})
-option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_FORMAT_INIT})
-option(FK_YAML_RunClangTidy   "Run clang-tidy when FK_YAML_RUN_CLANG_TIDY is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_TIDY_INIT})
-option(FK_YAML_RunIWYU        "Run include-what-you-use" OFF)
-
-if(FK_YAML_RunClangFormat OR FK_YAML_CUSTOM_CI)
+if(FK_YAML_RUN_CLANG_FORMAT OR FK_YAML_CI)
   set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 endif()
 
-if(FK_YAML_GenerateCoverage)
-  find_program(LCOV_TOOL NAMES lcov REQUIRED)
-  execute_process(COMMAND ${LCOV_TOOL} --version OUTPUT_VARIABLE LCOV_TOOL_VERSION ERROR_VARIABLE LCOV_TOOL_VERSION)
-  string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" LCOV_TOOL_VERSION "${LCOV_TOOL_VERSION}")
-  message(STATUS "lcov ${LCOV_TOOL_VERSION} (${LCOV_TOOL})")
+if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
+  set(CATCH2_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2")
+  if(NOT EXISTS ${CATCH2_ROOT_DIR}/CMakeLists.txt)
+    find_package(Git REQUIRED)
+    message(STATUS "Fetching git submodule: Catch2")
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ${CATCH2_ROOT_DIR}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      RESULT_VARIABLE GIT_SUBMOD_RET
+    )
+    if(NOT GIT_SUBMOD_RET EQUAL "0")
+      message(FATAL "Failed to fetch Catch2 as a git submodule.")
+    endif()
+  endif()
+  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CATCH2_ROOT_DIR}/contrib")
 endif()
 
 #
@@ -120,7 +76,7 @@ target_include_directories(
 )
 
 # configure clang-format if enabled.
-if(FK_YAML_RunClangFormat)
+if(FK_YAML_RUN_CLANG_FORMAT)
   set(FK_YAML_ClangFormatTargetPrefix "run_clang_format_for_")
   include(RunClangFormat)
   run_clang_format(
@@ -130,19 +86,20 @@ if(FK_YAML_RunClangFormat)
 endif()
 
 # Configure clang-tidy if enabled.
-# **DO NOT** put the following lines before configuring clang-format for fkYAML library sources
-# to make sure that correctly formatted source files will be tested by clang-tidy.
-if(FK_YAML_RunClangTidy)
+if(FK_YAML_RUN_CLANG_TIDY)
   add_subdirectory(tool/clang_tidy)
-  add_dependencies(ClangTidyHelper "${FK_YAML_ClangFormatTargetPrefix}${FK_YAML_TARGET_NAME}")
+  if(FK_YAML_RUN_CLANG_FORMAT)
+    add_dependencies(ClangTidyHelper "${FK_YAML_ClangFormatTargetPrefix}${FK_YAML_TARGET_NAME}")
+  endif()
 endif()
 
-if(FK_YAML_RunIWYU)
+# Configure include-what-you-use if enabled.
+if(FK_YAML_RUN_IWYU)
   add_subdirectory(tool/iwyu)
 endif()
 
 # Configure targets for CI.
-if(FK_YAML_CUSTOM_CI)
+if(FK_YAML_CI)
   include(ci)
 endif()
 
@@ -155,15 +112,11 @@ configure_file(
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
 )
 
-add_custom_target(build_library ALL DEPENDS ${FK_YAML_TARGET_NAME})
-
 #
 # Create and configure the unit test target.
 #
 
-if(FK_YAML_BuildTests)
-  set(CATCH2_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2")
-  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CATCH2_ROOT_DIR}/contrib")
+if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
   add_subdirectory(${CATCH2_ROOT_DIR})
   include(CTest)
   enable_testing()
@@ -173,7 +126,7 @@ endif()
 #
 # Generate API documentation if target == doxygen.
 #
-if(FK_YAML_RunDoxygen)
+if(FK_YAML_RUN_DOXYGEN)
   set(FK_YAML_DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
   add_subdirectory(docs)
 endif()
@@ -196,7 +149,7 @@ configure_file(
   @ONLY
 )
 
-if(FK_YAML_Install)
+if(FK_YAML_INSTALL)
   install(
     DIRECTORY "${FK_YAML_INCLUDE_BUILD_DIR}"
     DESTINATION include
