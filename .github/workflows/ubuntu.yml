@@ -43,7 +43,7 @@ jobs:
         submodules: recursive
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build_clang_tidy
+      run: cmake -B ${{github.workspace}}/build_clang_tidy -DFK_YAML_RUN_CLANG_TIDY=ON
 
     - name: Clang-Tidy check
       run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
