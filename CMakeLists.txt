@@ -73,6 +73,7 @@ option(FK_YAML_Install        "Install CMake targets during install step." ${FK_
 option(FK_YAML_RunDoxygen     "Generate API documentation with doxygen." ${FK_YAML_RUN_DOXYGEN_INIT})
 option(FK_YAML_RunClangFormat "Run clang-format when FK_YAML_RUN_CLANG_FORMAT is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_FORMAT_INIT})
 option(FK_YAML_RunClangTidy   "Run clang-tidy when FK_YAML_RUN_CLANG_TIDY is enabled or if this library is the main target." ${FK_YAML_RUN_CLANG_TIDY_INIT})
+option(FK_YAML_RunIWYU        "Run include-what-you-use" OFF)
 
 if(FK_YAML_RunClangFormat OR FK_YAML_CUSTOM_CI)
   set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -132,8 +133,12 @@ endif()
 # **DO NOT** put the following lines before configuring clang-format for fkYAML library sources
 # to make sure that correctly formatted source files will be tested by clang-tidy.
 if(FK_YAML_RunClangTidy)
-  add_subdirectory(clang_tidy)
+  add_subdirectory(tool/clang_tidy)
   add_dependencies(ClangTidyHelper "${FK_YAML_ClangFormatTargetPrefix}${FK_YAML_TARGET_NAME}")
+endif()
+
+if(FK_YAML_RunIWYU)
+  add_subdirectory(tool/iwyu)
 endif()
 
 # Configure targets for CI.
