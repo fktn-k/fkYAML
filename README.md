@@ -215,6 +215,12 @@ Currently, the following compilers are known to work and used in CI workflows:
 
 | Compiler | Operating System | CI provider |
 |----------|------------------|-------------|
+| AppleClang 11.0.3.11030032 | macOS 11.7.9 | GitHub Actions |
+| AppleClang 12.0.0.12000032 | macOS 11.7.9 | GitHub Actions |
+| AppleClang 12.0.5.12050022 | macOS 11.7.9 | GitHub Actions |
+| AppleClang 13.0.0.13000029 | macOS 11.7.9 | GitHub Actions |
+| AppleClang 13.0.0.13000029 | macOS 12.6.8 | GitHub Actions |
+| AppleClang 13.1.6.13160021 | macOS 12.6.8 | GitHub Actions |
 | AppleClang 14.0.0.14000029 | macOS 12.6.8 | GitHub Actions |
 | Clang 11.1.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 12.0.1 | Ubuntu 22.04.3 LTS | GitHub Actions |
