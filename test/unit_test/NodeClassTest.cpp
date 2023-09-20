@@ -48,18 +48,11 @@ TEST_CASE("NodeClassTest_BooleanTypeCtorTest", "[NodeClassTest]")
     REQUIRE(node.ToBoolean() == false);
 }
 
-TEST_CASE("NodeClassTest_SignedIntTypeCtorTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IntegerTypeCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node node(fkyaml::NodeType::SIGNED_INTEGER);
-    REQUIRE(node.IsSignedInteger());
-    REQUIRE(node.ToSignedInteger() == 0);
-}
-
-TEST_CASE("NodeClassTest_UnsignedIntTypeCtorTest", "[NodeClassTest]")
-{
-    fkyaml::Node node(fkyaml::NodeType::UNSIGNED_INTEGER);
-    REQUIRE(node.IsUnsignedInteger());
-    REQUIRE(node.ToUnsignedInteger() == 0);
+    fkyaml::Node node(fkyaml::NodeType::INTEGER);
+    REQUIRE(node.IsInteger());
+    REQUIRE(node.ToInteger() == 0);
 }
 
 TEST_CASE("NodeClassTest_FloatNumberTypeCtorTest", "[NodeClassTest]")
@@ -86,7 +79,7 @@ TEST_CASE("NodeClassTest_ThrowingSpecializationTypeCtorTest", "[NodeClassTest]")
         }
     };
 
-    using NodeType = fkyaml::BasicNode<std::vector, std::map, bool, int64_t, uint64_t, double, String>;
+    using NodeType = fkyaml::BasicNode<std::vector, std::map, bool, int64_t, double, String>;
     REQUIRE_THROWS_AS(NodeType::StringScalar(), fkyaml::Exception);
 }
 
@@ -113,15 +106,15 @@ TEST_CASE("NodeClassTest_SequenceCopyCtorTest", "[NodeClassTest]")
 TEST_CASE("NodeClassTest_MappingCopyCtorTest", "[NodeClassTest]")
 {
     fkyaml::Node copied = fkyaml::Node::Mapping(
-        {{"test0", fkyaml::Node::SignedIntegerScalar(123)}, {"test1", fkyaml::Node::FloatNumberScalar(3.14)}});
+        {{"test0", fkyaml::Node::IntegerScalar(123)}, {"test1", fkyaml::Node::FloatNumberScalar(3.14)}});
     fkyaml::Node node(copied);
     REQUIRE(node.IsMapping());
     REQUIRE_NOTHROW(node.Size());
     REQUIRE(node.Size() == 2);
     REQUIRE_NOTHROW(node["test0"]);
-    REQUIRE(node["test0"].IsSignedInteger());
-    REQUIRE_NOTHROW(node["test0"].ToSignedInteger());
-    REQUIRE(node["test0"].ToSignedInteger() == 123);
+    REQUIRE(node["test0"].IsInteger());
+    REQUIRE_NOTHROW(node["test0"].ToInteger());
+    REQUIRE(node["test0"].ToInteger() == 123);
     REQUIRE_NOTHROW(node["test1"]);
     REQUIRE(node["test1"].IsFloatNumber());
     REQUIRE_NOTHROW(node["test1"].ToFloatNumber());
@@ -144,22 +137,13 @@ TEST_CASE("NodeClassTest_BooleanCopyCtorTest", "[NodeClassTest]")
     REQUIRE(node.ToBoolean() == true);
 }
 
-TEST_CASE("NodeClassTest_SignedIntegerCopyCtorTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IntegerCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node copied = fkyaml::Node::SignedIntegerScalar(123);
+    fkyaml::Node copied = fkyaml::Node::IntegerScalar(123);
     fkyaml::Node node(copied);
-    REQUIRE(node.IsSignedInteger());
-    REQUIRE_NOTHROW(node.ToSignedInteger());
-    REQUIRE(node.ToSignedInteger() == 123);
-}
-
-TEST_CASE("NodeClassTest_UnsignedIntegerCopyCtorTest", "[NodeClassTest]")
-{
-    fkyaml::Node copied = fkyaml::Node::UnsignedIntegerScalar(521);
-    fkyaml::Node node(copied);
-    REQUIRE(node.IsUnsignedInteger());
-    REQUIRE_NOTHROW(node.ToUnsignedInteger());
-    REQUIRE(node.ToUnsignedInteger() == 521);
+    REQUIRE(node.IsInteger());
+    REQUIRE_NOTHROW(node.ToInteger());
+    REQUIRE(node.ToInteger() == 123);
 }
 
 TEST_CASE("NodeClassTest_FloatNumberCopyCtorTest", "[NodeClassTest]")
@@ -216,15 +200,15 @@ TEST_CASE("NodeClassTest_SequenceMoveCtorTest", "[NodeClassTest]")
 TEST_CASE("NodeClassTest_MappingMoveCtorTest", "[NodeClassTest]")
 {
     fkyaml::Node moved = fkyaml::Node::Mapping(
-        {{"test0", fkyaml::Node::SignedIntegerScalar(123)}, {"test1", fkyaml::Node::FloatNumberScalar(3.14)}});
+        {{"test0", fkyaml::Node::IntegerScalar(123)}, {"test1", fkyaml::Node::FloatNumberScalar(3.14)}});
     fkyaml::Node node(std::move(moved));
     REQUIRE(node.IsMapping());
     REQUIRE_NOTHROW(node.Size());
     REQUIRE(node.Size() == 2);
     REQUIRE_NOTHROW(node["test0"]);
-    REQUIRE(node["test0"].IsSignedInteger());
-    REQUIRE_NOTHROW(node["test0"].ToSignedInteger());
-    REQUIRE(node["test0"].ToSignedInteger() == 123);
+    REQUIRE(node["test0"].IsInteger());
+    REQUIRE_NOTHROW(node["test0"].ToInteger());
+    REQUIRE(node["test0"].ToInteger() == 123);
     REQUIRE_NOTHROW(node["test1"]);
     REQUIRE(node["test1"].IsFloatNumber());
     REQUIRE_NOTHROW(node["test1"].ToFloatNumber());
@@ -247,22 +231,13 @@ TEST_CASE("NodeClassTest_BooleanMoveCtorTest", "[NodeClassTest]")
     REQUIRE(node.ToBoolean() == true);
 }
 
-TEST_CASE("NodeClassTest_SignedIntegerMoveCtorTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IntegerMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node moved = fkyaml::Node::SignedIntegerScalar(123);
+    fkyaml::Node moved = fkyaml::Node::IntegerScalar(123);
     fkyaml::Node node(std::move(moved));
-    REQUIRE(node.IsSignedInteger());
-    REQUIRE_NOTHROW(node.ToSignedInteger());
-    REQUIRE(node.ToSignedInteger() == 123);
-}
-
-TEST_CASE("NodeClassTest_UnsignedIntegerMoveCtorTest", "[NodeClassTest]")
-{
-    fkyaml::Node moved = fkyaml::Node::UnsignedIntegerScalar(521);
-    fkyaml::Node node(std::move(moved));
-    REQUIRE(node.IsUnsignedInteger());
-    REQUIRE_NOTHROW(node.ToUnsignedInteger());
-    REQUIRE(node.ToUnsignedInteger() == 521);
+    REQUIRE(node.IsInteger());
+    REQUIRE_NOTHROW(node.ToInteger());
+    REQUIRE(node.ToInteger() == 123);
 }
 
 TEST_CASE("NodeClassTest_FloatNumberMoveCtorTest", "[NodeClassTest]")
@@ -378,26 +353,13 @@ TEST_CASE("NodeClassTest_BooleanNodeFactoryTest", "[NodeClassTest]")
     REQUIRE(node.ToBoolean() == boolean);
 }
 
-TEST_CASE("NodeClassTest_SignedIntegerNodeFactoryTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IntegerNodeFactoryTest", "[NodeClassTest]")
 {
-    auto signed_integer = GENERATE(
-        std::numeric_limits<fkyaml::NodeSignedIntType>::min(),
-        0,
-        std::numeric_limits<fkyaml::NodeSignedIntType>::max());
-    fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(signed_integer);
-    REQUIRE(node.IsSignedInteger());
-    REQUIRE(node.ToSignedInteger() == signed_integer);
-}
-
-TEST_CASE("NodeClassTest_UnsignedIntegerNodeFactoryTest", "[NodeClassTest]")
-{
-    auto unsigned_integer = GENERATE(
-        std::numeric_limits<fkyaml::NodeUnsignedIntType>::min(),
-        1840,
-        std::numeric_limits<fkyaml::NodeUnsignedIntType>::max());
-    fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(unsigned_integer);
-    REQUIRE(node.IsUnsignedInteger());
-    REQUIRE(node.ToUnsignedInteger() == unsigned_integer);
+    auto integer = GENERATE(
+        std::numeric_limits<fkyaml::NodeIntegerType>::min(), 0, std::numeric_limits<fkyaml::NodeIntegerType>::max());
+    fkyaml::Node node = fkyaml::Node::IntegerScalar(integer);
+    REQUIRE(node.IsInteger());
+    REQUIRE(node.ToInteger() == integer);
 }
 
 TEST_CASE("NodeClassTest_FloatNumberNodeFactoryTest", "[NodeClassTest]")
@@ -534,8 +496,7 @@ TEST_CASE("NodeClassTest_StringSubscriptOperatorTest", "[NodeClassTest]")
             fkyaml::Node::Sequence(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -604,8 +565,7 @@ TEST_CASE("NodeClassTest_IntegerSubscriptOperatorTest", "[NodeClassTest]")
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -634,8 +594,7 @@ TEST_CASE("NodeClassTest_TypeGetterTest", "[NodeClassTest]")
         NodeTypePair(fkyaml::Node::Mapping(), fkyaml::NodeType::MAPPING),
         NodeTypePair(fkyaml::Node(), fkyaml::NodeType::NULL_OBJECT),
         NodeTypePair(fkyaml::Node::BooleanScalar(false), fkyaml::NodeType::BOOLEAN),
-        NodeTypePair(fkyaml::Node::SignedIntegerScalar(0), fkyaml::NodeType::SIGNED_INTEGER),
-        NodeTypePair(fkyaml::Node::UnsignedIntegerScalar(0), fkyaml::NodeType::UNSIGNED_INTEGER),
+        NodeTypePair(fkyaml::Node::IntegerScalar(0), fkyaml::NodeType::INTEGER),
         NodeTypePair(fkyaml::Node::FloatNumberScalar(0.0), fkyaml::NodeType::FLOAT_NUMBER),
         NodeTypePair(fkyaml::Node::StringScalar(), fkyaml::NodeType::STRING));
 
@@ -677,8 +636,7 @@ TEST_CASE("NodeClassTest_IsSequenceTest", "[NodeClassTest]")
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -721,8 +679,7 @@ TEST_CASE("NodeClassTest_IsMappingTest", "[NodeClassTest]")
             fkyaml::Node::Sequence(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -765,8 +722,7 @@ TEST_CASE("NodeClassTest_IsNullTest", "[NodeClassTest]")
             fkyaml::Node::Sequence(),
             fkyaml::Node::Mapping(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -809,8 +765,7 @@ TEST_CASE("NodeClassTest_IsBooleanTest", "[NodeClassTest]")
             fkyaml::Node::Sequence(),
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -828,90 +783,45 @@ TEST_CASE("NodeClassTest_IsBooleanTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_IsSignedIntegerTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IsIntegerTest", "[NodeClassTest]")
 {
-    SECTION("Test signed integer node type.")
+    SECTION("Test integer node type.")
     {
-        fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(0);
+        fkyaml::Node node = fkyaml::Node::IntegerScalar(0);
 
-        SECTION("Test non-alias signed integer node type.")
+        SECTION("Test non-alias integer node type.")
         {
-            REQUIRE(node.IsSignedInteger());
+            REQUIRE(node.IsInteger());
         }
 
-        SECTION("Test alias signed integer node type.")
+        SECTION("Test alias integer node type.")
         {
             node.AddAnchorName("anchor_name");
             fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsSignedInteger());
+            REQUIRE(alias.IsInteger());
         }
     }
 
-    SECTION("Test non-signed-integer node types.")
+    SECTION("Test non-integer node types.")
     {
         auto node = GENERATE(
             fkyaml::Node::Sequence(),
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::UnsignedIntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
-        SECTION("Test non-alias non-signed-integer node types")
+        SECTION("Test non-alias non-integer node types")
         {
-            REQUIRE_FALSE(node.IsSignedInteger());
+            REQUIRE_FALSE(node.IsInteger());
         }
 
-        SECTION("Test alias non-signed-integer node types.")
+        SECTION("Test alias non-integer node types.")
         {
             node.AddAnchorName("anchor_name");
             fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsSignedInteger());
-        }
-    }
-}
-
-TEST_CASE("NodeClassTest_IsUnsignedIntegerTest", "[NodeClassTest]")
-{
-    SECTION("Test unsigned integer node type.")
-    {
-        fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(0);
-
-        SECTION("Test non-alias unsigned integer node type.")
-        {
-            REQUIRE(node.IsUnsignedInteger());
-        }
-
-        SECTION("Test alias unsigned integer node type.")
-        {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsUnsignedInteger());
-        }
-    }
-
-    SECTION("Test non-unsigned-integer node types.")
-    {
-        auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
-
-        SECTION("Test non-alias non-unsigned-integer node types")
-        {
-            REQUIRE_FALSE(node.IsUnsignedInteger());
-        }
-
-        SECTION("Test alias non-unsigned-integer node types.")
-        {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsUnsignedInteger());
+            REQUIRE_FALSE(alias.IsInteger());
         }
     }
 }
@@ -942,8 +852,7 @@ TEST_CASE("NodeClassTest_IsFloatNumberTest", "[NodeClassTest]")
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::StringScalar());
 
         SECTION("Test non-alias non-float-number node types")
@@ -986,8 +895,7 @@ TEST_CASE("NodeClassTest_IsStringTest", "[NodeClassTest]")
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0));
 
         SECTION("Test non-alias non-string node types")
@@ -1011,8 +919,7 @@ TEST_CASE("NodeClassTest_IsScalarTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -1054,8 +961,7 @@ TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
         fkyaml::Node::Mapping(),
         fkyaml::Node(),
         fkyaml::Node::BooleanScalar(false),
-        fkyaml::Node::SignedIntegerScalar(0),
-        fkyaml::Node::UnsignedIntegerScalar(0),
+        fkyaml::Node::IntegerScalar(0),
         fkyaml::Node::FloatNumberScalar(0.0),
         fkyaml::Node::StringScalar());
 
@@ -1121,8 +1027,7 @@ TEST_CASE("NodeClassTest_IsEmptyTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0));
 
         SECTION("Test non-const non-alias non-container node emptiness.")
@@ -1194,8 +1099,7 @@ TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
             fkyaml::Node::Sequence(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
         std::string key = "test";
@@ -1274,8 +1178,7 @@ TEST_CASE("NodeClassTest_SizeGetterTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0));
 
         SECTION("Test non-const non-alias non-container node size.")
@@ -1457,8 +1360,7 @@ TEST_CASE("NodeClassTest_ToSequenceTest", "[NodeClassTest]")
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -1543,8 +1445,7 @@ TEST_CASE("NodeClassTest_ToMappingTest", "[NodeClassTest]")
             fkyaml::Node::Sequence(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -1617,8 +1518,7 @@ TEST_CASE("NodeClassTest_ToBooleanTest", "[NodeClassTest]")
             fkyaml::Node::Sequence(),
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -1649,40 +1549,40 @@ TEST_CASE("NodeClassTest_ToBooleanTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_ToSignedIntegerTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_ToIntegerTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        fkyaml::NodeSignedIntType signed_int = -123;
-        fkyaml::Node node = fkyaml::Node::SignedIntegerScalar(signed_int);
+        fkyaml::NodeIntegerType integer = -123;
+        fkyaml::Node node = fkyaml::Node::IntegerScalar(integer);
 
-        SECTION("Test non-alias signed integer node.")
+        SECTION("Test non-alias  integer node.")
         {
-            REQUIRE_NOTHROW(node.ToSignedInteger());
-            REQUIRE(node.ToSignedInteger() == signed_int);
+            REQUIRE_NOTHROW(node.ToInteger());
+            REQUIRE(node.ToInteger() == integer);
         }
 
-        SECTION("Test const non-alias signed integer node.")
+        SECTION("Test const non-alias  integer node.")
         {
             const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.ToSignedInteger());
-            REQUIRE(const_node.ToSignedInteger() == signed_int);
+            REQUIRE_NOTHROW(const_node.ToInteger());
+            REQUIRE(const_node.ToInteger() == integer);
         }
 
-        SECTION("Test alias signed integer node.")
+        SECTION("Test alias  integer node.")
         {
             node.AddAnchorName("anchor_name");
             fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToSignedInteger());
-            REQUIRE(alias.ToSignedInteger() == signed_int);
+            REQUIRE_NOTHROW(alias.ToInteger());
+            REQUIRE(alias.ToInteger() == integer);
         }
 
-        SECTION("Test const alias signed integer node.")
+        SECTION("Test const alias  integer node.")
         {
             node.AddAnchorName("anchor_name");
             const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToSignedInteger());
-            REQUIRE(alias.ToSignedInteger() == signed_int);
+            REQUIRE_NOTHROW(alias.ToInteger());
+            REQUIRE(alias.ToInteger() == integer);
         }
     }
 
@@ -1693,108 +1593,32 @@ TEST_CASE("NodeClassTest_ToSignedIntegerTest", "[NodeClassTest]")
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::UnsignedIntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
-        SECTION("Test non-alias non-signed-integer nodes.")
+        SECTION("Test non-alias non-integer nodes.")
         {
-            REQUIRE_THROWS_AS(node.ToSignedInteger(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.ToInteger(), fkyaml::Exception);
         }
 
-        SECTION("Test const non-alias non-signed-integer nodes.")
+        SECTION("Test const non-alias non-integer nodes.")
         {
             const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.ToSignedInteger(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(const_node.ToInteger(), fkyaml::Exception);
         }
 
-        SECTION("Test alias non-signed-integer nodes.")
+        SECTION("Test alias non-integer nodes.")
         {
             node.AddAnchorName("anchor_name");
             fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToSignedInteger(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(alias.ToInteger(), fkyaml::Exception);
         }
 
-        SECTION("Test const alias non-signed-integer nodes.")
+        SECTION("Test const alias non-integer nodes.")
         {
             node.AddAnchorName("anchor_name");
             const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToSignedInteger(), fkyaml::Exception);
-        }
-    }
-}
-
-TEST_CASE("NodeClassTest_ToUnsignedIntegerTest", "[NodeClassTest]")
-{
-    SECTION("Test nothrow expected nodes.")
-    {
-        fkyaml::NodeUnsignedIntType unsigned_int = 123;
-        fkyaml::Node node = fkyaml::Node::UnsignedIntegerScalar(unsigned_int);
-
-        SECTION("Test non-alias unsigned integer node.")
-        {
-            REQUIRE_NOTHROW(node.ToUnsignedInteger());
-            REQUIRE(node.ToUnsignedInteger() == unsigned_int);
-        }
-
-        SECTION("Test const non-alias unsigned integer node.")
-        {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.ToUnsignedInteger());
-            REQUIRE(const_node.ToUnsignedInteger() == unsigned_int);
-        }
-
-        SECTION("Test alias unsigned integer node.")
-        {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToUnsignedInteger());
-            REQUIRE(alias.ToUnsignedInteger() == unsigned_int);
-        }
-
-        SECTION("Test const alias unsigned integer node.")
-        {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToUnsignedInteger());
-            REQUIRE(alias.ToUnsignedInteger() == unsigned_int);
-        }
-    }
-
-    SECTION("Test nothrow unexpected nodes.")
-    {
-        auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
-
-        SECTION("Test non-alias non-unsigned-integer nodes.")
-        {
-            REQUIRE_THROWS_AS(node.ToUnsignedInteger(), fkyaml::Exception);
-        }
-
-        SECTION("Test const non-alias non-unsigned-integer nodes.")
-        {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.ToUnsignedInteger(), fkyaml::Exception);
-        }
-
-        SECTION("Test alias non-unsigned-integer nodes.")
-        {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToUnsignedInteger(), fkyaml::Exception);
-        }
-
-        SECTION("Test const alias non-unsigned-integer nodes.")
-        {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToUnsignedInteger(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(alias.ToInteger(), fkyaml::Exception);
         }
     }
 }
@@ -1843,8 +1667,7 @@ TEST_CASE("NodeClassTest_ToFloatNumberTest", "[NodeClassTest]")
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::StringScalar());
 
         SECTION("Test non-alias non-float-number nodes.")
@@ -1918,8 +1741,7 @@ TEST_CASE("NodeClassTest_ToStringTest", "[NodeClassTest]")
             fkyaml::Node::Mapping(),
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0));
 
         SECTION("Test non-alias non-string nodes.")
@@ -2001,8 +1823,7 @@ TEST_CASE("NodeClassTest_BeginTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -2067,8 +1888,7 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::Node(),
             fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::SignedIntegerScalar(0),
-            fkyaml::Node::UnsignedIntegerScalar(0),
+            fkyaml::Node::IntegerScalar(0),
             fkyaml::Node::FloatNumberScalar(0.0),
             fkyaml::Node::StringScalar());
 
@@ -2092,10 +1912,10 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
 TEST_CASE("NodeClassTest_SwapTest", "[NodeClassTest]")
 {
     fkyaml::Node lhs_node = fkyaml::Node::BooleanScalar(true);
-    fkyaml::Node rhs_node = fkyaml::Node::SignedIntegerScalar(123);
+    fkyaml::Node rhs_node = fkyaml::Node::IntegerScalar(123);
     lhs_node.Swap(rhs_node);
-    REQUIRE(lhs_node.IsSignedInteger());
-    REQUIRE(lhs_node.ToSignedInteger() == 123);
+    REQUIRE(lhs_node.IsInteger());
+    REQUIRE(lhs_node.ToInteger() == 123);
     REQUIRE(rhs_node.IsBoolean());
     REQUIRE(rhs_node.ToBoolean() == true);
 }
@@ -2103,10 +1923,10 @@ TEST_CASE("NodeClassTest_SwapTest", "[NodeClassTest]")
 TEST_CASE("NodeClassTest_StdSwapTest", "[NodeClassTest]")
 {
     fkyaml::Node lhs_node = fkyaml::Node::BooleanScalar(true);
-    fkyaml::Node rhs_node = fkyaml::Node::SignedIntegerScalar(123);
+    fkyaml::Node rhs_node = fkyaml::Node::IntegerScalar(123);
     std::swap(lhs_node, rhs_node);
-    REQUIRE(lhs_node.IsSignedInteger());
-    REQUIRE(lhs_node.ToSignedInteger() == 123);
+    REQUIRE(lhs_node.IsInteger());
+    REQUIRE(lhs_node.ToInteger() == 123);
     REQUIRE(rhs_node.IsBoolean());
     REQUIRE(rhs_node.ToBoolean() == true);
 }

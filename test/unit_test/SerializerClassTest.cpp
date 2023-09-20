@@ -21,7 +21,7 @@ TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")
             "- true\n- false\n"),
         NodeStrPair(
             fkyaml::Node::Sequence(
-                {fkyaml::Node::Mapping({{"foo", fkyaml::Node::SignedIntegerScalar(-1234)}, {"bar", fkyaml::Node()}})}),
+                {fkyaml::Node::Mapping({{"foo", fkyaml::Node::IntegerScalar(-1234)}, {"bar", fkyaml::Node()}})}),
             "-\n  foo: -1234\n  bar: null\n"));
     fkyaml::Serializer serializer;
     REQUIRE(serializer.Serialize(node_str_pair.first) == node_str_pair.second);
@@ -32,7 +32,7 @@ TEST_CASE("SerializerClassTest_SerializeMappingNode", "[SerializerClassTest]")
     using NodeStrPair = std::pair<fkyaml::Node, std::string>;
     auto node_str_pair = GENERATE(
         NodeStrPair(
-            fkyaml::Node::Mapping({{"foo", fkyaml::Node::SignedIntegerScalar(-1234)}, {"bar", fkyaml::Node()}}),
+            fkyaml::Node::Mapping({{"foo", fkyaml::Node::IntegerScalar(-1234)}, {"bar", fkyaml::Node()}}),
             "foo: -1234\nbar: null\n"),
         NodeStrPair(
             fkyaml::Node::Mapping(
@@ -60,22 +60,12 @@ TEST_CASE("SerializerClassTest_SerializeBooleanNode", "[SerializerClassTest]")
     REQUIRE(serializer.Serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializerClassTest_SerializeSignedIntegerNode", "[SerializerClassTest]")
+TEST_CASE("SerializerClassTest_SerializeIntegerNode", "[SerializerClassTest]")
 {
     using NodeStrPair = std::pair<fkyaml::Node, std::string>;
     auto node_str_pair = GENERATE(
-        NodeStrPair(fkyaml::Node::SignedIntegerScalar(-1234), "-1234"),
-        NodeStrPair(fkyaml::Node::SignedIntegerScalar(5678), "5678"));
-    fkyaml::Serializer serializer;
-    REQUIRE(serializer.Serialize(node_str_pair.first) == node_str_pair.second);
-}
-
-TEST_CASE("SerializeClassTest_SerializeUnsignedIntegerNode", "[SerializeClassTest]")
-{
-    using NodeStrPair = std::pair<fkyaml::Node, std::string>;
-    auto node_str_pair = GENERATE(
-        NodeStrPair(fkyaml::Node::UnsignedIntegerScalar(1234), "1234"),
-        NodeStrPair(fkyaml::Node::UnsignedIntegerScalar(5678), "5678"));
+        NodeStrPair(fkyaml::Node::IntegerScalar(-1234), "-1234"),
+        NodeStrPair(fkyaml::Node::IntegerScalar(5678), "5678"));
     fkyaml::Serializer serializer;
     REQUIRE(serializer.Serialize(node_str_pair.first) == node_str_pair.second);
 }

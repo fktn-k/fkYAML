@@ -22,8 +22,7 @@ FK_YAML_NAMESPACE_BEGIN
 // forward declaration for fkyaml::BasicNode<...>
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
-    typename BooleanType, typename SignedIntegerType, typename UnsignedIntegerType, typename FloatNumberType,
-    typename StringType>
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType>
 class BasicNode;
 
 template <typename T>
@@ -33,10 +32,8 @@ struct IsBasicNode : std::false_type
 
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
-    typename BooleanType, typename SignedIntegerType, typename UnsignedIntegerType, typename FloatNumberType,
-    typename StringType>
-struct IsBasicNode<BasicNode<
-    SequenceType, MappingType, BooleanType, SignedIntegerType, UnsignedIntegerType, FloatNumberType, StringType>>
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType>
+struct IsBasicNode<BasicNode<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType>>
     : std::true_type
 {
 };

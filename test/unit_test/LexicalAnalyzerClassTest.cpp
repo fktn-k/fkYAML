@@ -208,9 +208,9 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBooleanFalseTokenTest", "[LexicalAnalyze
     REQUIRE(lexer.GetBoolean() == false);
 }
 
-TEST_CASE("LexicalAnalyzerClassTest_ScanSignedDecimalIntegerTokenTest", "[LexicalAnalyzerClassTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanIntegerTokenTest", "[LexicalAnalyzerClassTest]")
 {
-    using ValuePair = std::pair<std::string, fkyaml::NodeSignedIntType>;
+    using ValuePair = std::pair<std::string, fkyaml::NodeIntegerType>;
     auto value_pair = GENERATE(
         ValuePair(std::string("-1234"), -1234),
         ValuePair(std::string("-853255"), -853255),
@@ -221,33 +221,14 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanSignedDecimalIntegerTokenTest", "[Lexica
     fkyaml::LexicalTokenType token;
 
     REQUIRE_NOTHROW(token = lexer.GetNextToken());
-    REQUIRE(token == fkyaml::LexicalTokenType::SIGNED_INT_VALUE);
-    REQUIRE_NOTHROW(lexer.GetSignedInt());
-    REQUIRE(lexer.GetSignedInt() == value_pair.second);
-}
-
-TEST_CASE("LexicalAnalyzerClassTest_ScanUnsignedDecimalIntegerTokenTest", "[LexicalAnalyzerClassTest]")
-{
-    using ValuePair = std::pair<std::string, fkyaml::NodeUnsignedIntType>;
-    auto value_pair = GENERATE(
-        ValuePair(std::string("1234"), 1234),
-        ValuePair(std::string("853255"), 853255),
-        ValuePair(std::string("1"), 1),
-        ValuePair(std::string("0"), 0));
-
-    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
-    lexer.SetInputBuffer(value_pair.first.c_str());
-    fkyaml::LexicalTokenType token;
-
-    REQUIRE_NOTHROW(token = lexer.GetNextToken());
-    REQUIRE(token == fkyaml::LexicalTokenType::UNSIGNED_INT_VALUE);
-    REQUIRE_NOTHROW(lexer.GetUnsignedInt());
-    REQUIRE(lexer.GetUnsignedInt() == value_pair.second);
+    REQUIRE(token == fkyaml::LexicalTokenType::INTEGER_VALUE);
+    REQUIRE_NOTHROW(lexer.GetInteger());
+    REQUIRE(lexer.GetInteger() == value_pair.second);
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanOctalNumberTokenTest", "[LexicalAnalyzerClassTest]")
 {
-    using ValuePair = std::pair<std::string, fkyaml::NodeUnsignedIntType>;
+    using ValuePair = std::pair<std::string, fkyaml::NodeIntegerType>;
     auto value_pair = GENERATE(
         ValuePair(std::string("0o27"), 027),
         ValuePair(std::string("0o5"), 05),
@@ -258,14 +239,14 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanOctalNumberTokenTest", "[LexicalAnalyzer
     fkyaml::LexicalTokenType token;
 
     REQUIRE_NOTHROW(token = lexer.GetNextToken());
-    REQUIRE(token == fkyaml::LexicalTokenType::UNSIGNED_INT_VALUE);
-    REQUIRE_NOTHROW(lexer.GetUnsignedInt());
-    REQUIRE(lexer.GetUnsignedInt() == value_pair.second);
+    REQUIRE(token == fkyaml::LexicalTokenType::INTEGER_VALUE);
+    REQUIRE_NOTHROW(lexer.GetInteger());
+    REQUIRE(lexer.GetInteger() == value_pair.second);
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanHexadecimalNumberTokenTest", "[LexicalAnalyzerClassTest]")
 {
-    using ValuePair = std::pair<std::string, fkyaml::NodeUnsignedIntType>;
+    using ValuePair = std::pair<std::string, fkyaml::NodeIntegerType>;
     auto value_pair = GENERATE(
         ValuePair(std::string("0xA04F"), 0xA04F),
         ValuePair(std::string("0xa7F3"), 0xa7F3),
@@ -276,9 +257,9 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanHexadecimalNumberTokenTest", "[LexicalAn
     fkyaml::LexicalTokenType token;
 
     REQUIRE_NOTHROW(token = lexer.GetNextToken());
-    REQUIRE(token == fkyaml::LexicalTokenType::UNSIGNED_INT_VALUE);
-    REQUIRE_NOTHROW(lexer.GetUnsignedInt());
-    REQUIRE(lexer.GetUnsignedInt() == value_pair.second);
+    REQUIRE(token == fkyaml::LexicalTokenType::INTEGER_VALUE);
+    REQUIRE_NOTHROW(lexer.GetInteger());
+    REQUIRE(lexer.GetInteger() == value_pair.second);
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanFloatNumberTokenTest", "[LexicalAnalyzerClassTest]")
@@ -598,7 +579,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanKeyBooleanValuePairTokenTest", "[Lexical
     REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
 }
 
-TEST_CASE("LexicalAnalyzerClassTest_ScanKeySignedIntegerValuePairTokenTest", "[LexicalAnalyzerClassTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeyIntegerValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
     lexer.SetInputBuffer("test: -5784");
@@ -613,34 +594,9 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanKeySignedIntegerValuePairTokenTest", "[L
     REQUIRE(token == fkyaml::LexicalTokenType::KEY_SEPARATOR);
 
     REQUIRE_NOTHROW(token = lexer.GetNextToken());
-    REQUIRE(token == fkyaml::LexicalTokenType::SIGNED_INT_VALUE);
-    REQUIRE_NOTHROW(lexer.GetSignedInt());
-    REQUIRE(lexer.GetSignedInt() == -5784);
-
-    REQUIRE_NOTHROW(token = lexer.GetNextToken());
-    REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);
-}
-
-TEST_CASE("LexicalAnalyzerClassTest_ScanKeyUnsignedIntegerValuePairTokenTest", "[LexicalAnalyzerClassTest]")
-{
-    auto buffer = GENERATE(std::string("test: 47239"), std::string("test: +47239"));
-
-    fkyaml::LexicalAnalyzer<fkyaml::Node> lexer;
-    lexer.SetInputBuffer(buffer.c_str());
-    fkyaml::LexicalTokenType token;
-
-    REQUIRE_NOTHROW(token = lexer.GetNextToken());
-    REQUIRE(token == fkyaml::LexicalTokenType::STRING_VALUE);
-    REQUIRE_NOTHROW(lexer.GetString());
-    REQUIRE(lexer.GetString().compare("test") == 0);
-
-    REQUIRE_NOTHROW(token = lexer.GetNextToken());
-    REQUIRE(token == fkyaml::LexicalTokenType::KEY_SEPARATOR);
-
-    REQUIRE_NOTHROW(token = lexer.GetNextToken());
-    REQUIRE(token == fkyaml::LexicalTokenType::UNSIGNED_INT_VALUE);
-    REQUIRE_NOTHROW(lexer.GetUnsignedInt());
-    REQUIRE(lexer.GetUnsignedInt() == 47239);
+    REQUIRE(token == fkyaml::LexicalTokenType::INTEGER_VALUE);
+    REQUIRE_NOTHROW(lexer.GetInteger());
+    REQUIRE(lexer.GetInteger() == -5784);
 
     REQUIRE_NOTHROW(token = lexer.GetNextToken());
     REQUIRE(token == fkyaml::LexicalTokenType::END_OF_BUFFER);

@@ -93,11 +93,8 @@ private:
                 str += "false";
             }
             break;
-        case NodeType::SIGNED_INTEGER:
-            str += std::to_string(node.ToSignedInteger());
-            break;
-        case NodeType::UNSIGNED_INTEGER:
-            str += std::to_string(node.ToUnsignedInteger());
+        case NodeType::INTEGER:
+            str += std::to_string(node.ToInteger());
             break;
         case NodeType::FLOAT_NUMBER: {
             typename BasicNodeType::float_number_type float_val = node.ToFloatNumber();
