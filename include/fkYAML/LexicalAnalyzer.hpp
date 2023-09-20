@@ -51,8 +51,7 @@ enum class LexicalTokenType
     MAPPING_FLOW_END,      //!< the character for mapping end `}`
     NULL_VALUE,            //!< a null value found. use GetNull() to get a value.
     BOOLEAN_VALUE,         //!< a boolean value found. use GetBoolean() to get a value.
-    SIGNED_INT_VALUE,      //!< a signed integer value found. use GetSignedInt() to get a value.
-    UNSIGNED_INT_VALUE,    //!< an unsigned integer value found. use GetUnsignedInt() to get a value.
+    INTEGER_VALUE,         //!< an integer value found. use GetInteger() to get a value.
     FLOAT_NUMBER_VALUE,    //!< a float number value found. use GetFloatNumber() to get a value.
     STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
 };
@@ -74,8 +73,7 @@ private:
 
 public:
     using boolean_type = typename BasicNodeType::boolean_type;
-    using signed_int_type = typename BasicNodeType::signed_int_type;
-    using unsigned_int_type = typename BasicNodeType::unsigned_int_type;
+    using integer_type = typename BasicNodeType::integer_type;
     using float_number_type = typename BasicNodeType::float_number_type;
     using string_type = typename BasicNodeType::string_type;
 
@@ -357,11 +355,11 @@ public:
     }
 
     /**
-     * @brief Convert from string to signed integer and get the converted value.
+     * @brief Convert from string to integer and get the converted value.
      *
-     * @return signed_int_type A signed integer value converted from the source string.
+     * @return integer_type An integer value converted from the source string.
      */
-    signed_int_type GetSignedInt() const
+    integer_type GetInteger() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
 
@@ -370,24 +368,7 @@ public:
 
         FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
 
-        return static_cast<signed_int_type>(tmp_val);
-    }
-
-    /**
-     * @brief Convert from string to unsigned integer and get the converted value.
-     *
-     * @return unsigned_int_type An unsigned integer value converted from the source string.
-     */
-    unsigned_int_type GetUnsignedInt() const
-    {
-        FK_YAML_ASSERT(!m_value_buffer.empty());
-
-        char* endptr = nullptr;
-        const auto tmp_val = std::strtoull(m_value_buffer.data(), &endptr, 0);
-
-        FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
-
-        return static_cast<unsigned_int_type>(tmp_val);
+        return static_cast<integer_type>(tmp_val);
     }
 
     /**
@@ -591,7 +572,7 @@ private:
     }
 
     /**
-     * @brief Scan and determine a number type(signed/unsigned/float). This method is the entrypoint for all number
+     * @brief Scan and determine a number type(integer/float). This method is the entrypoint for all number
      * tokens.
      *
      * @return LexicalTokenType A lexical token type for a determined number type.
@@ -632,7 +613,7 @@ private:
     /**
      * @brief Scan a next character after the negative sign(-).
      *
-     * @return LexicalTokenType The lexical token type for either signed or float numbers.
+     * @return LexicalTokenType The lexical token type for either integer or float numbers.
      */
     LexicalTokenType ScanNegativeNumber()
     {
@@ -643,7 +624,7 @@ private:
         {
             m_value_buffer.push_back(next);
             const LexicalTokenType ret = ScanDecimalNumber();
-            return (ret == LexicalTokenType::FLOAT_NUMBER_VALUE) ? ret : LexicalTokenType::SIGNED_INT_VALUE;
+            return (ret == LexicalTokenType::FLOAT_NUMBER_VALUE) ? ret : LexicalTokenType::INTEGER_VALUE;
         }
 
         const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
@@ -662,7 +643,7 @@ private:
     /**
      * @brief Scan a next character after '0' at the beginning of a token.
      *
-     * @return LexicalTokenType The lexical token type for one of number types(signed/unsigned/float).
+     * @return LexicalTokenType The lexical token type for one of number types(integer/float).
      */
     LexicalTokenType ScanNumberAfterZeroAtFirst()
     {
@@ -681,7 +662,7 @@ private:
             m_value_buffer.push_back(next);
             return ScanHexadecimalNumber();
         default:
-            return LexicalTokenType::UNSIGNED_INT_VALUE;
+            return LexicalTokenType::INTEGER_VALUE;
         }
     }
 
@@ -729,7 +710,7 @@ private:
     /**
      * @brief Scan a next character after a sign(+/-) after exponent(e/E).
      *
-     * @return LexicalTokenType The lexical token type for one of number types(signed/unsigned/float)
+     * @return LexicalTokenType The lexical token type for one of number types(integer/float)
      */
     LexicalTokenType ScanDecimalNumberAfterSign()
     {
@@ -748,7 +729,7 @@ private:
     /**
      * @brief Scan a next character for decimal numbers.
      *
-     * @return LexicalTokenType The lexical token type for one of number types(signed/unsigned/float)
+     * @return LexicalTokenType The lexical token type for one of number types(integer/float)
      */
     LexicalTokenType ScanDecimalNumber()
     {
@@ -777,14 +758,13 @@ private:
             return ScanDecimalNumberAfterExponent();
         }
 
-        return LexicalTokenType::UNSIGNED_INT_VALUE;
+        return LexicalTokenType::INTEGER_VALUE;
     }
 
     /**
      * @brief Scan a next character for octal numbers.
-     * @note All octal numbers are interpreted as unsigned integers.
      *
-     * @return LexicalTokenType The lexical token type for unsigned numbers.
+     * @return LexicalTokenType The lexical token type for integers.
      */
     LexicalTokenType ScanOctalNumber()
     {
@@ -794,14 +774,13 @@ private:
             m_value_buffer.push_back(next);
             ScanOctalNumber();
         }
-        return LexicalTokenType::UNSIGNED_INT_VALUE;
+        return LexicalTokenType::INTEGER_VALUE;
     }
 
     /**
      * @brief Scan a next character for hexadecimal numbers.
-     * @note All hexadecimal numbers are interpreted as unsigned integers.
      *
-     * @return LexicalTokenType The lexical token type for unsigned numbers.
+     * @return LexicalTokenType The lexical token type for integers.
      */
     LexicalTokenType ScanHexadecimalNumber()
     {
@@ -811,7 +790,7 @@ private:
             m_value_buffer.push_back(next);
             ScanHexadecimalNumber();
         }
-        return LexicalTokenType::UNSIGNED_INT_VALUE;
+        return LexicalTokenType::INTEGER_VALUE;
     }
 
     /**

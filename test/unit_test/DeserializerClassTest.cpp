@@ -152,15 +152,15 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
         fkyaml::Node& test_0_node = test_node[0];
         REQUIRE(test_0_node.HasAnchorName());
         REQUIRE(test_0_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(test_0_node.IsSignedInteger());
-        REQUIRE_NOTHROW(test_0_node.ToSignedInteger());
-        REQUIRE(test_0_node.ToSignedInteger() == -123);
+        REQUIRE(test_0_node.IsInteger());
+        REQUIRE_NOTHROW(test_0_node.ToInteger());
+        REQUIRE(test_0_node.ToInteger() == -123);
 
         REQUIRE_NOTHROW(test_node[1]);
         fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsSignedInteger());
-        REQUIRE_NOTHROW(test_1_node.ToSignedInteger());
-        REQUIRE(test_1_node.ToSignedInteger() == test_0_node.ToSignedInteger());
+        REQUIRE(test_1_node.IsInteger());
+        REQUIRE_NOTHROW(test_1_node.ToInteger());
+        REQUIRE(test_1_node.ToInteger() == test_0_node.ToInteger());
     }
 
     SECTION("Input source No.5.")
@@ -181,15 +181,15 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
         fkyaml::Node& test_0_node = test_node[0];
         REQUIRE(test_0_node.HasAnchorName());
         REQUIRE(test_0_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(test_0_node.IsUnsignedInteger());
-        REQUIRE_NOTHROW(test_0_node.ToUnsignedInteger());
-        REQUIRE(test_0_node.ToUnsignedInteger() == 567);
+        REQUIRE(test_0_node.IsInteger());
+        REQUIRE_NOTHROW(test_0_node.ToInteger());
+        REQUIRE(test_0_node.ToInteger() == 567);
 
         REQUIRE_NOTHROW(test_node[1]);
         fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsUnsignedInteger());
-        REQUIRE_NOTHROW(test_1_node.ToUnsignedInteger());
-        REQUIRE(test_1_node.ToUnsignedInteger() == test_0_node.ToUnsignedInteger());
+        REQUIRE(test_1_node.IsInteger());
+        REQUIRE_NOTHROW(test_1_node.ToInteger());
+        REQUIRE(test_1_node.ToInteger() == test_0_node.ToInteger());
     }
 
     SECTION("Input source No.6.")
@@ -352,15 +352,15 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         fkyaml::Node& foo_node = root["foo"];
         REQUIRE(foo_node.HasAnchorName());
         REQUIRE(foo_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(foo_node.IsSignedInteger());
-        REQUIRE_NOTHROW(foo_node.ToSignedInteger());
-        REQUIRE(foo_node.ToSignedInteger() == -123);
+        REQUIRE(foo_node.IsInteger());
+        REQUIRE_NOTHROW(foo_node.ToInteger());
+        REQUIRE(foo_node.ToInteger() == -123);
 
         REQUIRE_NOTHROW(root["bar"]);
         fkyaml::Node& bar_node = root["bar"];
-        REQUIRE(bar_node.IsSignedInteger());
-        REQUIRE_NOTHROW(bar_node.ToSignedInteger());
-        REQUIRE(bar_node.ToSignedInteger() == foo_node.ToSignedInteger());
+        REQUIRE(bar_node.IsInteger());
+        REQUIRE_NOTHROW(bar_node.ToInteger());
+        REQUIRE(bar_node.ToInteger() == foo_node.ToInteger());
     }
 
     SECTION("Input source No.5.")
@@ -374,15 +374,15 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         fkyaml::Node& foo_node = root["foo"];
         REQUIRE(foo_node.HasAnchorName());
         REQUIRE(foo_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(foo_node.IsUnsignedInteger());
-        REQUIRE_NOTHROW(foo_node.ToUnsignedInteger());
-        REQUIRE(foo_node.ToUnsignedInteger() == 567);
+        REQUIRE(foo_node.IsInteger());
+        REQUIRE_NOTHROW(foo_node.ToInteger());
+        REQUIRE(foo_node.ToInteger() == 567);
 
         REQUIRE_NOTHROW(root["bar"]);
         fkyaml::Node& bar_node = root["bar"];
-        REQUIRE(bar_node.IsUnsignedInteger());
-        REQUIRE_NOTHROW(bar_node.ToUnsignedInteger());
-        REQUIRE(bar_node.ToUnsignedInteger() == foo_node.ToUnsignedInteger());
+        REQUIRE(bar_node.IsInteger());
+        REQUIRE_NOTHROW(bar_node.ToInteger());
+        REQUIRE(bar_node.ToInteger() == foo_node.ToInteger());
     }
 
     SECTION("Input source No.6.")

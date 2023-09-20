@@ -46,10 +46,8 @@ class BasicDeserializer
     using mapping_type = typename BasicNodeType::mapping_type;
     /** A type for boolean node values. */
     using boolean_type = typename BasicNodeType::boolean_type;
-    /** A type for signed integer node values. */
-    using signed_int_type = typename BasicNodeType::signed_int_type;
-    /** A type for unsigned integer node values. */
-    using unsigned_int_type = typename BasicNodeType::unsigned_int_type;
+    /** A type for integer node values. */
+    using integer_type = typename BasicNodeType::integer_type;
     /** A type for float number node values. */
     using float_number_type = typename BasicNodeType::float_number_type;
     /** A type for string node values. */
@@ -282,7 +280,7 @@ public:
                 p_current_node = node_stack.back();
                 node_stack.pop_back();
                 break;
-            case LexicalTokenType::SIGNED_INT_VALUE:
+            case LexicalTokenType::INTEGER_VALUE:
                 if (p_current_node->IsMapping())
                 {
                     throw Exception("Cannot assign a signed integer as a key.");
@@ -290,8 +288,7 @@ public:
 
                 if (p_current_node->IsSequence())
                 {
-                    p_current_node->ToSequence().emplace_back(
-                        BasicNodeType::SignedIntegerScalar(m_lexer.GetSignedInt()));
+                    p_current_node->ToSequence().emplace_back(BasicNodeType::IntegerScalar(m_lexer.GetInteger()));
                     p_current_node->ToSequence().back().SetVersion(yaml_version);
                     if (needs_anchor_impl)
                     {
@@ -303,40 +300,8 @@ public:
                     break;
                 }
                 // a scalar node
-                *p_current_node = BasicNodeType::SignedIntegerScalar(m_lexer.GetSignedInt());
+                *p_current_node = BasicNodeType::IntegerScalar(m_lexer.GetInteger());
                 p_current_node->SetVersion(yaml_version);
-                if (needs_anchor_impl)
-                {
-                    p_current_node->AddAnchorName(anchor_name);
-                    anchor_table[anchor_name] = *p_current_node;
-                    needs_anchor_impl = false;
-                    anchor_name.clear();
-                }
-                p_current_node = node_stack.back();
-                node_stack.pop_back();
-                break;
-            case LexicalTokenType::UNSIGNED_INT_VALUE:
-                if (p_current_node->IsMapping())
-                {
-                    throw Exception("Cannot assign an unsigned integer as a key.");
-                }
-
-                if (p_current_node->IsSequence())
-                {
-                    p_current_node->ToSequence().emplace_back(
-                        BasicNodeType::UnsignedIntegerScalar(m_lexer.GetUnsignedInt()));
-                    p_current_node->ToSequence().back().SetVersion(yaml_version);
-                    if (needs_anchor_impl)
-                    {
-                        p_current_node->ToSequence().back().AddAnchorName(anchor_name);
-                        anchor_table[anchor_name] = p_current_node->ToSequence().back();
-                        needs_anchor_impl = false;
-                        anchor_name.clear();
-                    }
-                    break;
-                }
-                // a scalar node
-                *p_current_node = BasicNodeType::UnsignedIntegerScalar(m_lexer.GetUnsignedInt());
                 if (needs_anchor_impl)
                 {
                     p_current_node->AddAnchorName(anchor_name);
