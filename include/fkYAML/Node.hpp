@@ -45,8 +45,7 @@ FK_YAML_NAMESPACE_BEGIN
 template <
     template <typename, typename...> class SequenceType = std::vector,
     template <typename, typename, typename...> class MappingType = OrderedMap, typename BooleanType = bool,
-    typename SignedIntegerType = std::int64_t, typename UnsignedIntegerType = std::uint64_t,
-    typename FloatNumberType = double, typename StringType = std::string>
+    typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string>
 class BasicNode
 {
 public:
@@ -61,10 +60,8 @@ public:
     using mapping_type = MappingType<StringType, BasicNode>;
     /** A type for boolean BasicNode values. */
     using boolean_type = BooleanType;
-    /** A type for signed integer BasicNode values. */
-    using signed_int_type = SignedIntegerType;
-    /** A type for unsigned integer BasicNode values. */
-    using unsigned_int_type = UnsignedIntegerType;
+    /** A type for integer BasicNode values. */
+    using integer_type = IntegerType;
     /** A type for float number BasicNode values. */
     using float_number_type = FloatNumberType;
     /** A type for string BasicNode values. */
@@ -106,11 +103,8 @@ private:
             case NodeType::BOOLEAN:
                 boolean = static_cast<boolean_type>(false);
                 break;
-            case NodeType::SIGNED_INTEGER:
-                signed_int = static_cast<signed_int_type>(0);
-                break;
-            case NodeType::UNSIGNED_INTEGER:
-                unsigned_int = static_cast<unsigned_int_type>(0);
+            case NodeType::INTEGER:
+                integer = static_cast<integer_type>(0);
                 break;
             case NodeType::FLOAT_NUMBER:
                 float_val = static_cast<float_number_type>(0.0);
@@ -198,10 +192,8 @@ private:
         mapping_type* mapping;
         /** A value of boolean type. */
         boolean_type boolean;
-        /** A value of signed integer type. */
-        signed_int_type signed_int;
-        /** A value of unsigned integer type. */
-        unsigned_int_type unsigned_int;
+        /** A value of integer type. */
+        integer_type integer;
         /** A value of float number type. */
         float_number_type float_val;
         /** A pointer to the value of string type. */
@@ -307,11 +299,8 @@ public:
         case NodeType::BOOLEAN:
             m_node_value.boolean = rhs.m_node_value.boolean;
             break;
-        case NodeType::SIGNED_INTEGER:
-            m_node_value.signed_int = rhs.m_node_value.signed_int;
-            break;
-        case NodeType::UNSIGNED_INTEGER:
-            m_node_value.unsigned_int = rhs.m_node_value.unsigned_int;
+        case NodeType::INTEGER:
+            m_node_value.integer = rhs.m_node_value.integer;
             break;
         case NodeType::FLOAT_NUMBER:
             m_node_value.float_val = rhs.m_node_value.float_val;
@@ -362,13 +351,9 @@ public:
             m_node_value.boolean = rhs.m_node_value.boolean;
             rhs.m_node_value.boolean = static_cast<boolean_type>(false);
             break;
-        case NodeType::SIGNED_INTEGER:
-            m_node_value.signed_int = rhs.m_node_value.signed_int;
-            rhs.m_node_value.signed_int = static_cast<signed_int_type>(0);
-            break;
-        case NodeType::UNSIGNED_INTEGER:
-            m_node_value.unsigned_int = rhs.m_node_value.unsigned_int;
-            rhs.m_node_value.unsigned_int = static_cast<unsigned_int_type>(0);
+        case NodeType::INTEGER:
+            m_node_value.integer = rhs.m_node_value.integer;
+            rhs.m_node_value.integer = static_cast<integer_type>(0);
             break;
         case NodeType::FLOAT_NUMBER:
             m_node_value.float_val = rhs.m_node_value.float_val;
@@ -504,30 +489,16 @@ public:
     }
 
     /**
-     * @brief A factory method for signed integer scalar BasicNode objects.
+     * @brief A factory method for integer scalar BasicNode objects.
      *
-     * @param[in] signed_int A source of signed integer type.
-     * @return BasicNode A constructed BasicNode object of signed integer type.
+     * @param[in] integer A source of integer type.
+     * @return BasicNode A constructed BasicNode object of integer type.
      */
-    static BasicNode SignedIntegerScalar(const signed_int_type signed_int) noexcept
+    static BasicNode IntegerScalar(const integer_type integer) noexcept
     {
         BasicNode node;
-        node.m_node_type = NodeType::SIGNED_INTEGER;
-        node.m_node_value.signed_int = signed_int;
-        return node;
-    }
-
-    /**
-     * @brief A factory method for unsigned integer scalar BasicNode objects.
-     *
-     * @param[in] unsigned_int A source of unsigned integer type.
-     * @return BasicNode A constructed BasicNode object of unsigned integer type.
-     */
-    static BasicNode UnsignedIntegerScalar(const unsigned_int_type unsigned_int) noexcept
-    {
-        BasicNode node;
-        node.m_node_type = NodeType::UNSIGNED_INTEGER;
-        node.m_node_value.unsigned_int = unsigned_int;
+        node.m_node_type = NodeType::INTEGER;
+        node.m_node_value.integer = integer;
         return node;
     }
 
@@ -745,8 +716,7 @@ public:
      * @retval NodeType::MAPPINT          mapping type.
      * @retval NodeType::NULL_OBJECT      null type.
      * @retval NodeType::BOOLEAN          boolean type.
-     * @retval NodeType::SIGNED_INTEGER   signed integer type.
-     * @retval NodeType::UNSIGNED_INTEGER unsigned integer type.
+     * @retval NodeType::INTEGER          integer type.
      * @retval NodeType::FLOAT_NUMBER     float number type.
      * @retval NodeType::STRING           string type.
      */
@@ -804,27 +774,15 @@ public:
     }
 
     /**
-     * @brief Tests whether the current BasicNode value is of signed integer type.
+     * @brief Tests whether the current BasicNode value is of integer type.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is of signed integer type.
-     * @retval true  The current BasicNode value is of signed integer type.
-     * @return false The current BasicNode value is not of signed integer type.
+     * @return bool A result of testing whetehre the current BasicNode value is of integer type.
+     * @retval true  The current BasicNode value is of integer type.
+     * @return false The current BasicNode value is not of integer type.
      */
-    bool IsSignedInteger() const noexcept
+    bool IsInteger() const noexcept
     {
-        return m_node_type == NodeType::SIGNED_INTEGER;
-    }
-
-    /**
-     * @brief Tests whether the current BasicNode value is of unsigned integer type.
-     *
-     * @return bool A result of testing whetehre the current BasicNode value is of unsigned integer type.
-     * @retval true  The current BasicNode value is of unsigned integer type.
-     * @return false The current BasicNode value is not of unsigned integer type.
-     */
-    bool IsUnsignedInteger() const noexcept
-    {
-        return m_node_type == NodeType::UNSIGNED_INTEGER;
+        return m_node_type == NodeType::INTEGER;
     }
 
     /**
@@ -1127,67 +1085,35 @@ public:
     }
 
     /**
-     * @brief Returns reference to signed integer BasicNode value from a non-const BasicNode object. Throws exception if
-     * the BasicNode value is not of signed integer type.
+     * @brief Returns reference to  integer BasicNode value from a non-const BasicNode object. Throws exception if
+     * the BasicNode value is not of  integer type.
      *
-     * @return signed_int_type& Reference to signed integer BasicNode value.
+     * @return integer_type& Reference to  integer BasicNode value.
      */
-    signed_int_type& ToSignedInteger()
+    integer_type& ToInteger()
     {
-        if (!IsSignedInteger())
+        if (!IsInteger())
         {
-            throw Exception("The target node is not of a signed integer type.");
+            throw Exception("The target node is not of integer type.");
         }
 
-        return m_node_value.signed_int;
+        return m_node_value.integer;
     }
 
     /**
-     * @brief Returns reference to signed integer BasicNode value from a const BasicNode object. Throws exception if the
-     * BasicNode value is not of signed integer type.
+     * @brief Returns reference to  integer BasicNode value from a const BasicNode object. Throws exception if the
+     * BasicNode value is not of  integer type.
      *
-     * @return const signed_int_type& Constant reference to signed integer BasicNode value.
+     * @return const integer_type& Constant reference to  integer BasicNode value.
      */
-    const signed_int_type& ToSignedInteger() const
+    const integer_type& ToInteger() const
     {
-        if (!IsSignedInteger())
+        if (!IsInteger())
         {
-            throw Exception("The target node is not of a signed integer type.");
+            throw Exception("The target node is not of integer type.");
         }
 
-        return m_node_value.signed_int;
-    }
-
-    /**
-     * @brief Returns reference to unsigned integer BasicNode value from a non-const BasicNode object. Throws exception
-     * if the BasicNode value is not of unsigned integer type.
-     *
-     * @return unsigned_int_type& Reference to unsigned integer BasicNode value.
-     */
-    unsigned_int_type& ToUnsignedInteger()
-    {
-        if (!IsUnsignedInteger())
-        {
-            throw Exception("The target node is not of an unsigned integer type.");
-        }
-
-        return m_node_value.unsigned_int;
-    }
-
-    /**
-     * @brief Returns reference to unsigned integer BasicNode value from a const BasicNode object. Throws exception if
-     * the BasicNode value is not of unsigned integer type.
-     *
-     * @return const unsigned_int_type& Constant reference to unsigned integer BasicNode value.
-     */
-    const unsigned_int_type& ToUnsignedInteger() const
-    {
-        if (!IsUnsignedInteger())
-        {
-            throw Exception("The target node is not of an unsigned integer type.");
-        }
-
-        return m_node_value.unsigned_int;
+        return m_node_value.integer;
     }
 
     /**
@@ -1436,11 +1362,8 @@ using NodeMappingType = typename Node::mapping_type;
 /** A default type for boolean Node values. */
 using NodeBooleanType = typename Node::boolean_type;
 
-/** A default type for signed integer Node values. */
-using NodeSignedIntType = typename Node::signed_int_type;
-
-/** A default type for unsigned integer Node values. */
-using NodeUnsignedIntType = typename Node::unsigned_int_type;
+/** A default type for integer Node values. */
+using NodeIntegerType = typename Node::integer_type;
 
 /** A default type for float number Node values. */
 using NodeFloatNumberType = typename Node::float_number_type;
