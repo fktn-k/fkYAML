@@ -68,9 +68,19 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Download MinGW 8.1.0
+      run: |
+        $headers = @{Authorization = 'Bearer ${{secrets.GITHUB_TOKEN}}'}
+        $uri = 'https://nuget.pkg.github.com/falbrechtskirchinger/download/mingw/8.1.0/mingw.8.1.0.nupkg'
+        Invoke-WebRequest -Uri $uri -Headers $headers -OutFile mingw.8.1.0.nupkg
+
+    - name: Uninstall existing MinGW
+      continue-on-error: true
+      run: choco uninstall mingw
+
     - name: Install MinGW 8.1.0
       run: |
-        choco install mingw.8.1.0.nupkg
+        choco install mingw.8.1.0.nupkg ''
         $prefix = 'x86_64-w64-mingw32'
         $mingw = 'mingw64'
         $mingw_install = Join-Path C: ProgramData chocolatey lib mingw tools install
