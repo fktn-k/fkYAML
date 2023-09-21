@@ -83,13 +83,11 @@ jobs:
         choco install mingw.8.1.0.nupkg ''
         $prefix = 'x86_64-w64-mingw32'
         $mingw = 'mingw64'
-        $mingw_install = Join-Path C: ProgramData chocolatey lib mingw tools install
+        $mingw_install = Join-Path C: 'Program Data' chocolatey lib mingw tools install
         $mingw_root = Join-Path $mingw_install $mingw
         $mingw_bin = Join-Path $mingw_root bin
         $mingw_lib = Join-Path $mingw_root $prefix lib
         echo $mingw_bin >> $env:GITHUB_PATH
-        Remove-Item (Join-Path $mingw_lib 'libpthread.dll.a')
-        Remove-Item (Join-Path $mingw_lib 'libwinpthread.dll.a')
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -S ${{github.workspace}} -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
 
