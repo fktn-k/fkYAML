@@ -215,6 +215,12 @@ Currently, the following compilers are known to work and used in CI workflows:
 
 | Compiler | Operating System | CI provider |
 |----------|------------------|-------------|
+| AppleClang 11.0.3.11030032 | macOS 11.7.9 | GitHub Actions |
+| AppleClang 12.0.0.12000032 | macOS 11.7.9 | GitHub Actions |
+| AppleClang 12.0.5.12050022 | macOS 11.7.9 | GitHub Actions |
+| AppleClang 13.0.0.13000029 | macOS 11.7.9 | GitHub Actions |
+| AppleClang 13.0.0.13000029 | macOS 12.6.8 | GitHub Actions |
+| AppleClang 13.1.6.13160021 | macOS 12.6.8 | GitHub Actions |
 | AppleClang 14.0.0.14000029 | macOS 12.6.8 | GitHub Actions |
 | Clang 11.1.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 12.0.1 | Ubuntu 22.04.3 LTS | GitHub Actions |
@@ -225,6 +231,8 @@ Currently, the following compilers are known to work and used in CI workflows:
 | GCC 10.5.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 11.4.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 12.3.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
+| MinGW-64 8.1.0 | Windows-10.0.17763 | GitHub Actions |
+| MinGW-64 12.2.0 | Windows-10.0.20348 | GitHub Actions |
 | Visual Studio 16 2019 MSVC 19.29.30152.0 | Windows-10.0.17763 | GitHub Actions |
 | Visual Studio 17 2022 MSVC 19.35.32217.1 | Windows-10.0.20348 | GitHub Actions |
 
