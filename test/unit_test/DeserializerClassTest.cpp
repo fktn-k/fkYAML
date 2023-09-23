@@ -6,7 +6,7 @@
  * | | |   <  | |/ ____ \| |  | | |____
  * |_| |_|\_\ |_/_/    \_\_|  |_|______|
  *
- * @file DeserializerClassTest.cpp 
+ * @file DeserializerClassTest.cpp
  * @brief Implementation of test functions for the Deserializer class.
  * @version 0.0.0
  *
