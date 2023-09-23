@@ -2,14 +2,16 @@ name: Clang_Format_Check
 
 on:
   push:
-    paths:
-      - '**.hpp'
-      - '**.cpp'
+    branches:
+      - develop
+      - main
+      - release/*
   pull_request:
-    branches: [ "main", "develop" ]
+  workflow_dispatch:
 
-env:
-  BUILD_TYPE: Release
+concurrency:
+  group: ${{github.workflow}}-${{github.ref || github.run_id}}
+  cancel-in-progress: true
 
 jobs:
   format-check:
