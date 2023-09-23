@@ -1,0 +1,23 @@
+/**
+ *   __ _  __     __      __  __ _
+ *  / _| | \ \   / //\   |  \/  | |
+ * | |_| | _\ \_/ //  \  | \  / | |
+ * |  _| |/ /\   // /\ \ | |\/| | |
+ * | | |   <  | |/ ____ \| |  | | |____
+ * |_| |_|\_\ |_/_/    \_\_|  |_|______|
+ *
+ * @file IWYUHelper_@REL_SRC_FILE_REPLACED@.cpp
+ * @brief A helper source file to run include-what-you-use tool for @REL_SRC_FILE@ file.
+ * @version 0.0.0
+ *
+ * Copyright (c) 2023 fktn
+ * Distributed under the MIT License (https://opensource.org/licenses/MIT)
+ */
+
+#include "fkYAML/@REL_SRC_FILE@" // IWYU pragma: keep
+
+// This is just a dummy main function for compilation.
+int main()
+{
+    return 0;
+}

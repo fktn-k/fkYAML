@@ -1,0 +1,51 @@
+name: ReleasePackage
+
+on:
+  push:
+    branches: 
+      - main
+  workflow_dispatch:
+
+jobs:
+  create_package:
+    timeout-minutes: 10
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: fkYAML.tgz
+          - os: windows-latest
+            artifact_name: fkYAML.zip
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{github.workspace}}/build/package"
+
+    - name: Install
+      run: |
+        cmake --build ${{github.workspace}}/build --config Release --target install
+        ls ${{github.workspace}}/build/package
+
+    - name: Package
+      shell: bash
+      run: |
+        ls '${{github.workspace}}/build'
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]
+        then
+          7z a ${{matrix.artifact_name}} '${{github.workspace}}/build/package'
+        else
+          tar czvf ${{matrix.artifact_name}} '${{github.workspace}}/build/package'
+        fi
+        ls
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{matrix.artifact_name}}
+        path: ${{matrix.artifact_name}}

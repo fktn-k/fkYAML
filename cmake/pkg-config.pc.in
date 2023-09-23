@@ -1,0 +1,4 @@
+NAME: ${PROJECT_NAME}
+Description: A header-only C++ library for YAML
+Version: ${PROJECT_VERSION}
+Cflags: -I"${CMAKE_INSTALL_FULL_INCLUDEDIR}"

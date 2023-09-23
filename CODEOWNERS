@@ -1,0 +1,5 @@
+# fkYAML has been originally written by Kensuke Fukutani.
+# This CODEOWNERS file is only to make sure that @fktn-k is requested
+# for a code review in case of a pull request.
+
+* @fktn-k

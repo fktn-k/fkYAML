@@ -1,0 +1,47 @@
+/**
+ *   __ _  __     __      __  __ _
+ *  / _| | \ \   / //\   |  \/  | |
+ * | |_| | _\ \_/ //  \  | \  / | |
+ * |  _| |/ /\   // /\ \ | |\/| | |
+ * | | |   <  | |/ ____ \| |  | | |____
+ * |_| |_|\_\ |_/_/    \_\_|  |_|______|
+ *
+ * @file NodeType.hpp
+ * @brief Definitions of YAML node data types.
+ * @version 0.0.0
+ *
+ * Copyright (c) 2023 fktn
+ * Distributed under the MIT License (https://opensource.org/licenses/MIT)
+ */
+
+#ifndef FK_YAML_NODE_TYPE_HPP_
+#define FK_YAML_NODE_TYPE_HPP_
+
+#include <cstdint>
+
+#include "fkYAML/VersioningMacros.hpp"
+
+/**
+ * @namespace fkyaml
+ * @brief namespace for fkYAML library.
+ */
+FK_YAML_NAMESPACE_BEGIN
+
+/**
+ * @enum NodeType
+ * @brief Definition of node value types.
+ */
+enum class NodeType : std::uint32_t
+{
+    SEQUENCE,     //!< sequence value type
+    MAPPING,      //!< mapping value type
+    NULL_OBJECT,  //!< null value type
+    BOOLEAN,      //!< boolean value type
+    INTEGER,      //!< integer value type
+    FLOAT_NUMBER, //!< float number value type
+    STRING,       //!< string value type
+};
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_NODE_TYPE_HPP_ */

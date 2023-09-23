@@ -1,0 +1,33 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - release/*
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  coverage:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Generate coverage
+      run: |
+        sudo apt-get install -y lcov
+        CXX=g++ cmake -B ${{github.workspace}}/build_coverage -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_CODE_COVERAGE=ON
+        cmake --build ${{github.workspace}}/build_coverage --config Debug --target generate_test_coverage
+
+    - name: Upload coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        file: ${{github.workspace}}/build_coverage/coverage/fkYAML.info
+        format: lcov

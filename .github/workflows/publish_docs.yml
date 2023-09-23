@@ -1,0 +1,52 @@
+name: PublishDocs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install graphviz and doxygen
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends graphviz doxygen
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -S ${{github.workspace}} -DFK_YAML_RUN_DOXYGEN=ON
+
+      - name: Create API documents with Doxygen
+        run: cmake --build ${{github.workspace}}/build --target doxygen
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload API documents
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ${{github.workspace}}/build/doxygen/html
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
