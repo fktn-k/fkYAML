@@ -1,6 +1,14 @@
 /**
+ *   __ _  __     __      __  __ _
+ *  / _| | \ \   / //\   |  \/  | |
+ * | |_| | _\ \_/ //  \  | \  / | |
+ * |  _| |/ /\   // /\ \ | |\/| | |
+ * | | |   <  | |/ ____ \| |  | | |____
+ * |_| |_|\_\ |_/_/    \_\_|  |_|______|
+ *
  * @file NodeType.hpp
  * @brief Definitions of YAML node data types.
+ * @version 0.0.0
  *
  * Copyright (c) 2023 fktn
  * Distributed under the MIT License (https://opensource.org/licenses/MIT)

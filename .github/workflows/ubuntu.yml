@@ -2,13 +2,16 @@ name: Ubuntu
 
 on:
   push:
-    paths:
-      - '**.hpp'
-      - '**.cpp'
-      - '**.cmake'
-      - '**.yml'
+    branches:
+      - develop
+      - main
+      - release/*
   pull_request:
   workflow_dispatch:
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref || github.run_id}}
+  cancel-in-progress: true
 
 jobs:
   ubuntu-latest:

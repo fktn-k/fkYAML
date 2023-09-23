@@ -1,5 +1,14 @@
 /**
- * SerializerClassTest.cpp - implementation of test functions for the Serializer class
+ *   __ _  __     __      __  __ _
+ *  / _| | \ \   / //\   |  \/  | |
+ * | |_| | _\ \_/ //  \  | \  / | |
+ * |  _| |/ /\   // /\ \ | |\/| | |
+ * | | |   <  | |/ ____ \| |  | | |____
+ * |_| |_|\_\ |_/_/    \_\_|  |_|______|
+ *
+ * @file SerializerClassTest.cpp
+ * @brief Implementation of test functions for the Serializer class.
+ * @version 0.0.0
  *
  * Copyright (c) 2023 fktn
  * Distributed under the MIT License (https://opensource.org/licenses/MIT)
