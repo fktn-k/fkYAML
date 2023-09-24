@@ -36,11 +36,12 @@ The fkYAML library has two design goals:
   By just adding the fkYAML libary to your own C++ projects, everything should work fine with no extra requirements.  
   If there should arise any issue, it's our fault. Please let us know by creating an issue or a PR to fix it up.
 
-- **Seriously tested**.  
+- **Heavily tested**.  
   The fkYAML library has been [unit-tested](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test) and covers as many lines and conditions of the code as possible. (You can see the actual coverage [here](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).)  
-  Furthermore, we checked with [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/), [Clang Sanitizers](https://clang.llvm.org/docs/index.html) and [CodeQL](https://codeql.github.com/docs/) that there are no static/runtime issues in the fkYAML library.  
-  CI workflows run against every commit where any .cpp or .hpp files get changed to check that the fkYAML library can be successfully built/tested on various platforms and compilers with C++ standards.  
-  See the supported environments section for more details.
+  We check with [Valgrind](https://valgrind.org) and the [Clang Sanitizers](https://clang.llvm.org/docs/index.html) that there are no runtime issues such as memory leak.  
+  Furthermore, the quality of our codebase has been checked with [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/) and [CodeQL](https://codeql.github.com/docs/).  
+  GitHub Actions workflows run against every commit pushed on the main & develop branches to check that the fkYAML library can be successfully built/tested with a variety of compilers and C++ standards.  
+  See the [supported compilers](#supported-compilers) section for more details.
 
 ## How to Integrate with existing C++ projects
 
@@ -284,3 +285,4 @@ However, it is built, tested and documented with a lot of third-party tools and 
 - [**Doxygen**](https://www.doxygen.nl/) as the API documentation generator.
 - [**include-what-you-use**](https://github.com/include-what-you-use/include-what-you-use) to check the fkYAML library source files are each self-contained.
 - [**lcov**](https://ltp.sourceforge.net/coverage/lcov.php) to process coverage information and create an HTML result view.
+- [**Valgrind**](https://valgrind.org/) for runtime memory leak check.

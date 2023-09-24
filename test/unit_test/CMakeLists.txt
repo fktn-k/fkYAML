@@ -65,6 +65,11 @@ if(${FK_YAML_RUN_CLANG_FORMAT})
   )
 endif()
 
+if(FK_YAML_RUN_VALGRIND)
+  find_program(MEMORYCHECK_COMMAND valgrind REQUIRED)
+  set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1")
+endif()
+
 if(FK_YAML_CODE_COVERAGE)
   target_compile_options(${TEST_TARGET} PRIVATE
     -O0        # no optimization

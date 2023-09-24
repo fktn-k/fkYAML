@@ -51,6 +51,30 @@ jobs:
     - name: Clang-Tidy check
       run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
 
+  valgrind_memory_leak_test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Install Valgrind
+      run: |
+        sudo apt install -y valgrind
+        valgrind --version
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build_valgrind -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build_valgrind --config Debug
+
+    - name: Memory Leak Check with Valgrind
+      working-directory: ${{github.workspace}}/build_valgrind
+      run: ctest -C Debug -T memcheck
+
   clang-tests-with-self-hosted-runner:
     runs-on: [self-hosted, Linux, X64, clang]
     strategy:
