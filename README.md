@@ -204,12 +204,11 @@ fkyaml::Node another_root = fkyaml::Node::Mapping({
 ## How to execute the unit tests
 
 You can execute the unit tests with the following commands.  
-If the fkYAML library is the main target, the unit test app is automatically built.  
 ```bash
 $ cd path/to/fkYAML
 $ mkdir build && cd build
-$ cmake .. -DCMAKE_BUILD_TYPE=Debug
-$ cmake --build .
+$ cmake .. -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
+$ cmake --build . --config Debug
 $ ctest -C Debug --output-on-failure
 ```
 
