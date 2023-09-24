@@ -26,6 +26,76 @@ TEST_CASE("DeserializerClassTest_InputStringTest", "[DeserializerClassTest]")
     REQUIRE_THROWS_AS(deserializer.Deserialize(nullptr), fkyaml::Exception);
 }
 
+TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTest]")
+{
+    fkyaml::Deserializer deserializer;
+    fkyaml::Node root;
+
+    SECTION("normal key-value cases")
+    {
+        auto input_str = GENERATE(
+            std::string("test: hoge"), std::string("test:\n  foo: bar"), std::string("test:\n  - foo\n  - bar"));
+        REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
+        REQUIRE(root.IsMapping());
+        REQUIRE(root.Size() == 1);
+    }
+
+    SECTION("error cases")
+    {
+        auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"));
+        REQUIRE_THROWS_AS(root = deserializer.Deserialize(input_str.c_str()), fkyaml::Exception);
+    }
+}
+
+TEST_CASE("DeserializerClassTest_DeserializeValueSeparator", "[DeserializerClassTest]")
+{
+    fkyaml::Deserializer deserializer;
+    fkyaml::Node root;
+
+    auto input_str = GENERATE(std::string("test: [ foo, bar ]"), std::string("test: { foo: bar, buz: val }"));
+    REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
+    REQUIRE(root.IsMapping());
+    REQUIRE(root.Size() == 1);
+}
+
+TEST_CASE("DeserializerClassTest_DeserializeNullValue", "[DeserializerClassTes]")
+{
+    fkyaml::Deserializer deserializer;
+    fkyaml::Node root;
+
+    auto input_str = GENERATE(std::string("test: null"), std::string("Null: test"));
+    REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
+    REQUIRE(root.IsMapping());
+    REQUIRE(root.Size() == 1);
+}
+
+TEST_CASE("DeserializerClassTest_DeserializeBooleanValue", "[DeserializerClassTest]")
+{
+    fkyaml::Deserializer deserializer;
+    fkyaml::Node root;
+
+    auto input_str =
+        GENERATE(std::string("test: true"), std::string("test: [ True, False ]"), std::string("True: TRUE"));
+    REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
+    REQUIRE(root.IsMapping());
+    REQUIRE(root.Size() == 1);
+}
+
+TEST_CASE("DeserializerClassTest_DeserializeNumericKey", "[DeserializerClassTest]")
+{
+    fkyaml::Deserializer deserializer;
+    fkyaml::Node root;
+
+    using StringValuePair = std::pair<std::string, std::string>;
+
+    auto str_val_pair = GENERATE(StringValuePair("123: foo", "123"), StringValuePair("3.14: foo", "3.14"));
+    REQUIRE_NOTHROW(root = deserializer.Deserialize(str_val_pair.first.c_str()));
+    REQUIRE(root.IsMapping());
+    REQUIRE(root.Size() == 1);
+    REQUIRE(root.Contains(str_val_pair.second));
+    REQUIRE(root[str_val_pair.second].ToString() == "foo");
+}
+
 TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerClassTest]")
 {
     fkyaml::Deserializer deserializer;
@@ -545,32 +615,37 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
     fkyaml::Deserializer deserializer;
     fkyaml::Node root;
 
-    REQUIRE_NOTHROW(root = deserializer.Deserialize("%YAML 1.1\nfoo: one\nbar: true\npi: 3.14"));
+    SECTION("YAML 1.1")
+    {
+        REQUIRE_NOTHROW(root = deserializer.Deserialize("%YAML 1.1\nfoo: one"));
 
-    REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
-    REQUIRE(root.IsMapping());
-    REQUIRE(root.Size() == 3);
+        REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+        REQUIRE(root.IsMapping());
+        REQUIRE(root.Size() == 1);
 
-    REQUIRE_NOTHROW(root["foo"]);
-    fkyaml::Node& foo_node = root["foo"];
-    REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
-    REQUIRE(foo_node.IsString());
-    REQUIRE_NOTHROW(foo_node.ToString());
-    REQUIRE(foo_node.ToString().compare("one") == 0);
+        REQUIRE_NOTHROW(root["foo"]);
+        fkyaml::Node& foo_node = root["foo"];
+        REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+        REQUIRE(foo_node.IsString());
+        REQUIRE_NOTHROW(foo_node.ToString());
+        REQUIRE(foo_node.ToString().compare("one") == 0);
+    }
 
-    REQUIRE_NOTHROW(root["bar"]);
-    fkyaml::Node& bar_node = root["bar"];
-    REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
-    REQUIRE(bar_node.IsBoolean());
-    REQUIRE_NOTHROW(bar_node.ToBoolean());
-    REQUIRE(bar_node.ToBoolean() == true);
+    SECTION("YAML 1.2")
+    {
+        REQUIRE_NOTHROW(root = deserializer.Deserialize("%YAML 1.2\nfoo: one"));
 
-    REQUIRE_NOTHROW(root["pi"]);
-    fkyaml::Node& pi_node = root["pi"];
-    REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
-    REQUIRE(pi_node.IsFloatNumber());
-    REQUIRE_NOTHROW(pi_node.ToFloatNumber());
-    REQUIRE(pi_node.ToFloatNumber() == 3.14);
+        REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_2);
+        REQUIRE(root.IsMapping());
+        REQUIRE(root.Size() == 1);
+
+        REQUIRE_NOTHROW(root["foo"]);
+        fkyaml::Node& foo_node = root["foo"];
+        REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_2);
+        REQUIRE(foo_node.IsString());
+        REQUIRE_NOTHROW(foo_node.ToString());
+        REQUIRE(foo_node.ToString().compare("one") == 0);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeNoMachingAnchorTest", "[DeserializerClassTest]")
