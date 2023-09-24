@@ -272,7 +272,7 @@ private:
 
     /**
      * @brief Assign node value to the current node.
-     * 
+     *
      * @param node_value A rvalue BasicNodeType object to be assigned to the current node.
      */
     void AssignNodeValue(BasicNodeType&& node_value) noexcept
@@ -307,7 +307,7 @@ private:
 
     /**
      * @brief Set the YamlVersionType object to the given node.
-     * 
+     *
      * @param node A BasicNodeType object to be set the YamlVersionType object.
      */
     void SetYamlVersion(BasicNodeType& node) noexcept

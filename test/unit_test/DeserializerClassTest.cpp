@@ -52,9 +52,7 @@ TEST_CASE("DeserializerClassTest_DeserializeValueSeparator", "[DeserializerClass
     fkyaml::Deserializer deserializer;
     fkyaml::Node root;
 
-    auto input_str = GENERATE(
-        std::string("test: [ foo, bar ]"), std::string("test: { foo: bar, buz: val }")
-    );
+    auto input_str = GENERATE(std::string("test: [ foo, bar ]"), std::string("test: { foo: bar, buz: val }"));
     REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
     REQUIRE(root.IsMapping());
     REQUIRE(root.Size() == 1);
@@ -65,8 +63,7 @@ TEST_CASE("DeserializerClassTest_DeserializeNullValue", "[DeserializerClassTes]"
     fkyaml::Deserializer deserializer;
     fkyaml::Node root;
 
-    auto input_str = GENERATE(
-        std::string("test: null"), std::string("Null: test"));
+    auto input_str = GENERATE(std::string("test: null"), std::string("Null: test"));
     REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
     REQUIRE(root.IsMapping());
     REQUIRE(root.Size() == 1);
@@ -77,8 +74,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBooleanValue", "[DeserializerClassTe
     fkyaml::Deserializer deserializer;
     fkyaml::Node root;
 
-    auto input_str = GENERATE(
-        std::string("test: true"), std::string("test: [ True, False ]"), std::string("True: TRUE"));
+    auto input_str =
+        GENERATE(std::string("test: true"), std::string("test: [ True, False ]"), std::string("True: TRUE"));
     REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
     REQUIRE(root.IsMapping());
     REQUIRE(root.Size() == 1);
@@ -91,10 +88,7 @@ TEST_CASE("DeserializerClassTest_DeserializeNumericKey", "[DeserializerClassTest
 
     using StringValuePair = std::pair<std::string, std::string>;
 
-    auto str_val_pair = GENERATE(
-        StringValuePair("123: foo", "123"),
-        StringValuePair("3.14: foo", "3.14")
-    );
+    auto str_val_pair = GENERATE(StringValuePair("123: foo", "123"), StringValuePair("3.14: foo", "3.14"));
     REQUIRE_NOTHROW(root = deserializer.Deserialize(str_val_pair.first.c_str()));
     REQUIRE(root.IsMapping());
     REQUIRE(root.Size() == 1);
