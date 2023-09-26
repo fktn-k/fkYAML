@@ -234,6 +234,7 @@ Currently, the following compilers are known to work and used in CI workflows:
 | GCC 10.5.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 11.4.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 12.3.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
+| GCC 13.2.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | MinGW-64 8.1.0 | Windows-10.0.17763 | GitHub Actions |
 | MinGW-64 12.2.0 | Windows-10.0.20348 | GitHub Actions |
 | Visual Studio 16 2019 MSVC 19.29.30152.0 | Windows-10.0.17763 | GitHub Actions |
