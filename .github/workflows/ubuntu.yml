@@ -36,7 +36,7 @@ jobs:
       working-directory: ${{github.workspace}}/build_${{matrix.build_type}}
       run: ctest -C ${{matrix.build_type}} --output-on-failure
 
-  ci-clang_tidy_check:
+  ci_test_clang_tidy:
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
@@ -46,13 +46,33 @@ jobs:
         submodules: recursive
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build_clang_tidy -DFK_YAML_RUN_CLANG_TIDY=ON
+      run: cmake -B ${{github.workspace}}/build -DFK_YAML_RUN_CLANG_TIDY=ON
 
     - name: Clang-Tidy check
-      run: cmake --build ${{github.workspace}}/build_clang_tidy --target run_clang_tidy
+      run: cmake --build ${{github.workspace}}/build --target run_clang_tidy
 
-  valgrind_memory_leak_test:
+  ci_test_iwyu:
     timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Install include-what-you-use
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y iwyu
+        include-what-you-use --version
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DFK_YAML_RUN_IWYU=ON
+
+    - name: include-what-you-use check
+      run: cmake --build ${{github.workspace}}/build --target run_iwyu
+
+  ci_test_valgrind:
     runs-on: ubuntu-latest
 
     steps:
@@ -62,50 +82,83 @@ jobs:
 
     - name: Install Valgrind
       run: |
-        sudo apt install -y valgrind
+        sudo apt-get update
+        sudo apt-get install -y valgrind
         valgrind --version
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build_valgrind -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build_valgrind --config Debug
+      run: cmake --build ${{github.workspace}}/build --config Debug
 
     - name: Memory Leak Check with Valgrind
-      working-directory: ${{github.workspace}}/build_valgrind
+      working-directory: ${{github.workspace}}/build
       run: ctest -C Debug -T memcheck
 
-  clang-tests-with-self-hosted-runner:
-    runs-on: [self-hosted, Linux, X64, clang]
-    strategy:
-      matrix:
-        target:
-          - ci_test_compiler_clang++-11
-          - ci_test_compiler_clang++-12
-          - ci_test_compiler_clang++-13
-          - ci_test_compiler_clang++-14
-          - ci_test_compiler_clang++-15
-          - ci_test_clang++_c++11
-          - ci_test_clang++_c++14
-          - ci_test_clang++_c++17
-          - ci_test_clang++_c++20
-          - ci_test_clang++_c++23
-          - ci_test_clang++_sanitizer
-          - ci_test_iwyu
+  ci_test_clang_sanitizers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
-      - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DFK_YAML_CI=ON
+    - name: Install Clang
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang
+        clang++ --version
 
-      - name: Run builds & tests for the test target
-        run: |
-          cmake --build ${{github.workspace}}/build --target ${{matrix.target}}
+    - name: Configure CMake
+      run: CXX=clang++ CXXFLAGS="-g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined,bounds,integer,nullability -fno-sanitize-recover=all -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base" cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
 
-  ci_test_gcc_cxx_versions:
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config Debug
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C Debug --output-on-failure
+
+  ci_test_clang_cxx_standards:
+    runs-on: ubuntu-latest
+    container: silkeh/clang:latest
+    strategy:
+      matrix:
+        cxx_standard: [ "11", "14", "17", "20", "23" ]
+        build_type: [ Debug, Release ]
+
+    steps:
+    - name: Install git and unzip
+      run: |
+        apt-get update
+        apt-get install -y git unzip
+        git --version
+      
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Get latest CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Install package for test
+      run: |
+        cmake -B ${{github.workspace}}/build_for_package
+        cmake --build ${{github.workspace}}/build_for_package --target install
+        rm -rf ${{github.workspace}}/build_for_package
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
+
+    - name: Build & Test
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+        cd ${{github.workspace}}/build
+        ctest -C ${{matrix.build_type}} --output-on-failure
+
+  ci_test_gcc_cxx_standards:
     runs-on: ubuntu-latest
     container: gcc:latest
     strategy:
@@ -114,27 +167,64 @@ jobs:
         build_type: [ Debug, Release ]
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
-      - name: Get latest CMake
-        uses: lukka/get-cmake@latest
+    - name: Get latest CMake
+      uses: lukka/get-cmake@latest
 
-      - name: Install package for test
-        run: |
-          cmake -B ${{github.workspace}}/build_for_package
-          cmake --build ${{github.workspace}}/build_for_package --target install
-          rm -rf ${{github.workspace}}/build_for_package
+    - name: Install package for test
+      run: |
+        cmake -B ${{github.workspace}}/build_for_package
+        cmake --build ${{github.workspace}}/build_for_package --target install
+        rm -rf ${{github.workspace}}/build_for_package
 
-      - name: Configure CMake and Ninja
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
+    - name: Configure CMake and Ninja
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
 
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+    - name: Build & Test
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+        cd ${{github.workspace}}/build
+        ctest -C ${{matrix.build_type}} --output-on-failure
 
-      - name: Test
-        run: ctest -C ${{matrix.build_type}} --output-on-failure
+  ci_test_clang_versions:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [ "3.5", "3.6", "3.7", "3.8", "3.9", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", latest ]
+        build_type: [ Debug, Release ]
+    container: silkeh/clang:${{matrix.compiler}}
+
+    steps:
+    - name: Install git and unzip
+      run: |
+        apt-get update
+        apt-get install -y git unzip
+        git --version
+
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Get latest CMake and Ninja
+      uses: lukka/get-cmake@latest
+
+    - name: Install package for test
+      run: |
+        cmake -B ${{github.workspace}}/build_for_package
+        cmake --build ${{github.workspace}}/build_for_package --target install
+        rm -rf ${{github.workspace}}/build_for_package
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON
+
+    - name: Build & Test
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+        cd ${{github.workspace}}/build
+        ctest -C ${{matrix.build_type}} --output-on-failure
 
   ci_test_gcc_versions:
     runs-on: ubuntu-latest
@@ -145,24 +235,24 @@ jobs:
     container: gcc:${{matrix.compiler}}
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
-      - name: Get latest CMake and Ninja
-        uses: lukka/get-cmake@latest
+    - name: Get latest CMake and Ninja
+      uses: lukka/get-cmake@latest
 
-      - name: Install package for test
-        run: |
-          cmake -B ${{github.workspace}}/build_for_package
-          cmake --build ${{github.workspace}}/build_for_package --target install
-          rm -rf ${{github.workspace}}/build_for_package
+    - name: Install package for test
+      run: |
+        cmake -B ${{github.workspace}}/build_for_package
+        cmake --build ${{github.workspace}}/build_for_package --target install
+        rm -rf ${{github.workspace}}/build_for_package
 
-      - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON
 
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
-
-      - name: Test
-        run: ctest -C ${{matrix.build_type}} --output-on-failure
+    - name: Build & Test
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+        cd ${{github.workspace}}/build
+        ctest -C ${{matrix.build_type}} --output-on-failure

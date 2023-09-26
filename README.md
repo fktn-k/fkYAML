@@ -225,11 +225,23 @@ Currently, the following compilers are known to work and used in CI workflows:
 | AppleClang 13.0.0.13000029 | macOS 12.6.8 | GitHub Actions |
 | AppleClang 13.1.6.13160021 | macOS 12.6.8 | GitHub Actions |
 | AppleClang 14.0.0.14000029 | macOS 12.6.8 | GitHub Actions |
+| Clang 3.5.2  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 3.6.2  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 3.7.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 3.8.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 3.9.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 4.0.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 5.0.2  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 6.0.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 7.1.0  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 9.0.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 10.0.1 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 11.1.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 12.0.1 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 13.0.1 | Ubuntu 22.04.3 LTS | GitHub Actions |
-| Clang 14.0.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 14.0.6 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 15.0.7 | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 16.0.6 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 9.5.0  | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 10.5.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 11.4.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
