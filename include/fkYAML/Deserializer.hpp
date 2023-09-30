@@ -263,6 +263,11 @@ public:
     }
 
 private:
+    /**
+     * @brief Add new key string to the current YAML node.
+     *
+     * @param key a key string to be added to the current YAML node.
+     */
     void AddNewKey(const string_type& key) noexcept
     {
         m_current_node->ToMapping().emplace(key, BasicNodeType());
@@ -331,14 +336,14 @@ private:
     }
 
 private:
-    lexer_type m_lexer {};
-    BasicNodeType* m_current_node = nullptr;
-    std::vector<BasicNodeType*> m_node_stack;
-    YamlVersionType m_yaml_version = YamlVersionType::VER_1_2;
-    uint32_t m_current_indent_width = 0;
-    bool m_needs_anchor_impl = false;
-    string_type m_anchor_name {};
-    std::unordered_map<std::string, BasicNodeType> m_anchor_table;
+    lexer_type m_lexer {};                                     /** A lexical analyzer object. */
+    BasicNodeType* m_current_node = nullptr;                   /** The currently focused YAML node. */
+    std::vector<BasicNodeType*> m_node_stack;                  /** The stack of YAML nodes. */
+    YamlVersionType m_yaml_version = YamlVersionType::VER_1_2; /** The YAML version specification type. */
+    uint32_t m_current_indent_width = 0;                       /** The current indentation width. */
+    bool m_needs_anchor_impl = false; /** A flag to determine the need for YAML anchor node implementation */
+    string_type m_anchor_name {};     /** The last YAML anchor name. */
+    std::unordered_map<std::string, BasicNodeType> m_anchor_table; /** The table of YAML anchor nodes. */
 };
 
 /**

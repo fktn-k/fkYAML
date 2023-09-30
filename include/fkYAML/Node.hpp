@@ -45,8 +45,7 @@ FK_YAML_NAMESPACE_BEGIN
  * @tparam SequenceType A type for sequence node value containers.
  * @tparam MappingType A type for mapping node value containers.
  * @tparam BooleanType A type for boolean node values.
- * @tparam SignedIntegerType A type for signed integer node values.
- * @tparam UnsignedIntegerType A type for unsigned integer node values.
+ * @tparam IntegerType A type for integer node values.
  * @tparam FloatNumberType A type for float number node values.
  * @tparam StringType A type for string node values.
  */
