@@ -35,10 +35,10 @@ FK_YAML_NAMESPACE_BEGIN
 /**
  * @brief A minimal map-like container which preserves insertion order.
  *
- * @tparam Key
- * @tparam Value
- * @tparam IgnoredCompare
- * @tparam Allocator
+ * @tparam Key A type for keys.
+ * @tparam Value A type for values.
+ * @tparam IgnoredCompare A placeholder for key comparison. This will be ignored.
+ * @tparam Allocator A class for allocators.
  */
 template <
     typename Key, typename Value, typename IgnoredCompare = std::less<Key>,
@@ -46,13 +46,21 @@ template <
 class OrderedMap : public std::vector<std::pair<const Key, Value>, Allocator>
 {
 public:
+    /** A type for keys. */
     using key_type = Key;
+    /** A type for values. */
     using mapped_type = Value;
+    /** A type for internal key-value containers */
     using Container = std::vector<std::pair<const Key, Value>, Allocator>;
+    /** A type for key-value pairs */
     using value_type = typename Container::value_type;
+    /** A type for non-const iterators */
     using iterator = typename Container::iterator;
+    /** A type for const iterators. */
     using const_iterator = typename Container::const_iterator;
+    /** A type for size parameters used in this class. */
     using size_type = typename Container::size_type;
+    /** A type for comparison between keys. */
     using key_compare = std::equal_to<Key>;
 
 public:
@@ -77,12 +85,25 @@ public:
     }
 
 public:
+    /**
+     * @brief A subscript operator with keys for this OrderedMap class.
+     *
+     * @param key A key to find values with.
+     * @return mapped_type& The found value or the initial value of the value object.
+     */
     mapped_type& operator[](const key_type& key) noexcept
     {
         return emplace(key, mapped_type()).first->second;
     }
 
 public:
+    /**
+     * @brief Emplace a new key-value pair if the new key does not exist.
+     *
+     * @param key A key to be emplaced to this OrderedMap object.
+     * @param value A value to be emplaced to this OrderedMap object.
+     * @return std::pair<iterator, bool> A result of emplacement of the new key-value pair.
+     */
     // NOLINTNEXTLINE(readability-identifier-naming)
     std::pair<iterator, bool> emplace(const key_type& key, const mapped_type& value) noexcept
     {
@@ -97,6 +118,12 @@ public:
         return {std::prev(this->end()), true};
     }
 
+    /**
+     * @brief Find a value associated to the given key. Throws an exception if the search fails.
+     *
+     * @param key A key to find a value with.
+     * @return mapped_type& The value associated to the given key.
+     */
     // NOLINTNEXTLINE(readability-identifier-naming)
     mapped_type& at(const key_type& key)
     {
@@ -110,6 +137,12 @@ public:
         throw Exception("key not found.");
     }
 
+    /**
+     * @brief Find a value associated to the given key. Throws an exception if the search fails.
+     *
+     * @param key A key to find a value with.
+     * @return const mapped_type& The value associated to the given key.
+     */
     // NOLINTNEXTLINE(readability-identifier-naming)
     const mapped_type& at(const key_type& key) const
     {
@@ -123,6 +156,12 @@ public:
         throw Exception("key not found.");
     }
 
+    /**
+     * @brief Find a value with the given key.
+     *
+     * @param key A key to find a value with.
+     * @return iterator The iterator for the found value, or the result of end().
+     */
     // NOLINTNEXTLINE(readability-identifier-naming)
     iterator find(const key_type& key) noexcept
     {
@@ -136,6 +175,12 @@ public:
         return this->end();
     }
 
+    /**
+     * @brief Find a value with the given key.
+     *
+     * @param key A key to find a value with.
+     * @return const_iterator The constant iterator for the found value, or the result of end().
+     */
     // NOLINTNEXTLINE(readability-identifier-naming)
     const_iterator find(const key_type& key) const noexcept
     {
@@ -150,7 +195,7 @@ public:
     }
 
 private:
-    key_compare m_compare;
+    key_compare m_compare; /** The object for comparing keys. */
 };
 
 FK_YAML_NAMESPACE_END

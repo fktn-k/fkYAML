@@ -527,11 +527,21 @@ public:
     }
 
 public:
+    /**
+     * @brief Get the type of the internal iterator implementation.
+     *
+     * @return IteratorType The type of the internal iterator implementation.
+     */
     IteratorType Type() const noexcept
     {
         return m_inner_iterator_type;
     }
 
+    /**
+     * @brief Get the key string of the YAML mapping node for the current iterator.
+     *
+     * @return const std::string& The key string of the YAML mapping node for the current iterator.
+     */
     const std::string& Key() const
     {
         switch (m_inner_iterator_type)
@@ -545,6 +555,11 @@ public:
         }
     }
 
+    /**
+     * @brief Get the reference of the YAML node for the current iterator.
+     *
+     * @return reference A reference to the YAML node for the current iterator.
+     */
     reference Value() noexcept // NOLINT(bugprone-exception-escape)
     {
         return operator*();

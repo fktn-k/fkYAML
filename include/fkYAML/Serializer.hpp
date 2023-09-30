@@ -29,6 +29,11 @@
 
 FK_YAML_NAMESPACE_BEGIN
 
+/**
+ * @brief A basic implementation of serialization feature for YAML nodes.
+ *
+ * @tparam BasicNodeType A BasicNode template class instantiation.
+ */
 template <typename BasicNodeType = Node>
 class BasicSerializer
 {
@@ -40,6 +45,12 @@ public:
      */
     BasicSerializer() = default;
 
+    /**
+     * @brief Serialize the given Node value.
+     *
+     * @param node A Node object to be serialized.
+     * @return std::string A serialization result of the given Node value.
+     */
     std::string Serialize(BasicNodeType& node)
     {
         std::string str {};
@@ -48,6 +59,13 @@ public:
     }
 
 private:
+    /**
+     * @brief Recursively serialize each Node object.
+     *
+     * @param node A Node object to be serialized.
+     * @param cur_indent The current indent width
+     * @param str A string to hold serialization result.
+     */
     void SerializeNode(BasicNodeType& node, const uint32_t cur_indent, std::string& str)
     {
         switch (node.Type())
@@ -137,11 +155,23 @@ private:
         }
     }
 
+    /**
+     * @brief Serialize mapping keys.
+     *
+     * @param key A key string to be serialized.
+     * @param str A string to hold serialization result.
+     */
     void SerializeKey(const std::string& key, std::string& str)
     {
         str += key + ":";
     }
 
+    /**
+     * @brief Insert indentation to the serialization result.
+     *
+     * @param cur_indent The current indent width to be inserted.
+     * @param str A string to hold serialization result.
+     */
     void InsertIndentation(const uint32_t cur_indent, std::string& str)
     {
         for (uint32_t i = 0; i < cur_indent; ++i)
@@ -151,6 +181,9 @@ private:
     }
 };
 
+/**
+ * @brief default YAML node serializer.
+ */
 using Serializer = BasicSerializer<>;
 
 FK_YAML_NAMESPACE_END
