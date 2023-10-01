@@ -30,6 +30,7 @@
 #include "fkYAML/Iterator.hpp"
 #include "fkYAML/NodeType.hpp"
 #include "fkYAML/OrderedMap.hpp"
+#include "fkYAML/TypeTraits.hpp"
 #include "fkYAML/YAMLVersionType.hpp"
 
 /**
