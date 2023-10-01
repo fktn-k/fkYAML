@@ -87,14 +87,16 @@ public:
 
 public:
     /**
-     * @brief A subscript operator with keys for this OrderedMap class.
+     * @brief A subscript operator for OrderedMap objects.
      *
-     * @param key A key to find values with.
-     * @return mapped_type& The found value or the initial value of the value object.
+     * @tparam KeyType A type for the input key.
+     * @param key A key to the target value.
+     * @return mapped_type& Reference to a mapped_type object associated with the given key.
      */
-    mapped_type& operator[](const key_type& key) noexcept
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
+    mapped_type& operator[](KeyType&& key) noexcept
     {
-        return emplace(key, mapped_type()).first->second;
+        return emplace(std::forward<KeyType>(key), mapped_type()).first->second;
     }
 
 public:
@@ -105,8 +107,9 @@ public:
      * @param value A value to be emplaced to this OrderedMap object.
      * @return std::pair<iterator, bool> A result of emplacement of the new key-value pair.
      */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    std::pair<iterator, bool> emplace(const key_type& key, const mapped_type& value) noexcept
+    std::pair<iterator, bool> emplace(KeyType&& key, const mapped_type& value) noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
@@ -122,11 +125,13 @@ public:
     /**
      * @brief Find a value associated to the given key. Throws an exception if the search fails.
      *
+     * @tparam KeyType A type for the input key.
      * @param key A key to find a value with.
      * @return mapped_type& The value associated to the given key.
      */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    mapped_type& at(const key_type& key)
+    mapped_type& at(KeyType&& key)
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
@@ -141,11 +146,13 @@ public:
     /**
      * @brief Find a value associated to the given key. Throws an exception if the search fails.
      *
+     * @tparam KeyType A type for the input key.
      * @param key A key to find a value with.
      * @return const mapped_type& The value associated to the given key.
      */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    const mapped_type& at(const key_type& key) const
+    const mapped_type& at(KeyType&& key) const
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
@@ -160,11 +167,13 @@ public:
     /**
      * @brief Find a value with the given key.
      *
+     * @tparam KeyType A type for the input key.
      * @param key A key to find a value with.
      * @return iterator The iterator for the found value, or the result of end().
      */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    iterator find(const key_type& key) noexcept
+    iterator find(KeyType&& key) noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
@@ -179,11 +188,13 @@ public:
     /**
      * @brief Find a value with the given key.
      *
+     * @tparam KeyType A type for the input key.
      * @param key A key to find a value with.
      * @return const_iterator The constant iterator for the found value, or the result of end().
      */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    const_iterator find(const key_type& key) const noexcept
+    const_iterator find(KeyType&& key) const noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
