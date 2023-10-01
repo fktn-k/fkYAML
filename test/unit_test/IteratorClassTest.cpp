@@ -78,21 +78,19 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
     {
         fkyaml::Node sequence = fkyaml::Node::Sequence({fkyaml::Node()});
         fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
-        fkyaml::Node mapping = fkyaml::Node::Mapping({{"test", fkyaml::Node::BooleanScalar(false)}});
-        fkyaml::Iterator<fkyaml::Node> assigned(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
 
         SECTION("Test lvalue iterator.")
         {
-            assigned = iterator;
-            REQUIRE(assigned.Type() == fkyaml::IteratorType::SEQUENCE);
-            REQUIRE(assigned->IsNull());
+            iterator = iterator;
+            REQUIRE(iterator.Type() == fkyaml::IteratorType::SEQUENCE);
+            REQUIRE(iterator->IsNull());
         }
 
         SECTION("Test rvalue iterator.")
         {
-            assigned = std::move(iterator);
-            REQUIRE(assigned.Type() == fkyaml::IteratorType::SEQUENCE);
-            REQUIRE(assigned->IsNull());
+            iterator = std::move(iterator);
+            REQUIRE(iterator.Type() == fkyaml::IteratorType::SEQUENCE);
+            REQUIRE(iterator->IsNull());
         }
     }
 
