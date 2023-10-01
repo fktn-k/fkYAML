@@ -25,7 +25,7 @@
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/Node.hpp"
 #include "fkYAML/NodeType.hpp"
-#include "fkYAML/NodeTypeTraits.hpp"
+#include "fkYAML/TypeTraits.hpp"
 
 FK_YAML_NAMESPACE_BEGIN
 

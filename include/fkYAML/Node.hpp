@@ -30,6 +30,7 @@
 #include "fkYAML/Iterator.hpp"
 #include "fkYAML/NodeType.hpp"
 #include "fkYAML/OrderedMap.hpp"
+#include "fkYAML/TypeTraits.hpp"
 #include "fkYAML/YAMLVersionType.hpp"
 
 /**
@@ -649,10 +650,16 @@ public:
     /**
      * @brief A subscript operator for non-const BasicNode objects.
      *
-     * @param[in] key A lvalue key of mapping BasicNode values.
-     * @return BasicNode& Constant reference to a BasicNode object associated with the specified key.
+     * @tparam KeyType A type for the input key.
+     * @param[in] key A key to the target BasicNode object..
+     * @return BasicNode& Reference to a BasicNode object associated with the given key.
      */
-    BasicNode& operator[](const std::string& key) // NOLINT(readability-make-member-function-const)
+    template <
+        typename KeyType,
+        fkyaml::enable_if_t<
+            IsUsableAsKeyType<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+            int> = 0>
+    BasicNode& operator[](KeyType&& key) // NOLINT(readability-make-member-function-const)
     {
         if (!IsMapping())
         {
@@ -660,16 +667,22 @@ public:
         }
 
         FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-        return m_node_value.mapping->operator[](key);
+        return m_node_value.mapping->operator[](std::forward<KeyType>(key));
     }
 
     /**
      * @brief A subscript operator for const BasicNode objects.
      *
-     * @param[in] key A lvalue key of mapping BasicNode values.
-     * @return const BasicNode& Constant reference to a BasicNode object associated with the specified key.
+     * @tparam KeyType A type for the input key.
+     * @param[in] key A key to the BasicNode object.
+     * @return const BasicNode& Constant reference to a BasicNode object associated with the given key.
      */
-    const BasicNode& operator[](const std::string& key) const
+    template <
+        typename KeyType,
+        fkyaml::enable_if_t<
+            IsUsableAsKeyType<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+            int> = 0>
+    const BasicNode& operator[](KeyType&& key) const
     {
         if (!IsMapping())
         {
@@ -677,41 +690,7 @@ public:
         }
 
         FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-        return m_node_value.mapping->operator[](key);
-    }
-
-    /**
-     * @brief A subscript operator for non-const BasicNode objects.
-     *
-     * @param[in] key A rvalue key of mapping BasicNode values.
-     * @return Node& Reference to a BasicNode object associated with the specified key.
-     */
-    BasicNode& operator[](std::string&& key) // NOLINT(readability-make-member-function-const)
-    {
-        if (!IsMapping())
-        {
-            throw Exception("The target node is not of a mapping type.");
-        }
-
-        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-        return m_node_value.mapping->operator[](std::move(key));
-    }
-
-    /**
-     * @brief A subscript operator for const BasicNode objects.
-     *
-     * @param[in] key A rvalue key of mapping Node values.
-     * @return const BasicNode& Constant reference to a BasicNode object associated with the specified key.
-     */
-    const BasicNode& operator[](std::string&& key) const
-    {
-        if (!IsMapping())
-        {
-            throw Exception("The target node is not of a mapping type.");
-        }
-
-        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-        return m_node_value.mapping->operator[](std::move(key));
+        return m_node_value.mapping->operator[](std::forward<KeyType>(key));
     }
 
 public:
@@ -879,39 +858,24 @@ public:
     /**
      * @brief Check whether or not this BasicNode object has a given key in its inner mapping Node value.
      *
-     * @param key A lvalue key object.
+     * @tparam KeyType A type for the input key.
+     * @param[in] key A key to the target BasicNode object.
      * @return true If this BasicNode object has a given key.
      * @return false If this BasicNode object does not have a given key.
      */
-    bool Contains(const std::string& key) const
+    template <
+        typename KeyType,
+        fkyaml::enable_if_t<
+            IsUsableAsKeyType<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+            int> = 0>
+    bool Contains(KeyType&& key) const
     {
         switch (m_node_type)
         {
         case NodeType::MAPPING: {
             FK_YAML_ASSERT(m_node_value.mapping != nullptr);
             mapping_type& map = *m_node_value.mapping;
-            return map.find(key) != map.end();
-        }
-        default:
-            return false;
-        }
-    }
-
-    /**
-     * @brief Check whether or not this BasicNode object has a given key in its inner mapping Node value.
-     *
-     * @param key A rvalue key object.
-     * @return true If this BasicNode object has a given key.
-     * @return false If this BasicNode object does not have a given key.
-     */
-    bool Contains(std::string&& key) const
-    {
-        switch (m_node_type)
-        {
-        case NodeType::MAPPING: {
-            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-            mapping_type& map = *m_node_value.mapping;
-            return map.find(std::move(key)) != map.end();
+            return map.find(std::forward<KeyType>(key)) != map.end();
         }
         default:
             return false;

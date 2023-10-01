@@ -21,7 +21,7 @@
 #include "fkYAML/Exception.hpp"
 #include "fkYAML/LexicalAnalyzer.hpp"
 #include "fkYAML/Node.hpp"
-#include "fkYAML/NodeTypeTraits.hpp"
+#include "fkYAML/TypeTraits.hpp"
 
 #ifndef FK_YAML_DESERIALIZER_HPP_
 #define FK_YAML_DESERIALIZER_HPP_

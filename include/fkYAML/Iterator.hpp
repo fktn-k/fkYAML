@@ -22,7 +22,7 @@
 
 #include "fkYAML/VersioningMacros.hpp"
 #include "fkYAML/Exception.hpp"
-#include "fkYAML/NodeTypeTraits.hpp"
+#include "fkYAML/TypeTraits.hpp"
 
 /**
  * @namespace fkyaml
