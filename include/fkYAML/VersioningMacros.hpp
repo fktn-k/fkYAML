@@ -1,3 +1,15 @@
+/**
+ *  _______   __ __   __  _____   __  __  __
+ * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.0
+ * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+ *
+ * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+ * SPDX-License-Identifier: MIT
+ *
+ * @file
+ */
+
 #if defined(FK_YAML_MAJOR_VERSION) && defined(FK_YAML_MINOR_VERSION) && defined(FK_YAML_PATCH_VERSION)
 #if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 0 || FK_YAML_PATCH_VERSION != 0
 #warning "Already included a different version of fkYAML library!"
