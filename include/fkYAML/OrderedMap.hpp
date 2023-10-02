@@ -1,19 +1,3 @@
-/**
- *   __ _  __     __      __  __ _
- *  / _| | \ \   / //\   |  \/  | |
- * | |_| | _\ \_/ //  \  | \  / | |
- * |  _| |/ /\   // /\ \ | |\/| | |
- * | | |   <  | |/ ____ \| |  | | |____
- * |_| |_|\_\ |_/_/    \_\_|  |_|______|
- *
- * @file Deserializer.hpp
- * @brief Implementation of a minimal map-like container which preserves insertion order.
- * @version 0.0.0
- *
- * Copyright (c) 2023 fktn
- * Distributed under the MIT License (https://opensource.org/licenses/MIT)
- */
-
 #ifndef FK_YAML_ORDERED_MAP_HPP_
 #define FK_YAML_ORDERED_MAP_HPP_
 

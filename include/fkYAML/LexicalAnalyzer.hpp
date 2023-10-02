@@ -1,19 +1,3 @@
-/**
- *   __ _  __     __      __  __ _
- *  / _| | \ \   / //\   |  \/  | |
- * | |_| | _\ \_/ //  \  | \  / | |
- * |  _| |/ /\   // /\ \ | |\/| | |
- * | | |   <  | |/ ____ \| |  | | |____
- * |_| |_|\_\ |_/_/    \_\_|  |_|______|
- *
- * @file LexicalAnalyzer.hpp
- * @brief Implementation of the lexical analyzer for YAML documents.
- * @version 0.0.0
- *
- * Copyright (c) 2023 fktn
- * Distributed under the MIT License (https://opensource.org/licenses/MIT)
- */
-
 #ifndef FK_YAML_LEXICAL_ANALIZER_HPP_
 #define FK_YAML_LEXICAL_ANALIZER_HPP_
 
