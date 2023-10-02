@@ -1,0 +1,13 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: fkYAML
+Upstream-Contact: Kensuke Fukutani <fktn.dev@gmail.com>
+Source: https://github.com/fktn-k/fkYAML
+
+Files: *
+Copyright: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+License: MIT
+
+Files: thirdparty/imapdl/*
+Copyright: 2017 Georg Sauthoff <mail@gms.tf>
+           2022, Alexander Stohr, ZF Friedrichshafen AG
+License: GPL-3.0-only
