@@ -1,14 +1,14 @@
 find_package(Doxygen REQUIRED)
 
-set(FK_YAML_DOXYFILE_IN  "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in")
+set(FK_YAML_DOXYFILE_IN "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in")
 set(FK_YAML_DOXYFILE_OUT "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
 set(FK_YAML_DOXYGEN_INPUT_DIR "${FK_YAML_INCLUDE_BUILD_DIR}")
 
 configure_file("${FK_YAML_DOXYFILE_IN}" "${FK_YAML_DOXYFILE_OUT}" @ONLY)
 
-add_custom_target(doxygen
+add_custom_target(
+  doxygen
   COMMAND "${DOXYGEN_EXECUTABLE}" "${FK_YAML_DOXYFILE_OUT}"
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
   COMMENT "Generating API documentation with doxygen."
-  VERBATIM
-)
+  VERBATIM)

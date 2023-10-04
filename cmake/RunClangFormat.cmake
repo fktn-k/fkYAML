@@ -1,5 +1,8 @@
 find_program(CLANG_FORMAT_EXE clang-format REQUIRED)
-execute_process(COMMAND ${CLANG_FORMAT_EXE} --version OUTPUT_VARIABLE CLANG_FORMAT_VERSION ERROR_VARIABLE CLANG_FORMAT_VERSION)
+execute_process(
+  COMMAND ${CLANG_FORMAT_EXE} --version
+  OUTPUT_VARIABLE CLANG_FORMAT_VERSION
+  ERROR_VARIABLE CLANG_FORMAT_VERSION)
 string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" CLANG_FORMAT_VERSION "${CLANG_FORMAT_VERSION}")
 message(STATUS "Found clang-format. location: ${CLANG_FORMAT_EXE} version: ${CLANG_FORMAT_VERSION}")
 
@@ -13,8 +16,7 @@ function(run_clang_format target pattern)
       ${target_for_clang_format}
       COMMAND "${CLANG_FORMAT_EXE}" --version
       COMMAND "${CLANG_FORMAT_EXE}" ${pattern} -i -style=file
-      WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    )
+      WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     # make sure that clang-format is executed before building target sources.
     add_dependencies(${target} ${target_for_clang_format})
     # enables running clang-format without building any applications.
