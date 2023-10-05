@@ -31,7 +31,9 @@ all:
 	@echo "cmake-format - check whether CMake scripts are well formatted."
 	@echo "cmake-lint - execute a linter for CMake scripts."
 	@echo "doxygen - generate the API documentation for the project with Doxygen."
+	@echo "html-coverage - generate HTML coverage report."
 	@echo "iwyu - check whether source files are each self-contained."
+	@echo "lcov-coverage - generate coverage data with lcov."
 	@echo "reuse - update file header descriptions in source files."
 	@echo "update-version - update version descriptions in the project."
 	@echo "valgrind - check whether no memory leak is detected while running the unit test app."
@@ -130,12 +132,12 @@ update-version: update-version-macros update-project-version reuse
 ################
 
 # pre-requisites: lcov
-fkYAML.info:
+lcov-coverage:
 	cmake -B build_coverage -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_CODE_COVERAGE=ON
 	cmake --build build_coverage --config Debug --target generate_test_coverage
 
 # pre-requisites: genhtml lcov
-coverage: fkYAML.info
+html-coverage: lcov_coverage
 	genhtml build_coverage/coverage/fkYAML.info --output-directory build_coverage/html \
 	    --title "fkYAML: A C++ header-only YAML library" \
 	    --legend --demangle-cpp --show-details --branch-coverage

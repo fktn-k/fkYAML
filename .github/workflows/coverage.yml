@@ -19,11 +19,14 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Generate coverage
+    - name: Install lcov
       run: |
+        sudo apt-get update
         sudo apt-get install -y lcov
-        CXX=g++ cmake -B ${{github.workspace}}/build_coverage -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_CODE_COVERAGE=ON
-        cmake --build ${{github.workspace}}/build_coverage --config Debug --target generate_test_coverage
+        lcov -v
+
+    - name: Generate coverage
+      run: make lcov-coverage
 
     - name: Upload coverage to Coveralls
       uses: coverallsapp/github-action@v2
