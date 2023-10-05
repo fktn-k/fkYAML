@@ -45,11 +45,8 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DFK_YAML_RUN_CLANG_TIDY=ON
-
-    - name: Clang-Tidy check
-      run: cmake --build ${{github.workspace}}/build --target run_clang_tidy
+    - name: Run Clang-Tidy
+      run: make clang-tidy
 
   ci_test_iwyu:
     timeout-minutes: 10
@@ -66,11 +63,8 @@ jobs:
         sudo apt-get install -y iwyu
         include-what-you-use --version
 
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DFK_YAML_RUN_IWYU=ON
-
-    - name: include-what-you-use check
-      run: cmake --build ${{github.workspace}}/build --target run_iwyu
+    - name: Run include-what-you-use
+      run: make iwyu
 
   ci_test_valgrind:
     runs-on: ubuntu-latest
@@ -86,15 +80,8 @@ jobs:
         sudo apt-get install -y valgrind
         valgrind --version
 
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config Debug
-
-    - name: Memory Leak Check with Valgrind
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C Debug -T memcheck
+    - name: Run Valgrind
+      run: make valgrind
 
   ci_test_clang_sanitizers:
     runs-on: ubuntu-latest
@@ -111,15 +98,8 @@ jobs:
         sudo apt-get install -y clang
         clang++ --version
 
-    - name: Configure CMake
-      run: CXX=clang++ CXXFLAGS="-g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined,bounds,integer,nullability -fno-sanitize-recover=all -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base" cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config Debug
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C Debug --output-on-failure
+    - name: Run Clang Sanitizers
+      run: make clang-sanitizers
 
   ci_test_clang_cxx_standards:
     runs-on: ubuntu-latest
