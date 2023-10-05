@@ -1,3 +1,5 @@
+.PHONY: CHANGELOG.md update-version
+
 #################
 #   variables   #
 #################
@@ -124,7 +126,15 @@ reuse: update-reuse-templates
 		--license MIT --year 2023 --style c
 	pipx run reuse lint
 
-update-version: update-version-macros update-project-version reuse
+CHANGELOG.md:
+	github_changelog_generator --user fktn-k --project fkYAML \
+		--no-issues \
+		--simple-list \
+		--exclude-labels release \
+		--release-url https://github.com/fktn-k/fkYAML/releases/tag/%s \
+		--future-release v$(TARGET_VERSION_FULL)
+
+update-version: update-version-macros update-project-version reuse CHANGELOG.md
 	@echo "updated version to $(TARGET_VERSION_FULL)"
 
 ################
