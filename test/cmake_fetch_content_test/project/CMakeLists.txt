@@ -8,7 +8,7 @@ include(FetchContent)
 FetchContent_Declare(
   fkYAML
   GIT_REPOSITORY https://github.com/fktn-k/fkYAML.git
-  GIT_TAG develop # TODO: this should be some release tag.
+  GIT_TAG v0.0.1
   )
 FetchContent_MakeAvailable(fkYAML)
 

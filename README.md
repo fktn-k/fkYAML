@@ -68,7 +68,7 @@ If your C++ project uses [CMake](https://cmake.org/) as the build system tool, t
   FetchContent_Declare(
     fkYAML
     GIT_REPOSITORY https://github.com/fktn-k/fkYAML.git
-    GIT_TAG        develop
+    GIT_TAG v0.0.1
   )
   FetchContent_MakeAvailable(fkYAML)
 

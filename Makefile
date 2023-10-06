@@ -18,7 +18,7 @@ SANITIZER_FLAGS = "-g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined,b
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 0
-TARGET_PATCH_VERSION := 0
+TARGET_PATCH_VERSION := 1
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/VersioningMacros.hpp
 
@@ -113,6 +113,10 @@ update-version-macros:
 update-project-version:
 	$(shell sed -i 's/VERSION [0-9]\+\.[0-9]\+\.[0-9]\+/VERSION $(TARGET_VERSION_FULL)/' CMakeLists.txt)
 
+update-git-tag-ref:
+	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' README.md)
+	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' test/cmake_fetch_content_test/project/CMakeLists.txt)
+
 # pre-requisites: pipx, reuse
 reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
@@ -134,7 +138,7 @@ CHANGELOG.md:
 		--release-url https://github.com/fktn-k/fkYAML/releases/tag/%s \
 		--future-release v$(TARGET_VERSION_FULL)
 
-update-version: update-version-macros update-project-version reuse CHANGELOG.md
+update-version: update-version-macros update-project-version reuse CHANGELOG.md update-git-tag-ref
 	@echo "updated version to $(TARGET_VERSION_FULL)"
 
 ################
