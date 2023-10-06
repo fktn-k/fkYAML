@@ -1,18 +1,10 @@
-/**
- *   __ _  __     __      __  __ _
- *  / _| | \ \   / //\   |  \/  | |
- * | |_| | _\ \_/ //  \  | \  / | |
- * |  _| |/ /\   // /\ \ | |\/| | |
- * | | |   <  | |/ ____ \| |  | | |____
- * |_| |_|\_\ |_/_/    \_\_|  |_|______|
- *
- * @file OrderedMapClassTest.cpp
- * @brief Implementation of test functions for the OrderedMap class.
- * @version 0.0.0
- *
- * Copyright (c) 2023 fktn
- * Distributed under the MIT License (https://opensource.org/licenses/MIT)
- */
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
 #include "catch2/catch.hpp"
 
@@ -79,11 +71,12 @@ TEST_CASE("OrderedMapClassTest_ConstAtTest", "[OrderedMapClassTest]")
     const fkyaml::OrderedMap<std::string, bool> map;
     REQUIRE_THROWS_AS(map.at("foo"), fkyaml::Exception);
     fkyaml::OrderedMap<std::string, bool> map_ = map;
+    map_.emplace("buz", false);
     map_.emplace("foo", true);
     const fkyaml::OrderedMap<std::string, bool> map__ = map_;
     REQUIRE_NOTHROW(map__.at("foo"));
     REQUIRE(map__.at("foo") == true);
-    REQUIRE_THROWS_AS(map.at("bar"), fkyaml::Exception);
+    REQUIRE_THROWS_AS(map__.at("bar"), fkyaml::Exception);
 }
 
 TEST_CASE("OrderedMapClassTest_NonConstFindTest", "[OrderedMapClassTest]")

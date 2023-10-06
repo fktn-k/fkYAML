@@ -1,17 +1,13 @@
 /**
- *   __ _  __     __      __  __ _
- *  / _| | \ \   / //\   |  \/  | |
- * | |_| | _\ \_/ //  \  | \  / | |
- * |  _| |/ /\   // /\ \ | |\/| | |
- * | | |   <  | |/ ____ \| |  | | |____
- * |_| |_|\_\ |_/_/    \_\_|  |_|______|
+ *  _______   __ __   __  _____   __  __  __
+ * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+ * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
- * @file Iterator.hpp
- * @brief Implementation of the YAML node iterator.
- * @version 0.0.0
+ * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+ * SPDX-License-Identifier: MIT
  *
- * Copyright (c) 2023 fktn
- * Distributed under the MIT License (https://opensource.org/licenses/MIT)
+ * @file
  */
 
 #ifndef FK_YAML_ITERATOR_HPP_
@@ -22,7 +18,7 @@
 
 #include "fkYAML/VersioningMacros.hpp"
 #include "fkYAML/Exception.hpp"
-#include "fkYAML/NodeTypeTraits.hpp"
+#include "fkYAML/TypeTraits.hpp"
 
 /**
  * @namespace fkyaml
@@ -527,11 +523,21 @@ public:
     }
 
 public:
+    /**
+     * @brief Get the type of the internal iterator implementation.
+     *
+     * @return IteratorType The type of the internal iterator implementation.
+     */
     IteratorType Type() const noexcept
     {
         return m_inner_iterator_type;
     }
 
+    /**
+     * @brief Get the key string of the YAML mapping node for the current iterator.
+     *
+     * @return const std::string& The key string of the YAML mapping node for the current iterator.
+     */
     const std::string& Key() const
     {
         switch (m_inner_iterator_type)
@@ -545,6 +551,11 @@ public:
         }
     }
 
+    /**
+     * @brief Get the reference of the YAML node for the current iterator.
+     *
+     * @return reference A reference to the YAML node for the current iterator.
+     */
     reference Value() noexcept // NOLINT(bugprone-exception-escape)
     {
         return operator*();

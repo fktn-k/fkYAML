@@ -5,4 +5,4 @@ project(CMakeFindPackageTestProject)
 find_package(fkYAML REQUIRED)
 
 add_executable(CMakeFindPackageTest main.cpp)
-target_include_directories(CMakeFindPackageTest PUBLIC fkYAML::fkYAML)
+target_link_libraries(CMakeFindPackageTest PUBLIC fkYAML::fkYAML)

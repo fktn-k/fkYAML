@@ -1,18 +1,10 @@
-/**
- *   __ _  __     __      __  __ _
- *  / _| | \ \   / //\   |  \/  | |
- * | |_| | _\ \_/ //  \  | \  / | |
- * |  _| |/ /\   // /\ \ | |\/| | |
- * | | |   <  | |/ ____ \| |  | | |____
- * |_| |_|\_\ |_/_/    \_\_|  |_|______|
- *
- * @file IteratorClassTest.cpp
- * @brief Implementation of test functions for the Iterator class.
- * @version 0.0.0
- *
- * Copyright (c) 2023 fktn
- * Distributed under the MIT License (https://opensource.org/licenses/MIT)
- */
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
 #include "catch2/catch.hpp"
 
@@ -78,21 +70,19 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
     {
         fkyaml::Node sequence = fkyaml::Node::Sequence({fkyaml::Node()});
         fkyaml::Iterator<fkyaml::Node> iterator(fkyaml::SequenceIteratorTag {}, sequence.ToSequence().begin());
-        fkyaml::Node mapping = fkyaml::Node::Mapping({{"test", fkyaml::Node::BooleanScalar(false)}});
-        fkyaml::Iterator<fkyaml::Node> assigned(fkyaml::MappingIteratorTag {}, mapping.ToMapping().begin());
 
         SECTION("Test lvalue iterator.")
         {
-            assigned = iterator;
-            REQUIRE(assigned.Type() == fkyaml::IteratorType::SEQUENCE);
-            REQUIRE(assigned->IsNull());
+            iterator = iterator;
+            REQUIRE(iterator.Type() == fkyaml::IteratorType::SEQUENCE);
+            REQUIRE(iterator->IsNull());
         }
 
         SECTION("Test rvalue iterator.")
         {
-            assigned = std::move(iterator);
-            REQUIRE(assigned.Type() == fkyaml::IteratorType::SEQUENCE);
-            REQUIRE(assigned->IsNull());
+            iterator = std::move(iterator);
+            REQUIRE(iterator.Type() == fkyaml::IteratorType::SEQUENCE);
+            REQUIRE(iterator->IsNull());
         }
     }
 

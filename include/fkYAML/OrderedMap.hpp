@@ -1,17 +1,13 @@
 /**
- *   __ _  __     __      __  __ _
- *  / _| | \ \   / //\   |  \/  | |
- * | |_| | _\ \_/ //  \  | \  / | |
- * |  _| |/ /\   // /\ \ | |\/| | |
- * | | |   <  | |/ ____ \| |  | | |____
- * |_| |_|\_\ |_/_/    \_\_|  |_|______|
+ *  _______   __ __   __  _____   __  __  __
+ * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+ * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
- * @file Deserializer.hpp
- * @brief Implementation of a minimal map-like container which preserves insertion order.
- * @version 0.0.0
+ * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+ * SPDX-License-Identifier: MIT
  *
- * Copyright (c) 2023 fktn
- * Distributed under the MIT License (https://opensource.org/licenses/MIT)
+ * @file
  */
 
 #ifndef FK_YAML_ORDERED_MAP_HPP_
@@ -25,6 +21,7 @@
 
 #include "fkYAML/VersioningMacros.hpp"
 #include "fkYAML/Exception.hpp"
+#include "fkYAML/TypeTraits.hpp"
 
 /**
  * @namespace fkyaml
@@ -35,10 +32,10 @@ FK_YAML_NAMESPACE_BEGIN
 /**
  * @brief A minimal map-like container which preserves insertion order.
  *
- * @tparam Key
- * @tparam Value
- * @tparam IgnoredCompare
- * @tparam Allocator
+ * @tparam Key A type for keys.
+ * @tparam Value A type for values.
+ * @tparam IgnoredCompare A placeholder for key comparison. This will be ignored.
+ * @tparam Allocator A class for allocators.
  */
 template <
     typename Key, typename Value, typename IgnoredCompare = std::less<Key>,
@@ -46,13 +43,21 @@ template <
 class OrderedMap : public std::vector<std::pair<const Key, Value>, Allocator>
 {
 public:
+    /** A type for keys. */
     using key_type = Key;
+    /** A type for values. */
     using mapped_type = Value;
+    /** A type for internal key-value containers */
     using Container = std::vector<std::pair<const Key, Value>, Allocator>;
+    /** A type for key-value pairs */
     using value_type = typename Container::value_type;
+    /** A type for non-const iterators */
     using iterator = typename Container::iterator;
+    /** A type for const iterators. */
     using const_iterator = typename Container::const_iterator;
+    /** A type for size parameters used in this class. */
     using size_type = typename Container::size_type;
+    /** A type for comparison between keys. */
     using key_compare = std::equal_to<Key>;
 
 public:
@@ -77,14 +82,30 @@ public:
     }
 
 public:
-    mapped_type& operator[](const key_type& key) noexcept
+    /**
+     * @brief A subscript operator for OrderedMap objects.
+     *
+     * @tparam KeyType A type for the input key.
+     * @param key A key to the target value.
+     * @return mapped_type& Reference to a mapped_type object associated with the given key.
+     */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
+    mapped_type& operator[](KeyType&& key) noexcept
     {
-        return emplace(key, mapped_type()).first->second;
+        return emplace(std::forward<KeyType>(key), mapped_type()).first->second;
     }
 
 public:
+    /**
+     * @brief Emplace a new key-value pair if the new key does not exist.
+     *
+     * @param key A key to be emplaced to this OrderedMap object.
+     * @param value A value to be emplaced to this OrderedMap object.
+     * @return std::pair<iterator, bool> A result of emplacement of the new key-value pair.
+     */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    std::pair<iterator, bool> emplace(const key_type& key, const mapped_type& value) noexcept
+    std::pair<iterator, bool> emplace(KeyType&& key, const mapped_type& value) noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
@@ -97,8 +118,16 @@ public:
         return {std::prev(this->end()), true};
     }
 
+    /**
+     * @brief Find a value associated to the given key. Throws an exception if the search fails.
+     *
+     * @tparam KeyType A type for the input key.
+     * @param key A key to find a value with.
+     * @return mapped_type& The value associated to the given key.
+     */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    mapped_type& at(const key_type& key)
+    mapped_type& at(KeyType&& key)
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
@@ -110,8 +139,16 @@ public:
         throw Exception("key not found.");
     }
 
+    /**
+     * @brief Find a value associated to the given key. Throws an exception if the search fails.
+     *
+     * @tparam KeyType A type for the input key.
+     * @param key A key to find a value with.
+     * @return const mapped_type& The value associated to the given key.
+     */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    const mapped_type& at(const key_type& key) const
+    const mapped_type& at(KeyType&& key) const
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
@@ -123,8 +160,16 @@ public:
         throw Exception("key not found.");
     }
 
+    /**
+     * @brief Find a value with the given key.
+     *
+     * @tparam KeyType A type for the input key.
+     * @param key A key to find a value with.
+     * @return iterator The iterator for the found value, or the result of end().
+     */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    iterator find(const key_type& key) noexcept
+    iterator find(KeyType&& key) noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
@@ -136,8 +181,16 @@ public:
         return this->end();
     }
 
+    /**
+     * @brief Find a value with the given key.
+     *
+     * @tparam KeyType A type for the input key.
+     * @param key A key to find a value with.
+     * @return const_iterator The constant iterator for the found value, or the result of end().
+     */
+    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
     // NOLINTNEXTLINE(readability-identifier-naming)
-    const_iterator find(const key_type& key) const noexcept
+    const_iterator find(KeyType&& key) const noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
         {
@@ -150,7 +203,7 @@ public:
     }
 
 private:
-    key_compare m_compare;
+    key_compare m_compare; /** The object for comparing keys. */
 };
 
 FK_YAML_NAMESPACE_END

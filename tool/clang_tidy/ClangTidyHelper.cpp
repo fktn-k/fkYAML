@@ -1,18 +1,10 @@
-/**
- *   __ _  __     __      __  __ _
- *  / _| | \ \   / //\   |  \/  | |
- * | |_| | _\ \_/ //  \  | \  / | |
- * |  _| |/ /\   // /\ \ | |\/| | |
- * | | |   <  | |/ ____ \| |  | | |____
- * |_| |_|\_\ |_/_/    \_\_|  |_|______|
- *
- * @file ClangTidyHelper.cpp
- * @brief A helper source file to run Clang-Tidy tool for the fkYAML library.
- * @version 0.0.0
- *
- * Copyright (c) 2023 fktn
- * Distributed under the MIT License (https://opensource.org/licenses/MIT)
- */
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
 #include "fkYAML/Assert.hpp"
 #include "fkYAML/Deserializer.hpp"
@@ -21,9 +13,9 @@
 #include "fkYAML/LexicalAnalyzer.hpp"
 #include "fkYAML/Node.hpp"
 #include "fkYAML/NodeType.hpp"
-#include "fkYAML/NodeTypeTraits.hpp"
 #include "fkYAML/OrderedMap.hpp"
 #include "fkYAML/Serializer.hpp"
+#include "fkYAML/TypeTraits.hpp"
 #include "fkYAML/VersioningMacros.hpp"
 #include "fkYAML/YAMLVersionType.hpp"
 

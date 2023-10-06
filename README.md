@@ -6,6 +6,7 @@
 [![GitHub Releases](https://img.shields.io/github/release/fktn-k/fkYAML.svg)](https://github.com/fktn-k/fkYAML/releases/latest)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/fktn-k/fkYAML/develop/LICENSE.txt)
 [![GitHub Issues](https://img.shields.io/github/issues/fktn-k/fkYAML.svg)](https://github.com/fktn-k/fkYAML/issues)
+[![REUSE status](https://api.reuse.software/badge/github.com/fktn-k/fkYAML)](https://api.reuse.software/info/github.com/fktn-k/fkYAML)
 
 # fkYAML
 fkYAML is a C++ header-only C++ library to deal with YAML.  
@@ -36,11 +37,12 @@ The fkYAML library has two design goals:
   By just adding the fkYAML libary to your own C++ projects, everything should work fine with no extra requirements.  
   If there should arise any issue, it's our fault. Please let us know by creating an issue or a PR to fix it up.
 
-- **Seriously tested**.  
+- **Heavily tested**.  
   The fkYAML library has been [unit-tested](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test) and covers as many lines and conditions of the code as possible. (You can see the actual coverage [here](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).)  
-  Furthermore, we checked with [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/), [Clang Sanitizers](https://clang.llvm.org/docs/index.html) and [CodeQL](https://codeql.github.com/docs/) that there are no static/runtime issues in the fkYAML library.  
-  CI workflows run against every commit where any .cpp or .hpp files get changed to check that the fkYAML library can be successfully built/tested on various platforms and compilers with C++ standards.  
-  See the supported environments section for more details.
+  We check with [Valgrind](https://valgrind.org) and the [Clang Sanitizers](https://clang.llvm.org/docs/index.html) that there are no runtime issues such as memory leak.  
+  Furthermore, the quality of our codebase has been checked with [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/) and [CodeQL](https://codeql.github.com/docs/).  
+  GitHub Actions workflows run against every commit pushed on the main & develop branches to check that the fkYAML library can be successfully built/tested with a variety of compilers and C++ standards.  
+  See the [supported compilers](#supported-compilers) section for more details.
 
 ## How to Integrate with existing C++ projects
 
@@ -66,7 +68,7 @@ If your C++ project uses [CMake](https://cmake.org/) as the build system tool, t
   FetchContent_Declare(
     fkYAML
     GIT_REPOSITORY https://github.com/fktn-k/fkYAML.git
-    GIT_TAG        develop
+    GIT_TAG v0.0.1
   )
   FetchContent_MakeAvailable(fkYAML)
 
@@ -204,12 +206,11 @@ fkyaml::Node another_root = fkyaml::Node::Mapping({
 ## How to execute the unit tests
 
 You can execute the unit tests with the following commands.  
-If the fkYAML library is the main target, the unit test app is automatically built.  
 ```bash
 $ cd path/to/fkYAML
 $ mkdir build && cd build
-$ cmake .. -DCMAKE_BUILD_TYPE=Debug
-$ cmake --build .
+$ cmake .. -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
+$ cmake --build . --config Debug
 $ ctest -C Debug --output-on-failure
 ```
 
@@ -225,15 +226,28 @@ Currently, the following compilers are known to work and used in CI workflows:
 | AppleClang 13.0.0.13000029 | macOS 12.6.8 | GitHub Actions |
 | AppleClang 13.1.6.13160021 | macOS 12.6.8 | GitHub Actions |
 | AppleClang 14.0.0.14000029 | macOS 12.6.8 | GitHub Actions |
+| Clang 3.5.2  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 3.6.2  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 3.7.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 3.8.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 3.9.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 4.0.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 5.0.2  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 6.0.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 7.1.0  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 9.0.1  | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 10.0.1 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 11.1.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 12.0.1 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 13.0.1 | Ubuntu 22.04.3 LTS | GitHub Actions |
-| Clang 14.0.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 14.0.6 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | Clang 15.0.7 | Ubuntu 22.04.3 LTS | GitHub Actions |
+| Clang 16.0.6 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 9.5.0  | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 10.5.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 11.4.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | GCC 12.3.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
+| GCC 13.2.0 | Ubuntu 22.04.3 LTS | GitHub Actions |
 | MinGW-64 8.1.0 | Windows-10.0.17763 | GitHub Actions |
 | MinGW-64 12.2.0 | Windows-10.0.20348 | GitHub Actions |
 | Visual Studio 16 2019 MSVC 19.29.30152.0 | Windows-10.0.17763 | GitHub Actions |
@@ -285,3 +299,4 @@ However, it is built, tested and documented with a lot of third-party tools and 
 - [**Doxygen**](https://www.doxygen.nl/) as the API documentation generator.
 - [**include-what-you-use**](https://github.com/include-what-you-use/include-what-you-use) to check the fkYAML library source files are each self-contained.
 - [**lcov**](https://ltp.sourceforge.net/coverage/lcov.php) to process coverage information and create an HTML result view.
+- [**Valgrind**](https://valgrind.org/) for runtime memory leak check.
