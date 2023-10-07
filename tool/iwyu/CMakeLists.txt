@@ -16,11 +16,11 @@ foreach(SRC_FILE ${SRC_FILES})
   string(REPLACE "/" "_" REL_SRC_FILE_REPLACED "${REL_SRC_FILE}")
   string(REPLACE ".hpp" "" REL_SRC_FILE_REPLACED "${REL_SRC_FILE_REPLACED}")
 
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/IWYUHelper.cpp.in
-                 ${CMAKE_CURRENT_BINARY_DIR}/IWYUHelper_${REL_SRC_FILE_REPLACED}.cpp @ONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/iwyu_helper.cpp.in
+                 ${CMAKE_CURRENT_BINARY_DIR}/iwyu_helper_${REL_SRC_FILE_REPLACED}.cpp @ONLY)
 
   add_executable(iwyu_for_${REL_SRC_FILE_REPLACED} EXCLUDE_FROM_ALL
-                 ${CMAKE_CURRENT_BINARY_DIR}/IWYUHelper_${REL_SRC_FILE_REPLACED}.cpp)
+                 ${CMAKE_CURRENT_BINARY_DIR}/iwyu_helper_${REL_SRC_FILE_REPLACED}.cpp)
   target_include_directories(iwyu_for_${REL_SRC_FILE_REPLACED}
                              PRIVATE ${PROJECT_SOURCE_DIR}/include)
   target_compile_features(iwyu_for_${REL_SRC_FILE_REPLACED} PRIVATE cxx_std_11)

@@ -15,7 +15,7 @@
 
 #include <type_traits>
 
-#include "fkYAML/VersioningMacros.hpp"
+#include "fkYAML/version_macros.hpp"
 
 /**
  * @namespace fkyaml

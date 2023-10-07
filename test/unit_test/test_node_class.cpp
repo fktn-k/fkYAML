@@ -10,7 +10,7 @@
 
 #include "catch2/catch.hpp"
 
-#include "fkYAML/Node.hpp"
+#include "fkYAML/node.hpp"
 
 //
 // test cases for constructors

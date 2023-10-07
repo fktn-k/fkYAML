@@ -10,8 +10,8 @@
 
 #include <limits>
 
-#include "fkYAML/Node.hpp"
-#include "fkYAML/Serializer.hpp"
+#include "fkYAML/node.hpp"
+#include "fkYAML/serializer.hpp"
 
 TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")
 {

@@ -8,7 +8,7 @@
 
 #include "catch2/catch.hpp"
 
-#include "fkYAML/Deserializer.hpp"
+#include "fkYAML/deserializer.hpp"
 
 TEST_CASE("DeserializerClassTest_InputStringTest", "[DeserializerClassTest]")
 {

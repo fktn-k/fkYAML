@@ -111,8 +111,8 @@ The `Deserializer` class provides an API for deserializing a YAML string into `n
 
 ```cpp
 #include <cassert>
-#include "fkYAML/Deserializer.hpp"
-#include "fkYAML/Node.hpp"
+#include "fkYAML/deserializer.hpp"
+#include "fkYAML/node.hpp"
 
 // ...
 
@@ -144,8 +144,8 @@ The `Serializer` class provides an API for serializing YAML node values into a s
 ```cpp
 #include <cmath>
 #include <string>
-#include "fkYAML/Deserializer.hpp"
-#include "fkYAML/Node.hpp"
+#include "fkYAML/deserializer.hpp"
+#include "fkYAML/node.hpp"
 
 // ...
 
@@ -173,7 +173,7 @@ std::string str = serializer.serialize(root);
 The `node` class provides APIs for building YAML nodes programatically.  
 
 ```cpp
-#include "fkYAML/Node.hpp"
+#include "fkYAML/node.hpp"
 
 // ...
 

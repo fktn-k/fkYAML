@@ -19,9 +19,9 @@
 #include <utility>
 #include <vector>
 
-#include "fkYAML/VersioningMacros.hpp"
-#include "fkYAML/Exception.hpp"
-#include "fkYAML/TypeTraits.hpp"
+#include "fkYAML/version_macros.hpp"
+#include "fkYAML/exception.hpp"
+#include "fkYAML/type_traits.hpp"
 
 /**
  * @namespace fkyaml

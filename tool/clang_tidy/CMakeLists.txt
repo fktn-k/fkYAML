@@ -9,7 +9,7 @@ message(STATUS "Found clang-tidy. location: ${CLANG_TIDY_EXE} version: ${CLANG_T
 set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-header-filter=../*")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_executable(ClangTidyHelper ClangTidyHelper.cpp)
+add_executable(ClangTidyHelper clang_tidy_helper.cpp)
 target_include_directories(ClangTidyHelper PUBLIC ${FK_YAML_INCLUDE_BUILD_DIR})
 target_compile_options(ClangTidyHelper PUBLIC -O0) # no optimization
 

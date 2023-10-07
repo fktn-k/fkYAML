@@ -32,13 +32,13 @@ set(TEST_TARGET "fkYAMLUnitTest")
 
 add_executable(
   ${TEST_TARGET}
-  ExceptionClassTest.cpp
-  OrderedMapClassTest.cpp
-  NodeClassTest.cpp
-  IteratorClassTest.cpp
-  LexicalAnalyzerClassTest.cpp
-  DeserializerClassTest.cpp
-  SerializerClassTest.cpp
+  test_deserializer_class.cpp
+  test_exception_class.cpp
+  test_iterator_class.cpp
+  test_lexical_analyzer_class.cpp
+  test_node_class.cpp
+  test_ordered_map_class.cpp
+  test_serializer_class.cpp
   main.cpp)
 
 target_include_directories(${TEST_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/include
