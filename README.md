@@ -107,7 +107,7 @@ Here are some examples to give you an idea how to use the fkYAML library.
 
 ### Deserialize YAML formatted strings
 
-The `Deserializer` class provides an API for deserializing a YAML string into `Node` objects.  
+The `Deserializer` class provides an API for deserializing a YAML string into `node` objects.  
 
 ```cpp
 #include <cassert>
@@ -116,25 +116,25 @@ The `Deserializer` class provides an API for deserializing a YAML string into `N
 
 // ...
 
-fkyaml::Deserializer deserializer;
-fkyaml::Node root = deserializer.Deserialize("foo: test\nbar: 3.14\nbuz: true");
+fkyaml::deserializer deserializer;
+fkyaml::node root = deserializer.deserialize("foo: test\nbar: 3.14\nbuz: true");
 
 // You can check that the `root` object has specific keys with the fkyaml::Node::Contains API.
 assert(root.Contains("foo"));
 assert(root.Contains("buz"));
 
 // You can check types of YAML node values associated to each key like the followings:
-assert(root["foo"].Type() == fkyaml::NodeType::STRING);
-assert(root["foo"].IsStringScalar());
-assert(root["bar"].Type() == fkyaml::NodeType::FLOAT_NUMBER);
-assert(root["bar"].IsFloatNumber());
-assert(root["buz"].Type() == fkyaml::NodeType::BOOLEAN);
-assert(root["buz"].IsBooleanScalar());
+assert(root["foo"].type() == fkyaml::node_t::STRING);
+assert(root["foo"].is_string_scalar());
+assert(root["bar"].type() == fkyaml::node_t::FLOAT_NUMBER);
+assert(root["bar"].is_float_number());
+assert(root["buz"].type() == fkyaml::node_t::BOOLEAN);
+assert(root["buz"].is_boolean_scalar());
 
 // You can get references to YAML node values like the followings:
-assert(root["foo"].ToString() == "test");
-assert(root["foo"].ToFloatNumber() == 3.14);
-assert(root["buz"].ToBoolean() == true);
+assert(root["foo"].to_string() == "test");
+assert(root["foo"].to_float_number() == 3.14);
+assert(root["buz"].to_boolean() == true);
 ```
 
 ### Serializing YAML node values
@@ -149,18 +149,18 @@ The `Serializer` class provides an API for serializing YAML node values into a s
 
 // ...
 
-fkyaml::Node root = fkyaml::Node::Mapping({
-    { "foo", fkyaml::Node::StringScalar("test") },
-    { "bar", fkyaml::Node::Sequence({
-        fkyaml::Node::FloatNumberScalar(3.14),
-        fkyaml::Node::FloatNumberScalar(std::nan(""))
+fkyaml::node root = fkyaml::node::Mapping({
+    { "foo", fkyaml::node::string_scalar("test") },
+    { "bar", fkyaml::node::sequence({
+        fkyaml::node::float_number_scalar(3.14),
+        fkyaml::node::float_number_scalar(std::nan(""))
     }) },
-    { "buz", fkyaml::Node::BooleanScalar(true) }
+    { "buz", fkyaml::node::boolean_scalar(true) }
 });
 
-fkyaml::Serializer serializer;
+fkyaml::serializer serializer;
 
-std::string str = serializer.Serialize(root);
+std::string str = serializer.serialize(root);
 // foo: test
 // bar:
 //   - 3.14
@@ -170,7 +170,7 @@ std::string str = serializer.Serialize(root);
 
 ### Build YAML nodes programatically
 
-The `Node` class provides APIs for building YAML nodes programatically.  
+The `node` class provides APIs for building YAML nodes programatically.  
 
 ```cpp
 #include "fkYAML/Node.hpp"
@@ -178,28 +178,28 @@ The `Node` class provides APIs for building YAML nodes programatically.
 // ...
 
 // Create an empty YAML node (mapping).
-fkyaml::Node root = fkyaml::Node::Mapping();
+fkyaml::node root = fkyaml::node::mapping();
 
 // Add a string scalar node.
-root["foo"] = fkyaml::Node::StringScalar("test");
+root["foo"] = fkyaml::node::string_scalar("test");
 
 // Add a sequence node containing floating number scalar nodes.
-root["bar"] = fkyaml::Node::Sequence({ 
-    fkyaml::Node::FloatNumberScalar(3.14),
-    fkyaml::Node::FloatNumberScalar(std::nan(""))
+root["bar"] = fkyaml::node::sequence({ 
+    fkyaml::node::float_number_scalar(3.14),
+    fkyaml::node::float_number_scalar(std::nan(""))
 });
 
 // Add a boolean node.
-root["buz"] = fkyaml::Node::BooleanScalar(true);
+root["buz"] = fkyaml::node::boolean_scalar(true);
 
 // Instead, you can build YAML nodes all at once.
-fkyaml::Node another_root = fkyaml::Node::Mapping({
-    { "foo", fkyaml::Node::StringScalar("test") },
-    { "bar", fkyaml::Node::Sequence({
-        fkyaml::Node::FloatNumberScalar(3.14),
-        fkyaml::Node::FloatNumberScalar(std::nan(""))
+fkyaml::node another_root = fkyaml::node::mapping({
+    { "foo", fkyaml::node::string_scalar("test") },
+    { "bar", fkyaml::node::sequence({
+        fkyaml::node::float_number_scalar(3.14),
+        fkyaml::node::float_number_scalar(std::nan(""))
     }) },
-    { "buz", fkyaml::Node::BooleanScalar(true) }
+    { "buz", fkyaml::node::boolean_scalar(true) }
 });
 ```
 
