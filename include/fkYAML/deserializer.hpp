@@ -13,11 +13,11 @@
 #include <cstdint>
 #include <unordered_map>
 
-#include "fkYAML/VersioningMacros.hpp"
-#include "fkYAML/Exception.hpp"
-#include "fkYAML/LexicalAnalyzer.hpp"
-#include "fkYAML/Node.hpp"
-#include "fkYAML/TypeTraits.hpp"
+#include "fkYAML/version_macros.hpp"
+#include "fkYAML/exception.hpp"
+#include "fkYAML/lexical_analyzer.hpp"
+#include "fkYAML/node.hpp"
+#include "fkYAML/type_traits.hpp"
 
 #ifndef FK_YAML_DESERIALIZER_HPP_
 #define FK_YAML_DESERIALIZER_HPP_

@@ -8,8 +8,8 @@
 
 #include "catch2/catch.hpp"
 
-#include "fkYAML/Iterator.hpp"
-#include "fkYAML/Node.hpp"
+#include "fkYAML/iterator.hpp"
+#include "fkYAML/node.hpp"
 
 TEST_CASE("IteratorClassTest_SequenceCtorTest", "[IteratorClassTest]")
 {

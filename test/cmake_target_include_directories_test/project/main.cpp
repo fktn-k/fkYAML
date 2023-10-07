@@ -8,8 +8,8 @@
 
 #include <iostream>
 
-#include "fkYAML/Node.hpp"
-#include "fkYAML/Deserializer.hpp"
+#include "fkYAML/node.hpp"
+#include "fkYAML/deserializer.hpp"
 
 int main()
 {

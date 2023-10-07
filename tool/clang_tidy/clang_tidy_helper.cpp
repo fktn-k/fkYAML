@@ -6,18 +6,18 @@
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include "fkYAML/Assert.hpp"
-#include "fkYAML/Deserializer.hpp"
-#include "fkYAML/Exception.hpp"
-#include "fkYAML/Iterator.hpp"
-#include "fkYAML/LexicalAnalyzer.hpp"
-#include "fkYAML/Node.hpp"
-#include "fkYAML/NodeType.hpp"
-#include "fkYAML/OrderedMap.hpp"
-#include "fkYAML/Serializer.hpp"
-#include "fkYAML/TypeTraits.hpp"
-#include "fkYAML/VersioningMacros.hpp"
-#include "fkYAML/YAMLVersionType.hpp"
+#include "fkYAML/assert.hpp"
+#include "fkYAML/deserializer.hpp"
+#include "fkYAML/exception.hpp"
+#include "fkYAML/iterator.hpp"
+#include "fkYAML/lexical_analyzer.hpp"
+#include "fkYAML/node.hpp"
+#include "fkYAML/node_t.hpp"
+#include "fkYAML/ordered_map.hpp"
+#include "fkYAML/serializer.hpp"
+#include "fkYAML/type_traits.hpp"
+#include "fkYAML/version_macros.hpp"
+#include "fkYAML/yaml_version_t.hpp"
 
 // This is just a dummy main function for compilation.
 int main()

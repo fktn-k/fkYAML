@@ -20,14 +20,14 @@
 #include <type_traits>
 #include <vector>
 
-#include "fkYAML/VersioningMacros.hpp"
-#include "fkYAML/Assert.hpp"
-#include "fkYAML/Exception.hpp"
-#include "fkYAML/Iterator.hpp"
-#include "fkYAML/NodeType.hpp"
-#include "fkYAML/OrderedMap.hpp"
-#include "fkYAML/TypeTraits.hpp"
-#include "fkYAML/YAMLVersionType.hpp"
+#include "fkYAML/version_macros.hpp"
+#include "fkYAML/assert.hpp"
+#include "fkYAML/exception.hpp"
+#include "fkYAML/iterator.hpp"
+#include "fkYAML/node_t.hpp"
+#include "fkYAML/ordered_map.hpp"
+#include "fkYAML/type_traits.hpp"
+#include "fkYAML/yaml_version_t.hpp"
 
 /**
  * @namespace fkyaml

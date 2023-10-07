@@ -10,7 +10,7 @@
 
 #include "catch2/catch.hpp"
 
-#include "fkYAML/Exception.hpp"
+#include "fkYAML/exception.hpp"
 
 TEST_CASE("ExceptionClassTest_DefaultCtorTest", "[ExceptionClassTest]")
 {

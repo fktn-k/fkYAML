@@ -10,7 +10,7 @@
 
 #include <string>
 
-#include "fkYAML/OrderedMap.hpp"
+#include "fkYAML/ordered_map.hpp"
 
 TEST_CASE("OrderedMapClassTest_DefaultCtorTest", "[OrderedMapClassTest]")
 {

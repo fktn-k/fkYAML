@@ -17,11 +17,11 @@
 #include <sstream>
 #include <string>
 
-#include "fkYAML/VersioningMacros.hpp"
-#include "fkYAML/Exception.hpp"
-#include "fkYAML/Node.hpp"
-#include "fkYAML/NodeType.hpp"
-#include "fkYAML/TypeTraits.hpp"
+#include "fkYAML/version_macros.hpp"
+#include "fkYAML/exception.hpp"
+#include "fkYAML/node.hpp"
+#include "fkYAML/node_t.hpp"
+#include "fkYAML/type_traits.hpp"
 
 FK_YAML_NAMESPACE_BEGIN
 

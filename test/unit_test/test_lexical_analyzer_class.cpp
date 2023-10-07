@@ -8,8 +8,8 @@
 
 #include "catch2/catch.hpp"
 
-#include "fkYAML/LexicalAnalyzer.hpp"
-#include "fkYAML/Node.hpp"
+#include "fkYAML/lexical_analyzer.hpp"
+#include "fkYAML/node.hpp"
 
 TEST_CASE("LexicalAnalyzerClassTest_set_input_bufferTest", "[LexicalAnalyzerClassTest]")
 {
