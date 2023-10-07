@@ -108,25 +108,13 @@ public:
                 }
                 break;
             case lexical_token_t::VALUE_SEPARATOR:
-                if (!m_current_node->is_sequence() && !m_current_node->is_mapping())
-                {
-                    throw fkyaml::exception("A value separator must appear in a container node.");
-                }
                 break;
             case lexical_token_t::ANCHOR_PREFIX: {
-                if (m_current_node->is_mapping())
-                {
-                    throw fkyaml::exception("A mapping node cannot be an anchor.");
-                }
                 m_anchor_name = m_lexer.get_string();
                 m_needs_anchor_impl = true;
                 break;
             }
             case lexical_token_t::ALIAS_PREFIX: {
-                if (m_current_node->is_mapping())
-                {
-                    throw fkyaml::exception("Cannot apply alias to a mapping node.");
-                }
                 m_anchor_name = m_lexer.get_string();
                 if (m_anchor_table.find(m_anchor_name) == m_anchor_table.end())
                 {
@@ -165,18 +153,10 @@ public:
                 }
                 break;
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
-                if (m_current_node->is_mapping())
-                {
-                    throw fkyaml::exception("Cannot assign a sequence value as a key.");
-                }
                 *m_current_node = BasicNodeType::sequence();
                 set_yaml_version(*m_current_node);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_END:
-                if (!m_current_node->is_sequence())
-                {
-                    throw fkyaml::exception("Invalid sequence flow ending found.");
-                }
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 break;

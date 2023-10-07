@@ -78,9 +78,11 @@ TEST_CASE("DeserializerClassTest_DeserializeNumericKey", "[DeserializerClassTest
     fkyaml::deserializer deserializer;
     fkyaml::node root;
 
-    using StringValuePair = std::pair<std::string, std::string>;
+    using string_value_pair_t = std::pair<std::string, std::string>;
 
-    auto str_val_pair = GENERATE(StringValuePair("123: foo", "123"), StringValuePair("3.14: foo", "3.14"));
+    auto str_val_pair = GENERATE(
+        string_value_pair_t("123: foo", "123"),
+        string_value_pair_t("3.14: foo", "3.14"));
     REQUIRE_NOTHROW(root = deserializer.deserialize(str_val_pair.first.c_str()));
     REQUIRE(root.is_mapping());
     REQUIRE(root.size() == 1);
