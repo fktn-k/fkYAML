@@ -29,20 +29,20 @@
 FK_YAML_NAMESPACE_BEGIN
 
 /**
- * @class BasicDeserializer
+ * @class basic_deserializer
  * @brief A class which provides the feature of deserializing YAML documents.
  */
 
 /**
- * @class BasicDeserializer
+ * @class basic_deserializer
  * @brief A class which provides the feature of deserializing YAML documents.
  *
  * @tparam BasicNodeType A type of the container for deserialized YAML values.
  */
-template <typename BasicNodeType = Node>
-class BasicDeserializer
+template <typename BasicNodeType = node>
+class basic_deserializer
 {
-    static_assert(IsBasicNode<BasicNodeType>::value, "BasicDeserializer only accepts (const) BasicNode<...>");
+    static_assert(is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts (const) basic_node<...>");
 
     /** A type for sequence node value containers. */
     using sequence_type = typename BasicNodeType::sequence_type;
@@ -57,13 +57,13 @@ class BasicDeserializer
     /** A type for string node values. */
     using string_type = typename BasicNodeType::string_type;
     /** A type for the lexical analyzer object used by this deserializer. */
-    using lexer_type = LexicalAnalyzer<BasicNodeType>;
+    using lexer_type = lexical_analyzer<BasicNodeType>;
 
 public:
     /**
-     * @brief Construct a new BasicDeserializer object.
+     * @brief Construct a new basic_deserializer object.
      */
-    BasicDeserializer() = default;
+    basic_deserializer() = default;
 
 public:
     /**
@@ -72,182 +72,162 @@ public:
      * @param source A YAML-formatted source string.
      * @return BasicNodeType A root YAML node deserialized from the source string.
      */
-    BasicNodeType Deserialize(const char* const source)
+    BasicNodeType deserialize(const char* const source)
     {
         if (!source)
         {
-            throw Exception("The given source for deserialization is nullptr.");
+            throw fkyaml::exception("The given source for deserialization is nullptr.");
         }
 
-        m_lexer.SetInputBuffer(source);
-        BasicNodeType root = BasicNodeType::Mapping();
+        m_lexer.set_input_buffer(source);
+        BasicNodeType root = BasicNodeType::mapping();
         m_current_node = &root;
 
-        LexicalTokenType type = m_lexer.GetNextToken();
-        while (type != LexicalTokenType::END_OF_BUFFER)
+        lexical_token_t type = m_lexer.get_next_token();
+        while (type != lexical_token_t::END_OF_BUFFER)
         {
             switch (type)
             {
-            case LexicalTokenType::KEY_SEPARATOR:
-                if (m_node_stack.empty() || !m_node_stack.back()->IsMapping())
+            case lexical_token_t::KEY_SEPARATOR:
+                if (m_node_stack.empty() || !m_node_stack.back()->is_mapping())
                 {
-                    throw Exception("A key separator found while a value token is expected.");
+                    throw fkyaml::exception("A key separator found while a value token is expected.");
                 }
-                if (m_current_node->IsSequence() && m_current_node->Size() == 1)
+                if (m_current_node->is_sequence() && m_current_node->size() == 1)
                 {
                     // make sequence node to mapping node.
-                    string_type tmp_str = m_current_node->operator[](0).ToString();
-                    m_current_node->operator[](0) = BasicNodeType::Mapping();
+                    string_type tmp_str = m_current_node->operator[](0).to_string();
+                    m_current_node->operator[](0) = BasicNodeType::mapping();
                     m_node_stack.emplace_back(m_current_node);
                     m_current_node = &(m_current_node->operator[](0));
-                    SetYamlVersion(*m_current_node);
-                    m_current_node->ToMapping().emplace(tmp_str, BasicNodeType());
+                    set_yaml_version(*m_current_node);
+                    m_current_node->to_mapping().emplace(tmp_str, BasicNodeType());
                     m_node_stack.emplace_back(m_current_node);
                     m_current_node = &(m_current_node->operator[](tmp_str));
-                    SetYamlVersion(*m_current_node);
+                    set_yaml_version(*m_current_node);
                 }
                 break;
-            case LexicalTokenType::VALUE_SEPARATOR:
-                if (!m_current_node->IsSequence() && !m_current_node->IsMapping())
-                {
-                    throw Exception("A value separator must appear in a container node.");
-                }
+            case lexical_token_t::VALUE_SEPARATOR:
                 break;
-            case LexicalTokenType::ANCHOR_PREFIX: {
-                if (m_current_node->IsMapping())
-                {
-                    throw Exception("A mapping node cannot be an anchor.");
-                }
-                m_anchor_name = m_lexer.GetString();
+            case lexical_token_t::ANCHOR_PREFIX: {
+                m_anchor_name = m_lexer.get_string();
                 m_needs_anchor_impl = true;
                 break;
             }
-            case LexicalTokenType::ALIAS_PREFIX: {
-                if (m_current_node->IsMapping())
-                {
-                    throw Exception("Cannot apply alias to a mapping node.");
-                }
-                m_anchor_name = m_lexer.GetString();
+            case lexical_token_t::ALIAS_PREFIX: {
+                m_anchor_name = m_lexer.get_string();
                 if (m_anchor_table.find(m_anchor_name) == m_anchor_table.end())
                 {
-                    throw Exception("The given anchor name must appear prior to the alias node.");
+                    throw fkyaml::exception("The given anchor name must appear prior to the alias node.");
                 }
-                AssignNodeValue(BasicNodeType::AliasOf(m_anchor_table.at(m_anchor_name)));
+                assign_node_value(BasicNodeType::alias_of(m_anchor_table.at(m_anchor_name)));
                 break;
             }
-            case LexicalTokenType::COMMENT_PREFIX:
+            case lexical_token_t::COMMENT_PREFIX:
                 break;
-            case LexicalTokenType::YAML_VER_DIRECTIVE: {
+            case lexical_token_t::YAML_VER_DIRECTIVE: {
                 FK_YAML_ASSERT(m_current_node == &root);
-                UpdateYamlVersionFrom(m_lexer.GetYamlVersion());
-                SetYamlVersion(*m_current_node);
+                update_yaml_version_from(m_lexer.get_yaml_version());
+                set_yaml_version(*m_current_node);
                 break;
             }
-            case LexicalTokenType::TAG_DIRECTIVE:
+            case lexical_token_t::TAG_DIRECTIVE:
                 // TODO: implement tag directive deserialization.
-            case LexicalTokenType::INVALID_DIRECTIVE:
+            case lexical_token_t::INVALID_DIRECTIVE:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
-            case LexicalTokenType::SEQUENCE_BLOCK_PREFIX:
-                if (m_current_node->IsMapping())
+            case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
+                if (m_current_node->is_mapping())
                 {
-                    if (m_current_node->IsEmpty())
+                    if (m_current_node->empty())
                     {
-                        *m_current_node = BasicNodeType::Sequence();
+                        *m_current_node = BasicNodeType::sequence();
                         break;
                     }
 
                     // for the second or later mapping items in a sequence node.
-                    m_node_stack.back()->ToSequence().emplace_back(BasicNodeType::Mapping());
-                    m_current_node = &(m_node_stack.back()->ToSequence().back());
-                    SetYamlVersion(*m_current_node);
+                    m_node_stack.back()->to_sequence().emplace_back(BasicNodeType::mapping());
+                    m_current_node = &(m_node_stack.back()->to_sequence().back());
+                    set_yaml_version(*m_current_node);
                     break;
                 }
                 break;
-            case LexicalTokenType::SEQUENCE_FLOW_BEGIN:
-                if (m_current_node->IsMapping())
-                {
-                    throw Exception("Cannot assign a sequence value as a key.");
-                }
-                *m_current_node = BasicNodeType::Sequence();
-                SetYamlVersion(*m_current_node);
+            case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+                *m_current_node = BasicNodeType::sequence();
+                set_yaml_version(*m_current_node);
                 break;
-            case LexicalTokenType::SEQUENCE_FLOW_END:
-                if (!m_current_node->IsSequence())
+            case lexical_token_t::SEQUENCE_FLOW_END:
+                m_current_node = m_node_stack.back();
+                m_node_stack.pop_back();
+                break;
+            case lexical_token_t::MAPPING_BLOCK_PREFIX:
+                *m_current_node = BasicNodeType::mapping();
+                set_yaml_version(*m_current_node);
+                break;
+            case lexical_token_t::MAPPING_FLOW_BEGIN:
+                if (m_current_node->is_mapping())
                 {
-                    throw Exception("Invalid sequence flow ending found.");
+                    throw fkyaml::exception("Cannot assign a mapping value as a key.");
+                }
+                *m_current_node = BasicNodeType::mapping();
+                set_yaml_version(*m_current_node);
+                break;
+            case lexical_token_t::MAPPING_FLOW_END:
+                if (!m_current_node->is_mapping())
+                {
+                    throw fkyaml::exception("Invalid mapping flow ending found.");
                 }
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 break;
-            case LexicalTokenType::MAPPING_BLOCK_PREFIX:
-                *m_current_node = BasicNodeType::Mapping();
-                SetYamlVersion(*m_current_node);
-                break;
-            case LexicalTokenType::MAPPING_FLOW_BEGIN:
-                if (m_current_node->IsMapping())
+            case lexical_token_t::NULL_VALUE:
+                if (m_current_node->is_mapping())
                 {
-                    throw Exception("Cannot assign a mapping value as a key.");
-                }
-                *m_current_node = BasicNodeType::Mapping();
-                SetYamlVersion(*m_current_node);
-                break;
-            case LexicalTokenType::MAPPING_FLOW_END:
-                if (!m_current_node->IsMapping())
-                {
-                    throw Exception("Invalid mapping flow ending found.");
-                }
-                m_current_node = m_node_stack.back();
-                m_node_stack.pop_back();
-                break;
-            case LexicalTokenType::NULL_VALUE:
-                if (m_current_node->IsMapping())
-                {
-                    AddNewKey(m_lexer.GetString());
+                    add_new_key(m_lexer.get_string());
                     break;
                 }
 
                 // Just make sure that the actual value is really a null value.
-                m_lexer.GetNull();
-                AssignNodeValue(BasicNodeType());
+                m_lexer.get_null();
+                assign_node_value(BasicNodeType());
                 break;
-            case LexicalTokenType::BOOLEAN_VALUE:
-                if (m_current_node->IsMapping())
+            case lexical_token_t::BOOLEAN_VALUE:
+                if (m_current_node->is_mapping())
                 {
-                    AddNewKey(m_lexer.GetString());
+                    add_new_key(m_lexer.get_string());
                     break;
                 }
-                AssignNodeValue(BasicNodeType::BooleanScalar(m_lexer.GetBoolean()));
+                assign_node_value(BasicNodeType::boolean_scalar(m_lexer.get_boolean()));
                 break;
-            case LexicalTokenType::INTEGER_VALUE:
-                if (m_current_node->IsMapping())
+            case lexical_token_t::INTEGER_VALUE:
+                if (m_current_node->is_mapping())
                 {
-                    AddNewKey(m_lexer.GetString());
+                    add_new_key(m_lexer.get_string());
                     break;
                 }
-                AssignNodeValue(BasicNodeType::IntegerScalar(m_lexer.GetInteger()));
+                assign_node_value(BasicNodeType::integer_scalar(m_lexer.get_integer()));
                 break;
-            case LexicalTokenType::FLOAT_NUMBER_VALUE:
-                if (m_current_node->IsMapping())
+            case lexical_token_t::FLOAT_NUMBER_VALUE:
+                if (m_current_node->is_mapping())
                 {
-                    AddNewKey(m_lexer.GetString());
+                    add_new_key(m_lexer.get_string());
                     break;
                 }
-                AssignNodeValue(BasicNodeType::FloatNumberScalar(m_lexer.GetFloatNumber()));
+                assign_node_value(BasicNodeType::float_number_scalar(m_lexer.get_float_number()));
                 break;
-            case LexicalTokenType::STRING_VALUE:
-                if (m_current_node->IsMapping())
+            case lexical_token_t::STRING_VALUE:
+                if (m_current_node->is_mapping())
                 {
-                    AddNewKey(m_lexer.GetString());
+                    add_new_key(m_lexer.get_string());
                     break;
                 }
-                AssignNodeValue(BasicNodeType::StringScalar(m_lexer.GetString()));
+                assign_node_value(BasicNodeType::string_scalar(m_lexer.get_string()));
                 break;
-            default:                                                 // LCOV_EXCL_LINE
-                throw Exception("Unsupported lexical token found."); // LCOV_EXCL_LINE
+            default:                                                         // LCOV_EXCL_LINE
+                throw fkyaml::exception("Unsupported lexical token found."); // LCOV_EXCL_LINE
             }
 
-            type = m_lexer.GetNextToken();
+            type = m_lexer.get_next_token();
         }
 
         m_current_node = nullptr;
@@ -264,11 +244,11 @@ private:
      *
      * @param key a key string to be added to the current YAML node.
      */
-    void AddNewKey(const string_type& key) noexcept
+    void add_new_key(const string_type& key) noexcept
     {
-        m_current_node->ToMapping().emplace(key, BasicNodeType());
+        m_current_node->to_mapping().emplace(key, BasicNodeType());
         m_node_stack.push_back(m_current_node);
-        m_current_node = &(m_current_node->ToMapping().at(key));
+        m_current_node = &(m_current_node->to_mapping().at(key));
     }
 
     /**
@@ -276,16 +256,16 @@ private:
      *
      * @param node_value A rvalue BasicNodeType object to be assigned to the current node.
      */
-    void AssignNodeValue(BasicNodeType&& node_value) noexcept
+    void assign_node_value(BasicNodeType&& node_value) noexcept
     {
-        if (m_current_node->IsSequence())
+        if (m_current_node->is_sequence())
         {
-            m_current_node->ToSequence().emplace_back(std::move(node_value));
-            SetYamlVersion(m_current_node->ToSequence().back());
+            m_current_node->to_sequence().emplace_back(std::move(node_value));
+            set_yaml_version(m_current_node->to_sequence().back());
             if (m_needs_anchor_impl)
             {
-                m_current_node->ToSequence().back().AddAnchorName(m_anchor_name);
-                m_anchor_table[m_anchor_name] = m_current_node->ToSequence().back();
+                m_current_node->to_sequence().back().add_anchor_name(m_anchor_name);
+                m_anchor_table[m_anchor_name] = m_current_node->to_sequence().back();
                 m_needs_anchor_impl = false;
                 m_anchor_name.clear();
             }
@@ -294,10 +274,10 @@ private:
 
         // a scalar node
         *m_current_node = std::move(node_value);
-        SetYamlVersion(*m_current_node);
+        set_yaml_version(*m_current_node);
         if (m_needs_anchor_impl)
         {
-            m_current_node->AddAnchorName(m_anchor_name);
+            m_current_node->add_anchor_name(m_anchor_name);
             m_anchor_table[m_anchor_name] = *m_current_node;
             m_needs_anchor_impl = false;
             m_anchor_name.clear();
@@ -307,13 +287,13 @@ private:
     }
 
     /**
-     * @brief Set the YamlVersionType object to the given node.
+     * @brief Set the yaml_version_t object to the given node.
      *
-     * @param node A BasicNodeType object to be set the YamlVersionType object.
+     * @param node A BasicNodeType object to be set the yaml_version_t object.
      */
-    void SetYamlVersion(BasicNodeType& node) noexcept
+    void set_yaml_version(BasicNodeType& node) noexcept
     {
-        node.SetVersion(m_yaml_version);
+        node.set_yaml_version(m_yaml_version);
     }
 
     /**
@@ -321,22 +301,22 @@ private:
      *
      * @param version_str A YAML version string.
      */
-    void UpdateYamlVersionFrom(const string_type& version_str) noexcept
+    void update_yaml_version_from(const string_type& version_str) noexcept
     {
         if (version_str == "1.1")
         {
-            m_yaml_version = YamlVersionType::VER_1_1;
+            m_yaml_version = yaml_version_t::VER_1_1;
             return;
         }
-        m_yaml_version = YamlVersionType::VER_1_2;
+        m_yaml_version = yaml_version_t::VER_1_2;
     }
 
 private:
-    lexer_type m_lexer {};                                     /** A lexical analyzer object. */
-    BasicNodeType* m_current_node = nullptr;                   /** The currently focused YAML node. */
-    std::vector<BasicNodeType*> m_node_stack;                  /** The stack of YAML nodes. */
-    YamlVersionType m_yaml_version = YamlVersionType::VER_1_2; /** The YAML version specification type. */
-    uint32_t m_current_indent_width = 0;                       /** The current indentation width. */
+    lexer_type m_lexer {};                                   /** A lexical analyzer object. */
+    BasicNodeType* m_current_node = nullptr;                 /** The currently focused YAML node. */
+    std::vector<BasicNodeType*> m_node_stack;                /** The stack of YAML nodes. */
+    yaml_version_t m_yaml_version = yaml_version_t::VER_1_2; /** The YAML version specification type. */
+    uint32_t m_current_indent_width = 0;                     /** The current indentation width. */
     bool m_needs_anchor_impl = false; /** A flag to determine the need for YAML anchor node implementation */
     string_type m_anchor_name {};     /** The last YAML anchor name. */
     std::unordered_map<std::string, BasicNodeType> m_anchor_table; /** The table of YAML anchor nodes. */
@@ -345,7 +325,7 @@ private:
 /**
  * @brief default YAML document deserializer.
  */
-using Deserializer = BasicDeserializer<>;
+using deserializer = basic_deserializer<>;
 
 FK_YAML_NAMESPACE_END
 

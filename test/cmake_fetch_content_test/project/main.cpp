@@ -13,6 +13,7 @@
 
 int main()
 {
+    // NOTE: API signatures must remain old until v0.1.0 release.
     fkyaml::Deserializer deserializer;
     fkyaml::Node node = deserializer.Deserialize("test: true");
 

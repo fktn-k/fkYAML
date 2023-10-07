@@ -13,10 +13,10 @@
 
 int main()
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node node = deserializer.Deserialize("test: true");
+    fkyaml::deserializer deserializer;
+    fkyaml::node node = deserializer.deserialize("test: true");
 
-    std::cout << "test: " << node["test"].ToString() << std::endl;
+    std::cout << "test: " << node["test"].to_string() << std::endl;
 
     return 0;
 }

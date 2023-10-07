@@ -18,56 +18,56 @@
 
 TEST_CASE("NodeClassTest_DefaultCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node node;
-    REQUIRE(node.IsNull());
+    fkyaml::node node;
+    REQUIRE(node.is_null());
 }
 
 TEST_CASE("NodeClassTest_SequenceTypeCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node node(fkyaml::NodeType::SEQUENCE);
-    REQUIRE(node.IsSequence());
-    REQUIRE(node.Size() == 0);
+    fkyaml::node node(fkyaml::node_t::SEQUENCE);
+    REQUIRE(node.is_sequence());
+    REQUIRE(node.size() == 0);
 }
 
 TEST_CASE("NodeClassTest_MappingTypeCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node node(fkyaml::NodeType::MAPPING);
-    REQUIRE(node.IsMapping());
-    REQUIRE(node.Size() == 0);
+    fkyaml::node node(fkyaml::node_t::MAPPING);
+    REQUIRE(node.is_mapping());
+    REQUIRE(node.size() == 0);
 }
 
 TEST_CASE("NodeClassTest_NullTypeCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node node(fkyaml::NodeType::NULL_OBJECT);
-    REQUIRE(node.IsNull());
+    fkyaml::node node(fkyaml::node_t::NULL_OBJECT);
+    REQUIRE(node.is_null());
 }
 
 TEST_CASE("NodeClassTest_BooleanTypeCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node node(fkyaml::NodeType::BOOLEAN);
-    REQUIRE(node.IsBoolean());
-    REQUIRE(node.ToBoolean() == false);
+    fkyaml::node node(fkyaml::node_t::BOOLEAN);
+    REQUIRE(node.is_boolean());
+    REQUIRE(node.to_boolean() == false);
 }
 
 TEST_CASE("NodeClassTest_IntegerTypeCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node node(fkyaml::NodeType::INTEGER);
-    REQUIRE(node.IsInteger());
-    REQUIRE(node.ToInteger() == 0);
+    fkyaml::node node(fkyaml::node_t::INTEGER);
+    REQUIRE(node.is_integer());
+    REQUIRE(node.to_integer() == 0);
 }
 
 TEST_CASE("NodeClassTest_FloatNumberTypeCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node node(fkyaml::NodeType::FLOAT_NUMBER);
-    REQUIRE(node.IsFloatNumber());
-    REQUIRE(node.ToFloatNumber() == 0.0);
+    fkyaml::node node(fkyaml::node_t::FLOAT_NUMBER);
+    REQUIRE(node.is_float_number());
+    REQUIRE(node.to_float_number() == 0.0);
 }
 
 TEST_CASE("NodeClassTest_StringTypeCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node node(fkyaml::NodeType::STRING);
-    REQUIRE(node.IsString());
-    REQUIRE(node.Size() == 0);
+    fkyaml::node node(fkyaml::node_t::STRING);
+    REQUIRE(node.is_string());
+    REQUIRE(node.size() == 0);
 }
 
 TEST_CASE("NodeClassTest_ThrowingSpecializationTypeCtorTest", "[NodeClassTest]")
@@ -76,200 +76,200 @@ TEST_CASE("NodeClassTest_ThrowingSpecializationTypeCtorTest", "[NodeClassTest]")
     {
         String()
         {
-            throw fkyaml::Exception();
+            throw fkyaml::exception();
         }
     };
 
-    using NodeType = fkyaml::BasicNode<std::vector, std::map, bool, int64_t, double, String>;
-    REQUIRE_THROWS_AS(NodeType::StringScalar(), fkyaml::Exception);
+    using NodeType = fkyaml::basic_node<std::vector, std::map, bool, int64_t, double, String>;
+    REQUIRE_THROWS_AS(NodeType::string_scalar(), fkyaml::exception);
 }
 
 TEST_CASE("NodeClassTest_SequenceCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node copied =
-        fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(true), fkyaml::Node::StringScalar("test")});
-    fkyaml::Node node(copied);
-    REQUIRE(node.IsSequence());
-    REQUIRE_NOTHROW(node.Size());
-    REQUIRE(node.Size() == 2);
+    fkyaml::node copied =
+        fkyaml::node::sequence({fkyaml::node::boolean_scalar(true), fkyaml::node::string_scalar("test")});
+    fkyaml::node node(copied);
+    REQUIRE(node.is_sequence());
+    REQUIRE_NOTHROW(node.size());
+    REQUIRE(node.size() == 2);
     REQUIRE_NOTHROW(node[0]);
-    REQUIRE(node[0].IsBoolean());
-    REQUIRE_NOTHROW(node[0].ToBoolean());
-    REQUIRE(node[0].ToBoolean() == true);
+    REQUIRE(node[0].is_boolean());
+    REQUIRE_NOTHROW(node[0].to_boolean());
+    REQUIRE(node[0].to_boolean() == true);
     REQUIRE_NOTHROW(node[1]);
-    REQUIRE(node[1].IsString());
-    REQUIRE_NOTHROW(node[1].ToString());
-    REQUIRE_NOTHROW(node[1].ToString().size());
-    REQUIRE(node[1].ToString().size() == 4);
-    REQUIRE(node[1].ToString().compare("test") == 0);
+    REQUIRE(node[1].is_string());
+    REQUIRE_NOTHROW(node[1].to_string());
+    REQUIRE_NOTHROW(node[1].to_string().size());
+    REQUIRE(node[1].to_string().size() == 4);
+    REQUIRE(node[1].to_string().compare("test") == 0);
 }
 
 TEST_CASE("NodeClassTest_MappingCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node copied = fkyaml::Node::Mapping(
-        {{"test0", fkyaml::Node::IntegerScalar(123)}, {"test1", fkyaml::Node::FloatNumberScalar(3.14)}});
-    fkyaml::Node node(copied);
-    REQUIRE(node.IsMapping());
-    REQUIRE_NOTHROW(node.Size());
-    REQUIRE(node.Size() == 2);
+    fkyaml::node copied = fkyaml::node::mapping(
+        {{"test0", fkyaml::node::integer_scalar(123)}, {"test1", fkyaml::node::float_number_scalar(3.14)}});
+    fkyaml::node node(copied);
+    REQUIRE(node.is_mapping());
+    REQUIRE_NOTHROW(node.size());
+    REQUIRE(node.size() == 2);
     REQUIRE_NOTHROW(node["test0"]);
-    REQUIRE(node["test0"].IsInteger());
-    REQUIRE_NOTHROW(node["test0"].ToInteger());
-    REQUIRE(node["test0"].ToInteger() == 123);
+    REQUIRE(node["test0"].is_integer());
+    REQUIRE_NOTHROW(node["test0"].to_integer());
+    REQUIRE(node["test0"].to_integer() == 123);
     REQUIRE_NOTHROW(node["test1"]);
-    REQUIRE(node["test1"].IsFloatNumber());
-    REQUIRE_NOTHROW(node["test1"].ToFloatNumber());
-    REQUIRE(node["test1"].ToFloatNumber() == 3.14);
+    REQUIRE(node["test1"].is_float_number());
+    REQUIRE_NOTHROW(node["test1"].to_float_number());
+    REQUIRE(node["test1"].to_float_number() == 3.14);
 }
 
 TEST_CASE("NodeClassTest_NullCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node copied;
-    fkyaml::Node node(copied);
-    REQUIRE(node.IsNull());
+    fkyaml::node copied;
+    fkyaml::node node(copied);
+    REQUIRE(node.is_null());
 }
 
 TEST_CASE("NodeClassTest_BooleanCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node copied = fkyaml::Node::BooleanScalar(true);
-    fkyaml::Node node(copied);
-    REQUIRE(node.IsBoolean());
-    REQUIRE_NOTHROW(node.ToBoolean());
-    REQUIRE(node.ToBoolean() == true);
+    fkyaml::node copied = fkyaml::node::boolean_scalar(true);
+    fkyaml::node node(copied);
+    REQUIRE(node.is_boolean());
+    REQUIRE_NOTHROW(node.to_boolean());
+    REQUIRE(node.to_boolean() == true);
 }
 
 TEST_CASE("NodeClassTest_IntegerCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node copied = fkyaml::Node::IntegerScalar(123);
-    fkyaml::Node node(copied);
-    REQUIRE(node.IsInteger());
-    REQUIRE_NOTHROW(node.ToInteger());
-    REQUIRE(node.ToInteger() == 123);
+    fkyaml::node copied = fkyaml::node::integer_scalar(123);
+    fkyaml::node node(copied);
+    REQUIRE(node.is_integer());
+    REQUIRE_NOTHROW(node.to_integer());
+    REQUIRE(node.to_integer() == 123);
 }
 
 TEST_CASE("NodeClassTest_FloatNumberCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node copied = fkyaml::Node::FloatNumberScalar(3.14);
-    fkyaml::Node node(copied);
-    REQUIRE(node.IsFloatNumber());
-    REQUIRE_NOTHROW(node.ToFloatNumber());
-    REQUIRE(node.ToFloatNumber() == 3.14);
+    fkyaml::node copied = fkyaml::node::float_number_scalar(3.14);
+    fkyaml::node node(copied);
+    REQUIRE(node.is_float_number());
+    REQUIRE_NOTHROW(node.to_float_number());
+    REQUIRE(node.to_float_number() == 3.14);
 }
 
 TEST_CASE("NodeClassTest_StringCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node copied = fkyaml::Node::StringScalar("test");
-    fkyaml::Node node(copied);
-    REQUIRE(node.IsString());
-    REQUIRE_NOTHROW(node.Size());
-    REQUIRE(node.Size() == 4);
-    REQUIRE_NOTHROW(node.ToString());
-    REQUIRE(node.ToString().compare("test") == 0);
+    fkyaml::node copied = fkyaml::node::string_scalar("test");
+    fkyaml::node node(copied);
+    REQUIRE(node.is_string());
+    REQUIRE_NOTHROW(node.size());
+    REQUIRE(node.size() == 4);
+    REQUIRE_NOTHROW(node.to_string());
+    REQUIRE(node.to_string().compare("test") == 0);
 }
 
 TEST_CASE("NodeClassTest_AliasCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node tmp = fkyaml::Node::BooleanScalar(true);
-    tmp.AddAnchorName("anchor_name");
-    fkyaml::Node tmp_alias = fkyaml::Node::AliasOf(tmp);
-    fkyaml::Node alias(tmp_alias);
-    REQUIRE(alias.IsBoolean());
-    REQUIRE_NOTHROW(alias.ToBoolean());
-    REQUIRE(alias.ToBoolean() == true);
+    fkyaml::node tmp = fkyaml::node::boolean_scalar(true);
+    tmp.add_anchor_name("anchor_name");
+    fkyaml::node tmp_alias = fkyaml::node::alias_of(tmp);
+    fkyaml::node alias(tmp_alias);
+    REQUIRE(alias.is_boolean());
+    REQUIRE_NOTHROW(alias.to_boolean());
+    REQUIRE(alias.to_boolean() == true);
 }
 
 TEST_CASE("NodeClassTest_SequenceMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node moved =
-        fkyaml::Node::Sequence({fkyaml::Node::BooleanScalar(true), fkyaml::Node::StringScalar("test")});
-    fkyaml::Node node(std::move(moved));
-    REQUIRE(node.IsSequence());
-    REQUIRE_NOTHROW(node.Size());
-    REQUIRE(node.Size() == 2);
+    fkyaml::node moved =
+        fkyaml::node::sequence({fkyaml::node::boolean_scalar(true), fkyaml::node::string_scalar("test")});
+    fkyaml::node node(std::move(moved));
+    REQUIRE(node.is_sequence());
+    REQUIRE_NOTHROW(node.size());
+    REQUIRE(node.size() == 2);
     REQUIRE_NOTHROW(node[0]);
-    REQUIRE(node[0].IsBoolean());
-    REQUIRE_NOTHROW(node[0].ToBoolean());
-    REQUIRE(node[0].ToBoolean() == true);
+    REQUIRE(node[0].is_boolean());
+    REQUIRE_NOTHROW(node[0].to_boolean());
+    REQUIRE(node[0].to_boolean() == true);
     REQUIRE_NOTHROW(node[1]);
-    REQUIRE(node[1].IsString());
-    REQUIRE_NOTHROW(node[1].ToString());
-    REQUIRE_NOTHROW(node[1].ToString().size());
-    REQUIRE(node[1].ToString().size() == 4);
-    REQUIRE(node[1].ToString().compare("test") == 0);
+    REQUIRE(node[1].is_string());
+    REQUIRE_NOTHROW(node[1].to_string());
+    REQUIRE_NOTHROW(node[1].to_string().size());
+    REQUIRE(node[1].to_string().size() == 4);
+    REQUIRE(node[1].to_string().compare("test") == 0);
 }
 
 TEST_CASE("NodeClassTest_MappingMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node moved = fkyaml::Node::Mapping(
-        {{"test0", fkyaml::Node::IntegerScalar(123)}, {"test1", fkyaml::Node::FloatNumberScalar(3.14)}});
-    fkyaml::Node node(std::move(moved));
-    REQUIRE(node.IsMapping());
-    REQUIRE_NOTHROW(node.Size());
-    REQUIRE(node.Size() == 2);
+    fkyaml::node moved = fkyaml::node::mapping(
+        {{"test0", fkyaml::node::integer_scalar(123)}, {"test1", fkyaml::node::float_number_scalar(3.14)}});
+    fkyaml::node node(std::move(moved));
+    REQUIRE(node.is_mapping());
+    REQUIRE_NOTHROW(node.size());
+    REQUIRE(node.size() == 2);
     REQUIRE_NOTHROW(node["test0"]);
-    REQUIRE(node["test0"].IsInteger());
-    REQUIRE_NOTHROW(node["test0"].ToInteger());
-    REQUIRE(node["test0"].ToInteger() == 123);
+    REQUIRE(node["test0"].is_integer());
+    REQUIRE_NOTHROW(node["test0"].to_integer());
+    REQUIRE(node["test0"].to_integer() == 123);
     REQUIRE_NOTHROW(node["test1"]);
-    REQUIRE(node["test1"].IsFloatNumber());
-    REQUIRE_NOTHROW(node["test1"].ToFloatNumber());
-    REQUIRE(node["test1"].ToFloatNumber() == 3.14);
+    REQUIRE(node["test1"].is_float_number());
+    REQUIRE_NOTHROW(node["test1"].to_float_number());
+    REQUIRE(node["test1"].to_float_number() == 3.14);
 }
 
 TEST_CASE("NodeClassTest_NullMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node moved;
-    fkyaml::Node node(std::move(moved));
-    REQUIRE(node.IsNull());
+    fkyaml::node moved;
+    fkyaml::node node(std::move(moved));
+    REQUIRE(node.is_null());
 }
 
 TEST_CASE("NodeClassTest_BooleanMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node moved = fkyaml::Node::BooleanScalar(true);
-    fkyaml::Node node(std::move(moved));
-    REQUIRE(node.IsBoolean());
-    REQUIRE_NOTHROW(node.ToBoolean());
-    REQUIRE(node.ToBoolean() == true);
+    fkyaml::node moved = fkyaml::node::boolean_scalar(true);
+    fkyaml::node node(std::move(moved));
+    REQUIRE(node.is_boolean());
+    REQUIRE_NOTHROW(node.to_boolean());
+    REQUIRE(node.to_boolean() == true);
 }
 
 TEST_CASE("NodeClassTest_IntegerMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node moved = fkyaml::Node::IntegerScalar(123);
-    fkyaml::Node node(std::move(moved));
-    REQUIRE(node.IsInteger());
-    REQUIRE_NOTHROW(node.ToInteger());
-    REQUIRE(node.ToInteger() == 123);
+    fkyaml::node moved = fkyaml::node::integer_scalar(123);
+    fkyaml::node node(std::move(moved));
+    REQUIRE(node.is_integer());
+    REQUIRE_NOTHROW(node.to_integer());
+    REQUIRE(node.to_integer() == 123);
 }
 
 TEST_CASE("NodeClassTest_FloatNumberMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node moved = fkyaml::Node::FloatNumberScalar(3.14);
-    fkyaml::Node node(std::move(moved));
-    REQUIRE(node.IsFloatNumber());
-    REQUIRE_NOTHROW(node.ToFloatNumber());
-    REQUIRE(node.ToFloatNumber() == 3.14);
+    fkyaml::node moved = fkyaml::node::float_number_scalar(3.14);
+    fkyaml::node node(std::move(moved));
+    REQUIRE(node.is_float_number());
+    REQUIRE_NOTHROW(node.to_float_number());
+    REQUIRE(node.to_float_number() == 3.14);
 }
 
 TEST_CASE("NodeClassTest_StringMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node moved = fkyaml::Node::StringScalar("test");
-    fkyaml::Node node(std::move(moved));
-    REQUIRE(node.IsString());
-    REQUIRE_NOTHROW(node.Size());
-    REQUIRE(node.Size() == 4);
-    REQUIRE_NOTHROW(node.ToString());
-    REQUIRE(node.ToString().compare("test") == 0);
+    fkyaml::node moved = fkyaml::node::string_scalar("test");
+    fkyaml::node node(std::move(moved));
+    REQUIRE(node.is_string());
+    REQUIRE_NOTHROW(node.size());
+    REQUIRE(node.size() == 4);
+    REQUIRE_NOTHROW(node.to_string());
+    REQUIRE(node.to_string().compare("test") == 0);
 }
 
 TEST_CASE("NodeClassTest_AliasMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::Node tmp = fkyaml::Node::BooleanScalar(true);
-    tmp.AddAnchorName("anchor_name");
-    fkyaml::Node tmp_alias = fkyaml::Node::AliasOf(tmp);
-    fkyaml::Node alias(std::move(tmp_alias));
-    REQUIRE(alias.IsBoolean());
-    REQUIRE_NOTHROW(alias.ToBoolean());
-    REQUIRE(alias.ToBoolean() == true);
+    fkyaml::node tmp = fkyaml::node::boolean_scalar(true);
+    tmp.add_anchor_name("anchor_name");
+    fkyaml::node tmp_alias = fkyaml::node::alias_of(tmp);
+    fkyaml::node alias(std::move(tmp_alias));
+    REQUIRE(alias.is_boolean());
+    REQUIRE_NOTHROW(alias.to_boolean());
+    REQUIRE(alias.to_boolean() == true);
 }
 
 //
@@ -280,34 +280,34 @@ TEST_CASE("NodeClassTest_SequenceNodeFactoryTest", "[NodeClassTest]")
 {
     SECTION("Test empty sequence node factory method.")
     {
-        fkyaml::Node node = fkyaml::Node::Sequence();
-        REQUIRE(node.IsSequence());
-        REQUIRE(node.Size() == 0);
+        fkyaml::node node = fkyaml::node::sequence();
+        REQUIRE(node.is_sequence());
+        REQUIRE(node.size() == 0);
     }
 
     SECTION("Test non-empty sequence node factory methods.")
     {
-        fkyaml::NodeSequenceType seq(3);
+        fkyaml::node_sequence_type seq(3);
 
         SECTION("Test lvalue sequence node factory method.")
         {
-            fkyaml::Node node = fkyaml::Node::Sequence(seq);
-            REQUIRE(node.IsSequence());
-            REQUIRE(node.Size() == 3);
+            fkyaml::node node = fkyaml::node::sequence(seq);
+            REQUIRE(node.is_sequence());
+            REQUIRE(node.size() == 3);
             for (int i = 0; i < 3; ++i)
             {
-                REQUIRE(node[i].IsNull());
+                REQUIRE(node[i].is_null());
             }
         }
 
         SECTION("Test lvalue sequence node factory method.")
         {
-            fkyaml::Node node = fkyaml::Node::Sequence(std::move(seq));
-            REQUIRE(node.IsSequence());
-            REQUIRE(node.Size() == 3);
+            fkyaml::node node = fkyaml::node::sequence(std::move(seq));
+            REQUIRE(node.is_sequence());
+            REQUIRE(node.size() == 3);
             for (int i = 0; i < 3; ++i)
             {
-                REQUIRE(node[i].IsNull());
+                REQUIRE(node[i].is_null());
             }
         }
     }
@@ -317,31 +317,31 @@ TEST_CASE("NodeClassTest_MappingNodeFactoryTest", "[NodeClassTest]")
 {
     SECTION("Test empty mapping node factory method.")
     {
-        fkyaml::Node node = fkyaml::Node::Mapping();
-        REQUIRE(node.IsMapping());
-        REQUIRE(node.Size() == 0);
+        fkyaml::node node = fkyaml::node::mapping();
+        REQUIRE(node.is_mapping());
+        REQUIRE(node.size() == 0);
     }
 
     SECTION("Test non-empty mapping node factory methods.")
     {
-        fkyaml::NodeMappingType map {{std::string("test"), fkyaml::Node::BooleanScalar(true)}};
+        fkyaml::node_mapping_type map {{std::string("test"), fkyaml::node::boolean_scalar(true)}};
 
         SECTION("Test lvalue mapping node factory method.")
         {
-            fkyaml::Node node = fkyaml::Node::Mapping(map);
-            REQUIRE(node.IsMapping());
-            REQUIRE(node.Size() == 1);
-            REQUIRE(node["test"].IsBoolean());
-            REQUIRE(node["test"].ToBoolean() == true);
+            fkyaml::node node = fkyaml::node::mapping(map);
+            REQUIRE(node.is_mapping());
+            REQUIRE(node.size() == 1);
+            REQUIRE(node["test"].is_boolean());
+            REQUIRE(node["test"].to_boolean() == true);
         }
 
         SECTION("Test rvalue mapping node factory method.")
         {
-            fkyaml::Node node = fkyaml::Node::Mapping(std::move(map));
-            REQUIRE(node.IsMapping());
-            REQUIRE(node.Size() == 1);
-            REQUIRE(node["test"].IsBoolean());
-            REQUIRE(node["test"].ToBoolean() == true);
+            fkyaml::node node = fkyaml::node::mapping(std::move(map));
+            REQUIRE(node.is_mapping());
+            REQUIRE(node.size() == 1);
+            REQUIRE(node["test"].is_boolean());
+            REQUIRE(node["test"].to_boolean() == true);
         }
     }
 }
@@ -349,80 +349,82 @@ TEST_CASE("NodeClassTest_MappingNodeFactoryTest", "[NodeClassTest]")
 TEST_CASE("NodeClassTest_BooleanNodeFactoryTest", "[NodeClassTest]")
 {
     auto boolean = GENERATE(true, false);
-    fkyaml::Node node = fkyaml::Node::BooleanScalar(boolean);
-    REQUIRE(node.IsBoolean());
-    REQUIRE(node.ToBoolean() == boolean);
+    fkyaml::node node = fkyaml::node::boolean_scalar(boolean);
+    REQUIRE(node.is_boolean());
+    REQUIRE(node.to_boolean() == boolean);
 }
 
 TEST_CASE("NodeClassTest_IntegerNodeFactoryTest", "[NodeClassTest]")
 {
     auto integer = GENERATE(
-        std::numeric_limits<fkyaml::NodeIntegerType>::min(), 0, std::numeric_limits<fkyaml::NodeIntegerType>::max());
-    fkyaml::Node node = fkyaml::Node::IntegerScalar(integer);
-    REQUIRE(node.IsInteger());
-    REQUIRE(node.ToInteger() == integer);
+        std::numeric_limits<fkyaml::node_integer_type>::min(),
+        0,
+        std::numeric_limits<fkyaml::node_integer_type>::max());
+    fkyaml::node node = fkyaml::node::integer_scalar(integer);
+    REQUIRE(node.is_integer());
+    REQUIRE(node.to_integer() == integer);
 }
 
 TEST_CASE("NodeClassTest_FloatNumberNodeFactoryTest", "[NodeClassTest]")
 {
     auto float_val = GENERATE(
-        std::numeric_limits<fkyaml::NodeFloatNumberType>::min(),
+        std::numeric_limits<fkyaml::node_float_number_type>::min(),
         3.141592,
-        std::numeric_limits<fkyaml::NodeFloatNumberType>::max());
-    fkyaml::Node node = fkyaml::Node::FloatNumberScalar(float_val);
-    REQUIRE(node.IsFloatNumber());
-    REQUIRE(node.ToFloatNumber() == float_val);
+        std::numeric_limits<fkyaml::node_float_number_type>::max());
+    fkyaml::node node = fkyaml::node::float_number_scalar(float_val);
+    REQUIRE(node.is_float_number());
+    REQUIRE(node.to_float_number() == float_val);
 }
 
 TEST_CASE("NodeClassTest_StringNodeFactoryTest", "[NodeClassTest]")
 {
     SECTION("Test empty string node factory method.")
     {
-        fkyaml::Node node = fkyaml::Node::StringScalar();
-        REQUIRE(node.IsString());
-        REQUIRE(node.Size() == 0);
+        fkyaml::node node = fkyaml::node::string_scalar();
+        REQUIRE(node.is_string());
+        REQUIRE(node.size() == 0);
     }
 
     SECTION("Test lvalue string node factory method.")
     {
-        fkyaml::NodeStringType str("test");
-        fkyaml::Node node = fkyaml::Node::StringScalar(str);
-        REQUIRE(node.IsString());
-        REQUIRE(node.Size() == str.size());
-        REQUIRE(node.ToString() == str);
+        fkyaml::node_string_type str("test");
+        fkyaml::node node = fkyaml::node::string_scalar(str);
+        REQUIRE(node.is_string());
+        REQUIRE(node.size() == str.size());
+        REQUIRE(node.to_string() == str);
     }
 
     SECTION("Test rvalue string node factory method.")
     {
-        fkyaml::Node node = fkyaml::Node::StringScalar("test");
-        REQUIRE(node.IsString());
-        REQUIRE(node.Size() == 4);
-        REQUIRE(node.ToString().compare("test") == 0);
+        fkyaml::node node = fkyaml::node::string_scalar("test");
+        REQUIRE(node.is_string());
+        REQUIRE(node.size() == 4);
+        REQUIRE(node.to_string().compare("test") == 0);
     }
 }
 
 TEST_CASE("NodeClassTest_AliasNodeFactoryTest", "[NodeClassTest]")
 {
-    fkyaml::Node anchor = fkyaml::Node::StringScalar("alias_test");
+    fkyaml::node anchor = fkyaml::node::string_scalar("alias_test");
 
-    SECTION("Make sure BasicNode::AliasOf() throws an exception without anchor name.")
+    SECTION("Make sure BasicNode::alias_of() throws an exception without anchor name.")
     {
-        REQUIRE_THROWS_AS(fkyaml::Node::AliasOf(anchor), fkyaml::Exception);
+        REQUIRE_THROWS_AS(fkyaml::node::alias_of(anchor), fkyaml::exception);
     }
 
-    SECTION("Make sure BasicNode::AliasOf() throws an exception with an empty anchor name.")
+    SECTION("Make sure BasicNode::alias_of() throws an exception with an empty anchor name.")
     {
-        anchor.AddAnchorName("");
-        REQUIRE_THROWS_AS(fkyaml::Node::AliasOf(anchor), fkyaml::Exception);
+        anchor.add_anchor_name("");
+        REQUIRE_THROWS_AS(fkyaml::node::alias_of(anchor), fkyaml::exception);
     }
 
-    SECTION("Check if BasicNode::AliasOf() does not throw any exception.")
+    SECTION("Check if BasicNode::alias_of() does not throw any exception.")
     {
-        anchor.AddAnchorName("anchor_name");
-        REQUIRE_NOTHROW(fkyaml::Node::AliasOf(anchor));
-        fkyaml::Node alias = fkyaml::Node::AliasOf(anchor);
-        REQUIRE(alias.IsString());
-        REQUIRE(alias.ToString().compare("alias_test") == 0);
+        anchor.add_anchor_name("anchor_name");
+        REQUIRE_NOTHROW(fkyaml::node::alias_of(anchor));
+        fkyaml::node alias = fkyaml::node::alias_of(anchor);
+        REQUIRE(alias.is_string());
+        REQUIRE(alias.to_string().compare("alias_test") == 0);
     }
 }
 
@@ -434,59 +436,59 @@ TEST_CASE("NodeClassTest_StringSubscriptOperatorTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected string subscript operators.")
     {
-        fkyaml::NodeMappingType map {{"test", fkyaml::Node()}};
+        fkyaml::node_mapping_type map {{"test", fkyaml::node()}};
 
         SECTION("Test the non-const string subscript operators.")
         {
-            fkyaml::Node node = fkyaml::Node::Mapping(map);
+            fkyaml::node node = fkyaml::node::mapping(map);
 
             SECTION("Test the non-const lvalue string subscript operator.")
             {
                 std::string key = "test";
                 REQUIRE_NOTHROW(node[key]);
-                REQUIRE(node[key].IsNull());
+                REQUIRE(node[key].is_null());
             }
 
             SECTION("Test the non-const alias lvalue string subscript operator.")
             {
                 std::string key = "test";
-                node.AddAnchorName("anchor_name");
-                fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+                node.add_anchor_name("anchor_name");
+                fkyaml::node alias = fkyaml::node::alias_of(node);
                 REQUIRE_NOTHROW(alias[key]);
-                REQUIRE(alias[key].IsNull());
+                REQUIRE(alias[key].is_null());
             }
 
             SECTION("Test the non-const rvalue string subscript operator.")
             {
                 REQUIRE_NOTHROW(node["test"]);
-                REQUIRE(node["test"].IsNull());
+                REQUIRE(node["test"].is_null());
             }
 
             SECTION("Test the const alias lvalue string subscript operator.")
             {
                 std::string key = "test";
-                node.AddAnchorName("anchor_name");
-                const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+                node.add_anchor_name("anchor_name");
+                const fkyaml::node alias = fkyaml::node::alias_of(node);
                 REQUIRE_NOTHROW(alias[key]);
-                REQUIRE(alias[key].IsNull());
+                REQUIRE(alias[key].is_null());
             }
         }
 
         SECTION("Test the const string subscript operators.")
         {
-            const fkyaml::Node node = fkyaml::Node::Mapping(map);
+            const fkyaml::node node = fkyaml::node::mapping(map);
             std::string key = "test";
 
             SECTION("Test the const lvalue string subscript operator.")
             {
                 REQUIRE_NOTHROW(node[key]);
-                REQUIRE(node[key].IsNull());
+                REQUIRE(node[key].is_null());
             }
 
             SECTION("Test the const rvalue string subscript operator.")
             {
                 REQUIRE_NOTHROW(node["test"]);
-                REQUIRE(node["test"].IsNull());
+                REQUIRE(node["test"].is_null());
             }
         }
     }
@@ -494,35 +496,35 @@ TEST_CASE("NodeClassTest_StringSubscriptOperatorTest", "[NodeClassTest]")
     SECTION("Test throwing expected string subscript operator.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-const lvalue throwing invocation.")
         {
             std::string key = "test";
-            REQUIRE_THROWS_AS(node[key], fkyaml::Exception);
+            REQUIRE_THROWS_AS(node[key], fkyaml::exception);
         }
 
         SECTION("Test const lvalue throwing invocation.")
         {
             std::string key = "test";
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node[key], fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node[key], fkyaml::exception);
         }
 
         SECTION("Test non-const rvalue throwing invocation.")
         {
-            REQUIRE_THROWS_AS(node["test"], fkyaml::Exception);
+            REQUIRE_THROWS_AS(node["test"], fkyaml::exception);
         }
 
         SECTION("Test const rvalue throwing invocation.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node["test"], fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node["test"], fkyaml::exception);
         }
     }
 }
@@ -531,8 +533,8 @@ TEST_CASE("NodeClassTest_IntegerSubscriptOperatorTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected integer subscript operators.")
     {
-        fkyaml::Node node = fkyaml::Node::Sequence();
-        node.ToSequence().emplace_back();
+        fkyaml::node node = fkyaml::node::sequence();
+        node.to_sequence().emplace_back();
 
         SECTION("Test non-const non-alias integer subscript operators")
         {
@@ -541,21 +543,21 @@ TEST_CASE("NodeClassTest_IntegerSubscriptOperatorTest", "[NodeClassTest]")
 
         SECTION("Test non-const alias integer subscript operators")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
             REQUIRE_NOTHROW(alias[0]);
         }
 
         SECTION("Test const non-alias integer subscript operators")
         {
-            const fkyaml::Node const_node = node;
+            const fkyaml::node const_node = node;
             REQUIRE_NOTHROW(const_node[0]);
         }
 
         SECTION("Test const alias integer subscript operators")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
             REQUIRE_NOTHROW(alias[0]);
         }
     }
@@ -563,22 +565,22 @@ TEST_CASE("NodeClassTest_IntegerSubscriptOperatorTest", "[NodeClassTest]")
     SECTION("Test throwing expected integer subscript operator.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-const non-sequence nodes.")
         {
-            REQUIRE_THROWS_AS(node[0], fkyaml::Exception);
+            REQUIRE_THROWS_AS(node[0], fkyaml::exception);
         }
 
         SECTION("Test const non-sequence nodes.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node[0], fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node[0], fkyaml::exception);
         }
     }
 }
@@ -589,240 +591,240 @@ TEST_CASE("NodeClassTest_IntegerSubscriptOperatorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_TypeGetterTest", "[NodeClassTest]")
 {
-    using NodeTypePair = std::pair<fkyaml::Node, fkyaml::NodeType>;
+    using NodeTypePair = std::pair<fkyaml::node, fkyaml::node_t>;
     auto type_pair = GENERATE(
-        NodeTypePair(fkyaml::Node::Sequence(), fkyaml::NodeType::SEQUENCE),
-        NodeTypePair(fkyaml::Node::Mapping(), fkyaml::NodeType::MAPPING),
-        NodeTypePair(fkyaml::Node(), fkyaml::NodeType::NULL_OBJECT),
-        NodeTypePair(fkyaml::Node::BooleanScalar(false), fkyaml::NodeType::BOOLEAN),
-        NodeTypePair(fkyaml::Node::IntegerScalar(0), fkyaml::NodeType::INTEGER),
-        NodeTypePair(fkyaml::Node::FloatNumberScalar(0.0), fkyaml::NodeType::FLOAT_NUMBER),
-        NodeTypePair(fkyaml::Node::StringScalar(), fkyaml::NodeType::STRING));
+        NodeTypePair(fkyaml::node::sequence(), fkyaml::node_t::SEQUENCE),
+        NodeTypePair(fkyaml::node::mapping(), fkyaml::node_t::MAPPING),
+        NodeTypePair(fkyaml::node(), fkyaml::node_t::NULL_OBJECT),
+        NodeTypePair(fkyaml::node::boolean_scalar(false), fkyaml::node_t::BOOLEAN),
+        NodeTypePair(fkyaml::node::integer_scalar(0), fkyaml::node_t::INTEGER),
+        NodeTypePair(fkyaml::node::float_number_scalar(0.0), fkyaml::node_t::FLOAT_NUMBER),
+        NodeTypePair(fkyaml::node::string_scalar(), fkyaml::node_t::STRING));
 
     SECTION("Test non-alias node types.")
     {
-        REQUIRE(type_pair.first.Type() == type_pair.second);
+        REQUIRE(type_pair.first.type() == type_pair.second);
     }
 
     SECTION("Test alias node types.")
     {
-        type_pair.first.AddAnchorName("anchor_name");
-        fkyaml::Node alias = fkyaml::Node::AliasOf(type_pair.first);
-        REQUIRE(alias.Type() == type_pair.second);
+        type_pair.first.add_anchor_name("anchor_name");
+        fkyaml::node alias = fkyaml::node::alias_of(type_pair.first);
+        REQUIRE(alias.type() == type_pair.second);
     }
 }
 
-TEST_CASE("NodeClassTest_IsSequenceTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_is_sequenceTest", "[NodeClassTest]")
 {
     SECTION("Test sequence node type.")
     {
-        fkyaml::Node node = fkyaml::Node::Sequence();
+        fkyaml::node node = fkyaml::node::sequence();
 
         SECTION("Test non-alias sequence node type.")
         {
-            REQUIRE(node.IsSequence());
+            REQUIRE(node.is_sequence());
         }
 
         SECTION("Test alias sequence node type.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsSequence());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(alias.is_sequence());
         }
     }
 
     SECTION("Test non-sequence node types.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-sequence node types")
         {
-            REQUIRE_FALSE(node.IsSequence());
+            REQUIRE_FALSE(node.is_sequence());
         }
 
         SECTION("Test alias non-sequence node types.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsSequence());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.is_sequence());
         }
     }
 }
 
-TEST_CASE("NodeClassTest_IsMappingTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_is_mappingTest", "[NodeClassTest]")
 {
     SECTION("Test mapping node type.")
     {
-        fkyaml::Node node = fkyaml::Node::Mapping();
+        fkyaml::node node = fkyaml::node::mapping();
 
         SECTION("Test non-alias mapping node type.")
         {
-            REQUIRE(node.IsMapping());
+            REQUIRE(node.is_mapping());
         }
 
         SECTION("Test alias mapping node type.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsMapping());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(alias.is_mapping());
         }
     }
 
     SECTION("Test non-mapping node types.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-mapping node types")
         {
-            REQUIRE_FALSE(node.IsMapping());
+            REQUIRE_FALSE(node.is_mapping());
         }
 
         SECTION("Test alias non-mapping node types.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsMapping());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.is_mapping());
         }
     }
 }
 
-TEST_CASE("NodeClassTest_IsNullTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_is_nullTest", "[NodeClassTest]")
 {
     SECTION("Test null node type.")
     {
-        fkyaml::Node node = fkyaml::Node();
+        fkyaml::node node = fkyaml::node();
 
         SECTION("Test non-alias null node type.")
         {
-            REQUIRE(node.IsNull());
+            REQUIRE(node.is_null());
         }
 
         SECTION("Test alias null node type.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsNull());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(alias.is_null());
         }
     }
 
     SECTION("Test non-null node types.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node::mapping(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-null node types")
         {
-            REQUIRE_FALSE(node.IsNull());
+            REQUIRE_FALSE(node.is_null());
         }
 
         SECTION("Test alias non-null node types.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsNull());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.is_null());
         }
     }
 }
 
-TEST_CASE("NodeClassTest_IsBooleanTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_is_booleanTest", "[NodeClassTest]")
 {
     SECTION("Test boolean node type.")
     {
-        fkyaml::Node node = fkyaml::Node::BooleanScalar(false);
+        fkyaml::node node = fkyaml::node::boolean_scalar(false);
 
         SECTION("Test non-alias boolean node type.")
         {
-            REQUIRE(node.IsBoolean());
+            REQUIRE(node.is_boolean());
         }
 
         SECTION("Test alias boolean node type.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsBoolean());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(alias.is_boolean());
         }
     }
 
     SECTION("Test non-boolean node types.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-boolean node types")
         {
-            REQUIRE_FALSE(node.IsBoolean());
+            REQUIRE_FALSE(node.is_boolean());
         }
 
         SECTION("Test alias non-boolean node types.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsBoolean());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.is_boolean());
         }
     }
 }
 
-TEST_CASE("NodeClassTest_IsIntegerTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_is_integerTest", "[NodeClassTest]")
 {
     SECTION("Test integer node type.")
     {
-        fkyaml::Node node = fkyaml::Node::IntegerScalar(0);
+        fkyaml::node node = fkyaml::node::integer_scalar(0);
 
         SECTION("Test non-alias integer node type.")
         {
-            REQUIRE(node.IsInteger());
+            REQUIRE(node.is_integer());
         }
 
         SECTION("Test alias integer node type.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsInteger());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(alias.is_integer());
         }
     }
 
     SECTION("Test non-integer node types.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-integer node types")
         {
-            REQUIRE_FALSE(node.IsInteger());
+            REQUIRE_FALSE(node.is_integer());
         }
 
         SECTION("Test alias non-integer node types.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsInteger());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.is_integer());
         }
     }
 }
@@ -831,41 +833,41 @@ TEST_CASE("NodeClassTest_IsFloatNumberTest", "[NodeClassTest]")
 {
     SECTION("Test float number node type.")
     {
-        fkyaml::Node node = fkyaml::Node::FloatNumberScalar(0.0);
+        fkyaml::node node = fkyaml::node::float_number_scalar(0.0);
 
         SECTION("Test non-alias float number node type.")
         {
-            REQUIRE(node.IsFloatNumber());
+            REQUIRE(node.is_float_number());
         }
 
         SECTION("Test alias float number node type.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsFloatNumber());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(alias.is_float_number());
         }
     }
 
     SECTION("Test non-float-number node types.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-float-number node types")
         {
-            REQUIRE_FALSE(node.IsFloatNumber());
+            REQUIRE_FALSE(node.is_float_number());
         }
 
         SECTION("Test alias non-float-number node types.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsFloatNumber());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.is_float_number());
         }
     }
 }
@@ -874,83 +876,83 @@ TEST_CASE("NodeClassTest_IsStringTest", "[NodeClassTest]")
 {
     SECTION("Test string node type.")
     {
-        fkyaml::Node node = fkyaml::Node::StringScalar();
+        fkyaml::node node = fkyaml::node::string_scalar();
 
         SECTION("Test non-alias string node type.")
         {
-            REQUIRE(node.IsString());
+            REQUIRE(node.is_string());
         }
 
         SECTION("Test alias string node type.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsString());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(alias.is_string());
         }
     }
 
     SECTION("Test non-string node types.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0));
+            fkyaml::node::sequence(),
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0));
 
         SECTION("Test non-alias non-string node types")
         {
-            REQUIRE_FALSE(node.IsString());
+            REQUIRE_FALSE(node.is_string());
         }
 
         SECTION("Test alias non-string node types.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsString());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.is_string());
         }
     }
 }
 
-TEST_CASE("NodeClassTest_IsScalarTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_is_scalarTest", "[NodeClassTest]")
 {
     SECTION("Test scalar node types.")
     {
         auto node = GENERATE(
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias scalar node types.")
         {
-            REQUIRE(node.IsScalar());
+            REQUIRE(node.is_scalar());
         }
 
         SECTION("Test alias scalar node types.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(alias.IsScalar());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(alias.is_scalar());
         }
     }
 
     SECTION("Test non-scalar node types.")
     {
-        auto node = GENERATE(fkyaml::Node::Sequence(), fkyaml::Node::Mapping());
+        auto node = GENERATE(fkyaml::node::sequence(), fkyaml::node::mapping());
 
         SECTION("Test non-alias non-scalar node types")
         {
-            REQUIRE_FALSE(node.IsScalar());
+            REQUIRE_FALSE(node.is_scalar());
         }
 
         SECTION("Test alias non-scalar node types.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.IsScalar());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.is_scalar());
         }
     }
 }
@@ -958,18 +960,18 @@ TEST_CASE("NodeClassTest_IsScalarTest", "[NodeClassTest]")
 TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
 {
     auto node = GENERATE(
-        fkyaml::Node::Sequence(),
-        fkyaml::Node::Mapping(),
-        fkyaml::Node(),
-        fkyaml::Node::BooleanScalar(false),
-        fkyaml::Node::IntegerScalar(0),
-        fkyaml::Node::FloatNumberScalar(0.0),
-        fkyaml::Node::StringScalar());
+        fkyaml::node::sequence(),
+        fkyaml::node::mapping(),
+        fkyaml::node(),
+        fkyaml::node::boolean_scalar(false),
+        fkyaml::node::integer_scalar(0),
+        fkyaml::node::float_number_scalar(0.0),
+        fkyaml::node::string_scalar());
 
     SECTION("Test alias node types.")
     {
-        node.AddAnchorName("anchor_name");
-        fkyaml::Node alias = fkyaml::Node::AliasOf(node);
+        node.add_anchor_name("anchor_name");
+        fkyaml::node alias = fkyaml::node::alias_of(node);
     }
 }
 
@@ -977,48 +979,48 @@ TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
 // test cases for emptiness checker
 //
 
-TEST_CASE("NodeClassTest_IsEmptyTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_emptyTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected node emptiness.")
     {
         SECTION("Test empty container node emptiness.")
         {
-            auto node = GENERATE(fkyaml::Node::Sequence(), fkyaml::Node::Mapping(), fkyaml::Node::StringScalar());
+            auto node = GENERATE(fkyaml::node::sequence(), fkyaml::node::mapping(), fkyaml::node::string_scalar());
 
             SECTION("Test empty non-alias container node emptiness.")
             {
-                REQUIRE_NOTHROW(node.IsEmpty());
-                REQUIRE(node.IsEmpty());
+                REQUIRE_NOTHROW(node.empty());
+                REQUIRE(node.empty());
             }
 
             SECTION("Test empty alias container node emptiness.")
             {
-                node.AddAnchorName("anchor_name");
-                fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-                REQUIRE_NOTHROW(alias.IsEmpty());
-                REQUIRE(alias.IsEmpty());
+                node.add_anchor_name("anchor_name");
+                fkyaml::node alias = fkyaml::node::alias_of(node);
+                REQUIRE_NOTHROW(alias.empty());
+                REQUIRE(alias.empty());
             }
         }
 
         SECTION("Test non-empty container node emptiness.")
         {
             auto node = GENERATE(
-                fkyaml::Node::Sequence(fkyaml::NodeSequenceType(3)),
-                fkyaml::Node::Mapping(fkyaml::NodeMappingType {{"test", fkyaml::Node()}}),
-                fkyaml::Node::StringScalar("test"));
+                fkyaml::node::sequence(fkyaml::node_sequence_type(3)),
+                fkyaml::node::mapping(fkyaml::node_mapping_type {{"test", fkyaml::node()}}),
+                fkyaml::node::string_scalar("test"));
 
             SECTION("Test non-empty non-alias container node emptiness.")
             {
-                REQUIRE_NOTHROW(node.IsEmpty());
-                REQUIRE_FALSE(node.IsEmpty());
+                REQUIRE_NOTHROW(node.empty());
+                REQUIRE_FALSE(node.empty());
             }
 
             SECTION("Test non-empty alias container node emptiness.")
             {
-                node.AddAnchorName("anchor_name");
-                fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-                REQUIRE_NOTHROW(alias.IsEmpty());
-                REQUIRE_FALSE(alias.IsEmpty());
+                node.add_anchor_name("anchor_name");
+                fkyaml::node alias = fkyaml::node::alias_of(node);
+                REQUIRE_NOTHROW(alias.empty());
+                REQUIRE_FALSE(alias.empty());
             }
         }
     }
@@ -1026,34 +1028,34 @@ TEST_CASE("NodeClassTest_IsEmptyTest", "[NodeClassTest]")
     SECTION("Test nothrow unexpected node emptiness.")
     {
         auto node = GENERATE(
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0));
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0));
 
         SECTION("Test non-const non-alias non-container node emptiness.")
         {
-            REQUIRE_THROWS_AS(node.IsEmpty(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.empty(), fkyaml::exception);
         }
 
         SECTION("Test const non-alias non-container node emptiness.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.IsEmpty(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.empty(), fkyaml::exception);
         }
 
         SECTION("Test non-const alias non-container node emptiness.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.IsEmpty(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.empty(), fkyaml::exception);
         }
 
         SECTION("Test const alias non-container node emptiness.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.IsEmpty(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.empty(), fkyaml::exception);
         }
     }
 }
@@ -1066,67 +1068,67 @@ TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
 {
     SECTION("Test mapping node.")
     {
-        fkyaml::Node node = fkyaml::Node::Mapping({{"test", fkyaml::Node()}});
+        fkyaml::node node = fkyaml::node::mapping({{"test", fkyaml::node()}});
         std::string key = "test";
 
         SECTION("Test non-alias mapping node with lvalue key.")
         {
-            REQUIRE(node.Contains(key));
+            REQUIRE(node.contains(key));
         }
 
         SECTION("Test alias mapping node with lvalue key.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(node.Contains(key));
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(node.contains(key));
         }
 
         SECTION("Test non-alias mapping node with rvalue key.")
         {
-            REQUIRE(node.Contains(std::move(key)));
+            REQUIRE(node.contains(std::move(key)));
         }
 
         SECTION("Test alias mapping node with rvalue key.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE(node.Contains(std::move(key)));
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE(node.contains(std::move(key)));
         }
     }
 
     SECTION("Test non-mapping node.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
         std::string key = "test";
 
         SECTION("Test non-alias non-mapping node with lvalue key.")
         {
-            REQUIRE_FALSE(node.Contains(key));
+            REQUIRE_FALSE(node.contains(key));
         }
 
         SECTION("Test alias non-mapping node with lvalue key.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.Contains(key));
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.contains(key));
         }
 
         SECTION("Test non-alias non-mapping node with rvalue key.")
         {
-            REQUIRE_FALSE(node.Contains(std::move(key)));
+            REQUIRE_FALSE(node.contains(std::move(key)));
         }
 
         SECTION("Test alias non-mapping node with rvalue key.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_FALSE(alias.Contains(std::move(key)));
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_FALSE(alias.contains(std::move(key)));
         }
     }
 }
@@ -1135,76 +1137,76 @@ TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
 // test cases for container size getter
 //
 
-TEST_CASE("NodeClassTest_SizeGetterTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_sizeGetterTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected node size.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence({fkyaml::Node(), fkyaml::Node(), fkyaml::Node()}),
-            fkyaml::Node::Mapping({{"test0", fkyaml::Node()}, {"test1", fkyaml::Node()}, {"test2", fkyaml::Node()}}),
-            fkyaml::Node::StringScalar("tmp"));
+            fkyaml::node::sequence({fkyaml::node(), fkyaml::node(), fkyaml::node()}),
+            fkyaml::node::mapping({{"test0", fkyaml::node()}, {"test1", fkyaml::node()}, {"test2", fkyaml::node()}}),
+            fkyaml::node::string_scalar("tmp"));
 
         SECTION("Test container node size.")
         {
-            REQUIRE_NOTHROW(node.Size());
-            REQUIRE(node.Size() == 3);
+            REQUIRE_NOTHROW(node.size());
+            REQUIRE(node.size() == 3);
         }
 
         SECTION("Test const container node size.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(node.Size());
-            REQUIRE(const_node.Size() == 3);
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(node.size());
+            REQUIRE(const_node.size() == 3);
         }
 
         SECTION("Test alias container node size.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.Size());
-            REQUIRE(alias.Size() == 3);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.size());
+            REQUIRE(alias.size() == 3);
         }
 
         SECTION("Test const alias container node size.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.Size());
-            REQUIRE(alias.Size() == 3);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.size());
+            REQUIRE(alias.size() == 3);
         }
     }
 
     SECTION("Test nothrow unexpected node size.")
     {
         auto node = GENERATE(
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0));
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0));
 
         SECTION("Test non-const non-alias non-container node size.")
         {
-            REQUIRE_THROWS_AS(node.Size(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.size(), fkyaml::exception);
         }
 
         SECTION("Test const non-alias non-container node size.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.Size(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.size(), fkyaml::exception);
         }
 
         SECTION("Test non-const alias non-container node size.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.Size(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.size(), fkyaml::exception);
         }
 
         SECTION("Test const alias non-container node size.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.Size(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.size(), fkyaml::exception);
         }
     }
 }
@@ -1215,21 +1217,21 @@ TEST_CASE("NodeClassTest_SizeGetterTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_SetVersionTest", "[NodeClassTest]")
 {
-    fkyaml::Node node;
-    node.SetVersion(fkyaml::YamlVersionType::VER_1_1);
-    REQUIRE(node.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+    fkyaml::node node;
+    node.set_yaml_version(fkyaml::yaml_version_t::VER_1_1);
+    REQUIRE(node.get_yaml_version() == fkyaml::yaml_version_t::VER_1_1);
 
-    node.SetVersion(fkyaml::YamlVersionType::VER_1_2);
-    REQUIRE(node.GetVersion() == fkyaml::YamlVersionType::VER_1_2);
+    node.set_yaml_version(fkyaml::yaml_version_t::VER_1_2);
+    REQUIRE(node.get_yaml_version() == fkyaml::yaml_version_t::VER_1_2);
 }
 
 TEST_CASE("NodeClassTest_GetVersionTest", "[NodeClassTest]")
 {
-    fkyaml::Node node;
-    REQUIRE(node.GetVersion() == fkyaml::YamlVersionType::VER_1_2);
+    fkyaml::node node;
+    REQUIRE(node.get_yaml_version() == fkyaml::yaml_version_t::VER_1_2);
 
-    node.SetVersion(fkyaml::YamlVersionType::VER_1_1);
-    REQUIRE(node.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
+    node.set_yaml_version(fkyaml::yaml_version_t::VER_1_1);
+    REQUIRE(node.get_yaml_version() == fkyaml::yaml_version_t::VER_1_1);
 }
 
 //
@@ -1238,63 +1240,63 @@ TEST_CASE("NodeClassTest_GetVersionTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_HasAnchorNameTest", "[NodeClassTest]")
 {
-    fkyaml::Node node;
+    fkyaml::node node;
 
     SECTION("Test node without anchor name.")
     {
-        REQUIRE_FALSE(node.HasAnchorName());
+        REQUIRE_FALSE(node.has_anchor_name());
     }
 
     SECTION("Test node wityh anchor name.")
     {
-        node.AddAnchorName("anchor_name");
-        REQUIRE(node.HasAnchorName());
+        node.add_anchor_name("anchor_name");
+        REQUIRE(node.has_anchor_name());
     }
 }
 
 TEST_CASE("NodeClassTest_GetAnchorNameTest", "[NodeClassTest]")
 {
-    fkyaml::Node node;
+    fkyaml::node node;
 
     SECTION("Test node without anchor name.")
     {
-        REQUIRE_THROWS_AS(node.GetAnchorName(), fkyaml::Exception);
+        REQUIRE_THROWS_AS(node.get_anchor_name(), fkyaml::exception);
     }
 
     SECTION("Test node with anchor name.")
     {
-        node.AddAnchorName("anchor_name");
-        REQUIRE_NOTHROW(node.GetAnchorName());
-        REQUIRE(node.GetAnchorName().compare("anchor_name") == 0);
+        node.add_anchor_name("anchor_name");
+        REQUIRE_NOTHROW(node.get_anchor_name());
+        REQUIRE(node.get_anchor_name().compare("anchor_name") == 0);
     }
 }
 
-TEST_CASE("NodeClassTest_AddAnchorNameTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_add_anchor_nameTest", "[NodeClassTest]")
 {
-    fkyaml::Node node;
+    fkyaml::node node;
     std::string anchor_name = "anchor_name";
 
     SECTION("Test lvalue anchor name.")
     {
-        node.AddAnchorName(anchor_name);
-        REQUIRE_NOTHROW(node.GetAnchorName());
-        REQUIRE(node.GetAnchorName().compare("anchor_name") == 0);
+        node.add_anchor_name(anchor_name);
+        REQUIRE_NOTHROW(node.get_anchor_name());
+        REQUIRE(node.get_anchor_name().compare("anchor_name") == 0);
     }
 
     SECTION("Test rvalue anchor name.")
     {
-        node.AddAnchorName(std::move(anchor_name));
-        REQUIRE_NOTHROW(node.GetAnchorName());
-        REQUIRE(node.GetAnchorName().compare("anchor_name") == 0);
+        node.add_anchor_name(std::move(anchor_name));
+        REQUIRE_NOTHROW(node.get_anchor_name());
+        REQUIRE(node.get_anchor_name().compare("anchor_name") == 0);
     }
 
     SECTION("Test overwritten anchor name.")
     {
-        node.AddAnchorName(anchor_name);
-        node.AddAnchorName("overwritten_name");
-        REQUIRE_NOTHROW(node.GetAnchorName());
-        REQUIRE_FALSE(node.GetAnchorName().compare("anchor_name") == 0);
-        REQUIRE(node.GetAnchorName().compare("overwritten_name") == 0);
+        node.add_anchor_name(anchor_name);
+        node.add_anchor_name("overwritten_name");
+        REQUIRE_NOTHROW(node.get_anchor_name());
+        REQUIRE_FALSE(node.get_anchor_name().compare("anchor_name") == 0);
+        REQUIRE(node.get_anchor_name().compare("overwritten_name") == 0);
     }
 }
 
@@ -1302,55 +1304,55 @@ TEST_CASE("NodeClassTest_AddAnchorNameTest", "[NodeClassTest]")
 // test cases for value reference getters
 //
 
-TEST_CASE("NodeClassTest_ToSequenceTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_to_sequenceTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        fkyaml::Node node =
-            fkyaml::Node::Sequence(fkyaml::NodeSequenceType {fkyaml::Node(), fkyaml::Node(), fkyaml::Node()});
+        fkyaml::node node =
+            fkyaml::node::sequence(fkyaml::node_sequence_type {fkyaml::node(), fkyaml::node(), fkyaml::node()});
 
         SECTION("Test non-alias sequence node.")
         {
-            REQUIRE_NOTHROW(node.ToSequence());
-            REQUIRE(node.ToSequence().size() == 3);
+            REQUIRE_NOTHROW(node.to_sequence());
+            REQUIRE(node.to_sequence().size() == 3);
             for (int i = 0; i < 3; ++i)
             {
-                REQUIRE(node.ToSequence()[i].IsNull());
+                REQUIRE(node.to_sequence()[i].is_null());
             }
         }
 
         SECTION("Test const non-alias sequence node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.ToSequence());
-            REQUIRE(const_node.ToSequence().size() == 3);
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.to_sequence());
+            REQUIRE(const_node.to_sequence().size() == 3);
             for (int i = 0; i < 3; ++i)
             {
-                REQUIRE(node.ToSequence()[i].IsNull());
+                REQUIRE(node.to_sequence()[i].is_null());
             }
         }
 
         SECTION("Test alias sequence node.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToSequence());
-            REQUIRE(alias.ToSequence().size() == 3);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_sequence());
+            REQUIRE(alias.to_sequence().size() == 3);
             for (int i = 0; i < 3; ++i)
             {
-                REQUIRE(alias.ToSequence()[i].IsNull());
+                REQUIRE(alias.to_sequence()[i].is_null());
             }
         }
 
         SECTION("Test const alias sequence node.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToSequence());
-            REQUIRE(alias.ToSequence().size() == 3);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_sequence());
+            REQUIRE(alias.to_sequence().size() == 3);
             for (int i = 0; i < 3; ++i)
             {
-                REQUIRE(alias.ToSequence()[i].IsNull());
+                REQUIRE(alias.to_sequence()[i].is_null());
             }
         }
     }
@@ -1358,36 +1360,36 @@ TEST_CASE("NodeClassTest_ToSequenceTest", "[NodeClassTest]")
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-sequence nodes.")
         {
-            REQUIRE_THROWS_AS(node.ToSequence(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.to_sequence(), fkyaml::exception);
         }
 
         SECTION("Test const non-alias non-sequence nodes.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.ToSequence(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.to_sequence(), fkyaml::exception);
         }
 
         SECTION("Test alias non-sequence nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToSequence(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_sequence(), fkyaml::exception);
         }
 
         SECTION("Test const alias non-sequence nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToSequence(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_sequence(), fkyaml::exception);
         }
     }
 }
@@ -1396,156 +1398,156 @@ TEST_CASE("NodeClassTest_ToMappingTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        fkyaml::Node node = fkyaml::Node::Mapping(
-            fkyaml::NodeMappingType {{"test0", fkyaml::Node()}, {"test1", fkyaml::Node()}, {"test2", fkyaml::Node()}});
+        fkyaml::node node = fkyaml::node::mapping(fkyaml::node_mapping_type {
+            {"test0", fkyaml::node()}, {"test1", fkyaml::node()}, {"test2", fkyaml::node()}});
 
         SECTION("Test non-alias mapping node.")
         {
-            REQUIRE_NOTHROW(node.ToMapping());
-            REQUIRE(node.ToMapping().size() == 3);
-            REQUIRE(node["test0"].IsNull());
-            REQUIRE(node["test1"].IsNull());
-            REQUIRE(node["test2"].IsNull());
+            REQUIRE_NOTHROW(node.to_mapping());
+            REQUIRE(node.to_mapping().size() == 3);
+            REQUIRE(node["test0"].is_null());
+            REQUIRE(node["test1"].is_null());
+            REQUIRE(node["test2"].is_null());
         }
 
         SECTION("Test const non-alias mapping node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.ToMapping());
-            REQUIRE(const_node.ToMapping().size() == 3);
-            REQUIRE(const_node["test0"].IsNull());
-            REQUIRE(const_node["test1"].IsNull());
-            REQUIRE(const_node["test2"].IsNull());
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.to_mapping());
+            REQUIRE(const_node.to_mapping().size() == 3);
+            REQUIRE(const_node["test0"].is_null());
+            REQUIRE(const_node["test1"].is_null());
+            REQUIRE(const_node["test2"].is_null());
         }
 
         SECTION("Test alias mapping node.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToMapping());
-            REQUIRE(alias.ToMapping().size() == 3);
-            REQUIRE(alias["test0"].IsNull());
-            REQUIRE(alias["test1"].IsNull());
-            REQUIRE(alias["test2"].IsNull());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_mapping());
+            REQUIRE(alias.to_mapping().size() == 3);
+            REQUIRE(alias["test0"].is_null());
+            REQUIRE(alias["test1"].is_null());
+            REQUIRE(alias["test2"].is_null());
         }
 
         SECTION("Test const alias mapping node.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToMapping());
-            REQUIRE(alias["test0"].IsNull());
-            REQUIRE(alias["test1"].IsNull());
-            REQUIRE(alias["test2"].IsNull());
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_mapping());
+            REQUIRE(alias["test0"].is_null());
+            REQUIRE(alias["test1"].is_null());
+            REQUIRE(alias["test2"].is_null());
         }
     }
 
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-mapping nodes.")
         {
-            REQUIRE_THROWS_AS(node.ToMapping(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.to_mapping(), fkyaml::exception);
         }
 
         SECTION("Test const non-alias non-mapping nodes.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.ToMapping(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.to_mapping(), fkyaml::exception);
         }
 
         SECTION("Test alias non-mapping nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToMapping(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_mapping(), fkyaml::exception);
         }
 
         SECTION("Test const alias non-mapping nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToMapping(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_mapping(), fkyaml::exception);
         }
     }
 }
 
-TEST_CASE("NodeClassTest_ToBooleanTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_to_booleanTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        fkyaml::Node node = fkyaml::Node::BooleanScalar(true);
+        fkyaml::node node = fkyaml::node::boolean_scalar(true);
 
         SECTION("Test non-alias boolean node.")
         {
-            REQUIRE_NOTHROW(node.ToBoolean());
-            REQUIRE(node.ToBoolean() == true);
+            REQUIRE_NOTHROW(node.to_boolean());
+            REQUIRE(node.to_boolean() == true);
         }
 
         SECTION("Test const non-alias boolean node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.ToBoolean());
-            REQUIRE(const_node.ToBoolean() == true);
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.to_boolean());
+            REQUIRE(const_node.to_boolean() == true);
         }
 
         SECTION("Test alias boolean node.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToBoolean());
-            REQUIRE(alias.ToBoolean() == true);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_boolean());
+            REQUIRE(alias.to_boolean() == true);
         }
 
         SECTION("Test const alias boolean node.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToBoolean());
-            REQUIRE(alias.ToBoolean() == true);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_boolean());
+            REQUIRE(alias.to_boolean() == true);
         }
     }
 
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-boolean nodes.")
         {
-            REQUIRE_THROWS_AS(node.ToBoolean(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.to_boolean(), fkyaml::exception);
         }
 
         SECTION("Test const non-alias non-boolean nodes.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.ToBoolean(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.to_boolean(), fkyaml::exception);
         }
 
         SECTION("Test alias non-boolean nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToBoolean(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_boolean(), fkyaml::exception);
         }
 
         SECTION("Test const alias non-boolean nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToBoolean(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_boolean(), fkyaml::exception);
         }
     }
 }
@@ -1554,72 +1556,72 @@ TEST_CASE("NodeClassTest_ToIntegerTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        fkyaml::NodeIntegerType integer = -123;
-        fkyaml::Node node = fkyaml::Node::IntegerScalar(integer);
+        fkyaml::node_integer_type integer = -123;
+        fkyaml::node node = fkyaml::node::integer_scalar(integer);
 
         SECTION("Test non-alias  integer node.")
         {
-            REQUIRE_NOTHROW(node.ToInteger());
-            REQUIRE(node.ToInteger() == integer);
+            REQUIRE_NOTHROW(node.to_integer());
+            REQUIRE(node.to_integer() == integer);
         }
 
         SECTION("Test const non-alias  integer node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.ToInteger());
-            REQUIRE(const_node.ToInteger() == integer);
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.to_integer());
+            REQUIRE(const_node.to_integer() == integer);
         }
 
         SECTION("Test alias  integer node.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToInteger());
-            REQUIRE(alias.ToInteger() == integer);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_integer());
+            REQUIRE(alias.to_integer() == integer);
         }
 
         SECTION("Test const alias  integer node.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToInteger());
-            REQUIRE(alias.ToInteger() == integer);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_integer());
+            REQUIRE(alias.to_integer() == integer);
         }
     }
 
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-integer nodes.")
         {
-            REQUIRE_THROWS_AS(node.ToInteger(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.to_integer(), fkyaml::exception);
         }
 
         SECTION("Test const non-alias non-integer nodes.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.ToInteger(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.to_integer(), fkyaml::exception);
         }
 
         SECTION("Test alias non-integer nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToInteger(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_integer(), fkyaml::exception);
         }
 
         SECTION("Test const alias non-integer nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToInteger(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_integer(), fkyaml::exception);
         }
     }
 }
@@ -1628,146 +1630,146 @@ TEST_CASE("NodeClassTest_ToFloatNumberTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        fkyaml::NodeFloatNumberType float_val = 123.45;
-        fkyaml::Node node = fkyaml::Node::FloatNumberScalar(float_val);
+        fkyaml::node_float_number_type float_val = 123.45;
+        fkyaml::node node = fkyaml::node::float_number_scalar(float_val);
 
         SECTION("Test non-alias float number node.")
         {
-            REQUIRE_NOTHROW(node.ToFloatNumber());
-            REQUIRE(node.ToFloatNumber() == float_val);
+            REQUIRE_NOTHROW(node.to_float_number());
+            REQUIRE(node.to_float_number() == float_val);
         }
 
         SECTION("Test const non-alias float number node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.ToFloatNumber());
-            REQUIRE(const_node.ToFloatNumber() == float_val);
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.to_float_number());
+            REQUIRE(const_node.to_float_number() == float_val);
         }
 
         SECTION("Test alias float number node.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToFloatNumber());
-            REQUIRE(alias.ToFloatNumber() == float_val);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_float_number());
+            REQUIRE(alias.to_float_number() == float_val);
         }
 
         SECTION("Test const alias float number node.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToFloatNumber());
-            REQUIRE(alias.ToFloatNumber() == float_val);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_float_number());
+            REQUIRE(alias.to_float_number() == float_val);
         }
     }
 
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node::sequence(),
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-alias non-float-number nodes.")
         {
-            REQUIRE_THROWS_AS(node.ToFloatNumber(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.to_float_number(), fkyaml::exception);
         }
 
         SECTION("Test const non-alias non-float-number nodes.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.ToFloatNumber(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.to_float_number(), fkyaml::exception);
         }
 
         SECTION("Test alias non-float-number nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToFloatNumber(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_float_number(), fkyaml::exception);
         }
 
         SECTION("Test const alias non-float-number nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToFloatNumber(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_float_number(), fkyaml::exception);
         }
     }
 }
 
-TEST_CASE("NodeClassTest_ToStringTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_to_stringTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        fkyaml::NodeStringType str = "test";
-        fkyaml::Node node = fkyaml::Node::StringScalar(str);
+        fkyaml::node_string_type str = "test";
+        fkyaml::node node = fkyaml::node::string_scalar(str);
 
         SECTION("Test non-alias string node.")
         {
-            REQUIRE_NOTHROW(node.ToString());
-            REQUIRE(node.ToString() == str);
+            REQUIRE_NOTHROW(node.to_string());
+            REQUIRE(node.to_string() == str);
         }
 
         SECTION("Test const non-alias string node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.ToString());
-            REQUIRE(const_node.ToString() == str);
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.to_string());
+            REQUIRE(const_node.to_string() == str);
         }
 
         SECTION("Test alias string node.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToString());
-            REQUIRE(alias.ToString() == str);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_string());
+            REQUIRE(alias.to_string() == str);
         }
 
         SECTION("Test const alias string node.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.ToString());
-            REQUIRE(alias.ToString() == str);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.to_string());
+            REQUIRE(alias.to_string() == str);
         }
     }
 
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::Node::Sequence(),
-            fkyaml::Node::Mapping(),
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0));
+            fkyaml::node::sequence(),
+            fkyaml::node::mapping(),
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0));
 
         SECTION("Test non-alias non-string nodes.")
         {
-            REQUIRE_THROWS_AS(node.ToString(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.to_string(), fkyaml::exception);
         }
 
         SECTION("Test const non-alias non-string nodes.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.ToString(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.to_string(), fkyaml::exception);
         }
 
         SECTION("Test alias non-string nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToString(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_string(), fkyaml::exception);
         }
 
         SECTION("Test const alias non-string nodes.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_THROWS_AS(alias.ToString(), fkyaml::Exception);
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_THROWS_AS(alias.to_string(), fkyaml::exception);
         }
     }
 }
@@ -1780,31 +1782,31 @@ TEST_CASE("NodeClassTest_BeginTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        auto node = GENERATE(fkyaml::Node::Sequence(), fkyaml::Node::Mapping());
+        auto node = GENERATE(fkyaml::node::sequence(), fkyaml::node::mapping());
 
         SECTION("Test non-const non-alias container node.")
         {
-            REQUIRE_NOTHROW(node.Begin());
+            REQUIRE_NOTHROW(node.begin());
         }
 
         SECTION("Test const non-alias container node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.Begin());
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.begin());
         }
 
         SECTION("Test non-const alias container node.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.Begin());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.begin());
         }
 
         SECTION("Test non-const alias container node.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.Begin());
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.begin());
         }
 
         SECTION("Test non-const range-based for-loop compatibility.")
@@ -1814,7 +1816,7 @@ TEST_CASE("NodeClassTest_BeginTest", "[NodeClassTest]")
 
         SECTION("Test const range-based for-loop compatibility.")
         {
-            const fkyaml::Node const_node = node;
+            const fkyaml::node const_node = node;
             REQUIRE_NOTHROW(const_node.begin());
         }
     }
@@ -1822,21 +1824,21 @@ TEST_CASE("NodeClassTest_BeginTest", "[NodeClassTest]")
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-const throwing node.")
         {
-            REQUIRE_THROWS_AS(node.Begin(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.begin(), fkyaml::exception);
         }
 
         SECTION("Test const throwing node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.Begin(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.begin(), fkyaml::exception);
         }
     }
 }
@@ -1845,31 +1847,31 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        auto node = GENERATE(fkyaml::Node::Sequence(), fkyaml::Node::Mapping());
+        auto node = GENERATE(fkyaml::node::sequence(), fkyaml::node::mapping());
 
         SECTION("Test non-const non-alias container node.")
         {
-            REQUIRE_NOTHROW(node.End());
+            REQUIRE_NOTHROW(node.end());
         }
 
         SECTION("Test const non-alias container node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_NOTHROW(const_node.End());
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.end());
         }
 
         SECTION("Test non-const alias container node.")
         {
-            node.AddAnchorName("anchor_name");
-            fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.End());
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.end());
         }
 
         SECTION("Test non-const alias container node.")
         {
-            node.AddAnchorName("anchor_name");
-            const fkyaml::Node alias = fkyaml::Node::AliasOf(node);
-            REQUIRE_NOTHROW(alias.End());
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.end());
         }
 
         SECTION("Test non-const range-based for-loop compatibility.")
@@ -1879,7 +1881,7 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
 
         SECTION("Test const range-based for-loop compatibility.")
         {
-            const fkyaml::Node const_node = node;
+            const fkyaml::node const_node = node;
             REQUIRE_NOTHROW(const_node.end());
         }
     }
@@ -1887,21 +1889,21 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::Node(),
-            fkyaml::Node::BooleanScalar(false),
-            fkyaml::Node::IntegerScalar(0),
-            fkyaml::Node::FloatNumberScalar(0.0),
-            fkyaml::Node::StringScalar());
+            fkyaml::node(),
+            fkyaml::node::boolean_scalar(false),
+            fkyaml::node::integer_scalar(0),
+            fkyaml::node::float_number_scalar(0.0),
+            fkyaml::node::string_scalar());
 
         SECTION("Test non-const throwing node.")
         {
-            REQUIRE_THROWS_AS(node.End(), fkyaml::Exception);
+            REQUIRE_THROWS_AS(node.end(), fkyaml::exception);
         }
 
         SECTION("Test const throwing node.")
         {
-            const fkyaml::Node const_node = node;
-            REQUIRE_THROWS_AS(const_node.End(), fkyaml::Exception);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.end(), fkyaml::exception);
         }
     }
 }
@@ -1912,22 +1914,22 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_SwapTest", "[NodeClassTest]")
 {
-    fkyaml::Node lhs_node = fkyaml::Node::BooleanScalar(true);
-    fkyaml::Node rhs_node = fkyaml::Node::IntegerScalar(123);
-    lhs_node.Swap(rhs_node);
-    REQUIRE(lhs_node.IsInteger());
-    REQUIRE(lhs_node.ToInteger() == 123);
-    REQUIRE(rhs_node.IsBoolean());
-    REQUIRE(rhs_node.ToBoolean() == true);
+    fkyaml::node lhs_node = fkyaml::node::boolean_scalar(true);
+    fkyaml::node rhs_node = fkyaml::node::integer_scalar(123);
+    lhs_node.swap(rhs_node);
+    REQUIRE(lhs_node.is_integer());
+    REQUIRE(lhs_node.to_integer() == 123);
+    REQUIRE(rhs_node.is_boolean());
+    REQUIRE(rhs_node.to_boolean() == true);
 }
 
 TEST_CASE("NodeClassTest_StdSwapTest", "[NodeClassTest]")
 {
-    fkyaml::Node lhs_node = fkyaml::Node::BooleanScalar(true);
-    fkyaml::Node rhs_node = fkyaml::Node::IntegerScalar(123);
+    fkyaml::node lhs_node = fkyaml::node::boolean_scalar(true);
+    fkyaml::node rhs_node = fkyaml::node::integer_scalar(123);
     std::swap(lhs_node, rhs_node);
-    REQUIRE(lhs_node.IsInteger());
-    REQUIRE(lhs_node.ToInteger() == 123);
-    REQUIRE(rhs_node.IsBoolean());
-    REQUIRE(rhs_node.ToBoolean() == true);
+    REQUIRE(lhs_node.is_integer());
+    REQUIRE(lhs_node.to_integer() == 123);
+    REQUIRE(rhs_node.is_boolean());
+    REQUIRE(rhs_node.to_boolean() == true);
 }

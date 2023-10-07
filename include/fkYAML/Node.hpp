@@ -36,7 +36,7 @@
 FK_YAML_NAMESPACE_BEGIN
 
 /**
- * @class BasicNode
+ * @class basic_node
  * @brief A class to store value of YAML nodes.
  *
  * @tparam SequenceType A type for sequence node value containers.
@@ -48,76 +48,76 @@ FK_YAML_NAMESPACE_BEGIN
  */
 template <
     template <typename, typename...> class SequenceType = std::vector,
-    template <typename, typename, typename...> class MappingType = OrderedMap, typename BooleanType = bool,
+    template <typename, typename, typename...> class MappingType = ordered_map, typename BooleanType = bool,
     typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string>
-class BasicNode
+class basic_node
 {
 public:
-    /** A type for iterators of BasicNode containers. */
-    using iterator = Iterator<BasicNode>;
-    /** A type for constant iterators of BasicNode containers. */
-    using const_iterator = Iterator<const BasicNode>;
+    /** A type for constant iterators of basic_node containers. */
+    using const_iterator = fkyaml::iterator<const basic_node>;
+    /** A type for iterators of basic_node containers. */
+    using iterator = fkyaml::iterator<basic_node>;
 
-    /** A type for sequence BasicNode values. */
-    using sequence_type = SequenceType<BasicNode, std::allocator<BasicNode>>;
-    /** A type for mapping BasicNode values. */
-    using mapping_type = MappingType<StringType, BasicNode>;
-    /** A type for boolean BasicNode values. */
+    /** A type for sequence basic_node values. */
+    using sequence_type = SequenceType<basic_node, std::allocator<basic_node>>;
+    /** A type for mapping basic_node values. */
+    using mapping_type = MappingType<StringType, basic_node>;
+    /** A type for boolean basic_node values. */
     using boolean_type = BooleanType;
-    /** A type for integer BasicNode values. */
+    /** A type for integer basic_node values. */
     using integer_type = IntegerType;
-    /** A type for float number BasicNode values. */
+    /** A type for float number basic_node values. */
     using float_number_type = FloatNumberType;
-    /** A type for string BasicNode values. */
+    /** A type for string basic_node values. */
     using string_type = StringType;
 
 private:
     /**
-     * @union NodeValue
-     * @brief The actual storage for a YAML node value of the @ref BasicNode class.
-     * @details This union combines the different sotrage types for the YAML value types defined in @ref NodeType.
+     * @union node_value
+     * @brief The actual storage for a YAML node value of the @ref basic_node class.
+     * @details This union combines the different sotrage types for the YAML value types defined in @ref node_t.
      * @note Container types are stored as pointers so that the size of this union should not exceed 64 bits by default.
      */
-    union NodeValue
+    union node_value
     {
         /**
-         * @brief Construct a new BasicNode Value object for null types.
+         * @brief Construct a new basic_node Value object for null types.
          */
-        NodeValue() = default;
+        node_value() = default;
 
         /**
-         * @brief Construct a new BasicNode Value object with BasicNode types. The default value for the specified type
-         * will be assigned.
+         * @brief Construct a new basic_node Value object with basic_node types. The default value for the specified
+         * type will be assigned.
          *
          * @param[in] type A Node type.
          */
-        explicit NodeValue(NodeType type)
+        explicit node_value(node_t type)
         {
             switch (type)
             {
-            case NodeType::SEQUENCE:
-                sequence = CreateObject<sequence_type>();
+            case node_t::SEQUENCE:
+                p_sequence = create_object<sequence_type>();
                 break;
-            case NodeType::MAPPING:
-                mapping = CreateObject<mapping_type>();
+            case node_t::MAPPING:
+                p_mapping = create_object<mapping_type>();
                 break;
-            case NodeType::NULL_OBJECT:
-                mapping = nullptr;
+            case node_t::NULL_OBJECT:
+                p_mapping = nullptr;
                 break;
-            case NodeType::BOOLEAN:
+            case node_t::BOOLEAN:
                 boolean = static_cast<boolean_type>(false);
                 break;
-            case NodeType::INTEGER:
+            case node_t::INTEGER:
                 integer = static_cast<integer_type>(0);
                 break;
-            case NodeType::FLOAT_NUMBER:
+            case node_t::FLOAT_NUMBER:
                 float_val = static_cast<float_number_type>(0.0);
                 break;
-            case NodeType::STRING:
-                str = CreateObject<string_type>("");
+            case node_t::STRING:
+                p_string = create_object<string_type>("");
                 break;
-            default:                                             // LCOV_EXCL_LINE
-                throw Exception("Unsupported node value type."); // LCOV_EXCL_LINE
+            default:                                                     // LCOV_EXCL_LINE
+                throw fkyaml::exception("Unsupported node value type."); // LCOV_EXCL_LINE
             }
         }
 
@@ -127,21 +127,21 @@ private:
          *
          * @param[in] type A Node type to determine which Node value is destroyed.
          */
-        void Destroy(NodeType type)
+        void destroy(node_t type)
         {
-            if (type == NodeType::SEQUENCE || type == NodeType::MAPPING)
+            if (type == node_t::SEQUENCE || type == node_t::MAPPING)
             {
-                std::vector<BasicNode> stack;
+                std::vector<basic_node> stack;
 
-                if (type == NodeType::SEQUENCE)
+                if (type == node_t::SEQUENCE)
                 {
-                    stack.reserve(sequence->size());
-                    std::move(sequence->begin(), sequence->end(), std::back_inserter(stack));
+                    stack.reserve(p_sequence->size());
+                    std::move(p_sequence->begin(), p_sequence->end(), std::back_inserter(stack));
                 }
                 else
                 {
-                    stack.reserve(mapping->size());
-                    for (auto&& it : *mapping)
+                    stack.reserve(p_mapping->size());
+                    for (auto&& it : *p_mapping)
                     {
                         stack.push_back(std::move(it.second));
                     }
@@ -149,41 +149,41 @@ private:
 
                 while (!stack.empty())
                 {
-                    BasicNode current_node(std::move(stack.back()));
+                    basic_node current_node(std::move(stack.back()));
                     stack.pop_back();
 
-                    if (current_node.IsSequence())
+                    if (current_node.is_sequence())
                     {
                         std::move(
-                            current_node.m_node_value.sequence->begin(),
-                            current_node.m_node_value.sequence->end(),
+                            current_node.m_node_value.p_sequence->begin(),
+                            current_node.m_node_value.p_sequence->end(),
                             std::back_inserter(stack));
-                        current_node.m_node_value.sequence->clear();
+                        current_node.m_node_value.p_sequence->clear();
                     }
-                    else if (current_node.IsMapping())
+                    else if (current_node.is_mapping())
                     {
-                        for (auto&& it : *current_node.m_node_value.mapping)
+                        for (auto&& it : *current_node.m_node_value.p_mapping)
                         {
                             stack.push_back(std::move(it.second));
                         }
-                        current_node.m_node_value.mapping->clear();
+                        current_node.m_node_value.p_mapping->clear();
                     }
                 }
             }
 
             switch (type)
             {
-            case NodeType::SEQUENCE:
-                DestroyObject<sequence_type>(sequence);
-                sequence = nullptr;
+            case node_t::SEQUENCE:
+                destroy_object<sequence_type>(p_sequence);
+                p_sequence = nullptr;
                 break;
-            case NodeType::MAPPING:
-                DestroyObject<mapping_type>(mapping);
-                mapping = nullptr;
+            case node_t::MAPPING:
+                destroy_object<mapping_type>(p_mapping);
+                p_mapping = nullptr;
                 break;
-            case NodeType::STRING:
-                DestroyObject<string_type>(str);
-                str = nullptr;
+            case node_t::STRING:
+                destroy_object<string_type>(p_string);
+                p_string = nullptr;
                 break;
             default:
                 break;
@@ -191,9 +191,9 @@ private:
         }
 
         /** A pointer to the value of sequence type. */
-        sequence_type* sequence;
+        sequence_type* p_sequence;
         /** A pointer to the value of mapping type. This pointer is also used when node type is null. */
-        mapping_type* mapping;
+        mapping_type* p_mapping;
         /** A value of boolean type. */
         boolean_type boolean;
         /** A value of integer type. */
@@ -201,7 +201,7 @@ private:
         /** A value of float number type. */
         float_number_type float_val;
         /** A pointer to the value of string type. */
-        string_type* str;
+        string_type* p_string;
     };
 
 private:
@@ -214,7 +214,7 @@ private:
      * @return ObjType* An address of allocated memory on the heap.
      */
     template <typename ObjType, typename... ArgTypes>
-    static ObjType* CreateObject(ArgTypes&&... args)
+    static ObjType* create_object(ArgTypes&&... args)
     {
         using AllocType = std::allocator<ObjType>;
         using AllocTraitsType = std::allocator_traits<AllocType>;
@@ -239,7 +239,7 @@ private:
      * @param[in] obj A pointer to the target object to be destroyed.
      */
     template <typename ObjType>
-    static void DestroyObject(ObjType* obj)
+    static void destroy_object(ObjType* obj)
     {
         if (!obj)
         {
@@ -253,624 +253,624 @@ private:
 
 public:
     /**
-     * @brief Construct a new BasicNode object of null type.
+     * @brief Construct a new basic_node object of null type.
      */
-    BasicNode() noexcept
-        : m_node_type(NodeType::NULL_OBJECT),
-          m_yaml_version_type(YamlVersionType::VER_1_2),
+    basic_node() noexcept
+        : m_node_type(node_t::NULL_OBJECT),
+          m_yaml_version_type(yaml_version_t::VER_1_2),
           m_node_value(),
           m_anchor_name(nullptr)
     {
     }
 
     /**
-     * @brief Construct a new BasicNode object with a specified type.
-     * @note If you construct an alias node, call BasicNode::AliasOf() instead.
+     * @brief Construct a new basic_node object with a specified type.
+     * @note If you construct an alias node, call basic_node::AliasOf() instead.
      *
      * @param[in] type A YAML node value type.
      */
-    explicit BasicNode(const NodeType type)
+    explicit basic_node(const node_t type)
         : m_node_type(type),
-          m_yaml_version_type(YamlVersionType::VER_1_2),
+          m_yaml_version_type(yaml_version_t::VER_1_2),
           m_node_value(type),
           m_anchor_name(nullptr)
     {
     }
 
     /**
-     * @brief Copy constructor of the BasicNode class.
+     * @brief Copy constructor of the basic_node class.
      *
-     * @param[in] rhs A BasicNode object to be copied with.
+     * @param[in] rhs A basic_node object to be copied with.
      */
-    BasicNode(const BasicNode& rhs)
+    basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
           m_yaml_version_type(rhs.m_yaml_version_type),
           m_anchor_name(nullptr)
     {
         switch (m_node_type)
         {
-        case NodeType::SEQUENCE:
-            m_node_value.sequence = CreateObject<sequence_type>(*(rhs.m_node_value.sequence));
-            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
+        case node_t::SEQUENCE:
+            m_node_value.p_sequence = create_object<sequence_type>(*(rhs.m_node_value.p_sequence));
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             break;
-        case NodeType::MAPPING:
-            m_node_value.mapping = CreateObject<mapping_type>(*(rhs.m_node_value.mapping));
-            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
+        case node_t::MAPPING:
+            m_node_value.p_mapping = create_object<mapping_type>(*(rhs.m_node_value.p_mapping));
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
             break;
-        case NodeType::NULL_OBJECT:
-            m_node_value.mapping = nullptr;
+        case node_t::NULL_OBJECT:
+            m_node_value.p_mapping = nullptr;
             break;
-        case NodeType::BOOLEAN:
+        case node_t::BOOLEAN:
             m_node_value.boolean = rhs.m_node_value.boolean;
             break;
-        case NodeType::INTEGER:
+        case node_t::INTEGER:
             m_node_value.integer = rhs.m_node_value.integer;
             break;
-        case NodeType::FLOAT_NUMBER:
+        case node_t::FLOAT_NUMBER:
             m_node_value.float_val = rhs.m_node_value.float_val;
             break;
-        case NodeType::STRING:
-            m_node_value.str = CreateObject<string_type>(*(rhs.m_node_value.str));
-            FK_YAML_ASSERT(m_node_value.str != nullptr);
+        case node_t::STRING:
+            m_node_value.p_string = create_object<string_type>(*(rhs.m_node_value.p_string));
+            FK_YAML_ASSERT(m_node_value.p_string != nullptr);
             break;
-        default:                                               // LCOV_EXCL_LINE
-            throw Exception("Not supported node value type."); // LCOV_EXCL_LINE
+        default:                                                       // LCOV_EXCL_LINE
+            throw fkyaml::exception("Not supported node value type."); // LCOV_EXCL_LINE
         }
 
         if (rhs.m_anchor_name)
         {
-            DestroyObject<std::string>(m_anchor_name);
-            m_anchor_name = CreateObject<std::string>(*(rhs.m_anchor_name));
+            destroy_object<std::string>(m_anchor_name);
+            m_anchor_name = create_object<std::string>(*(rhs.m_anchor_name));
             FK_YAML_ASSERT(m_anchor_name != nullptr);
         }
     }
 
     /**
-     * @brief Move constructor of the BasicNode class.
+     * @brief Move constructor of the basic_node class.
      *
-     * @param[in] rhs A BasicNode object to be moved from.
+     * @param[in] rhs A basic_node object to be moved from.
      */
-    BasicNode(BasicNode&& rhs) noexcept // NOLINT(bugprone-exception-escape)
+    basic_node(basic_node&& rhs) noexcept // NOLINT(bugprone-exception-escape)
         : m_node_type(rhs.m_node_type),
           m_yaml_version_type(rhs.m_yaml_version_type),
           m_anchor_name(rhs.m_anchor_name)
     {
         switch (m_node_type)
         {
-        case NodeType::SEQUENCE:
-            FK_YAML_ASSERT(rhs.m_node_value.sequence != nullptr);
-            m_node_value.sequence = rhs.m_node_value.sequence;
-            rhs.m_node_value.sequence = nullptr;
+        case node_t::SEQUENCE:
+            FK_YAML_ASSERT(rhs.m_node_value.p_sequence != nullptr);
+            m_node_value.p_sequence = rhs.m_node_value.p_sequence;
+            rhs.m_node_value.p_sequence = nullptr;
             break;
-        case NodeType::MAPPING:
-            FK_YAML_ASSERT(rhs.m_node_value.mapping != nullptr);
-            m_node_value.mapping = rhs.m_node_value.mapping;
-            rhs.m_node_value.mapping = nullptr;
+        case node_t::MAPPING:
+            FK_YAML_ASSERT(rhs.m_node_value.p_mapping != nullptr);
+            m_node_value.p_mapping = rhs.m_node_value.p_mapping;
+            rhs.m_node_value.p_mapping = nullptr;
             break;
-        case NodeType::NULL_OBJECT:
-            FK_YAML_ASSERT(rhs.m_node_value.mapping == nullptr);
-            m_node_value.mapping = rhs.m_node_value.mapping;
+        case node_t::NULL_OBJECT:
+            FK_YAML_ASSERT(rhs.m_node_value.p_mapping == nullptr);
+            m_node_value.p_mapping = rhs.m_node_value.p_mapping;
             break;
-        case NodeType::BOOLEAN:
+        case node_t::BOOLEAN:
             m_node_value.boolean = rhs.m_node_value.boolean;
             rhs.m_node_value.boolean = static_cast<boolean_type>(false);
             break;
-        case NodeType::INTEGER:
+        case node_t::INTEGER:
             m_node_value.integer = rhs.m_node_value.integer;
             rhs.m_node_value.integer = static_cast<integer_type>(0);
             break;
-        case NodeType::FLOAT_NUMBER:
+        case node_t::FLOAT_NUMBER:
             m_node_value.float_val = rhs.m_node_value.float_val;
             rhs.m_node_value.float_val = static_cast<float_number_type>(0.0);
             break;
-        case NodeType::STRING:
-            FK_YAML_ASSERT(rhs.m_node_value.str != nullptr);
-            m_node_value.str = rhs.m_node_value.str;
-            rhs.m_node_value.str = nullptr;
+        case node_t::STRING:
+            FK_YAML_ASSERT(rhs.m_node_value.p_string != nullptr);
+            m_node_value.p_string = rhs.m_node_value.p_string;
+            rhs.m_node_value.p_string = nullptr;
             break;
-        default:                                             // LCOV_EXCL_LINE
-            throw Exception("Unsupported node value type."); // LCOV_EXCL_LINE
+        default:                                                     // LCOV_EXCL_LINE
+            throw fkyaml::exception("Unsupported node value type."); // LCOV_EXCL_LINE
         }
 
-        rhs.m_node_type = NodeType::NULL_OBJECT;
-        rhs.m_yaml_version_type = YamlVersionType::VER_1_2;
-        rhs.m_node_value.mapping = nullptr;
+        rhs.m_node_type = node_t::NULL_OBJECT;
+        rhs.m_yaml_version_type = yaml_version_t::VER_1_2;
+        rhs.m_node_value.p_mapping = nullptr;
         rhs.m_anchor_name = nullptr;
     }
 
     /**
-     * @brief Destroy the BasicNode object and its value storage.
+     * @brief Destroy the basic_node object and its value storage.
      */
-    ~BasicNode() noexcept // NOLINT(bugprone-exception-escape)
+    ~basic_node() noexcept // NOLINT(bugprone-exception-escape)
     {
-        DestroyObject<std::string>(m_anchor_name);
+        destroy_object<std::string>(m_anchor_name);
         m_anchor_name = nullptr;
-        m_node_value.Destroy(m_node_type);
-        m_node_type = NodeType::NULL_OBJECT;
+        m_node_value.destroy(m_node_type);
+        m_node_type = node_t::NULL_OBJECT;
     }
 
 public:
     /**
-     * @brief A factory method for sequence BasicNode objects without sequence_type objects.
+     * @brief A factory method for sequence basic_node objects without sequence_type objects.
      *
-     * @return BasicNode A constructed BasicNode object of sequence type.
+     * @return basic_node A constructed basic_node object of sequence type.
      */
-    static BasicNode Sequence()
+    static basic_node sequence()
     {
-        BasicNode node;
-        node.m_node_type = NodeType::SEQUENCE;
-        node.m_node_value.sequence = CreateObject<sequence_type>();
-        FK_YAML_ASSERT(node.m_node_value.sequence != nullptr);
+        basic_node node;
+        node.m_node_type = node_t::SEQUENCE;
+        node.m_node_value.p_sequence = create_object<sequence_type>();
+        FK_YAML_ASSERT(node.m_node_value.p_sequence != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
     /**
-     * @brief A factory method for sequence BasicNode objects with lvalue sequence_type objects.
+     * @brief A factory method for sequence basic_node objects with lvalue sequence_type objects.
      *
-     * @param[in] sequence A lvalue source of sequence type.
-     * @return BasicNode A constructed BasicNode object of sequence type.
+     * @param[in] seq A lvalue source of sequence type.
+     * @return basic_node A constructed basic_node object of sequence type.
      */
-    static BasicNode Sequence(const sequence_type& sequence)
+    static basic_node sequence(const sequence_type& seq)
     {
-        BasicNode node;
-        node.m_node_type = NodeType::SEQUENCE;
-        node.m_node_value.sequence = CreateObject<sequence_type>(sequence);
-        FK_YAML_ASSERT(node.m_node_value.sequence != nullptr);
+        basic_node node;
+        node.m_node_type = node_t::SEQUENCE;
+        node.m_node_value.p_sequence = create_object<sequence_type>(seq);
+        FK_YAML_ASSERT(node.m_node_value.p_sequence != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
     /**
-     * @brief A factory method for sequence BasicNode objects with rvalue sequence_type objects.
+     * @brief A factory method for sequence basic_node objects with rvalue sequence_type objects.
      *
-     * @param[in] sequence A rvalue source of sequence type.
-     * @return BasicNode A constructed BasicNode object of sequence type.
+     * @param[in] seq A rvalue source of sequence type.
+     * @return basic_node A constructed basic_node object of sequence type.
      */
-    static BasicNode Sequence(sequence_type&& sequence)
+    static basic_node sequence(sequence_type&& seq)
     {
-        BasicNode node;
-        node.m_node_type = NodeType::SEQUENCE;
-        node.m_node_value.sequence = CreateObject<sequence_type>(std::move(sequence));
-        FK_YAML_ASSERT(node.m_node_value.sequence != nullptr);
+        basic_node node;
+        node.m_node_type = node_t::SEQUENCE;
+        node.m_node_value.p_sequence = create_object<sequence_type>(std::move(seq));
+        FK_YAML_ASSERT(node.m_node_value.p_sequence != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
     /**
-     * @brief A factory method for mapping BasicNode objects without mapping_type objects.
+     * @brief A factory method for mapping basic_node objects without mapping_type objects.
      *
-     * @return BasicNode A constructed BasicNode object of mapping type.
+     * @return basic_node A constructed basic_node object of mapping type.
      */
-    static BasicNode Mapping()
+    static basic_node mapping()
     {
-        BasicNode node;
-        node.m_node_type = NodeType::MAPPING;
-        node.m_node_value.mapping = CreateObject<mapping_type>();
-        FK_YAML_ASSERT(node.m_node_value.mapping != nullptr);
+        basic_node node;
+        node.m_node_type = node_t::MAPPING;
+        node.m_node_value.p_mapping = create_object<mapping_type>();
+        FK_YAML_ASSERT(node.m_node_value.p_mapping != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
     /**
-     * @brief A factory method for mapping BasicNode objects with lvalue mapping_type objects.
+     * @brief A factory method for mapping basic_node objects with lvalue mapping_type objects.
      *
-     * @param[in] mapping A lvalue source of mapping type.
-     * @return BasicNode A constructed BasicNode object of mapping type.
+     * @param[in] map A lvalue source of mapping type.
+     * @return basic_node A constructed basic_node object of mapping type.
      */
-    static BasicNode Mapping(const mapping_type& mapping)
+    static basic_node mapping(const mapping_type& map)
     {
-        BasicNode node;
-        node.m_node_type = NodeType::MAPPING;
-        node.m_node_value.mapping = CreateObject<mapping_type>(mapping);
-        FK_YAML_ASSERT(node.m_node_value.mapping != nullptr);
+        basic_node node;
+        node.m_node_type = node_t::MAPPING;
+        node.m_node_value.p_mapping = create_object<mapping_type>(map);
+        FK_YAML_ASSERT(node.m_node_value.p_mapping != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
     /**
-     * @brief A factory method for mapping BasicNode objects with rvalue mapping_type objects.
+     * @brief A factory method for mapping basic_node objects with rvalue mapping_type objects.
      *
-     * @param[in] mapping A rvalue source of mapping type.
-     * @return BasicNode A constructed BasicNode object of mapping type.
+     * @param[in] map A rvalue source of mapping type.
+     * @return basic_node A constructed basic_node object of mapping type.
      */
-    static BasicNode Mapping(mapping_type&& mapping)
+    static basic_node mapping(mapping_type&& map)
     {
-        BasicNode node;
-        node.m_node_type = NodeType::MAPPING;
-        node.m_node_value.mapping = CreateObject<mapping_type>(std::move(mapping));
-        FK_YAML_ASSERT(node.m_node_value.mapping != nullptr);
+        basic_node node;
+        node.m_node_type = node_t::MAPPING;
+        node.m_node_value.p_mapping = create_object<mapping_type>(std::move(map));
+        FK_YAML_ASSERT(node.m_node_value.p_mapping != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
     /**
-     * @brief A factory method for boolean scalar BasicNode objects.
+     * @brief A factory method for boolean scalar basic_node objects.
      *
      * @param[in] boolean A source of boolean type.
-     * @return BasicNode A constructed BasicNode object of boolean type.
+     * @return basic_node A constructed basic_node object of boolean type.
      */
-    static BasicNode BooleanScalar(const boolean_type boolean) noexcept
+    static basic_node boolean_scalar(const boolean_type boolean) noexcept
     {
-        BasicNode node;
-        node.m_node_type = NodeType::BOOLEAN;
+        basic_node node;
+        node.m_node_type = node_t::BOOLEAN;
         node.m_node_value.boolean = boolean;
         return node;
     }
 
     /**
-     * @brief A factory method for integer scalar BasicNode objects.
+     * @brief A factory method for integer scalar basic_node objects.
      *
      * @param[in] integer A source of integer type.
-     * @return BasicNode A constructed BasicNode object of integer type.
+     * @return basic_node A constructed basic_node object of integer type.
      */
-    static BasicNode IntegerScalar(const integer_type integer) noexcept
+    static basic_node integer_scalar(const integer_type integer) noexcept
     {
-        BasicNode node;
-        node.m_node_type = NodeType::INTEGER;
+        basic_node node;
+        node.m_node_type = node_t::INTEGER;
         node.m_node_value.integer = integer;
         return node;
     }
 
     /**
-     * @brief A factory method for float number scalar BasicNode objects.
+     * @brief A factory method for float number scalar basic_node objects.
      *
      * @param[in] float_val A source of unsigned integer type.
-     * @return BasicNode A constructed BasicNode object of float number type.
+     * @return basic_node A constructed basic_node object of float number type.
      */
-    static BasicNode FloatNumberScalar(const float_number_type float_val) noexcept
+    static basic_node float_number_scalar(const float_number_type float_val) noexcept
     {
-        BasicNode node;
-        node.m_node_type = NodeType::FLOAT_NUMBER;
+        basic_node node;
+        node.m_node_type = node_t::FLOAT_NUMBER;
         node.m_node_value.float_val = float_val;
         return node;
     }
 
     /**
-     * @brief A factory method for string BasicNode objects without string_type objects.
+     * @brief A factory method for string basic_node objects without string_type objects.
      *
-     * @return BasicNode A constructed BasicNode object of string type.
+     * @return basic_node A constructed basic_node object of string type.
      */
-    static BasicNode StringScalar()
+    static basic_node string_scalar()
     {
-        BasicNode node;
-        node.m_node_type = NodeType::STRING;
-        node.m_node_value.str = CreateObject<string_type>();
-        FK_YAML_ASSERT(node.m_node_value.str != nullptr);
+        basic_node node;
+        node.m_node_type = node_t::STRING;
+        node.m_node_value.p_string = create_object<string_type>();
+        FK_YAML_ASSERT(node.m_node_value.p_string != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
     /**
-     * @brief A factory method for string BasicNode objects with lvalue string_type objects.
+     * @brief A factory method for string basic_node objects with lvalue string_type objects.
      *
      * @param[in] str A lvalue source of string type.
-     * @return BasicNode A constructed BasicNode object of string type.
+     * @return basic_node A constructed basic_node object of string type.
      */
-    static BasicNode StringScalar(const string_type& str)
+    static basic_node string_scalar(const string_type& str)
     {
-        BasicNode node;
-        node.m_node_type = NodeType::STRING;
-        node.m_node_value.str = CreateObject<string_type>(str);
-        FK_YAML_ASSERT(node.m_node_value.str != nullptr);
+        basic_node node;
+        node.m_node_type = node_t::STRING;
+        node.m_node_value.p_string = create_object<string_type>(str);
+        FK_YAML_ASSERT(node.m_node_value.p_string != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
     /**
-     * @brief A factory method for string BasicNode objects with rvalue string_type objects.
+     * @brief A factory method for string basic_node objects with rvalue string_type objects.
      *
      * @param[in] str A rvalue source of string type.
-     * @return BasicNode A constructed BasicNode object of string type.
+     * @return basic_node A constructed basic_node object of string type.
      */
-    static BasicNode StringScalar(string_type&& str)
+    static basic_node string_scalar(string_type&& str)
     {
-        BasicNode node;
-        node.m_node_type = NodeType::STRING;
-        node.m_node_value.str = CreateObject<string_type>(std::move(str));
-        FK_YAML_ASSERT(node.m_node_value.str != nullptr);
+        basic_node node;
+        node.m_node_type = node_t::STRING;
+        node.m_node_value.p_string = create_object<string_type>(std::move(str));
+        FK_YAML_ASSERT(node.m_node_value.p_string != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
     /**
-     * @brief A factory method for alias BasicNode objects referencing the given anchor BasicNode object.
-     * @note The given anchor BasicNode must have a non-empty anchor name.
+     * @brief A factory method for alias basic_node objects referencing the given anchor basic_node object.
+     * @note The given anchor basic_node must have a non-empty anchor name.
      *
-     * @param anchor_node An anchor node to be referenced by the newly constructed BasicNode object.
-     * @return BasicNode A constructed BasicNode object of alias type.
+     * @param anchor_node An anchor node to be referenced by the newly constructed basic_node object.
+     * @return basic_node A constructed basic_node object of alias type.
      */
-    static BasicNode AliasOf(const BasicNode& anchor_node)
+    static basic_node alias_of(const basic_node& anchor_node)
     {
         if (!anchor_node.m_anchor_name || anchor_node.m_anchor_name->empty())
         {
-            throw Exception("Cannot create an alias without anchor name.");
+            throw fkyaml::exception("Cannot create an alias without anchor name.");
         }
 
-        BasicNode node = anchor_node;
+        basic_node node = anchor_node;
         return node;
     }
 
 public:
     /**
-     * @brief A copy assignment operator of the BasicNode class.
+     * @brief A copy assignment operator of the basic_node class.
      *
-     * @param[in] rhs A lvalue BasicNode object to be copied with.
-     * @return BasicNode& Reference to this BasicNode object.
+     * @param[in] rhs A lvalue basic_node object to be copied with.
+     * @return basic_node& Reference to this basic_node object.
      */
-    BasicNode& operator=(const BasicNode& rhs) noexcept
+    basic_node& operator=(const basic_node& rhs) noexcept
     {
-        BasicNode(rhs).Swap(*this);
+        basic_node(rhs).swap(*this);
         return *this;
     }
 
     /**
-     * @brief A move assignment operator of the BasicNode class.
+     * @brief A move assignment operator of the basic_node class.
      *
-     * @param[in] rhs A rvalue BasicNode object to be moved from.
-     * @return BasicNode& Reference to this BasicNode object.
+     * @param[in] rhs A rvalue basic_node object to be moved from.
+     * @return basic_node& Reference to this basic_node object.
      */
-    BasicNode& operator=(BasicNode&& rhs) noexcept
+    basic_node& operator=(basic_node&& rhs) noexcept
     {
-        BasicNode(std::move(rhs)).Swap(*this);
+        basic_node(std::move(rhs)).swap(*this);
         return *this;
     }
 
     /**
-     * @brief A subscript operator for non-const BasicNode objects.
+     * @brief A subscript operator for non-const basic_node objects.
      *
-     * @param[in] index An index of sequence BasicNode values.
-     * @return BasicNode& Reference to a BasicNode object located at the specified index.
+     * @param[in] index An index of sequence basic_node values.
+     * @return basic_node& Reference to a basic_node object located at the specified index.
      */
-    BasicNode& operator[](std::size_t index) // NOLINT(readability-make-member-function-const)
+    basic_node& operator[](std::size_t index) // NOLINT(readability-make-member-function-const)
     {
-        if (!IsSequence())
+        if (!is_sequence())
         {
-            throw Exception("The target node is not of a sequence type.");
+            throw fkyaml::exception("The target node is not of a sequence type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-        FK_YAML_ASSERT(index < m_node_value.sequence->size());
-        return m_node_value.sequence->operator[](index);
+        FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+        FK_YAML_ASSERT(index < m_node_value.p_sequence->size());
+        return m_node_value.p_sequence->operator[](index);
     }
 
     /**
-     * @brief A subscript operator for const BasicNode objects.
+     * @brief A subscript operator for const basic_node objects.
      *
-     * @param[in] index An index of sequence BasicNode values.
-     * @return const BasicNode& Constant reference to a BasicNode object located at the specified index.
+     * @param[in] index An index of sequence basic_node values.
+     * @return const basic_node& Constant reference to a basic_node object located at the specified index.
      */
-    const BasicNode& operator[](std::size_t index) const
+    const basic_node& operator[](std::size_t index) const
     {
-        if (!IsSequence())
+        if (!is_sequence())
         {
-            throw Exception("The target node is not of a sequence type.");
+            throw fkyaml::exception("The target node is not of a sequence type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-        FK_YAML_ASSERT(index < m_node_value.sequence->size());
-        return m_node_value.sequence->operator[](index);
+        FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+        FK_YAML_ASSERT(index < m_node_value.p_sequence->size());
+        return m_node_value.p_sequence->operator[](index);
     }
 
     /**
-     * @brief A subscript operator for non-const BasicNode objects.
+     * @brief A subscript operator for non-const basic_node objects.
      *
      * @tparam KeyType A type for the input key.
-     * @param[in] key A key to the target BasicNode object..
-     * @return BasicNode& Reference to a BasicNode object associated with the given key.
+     * @param[in] key A key to the target basic_node object..
+     * @return basic_node& Reference to a basic_node object associated with the given key.
      */
     template <
         typename KeyType,
         fkyaml::enable_if_t<
-            IsUsableAsKeyType<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+            is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
             int> = 0>
-    BasicNode& operator[](KeyType&& key) // NOLINT(readability-make-member-function-const)
+    basic_node& operator[](KeyType&& key) // NOLINT(readability-make-member-function-const)
     {
-        if (!IsMapping())
+        if (!is_mapping())
         {
-            throw Exception("The target node is not of a mapping type.");
+            throw fkyaml::exception("The target node is not of a mapping type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-        return m_node_value.mapping->operator[](std::forward<KeyType>(key));
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        return m_node_value.p_mapping->operator[](std::forward<KeyType>(key));
     }
 
     /**
-     * @brief A subscript operator for const BasicNode objects.
+     * @brief A subscript operator for const basic_node objects.
      *
      * @tparam KeyType A type for the input key.
-     * @param[in] key A key to the BasicNode object.
-     * @return const BasicNode& Constant reference to a BasicNode object associated with the given key.
+     * @param[in] key A key to the basic_node object.
+     * @return const basic_node& Constant reference to a basic_node object associated with the given key.
      */
     template <
         typename KeyType,
         fkyaml::enable_if_t<
-            IsUsableAsKeyType<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+            is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
             int> = 0>
-    const BasicNode& operator[](KeyType&& key) const
+    const basic_node& operator[](KeyType&& key) const
     {
-        if (!IsMapping())
+        if (!is_mapping())
         {
-            throw Exception("The target node is not of a mapping type.");
+            throw fkyaml::exception("The target node is not of a mapping type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-        return m_node_value.mapping->operator[](std::forward<KeyType>(key));
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        return m_node_value.p_mapping->operator[](std::forward<KeyType>(key));
     }
 
 public:
     /**
-     * @brief Returns the type of the current BasicNode value.
+     * @brief Returns the type of the current basic_node value.
      *
-     * @return NodeType The type of the current BasicNode value.
-     * @retval NodeType::SEQUENCE         sequence type.
-     * @retval NodeType::MAPPINT          mapping type.
-     * @retval NodeType::NULL_OBJECT      null type.
-     * @retval NodeType::BOOLEAN          boolean type.
-     * @retval NodeType::INTEGER          integer type.
-     * @retval NodeType::FLOAT_NUMBER     float number type.
-     * @retval NodeType::STRING           string type.
+     * @return node_t The type of the current basic_node value.
+     * @retval node_t::SEQUENCE         sequence type.
+     * @retval node_t::MAPPINT          mapping type.
+     * @retval node_t::NULL_OBJECT      null type.
+     * @retval node_t::BOOLEAN          boolean type.
+     * @retval node_t::INTEGER          integer type.
+     * @retval node_t::FLOAT_NUMBER     float number type.
+     * @retval node_t::STRING           string type.
      */
-    NodeType Type() const noexcept
+    node_t type() const noexcept
     {
         return m_node_type;
     }
 
     /**
-     * @brief Tests whether the current BasicNode value is of sequence type.
+     * @brief Tests whether the current basic_node value is of sequence type.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is of sequence type.
-     * @retval true  The current BasicNode value is of sequence type.
-     * @return false The current BasicNode value is not of sequence type.
+     * @return bool A result of testing whetehre the current basic_node value is of sequence type.
+     * @retval true  The current basic_node value is of sequence type.
+     * @return false The current basic_node value is not of sequence type.
      */
-    bool IsSequence() const noexcept
+    bool is_sequence() const noexcept
     {
-        return m_node_type == NodeType::SEQUENCE;
+        return m_node_type == node_t::SEQUENCE;
     }
 
     /**
-     * @brief Tests whether the current BasicNode value is of mapping type.
+     * @brief Tests whether the current basic_node value is of mapping type.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is of mapping type.
-     * @retval true  The current BasicNode value is of mapping type.
-     * @return false The current BasicNode value is not of mapping type.
+     * @return bool A result of testing whetehre the current basic_node value is of mapping type.
+     * @retval true  The current basic_node value is of mapping type.
+     * @return false The current basic_node value is not of mapping type.
      */
-    bool IsMapping() const noexcept
+    bool is_mapping() const noexcept
     {
-        return m_node_type == NodeType::MAPPING;
+        return m_node_type == node_t::MAPPING;
     }
 
     /**
-     * @brief Tests whether the current BasicNode value is of null type.
+     * @brief Tests whether the current basic_node value is of null type.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is of null type.
-     * @retval true  The current BasicNode value is of null type.
-     * @return false The current BasicNode value is not of null type.
+     * @return bool A result of testing whetehre the current basic_node value is of null type.
+     * @retval true  The current basic_node value is of null type.
+     * @return false The current basic_node value is not of null type.
      */
-    bool IsNull() const noexcept
+    bool is_null() const noexcept
     {
-        return m_node_type == NodeType::NULL_OBJECT;
+        return m_node_type == node_t::NULL_OBJECT;
     }
 
     /**
-     * @brief Tests whether the current BasicNode value is of boolean type.
+     * @brief Tests whether the current basic_node value is of boolean type.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is of boolean type.
-     * @retval true  The current BasicNode value is of boolean type.
-     * @return false The current BasicNode value is not of boolean type.
+     * @return bool A result of testing whetehre the current basic_node value is of boolean type.
+     * @retval true  The current basic_node value is of boolean type.
+     * @return false The current basic_node value is not of boolean type.
      */
-    bool IsBoolean() const noexcept
+    bool is_boolean() const noexcept
     {
-        return m_node_type == NodeType::BOOLEAN;
+        return m_node_type == node_t::BOOLEAN;
     }
 
     /**
-     * @brief Tests whether the current BasicNode value is of integer type.
+     * @brief Tests whether the current basic_node value is of integer type.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is of integer type.
-     * @retval true  The current BasicNode value is of integer type.
-     * @return false The current BasicNode value is not of integer type.
+     * @return bool A result of testing whetehre the current basic_node value is of integer type.
+     * @retval true  The current basic_node value is of integer type.
+     * @return false The current basic_node value is not of integer type.
      */
-    bool IsInteger() const noexcept
+    bool is_integer() const noexcept
     {
-        return m_node_type == NodeType::INTEGER;
+        return m_node_type == node_t::INTEGER;
     }
 
     /**
-     * @brief Tests whether the current BasicNode value is of float number type.
+     * @brief Tests whether the current basic_node value is of float number type.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is of float number type.
-     * @retval true  The current BasicNode value is of float number type.
-     * @return false The current BasicNode value is not of float number type.
+     * @return bool A result of testing whetehre the current basic_node value is of float number type.
+     * @retval true  The current basic_node value is of float number type.
+     * @return false The current basic_node value is not of float number type.
      */
-    bool IsFloatNumber() const noexcept
+    bool is_float_number() const noexcept
     {
-        return m_node_type == NodeType::FLOAT_NUMBER;
+        return m_node_type == node_t::FLOAT_NUMBER;
     }
 
     /**
-     * @brief Tests whether the current BasicNode value is of string type.
+     * @brief Tests whether the current basic_node value is of string type.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is of string type.
-     * @retval true  The current BasicNode value is of string type.
-     * @return false The current BasicNode value is not of string type.
+     * @return bool A result of testing whetehre the current basic_node value is of string type.
+     * @retval true  The current basic_node value is of string type.
+     * @return false The current basic_node value is not of string type.
      */
-    bool IsString() const noexcept
+    bool is_string() const noexcept
     {
-        return m_node_type == NodeType::STRING;
+        return m_node_type == node_t::STRING;
     }
 
     /**
-     * @brief Tests whether the current BasicNode value is of scalar types.
+     * @brief Tests whether the current basic_node value is of scalar types.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is of scalar types.
-     * @retval true  The current BasicNode value is of scalar types.
-     * @return false The current BasicNode value is not of scalar types.
+     * @return bool A result of testing whetehre the current basic_node value is of scalar types.
+     * @retval true  The current basic_node value is of scalar types.
+     * @return false The current basic_node value is not of scalar types.
      */
-    bool IsScalar() const noexcept
+    bool is_scalar() const noexcept
     {
-        return !IsSequence() && !IsMapping();
+        return !is_sequence() && !is_mapping();
     }
 
     /**
-     * @brief Tests whether the current BasicNode value (sequence, mapping, string) is empty.
+     * @brief Tests whether the current basic_node value (sequence, mapping, string) is empty.
      *
-     * @return bool A result of testing whetehre the current BasicNode value is empty.
-     * @retval true  The current BasicNode value is empty.
-     * @return false The current BasicNode value is not empty.
+     * @return bool A result of testing whetehre the current basic_node value is empty.
+     * @retval true  The current basic_node value is empty.
+     * @return false The current basic_node value is not empty.
      */
-    bool IsEmpty() const
+    bool empty() const
     {
         switch (m_node_type)
         {
-        case NodeType::SEQUENCE:
-            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-            return m_node_value.sequence->empty();
-        case NodeType::MAPPING:
-            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-            return m_node_value.mapping->empty();
-        case NodeType::STRING:
-            FK_YAML_ASSERT(m_node_value.str != nullptr);
-            return m_node_value.str->empty();
+        case node_t::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return m_node_value.p_sequence->empty();
+        case node_t::MAPPING:
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+            return m_node_value.p_mapping->empty();
+        case node_t::STRING:
+            FK_YAML_ASSERT(m_node_value.p_string != nullptr);
+            return m_node_value.p_string->empty();
         default:
-            throw Exception("The target node is not of a container type.");
+            throw fkyaml::exception("The target node is not of a container type.");
         }
     }
 
     /**
-     * @brief Returns the size of the current BasicNode value (sequence, mapping, string).
+     * @brief Returns the size of the current basic_node value (sequence, mapping, string).
      *
-     * @return std::size_t The size of the current BasicNode value.
+     * @return std::size_t The size of the current basic_node value.
      */
-    std::size_t Size() const
+    std::size_t size() const
     {
         switch (m_node_type)
         {
-        case NodeType::SEQUENCE:
-            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-            return m_node_value.sequence->size();
-        case NodeType::MAPPING:
-            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-            return m_node_value.mapping->size();
-        case NodeType::STRING:
-            FK_YAML_ASSERT(m_node_value.str != nullptr);
-            return m_node_value.str->size();
+        case node_t::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return m_node_value.p_sequence->size();
+        case node_t::MAPPING:
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+            return m_node_value.p_mapping->size();
+        case node_t::STRING:
+            FK_YAML_ASSERT(m_node_value.p_string != nullptr);
+            return m_node_value.p_string->size();
         default:
-            throw Exception("The target node is not of a container type.");
+            throw fkyaml::exception("The target node is not of a container type.");
         }
     }
 
     /**
-     * @brief Check whether or not this BasicNode object has a given key in its inner mapping Node value.
+     * @brief Check whether or not this basic_node object has a given key in its inner mapping Node value.
      *
      * @tparam KeyType A type for the input key.
-     * @param[in] key A key to the target BasicNode object.
-     * @return true If this BasicNode object has a given key.
-     * @return false If this BasicNode object does not have a given key.
+     * @param[in] key A key to the target basic_node object.
+     * @return true If this basic_node object has a given key.
+     * @return false If this basic_node object does not have a given key.
      */
     template <
         typename KeyType,
         fkyaml::enable_if_t<
-            IsUsableAsKeyType<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+            is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
             int> = 0>
-    bool Contains(KeyType&& key) const
+    bool contains(KeyType&& key) const
     {
         switch (m_node_type)
         {
-        case NodeType::MAPPING: {
-            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-            mapping_type& map = *m_node_value.mapping;
+        case node_t::MAPPING: {
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+            mapping_type& map = *m_node_value.p_mapping;
             return map.find(std::forward<KeyType>(key)) != map.end();
         }
         default:
@@ -879,438 +879,386 @@ public:
     }
 
     /**
-     * @brief Get the YAML version specification for this BasicNode object.
+     * @brief Get the YAML version specification for this basic_node object.
      *
-     * @return YamlVersionType The YAML version specification.
+     * @return yaml_version_t The YAML version specification.
      */
-    YamlVersionType GetVersion() const noexcept
+    yaml_version_t get_yaml_version() const noexcept
     {
         return m_yaml_version_type;
     }
 
     /**
-     * @brief Set the YAML version specification for this BasicNode object.
+     * @brief Set the YAML version specification for this basic_node object.
      *
      * @param version The YAML version specification.
      */
-    void SetVersion(const YamlVersionType version) noexcept
+    void set_yaml_version(const yaml_version_t version) noexcept
     {
         m_yaml_version_type = version;
     }
 
     /**
-     * @brief Check whether or not this BasicNode object has already had any anchor name.
+     * @brief Check whether or not this basic_node object has already had any anchor name.
      *
-     * @return true If this BasicNode object has already had any anchor name.
-     * @return false If this BasicNode object has not had any anchor name yet.
+     * @return true If this basic_node object has already had any anchor name.
+     * @return false If this basic_node object has not had any anchor name yet.
      */
-    bool HasAnchorName() const noexcept
+    bool has_anchor_name() const noexcept
     {
         return m_anchor_name != nullptr;
     }
 
     /**
-     * @brief Get the anchor name associated to this BasicNode object.
-     * @note Some anchor name must be set before calling this method. Call BasicNode::HasAnchorName() to see if this
-     * BasicNode object has any anchor name.
+     * @brief Get the anchor name associated to this basic_node object.
+     * @note Some anchor name must be set before calling this method. Call basic_node::HasAnchorName() to see if this
+     * basic_node object has any anchor name.
      *
      * @return const std::string& Const reference to the anchor name.
      */
-    const std::string& GetAnchorName() const
+    const std::string& get_anchor_name() const
     {
         if (!m_anchor_name)
         {
-            throw Exception("No anchor name has been set.");
+            throw fkyaml::exception("No anchor name has been set.");
         }
         return *m_anchor_name;
     }
 
     /**
-     * @brief Add an anchor name to this BasicNode object.
-     * @note If this BasicNode object has already had any anchor name, the new anchor name will overwrite the old one.
+     * @brief Add an anchor name to this basic_node object.
+     * @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
      *
-     * @param anchor_name An anchor name associated to this BasicNode object.
+     * @param anchor_name An anchor name associated to this basic_node object.
      */
-    void AddAnchorName(const std::string& anchor_name)
+    void add_anchor_name(const std::string& anchor_name)
     {
-        DestroyObject<std::string>(m_anchor_name);
-        m_anchor_name = CreateObject<std::string>(anchor_name);
+        destroy_object<std::string>(m_anchor_name);
+        m_anchor_name = create_object<std::string>(anchor_name);
         FK_YAML_ASSERT(m_anchor_name != nullptr);
     }
 
     /**
-     * @brief Add an anchor name to this BasicNode object.
-     * @note If this BasicNode object has already had any anchor name, the new anchor name will overwrite the old one.
+     * @brief Add an anchor name to this basic_node object.
+     * @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
      *
-     * @param anchor_name An anchor name associated to this BasicNode object.
+     * @param anchor_name An anchor name associated to this basic_node object.
      */
-    void AddAnchorName(std::string&& anchor_name)
+    void add_anchor_name(std::string&& anchor_name)
     {
-        DestroyObject<std::string>(m_anchor_name);
-        m_anchor_name = CreateObject<std::string>(std::move(anchor_name));
+        destroy_object<std::string>(m_anchor_name);
+        m_anchor_name = create_object<std::string>(std::move(anchor_name));
         FK_YAML_ASSERT(m_anchor_name != nullptr);
     }
 
     /**
-     * @brief Returns reference to sequence BasicNode value from a non-const BasicNode object. Throws exception if the
-     * BasicNode value is not of sequence type.
+     * @brief Returns reference to sequence basic_node value from a non-const basic_node object. Throws exception if the
+     * basic_node value is not of sequence type.
      *
-     * @return sequence_type& Reference to sequence BasicNode value.
+     * @return sequence_type& Reference to sequence basic_node value.
      */
-    sequence_type& ToSequence() // NOLINT(readability-make-member-function-const)
+    sequence_type& to_sequence() // NOLINT(readability-make-member-function-const)
     {
-        if (!IsSequence())
+        if (!is_sequence())
         {
-            throw Exception("The target node is not of a sequence type.");
+            throw fkyaml::exception("The target node is not of a sequence type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-        return *(m_node_value.sequence);
+        FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+        return *(m_node_value.p_sequence);
     }
 
     /**
-     * @brief Returns reference to sequence BasicNode value from a const BasicNode object.  Throws exception if the
-     * BasicNode value is not of sequence type.
+     * @brief Returns reference to sequence basic_node value from a const basic_node object.  Throws exception if the
+     * basic_node value is not of sequence type.
      *
-     * @return const sequence_type& Constant reference to sequence BasicNode value.
+     * @return const sequence_type& Constant reference to sequence basic_node value.
      */
-    const sequence_type& ToSequence() const
+    const sequence_type& to_sequence() const
     {
-        if (!IsSequence())
+        if (!is_sequence())
         {
-            throw Exception("The target node is not of a sequence type.");
+            throw fkyaml::exception("The target node is not of a sequence type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-        return *(m_node_value.sequence);
+        FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+        return *(m_node_value.p_sequence);
     }
 
     /**
-     * @brief Returns reference to mapping BasicNode value from a non-const BasicNode object. Throws exception if the
-     * BasicNode value is not of mapping type.
+     * @brief Returns reference to mapping basic_node value from a non-const basic_node object. Throws exception if the
+     * basic_node value is not of mapping type.
      *
-     * @return mapping_type& Reference to mapping BasicNode value.
+     * @return mapping_type& Reference to mapping basic_node value.
      */
-    mapping_type& ToMapping() // NOLINT(readability-make-member-function-const)
+    mapping_type& to_mapping() // NOLINT(readability-make-member-function-const)
     {
-        if (!IsMapping())
+        if (!is_mapping())
         {
-            throw Exception("The target node is not of a mapping type.");
+            throw fkyaml::exception("The target node is not of a mapping type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-        return *(m_node_value.mapping);
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        return *(m_node_value.p_mapping);
     }
 
     /**
-     * @brief Returns reference to mapping BasicNode value from a const BasicNode object.  Throws exception if the
-     * BasicNode value is not of mapping type.
+     * @brief Returns reference to mapping basic_node value from a const basic_node object.  Throws exception if the
+     * basic_node value is not of mapping type.
      *
-     * @return const mapping_type& Constant reference to mapping BasicNode value.
+     * @return const mapping_type& Constant reference to mapping basic_node value.
      */
-    const mapping_type& ToMapping() const
+    const mapping_type& to_mapping() const
     {
-        if (!IsMapping())
+        if (!is_mapping())
         {
-            throw Exception("The target node is not of a mapping type.");
+            throw fkyaml::exception("The target node is not of a mapping type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-        return *(m_node_value.mapping);
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        return *(m_node_value.p_mapping);
     }
 
     /**
-     * @brief Returns reference to boolean BasicNode value from a non-const BasicNode object. Throws exception if the
-     * BasicNode value is not of boolean type.
+     * @brief Returns reference to boolean basic_node value from a non-const basic_node object. Throws exception if the
+     * basic_node value is not of boolean type.
      *
-     * @return boolean_type& Reference to boolean BasicNode value.
+     * @return boolean_type& Reference to boolean basic_node value.
      */
-    boolean_type& ToBoolean()
+    boolean_type& to_boolean()
     {
-        if (!IsBoolean())
+        if (!is_boolean())
         {
-            throw Exception("The target node is not of a boolean type.");
+            throw fkyaml::exception("The target node is not of a boolean type.");
         }
 
         return m_node_value.boolean;
     }
 
     /**
-     * @brief Returns reference to boolean BasicNode value from a const BasicNode object.  Throws exception if the
-     * BasicNode value is not of boolean type.
+     * @brief Returns reference to boolean basic_node value from a const basic_node object.  Throws exception if the
+     * basic_node value is not of boolean type.
      *
-     * @return const boolean_type& Constant reference to boolean BasicNode value.
+     * @return const boolean_type& Constant reference to boolean basic_node value.
      */
-    const boolean_type& ToBoolean() const
+    const boolean_type& to_boolean() const
     {
-        if (!IsBoolean())
+        if (!is_boolean())
         {
-            throw Exception("The target node is not of a boolean type.");
+            throw fkyaml::exception("The target node is not of a boolean type.");
         }
 
         return m_node_value.boolean;
     }
 
     /**
-     * @brief Returns reference to  integer BasicNode value from a non-const BasicNode object. Throws exception if
-     * the BasicNode value is not of  integer type.
+     * @brief Returns reference to  integer basic_node value from a non-const basic_node object. Throws exception if
+     * the basic_node value is not of  integer type.
      *
-     * @return integer_type& Reference to  integer BasicNode value.
+     * @return integer_type& Reference to  integer basic_node value.
      */
-    integer_type& ToInteger()
+    integer_type& to_integer()
     {
-        if (!IsInteger())
+        if (!is_integer())
         {
-            throw Exception("The target node is not of integer type.");
+            throw fkyaml::exception("The target node is not of integer type.");
         }
 
         return m_node_value.integer;
     }
 
     /**
-     * @brief Returns reference to  integer BasicNode value from a const BasicNode object. Throws exception if the
-     * BasicNode value is not of  integer type.
+     * @brief Returns reference to  integer basic_node value from a const basic_node object. Throws exception if the
+     * basic_node value is not of  integer type.
      *
-     * @return const integer_type& Constant reference to  integer BasicNode value.
+     * @return const integer_type& Constant reference to  integer basic_node value.
      */
-    const integer_type& ToInteger() const
+    const integer_type& to_integer() const
     {
-        if (!IsInteger())
+        if (!is_integer())
         {
-            throw Exception("The target node is not of integer type.");
+            throw fkyaml::exception("The target node is not of integer type.");
         }
 
         return m_node_value.integer;
     }
 
     /**
-     * @brief Returns reference to float number BasicNode value from a non-const BasicNode object. Throws exception if
-     * the BasicNode value is not of float number type.
+     * @brief Returns reference to float number basic_node value from a non-const basic_node object. Throws exception if
+     * the basic_node value is not of float number type.
      *
-     * @return float_number_type& Reference to float number BasicNode value.
+     * @return float_number_type& Reference to float number basic_node value.
      */
-    float_number_type& ToFloatNumber()
+    float_number_type& to_float_number()
     {
-        if (!IsFloatNumber())
+        if (!is_float_number())
         {
-            throw Exception("The target node is not of a float number type.");
+            throw fkyaml::exception("The target node is not of a float number type.");
         }
 
         return m_node_value.float_val;
     }
 
     /**
-     * @brief Returns reference to float number BasicNode value from a const BasicNode object. Throws exception if the
-     * BasicNode value is not of float number type.
+     * @brief Returns reference to float number basic_node value from a const basic_node object. Throws exception if the
+     * basic_node value is not of float number type.
      *
-     * @return const float_number_type& Constant reference to float number BasicNode value.
+     * @return const float_number_type& Constant reference to float number basic_node value.
      */
-    const float_number_type& ToFloatNumber() const
+    const float_number_type& to_float_number() const
     {
-        if (!IsFloatNumber())
+        if (!is_float_number())
         {
-            throw Exception("The target node is not of a float number type.");
+            throw fkyaml::exception("The target node is not of a float number type.");
         }
 
         return m_node_value.float_val;
     }
 
     /**
-     * @brief Returns reference to string BasicNode value from a non-const BasicNode object. Throws exception if the
-     * BasicNode value is not of string type.
+     * @brief Returns reference to string basic_node value from a non-const basic_node object. Throws exception if the
+     * basic_node value is not of string type.
      *
-     * @return string_type& Reference to string BasicNode value.
+     * @return string_type& Reference to string basic_node value.
      */
-    string_type& ToString() // NOLINT(readability-make-member-function-const)
+    string_type& to_string() // NOLINT(readability-make-member-function-const)
     {
-        if (!IsString())
+        if (!is_string())
         {
-            throw Exception("The target node is not of a string type.");
+            throw fkyaml::exception("The target node is not of a string type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.str != nullptr);
-        return *(m_node_value.str);
+        FK_YAML_ASSERT(m_node_value.p_string != nullptr);
+        return *(m_node_value.p_string);
     }
 
     /**
-     * @brief Returns reference to string BasicNode value from a const BasicNode object. Throws exception if the
-     * BasicNode value is not of string type.
+     * @brief Returns reference to string basic_node value from a const basic_node object. Throws exception if the
+     * basic_node value is not of string type.
      *
-     * @return const string_type& Constant reference to string BasicNode value.
+     * @return const string_type& Constant reference to string basic_node value.
      */
-    const string_type& ToString() const
+    const string_type& to_string() const
     {
-        if (!IsString())
+        if (!is_string())
         {
-            throw Exception("The target node is not of a string type.");
+            throw fkyaml::exception("The target node is not of a string type.");
         }
 
-        FK_YAML_ASSERT(m_node_value.str != nullptr);
-        return *(m_node_value.str);
+        FK_YAML_ASSERT(m_node_value.p_string != nullptr);
+        return *(m_node_value.p_string);
     }
 
     /**
-     * @brief Swaps data with the specified BasicNode object.
+     * @brief Swaps data with the specified basic_node object.
      *
-     * @param[in] rhs A BasicNode object to be swapped with.
+     * @param[in] rhs A basic_node object to be swapped with.
      */
-    void Swap(BasicNode& rhs) noexcept
+    void swap(basic_node& rhs) noexcept
     {
         using std::swap;
         swap(m_node_type, rhs.m_node_type);
         swap(m_yaml_version_type, rhs.m_yaml_version_type);
 
-        NodeValue tmp {};
-        std::memcpy(&tmp, &m_node_value, sizeof(NodeValue));
-        std::memcpy(&m_node_value, &rhs.m_node_value, sizeof(NodeValue));
-        std::memcpy(&rhs.m_node_value, &tmp, sizeof(NodeValue));
+        node_value tmp {};
+        std::memcpy(&tmp, &m_node_value, sizeof(node_value));
+        std::memcpy(&m_node_value, &rhs.m_node_value, sizeof(node_value));
+        std::memcpy(&rhs.m_node_value, &tmp, sizeof(node_value));
 
         swap(m_anchor_name, rhs.m_anchor_name);
     }
 
     /**
-     * @brief Returns the first iterator of BasicNode values of container types (sequence or mapping) from a non-const
-     * BasicNode object. Throws exception if the BasicNode value is not of container types.
+     * @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const
+     * basic_node object. Throws exception if the basic_node value is not of container types.
      *
-     * @return iterator The first iterator of BasicNode values of container types.
+     * @return iterator The first iterator of basic_node values of container types.
      */
-    iterator Begin()
+    iterator begin()
     {
         switch (m_node_type)
         {
-        case NodeType::SEQUENCE:
-            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-            return {fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin()};
-        case NodeType::MAPPING:
-            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-            return {fkyaml::MappingIteratorTag(), m_node_value.mapping->begin()};
+        case node_t::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return {fkyaml::sequence_iterator_tag(), m_node_value.p_sequence->begin()};
+        case node_t::MAPPING:
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+            return {fkyaml::mapping_iterator_tag(), m_node_value.p_mapping->begin()};
         default:
-            throw Exception("The target node is neither of sequence nor mapping types.");
+            throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
         }
     }
 
     /**
-     * @brief Returns the first iterator of BasicNode values of container types (sequence or mapping) from a non-const
-     * BasicNode object. Throws exception if the BasicNode value is not of container types.
-     * @note This is a work-around for range-based for statements, and just a wrapper method of Begin() for non-const
-     * BasicNode objects.
+     * @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a const
+     * basic_node object. Throws exception if the basic_node value is not of container types.
      *
-     * @return iterator The first iterator of BasicNode values of container types.
+     * @return const_iterator The first iterator of basic_node values of container types.
      */
-    iterator begin() // NOLINT(readability-identifier-naming)
-    {
-        return Begin();
-    }
-
-    /**
-     * @brief Returns the first iterator of BasicNode values of container types (sequence or mapping) from a const
-     * BasicNode object. Throws exception if the BasicNode value is not of container types.
-     *
-     * @return const_iterator The first iterator of BasicNode values of container types.
-     */
-    const_iterator Begin() const
+    const_iterator begin() const
     {
         switch (m_node_type)
         {
-        case NodeType::SEQUENCE:
-            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-            return {fkyaml::SequenceIteratorTag(), m_node_value.sequence->begin()};
-        case NodeType::MAPPING:
-            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-            return {fkyaml::MappingIteratorTag(), m_node_value.mapping->begin()};
+        case node_t::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return {fkyaml::sequence_iterator_tag(), m_node_value.p_sequence->begin()};
+        case node_t::MAPPING:
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+            return {fkyaml::mapping_iterator_tag(), m_node_value.p_mapping->begin()};
         default:
-            throw Exception("The target node is neither of sequence nor mapping types.");
+            throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
         }
     }
 
     /**
-     * @brief Returns the first iterator of BasicNode values of container types (sequence or mapping) from a const
-     * BasicNode object. Throws exception if the BasicNode value is not of container types.
-     * @note This is a work-around for range-based for statements, and just a wrapper method of Begin() for const
-     * BasicNode objects.
+     * @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a non-const
+     * basic_node object. Throws exception if the basic_node value is not of container types.
      *
-     * @return const_iterator The first iterator of BasicNode values of container types.
+     * @return iterator The last iterator of basic_node values of container types.
      */
-    const_iterator begin() const // NOLINT(readability-identifier-naming)
-    {
-        return Begin();
-    }
-
-    /**
-     * @brief Returns the last iterator of BasicNode values of container types (sequence or mapping) from a non-const
-     * BasicNode object. Throws exception if the BasicNode value is not of container types.
-     *
-     * @return iterator The last iterator of BasicNode values of container types.
-     */
-    iterator End()
+    iterator end()
     {
         switch (m_node_type)
         {
-        case NodeType::SEQUENCE:
-            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-            return {fkyaml::SequenceIteratorTag(), m_node_value.sequence->end()};
-        case NodeType::MAPPING:
-            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-            return {fkyaml::MappingIteratorTag(), m_node_value.mapping->end()};
+        case node_t::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return {fkyaml::sequence_iterator_tag(), m_node_value.p_sequence->end()};
+        case node_t::MAPPING:
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+            return {fkyaml::mapping_iterator_tag(), m_node_value.p_mapping->end()};
         default:
-            throw Exception("The target node is neither of sequence nor mapping types.");
+            throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
         }
     }
 
     /**
-     * @brief Returns the last iterator of BasicNode values of container types (sequence or mapping) from a non-const
-     * BasicNode object. Throws exception if the BasicNode value is not of container types.
-     * @note This is a work-around for range-based for statements, and just a wrapper method of End() for const
-     * BasicNode objects.
+     * @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a const
+     * basic_node object. Throws exception if the basic_node value is not of container types.
      *
-     * @return iterator The last iterator of BasicNode values of container types.
+     * @return const_iterator The last iterator of basic_node values of container types.
      */
-    iterator end() // NOLINT(readability-identifier-naming)
-    {
-        return End();
-    }
-
-    /**
-     * @brief Returns the last iterator of BasicNode values of container types (sequence or mapping) from a const
-     * BasicNode object. Throws exception if the BasicNode value is not of container types.
-     *
-     * @return const_iterator The last iterator of BasicNode values of container types.
-     */
-    const_iterator End() const
+    const_iterator end() const
     {
         switch (m_node_type)
         {
-        case NodeType::SEQUENCE:
-            FK_YAML_ASSERT(m_node_value.sequence != nullptr);
-            return {fkyaml::SequenceIteratorTag(), m_node_value.sequence->end()};
-        case NodeType::MAPPING:
-            FK_YAML_ASSERT(m_node_value.mapping != nullptr);
-            return {fkyaml::MappingIteratorTag(), m_node_value.mapping->end()};
+        case node_t::SEQUENCE:
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return {fkyaml::sequence_iterator_tag(), m_node_value.p_sequence->end()};
+        case node_t::MAPPING:
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+            return {fkyaml::mapping_iterator_tag(), m_node_value.p_mapping->end()};
         default:
-            throw Exception("The target node is neither of sequence nor mapping types.");
+            throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
         }
-    }
-
-    /**
-     * @brief Returns the last iterator of BasicNode values of container types (sequence or mapping) from a const
-     * BasicNode object. Throws exception if the BasicNode value is not of container types.
-     * @note This is a work-around for range-based for statements, and just a wrapper method of End() for const
-     * BasicNode objects.
-     *
-     * @return const_iterator The last iterator of BasicNode values of container types.
-     */
-    const_iterator end() const // NOLINT(readability-identifier-naming)
-    {
-        return End();
     }
 
 private:
     /** The current node value type. */
-    NodeType m_node_type;
+    node_t m_node_type;
     /** The YAML version specification. */
-    YamlVersionType m_yaml_version_type;
+    yaml_version_t m_yaml_version_type;
     /** The current node value. */
-    NodeValue m_node_value;
+    node_value m_node_value;
     /** The anchor name for this node. */
     std::string* m_anchor_name;
 };
@@ -1318,25 +1266,25 @@ private:
 /**
  * @brief default YAML node value container.
  */
-using Node = BasicNode<>;
+using node = basic_node<>;
 
-/** A default type for sequence Node values. */
-using NodeSequenceType = typename Node::sequence_type;
+/** A default type for sequence node values. */
+using node_sequence_type = typename node::sequence_type;
 
-/** A default type for mapping Node values. */
-using NodeMappingType = typename Node::mapping_type;
+/** A default type for mapping node values. */
+using node_mapping_type = typename node::mapping_type;
 
-/** A default type for boolean Node values. */
-using NodeBooleanType = typename Node::boolean_type;
+/** A default type for boolean node values. */
+using node_boolean_type = typename node::boolean_type;
 
-/** A default type for integer Node values. */
-using NodeIntegerType = typename Node::integer_type;
+/** A default type for integer node values. */
+using node_integer_type = typename node::integer_type;
 
-/** A default type for float number Node values. */
-using NodeFloatNumberType = typename Node::float_number_type;
+/** A default type for float number node values. */
+using node_float_number_type = typename node::float_number_type;
 
-/** A default type for string Node values. */
-using NodeStringType = typename Node::string_type;
+/** A default type for string node values. */
+using node_string_type = typename node::string_type;
 
 FK_YAML_NAMESPACE_END
 
@@ -1351,9 +1299,9 @@ namespace std
  * @param rhs A Node object of right-hand-side.
  */
 template <>
-inline void swap<fkyaml::Node>(fkyaml::Node& lhs, fkyaml::Node& rhs) noexcept(noexcept(lhs.Swap(rhs)))
+inline void swap<fkyaml::node>(fkyaml::node& lhs, fkyaml::node& rhs) noexcept(noexcept(lhs.swap(rhs)))
 {
-    lhs.Swap(rhs);
+    lhs.swap(rhs);
 }
 
 } // namespace std

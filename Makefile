@@ -151,7 +151,7 @@ lcov-coverage:
 	cmake --build build_coverage --config Debug --target generate_test_coverage
 
 # pre-requisites: genhtml lcov
-html-coverage: lcov_coverage
+html-coverage: lcov-coverage
 	genhtml build_coverage/coverage/fkYAML.info --output-directory build_coverage/html \
 	    --title "fkYAML: A C++ header-only YAML library" \
 	    --legend --demangle-cpp --show-details --branch-coverage

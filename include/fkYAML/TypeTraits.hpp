@@ -23,25 +23,25 @@
  */
 FK_YAML_NAMESPACE_BEGIN
 
-// forward declaration for fkyaml::BasicNode<...>
+// forward declaration for fkyaml::basic_node<...>
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType>
-class BasicNode;
+class basic_node;
 
 /**
- * @struct IsBasicNode
- * @brief A struct to check the template parameter class is a kind of BasicNode template class.
+ * @struct is_basic_node
+ * @brief A struct to check the template parameter class is a kind of basic_node template class.
  *
- * @tparam T A class to be checked if it's a kind of BasicNode template class.
+ * @tparam T A class to be checked if it's a kind of basic_node template class.
  */
 template <typename T>
-struct IsBasicNode : std::false_type
+struct is_basic_node : std::false_type
 {
 };
 
 /**
- * @brief A partial specialization of IsBasicNode for BasicNode template class.
+ * @brief A partial specialization of is_basic_node for basic_node template class.
  *
  * @tparam SequenceType A type for sequence node value containers.
  * @tparam MappingType A type for mapping node value containers.
@@ -53,7 +53,7 @@ struct IsBasicNode : std::false_type
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType>
-struct IsBasicNode<BasicNode<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType>>
+struct is_basic_node<basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType>>
     : std::true_type
 {
 };
@@ -64,7 +64,7 @@ struct IsBasicNode<BasicNode<SequenceType, MappingType, BooleanType, IntegerType
  * @tparam Types Any types to be transformed to void type.
  */
 template <typename... Types>
-struct MakeVoid
+struct make_void
 {
     using type = void;
 };
@@ -76,7 +76,7 @@ struct MakeVoid
  * @tparam Types Any types to be transformed to void type.
  */
 template <typename... Types>
-using void_t = typename MakeVoid<Types...>::type;
+using void_t = typename make_void<Types...>::type;
 
 /**
  * @brief An alias template for std::enable_if::type with C++11.
@@ -97,19 +97,19 @@ using enable_if_t = typename std::enable_if<Condition, T>::type;
  * @tparam typename Placeholder for determining T and U are comparable types.
  */
 template <typename Comparator, typename T, typename U, typename = void>
-struct IsComparable : std::false_type
+struct is_comparable : std::false_type
 {
 };
 
 /**
- * @brief A partial specialization of IsComparable if T and U are comparable types.
+ * @brief A partial specialization of is_comparable if T and U are comparable types.
  *
  * @tparam Comparator An object type to compare T and U objects.
  * @tparam T A type for comparison.
  * @tparam U Ther other type for comparison.
  */
 template <typename Comparator, typename T, typename U>
-struct IsComparable<
+struct is_comparable<
     Comparator, T, U,
     void_t<
         decltype(std::declval<Comparator>()(std::declval<T>(), std::declval<U>())),
@@ -125,8 +125,8 @@ struct IsComparable<
  * @tparam KeyType A type to be used as key type.
  */
 template <typename Comparator, typename ObjectKeyType, typename KeyType>
-using IsUsableAsKeyType = typename std::conditional<
-    IsComparable<Comparator, ObjectKeyType, KeyType>::value, std::true_type, std::false_type>::type;
+using is_usable_as_key_type = typename std::conditional<
+    is_comparable<Comparator, ObjectKeyType, KeyType>::value, std::true_type, std::false_type>::type;
 
 FK_YAML_NAMESPACE_END
 

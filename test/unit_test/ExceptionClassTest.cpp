@@ -14,7 +14,7 @@
 
 TEST_CASE("ExceptionClassTest_DefaultCtorTest", "[ExceptionClassTest]")
 {
-    fkyaml::Exception exception;
+    fkyaml::exception exception;
     REQUIRE(std::string(exception.what()).empty());
 }
 
@@ -23,14 +23,14 @@ TEST_CASE("ExceptionClassTest_CtorWithMessageTest", "[ExceptionClassTest]")
     SECTION("Test non-null message.")
     {
         const char* message = "test error message.";
-        fkyaml::Exception exception(message);
+        fkyaml::exception exception(message);
         REQUIRE(std::string(exception.what()).compare(message) == 0);
     }
 
     SECTION("Test null message.")
     {
         const char* message = nullptr;
-        fkyaml::Exception exception(message);
+        fkyaml::exception exception(message);
         REQUIRE(std::string(exception.what()).empty());
     }
 }
