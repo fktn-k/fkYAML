@@ -12,636 +12,636 @@
 
 TEST_CASE("DeserializerClassTest_InputStringTest", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
+    fkyaml::deserializer deserializer;
 
-    REQUIRE_NOTHROW(deserializer.Deserialize("test: hoge"));
-    REQUIRE_THROWS_AS(deserializer.Deserialize(nullptr), fkyaml::Exception);
+    REQUIRE_NOTHROW(deserializer.deserialize("test: hoge"));
+    REQUIRE_THROWS_AS(deserializer.deserialize(nullptr), fkyaml::exception);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     SECTION("normal key-value cases")
     {
         auto input_str = GENERATE(
             std::string("test: hoge"), std::string("test:\n  foo: bar"), std::string("test:\n  - foo\n  - bar"));
-        REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
-        REQUIRE(root.IsMapping());
-        REQUIRE(root.Size() == 1);
+        REQUIRE_NOTHROW(root = deserializer.deserialize(input_str.c_str()));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
     }
 
     SECTION("error cases")
     {
         auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"));
-        REQUIRE_THROWS_AS(root = deserializer.Deserialize(input_str.c_str()), fkyaml::Exception);
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(input_str.c_str()), fkyaml::exception);
     }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeValueSeparator", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     auto input_str = GENERATE(std::string("test: [ foo, bar ]"), std::string("test: { foo: bar, buz: val }"));
-    REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
-    REQUIRE(root.IsMapping());
-    REQUIRE(root.Size() == 1);
+    REQUIRE_NOTHROW(root = deserializer.deserialize(input_str.c_str()));
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.size() == 1);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeNullValue", "[DeserializerClassTes]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     auto input_str = GENERATE(std::string("test: null"), std::string("Null: test"));
-    REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
-    REQUIRE(root.IsMapping());
-    REQUIRE(root.Size() == 1);
+    REQUIRE_NOTHROW(root = deserializer.deserialize(input_str.c_str()));
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.size() == 1);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeBooleanValue", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     auto input_str =
         GENERATE(std::string("test: true"), std::string("test: [ True, False ]"), std::string("True: TRUE"));
-    REQUIRE_NOTHROW(root = deserializer.Deserialize(input_str.c_str()));
-    REQUIRE(root.IsMapping());
-    REQUIRE(root.Size() == 1);
+    REQUIRE_NOTHROW(root = deserializer.deserialize(input_str.c_str()));
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.size() == 1);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeNumericKey", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     using StringValuePair = std::pair<std::string, std::string>;
 
     auto str_val_pair = GENERATE(StringValuePair("123: foo", "123"), StringValuePair("3.14: foo", "3.14"));
-    REQUIRE_NOTHROW(root = deserializer.Deserialize(str_val_pair.first.c_str()));
-    REQUIRE(root.IsMapping());
-    REQUIRE(root.Size() == 1);
-    REQUIRE(root.Contains(str_val_pair.second));
-    REQUIRE(root[str_val_pair.second].ToString() == "foo");
+    REQUIRE_NOTHROW(root = deserializer.deserialize(str_val_pair.first.c_str()));
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.size() == 1);
+    REQUIRE(root.contains(str_val_pair.second));
+    REQUIRE(root[str_val_pair.second].to_string() == "foo");
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     SECTION("Input source No.1.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("test:\n  - foo\n  - bar"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - foo\n  - bar"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsSequence());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 2);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 2);
 
         REQUIRE_NOTHROW(test_node[0]);
-        fkyaml::Node& test_0_node = test_node[0];
-        REQUIRE(test_0_node.IsString());
-        REQUIRE_NOTHROW(test_0_node.Size());
-        REQUIRE(test_0_node.Size() == 3);
-        REQUIRE_NOTHROW(test_0_node.ToString());
-        REQUIRE(test_0_node.ToString().compare("foo") == 0);
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_string());
+        REQUIRE_NOTHROW(test_0_node.size());
+        REQUIRE(test_0_node.size() == 3);
+        REQUIRE_NOTHROW(test_0_node.to_string());
+        REQUIRE(test_0_node.to_string().compare("foo") == 0);
 
         REQUIRE_NOTHROW(test_node[1]);
-        fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsString());
-        REQUIRE_NOTHROW(test_1_node.Size());
-        REQUIRE(test_1_node.Size() == 3);
-        REQUIRE_NOTHROW(test_1_node.ToString());
-        REQUIRE(test_1_node.ToString().compare("bar") == 0);
+        fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_string());
+        REQUIRE_NOTHROW(test_1_node.size());
+        REQUIRE(test_1_node.size() == 3);
+        REQUIRE_NOTHROW(test_1_node.to_string());
+        REQUIRE(test_1_node.to_string().compare("bar") == 0);
     }
 
     SECTION("Input source No.2.")
     {
         REQUIRE_NOTHROW(
-            root = deserializer.Deserialize("test:\n  - foo: true\n    bar: one\n  - foo: false\n    bar: two"));
+            root = deserializer.deserialize("test:\n  - foo: true\n    bar: one\n  - foo: false\n    bar: two"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsSequence());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 2);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 2);
 
         REQUIRE_NOTHROW(test_node[0]);
-        fkyaml::Node& test_0_node = test_node[0];
-        REQUIRE(test_0_node.IsMapping());
-        REQUIRE_NOTHROW(test_0_node.Size());
-        REQUIRE(test_0_node.Size() == 2);
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_mapping());
+        REQUIRE_NOTHROW(test_0_node.size());
+        REQUIRE(test_0_node.size() == 2);
 
         REQUIRE_NOTHROW(test_0_node["foo"]);
-        fkyaml::Node& test_0_foo_node = test_0_node["foo"];
-        REQUIRE(test_0_foo_node.IsBoolean());
-        REQUIRE_NOTHROW(test_0_foo_node.ToBoolean());
-        REQUIRE(test_0_foo_node.ToBoolean() == true);
+        fkyaml::node& test_0_foo_node = test_0_node["foo"];
+        REQUIRE(test_0_foo_node.is_boolean());
+        REQUIRE_NOTHROW(test_0_foo_node.to_boolean());
+        REQUIRE(test_0_foo_node.to_boolean() == true);
 
         REQUIRE_NOTHROW(test_0_node["bar"]);
-        fkyaml::Node& test_0_bar_node = test_0_node["bar"];
-        REQUIRE(test_0_bar_node.IsString());
-        REQUIRE_NOTHROW(test_0_bar_node.ToString());
-        REQUIRE(test_0_bar_node.ToString().compare("one") == 0);
+        fkyaml::node& test_0_bar_node = test_0_node["bar"];
+        REQUIRE(test_0_bar_node.is_string());
+        REQUIRE_NOTHROW(test_0_bar_node.to_string());
+        REQUIRE(test_0_bar_node.to_string().compare("one") == 0);
 
         REQUIRE_NOTHROW(test_node[1]);
-        fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsMapping());
-        REQUIRE_NOTHROW(test_1_node.Size());
-        REQUIRE(test_1_node.Size() == 2);
+        fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_mapping());
+        REQUIRE_NOTHROW(test_1_node.size());
+        REQUIRE(test_1_node.size() == 2);
 
         REQUIRE_NOTHROW(test_1_node["foo"]);
-        fkyaml::Node& test_1_foo_node = test_1_node["foo"];
-        REQUIRE(test_1_foo_node.IsBoolean());
-        REQUIRE_NOTHROW(test_1_foo_node.ToBoolean());
-        REQUIRE(test_1_foo_node.ToBoolean() == false);
+        fkyaml::node& test_1_foo_node = test_1_node["foo"];
+        REQUIRE(test_1_foo_node.is_boolean());
+        REQUIRE_NOTHROW(test_1_foo_node.to_boolean());
+        REQUIRE(test_1_foo_node.to_boolean() == false);
 
         REQUIRE_NOTHROW(test_1_node["bar"]);
-        fkyaml::Node& test_1_bar_node = test_1_node["bar"];
-        REQUIRE(test_1_bar_node.IsString());
-        REQUIRE_NOTHROW(test_1_bar_node.ToString());
-        REQUIRE(test_1_bar_node.ToString().compare("two") == 0);
+        fkyaml::node& test_1_bar_node = test_1_node["bar"];
+        REQUIRE(test_1_bar_node.is_string());
+        REQUIRE_NOTHROW(test_1_bar_node.to_string());
+        REQUIRE(test_1_bar_node.to_string().compare("two") == 0);
     }
 
     SECTION("Input source No.3.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("test:\n  - &anchor true\n  - *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor true\n  - *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsSequence());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 2);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 2);
 
         REQUIRE_NOTHROW(test_node[0]);
-        fkyaml::Node& test_0_node = test_node[0];
-        REQUIRE(test_0_node.HasAnchorName());
-        REQUIRE(test_0_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(test_0_node.IsBoolean());
-        REQUIRE_NOTHROW(test_0_node.ToBoolean());
-        REQUIRE(test_0_node.ToBoolean() == true);
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.has_anchor_name());
+        REQUIRE(test_0_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(test_0_node.is_boolean());
+        REQUIRE_NOTHROW(test_0_node.to_boolean());
+        REQUIRE(test_0_node.to_boolean() == true);
 
         REQUIRE_NOTHROW(test_node[1]);
-        fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsBoolean());
-        REQUIRE_NOTHROW(test_1_node.ToBoolean());
-        REQUIRE(test_1_node.ToBoolean() == test_0_node.ToBoolean());
+        fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_boolean());
+        REQUIRE_NOTHROW(test_1_node.to_boolean());
+        REQUIRE(test_1_node.to_boolean() == test_0_node.to_boolean());
     }
 
     SECTION("Input source No.4.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("test:\n  - &anchor -123\n  - *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor -123\n  - *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsSequence());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 2);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 2);
 
         REQUIRE_NOTHROW(test_node[0]);
-        fkyaml::Node& test_0_node = test_node[0];
-        REQUIRE(test_0_node.HasAnchorName());
-        REQUIRE(test_0_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(test_0_node.IsInteger());
-        REQUIRE_NOTHROW(test_0_node.ToInteger());
-        REQUIRE(test_0_node.ToInteger() == -123);
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.has_anchor_name());
+        REQUIRE(test_0_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(test_0_node.is_integer());
+        REQUIRE_NOTHROW(test_0_node.to_integer());
+        REQUIRE(test_0_node.to_integer() == -123);
 
         REQUIRE_NOTHROW(test_node[1]);
-        fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsInteger());
-        REQUIRE_NOTHROW(test_1_node.ToInteger());
-        REQUIRE(test_1_node.ToInteger() == test_0_node.ToInteger());
+        fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_integer());
+        REQUIRE_NOTHROW(test_1_node.to_integer());
+        REQUIRE(test_1_node.to_integer() == test_0_node.to_integer());
     }
 
     SECTION("Input source No.5.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("test:\n  - &anchor 567\n  - *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor 567\n  - *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsSequence());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 2);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 2);
 
         REQUIRE_NOTHROW(test_node[0]);
-        fkyaml::Node& test_0_node = test_node[0];
-        REQUIRE(test_0_node.HasAnchorName());
-        REQUIRE(test_0_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(test_0_node.IsInteger());
-        REQUIRE_NOTHROW(test_0_node.ToInteger());
-        REQUIRE(test_0_node.ToInteger() == 567);
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.has_anchor_name());
+        REQUIRE(test_0_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(test_0_node.is_integer());
+        REQUIRE_NOTHROW(test_0_node.to_integer());
+        REQUIRE(test_0_node.to_integer() == 567);
 
         REQUIRE_NOTHROW(test_node[1]);
-        fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsInteger());
-        REQUIRE_NOTHROW(test_1_node.ToInteger());
-        REQUIRE(test_1_node.ToInteger() == test_0_node.ToInteger());
+        fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_integer());
+        REQUIRE_NOTHROW(test_1_node.to_integer());
+        REQUIRE(test_1_node.to_integer() == test_0_node.to_integer());
     }
 
     SECTION("Input source No.6.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("test:\n  - &anchor 3.14\n  - *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor 3.14\n  - *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsSequence());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 2);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 2);
 
         REQUIRE_NOTHROW(test_node[0]);
-        fkyaml::Node& test_0_node = test_node[0];
-        REQUIRE(test_0_node.HasAnchorName());
-        REQUIRE(test_0_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(test_0_node.IsFloatNumber());
-        REQUIRE_NOTHROW(test_0_node.ToFloatNumber());
-        REQUIRE(test_0_node.ToFloatNumber() == 3.14);
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.has_anchor_name());
+        REQUIRE(test_0_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(test_0_node.is_float_number());
+        REQUIRE_NOTHROW(test_0_node.to_float_number());
+        REQUIRE(test_0_node.to_float_number() == 3.14);
 
         REQUIRE_NOTHROW(test_node[1]);
-        fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsFloatNumber());
-        REQUIRE_NOTHROW(test_1_node.ToFloatNumber());
-        REQUIRE(test_1_node.ToFloatNumber() == test_0_node.ToFloatNumber());
+        fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_float_number());
+        REQUIRE_NOTHROW(test_1_node.to_float_number());
+        REQUIRE(test_1_node.to_float_number() == test_0_node.to_float_number());
     }
 
     SECTION("Input source No.7.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("test:\n  - &anchor foo\n  - *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor foo\n  - *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsSequence());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 2);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 2);
 
         REQUIRE_NOTHROW(test_node[0]);
-        fkyaml::Node& test_0_node = test_node[0];
-        REQUIRE(test_0_node.HasAnchorName());
-        REQUIRE(test_0_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(test_0_node.IsString());
-        REQUIRE_NOTHROW(test_0_node.Size());
-        REQUIRE(test_0_node.Size() == 3);
-        REQUIRE_NOTHROW(test_0_node.ToString());
-        REQUIRE(test_0_node.ToString().compare("foo") == 0);
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.has_anchor_name());
+        REQUIRE(test_0_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(test_0_node.is_string());
+        REQUIRE_NOTHROW(test_0_node.size());
+        REQUIRE(test_0_node.size() == 3);
+        REQUIRE_NOTHROW(test_0_node.to_string());
+        REQUIRE(test_0_node.to_string().compare("foo") == 0);
 
         REQUIRE_NOTHROW(test_node[1]);
-        fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsString());
-        REQUIRE_NOTHROW(test_1_node.Size());
-        REQUIRE(test_1_node.Size() == 3);
-        REQUIRE_NOTHROW(test_1_node.ToString());
-        REQUIRE(test_1_node.ToString().compare("foo") == 0);
+        fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_string());
+        REQUIRE_NOTHROW(test_1_node.size());
+        REQUIRE(test_1_node.size() == 3);
+        REQUIRE_NOTHROW(test_1_node.to_string());
+        REQUIRE(test_1_node.to_string().compare("foo") == 0);
     }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     SECTION("Input source No.1.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("foo: one\nbar: true\npi: 3.14"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: one\nbar: true\npi: 3.14"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE(root.Size() == 3);
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 3);
 
         REQUIRE_NOTHROW(root["foo"]);
-        fkyaml::Node& foo_node = root["foo"];
-        REQUIRE(foo_node.IsString());
-        REQUIRE_NOTHROW(foo_node.ToString());
-        REQUIRE(foo_node.ToString().compare("one") == 0);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE_NOTHROW(foo_node.to_string());
+        REQUIRE(foo_node.to_string().compare("one") == 0);
 
         REQUIRE_NOTHROW(root["bar"]);
-        fkyaml::Node& bar_node = root["bar"];
-        REQUIRE(bar_node.IsBoolean());
-        REQUIRE_NOTHROW(bar_node.ToBoolean());
-        REQUIRE(bar_node.ToBoolean() == true);
+        fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_boolean());
+        REQUIRE_NOTHROW(bar_node.to_boolean());
+        REQUIRE(bar_node.to_boolean() == true);
 
         REQUIRE_NOTHROW(root["pi"]);
-        fkyaml::Node& pi_node = root["pi"];
-        REQUIRE(pi_node.IsFloatNumber());
-        REQUIRE_NOTHROW(pi_node.ToFloatNumber());
-        REQUIRE(pi_node.ToFloatNumber() == 3.14);
+        fkyaml::node& pi_node = root["pi"];
+        REQUIRE(pi_node.is_float_number());
+        REQUIRE_NOTHROW(pi_node.to_float_number());
+        REQUIRE(pi_node.to_float_number() == 3.14);
     }
 
     SECTION("Input source No.2.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("test:\n  bool: true\n  foo: bar\n  pi: 3.14"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  bool: true\n  foo: bar\n  pi: 3.14"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsMapping());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 3);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_mapping());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 3);
 
         REQUIRE_NOTHROW(test_node["bool"]);
-        fkyaml::Node& test_bool_node = test_node["bool"];
-        REQUIRE(test_bool_node.IsBoolean());
-        REQUIRE_NOTHROW(test_bool_node.ToBoolean());
-        REQUIRE(test_bool_node.ToBoolean() == true);
+        fkyaml::node& test_bool_node = test_node["bool"];
+        REQUIRE(test_bool_node.is_boolean());
+        REQUIRE_NOTHROW(test_bool_node.to_boolean());
+        REQUIRE(test_bool_node.to_boolean() == true);
 
         REQUIRE_NOTHROW(test_node["foo"]);
-        fkyaml::Node& test_foo_node = test_node["foo"];
-        REQUIRE(test_foo_node.IsString());
-        REQUIRE_NOTHROW(test_foo_node.ToString());
-        REQUIRE(test_foo_node.ToString().compare("bar") == 0);
+        fkyaml::node& test_foo_node = test_node["foo"];
+        REQUIRE(test_foo_node.is_string());
+        REQUIRE_NOTHROW(test_foo_node.to_string());
+        REQUIRE(test_foo_node.to_string().compare("bar") == 0);
 
         REQUIRE_NOTHROW(test_node["pi"]);
-        fkyaml::Node& test_pi_node = test_node["pi"];
-        REQUIRE(test_pi_node.IsFloatNumber());
-        REQUIRE_NOTHROW(test_pi_node.ToFloatNumber());
-        REQUIRE(test_pi_node.ToFloatNumber() == 3.14);
+        fkyaml::node& test_pi_node = test_node["pi"];
+        REQUIRE(test_pi_node.is_float_number());
+        REQUIRE_NOTHROW(test_pi_node.to_float_number());
+        REQUIRE(test_pi_node.to_float_number() == 3.14);
     }
 
     SECTION("Input source No.3.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("foo: &anchor true\nbar: *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor true\nbar: *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE(root.Size() == 2);
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
 
         REQUIRE_NOTHROW(root["foo"]);
-        fkyaml::Node& foo_node = root["foo"];
-        REQUIRE(foo_node.HasAnchorName());
-        REQUIRE(foo_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(foo_node.IsBoolean());
-        REQUIRE_NOTHROW(foo_node.ToBoolean());
-        REQUIRE(foo_node.ToBoolean() == true);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.has_anchor_name());
+        REQUIRE(foo_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(foo_node.is_boolean());
+        REQUIRE_NOTHROW(foo_node.to_boolean());
+        REQUIRE(foo_node.to_boolean() == true);
 
         REQUIRE_NOTHROW(root["bar"]);
-        fkyaml::Node& bar_node = root["bar"];
-        REQUIRE(bar_node.IsBoolean());
-        REQUIRE_NOTHROW(bar_node.ToBoolean());
-        REQUIRE(bar_node.ToBoolean() == foo_node.ToBoolean());
+        fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_boolean());
+        REQUIRE_NOTHROW(bar_node.to_boolean());
+        REQUIRE(bar_node.to_boolean() == foo_node.to_boolean());
     }
 
     SECTION("Input source No.4.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("foo: &anchor -123\nbar: *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor -123\nbar: *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE(root.Size() == 2);
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
 
         REQUIRE_NOTHROW(root["foo"]);
-        fkyaml::Node& foo_node = root["foo"];
-        REQUIRE(foo_node.HasAnchorName());
-        REQUIRE(foo_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(foo_node.IsInteger());
-        REQUIRE_NOTHROW(foo_node.ToInteger());
-        REQUIRE(foo_node.ToInteger() == -123);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.has_anchor_name());
+        REQUIRE(foo_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(foo_node.is_integer());
+        REQUIRE_NOTHROW(foo_node.to_integer());
+        REQUIRE(foo_node.to_integer() == -123);
 
         REQUIRE_NOTHROW(root["bar"]);
-        fkyaml::Node& bar_node = root["bar"];
-        REQUIRE(bar_node.IsInteger());
-        REQUIRE_NOTHROW(bar_node.ToInteger());
-        REQUIRE(bar_node.ToInteger() == foo_node.ToInteger());
+        fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_integer());
+        REQUIRE_NOTHROW(bar_node.to_integer());
+        REQUIRE(bar_node.to_integer() == foo_node.to_integer());
     }
 
     SECTION("Input source No.5.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("foo: &anchor 567\nbar: *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor 567\nbar: *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE(root.Size() == 2);
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
 
         REQUIRE_NOTHROW(root["foo"]);
-        fkyaml::Node& foo_node = root["foo"];
-        REQUIRE(foo_node.HasAnchorName());
-        REQUIRE(foo_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(foo_node.IsInteger());
-        REQUIRE_NOTHROW(foo_node.ToInteger());
-        REQUIRE(foo_node.ToInteger() == 567);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.has_anchor_name());
+        REQUIRE(foo_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(foo_node.is_integer());
+        REQUIRE_NOTHROW(foo_node.to_integer());
+        REQUIRE(foo_node.to_integer() == 567);
 
         REQUIRE_NOTHROW(root["bar"]);
-        fkyaml::Node& bar_node = root["bar"];
-        REQUIRE(bar_node.IsInteger());
-        REQUIRE_NOTHROW(bar_node.ToInteger());
-        REQUIRE(bar_node.ToInteger() == foo_node.ToInteger());
+        fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_integer());
+        REQUIRE_NOTHROW(bar_node.to_integer());
+        REQUIRE(bar_node.to_integer() == foo_node.to_integer());
     }
 
     SECTION("Input source No.6.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("foo: &anchor 3.14\nbar: *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor 3.14\nbar: *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE(root.Size() == 2);
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
 
         REQUIRE_NOTHROW(root["foo"]);
-        fkyaml::Node& foo_node = root["foo"];
-        REQUIRE(foo_node.HasAnchorName());
-        REQUIRE(foo_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(foo_node.IsFloatNumber());
-        REQUIRE_NOTHROW(foo_node.ToFloatNumber());
-        REQUIRE(foo_node.ToFloatNumber() == 3.14);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.has_anchor_name());
+        REQUIRE(foo_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(foo_node.is_float_number());
+        REQUIRE_NOTHROW(foo_node.to_float_number());
+        REQUIRE(foo_node.to_float_number() == 3.14);
 
         REQUIRE_NOTHROW(root["bar"]);
-        fkyaml::Node& bar_node = root["bar"];
-        REQUIRE(bar_node.IsFloatNumber());
-        REQUIRE_NOTHROW(bar_node.ToFloatNumber());
-        REQUIRE(bar_node.ToFloatNumber() == foo_node.ToFloatNumber());
+        fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_float_number());
+        REQUIRE_NOTHROW(bar_node.to_float_number());
+        REQUIRE(bar_node.to_float_number() == foo_node.to_float_number());
     }
 
     SECTION("Input source No.7.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("foo: &anchor one\nbar: *anchor"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor one\nbar: *anchor"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE(root.Size() == 2);
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
 
         REQUIRE_NOTHROW(root["foo"]);
-        fkyaml::Node& foo_node = root["foo"];
-        REQUIRE(foo_node.HasAnchorName());
-        REQUIRE(foo_node.GetAnchorName().compare("anchor") == 0);
-        REQUIRE(foo_node.IsString());
-        REQUIRE_NOTHROW(foo_node.ToString());
-        REQUIRE(foo_node.ToString().compare("one") == 0);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.has_anchor_name());
+        REQUIRE(foo_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(foo_node.is_string());
+        REQUIRE_NOTHROW(foo_node.to_string());
+        REQUIRE(foo_node.to_string().compare("one") == 0);
 
         REQUIRE_NOTHROW(root["bar"]);
-        fkyaml::Node& bar_node = root["bar"];
-        REQUIRE(bar_node.IsString());
-        REQUIRE_NOTHROW(bar_node.ToString());
-        REQUIRE(bar_node.ToString() == foo_node.ToString());
+        fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_string());
+        REQUIRE_NOTHROW(bar_node.to_string());
+        REQUIRE(bar_node.to_string() == foo_node.to_string());
     }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     SECTION("Input source No.1.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("test: [ foo, bar ]"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("test: [ foo, bar ]"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsSequence());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 2);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 2);
 
         REQUIRE_NOTHROW(test_node[0]);
-        fkyaml::Node& test_0_node = test_node[0];
-        REQUIRE(test_0_node.IsString());
-        REQUIRE_NOTHROW(test_0_node.ToString());
-        REQUIRE(test_0_node.ToString().compare("foo") == 0);
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_string());
+        REQUIRE_NOTHROW(test_0_node.to_string());
+        REQUIRE(test_0_node.to_string().compare("foo") == 0);
 
         REQUIRE_NOTHROW(test_node[1]);
-        fkyaml::Node& test_1_node = test_node[1];
-        REQUIRE(test_1_node.IsString());
-        REQUIRE_NOTHROW(test_1_node.ToString());
-        REQUIRE(test_1_node.ToString().compare("bar") == 0);
+        fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_string());
+        REQUIRE_NOTHROW(test_1_node.to_string());
+        REQUIRE(test_1_node.to_string().compare("bar") == 0);
     }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     SECTION("Input source No.1.")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("test: { bool: true, foo: bar, pi: 3.14 }"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("test: { bool: true, foo: bar, pi: 3.14 }"));
 
-        REQUIRE(root.IsMapping());
-        REQUIRE_NOTHROW(root.Size());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["test"]);
-        fkyaml::Node& test_node = root["test"];
-        REQUIRE(test_node.IsMapping());
-        REQUIRE_NOTHROW(test_node.Size());
-        REQUIRE(test_node.Size() == 3);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_mapping());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 3);
 
         REQUIRE_NOTHROW(test_node["bool"]);
-        fkyaml::Node& test_bool_node = test_node["bool"];
-        REQUIRE(test_bool_node.IsBoolean());
-        REQUIRE_NOTHROW(test_bool_node.ToBoolean());
-        REQUIRE(test_bool_node.ToBoolean() == true);
+        fkyaml::node& test_bool_node = test_node["bool"];
+        REQUIRE(test_bool_node.is_boolean());
+        REQUIRE_NOTHROW(test_bool_node.to_boolean());
+        REQUIRE(test_bool_node.to_boolean() == true);
 
         REQUIRE_NOTHROW(test_node["foo"]);
-        fkyaml::Node& test_foo_node = test_node["foo"];
-        REQUIRE(test_foo_node.IsString());
-        REQUIRE_NOTHROW(test_foo_node.ToString());
-        REQUIRE(test_foo_node.ToString().compare("bar") == 0);
+        fkyaml::node& test_foo_node = test_node["foo"];
+        REQUIRE(test_foo_node.is_string());
+        REQUIRE_NOTHROW(test_foo_node.to_string());
+        REQUIRE(test_foo_node.to_string().compare("bar") == 0);
 
         REQUIRE_NOTHROW(test_node["pi"]);
-        fkyaml::Node& test_pi_node = test_node["pi"];
-        REQUIRE(test_pi_node.IsFloatNumber());
-        REQUIRE_NOTHROW(test_pi_node.ToFloatNumber());
-        REQUIRE(test_pi_node.ToFloatNumber() == 3.14);
+        fkyaml::node& test_pi_node = test_node["pi"];
+        REQUIRE(test_pi_node.is_float_number());
+        REQUIRE_NOTHROW(test_pi_node.to_float_number());
+        REQUIRE(test_pi_node.to_float_number() == 3.14);
     }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeInputWithCommentTest", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
-    REQUIRE_NOTHROW(root = deserializer.Deserialize("foo: one # comment\nbar: true\npi: 3.14"));
+    REQUIRE_NOTHROW(root = deserializer.deserialize("foo: one # comment\nbar: true\npi: 3.14"));
 
-    REQUIRE(root.IsMapping());
-    REQUIRE(root.Size() == 3);
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.size() == 3);
 
     REQUIRE_NOTHROW(root["foo"]);
-    fkyaml::Node& foo_node = root["foo"];
-    REQUIRE(foo_node.IsString());
-    REQUIRE_NOTHROW(foo_node.ToString());
-    REQUIRE(foo_node.ToString().compare("one") == 0);
+    fkyaml::node& foo_node = root["foo"];
+    REQUIRE(foo_node.is_string());
+    REQUIRE_NOTHROW(foo_node.to_string());
+    REQUIRE(foo_node.to_string().compare("one") == 0);
 
     REQUIRE_NOTHROW(root["bar"]);
-    fkyaml::Node& bar_node = root["bar"];
-    REQUIRE(bar_node.IsBoolean());
-    REQUIRE_NOTHROW(bar_node.ToBoolean());
-    REQUIRE(bar_node.ToBoolean() == true);
+    fkyaml::node& bar_node = root["bar"];
+    REQUIRE(bar_node.is_boolean());
+    REQUIRE_NOTHROW(bar_node.to_boolean());
+    REQUIRE(bar_node.to_boolean() == true);
 
     REQUIRE_NOTHROW(root["pi"]);
-    fkyaml::Node& pi_node = root["pi"];
-    REQUIRE(pi_node.IsFloatNumber());
-    REQUIRE_NOTHROW(pi_node.ToFloatNumber());
-    REQUIRE(pi_node.ToFloatNumber() == 3.14);
+    fkyaml::node& pi_node = root["pi"];
+    REQUIRE(pi_node.is_float_number());
+    REQUIRE_NOTHROW(pi_node.to_float_number());
+    REQUIRE(pi_node.to_float_number() == 3.14);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    fkyaml::Node root;
+    fkyaml::deserializer deserializer;
+    fkyaml::node root;
 
     SECTION("YAML 1.1")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("%YAML 1.1\nfoo: one"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("%YAML 1.1\nfoo: one"));
 
-        REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
-        REQUIRE(root.IsMapping());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.get_yaml_version() == fkyaml::yaml_version_t::VER_1_1);
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["foo"]);
-        fkyaml::Node& foo_node = root["foo"];
-        REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_1);
-        REQUIRE(foo_node.IsString());
-        REQUIRE_NOTHROW(foo_node.ToString());
-        REQUIRE(foo_node.ToString().compare("one") == 0);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(root.get_yaml_version() == fkyaml::yaml_version_t::VER_1_1);
+        REQUIRE(foo_node.is_string());
+        REQUIRE_NOTHROW(foo_node.to_string());
+        REQUIRE(foo_node.to_string().compare("one") == 0);
     }
 
     SECTION("YAML 1.2")
     {
-        REQUIRE_NOTHROW(root = deserializer.Deserialize("%YAML 1.2\nfoo: one"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize("%YAML 1.2\nfoo: one"));
 
-        REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_2);
-        REQUIRE(root.IsMapping());
-        REQUIRE(root.Size() == 1);
+        REQUIRE(root.get_yaml_version() == fkyaml::yaml_version_t::VER_1_2);
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["foo"]);
-        fkyaml::Node& foo_node = root["foo"];
-        REQUIRE(root.GetVersion() == fkyaml::YamlVersionType::VER_1_2);
-        REQUIRE(foo_node.IsString());
-        REQUIRE_NOTHROW(foo_node.ToString());
-        REQUIRE(foo_node.ToString().compare("one") == 0);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(root.get_yaml_version() == fkyaml::yaml_version_t::VER_1_2);
+        REQUIRE(foo_node.is_string());
+        REQUIRE_NOTHROW(foo_node.to_string());
+        REQUIRE(foo_node.to_string().compare("one") == 0);
     }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeNoMachingAnchorTest", "[DeserializerClassTest]")
 {
-    fkyaml::Deserializer deserializer;
-    REQUIRE_THROWS_AS(deserializer.Deserialize("foo: *anchor"), fkyaml::Exception);
+    fkyaml::deserializer deserializer;
+    REQUIRE_THROWS_AS(deserializer.deserialize("foo: *anchor"), fkyaml::exception);
 }
