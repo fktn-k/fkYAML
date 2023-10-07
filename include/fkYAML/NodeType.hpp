@@ -24,10 +24,10 @@
 FK_YAML_NAMESPACE_BEGIN
 
 /**
- * @enum NodeType
+ * @enum node_t
  * @brief Definition of node value types.
  */
-enum class NodeType : std::uint32_t
+enum class node_t : std::uint32_t
 {
     SEQUENCE,     //!< sequence value type
     MAPPING,      //!< mapping value type

@@ -25,23 +25,23 @@
 FK_YAML_NAMESPACE_BEGIN
 
 /**
- * @class Exception
+ * @class exception
  * @brief A base exception class used in fkYAML library.
  */
-class Exception : public std::exception
+class exception : public std::exception
 {
 public:
     /**
-     * @brief Construct a new Exception object without any error messages.
+     * @brief Construct a new exception object without any error messages.
      */
-    Exception() = default;
+    exception() = default;
 
     /**
-     * @brief Construct a new Exception object with an error message.
+     * @brief Construct a new exception object with an error message.
      *
      * @param msg An error description message.
      */
-    explicit Exception(const char* msg)
+    explicit exception(const char* msg)
     {
         if (msg)
         {
