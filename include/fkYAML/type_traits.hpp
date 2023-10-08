@@ -58,8 +58,9 @@ struct is_basic_node<basic_node<SequenceType, MappingType, BooleanType, IntegerT
 {
 };
 
+#ifndef FK_YAML_HAS_CXX_17
 /**
- * @brief A helper structure for void_t.
+ * @brief A helper for void_t.
  *
  * @tparam Types Any types to be transformed to void type.
  */
@@ -77,7 +78,11 @@ struct make_void
  */
 template <typename... Types>
 using void_t = typename make_void<Types...>::type;
+#else
+using std::void_t;
+#endif
 
+#ifndef FK_YAML_HAS_CXX_14
 /**
  * @brief An alias template for std::enable_if::type with C++11.
  * @note std::enable_if_t is available since C++14.
@@ -85,8 +90,11 @@ using void_t = typename make_void<Types...>::type;
  * @tparam Condition A condition tested at compile time.
  * @tparam T The type defined only if Condition is true.
  */
-template <bool Condition, typename T>
+template <bool Condition, typename T = void>
 using enable_if_t = typename std::enable_if<Condition, T>::type;
+#else
+using std::enable_if_t;
+#endif
 
 /**
  * @brief Type trait to check if T and U are comparable types.
