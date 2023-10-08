@@ -17,6 +17,7 @@
 #include <type_traits>
 
 #include "fkYAML/version_macros.hpp"
+#include "fkYAML/stl_supplement.hpp"
 
 /**
  * @namespace fkyaml
@@ -62,57 +63,6 @@ struct is_basic_node<
 {
 };
 
-#ifndef FK_YAML_HAS_CXX_17
-/**
- * @brief A helper for void_t.
- *
- * @tparam Types Any types to be transformed to void type.
- */
-template <typename... Types>
-struct make_void
-{
-    using type = void;
-};
-
-/**
- * @brief A simple implementation to use std::void_t even with C++11-14.
- * @note std::void_t is available since C++17.
- *
- * @tparam Types Any types to be transformed to void type.
- */
-template <typename... Types>
-using void_t = typename make_void<Types...>::type;
-#else
-using std::void_t;
-#endif
-
-#ifndef FK_YAML_HAS_CXX_14
-/**
- * @brief An alias template for std::enable_if::type with C++11.
- * @note std::enable_if_t is available since C++14.
- *
- * @tparam Condition A condition tested at compile time.
- * @tparam T The type defined only if Condition is true.
- */
-template <bool Condition, typename T = void>
-using enable_if_t = typename std::enable_if<Condition, T>::type;
-#else
-using std::enable_if_t;
-#endif
-
-#ifndef FK_YAML_HAS_CXX_20
-/**
- * @brief A simple implementation to use std::remove_cvref_t with C++11-17.
- * @note std::remove_cvref & std::remove_cvref_t are available since C++20.
- *
- * @tparam T A type from which cv-qualifiers and reference are removed.
- */
-template <typename T>
-using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
-#else
-using std::remove_cvref_t;
-#endif
-
 /**
  * @brief Type trait to check if T and U are comparable types.
  *
@@ -136,7 +86,7 @@ struct is_comparable : std::false_type
 template <typename Comparator, typename T, typename U>
 struct is_comparable<
     Comparator, T, U,
-    void_t<
+    detail::void_t<
         decltype(std::declval<Comparator>()(std::declval<T>(), std::declval<U>())),
         decltype(std::declval<Comparator>()(std::declval<U>(), std::declval<T>()))>> : std::true_type
 {
@@ -171,7 +121,8 @@ struct is_non_bool_integral : std::false_type
  */
 template <typename IntegralType>
 struct is_non_bool_integral<
-    IntegralType, enable_if_t<std::is_integral<IntegralType>::value && !std::is_same<bool, IntegralType>::value>>
+    IntegralType,
+    detail::enable_if_t<std::is_integral<IntegralType>::value && !std::is_same<bool, IntegralType>::value>>
     : std::true_type
 {
 };
@@ -199,7 +150,7 @@ struct is_compatible_integer_type_impl : std::false_type
 template <typename TargetIntegerType, typename CompatibleIntegerType>
 struct is_compatible_integer_type_impl<
     TargetIntegerType, CompatibleIntegerType,
-    enable_if_t<
+    detail::enable_if_t<
         std::is_integral<TargetIntegerType>::value && is_non_bool_integral<CompatibleIntegerType>::value &&
         std::is_constructible<TargetIntegerType, CompatibleIntegerType>::value &&
         std::numeric_limits<TargetIntegerType>::is_signed == std::numeric_limits<CompatibleIntegerType>::is_signed>>
@@ -275,7 +226,7 @@ struct detect_helper : std::false_type
  * @tparam Args Argument types passed to desired operation.
  */
 template <typename Default, template <typename...> class Op, typename... Args>
-struct detect_helper<Default, void_t<Op<Args...>>, Op, Args...> : std::true_type
+struct detect_helper<Default, detail::void_t<Op<Args...>>, Op, Args...> : std::true_type
 {
     using type = Op<Args...>;
 };
@@ -337,7 +288,7 @@ struct has_to_node : std::false_type
  * @tparam T A target type passed to to_node function.
  */
 template <typename BasicNodeType, typename T>
-struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
+struct has_to_node<BasicNodeType, T, detail::enable_if_t<!is_basic_node<T>::value>>
 {
     using serializer = typename BasicNodeType::template node_serializer<T, void>;
 
@@ -368,7 +319,7 @@ struct is_compatible_type_impl : std::false_type
 template <typename BasicNodeType, typename CompatibleType>
 struct is_compatible_type_impl<
     BasicNodeType, CompatibleType,
-    enable_if_t<is_complete_type<CompatibleType>::value && has_to_node<BasicNodeType, CompatibleType>::value>>
+    detail::enable_if_t<is_complete_type<CompatibleType>::value && has_to_node<BasicNodeType, CompatibleType>::value>>
     : std::true_type
 {
 };

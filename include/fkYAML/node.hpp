@@ -27,7 +27,7 @@
 #include "fkYAML/iterator.hpp"
 #include "fkYAML/node_t.hpp"
 #include "fkYAML/ordered_map.hpp"
-#include "fkYAML/to_node.hpp"
+#include "fkYAML/stl_supplement.hpp"
 #include "fkYAML/type_traits.hpp"
 #include "fkYAML/yaml_version_t.hpp"
 
@@ -389,8 +389,8 @@ public:
     }
 
     template <
-        typename CompatibleType, typename U = remove_cvref_t<CompatibleType>,
-        enable_if_t<
+        typename CompatibleType, typename U = detail::remove_cvref_t<CompatibleType>,
+        detail::enable_if_t<
             !is_basic_node<U>::value &&
                 (std::is_same<CompatibleType, std::nullptr_t>::value || is_compatible_type<basic_node, U>::value),
             int> = 0>
@@ -678,7 +678,7 @@ public:
      */
     template <
         typename KeyType,
-        fkyaml::enable_if_t<
+        detail::enable_if_t<
             is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
             int> = 0>
     basic_node& operator[](KeyType&& key) // NOLINT(readability-make-member-function-const)
@@ -701,7 +701,7 @@ public:
      */
     template <
         typename KeyType,
-        fkyaml::enable_if_t<
+        detail::enable_if_t<
             is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
             int> = 0>
     const basic_node& operator[](KeyType&& key) const
@@ -887,7 +887,7 @@ public:
      */
     template <
         typename KeyType,
-        fkyaml::enable_if_t<
+        detail::enable_if_t<
             is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
             int> = 0>
     bool contains(KeyType&& key) const

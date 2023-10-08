@@ -15,6 +15,7 @@
 #include "fkYAML/node.hpp"
 #include "fkYAML/ordered_map.hpp"
 #include "fkYAML/serializer.hpp"
+#include "fkYAML/stl_supplement.hpp"
 #include "fkYAML/to_node.hpp"
 #include "fkYAML/type_traits.hpp"
 #include "fkYAML/version_macros.hpp"
