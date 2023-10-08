@@ -100,7 +100,7 @@ IndentCaseBlocks: false
 IndentCaseLabels: false
 IndentExternBlock: AfterExternBlock
 IndentGotoLabels: true
-IndentPPDirectives: None
+IndentPPDirectives: BeforeHash
 # IndentRequiresClause: true # since clang-format 15
 IndentWidth:     4
 IndentWrappedFunctionNames: false

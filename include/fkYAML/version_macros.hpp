@@ -11,9 +11,9 @@
  */
 
 #if defined(FK_YAML_MAJOR_VERSION) && defined(FK_YAML_MINOR_VERSION) && defined(FK_YAML_PATCH_VERSION)
-#if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 0 || FK_YAML_PATCH_VERSION != 1
-#warning "Already included a different version of fkYAML library!"
-#endif
+    #if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 0 || FK_YAML_PATCH_VERSION != 1
+        #warning "Already included a different version of fkYAML library!"
+    #endif
 #endif
 
 #define FK_YAML_MAJOR_VERSION 0

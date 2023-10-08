@@ -10,6 +10,9 @@
  * @file
  */
 
+#ifndef FK_YAML_DESERIALIZER_HPP_
+#define FK_YAML_DESERIALIZER_HPP_
+
 #include <cstdint>
 #include <unordered_map>
 
@@ -18,9 +21,6 @@
 #include "fkYAML/lexical_analyzer.hpp"
 #include "fkYAML/node.hpp"
 #include "fkYAML/type_traits.hpp"
-
-#ifndef FK_YAML_DESERIALIZER_HPP_
-#define FK_YAML_DESERIALIZER_HPP_
 
 /**
  * @namespace fkyaml
