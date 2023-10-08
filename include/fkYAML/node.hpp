@@ -390,12 +390,15 @@ public:
 
     template <
         typename CompatibleType, typename U = remove_cvref_t<CompatibleType>,
-        enable_if_t<!is_basic_node<U>::value && is_compatible_type<basic_node, U>::value, int> = 0>
+        enable_if_t<
+            !is_basic_node<U>::value &&
+                (std::is_same<CompatibleType, std::nullptr_t>::value || is_compatible_type<basic_node, U>::value),
+            int> = 0>
     explicit basic_node(CompatibleType&& val) noexcept(
         noexcept(NodeSerializer<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
         : m_node_type(node_t::NULL_OBJECT),
-          m_node_value(),
           m_yaml_version_type(yaml_version_t::VER_1_2),
+          m_node_value(),
           m_anchor_name(nullptr)
     {
         NodeSerializer<U>::to_node(*this, std::forward<CompatibleType>(val));

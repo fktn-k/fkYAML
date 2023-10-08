@@ -55,9 +55,9 @@ struct external_node_constructor;
  * @tparam N/A
  */
 template <>
-struct external_node_constructor<fkyaml::node_t::SEQUENCE>
+struct external_node_constructor<node_t::SEQUENCE>
 {
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, const typename BasicNodeType::sequence_type& s) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
@@ -65,7 +65,7 @@ struct external_node_constructor<fkyaml::node_t::SEQUENCE>
         n.m_node_value.p_sequence = BasicNodeType::template create_object<typename BasicNodeType::sequence_type>(s);
     }
 
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::sequence_type&& s) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
@@ -81,9 +81,9 @@ struct external_node_constructor<fkyaml::node_t::SEQUENCE>
  * @tparam N/A
  */
 template <>
-struct external_node_constructor<fkyaml::node_t::MAPPING>
+struct external_node_constructor<node_t::MAPPING>
 {
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, const typename BasicNodeType::mapping_type& m) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
@@ -91,7 +91,7 @@ struct external_node_constructor<fkyaml::node_t::MAPPING>
         n.m_node_value.p_mapping = BasicNodeType::template create_object<typename BasicNodeType::mapping_type>(m);
     }
 
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::mapping_type&& m) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
@@ -107,9 +107,9 @@ struct external_node_constructor<fkyaml::node_t::MAPPING>
  * @tparam N/A
  */
 template <>
-struct external_node_constructor<fkyaml::node_t::NULL_OBJECT>
+struct external_node_constructor<node_t::NULL_OBJECT>
 {
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, std::nullptr_t /*unused*/) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
@@ -124,9 +124,9 @@ struct external_node_constructor<fkyaml::node_t::NULL_OBJECT>
  * @tparam N/A
  */
 template <>
-struct external_node_constructor<fkyaml::node_t::BOOLEAN>
+struct external_node_constructor<node_t::BOOLEAN>
 {
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::boolean_type b) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
@@ -141,9 +141,9 @@ struct external_node_constructor<fkyaml::node_t::BOOLEAN>
  * @tparam N/A
  */
 template <>
-struct external_node_constructor<fkyaml::node_t::INTEGER>
+struct external_node_constructor<node_t::INTEGER>
 {
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::integer_type i) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
@@ -158,9 +158,9 @@ struct external_node_constructor<fkyaml::node_t::INTEGER>
  * @tparam N/A
  */
 template <>
-struct external_node_constructor<fkyaml::node_t::FLOAT_NUMBER>
+struct external_node_constructor<node_t::FLOAT_NUMBER>
 {
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::float_number_type f) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
@@ -175,22 +175,22 @@ struct external_node_constructor<fkyaml::node_t::FLOAT_NUMBER>
  * @tparam N/A
  */
 template <>
-struct external_node_constructor<fkyaml::node_t::STRING>
+struct external_node_constructor<node_t::STRING>
 {
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, const typename BasicNodeType::string_type& s) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::STRING;
-        n.m_node_value.p_mapping = BasicNodeType::template create_object<typename BasicNodeType::string_type>(s);
+        n.m_node_value.p_string = BasicNodeType::template create_object<typename BasicNodeType::string_type>(s);
     }
 
-    template <typename BasicNodeType, fkyaml::enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+    template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::string_type&& s) noexcept
     {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::STRING;
-        n.m_node_value.p_mapping =
+        n.m_node_value.p_string =
             BasicNodeType::template create_object<typename BasicNodeType::string_type>(std::move(s));
     }
 };
@@ -201,7 +201,7 @@ struct external_node_constructor<fkyaml::node_t::STRING>
 
 /**
  * @brief to_node function for BasicNodeType::sequence_type objects.
- * 
+ *
  * @tparam BasicNodeType A basic_node template instance type.
  * @tparam T A sequence node value type.
  * @param n A basic_node object.
@@ -209,18 +209,18 @@ struct external_node_constructor<fkyaml::node_t::STRING>
  */
 template <
     typename BasicNodeType, typename T,
-    fkyaml::enable_if_t<
-        fkyaml::is_basic_node<BasicNodeType>::value &&
-            std::is_same<typename BasicNodeType::sequence_type, fkyaml::remove_cvref_t<T>>::value,
+    enable_if_t<
+        is_basic_node<BasicNodeType>::value &&
+            std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<T>>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, T&& s) noexcept
 {
-    external_node_constructor<fkyaml::node_t::SEQUENCE>::construct(n, std::forward<T>(s));
+    external_node_constructor<node_t::SEQUENCE>::construct(n, std::forward<T>(s));
 }
 
 /**
  * @brief to_node function for BasicNodeType::mapping_type objects.
- * 
+ *
  * @tparam BasicNodeType A basid_node template instance type.
  * @tparam T A mapping node value type.
  * @param n A basic_node object.
@@ -228,18 +228,32 @@ inline void to_node(BasicNodeType& n, T&& s) noexcept
  */
 template <
     typename BasicNodeType, typename T,
-    fkyaml::enable_if_t<
-        fkyaml::is_basic_node<BasicNodeType>::value &&
-            std::is_same<typename BasicNodeType::mapping_type, fkyaml::remove_cvref_t<T>>::value,
+    enable_if_t<
+        is_basic_node<BasicNodeType>::value &&
+            std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<T>>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, T&& m) noexcept
 {
-    external_node_constructor<fkyaml::node_t::MAPPING>::construct(n, std::forward<T>(m));
+    external_node_constructor<node_t::MAPPING>::construct(n, std::forward<T>(m));
+}
+
+/**
+ * @brief to_node function for null objects.
+ *
+ * @tparam BasicNodeType A mapping node value type.
+ * @tparam NullType This must be std::nullptr_t type
+ */
+template <
+    typename BasicNodeType, typename NullType,
+    enable_if_t<is_basic_node<BasicNodeType>::value && std::is_same<NullType, std::nullptr_t>::value, int> = 0>
+inline void to_node(BasicNodeType& n, NullType /*unused*/)
+{
+    external_node_constructor<node_t::NULL_OBJECT>::construct(n, nullptr);
 }
 
 /**
  * @brief to_node function for BasicNodeType::boolean_type objects.
- * 
+ *
  * @tparam BasicNodeType A basic_node template instance type.
  * @tparam T A boolean scalar node value type.
  * @param n A basic_node object.
@@ -247,17 +261,16 @@ inline void to_node(BasicNodeType& n, T&& m) noexcept
  */
 template <
     typename BasicNodeType, typename T,
-    fkyaml::enable_if_t<
-        fkyaml::is_basic_node<BasicNodeType>::value && std::is_same<typename BasicNodeType::boolean_type, T>::value,
-        int> = 0>
+    enable_if_t<
+        is_basic_node<BasicNodeType>::value && std::is_same<typename BasicNodeType::boolean_type, T>::value, int> = 0>
 inline void to_node(BasicNodeType& n, T b) noexcept
 {
-    external_node_constructor<fkyaml::node_t::BOOLEAN>::construct(n, b);
+    external_node_constructor<node_t::BOOLEAN>::construct(n, b);
 }
 
 /**
  * @brief to_node function for integers.
- * 
+ *
  * @tparam BasicNodeType A basic_node template instance type.
  * @tparam T An integer type.
  * @param n A basic_node object.
@@ -265,18 +278,18 @@ inline void to_node(BasicNodeType& n, T b) noexcept
  */
 template <
     typename BasicNodeType, typename T,
-    fkyaml::enable_if_t<
-        fkyaml::is_basic_node<BasicNodeType>::value &&
-            fkyaml::is_compatible_integer_type<typename BasicNodeType::integer_type, T>::value,
+    enable_if_t<
+        is_basic_node<BasicNodeType>::value &&
+            is_compatible_integer_type<typename BasicNodeType::integer_type, T>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, T i) noexcept
 {
-    external_node_constructor<fkyaml::node_t::INTEGER>::construct(n, i);
+    external_node_constructor<node_t::INTEGER>::construct(n, i);
 }
 
 /**
  * @brief to_node function for floating point numbers.
- * 
+ *
  * @tparam BasicNodeType A basic_node template instance type.
  * @tparam T A floating point number type.
  * @param n A basic_node object.
@@ -284,10 +297,21 @@ inline void to_node(BasicNodeType& n, T i) noexcept
  */
 template <
     typename BasicNodeType, typename T,
-    fkyaml::enable_if_t<fkyaml::is_basic_node<BasicNodeType>::value && std::is_floating_point<T>::value, int> = 0>
+    enable_if_t<is_basic_node<BasicNodeType>::value && std::is_floating_point<T>::value, int> = 0>
 inline void to_node(BasicNodeType& n, T f) noexcept
 {
-    external_node_constructor<fkyaml::node_t::FLOAT_NUMBER>::construct(n, f);
+    external_node_constructor<node_t::FLOAT_NUMBER>::construct(n, f);
+}
+
+template <
+    typename BasicNodeType, typename T,
+    enable_if_t<
+        is_basic_node<BasicNodeType>::value &&
+            std::is_same<typename BasicNodeType::string_type, remove_cvref_t<T>>::value,
+        int> = 0>
+inline void to_node(BasicNodeType& n, T&& s) noexcept
+{
+    external_node_constructor<node_t::STRING>::construct(n, std::forward<T>(s));
 }
 
 /**
@@ -298,7 +322,7 @@ struct to_node_fn
 {
     /**
      * @brief Call to_node function suitable for the given T type.
-     * 
+     *
      * @tparam BasicNodeType A basic_node template instance type.
      * @tparam T A target value type assigned to the basic_node object.
      * @param n A basic_node object.

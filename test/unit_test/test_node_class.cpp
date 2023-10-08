@@ -84,6 +84,69 @@ TEST_CASE("NodeClassTest_ThrowingSpecializationTypeCtorTest", "[NodeClassTest]")
     REQUIRE_THROWS_AS(NodeType::string_scalar(), fkyaml::exception);
 }
 
+TEST_CASE("NodeClassTest_SequenceCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(fkyaml::node_sequence_type {fkyaml::node {true}, fkyaml::node {false}});
+    REQUIRE(node.type() == fkyaml::node_t::SEQUENCE);
+    REQUIRE(node.is_sequence());
+    REQUIRE(node.size() == 2);
+    REQUIRE(node[0].is_boolean());
+    REQUIRE(node[0].to_boolean() == true);
+    REQUIRE(node[1].is_boolean());
+    REQUIRE(node[1].to_boolean() == false);
+}
+
+TEST_CASE("NodeClassTest_MappingCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(fkyaml::node_mapping_type {{"test", fkyaml::node {true}}});
+    REQUIRE(node.type() == fkyaml::node_t::MAPPING);
+    REQUIRE(node.is_mapping());
+    REQUIRE(node.size() == 1);
+    REQUIRE(node.contains("test"));
+    REQUIRE(node["test"].is_boolean());
+    REQUIRE(node["test"].to_boolean() == true);
+}
+
+TEST_CASE("NodeClassTest_NullCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(nullptr);
+    REQUIRE(node.type() == fkyaml::node_t::NULL_OBJECT);
+    REQUIRE(node.is_null());
+}
+
+TEST_CASE("NodeClassTest_BooleanCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(true);
+    REQUIRE(node.type() == fkyaml::node_t::BOOLEAN);
+    REQUIRE(node.is_boolean());
+    REQUIRE(node.to_boolean() == true);
+}
+
+TEST_CASE("NodeClassTest_IntegerCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(23467);
+    REQUIRE(node.type() == fkyaml::node_t::INTEGER);
+    REQUIRE(node.is_integer());
+    REQUIRE(node.to_integer() == 23467);
+}
+
+TEST_CASE("NodeClassTest_FloatNumberCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(3.14);
+    REQUIRE(node.type() == fkyaml::node_t::FLOAT_NUMBER);
+    REQUIRE(node.is_float_number());
+    REQUIRE(node.to_float_number() == 3.14);
+}
+
+TEST_CASE("NodeClassTest_StringCtorTest", "[NodeClassTest]")
+{
+    auto node = GENERATE(fkyaml::node(fkyaml::node_string_type("test")));
+    REQUIRE(node.type() == fkyaml::node_t::STRING);
+    REQUIRE(node.is_string());
+    REQUIRE(node.size() == 4);
+    REQUIRE(node.to_string() == "test");
+}
+
 TEST_CASE("NodeClassTest_SequenceCopyCtorTest", "[NodeClassTest]")
 {
     fkyaml::node copied =
