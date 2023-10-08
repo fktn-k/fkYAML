@@ -199,6 +199,14 @@ struct external_node_constructor<fkyaml::node_t::STRING>
 //   to_node   //
 /////////////////
 
+/**
+ * @brief to_node function for BasicNodeType::sequence_type objects.
+ * 
+ * @tparam BasicNodeType A basic_node template instance type.
+ * @tparam T A sequence node value type.
+ * @param n A basic_node object.
+ * @param s A sequence node value object.
+ */
 template <
     typename BasicNodeType, typename T,
     fkyaml::enable_if_t<
@@ -210,6 +218,14 @@ inline void to_node(BasicNodeType& n, T&& s) noexcept
     external_node_constructor<fkyaml::node_t::SEQUENCE>::construct(n, std::forward<T>(s));
 }
 
+/**
+ * @brief to_node function for BasicNodeType::mapping_type objects.
+ * 
+ * @tparam BasicNodeType A basid_node template instance type.
+ * @tparam T A mapping node value type.
+ * @param n A basic_node object.
+ * @param m A mapping node value object.
+ */
 template <
     typename BasicNodeType, typename T,
     fkyaml::enable_if_t<
@@ -221,6 +237,14 @@ inline void to_node(BasicNodeType& n, T&& m) noexcept
     external_node_constructor<fkyaml::node_t::MAPPING>::construct(n, std::forward<T>(m));
 }
 
+/**
+ * @brief to_node function for BasicNodeType::boolean_type objects.
+ * 
+ * @tparam BasicNodeType A basic_node template instance type.
+ * @tparam T A boolean scalar node value type.
+ * @param n A basic_node object.
+ * @param b A boolean scalar node value object.
+ */
 template <
     typename BasicNodeType, typename T,
     fkyaml::enable_if_t<
@@ -231,6 +255,14 @@ inline void to_node(BasicNodeType& n, T b) noexcept
     external_node_constructor<fkyaml::node_t::BOOLEAN>::construct(n, b);
 }
 
+/**
+ * @brief to_node function for integers.
+ * 
+ * @tparam BasicNodeType A basic_node template instance type.
+ * @tparam T An integer type.
+ * @param n A basic_node object.
+ * @param i An integer object.
+ */
 template <
     typename BasicNodeType, typename T,
     fkyaml::enable_if_t<
@@ -242,6 +274,14 @@ inline void to_node(BasicNodeType& n, T i) noexcept
     external_node_constructor<fkyaml::node_t::INTEGER>::construct(n, i);
 }
 
+/**
+ * @brief to_node function for floating point numbers.
+ * 
+ * @tparam BasicNodeType A basic_node template instance type.
+ * @tparam T A floating point number type.
+ * @param n A basic_node object.
+ * @param f A floating point number object.
+ */
 template <
     typename BasicNodeType, typename T,
     fkyaml::enable_if_t<fkyaml::is_basic_node<BasicNodeType>::value && std::is_floating_point<T>::value, int> = 0>
@@ -250,8 +290,21 @@ inline void to_node(BasicNodeType& n, T f) noexcept
     external_node_constructor<fkyaml::node_t::FLOAT_NUMBER>::construct(n, f);
 }
 
+/**
+ * @brief A function object to call to_node functions.
+ * @note User-defined specialization is available by providing implementation **OUTSIDE** fkyaml namespace.
+ */
 struct to_node_fn
 {
+    /**
+     * @brief Call to_node function suitable for the given T type.
+     * 
+     * @tparam BasicNodeType A basic_node template instance type.
+     * @tparam T A target value type assigned to the basic_node object.
+     * @param n A basic_node object.
+     * @param val A target object assigned to the basic_node object.
+     * @return decltype(to_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
+     */
     template <typename BasicNodeType, typename T>
     auto operator()(BasicNodeType& n, T&& val) const noexcept(noexcept(to_node(n, std::forward<T>(val))))
         -> decltype(to_node(n, std::forward<T>(val)))
