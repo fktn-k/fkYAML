@@ -10,8 +10,8 @@
  * @file
  */
 
-#ifndef FK_YAML_ASSERT_HPP_
-#define FK_YAML_ASSERT_HPP_
+#ifndef FK_YAML_DETAIL_ASSERT_HPP_
+#define FK_YAML_DETAIL_ASSERT_HPP_
 
 // if FK_YAML_ASSERT is not user-defined. apply the default assert impl.
 #ifndef FK_YAML_ASSERT
@@ -23,4 +23,4 @@
     #endif
 #endif
 
-#endif /* FK_YAML_ASSERT_HPP_ */
+#endif /* FK_YAML_DETAIL_ASSERT_HPP_ */

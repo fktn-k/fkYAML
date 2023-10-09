@@ -16,11 +16,11 @@
 #include <cstdint>
 #include <unordered_map>
 
-#include "fkYAML/version_macros.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/lexical_analyzer.hpp"
+#include "fkYAML/detail/type_traits.hpp"
 #include "fkYAML/exception.hpp"
-#include "fkYAML/lexical_analyzer.hpp"
 #include "fkYAML/node.hpp"
-#include "fkYAML/type_traits.hpp"
 
 /**
  * @namespace fkyaml
@@ -31,18 +31,14 @@ FK_YAML_NAMESPACE_BEGIN
 /**
  * @class basic_deserializer
  * @brief A class which provides the feature of deserializing YAML documents.
- */
-
-/**
- * @class basic_deserializer
- * @brief A class which provides the feature of deserializing YAML documents.
  *
  * @tparam BasicNodeType A type of the container for deserialized YAML values.
  */
 template <typename BasicNodeType = node>
 class basic_deserializer
 {
-    static_assert(is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts (const) basic_node<...>");
+    static_assert(
+        detail::is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts (const) basic_node<...>");
 
     /** A type for sequence node value containers. */
     using sequence_type = typename BasicNodeType::sequence_type;
@@ -57,7 +53,10 @@ class basic_deserializer
     /** A type for string node values. */
     using string_type = typename BasicNodeType::string_type;
     /** A type for the lexical analyzer object used by this deserializer. */
-    using lexer_type = lexical_analyzer<BasicNodeType>;
+    using lexer_type = detail::lexical_analyzer<BasicNodeType>;
+
+    using lexical_token_t = detail::lexical_token_t;
+    using yaml_version_t = detail::yaml_version_t;
 
 public:
     /**
@@ -314,7 +313,7 @@ private:
 private:
     lexer_type m_lexer {};                                   /** A lexical analyzer object. */
     BasicNodeType* m_current_node = nullptr;                 /** The currently focused YAML node. */
-    std::vector<BasicNodeType*> m_node_stack;                /** The stack of YAML nodes. */
+    std::vector<BasicNodeType*> m_node_stack {};             /** The stack of YAML nodes. */
     yaml_version_t m_yaml_version = yaml_version_t::VER_1_2; /** The YAML version specification type. */
     uint32_t m_current_indent_width = 0;                     /** The current indentation width. */
     bool m_needs_anchor_impl = false; /** A flag to determine the need for YAML anchor node implementation */

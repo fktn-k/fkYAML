@@ -10,8 +10,8 @@
  * @file
  */
 
-#ifndef FK_YAML_LEXICAL_ANALIZER_HPP_
-#define FK_YAML_LEXICAL_ANALIZER_HPP_
+#ifndef FK_YAML_DETAIL_LEXICAL_ANALIZER_HPP_
+#define FK_YAML_DETAIL_LEXICAL_ANALIZER_HPP_
 
 #include <cctype>
 #include <cmath>
@@ -21,16 +21,23 @@
 #include <string>
 #include <vector>
 
-#include "fkYAML/version_macros.hpp"
-#include "fkYAML/assert.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/assert.hpp"
+#include "fkYAML/detail/type_traits.hpp"
 #include "fkYAML/exception.hpp"
-#include "fkYAML/type_traits.hpp"
 
 /**
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
  */
 FK_YAML_NAMESPACE_BEGIN
+
+/**
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
 
 /**
  * @enum lexical_token_t
@@ -70,7 +77,7 @@ template <typename BasicNodeType>
 class lexical_analyzer
 {
 private:
-    static_assert(is_basic_node<BasicNodeType>::value, "lexical_analyzer only accepts (const) BasicNode<...>");
+    static_assert(is_basic_node<BasicNodeType>::value, "lexical_analyzer only accepts basic_node<...>");
 
     using char_traits_type = std::char_traits<char>;
     using char_int_type = typename char_traits_type::int_type;
@@ -1273,6 +1280,8 @@ private:
     std::vector<uint32_t> m_indent_width_stack;
 };
 
+} // namespace detail
+
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_LEXICAL_ANALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_LEXICAL_ANALIZER_HPP_ */

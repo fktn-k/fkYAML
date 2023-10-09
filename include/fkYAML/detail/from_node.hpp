@@ -10,16 +10,16 @@
  * @file
  */
 
-#ifndef FK_YAML_FROM_NODE_HPP_
-#define FK_YAML_FROM_NODE_HPP_
+#ifndef FK_YAML_DETAIL_FROM_NODE_HPP_
+#define FK_YAML_DETAIL_FROM_NODE_HPP_
 
 #include <limits>
 #include <utility>
 
-#include "fkYAML/version_macros.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/type_traits.hpp"
+#include "fkYAML/detail/node_t.hpp"
 #include "fkYAML/exception.hpp"
-#include "fkYAML/node_t.hpp"
-#include "fkYAML/type_traits.hpp"
 
 /**
  * @namespace fkyaml
@@ -280,4 +280,4 @@ FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_FROM_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_FROM_NODE_HPP_ */

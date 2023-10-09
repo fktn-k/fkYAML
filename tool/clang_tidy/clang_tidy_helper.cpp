@@ -6,22 +6,22 @@
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include "fkYAML/assert.hpp"
+#include "fkYAML/detail/assert.hpp"
+#include "fkYAML/detail/from_node.hpp"
+#include "fkYAML/detail/iterator.hpp"
+#include "fkYAML/detail/lexical_analyzer.hpp"
+#include "fkYAML/detail/node_t.hpp"
+#include "fkYAML/detail/stl_supplement.hpp"
+#include "fkYAML/detail/to_node.hpp"
+#include "fkYAML/detail/type_traits.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/yaml_version_t.hpp"
 #include "fkYAML/deserializer.hpp"
 #include "fkYAML/exception.hpp"
-#include "fkYAML/from_node.hpp"
-#include "fkYAML/iterator.hpp"
-#include "fkYAML/lexical_analyzer.hpp"
-#include "fkYAML/node_t.hpp"
 #include "fkYAML/node_value_converter.hpp"
 #include "fkYAML/node.hpp"
 #include "fkYAML/ordered_map.hpp"
 #include "fkYAML/serializer.hpp"
-#include "fkYAML/stl_supplement.hpp"
-#include "fkYAML/to_node.hpp"
-#include "fkYAML/type_traits.hpp"
-#include "fkYAML/version_macros.hpp"
-#include "fkYAML/yaml_version_t.hpp"
 
 // This is just a dummy main function for compilation.
 int main()

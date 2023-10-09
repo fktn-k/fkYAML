@@ -19,9 +19,9 @@
 #include <utility>
 #include <vector>
 
-#include "fkYAML/version_macros.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/type_traits.hpp"
 #include "fkYAML/exception.hpp"
-#include "fkYAML/type_traits.hpp"
 
 /**
  * @namespace fkyaml
@@ -90,7 +90,8 @@ public:
      * @return mapped_type& Reference to a mapped_type object associated with the given key.
      */
     template <
-        typename KeyType, detail::enable_if_t<is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     mapped_type& operator[](KeyType&& key) noexcept
     {
         return emplace(std::forward<KeyType>(key), mapped_type()).first->second;
@@ -105,7 +106,8 @@ public:
      * @return std::pair<iterator, bool> A result of emplacement of the new key-value pair.
      */
     template <
-        typename KeyType, detail::enable_if_t<is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     std::pair<iterator, bool> emplace(KeyType&& key, const mapped_type& value) noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
@@ -127,7 +129,8 @@ public:
      * @return mapped_type& The value associated to the given key.
      */
     template <
-        typename KeyType, detail::enable_if_t<is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     mapped_type& at(KeyType&& key)
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
@@ -148,7 +151,8 @@ public:
      * @return const mapped_type& The value associated to the given key.
      */
     template <
-        typename KeyType, detail::enable_if_t<is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     const mapped_type& at(KeyType&& key) const
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
@@ -169,7 +173,8 @@ public:
      * @return iterator The iterator for the found value, or the result of end().
      */
     template <
-        typename KeyType, detail::enable_if_t<is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     iterator find(KeyType&& key) noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
@@ -190,7 +195,8 @@ public:
      * @return const_iterator The constant iterator for the found value, or the result of end().
      */
     template <
-        typename KeyType, detail::enable_if_t<is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     const_iterator find(KeyType&& key) const noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)

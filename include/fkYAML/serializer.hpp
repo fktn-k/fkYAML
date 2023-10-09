@@ -17,11 +17,11 @@
 #include <sstream>
 #include <string>
 
-#include "fkYAML/version_macros.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/node_t.hpp"
+#include "fkYAML/detail/type_traits.hpp"
 #include "fkYAML/exception.hpp"
 #include "fkYAML/node.hpp"
-#include "fkYAML/node_t.hpp"
-#include "fkYAML/type_traits.hpp"
 
 FK_YAML_NAMESPACE_BEGIN
 
@@ -33,7 +33,9 @@ FK_YAML_NAMESPACE_BEGIN
 template <typename BasicNodeType = node>
 class basic_serializer
 {
-    static_assert(is_basic_node<BasicNodeType>::value, "basic_serializer only accepts (const) BasicNode<...>");
+    static_assert(detail::is_basic_node<BasicNodeType>::value, "basic_serializer only accepts basic_node<...>");
+
+    using node_t = detail::node_t;
 
 public:
     /**
