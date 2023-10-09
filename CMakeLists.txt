@@ -23,10 +23,6 @@ if(FK_YAML_CODE_COVERAGE)
   set(FK_YAML_BUILD_TEST ON)
 endif()
 
-if(FK_YAML_RUN_CLANG_FORMAT OR FK_YAML_CI)
-  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-endif()
-
 if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
   set(CATCH2_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2")
   if(NOT EXISTS ${CATCH2_ROOT_DIR}/CMakeLists.txt)
@@ -78,19 +74,9 @@ target_include_directories(
   ${FK_YAML_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${FK_YAML_INCLUDE_BUILD_DIR}>
                                    $<INSTALL_INTERFACE:${FK_YAML_INCLUDE_INSTALL_DIR}>)
 
-# configure clang-format if enabled.
-if(FK_YAML_RUN_CLANG_FORMAT)
-  set(FK_YAML_ClangFormatTargetPrefix "run_clang_format_for_")
-  include(RunClangFormat)
-  run_clang_format(${FK_YAML_TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/include/fkYAML/*.hpp")
-endif()
-
 # Configure clang-tidy if enabled.
 if(FK_YAML_RUN_CLANG_TIDY)
   add_subdirectory(tool/clang_tidy)
-  if(FK_YAML_RUN_CLANG_FORMAT)
-    add_dependencies(ClangTidyHelper "${FK_YAML_ClangFormatTargetPrefix}${FK_YAML_TARGET_NAME}")
-  endif()
 endif()
 
 # Configure include-what-you-use if enabled.

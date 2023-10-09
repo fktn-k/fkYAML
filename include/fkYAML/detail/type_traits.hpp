@@ -129,8 +129,8 @@ struct is_non_bool_integral : std::false_type
  */
 template <typename IntegralType>
 struct is_non_bool_integral<
-    IntegralType, enable_if_t<conjunction<
-                      std::is_integral<IntegralType>, negation<std::is_same<bool, IntegralType>>>::value>>
+    IntegralType,
+    enable_if_t<conjunction<std::is_integral<IntegralType>, negation<std::is_same<bool, IntegralType>>>::value>>
     : std::true_type
 {
 };
@@ -381,8 +381,7 @@ struct is_compatible_type_impl : std::false_type
 template <typename BasicNodeType, typename CompatibleType>
 struct is_compatible_type_impl<
     BasicNodeType, CompatibleType,
-    enable_if_t<
-        conjunction<is_complete_type<CompatibleType>, has_to_node<BasicNodeType, CompatibleType>>::value>>
+    enable_if_t<conjunction<is_complete_type<CompatibleType>, has_to_node<BasicNodeType, CompatibleType>>::value>>
     : std::true_type
 {
 };

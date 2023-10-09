@@ -46,8 +46,7 @@ all:
 
 # pre-requisites: clang-format
 clang-format:
-	cmake -B build_clang_format -S . -DFK_YAML_RUN_CLANG_FORMAT=ON
-	cmake --build build_clang_format --target run_clang_format
+	for FILE in $(SRCS) $(TEST_SRCS); do echo $$FILE; clang-format -i $$FILE; done
 
 # pre-requisites: clang-tidy
 clang-tidy:

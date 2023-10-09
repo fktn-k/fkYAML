@@ -55,10 +55,6 @@ catch_discover_tests(${TEST_TARGET})
 
 add_dependencies(${TEST_TARGET} ${FK_YAML_TARGET_NAME})
 
-if(${FK_YAML_RUN_CLANG_FORMAT})
-  run_clang_format(${TEST_TARGET} "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-endif()
-
 if(FK_YAML_RUN_VALGRIND)
   find_program(MEMORYCHECK_COMMAND valgrind REQUIRED)
   set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1")
