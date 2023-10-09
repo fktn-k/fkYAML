@@ -121,11 +121,27 @@ struct is_non_bool_integral : std::false_type
  */
 template <typename IntegralType>
 struct is_non_bool_integral<
-    IntegralType,
-    detail::enable_if_t<std::is_integral<IntegralType>::value && !std::is_same<bool, IntegralType>::value>>
+    IntegralType, detail::enable_if_t<detail::conjunction<
+                      std::is_integral<IntegralType>, detail::negation<std::is_same<bool, IntegralType>>>::value>>
     : std::true_type
 {
 };
+
+/**
+ * @brief Type traits to check if Types are all signed arithmetic types.
+ *
+ * @tparam Types Types to check if they are all signed arithmetic types.
+ */
+template <typename... Types>
+using is_all_signed = detail::conjunction<std::is_signed<Types>...>;
+
+/**
+ * @brief Type traits to check if Types are all unsigned arithmetic types.
+ *
+ * @tparam Types Types to check if they are all unsigned arithmetic types.
+ */
+template <typename... Types>
+using is_all_unsigned = detail::conjunction<std::is_unsigned<Types>...>;
 
 /**
  * @brief Type trait implementation to check if TargetIntegerType and CompatibleIntegerType are compatible integer
@@ -150,11 +166,12 @@ struct is_compatible_integer_type_impl : std::false_type
 template <typename TargetIntegerType, typename CompatibleIntegerType>
 struct is_compatible_integer_type_impl<
     TargetIntegerType, CompatibleIntegerType,
-    detail::enable_if_t<
-        std::is_integral<TargetIntegerType>::value && is_non_bool_integral<CompatibleIntegerType>::value &&
-        std::is_constructible<TargetIntegerType, CompatibleIntegerType>::value &&
-        std::numeric_limits<TargetIntegerType>::is_signed == std::numeric_limits<CompatibleIntegerType>::is_signed>>
-    : std::true_type
+    detail::enable_if_t<detail::conjunction<
+        std::is_integral<TargetIntegerType>, is_non_bool_integral<CompatibleIntegerType>,
+        std::is_constructible<TargetIntegerType, CompatibleIntegerType>,
+        detail::disjunction<
+            is_all_signed<TargetIntegerType, CompatibleIntegerType>,
+            is_all_unsigned<TargetIntegerType, CompatibleIntegerType>>>::value>> : std::true_type
 {
 };
 
@@ -356,7 +373,8 @@ struct is_compatible_type_impl : std::false_type
 template <typename BasicNodeType, typename CompatibleType>
 struct is_compatible_type_impl<
     BasicNodeType, CompatibleType,
-    detail::enable_if_t<is_complete_type<CompatibleType>::value && has_to_node<BasicNodeType, CompatibleType>::value>>
+    detail::enable_if_t<
+        detail::conjunction<is_complete_type<CompatibleType>, has_to_node<BasicNodeType, CompatibleType>>::value>>
     : std::true_type
 {
 };

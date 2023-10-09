@@ -142,8 +142,9 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_ty
 template <
     typename BasicNodeType, typename IntegerType,
     enable_if_t<
-        is_non_bool_integral<IntegerType>::value &&
-            !std::is_same<IntegerType, typename BasicNodeType::integer_type>::value,
+        conjunction<
+            is_non_bool_integral<IntegerType>,
+            negation<std::is_same<IntegerType, typename BasicNodeType::integer_type>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, IntegerType& i)
 {
@@ -194,8 +195,9 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_numb
 template <
     typename BasicNodeType, typename FloatType,
     enable_if_t<
-        std::is_floating_point<FloatType>::value &&
-            !std::is_same<FloatType, typename BasicNodeType::float_number_type>::value,
+        conjunction<
+            std::is_floating_point<FloatType>,
+            negation<std::is_same<FloatType, typename BasicNodeType::float_number_type>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, FloatType& f)
 {

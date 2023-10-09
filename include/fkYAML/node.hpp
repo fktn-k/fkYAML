@@ -391,8 +391,10 @@ public:
     template <
         typename CompatibleType, typename U = detail::remove_cvref_t<CompatibleType>,
         detail::enable_if_t<
-            !is_basic_node<U>::value &&
-                (std::is_same<CompatibleType, std::nullptr_t>::value || is_compatible_type<basic_node, U>::value),
+            detail::conjunction<
+                detail::negation<is_basic_node<U>>,
+                detail::disjunction<std::is_same<CompatibleType, std::nullptr_t>, is_compatible_type<basic_node, U>>>::
+                value,
             int> = 0>
     explicit basic_node(CompatibleType&& val) noexcept(
         noexcept(NodeSerializer<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
@@ -980,7 +982,8 @@ public:
     template <
         typename T, typename ValueType = detail::remove_cvref_t<T>,
         detail::enable_if_t<
-            std::is_default_constructible<ValueType>::value && has_from_node<basic_node, ValueType>::value, int> = 0>
+            detail::conjunction<std::is_default_constructible<ValueType>, has_from_node<basic_node, ValueType>>::value,
+            int> = 0>
     T get_value() const noexcept(
         noexcept(NodeSerializer<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
     {

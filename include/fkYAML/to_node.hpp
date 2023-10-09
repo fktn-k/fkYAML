@@ -210,8 +210,9 @@ struct external_node_constructor<node_t::STRING>
 template <
     typename BasicNodeType, typename T,
     enable_if_t<
-        is_basic_node<BasicNodeType>::value &&
-            std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<T>>::value,
+        conjunction<
+            is_basic_node<BasicNodeType>,
+            std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<T>>>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, T&& s) noexcept
 {
@@ -229,8 +230,8 @@ inline void to_node(BasicNodeType& n, T&& s) noexcept
 template <
     typename BasicNodeType, typename T,
     enable_if_t<
-        is_basic_node<BasicNodeType>::value &&
-            std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<T>>::value,
+        conjunction<
+            is_basic_node<BasicNodeType>, std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<T>>>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, T&& m) noexcept
 {
@@ -245,7 +246,7 @@ inline void to_node(BasicNodeType& n, T&& m) noexcept
  */
 template <
     typename BasicNodeType, typename NullType,
-    enable_if_t<is_basic_node<BasicNodeType>::value && std::is_same<NullType, std::nullptr_t>::value, int> = 0>
+    enable_if_t<conjunction<is_basic_node<BasicNodeType>, std::is_same<NullType, std::nullptr_t>>::value, int> = 0>
 inline void to_node(BasicNodeType& n, NullType /*unused*/)
 {
     external_node_constructor<node_t::NULL_OBJECT>::construct(n, nullptr);
@@ -262,7 +263,8 @@ inline void to_node(BasicNodeType& n, NullType /*unused*/)
 template <
     typename BasicNodeType, typename T,
     enable_if_t<
-        is_basic_node<BasicNodeType>::value && std::is_same<typename BasicNodeType::boolean_type, T>::value, int> = 0>
+        conjunction<is_basic_node<BasicNodeType>, std::is_same<typename BasicNodeType::boolean_type, T>>::value, int> =
+        0>
 inline void to_node(BasicNodeType& n, T b) noexcept
 {
     external_node_constructor<node_t::BOOLEAN>::construct(n, b);
@@ -279,8 +281,8 @@ inline void to_node(BasicNodeType& n, T b) noexcept
 template <
     typename BasicNodeType, typename T,
     enable_if_t<
-        is_basic_node<BasicNodeType>::value &&
-            is_compatible_integer_type<typename BasicNodeType::integer_type, T>::value,
+        conjunction<
+            is_basic_node<BasicNodeType>, is_compatible_integer_type<typename BasicNodeType::integer_type, T>>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, T i) noexcept
 {
@@ -297,7 +299,7 @@ inline void to_node(BasicNodeType& n, T i) noexcept
  */
 template <
     typename BasicNodeType, typename T,
-    enable_if_t<is_basic_node<BasicNodeType>::value && std::is_floating_point<T>::value, int> = 0>
+    enable_if_t<conjunction<is_basic_node<BasicNodeType>, std::is_floating_point<T>>::value, int> = 0>
 inline void to_node(BasicNodeType& n, T f) noexcept
 {
     external_node_constructor<node_t::FLOAT_NUMBER>::construct(n, f);
@@ -306,8 +308,8 @@ inline void to_node(BasicNodeType& n, T f) noexcept
 template <
     typename BasicNodeType, typename T,
     enable_if_t<
-        is_basic_node<BasicNodeType>::value &&
-            std::is_same<typename BasicNodeType::string_type, remove_cvref_t<T>>::value,
+        conjunction<
+            is_basic_node<BasicNodeType>, std::is_same<typename BasicNodeType::string_type, remove_cvref_t<T>>>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, T&& s) noexcept
 {
