@@ -1481,7 +1481,7 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
             // TODO: REQUIRE(node.get_value<uint64_t>() == 123);
         }
 
-        SECTION("test for non-boolean values.")
+        SECTION("test for non-integer values.")
         {
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node_sequence_type>(), fkyaml::exception);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node_mapping_type>(), fkyaml::exception);
@@ -1489,6 +1489,24 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node_boolean_type>(), fkyaml::exception);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node_float_number_type>(), fkyaml::exception);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node_string_type>(), fkyaml::exception);
+        }
+
+        SECTION("test for non-integer node value.")
+        {
+            fkyaml::node non_int_node(true);
+            REQUIRE_THROWS_AS(non_int_node.get_value<int32_t>(), fkyaml::exception);
+        }
+
+        SECTION("test underflowable integer type.")
+        {
+            fkyaml::node negative_int_node(std::numeric_limits<fkyaml::node_integer_type>::min());
+            REQUIRE_THROWS_AS(negative_int_node.get_value<int8_t>(), fkyaml::exception);
+        }
+
+        SECTION("test overflowable integer type.")
+        {
+            fkyaml::node large_int_node(std::numeric_limits<fkyaml::node_integer_type>::max());
+            REQUIRE_THROWS_AS(large_int_node.get_value<int8_t>(), fkyaml::exception);
         }
     }
 
@@ -1511,6 +1529,24 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node_boolean_type>(), fkyaml::exception);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node_integer_type>(), fkyaml::exception);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node_string_type>(), fkyaml::exception);
+        }
+
+        SECTION("test for non-float-number node value.")
+        {
+            fkyaml::node non_float_num_node(true);
+            REQUIRE_THROWS_AS(non_float_num_node.get_value<float>(), fkyaml::exception);
+        }
+
+        SECTION("test underflowable float number type.")
+        {
+            fkyaml::node negative_float_node(std::numeric_limits<fkyaml::node_float_number_type>::min());
+            REQUIRE_THROWS_AS(negative_float_node.get_value<float>(), fkyaml::exception);
+        }
+
+        SECTION("test overflowable float number type.")
+        {
+            fkyaml::node large_float_node(std::numeric_limits<fkyaml::node_float_number_type>::max());
+            REQUIRE_THROWS_AS(large_float_node.get_value<float>(), fkyaml::exception);
         }
     }
 
