@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "fkYAML/version_macros.hpp"
+#include "fkYAML/from_node.hpp"
 #include "fkYAML/to_node.hpp"
 
 FK_YAML_NAMESPACE_BEGIN
@@ -31,6 +32,14 @@ template <typename ValueType, typename>
 class adl_serializer
 {
 public:
+    template <typename BasicNodeType, typename TargetType = ValueType>
+    static auto from_node(BasicNodeType&& n, TargetType& val) noexcept(
+        noexcept(::fkyaml::from_node(std::forward<BasicNodeType>(n), val)))
+        -> decltype(::fkyaml::from_node(std::forward<BasicNodeType>(n), val), void())
+    {
+        ::fkyaml::from_node(std::forward<BasicNodeType>(n), val);
+    }
+
     /**
      * @brief Convert compatible native data into a YAML node.
      *

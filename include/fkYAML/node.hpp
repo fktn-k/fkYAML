@@ -977,6 +977,18 @@ public:
         FK_YAML_ASSERT(m_anchor_name != nullptr);
     }
 
+    template <
+        typename T, typename ValueType = detail::remove_cvref_t<T>,
+        detail::enable_if_t<
+            std::is_default_constructible<ValueType>::value && has_from_node<basic_node, ValueType>::value, int> = 0>
+    T get_value() const noexcept(
+        noexcept(NodeSerializer<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
+    {
+        auto ret = ValueType();
+        NodeSerializer<ValueType>::from_node(*this, ret);
+        return ret;
+    }
+
     /**
      * @brief Returns reference to sequence basic_node value from a non-const basic_node object. Throws exception if the
      * basic_node value is not of sequence type.

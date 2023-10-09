@@ -340,14 +340,14 @@ struct to_node_fn
 } // namespace detail
 
 #ifndef FK_YAML_HAS_CXX_17
-// namespace to hold default `to_node` function.
-// see http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4381.html for more details.
+// anonymous namespace to hold `to_node` functor.
+// see http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4381.html for why it's needed.
 namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-namespaces)
 {
 #endif
 
 /**
- * @brief A blobal object to represent ADL friendly to_node function.
+ * @brief A blobal object to represent ADL friendly to_node functor.
  */
 // NOLINTNEXTLINE(misc-definitions-in-headers)
 FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::to_node_fn>::value;

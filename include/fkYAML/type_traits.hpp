@@ -260,16 +260,53 @@ template <typename Expected, template <typename...> class Op, typename... Args>
 using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
 /**
- * @brief A type represent to_node function.
+ * @brief A type represent from_node function.
  *
- * @tparam BasicNodeType A basic_node template instance type.
- * @tparam Args A type passed to to_node function.
+ * @tparam T A type which provides from_node function.
+ * @tparam Args Argument types passed to from_node function.
  */
-template <typename BasicNodeType, typename... Args>
-using to_node_funcion_t = decltype(BasicNodeType::to_node(std::declval<Args>()...));
+template <typename T, typename... Args>
+using from_node_function_t = decltype(T::from_node(std::declval<Args>()...));
 
 /**
- * @brief Type traits to check if T is a compatible type for BasicNodeType.
+ * @brief Type traits to check if T is a compatible type for BasicNodeType in terms of from_node function.
+ *
+ * @tparam BasicNodeType A basic_node template instance type.
+ * @tparam T A target type passed to from_node function.
+ * @tparam typename N/A
+ */
+template <typename BasicNodeType, typename T, typename = void>
+struct has_from_node : std::false_type
+{
+};
+
+/**
+ * @brief A partial specialization of has_from_node if T is not a basic_node template instance type.
+ *
+ * @tparam BasicNodeType A basic_node template instance type.
+ * @tparam T A target type passed to from_node function.
+ */
+template <typename BasicNodeType, typename T>
+struct has_from_node<BasicNodeType, T, detail::enable_if_t<!is_basic_node<T>::value>>
+{
+    using serializer = typename BasicNodeType::template node_serializer<T, void>;
+
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    static constexpr bool value =
+        is_detected_exact<void, from_node_function_t, serializer, const BasicNodeType&, T&>::value;
+};
+
+/**
+ * @brief A type represent to_node function.
+ *
+ * @tparam T A type which provides to_node function.
+ * @tparam Args Argument types passed to to_node function.
+ */
+template <typename T, typename... Args>
+using to_node_funcion_t = decltype(T::to_node(std::declval<Args>()...));
+
+/**
+ * @brief Type traits to check if T is a compatible type for BasicNodeType in terms of to_node function.
  * @warning Do not pass basic_node type as BasicNodeType to avoid infinite type instantiation.
  *
  * @tparam BasicNodeType A basic_node template instance type.
@@ -282,7 +319,7 @@ struct has_to_node : std::false_type
 };
 
 /**
- * @brief A partial specialization of has_to_node if BasicNodeType is a basic_node template instance type.
+ * @brief A partial specialization of has_to_node if T is not a basic_node template instance type.
  *
  * @tparam BasicNodeType A basic_node template instance type.
  * @tparam T A target type passed to to_node function.
