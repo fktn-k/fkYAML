@@ -10,14 +10,14 @@
  * @file
  */
 
-#ifndef FK_YAML_NODE_TYPE_TRAITS_HPP_
-#define FK_YAML_NODE_TYPE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_TYPE_TRAITS_HPP_
+#define FK_YAML_DETAIL_TYPE_TRAITS_HPP_
 
 #include <limits>
 #include <type_traits>
 
-#include "fkYAML/version_macros.hpp"
-#include "fkYAML/stl_supplement.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/stl_supplement.hpp"
 
 /**
  * @namespace fkyaml
@@ -25,12 +25,19 @@
  */
 FK_YAML_NAMESPACE_BEGIN
 
-// forward declaration for fkyaml::basic_node<...>
+// forward declaration for basic_node<...>
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
     template <typename, typename> class Converter>
 class basic_node;
+
+/**
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
 
 /**
  * @struct is_basic_node
@@ -87,7 +94,7 @@ struct is_comparable : std::false_type
 template <typename Comparator, typename T, typename U>
 struct is_comparable<
     Comparator, T, U,
-    detail::void_t<
+    void_t<
         decltype(std::declval<Comparator>()(std::declval<T>(), std::declval<U>())),
         decltype(std::declval<Comparator>()(std::declval<U>(), std::declval<T>()))>> : std::true_type
 {
@@ -122,8 +129,8 @@ struct is_non_bool_integral : std::false_type
  */
 template <typename IntegralType>
 struct is_non_bool_integral<
-    IntegralType, detail::enable_if_t<detail::conjunction<
-                      std::is_integral<IntegralType>, detail::negation<std::is_same<bool, IntegralType>>>::value>>
+    IntegralType, enable_if_t<conjunction<
+                      std::is_integral<IntegralType>, negation<std::is_same<bool, IntegralType>>>::value>>
     : std::true_type
 {
 };
@@ -134,7 +141,7 @@ struct is_non_bool_integral<
  * @tparam Types Types to check if they are all signed arithmetic types.
  */
 template <typename... Types>
-using is_all_signed = detail::conjunction<std::is_signed<Types>...>;
+using is_all_signed = conjunction<std::is_signed<Types>...>;
 
 /**
  * @brief Type traits to check if Types are all unsigned arithmetic types.
@@ -142,7 +149,7 @@ using is_all_signed = detail::conjunction<std::is_signed<Types>...>;
  * @tparam Types Types to check if they are all unsigned arithmetic types.
  */
 template <typename... Types>
-using is_all_unsigned = detail::conjunction<std::is_unsigned<Types>...>;
+using is_all_unsigned = conjunction<std::is_unsigned<Types>...>;
 
 /**
  * @brief Type trait implementation to check if TargetIntegerType and CompatibleIntegerType are compatible integer
@@ -167,10 +174,10 @@ struct is_compatible_integer_type_impl : std::false_type
 template <typename TargetIntegerType, typename CompatibleIntegerType>
 struct is_compatible_integer_type_impl<
     TargetIntegerType, CompatibleIntegerType,
-    detail::enable_if_t<detail::conjunction<
+    enable_if_t<conjunction<
         std::is_integral<TargetIntegerType>, is_non_bool_integral<CompatibleIntegerType>,
         std::is_constructible<TargetIntegerType, CompatibleIntegerType>,
-        detail::disjunction<
+        disjunction<
             is_all_signed<TargetIntegerType, CompatibleIntegerType>,
             is_all_unsigned<TargetIntegerType, CompatibleIntegerType>>>::value>> : std::true_type
 {
@@ -244,7 +251,7 @@ struct detect_helper : std::false_type
  * @tparam Args Argument types passed to desired operation.
  */
 template <typename Default, template <typename...> class Op, typename... Args>
-struct detect_helper<Default, detail::void_t<Op<Args...>>, Op, Args...> : std::true_type
+struct detect_helper<Default, void_t<Op<Args...>>, Op, Args...> : std::true_type
 {
     using type = Op<Args...>;
 };
@@ -305,7 +312,7 @@ struct has_from_node : std::false_type
  * @tparam T A target type passed to from_node function.
  */
 template <typename BasicNodeType, typename T>
-struct has_from_node<BasicNodeType, T, detail::enable_if_t<!is_basic_node<T>::value>>
+struct has_from_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
 {
     using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
@@ -343,7 +350,7 @@ struct has_to_node : std::false_type
  * @tparam T A target type passed to to_node function.
  */
 template <typename BasicNodeType, typename T>
-struct has_to_node<BasicNodeType, T, detail::enable_if_t<!is_basic_node<T>::value>>
+struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
 {
     using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
@@ -374,8 +381,8 @@ struct is_compatible_type_impl : std::false_type
 template <typename BasicNodeType, typename CompatibleType>
 struct is_compatible_type_impl<
     BasicNodeType, CompatibleType,
-    detail::enable_if_t<
-        detail::conjunction<is_complete_type<CompatibleType>, has_to_node<BasicNodeType, CompatibleType>>::value>>
+    enable_if_t<
+        conjunction<is_complete_type<CompatibleType>, has_to_node<BasicNodeType, CompatibleType>>::value>>
     : std::true_type
 {
 };
@@ -390,13 +397,6 @@ template <typename BasicNodeType, typename CompatibleType>
 struct is_compatible_type : is_compatible_type_impl<BasicNodeType, CompatibleType>
 {
 };
-
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
-namespace detail
-{
 
 /**
  * @brief A utility struct to generate static constant instance.
@@ -424,4 +424,4 @@ constexpr T static_const<T>::value;
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_TYPE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPE_TRAITS_HPP_ */

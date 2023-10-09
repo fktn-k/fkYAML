@@ -611,13 +611,13 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize("%YAML 1.1\nfoo: one"));
 
-        REQUIRE(root.get_yaml_version() == fkyaml::yaml_version_t::VER_1_1);
+        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["foo"]);
         fkyaml::node& foo_node = root["foo"];
-        REQUIRE(root.get_yaml_version() == fkyaml::yaml_version_t::VER_1_1);
+        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
         REQUIRE(foo_node.is_string());
         REQUIRE_NOTHROW(foo_node.to_string());
         REQUIRE(foo_node.to_string().compare("one") == 0);
@@ -627,13 +627,13 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize("%YAML 1.2\nfoo: one"));
 
-        REQUIRE(root.get_yaml_version() == fkyaml::yaml_version_t::VER_1_2);
+        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
 
         REQUIRE_NOTHROW(root["foo"]);
         fkyaml::node& foo_node = root["foo"];
-        REQUIRE(root.get_yaml_version() == fkyaml::yaml_version_t::VER_1_2);
+        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
         REQUIRE(foo_node.is_string());
         REQUIRE_NOTHROW(foo_node.to_string());
         REQUIRE(foo_node.to_string().compare("one") == 0);

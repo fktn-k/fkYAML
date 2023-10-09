@@ -10,14 +10,14 @@
  * @file
  */
 
-#ifndef FK_YAML_TO_NODE_HPP_
-#define FK_YAML_TO_NODE_HPP_
+#ifndef FK_YAML_DETAIL_TO_NODE_HPP_
+#define FK_YAML_DETAIL_TO_NODE_HPP_
 
 #include <utility>
 
-#include "fkYAML/version_macros.hpp"
-#include "fkYAML/node_t.hpp"
-#include "fkYAML/type_traits.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/node_t.hpp"
+#include "fkYAML/detail/type_traits.hpp"
 
 /**
  * @namespace fkyaml
@@ -44,9 +44,9 @@ namespace detail
  * @warning All the specialization must call n.m_node_value.destroy(n.m_node_type) first in construct function to avoid
  * memory leak.
  *
- * @tparam fkyaml::node_t The resulting YAMK node value type.
+ * @tparam node_t The resulting YAMK node value type.
  */
-template <fkyaml::node_t>
+template <node_t>
 struct external_node_constructor;
 
 /**
@@ -360,4 +360,4 @@ FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_TO_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_TO_NODE_HPP_ */

@@ -10,18 +10,25 @@
  * @file
  */
 
-#ifndef FK_YAML_NODE_TYPE_HPP_
-#define FK_YAML_NODE_TYPE_HPP_
+#ifndef FK_YAML_DETAIL_NODE_T_HPP_
+#define FK_YAML_DETAIL_NODE_T_HPP_
 
 #include <cstdint>
 
-#include "fkYAML/version_macros.hpp"
+#include "fkYAML/detail/version_macros.hpp"
 
 /**
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
  */
 FK_YAML_NAMESPACE_BEGIN
+
+/**
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
 
 /**
  * @enum node_t
@@ -38,6 +45,8 @@ enum class node_t : std::uint32_t
     STRING,       //!< string value type
 };
 
+} // namespace detail
+
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_TYPE_HPP_ */
+#endif /* FK_YAML_DETAIL_NODE_T_HPP_ */

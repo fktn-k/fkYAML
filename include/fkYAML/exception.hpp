@@ -16,7 +16,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "fkYAML/version_macros.hpp"
+#include "fkYAML/detail/version_macros.hpp"
 
 /**
  * @namespace fkyaml

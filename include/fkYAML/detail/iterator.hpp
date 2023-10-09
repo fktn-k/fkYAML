@@ -10,21 +10,28 @@
  * @file
  */
 
-#ifndef FK_YAML_ITERATOR_HPP_
-#define FK_YAML_ITERATOR_HPP_
+#ifndef FK_YAML_DETAIL_ITERATOR_HPP_
+#define FK_YAML_DETAIL_ITERATOR_HPP_
 
 #include <cstddef>
 #include <iterator>
 
-#include "fkYAML/version_macros.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/type_traits.hpp"
 #include "fkYAML/exception.hpp"
-#include "fkYAML/type_traits.hpp"
 
 /**
  * @namespace fkyaml
  * @brief namespace for fkYAML library.
  */
 FK_YAML_NAMESPACE_BEGIN
+
+/**
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
 
 /**
  * @struct sequence_iterator_tag
@@ -123,7 +130,7 @@ private:
     /** A type of non-const version of iterated elements. */
     using NonConstValueType = typename std::remove_const<ValueType>::type;
 
-    static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts (const) BasicNode<...>");
+    static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts basic_node<...>");
 
     /**
      * @struct iterator_holder
@@ -568,6 +575,8 @@ private:
     mutable iterator_holder m_iterator_holder;
 };
 
+} // namespace detail
+
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_ITERATOR_HPP_ */
+#endif /* FK_YAML_DETAIL_ITERATOR_HPP_ */

@@ -20,16 +20,16 @@
 #include <type_traits>
 #include <vector>
 
-#include "fkYAML/version_macros.hpp"
-#include "fkYAML/assert.hpp"
+#include "fkYAML/detail/version_macros.hpp"
+#include "fkYAML/detail/assert.hpp"
+#include "fkYAML/detail/iterator.hpp"
+#include "fkYAML/detail/node_t.hpp"
+#include "fkYAML/detail/stl_supplement.hpp"
+#include "fkYAML/detail/type_traits.hpp"
+#include "fkYAML/detail/yaml_version_t.hpp"
 #include "fkYAML/exception.hpp"
-#include "fkYAML/iterator.hpp"
-#include "fkYAML/node_t.hpp"
 #include "fkYAML/node_value_converter.hpp"
 #include "fkYAML/ordered_map.hpp"
-#include "fkYAML/stl_supplement.hpp"
-#include "fkYAML/type_traits.hpp"
-#include "fkYAML/yaml_version_t.hpp"
 
 /**
  * @namespace fkyaml
@@ -56,14 +56,11 @@ template <
     template <typename, typename = void> class Converter = node_value_converter>
 class basic_node
 {
-    template <fkyaml::node_t>
-    friend struct fkyaml::detail::external_node_constructor;
-
 public:
     /** A type for constant iterators of basic_node containers. */
-    using const_iterator = fkyaml::iterator<const basic_node>;
+    using const_iterator = fkyaml::detail::iterator<const basic_node>;
     /** A type for iterators of basic_node containers. */
-    using iterator = fkyaml::iterator<basic_node>;
+    using iterator = fkyaml::detail::iterator<basic_node>;
 
     /** A type for sequence basic_node values. */
     using sequence_type = SequenceType<basic_node, std::allocator<basic_node>>;
@@ -87,7 +84,13 @@ public:
     template <typename T, typename SFINAE>
     using value_converter_type = Converter<T, SFINAE>;
 
+    using node_t = detail::node_t;
+    using yaml_version_t = detail::yaml_version_t;
+
 private:
+    template <node_t>
+    friend struct fkyaml::detail::external_node_constructor;
+
     /**
      * @union node_value
      * @brief The actual storage for a YAML node value of the @ref basic_node class.
@@ -398,9 +401,9 @@ public:
         typename CompatibleType, typename U = detail::remove_cvref_t<CompatibleType>,
         detail::enable_if_t<
             detail::conjunction<
-                detail::negation<is_basic_node<U>>,
-                detail::disjunction<std::is_same<CompatibleType, std::nullptr_t>, is_compatible_type<basic_node, U>>>::
-                value,
+                detail::negation<detail::is_basic_node<U>>,
+                detail::disjunction<
+                    std::is_same<CompatibleType, std::nullptr_t>, detail::is_compatible_type<basic_node, U>>>::value,
             int> = 0>
     explicit basic_node(CompatibleType&& val) noexcept(
         noexcept(Converter<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
@@ -685,10 +688,10 @@ public:
      * @return basic_node& Reference to a basic_node object associated with the given key.
      */
     template <
-        typename KeyType,
-        detail::enable_if_t<
-            is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
-            int> = 0>
+        typename KeyType, detail::enable_if_t<
+                              detail::is_usable_as_key_type<
+                                  typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+                              int> = 0>
     basic_node& operator[](KeyType&& key) // NOLINT(readability-make-member-function-const)
     {
         if (!is_mapping())
@@ -708,10 +711,10 @@ public:
      * @return const basic_node& Constant reference to a basic_node object associated with the given key.
      */
     template <
-        typename KeyType,
-        detail::enable_if_t<
-            is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
-            int> = 0>
+        typename KeyType, detail::enable_if_t<
+                              detail::is_usable_as_key_type<
+                                  typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+                              int> = 0>
     const basic_node& operator[](KeyType&& key) const
     {
         if (!is_mapping())
@@ -894,10 +897,10 @@ public:
      * @return false If this basic_node object does not have a given key.
      */
     template <
-        typename KeyType,
-        detail::enable_if_t<
-            is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
-            int> = 0>
+        typename KeyType, detail::enable_if_t<
+                              detail::is_usable_as_key_type<
+                                  typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+                              int> = 0>
     bool contains(KeyType&& key) const
     {
         switch (m_node_type)
@@ -996,7 +999,8 @@ public:
     template <
         typename T, typename ValueType = detail::remove_cvref_t<T>,
         detail::enable_if_t<
-            detail::conjunction<std::is_default_constructible<ValueType>, has_from_node<basic_node, ValueType>>::value,
+            detail::conjunction<
+                std::is_default_constructible<ValueType>, detail::has_from_node<basic_node, ValueType>>::value,
             int> = 0>
     T get_value() const noexcept(
         noexcept(Converter<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
@@ -1235,10 +1239,10 @@ public:
         {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
-            return {fkyaml::sequence_iterator_tag(), m_node_value.p_sequence->begin()};
+            return {detail::sequence_iterator_tag(), m_node_value.p_sequence->begin()};
         case node_t::MAPPING:
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
-            return {fkyaml::mapping_iterator_tag(), m_node_value.p_mapping->begin()};
+            return {detail::mapping_iterator_tag(), m_node_value.p_mapping->begin()};
         default:
             throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
         }
@@ -1256,10 +1260,10 @@ public:
         {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
-            return {fkyaml::sequence_iterator_tag(), m_node_value.p_sequence->begin()};
+            return {detail::sequence_iterator_tag(), m_node_value.p_sequence->begin()};
         case node_t::MAPPING:
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
-            return {fkyaml::mapping_iterator_tag(), m_node_value.p_mapping->begin()};
+            return {detail::mapping_iterator_tag(), m_node_value.p_mapping->begin()};
         default:
             throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
         }
@@ -1277,10 +1281,10 @@ public:
         {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
-            return {fkyaml::sequence_iterator_tag(), m_node_value.p_sequence->end()};
+            return {detail::sequence_iterator_tag(), m_node_value.p_sequence->end()};
         case node_t::MAPPING:
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
-            return {fkyaml::mapping_iterator_tag(), m_node_value.p_mapping->end()};
+            return {detail::mapping_iterator_tag(), m_node_value.p_mapping->end()};
         default:
             throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
         }
@@ -1298,10 +1302,10 @@ public:
         {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
-            return {fkyaml::sequence_iterator_tag(), m_node_value.p_sequence->end()};
+            return {detail::sequence_iterator_tag(), m_node_value.p_sequence->end()};
         case node_t::MAPPING:
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
-            return {fkyaml::mapping_iterator_tag(), m_node_value.p_mapping->end()};
+            return {detail::mapping_iterator_tag(), m_node_value.p_mapping->end()};
         default:
             throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
         }

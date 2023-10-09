@@ -10,12 +10,12 @@
  * @file
  */
 
-#ifndef FK_YAML_STL_SUPPLEMENT_HPP_
-#define FK_YAML_STL_SUPPLEMENT_HPP_
+#ifndef FK_YAML_DETAIL_STL_SUPPLEMENT_HPP_
+#define FK_YAML_DETAIL_STL_SUPPLEMENT_HPP_
 
 #include <type_traits>
 
-#include "fkYAML/version_macros.hpp"
+#include "fkYAML/detail/version_macros.hpp"
 
 /**
  * @namespace fkyaml
@@ -194,4 +194,4 @@ using std::remove_cvref_t;
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_STL_SUPPLEMENT_HPP_ */
+#endif /* FK_YAML_DETAIL_STL_SUPPLEMENT_HPP_ */
