@@ -32,6 +32,15 @@ template <typename ValueType, typename>
 class adl_serializer
 {
 public:
+    /**
+     * @brief Convert a YAML node value into compatible native data.
+     *
+     * @tparam BasicNodeType A basic_node template instance type.
+     * @tparam TargetType A native data type for conversion.
+     * @param n A basic_node object.
+     * @param val A native data object.
+     * @return decltype(::fkyaml::from_node(std::forward<BasicNodeType>(n), val), void())
+     */
     template <typename BasicNodeType, typename TargetType = ValueType>
     static auto from_node(BasicNodeType&& n, TargetType& val) noexcept(
         noexcept(::fkyaml::from_node(std::forward<BasicNodeType>(n), val)))

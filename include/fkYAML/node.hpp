@@ -979,6 +979,14 @@ public:
         FK_YAML_ASSERT(m_anchor_name != nullptr);
     }
 
+    /**
+     * @brief Get the node value object converted into a given type.
+     * @note This function requires T objects to be default constructible.
+     *
+     * @tparam T A native data type for conversion.
+     * @tparam ValueType T without cv qualifiers and reference.
+     * @return T A native data converted from the node value.
+     */
     template <
         typename T, typename ValueType = detail::remove_cvref_t<T>,
         detail::enable_if_t<
