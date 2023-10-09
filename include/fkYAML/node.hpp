@@ -25,7 +25,9 @@
 #include "fkYAML/exception.hpp"
 #include "fkYAML/iterator.hpp"
 #include "fkYAML/node_t.hpp"
+#include "fkYAML/node_value_converter.hpp"
 #include "fkYAML/ordered_map.hpp"
+#include "fkYAML/stl_supplement.hpp"
 #include "fkYAML/type_traits.hpp"
 #include "fkYAML/yaml_version_t.hpp"
 
@@ -45,13 +47,18 @@ FK_YAML_NAMESPACE_BEGIN
  * @tparam IntegerType A type for integer node values.
  * @tparam FloatNumberType A type for float number node values.
  * @tparam StringType A type for string node values.
+ * @tparam Converter A type for node value converter.
  */
 template <
     template <typename, typename...> class SequenceType = std::vector,
     template <typename, typename, typename...> class MappingType = ordered_map, typename BooleanType = bool,
-    typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string>
+    typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
+    template <typename, typename = void> class Converter = node_value_converter>
 class basic_node
 {
+    template <fkyaml::node_t>
+    friend struct fkyaml::detail::external_node_constructor;
+
 public:
     /** A type for constant iterators of basic_node containers. */
     using const_iterator = fkyaml::iterator<const basic_node>;
@@ -70,6 +77,15 @@ public:
     using float_number_type = FloatNumberType;
     /** A type for string basic_node values. */
     using string_type = StringType;
+
+    /**
+     * @brief A helper alias to determine converter type for the given target native data type.
+     *
+     * @tparam T A target native data type.
+     * @tparam SFINAE A type placeholder for SFINAE
+     */
+    template <typename T, typename SFINAE>
+    using value_converter_type = Converter<T, SFINAE>;
 
 private:
     /**
@@ -378,6 +394,24 @@ public:
         rhs.m_anchor_name = nullptr;
     }
 
+    template <
+        typename CompatibleType, typename U = detail::remove_cvref_t<CompatibleType>,
+        detail::enable_if_t<
+            detail::conjunction<
+                detail::negation<is_basic_node<U>>,
+                detail::disjunction<std::is_same<CompatibleType, std::nullptr_t>, is_compatible_type<basic_node, U>>>::
+                value,
+            int> = 0>
+    explicit basic_node(CompatibleType&& val) noexcept(
+        noexcept(Converter<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
+        : m_node_type(node_t::NULL_OBJECT),
+          m_yaml_version_type(yaml_version_t::VER_1_2),
+          m_node_value(),
+          m_anchor_name(nullptr)
+    {
+        Converter<U>::to_node(*this, std::forward<CompatibleType>(val));
+    }
+
     /**
      * @brief Destroy the basic_node object and its value storage.
      */
@@ -652,7 +686,7 @@ public:
      */
     template <
         typename KeyType,
-        fkyaml::enable_if_t<
+        detail::enable_if_t<
             is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
             int> = 0>
     basic_node& operator[](KeyType&& key) // NOLINT(readability-make-member-function-const)
@@ -675,7 +709,7 @@ public:
      */
     template <
         typename KeyType,
-        fkyaml::enable_if_t<
+        detail::enable_if_t<
             is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
             int> = 0>
     const basic_node& operator[](KeyType&& key) const
@@ -861,7 +895,7 @@ public:
      */
     template <
         typename KeyType,
-        fkyaml::enable_if_t<
+        detail::enable_if_t<
             is_usable_as_key_type<typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
             int> = 0>
     bool contains(KeyType&& key) const
@@ -949,6 +983,27 @@ public:
         destroy_object<std::string>(m_anchor_name);
         m_anchor_name = create_object<std::string>(std::move(anchor_name));
         FK_YAML_ASSERT(m_anchor_name != nullptr);
+    }
+
+    /**
+     * @brief Get the node value object converted into a given type.
+     * @note This function requires T objects to be default constructible.
+     *
+     * @tparam T A native data type for conversion.
+     * @tparam ValueType T without cv qualifiers and reference.
+     * @return T A native data converted from the node value.
+     */
+    template <
+        typename T, typename ValueType = detail::remove_cvref_t<T>,
+        detail::enable_if_t<
+            detail::conjunction<std::is_default_constructible<ValueType>, has_from_node<basic_node, ValueType>>::value,
+            int> = 0>
+    T get_value() const noexcept(
+        noexcept(Converter<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
+    {
+        auto ret = ValueType();
+        Converter<ValueType>::from_node(*this, ret);
+        return ret;
     }
 
     /**

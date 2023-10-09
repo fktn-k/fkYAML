@@ -6,6 +6,8 @@
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
+#include <cmath>
+#include <cfloat>
 #include <map>
 
 #include "catch2/catch.hpp"
@@ -82,6 +84,69 @@ TEST_CASE("NodeClassTest_ThrowingSpecializationTypeCtorTest", "[NodeClassTest]")
 
     using NodeType = fkyaml::basic_node<std::vector, std::map, bool, int64_t, double, String>;
     REQUIRE_THROWS_AS(NodeType::string_scalar(), fkyaml::exception);
+}
+
+TEST_CASE("NodeClassTest_SequenceCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(fkyaml::node_sequence_type {fkyaml::node {true}, fkyaml::node {false}});
+    REQUIRE(node.type() == fkyaml::node_t::SEQUENCE);
+    REQUIRE(node.is_sequence());
+    REQUIRE(node.size() == 2);
+    REQUIRE(node[0].is_boolean());
+    REQUIRE(node[0].to_boolean() == true);
+    REQUIRE(node[1].is_boolean());
+    REQUIRE(node[1].to_boolean() == false);
+}
+
+TEST_CASE("NodeClassTest_MappingCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(fkyaml::node_mapping_type {{"test", fkyaml::node {true}}});
+    REQUIRE(node.type() == fkyaml::node_t::MAPPING);
+    REQUIRE(node.is_mapping());
+    REQUIRE(node.size() == 1);
+    REQUIRE(node.contains("test"));
+    REQUIRE(node["test"].is_boolean());
+    REQUIRE(node["test"].to_boolean() == true);
+}
+
+TEST_CASE("NodeClassTest_NullCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(nullptr);
+    REQUIRE(node.type() == fkyaml::node_t::NULL_OBJECT);
+    REQUIRE(node.is_null());
+}
+
+TEST_CASE("NodeClassTest_BooleanCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(true);
+    REQUIRE(node.type() == fkyaml::node_t::BOOLEAN);
+    REQUIRE(node.is_boolean());
+    REQUIRE(node.to_boolean() == true);
+}
+
+TEST_CASE("NodeClassTest_IntegerCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(23467);
+    REQUIRE(node.type() == fkyaml::node_t::INTEGER);
+    REQUIRE(node.is_integer());
+    REQUIRE(node.to_integer() == 23467);
+}
+
+TEST_CASE("NodeClassTest_FloatNumberCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node(3.14);
+    REQUIRE(node.type() == fkyaml::node_t::FLOAT_NUMBER);
+    REQUIRE(node.is_float_number());
+    REQUIRE(node.to_float_number() == 3.14);
+}
+
+TEST_CASE("NodeClassTest_StringCtorTest", "[NodeClassTest]")
+{
+    auto node = GENERATE(fkyaml::node(fkyaml::node_string_type("test")));
+    REQUIRE(node.type() == fkyaml::node_t::STRING);
+    REQUIRE(node.is_string());
+    REQUIRE(node.size() == 4);
+    REQUIRE(node.to_string() == "test");
 }
 
 TEST_CASE("NodeClassTest_SequenceCopyCtorTest", "[NodeClassTest]")
@@ -1301,10 +1366,218 @@ TEST_CASE("NodeClassTest_add_anchor_nameTest", "[NodeClassTest]")
 }
 
 //
+// test cases for value getters (copy)
+//
+
+TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
+{
+    SECTION("test sequence node value.")
+    {
+        fkyaml::node node(fkyaml::node_sequence_type {fkyaml::node(true), fkyaml::node(false)});
+
+        SECTION("test for sequence value.")
+        {
+            auto seq = node.get_value<fkyaml::node_sequence_type>();
+            REQUIRE(seq.size() == 2);
+            REQUIRE(seq[0].is_boolean());
+            REQUIRE(seq[0].get_value<bool>() == true);
+            REQUIRE(seq[1].is_boolean());
+            REQUIRE(seq[1].get_value<bool>() == false);
+        }
+
+        SECTION("test for non-sequence value.")
+        {
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_mapping_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<std::nullptr_t>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_boolean_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_integer_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_float_number_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_string_type>(), fkyaml::exception);
+        }
+    }
+
+    SECTION("test mapping node value.")
+    {
+        fkyaml::node node(
+            fkyaml::node_mapping_type {{"test", fkyaml::node(3.14)}, {"foo", fkyaml::node(std::string("bar"))}});
+
+        SECTION("test for mapping value.")
+        {
+            auto map = node.get_value<fkyaml::node_mapping_type>();
+            REQUIRE(map.size() == 2);
+            REQUIRE(map.find("test") != map.end());
+            REQUIRE(map.at("test").is_float_number());
+            REQUIRE(map.at("test").get_value<double>() == 3.14);
+            REQUIRE(map.find("foo") != map.end());
+            REQUIRE(map.at("foo").is_string());
+            REQUIRE(map.at("foo").get_value<std::string>() == "bar");
+        }
+
+        SECTION("test for non-mapping values.")
+        {
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_sequence_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<std::nullptr_t>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_boolean_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_integer_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_float_number_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_string_type>(), fkyaml::exception);
+        }
+    }
+
+    SECTION("test null node value.")
+    {
+        fkyaml::node node(nullptr);
+
+        SECTION("test for null value.")
+        {
+            auto null = node.get_value<std::nullptr_t>();
+            REQUIRE(null == nullptr);
+        }
+
+        SECTION("test for non-null values.")
+        {
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_sequence_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_mapping_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_boolean_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_integer_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_float_number_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_string_type>(), fkyaml::exception);
+        }
+    }
+
+    SECTION("test boolean node value.")
+    {
+        fkyaml::node node(true);
+
+        SECTION("test for boolean value.")
+        {
+            REQUIRE(node.get_value<bool>() == true);
+        }
+
+        SECTION("test for non-boolean values.")
+        {
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_sequence_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_mapping_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<std::nullptr_t>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_integer_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_float_number_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_string_type>(), fkyaml::exception);
+        }
+    }
+
+    SECTION("test integer node value.")
+    {
+        fkyaml::node node(123);
+
+        SECTION("test for integer values.")
+        {
+            REQUIRE(node.get_value<int8_t>() == 123);
+            REQUIRE(node.get_value<int16_t>() == 123);
+            REQUIRE(node.get_value<int32_t>() == 123);
+            REQUIRE(node.get_value<int64_t>() == 123);
+            REQUIRE(node.get_value<uint8_t>() == 123);
+            REQUIRE(node.get_value<uint16_t>() == 123);
+            REQUIRE(node.get_value<uint32_t>() == 123);
+            // TODO: REQUIRE(node.get_value<uint64_t>() == 123);
+        }
+
+        SECTION("test for non-integer values.")
+        {
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_sequence_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_mapping_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<std::nullptr_t>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_boolean_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_float_number_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_string_type>(), fkyaml::exception);
+        }
+
+        SECTION("test for non-integer node value.")
+        {
+            fkyaml::node non_int_node(true);
+            REQUIRE_THROWS_AS(non_int_node.get_value<int32_t>(), fkyaml::exception);
+        }
+
+        SECTION("test underflowable integer type.")
+        {
+            fkyaml::node negative_int_node(std::numeric_limits<fkyaml::node_integer_type>::min());
+            REQUIRE_THROWS_AS(negative_int_node.get_value<int8_t>(), fkyaml::exception);
+        }
+
+        SECTION("test overflowable integer type.")
+        {
+            fkyaml::node large_int_node(std::numeric_limits<fkyaml::node_integer_type>::max());
+            REQUIRE_THROWS_AS(large_int_node.get_value<int8_t>(), fkyaml::exception);
+        }
+    }
+
+    SECTION("test float number node value.")
+    {
+        fkyaml::node node(3.14);
+
+        SECTION("test for float number values.")
+        {
+            REQUIRE(fabsf(node.get_value<float>() - 3.14) < FLT_EPSILON);
+            REQUIRE(fabsf(node.get_value<double>() - 3.14) < DBL_EPSILON);
+            REQUIRE(fabsf(node.get_value<long double>() - 3.14) < LDBL_EPSILON);
+        }
+
+        SECTION("test for non-float-number values.")
+        {
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_sequence_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_mapping_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<std::nullptr_t>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_boolean_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_integer_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_string_type>(), fkyaml::exception);
+        }
+
+        SECTION("test for non-float-number node value.")
+        {
+            fkyaml::node non_float_num_node(true);
+            REQUIRE_THROWS_AS(non_float_num_node.get_value<float>(), fkyaml::exception);
+        }
+
+        SECTION("test underflowable float number type.")
+        {
+            fkyaml::node negative_float_node(std::numeric_limits<fkyaml::node_float_number_type>::min());
+            REQUIRE_THROWS_AS(negative_float_node.get_value<float>(), fkyaml::exception);
+        }
+
+        SECTION("test overflowable float number type.")
+        {
+            fkyaml::node large_float_node(std::numeric_limits<fkyaml::node_float_number_type>::max());
+            REQUIRE_THROWS_AS(large_float_node.get_value<float>(), fkyaml::exception);
+        }
+    }
+
+    SECTION("test string node value.")
+    {
+        fkyaml::node node(std::string("test"));
+
+        SECTION("test for string value.")
+        {
+            auto str = node.get_value<std::string>();
+            REQUIRE(str.size() == 4);
+            REQUIRE(str == "test");
+        }
+
+        SECTION("test for non-string values.")
+        {
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_sequence_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_mapping_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<std::nullptr_t>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_boolean_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_integer_type>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<fkyaml::node_float_number_type>(), fkyaml::exception);
+        }
+    }
+}
+
+//
 // test cases for value reference getters
 //
 
-TEST_CASE("NodeClassTest_to_sequenceTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_ToSequenceTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
@@ -1479,7 +1752,7 @@ TEST_CASE("NodeClassTest_ToMappingTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_to_booleanTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_ToBooleanTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
@@ -1700,7 +1973,7 @@ TEST_CASE("NodeClassTest_ToFloatNumberTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_to_stringTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_ToStringTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {

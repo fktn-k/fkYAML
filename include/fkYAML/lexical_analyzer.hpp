@@ -143,7 +143,7 @@ public:
         switch (current)
         {
         case '\0':
-        case s_EOF: // end of input buffer
+        case eof(): // end of input buffer
             return lexical_token_t::END_OF_BUFFER;
         case ':': // key separater
             switch (get_next_char())
@@ -443,6 +443,11 @@ public:
     }
 
 private:
+    static constexpr char_int_type eof() noexcept
+    {
+        return char_traits_type::eof();
+    }
+
     /**
      * @brief A utility function to convert a hexadecimal character to an integer.
      *
@@ -948,7 +953,7 @@ private:
             }
 
             // Handle the end of input buffer.
-            if (current == '\0' || current == s_EOF)
+            if (current == '\0' || current == eof())
             {
                 if (needs_last_double_quote)
                 {
@@ -1258,9 +1263,6 @@ private:
     }
 
 private:
-    //!< The value of EOF.
-    static constexpr char_int_type s_EOF = char_traits_type::eof();
-
     //!< An input buffer to be analyzed.
     string_type m_input_buffer {};
     //!< The information set for the input buffer.
