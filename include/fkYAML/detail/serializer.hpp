@@ -21,16 +21,22 @@
 #include "fkYAML/detail/node_t.hpp"
 #include "fkYAML/detail/type_traits.hpp"
 #include "fkYAML/exception.hpp"
-#include "fkYAML/node.hpp"
 
 FK_YAML_NAMESPACE_BEGIN
+
+/**
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
 
 /**
  * @brief A basic implementation of serialization feature for YAML nodes.
  *
  * @tparam BasicNodeType A BasicNode template class instantiation.
  */
-template <typename BasicNodeType = node>
+template <typename BasicNodeType>
 class basic_serializer
 {
     static_assert(detail::is_basic_node<BasicNodeType>::value, "basic_serializer only accepts basic_node<...>");
@@ -179,10 +185,7 @@ private:
     }
 };
 
-/**
- * @brief default YAML node serializer.
- */
-using serializer = basic_serializer<>;
+} // namespace detail
 
 FK_YAML_NAMESPACE_END
 

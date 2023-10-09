@@ -7,21 +7,21 @@
 // SPDX-License-Identifier: MIT
 
 #include "fkYAML/detail/assert.hpp"
+#include "fkYAML/detail/deserializer.hpp"
 #include "fkYAML/detail/from_node.hpp"
 #include "fkYAML/detail/iterator.hpp"
 #include "fkYAML/detail/lexical_analyzer.hpp"
 #include "fkYAML/detail/node_t.hpp"
+#include "fkYAML/detail/serializer.hpp"
 #include "fkYAML/detail/stl_supplement.hpp"
 #include "fkYAML/detail/to_node.hpp"
 #include "fkYAML/detail/type_traits.hpp"
 #include "fkYAML/detail/version_macros.hpp"
 #include "fkYAML/detail/yaml_version_t.hpp"
-#include "fkYAML/deserializer.hpp"
 #include "fkYAML/exception.hpp"
 #include "fkYAML/node_value_converter.hpp"
 #include "fkYAML/node.hpp"
 #include "fkYAML/ordered_map.hpp"
-#include "fkYAML/serializer.hpp"
 
 // This is just a dummy main function for compilation.
 int main()

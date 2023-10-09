@@ -8,11 +8,12 @@
 
 #include "catch2/catch.hpp"
 
-#include "fkYAML/deserializer.hpp"
+#include "fkYAML/detail/deserializer.hpp"
+#include "fkYAML/node.hpp"
 
 TEST_CASE("DeserializerClassTest_InputStringTest", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
 
     REQUIRE_NOTHROW(deserializer.deserialize("test: hoge"));
     REQUIRE_THROWS_AS(deserializer.deserialize(nullptr), fkyaml::exception);
@@ -20,7 +21,7 @@ TEST_CASE("DeserializerClassTest_InputStringTest", "[DeserializerClassTest]")
 
 TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     SECTION("normal key-value cases")
@@ -41,7 +42,7 @@ TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTe
 
 TEST_CASE("DeserializerClassTest_DeserializeValueSeparator", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     auto input_str = GENERATE(std::string("test: [ foo, bar ]"), std::string("test: { foo: bar, buz: val }"));
@@ -52,7 +53,7 @@ TEST_CASE("DeserializerClassTest_DeserializeValueSeparator", "[DeserializerClass
 
 TEST_CASE("DeserializerClassTest_DeserializeNullValue", "[DeserializerClassTes]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     auto input_str = GENERATE(std::string("test: null"), std::string("Null: test"));
@@ -63,7 +64,7 @@ TEST_CASE("DeserializerClassTest_DeserializeNullValue", "[DeserializerClassTes]"
 
 TEST_CASE("DeserializerClassTest_DeserializeBooleanValue", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     auto input_str =
@@ -75,7 +76,7 @@ TEST_CASE("DeserializerClassTest_DeserializeBooleanValue", "[DeserializerClassTe
 
 TEST_CASE("DeserializerClassTest_DeserializeNumericKey", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     using string_value_pair_t = std::pair<std::string, std::string>;
@@ -90,7 +91,7 @@ TEST_CASE("DeserializerClassTest_DeserializeNumericKey", "[DeserializerClassTest
 
 TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     SECTION("Input source No.1.")
@@ -328,7 +329,7 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
 
 TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     SECTION("Input source No.1.")
@@ -503,7 +504,7 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     SECTION("Input source No.1.")
@@ -536,7 +537,7 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerCla
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     SECTION("Input source No.1.")
@@ -575,7 +576,7 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
 
 TEST_CASE("DeserializerClassTest_DeserializeInputWithCommentTest", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     REQUIRE_NOTHROW(root = deserializer.deserialize("foo: one # comment\nbar: true\npi: 3.14"));
@@ -604,7 +605,7 @@ TEST_CASE("DeserializerClassTest_DeserializeInputWithCommentTest", "[Deserialize
 
 TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
     SECTION("YAML 1.1")
@@ -642,6 +643,6 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
 
 TEST_CASE("DeserializerClassTest_DeserializeNoMachingAnchorTest", "[DeserializerClassTest]")
 {
-    fkyaml::deserializer deserializer;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     REQUIRE_THROWS_AS(deserializer.deserialize("foo: *anchor"), fkyaml::exception);
 }
