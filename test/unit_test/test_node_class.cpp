@@ -6,6 +6,8 @@
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
+#include <cmath>
+#include <cfloat>
 #include <map>
 
 #include "catch2/catch.hpp"
@@ -1364,10 +1366,84 @@ TEST_CASE("NodeClassTest_add_anchor_nameTest", "[NodeClassTest]")
 }
 
 //
+// test cases for value getters (copy)
+//
+
+TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
+{
+    SECTION("test sequence node value.")
+    {
+        fkyaml::node node(fkyaml::node_sequence_type {fkyaml::node(true), fkyaml::node(false)});
+        auto seq = node.get_value<fkyaml::node_sequence_type>();
+        REQUIRE(seq.size() == 2);
+        REQUIRE(seq[0].is_boolean());
+        REQUIRE(seq[0].get_value<bool>() == true);
+        REQUIRE(seq[1].is_boolean());
+        REQUIRE(seq[1].get_value<bool>() == false);
+    }
+
+    SECTION("test mapping node value.")
+    {
+        fkyaml::node node(
+            fkyaml::node_mapping_type {{"test", fkyaml::node(3.14)}, {"foo", fkyaml::node(std::string("bar"))}});
+        auto map = node.get_value<fkyaml::node_mapping_type>();
+        REQUIRE(map.size() == 2);
+        REQUIRE(map.find("test") != map.end());
+        REQUIRE(map.at("test").is_float_number());
+        REQUIRE(map.at("test").get_value<double>() == 3.14);
+        REQUIRE(map.find("foo") != map.end());
+        REQUIRE(map.at("foo").is_string());
+        REQUIRE(map.at("foo").get_value<std::string>() == "bar");
+    }
+
+    SECTION("test null node value.")
+    {
+        fkyaml::node node(nullptr);
+        auto null = node.get_value<std::nullptr_t>();
+        REQUIRE(null == nullptr);
+    }
+
+    SECTION("test boolean node value.")
+    {
+        fkyaml::node node(true);
+        REQUIRE(node.get_value<bool>() == true);
+    }
+
+    SECTION("test integer node value.")
+    {
+        fkyaml::node node(123);
+        REQUIRE(node.get_value<int8_t>() == 123);
+        REQUIRE(node.get_value<int16_t>() == 123);
+        REQUIRE(node.get_value<int32_t>() == 123);
+        REQUIRE(node.get_value<int64_t>() == 123);
+        REQUIRE(node.get_value<uint8_t>() == 123);
+        REQUIRE(node.get_value<uint16_t>() == 123);
+        REQUIRE(node.get_value<uint32_t>() == 123);
+        // TODO: REQUIRE(node.get_value<uint64_t>() == 123);
+    }
+
+    SECTION("test float number node value.")
+    {
+        fkyaml::node node(3.14);
+        REQUIRE(fabsf(node.get_value<float>() - 3.14) < FLT_EPSILON);
+        REQUIRE(fabsf(node.get_value<double>() - 3.14) < DBL_EPSILON);
+        REQUIRE(fabsf(node.get_value<long double>() - 3.14) < LDBL_EPSILON);
+    }
+
+    SECTION("test string node value.")
+    {
+        fkyaml::node node(std::string("test"));
+        auto str = node.get_value<std::string>();
+        REQUIRE(str.size() == 4);
+        REQUIRE(str == "test");
+    }
+}
+
+//
 // test cases for value reference getters
 //
 
-TEST_CASE("NodeClassTest_to_sequenceTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_ToSequenceTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
@@ -1542,7 +1618,7 @@ TEST_CASE("NodeClassTest_ToMappingTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_to_booleanTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_ToBooleanTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
@@ -1763,7 +1839,7 @@ TEST_CASE("NodeClassTest_ToFloatNumberTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_to_stringTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_ToStringTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
