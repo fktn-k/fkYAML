@@ -21,11 +21,11 @@
 #include <vector>
 
 #include "fkYAML/version_macros.hpp"
-#include "fkYAML/adl_serializer.hpp"
 #include "fkYAML/assert.hpp"
 #include "fkYAML/exception.hpp"
 #include "fkYAML/iterator.hpp"
 #include "fkYAML/node_t.hpp"
+#include "fkYAML/node_value_converter.hpp"
 #include "fkYAML/ordered_map.hpp"
 #include "fkYAML/stl_supplement.hpp"
 #include "fkYAML/type_traits.hpp"
@@ -47,13 +47,13 @@ FK_YAML_NAMESPACE_BEGIN
  * @tparam IntegerType A type for integer node values.
  * @tparam FloatNumberType A type for float number node values.
  * @tparam StringType A type for string node values.
- * @tparam NodeSerializer A type for node serializer.
+ * @tparam Converter A type for node value converter.
  */
 template <
     template <typename, typename...> class SequenceType = std::vector,
     template <typename, typename, typename...> class MappingType = ordered_map, typename BooleanType = bool,
     typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
-    template <typename, typename = void> class NodeSerializer = adl_serializer>
+    template <typename, typename = void> class Converter = node_value_converter>
 class basic_node
 {
     template <fkyaml::node_t>
@@ -78,8 +78,14 @@ public:
     /** A type for string basic_node values. */
     using string_type = StringType;
 
+    /**
+     * @brief A helper alias to determine converter type for the given target native data type.
+     *
+     * @tparam T A target native data type.
+     * @tparam SFINAE A type placeholder for SFINAE
+     */
     template <typename T, typename SFINAE>
-    using node_serializer = NodeSerializer<T, SFINAE>;
+    using value_converter_type = Converter<T, SFINAE>;
 
 private:
     /**
@@ -397,13 +403,13 @@ public:
                 value,
             int> = 0>
     explicit basic_node(CompatibleType&& val) noexcept(
-        noexcept(NodeSerializer<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
+        noexcept(Converter<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
         : m_node_type(node_t::NULL_OBJECT),
           m_yaml_version_type(yaml_version_t::VER_1_2),
           m_node_value(),
           m_anchor_name(nullptr)
     {
-        NodeSerializer<U>::to_node(*this, std::forward<CompatibleType>(val));
+        Converter<U>::to_node(*this, std::forward<CompatibleType>(val));
     }
 
     /**
@@ -993,10 +999,10 @@ public:
             detail::conjunction<std::is_default_constructible<ValueType>, has_from_node<basic_node, ValueType>>::value,
             int> = 0>
     T get_value() const noexcept(
-        noexcept(NodeSerializer<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
+        noexcept(Converter<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
     {
         auto ret = ValueType();
-        NodeSerializer<ValueType>::from_node(*this, ret);
+        Converter<ValueType>::from_node(*this, ret);
         return ret;
     }
 

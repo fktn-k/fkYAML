@@ -10,8 +10,8 @@
  * @file
  */
 
-#ifndef ADL_SERIALIZER_HPP_
-#define ADL_SERIALIZER_HPP_
+#ifndef FK_YAML_NODE_VALUE_CONVERTER_HPP_
+#define FK_YAML_NODE_VALUE_CONVERTER_HPP_
 
 #include <utility>
 
@@ -22,14 +22,14 @@
 FK_YAML_NAMESPACE_BEGIN
 
 /**
- * @class adl_serializer
- * @brief An ADL friendly serializer for YAML nodes.
+ * @class node_value_converter
+ * @brief An ADL friendly converter between basic_node objects and native data objects.
  *
- * @tparam ValueType A default output data type.
+ * @tparam ValueType A default target data type.
  * @tparam typename N/A
  */
 template <typename ValueType, typename>
-class adl_serializer
+class node_value_converter
 {
 public:
     /**
@@ -69,4 +69,4 @@ public:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* ADL_SERIALIZER_HPP_ */
+#endif /* FK_YAML_NODE_VALUE_CONVERTER_HPP_ */

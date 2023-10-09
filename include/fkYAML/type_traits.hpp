@@ -29,7 +29,7 @@ FK_YAML_NAMESPACE_BEGIN
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
-    template <typename, typename> class NodeSerializer>
+    template <typename, typename> class Converter>
 class basic_node;
 
 /**
@@ -52,13 +52,14 @@ struct is_basic_node : std::false_type
  * @tparam IntegerType A type for integer node values.
  * @tparam FloatNumberType A type for float number node values.
  * @tparam StringType A type for string node values.
+ * @tparam Converter A type for
  */
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
-    template <typename, typename> class NodeSerializer>
+    template <typename, typename> class Converter>
 struct is_basic_node<
-    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, NodeSerializer>>
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, Converter>>
     : std::true_type
 {
 };
@@ -306,11 +307,11 @@ struct has_from_node : std::false_type
 template <typename BasicNodeType, typename T>
 struct has_from_node<BasicNodeType, T, detail::enable_if_t<!is_basic_node<T>::value>>
 {
-    using serializer = typename BasicNodeType::template node_serializer<T, void>;
+    using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
     static constexpr bool value =
-        is_detected_exact<void, from_node_function_t, serializer, const BasicNodeType&, T&>::value;
+        is_detected_exact<void, from_node_function_t, converter, const BasicNodeType&, T&>::value;
 };
 
 /**
@@ -344,10 +345,10 @@ struct has_to_node : std::false_type
 template <typename BasicNodeType, typename T>
 struct has_to_node<BasicNodeType, T, detail::enable_if_t<!is_basic_node<T>::value>>
 {
-    using serializer = typename BasicNodeType::template node_serializer<T, void>;
+    using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
-    static constexpr bool value = is_detected_exact<void, to_node_funcion_t, serializer, BasicNodeType&, T>::value;
+    static constexpr bool value = is_detected_exact<void, to_node_funcion_t, converter, BasicNodeType&, T>::value;
 };
 
 /**

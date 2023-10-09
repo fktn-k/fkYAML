@@ -13,6 +13,7 @@
 #include "fkYAML/iterator.hpp"
 #include "fkYAML/lexical_analyzer.hpp"
 #include "fkYAML/node_t.hpp"
+#include "fkYAML/node_value_converter.hpp"
 #include "fkYAML/node.hpp"
 #include "fkYAML/ordered_map.hpp"
 #include "fkYAML/serializer.hpp"
