@@ -9,6 +9,7 @@
 #include "fkYAML/detail/assert.hpp"
 #include "fkYAML/detail/deserializer.hpp"
 #include "fkYAML/detail/from_node.hpp"
+#include "fkYAML/detail/input_adapter.hpp"
 #include "fkYAML/detail/iterator.hpp"
 #include "fkYAML/detail/lexical_analyzer.hpp"
 #include "fkYAML/detail/node_t.hpp"

@@ -358,6 +358,60 @@ struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
     static constexpr bool value = is_detected_exact<void, to_node_funcion_t, converter, BasicNodeType&, T>::value;
 };
 
+template <typename T>
+using detect_char_type_helper_t = typename T::char_type;
+
+template <typename T, typename = void>
+struct has_char_type : std::false_type
+{
+};
+
+template <typename T>
+struct has_char_type<T, enable_if_t<is_detected<detect_char_type_helper_t, T>::value>> : std::true_type
+{
+};
+
+template <typename T>
+using get_character_fn_t = decltype(std::declval<T>().get_character());
+
+template <typename T>
+using unget_character_fn_t = decltype(std::declval<T>().unget_character());
+
+template <typename InputAdapterType, typename = void>
+struct has_get_character : std::false_type
+{
+};
+
+template <typename InputAdapterType>
+struct has_get_character<InputAdapterType, enable_if_t<is_detected<get_character_fn_t, InputAdapterType>::value>>
+    : std::true_type
+{
+};
+
+template <typename InputAdapterType, typename = void>
+struct has_unget_character : std::false_type
+{
+};
+
+template <typename InputAdapterType>
+struct has_unget_character<InputAdapterType, enable_if_t<is_detected<unget_character_fn_t, InputAdapterType>::value>>
+    : std::true_type
+{
+};
+
+template <typename T, typename = void>
+struct is_input_adapter : std::false_type
+{
+};
+
+template <typename InputAdapterType>
+struct is_input_adapter<
+    InputAdapterType, enable_if_t<conjunction<
+                          has_char_type<InputAdapterType>, has_get_character<InputAdapterType>,
+                          has_unget_character<InputAdapterType>>::value>> : std::true_type
+{
+};
+
 /**
  * @brief Type traits implementation of is_compatible_type to check if CompatibleType is a compatible type for
  * BasicNodeType.
