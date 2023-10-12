@@ -58,8 +58,6 @@ class basic_deserializer
     using float_number_type = typename BasicNodeType::float_number_type;
     /** A type for string node values. */
     using string_type = typename BasicNodeType::string_type;
-    /** A type for the lexical analyzer object used by this deserializer. */
-    using lexer_type = detail::lexical_analyzer<BasicNodeType>;
 
 public:
     /**
@@ -74,18 +72,15 @@ public:
      * @param source A YAML-formatted source string.
      * @return BasicNodeType A root YAML node deserialized from the source string.
      */
-    BasicNodeType deserialize(const char* const source)
+    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
+    BasicNodeType deserialize(InputAdapterType&& input_adapter)
     {
-        if (!source)
-        {
-            throw fkyaml::exception("The given source for deserialization is nullptr.");
-        }
+        lexical_analyzer<BasicNodeType, InputAdapterType> lexer(std::forward<InputAdapterType>(input_adapter));
 
-        m_lexer.set_input_buffer(source);
         BasicNodeType root = BasicNodeType::mapping();
         m_current_node = &root;
 
-        lexical_token_t type = m_lexer.get_next_token();
+        lexical_token_t type = lexer.get_next_token();
         while (type != lexical_token_t::END_OF_BUFFER)
         {
             switch (type)
@@ -112,12 +107,12 @@ public:
             case lexical_token_t::VALUE_SEPARATOR:
                 break;
             case lexical_token_t::ANCHOR_PREFIX: {
-                m_anchor_name = m_lexer.get_string();
+                m_anchor_name = lexer.get_string();
                 m_needs_anchor_impl = true;
                 break;
             }
             case lexical_token_t::ALIAS_PREFIX: {
-                m_anchor_name = m_lexer.get_string();
+                m_anchor_name = lexer.get_string();
                 if (m_anchor_table.find(m_anchor_name) == m_anchor_table.end())
                 {
                     throw fkyaml::exception("The given anchor name must appear prior to the alias node.");
@@ -129,7 +124,7 @@ public:
                 break;
             case lexical_token_t::YAML_VER_DIRECTIVE: {
                 FK_YAML_ASSERT(m_current_node == &root);
-                update_yaml_version_from(m_lexer.get_yaml_version());
+                update_yaml_version_from(lexer.get_yaml_version());
                 set_yaml_version(*m_current_node);
                 break;
             }
@@ -185,51 +180,51 @@ public:
             case lexical_token_t::NULL_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(m_lexer.get_string());
+                    add_new_key(lexer.get_string());
                     break;
                 }
 
                 // Just make sure that the actual value is really a null value.
-                m_lexer.get_null();
+                lexer.get_null();
                 assign_node_value(BasicNodeType());
                 break;
             case lexical_token_t::BOOLEAN_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(m_lexer.get_string());
+                    add_new_key(lexer.get_string());
                     break;
                 }
-                assign_node_value(BasicNodeType::boolean_scalar(m_lexer.get_boolean()));
+                assign_node_value(BasicNodeType::boolean_scalar(lexer.get_boolean()));
                 break;
             case lexical_token_t::INTEGER_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(m_lexer.get_string());
+                    add_new_key(lexer.get_string());
                     break;
                 }
-                assign_node_value(BasicNodeType::integer_scalar(m_lexer.get_integer()));
+                assign_node_value(BasicNodeType::integer_scalar(lexer.get_integer()));
                 break;
             case lexical_token_t::FLOAT_NUMBER_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(m_lexer.get_string());
+                    add_new_key(lexer.get_string());
                     break;
                 }
-                assign_node_value(BasicNodeType::float_number_scalar(m_lexer.get_float_number()));
+                assign_node_value(BasicNodeType::float_number_scalar(lexer.get_float_number()));
                 break;
             case lexical_token_t::STRING_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(m_lexer.get_string());
+                    add_new_key(lexer.get_string());
                     break;
                 }
-                assign_node_value(BasicNodeType::string_scalar(m_lexer.get_string()));
+                assign_node_value(BasicNodeType::string_scalar(lexer.get_string()));
                 break;
             default:                                                         // LCOV_EXCL_LINE
                 throw fkyaml::exception("Unsupported lexical token found."); // LCOV_EXCL_LINE
             }
 
-            type = m_lexer.get_next_token();
+            type = lexer.get_next_token();
         }
 
         m_current_node = nullptr;
@@ -314,14 +309,13 @@ private:
     }
 
 private:
-    lexer_type m_lexer {};                                   /** A lexical analyzer object. */
     BasicNodeType* m_current_node = nullptr;                 /** The currently focused YAML node. */
-    std::vector<BasicNodeType*> m_node_stack {};             /** The stack of YAML nodes. */
+    std::vector<BasicNodeType*> m_node_stack = {};           /** The stack of YAML nodes. */
     yaml_version_t m_yaml_version = yaml_version_t::VER_1_2; /** The YAML version specification type. */
     uint32_t m_current_indent_width = 0;                     /** The current indentation width. */
     bool m_needs_anchor_impl = false; /** A flag to determine the need for YAML anchor node implementation */
     string_type m_anchor_name {};     /** The last YAML anchor name. */
-    std::unordered_map<std::string, BasicNodeType> m_anchor_table; /** The table of YAML anchor nodes. */
+    std::unordered_map<std::string, BasicNodeType> m_anchor_table = {}; /** The table of YAML anchor nodes. */
 };
 
 } // namespace detail

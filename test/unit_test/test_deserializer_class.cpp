@@ -9,15 +9,8 @@
 #include "catch2/catch.hpp"
 
 #include "fkYAML/detail/deserializer.hpp"
+#include "fkYAML/detail/input_adapter.hpp"
 #include "fkYAML/node.hpp"
-
-TEST_CASE("DeserializerClassTest_InputStringTest", "[DeserializerClassTest]")
-{
-    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
-
-    REQUIRE_NOTHROW(deserializer.deserialize("test: hoge"));
-    REQUIRE_THROWS_AS(deserializer.deserialize(nullptr), fkyaml::exception);
-}
 
 TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTest]")
 {
@@ -28,7 +21,7 @@ TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTe
     {
         auto input_str = GENERATE(
             std::string("test: hoge"), std::string("test:\n  foo: bar"), std::string("test:\n  - foo\n  - bar"));
-        REQUIRE_NOTHROW(root = deserializer.deserialize(input_str.c_str()));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)));
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
     }
@@ -36,7 +29,7 @@ TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTe
     SECTION("error cases")
     {
         auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"));
-        REQUIRE_THROWS_AS(root = deserializer.deserialize(input_str.c_str()), fkyaml::exception);
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::exception);
     }
 }
 
@@ -46,7 +39,7 @@ TEST_CASE("DeserializerClassTest_DeserializeValueSeparator", "[DeserializerClass
     fkyaml::node root;
 
     auto input_str = GENERATE(std::string("test: [ foo, bar ]"), std::string("test: { foo: bar, buz: val }"));
-    REQUIRE_NOTHROW(root = deserializer.deserialize(input_str.c_str()));
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)));
     REQUIRE(root.is_mapping());
     REQUIRE(root.size() == 1);
 }
@@ -57,7 +50,7 @@ TEST_CASE("DeserializerClassTest_DeserializeNullValue", "[DeserializerClassTes]"
     fkyaml::node root;
 
     auto input_str = GENERATE(std::string("test: null"), std::string("Null: test"));
-    REQUIRE_NOTHROW(root = deserializer.deserialize(input_str.c_str()));
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)));
     REQUIRE(root.is_mapping());
     REQUIRE(root.size() == 1);
 }
@@ -69,7 +62,7 @@ TEST_CASE("DeserializerClassTest_DeserializeBooleanValue", "[DeserializerClassTe
 
     auto input_str =
         GENERATE(std::string("test: true"), std::string("test: [ True, False ]"), std::string("True: TRUE"));
-    REQUIRE_NOTHROW(root = deserializer.deserialize(input_str.c_str()));
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)));
     REQUIRE(root.is_mapping());
     REQUIRE(root.size() == 1);
 }
@@ -82,7 +75,7 @@ TEST_CASE("DeserializerClassTest_DeserializeNumericKey", "[DeserializerClassTest
     using string_value_pair_t = std::pair<std::string, std::string>;
 
     auto str_val_pair = GENERATE(string_value_pair_t("123: foo", "123"), string_value_pair_t("3.14: foo", "3.14"));
-    REQUIRE_NOTHROW(root = deserializer.deserialize(str_val_pair.first.c_str()));
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(str_val_pair.first)));
     REQUIRE(root.is_mapping());
     REQUIRE(root.size() == 1);
     REQUIRE(root.contains(str_val_pair.second));
@@ -96,7 +89,7 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
 
     SECTION("Input source No.1.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - foo\n  - bar"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - foo\n  - bar")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -128,7 +121,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
     SECTION("Input source No.2.")
     {
         REQUIRE_NOTHROW(
-            root = deserializer.deserialize("test:\n  - foo: true\n    bar: one\n  - foo: false\n    bar: two"));
+            root = deserializer.deserialize(
+                fkyaml::detail::input_adapter("test:\n  - foo: true\n    bar: one\n  - foo: false\n    bar: two")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -179,7 +173,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
 
     SECTION("Input source No.3.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor true\n  - *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - &anchor true\n  - *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -208,7 +203,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
 
     SECTION("Input source No.4.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor -123\n  - *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - &anchor -123\n  - *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -237,7 +233,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
 
     SECTION("Input source No.5.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor 567\n  - *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - &anchor 567\n  - *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -266,7 +263,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
 
     SECTION("Input source No.6.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor 3.14\n  - *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - &anchor 3.14\n  - *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -295,7 +293,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
 
     SECTION("Input source No.7.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  - &anchor foo\n  - *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - &anchor foo\n  - *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -334,7 +333,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.1.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: one\nbar: true\npi: 3.14"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: one\nbar: true\npi: 3.14")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 3);
@@ -360,7 +360,9 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.2.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("test:\n  bool: true\n  foo: bar\n  pi: 3.14"));
+        REQUIRE_NOTHROW(
+            root =
+                deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  bool: true\n  foo: bar\n  pi: 3.14")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -393,7 +395,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.3.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor true\nbar: *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: &anchor true\nbar: *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
@@ -415,7 +418,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.4.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor -123\nbar: *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: &anchor -123\nbar: *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
@@ -437,7 +441,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.5.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor 567\nbar: *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: &anchor 567\nbar: *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
@@ -459,7 +464,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.6.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor 3.14\nbar: *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: &anchor 3.14\nbar: *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
@@ -481,7 +487,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.7.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("foo: &anchor one\nbar: *anchor"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: &anchor one\nbar: *anchor")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
@@ -509,7 +516,7 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerCla
 
     SECTION("Input source No.1.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("test: [ foo, bar ]"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test: [ foo, bar ]")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -542,7 +549,8 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
 
     SECTION("Input source No.1.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("test: { bool: true, foo: bar, pi: 3.14 }"));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test: { bool: true, foo: bar, pi: 3.14 }")));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -579,7 +587,8 @@ TEST_CASE("DeserializerClassTest_DeserializeInputWithCommentTest", "[Deserialize
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
-    REQUIRE_NOTHROW(root = deserializer.deserialize("foo: one # comment\nbar: true\npi: 3.14"));
+    REQUIRE_NOTHROW(
+        root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: one # comment\nbar: true\npi: 3.14")));
 
     REQUIRE(root.is_mapping());
     REQUIRE(root.size() == 3);
@@ -610,7 +619,7 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
 
     SECTION("YAML 1.1")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("%YAML 1.1\nfoo: one"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.1\nfoo: one")));
 
         REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
         REQUIRE(root.is_mapping());
@@ -626,7 +635,7 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
 
     SECTION("YAML 1.2")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize("%YAML 1.2\nfoo: one"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.2\nfoo: one")));
 
         REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
         REQUIRE(root.is_mapping());
@@ -644,5 +653,5 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
 TEST_CASE("DeserializerClassTest_DeserializeNoMachingAnchorTest", "[DeserializerClassTest]")
 {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
-    REQUIRE_THROWS_AS(deserializer.deserialize("foo: *anchor"), fkyaml::exception);
+    REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("foo: *anchor")), fkyaml::exception);
 }
