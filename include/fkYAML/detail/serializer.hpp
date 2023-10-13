@@ -21,21 +21,25 @@
 #include "fkYAML/detail/node_t.hpp"
 #include "fkYAML/detail/type_traits.hpp"
 #include "fkYAML/exception.hpp"
-#include "fkYAML/node.hpp"
 
 FK_YAML_NAMESPACE_BEGIN
+
+/**
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
 
 /**
  * @brief A basic implementation of serialization feature for YAML nodes.
  *
  * @tparam BasicNodeType A BasicNode template class instantiation.
  */
-template <typename BasicNodeType = node>
+template <typename BasicNodeType>
 class basic_serializer
 {
     static_assert(detail::is_basic_node<BasicNodeType>::value, "basic_serializer only accepts basic_node<...>");
-
-    using node_t = detail::node_t;
 
 public:
     /**
@@ -49,7 +53,7 @@ public:
      * @param node A Node object to be serialized.
      * @return std::string A serialization result of the given Node value.
      */
-    std::string serialize(BasicNodeType& node)
+    std::string serialize(const BasicNodeType& node)
     {
         std::string str {};
         serialize_node(node, 0, str);
@@ -64,12 +68,12 @@ private:
      * @param cur_indent The current indent width
      * @param str A string to hold serialization result.
      */
-    void serialize_node(BasicNodeType& node, const uint32_t cur_indent, std::string& str)
+    void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str)
     {
         switch (node.type())
         {
         case node_t::SEQUENCE:
-            for (auto& seq_item : node)
+            for (const auto& seq_item : node)
             {
                 insert_indentation(cur_indent, str);
                 str += "-";
@@ -179,10 +183,7 @@ private:
     }
 };
 
-/**
- * @brief default YAML node serializer.
- */
-using serializer = basic_serializer<>;
+} // namespace detail
 
 FK_YAML_NAMESPACE_END
 

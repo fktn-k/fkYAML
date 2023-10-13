@@ -10,8 +10,8 @@
 
 #include <limits>
 
+#include "fkYAML/detail/serializer.hpp"
 #include "fkYAML/node.hpp"
-#include "fkYAML/serializer.hpp"
 
 TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")
 {
@@ -24,7 +24,7 @@ TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")
             fkyaml::node::sequence(
                 {fkyaml::node::mapping({{"foo", fkyaml::node::integer_scalar(-1234)}, {"bar", fkyaml::node()}})}),
             "-\n  foo: -1234\n  bar: null\n"));
-    fkyaml::serializer serializer;
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
@@ -40,13 +40,13 @@ TEST_CASE("SerializerClassTest_SerializeMappingNode", "[SerializerClassTest]")
                 {{"foo",
                   fkyaml::node::sequence({fkyaml::node::boolean_scalar(true), fkyaml::node::boolean_scalar(false)})}}),
             "foo:\n  - true\n  - false\n"));
-    fkyaml::serializer serializer;
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
 TEST_CASE("SerializerClassTest_SerializeNullNode", "[SerializerClassTest]")
 {
-    fkyaml::serializer serializer;
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     fkyaml::node node;
     REQUIRE(serializer.serialize(node) == "null");
 }
@@ -57,7 +57,7 @@ TEST_CASE("SerializerClassTest_SerializeBooleanNode", "[SerializerClassTest]")
     auto node_str_pair = GENERATE(
         NodeStrPair(fkyaml::node::boolean_scalar(false), "false"),
         NodeStrPair(fkyaml::node::boolean_scalar(true), "true"));
-    fkyaml::serializer serializer;
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
@@ -67,7 +67,7 @@ TEST_CASE("SerializerClassTest_SerializeIntegerNode", "[SerializerClassTest]")
     auto node_str_pair = GENERATE(
         NodeStrPair(fkyaml::node::integer_scalar(-1234), "-1234"),
         NodeStrPair(fkyaml::node::integer_scalar(5678), "5678"));
-    fkyaml::serializer serializer;
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
@@ -83,7 +83,7 @@ TEST_CASE("SerializeClassTest_SerializeFloatNumberNode", "[SerializeClassTest]")
             fkyaml::node::float_number_scalar(-1 * std::numeric_limits<fkyaml::node_float_number_type>::infinity()),
             "-.inf"),
         NodeStrPair(fkyaml::node::float_number_scalar(std::nan("")), ".nan"));
-    fkyaml::serializer serializer;
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
@@ -94,6 +94,6 @@ TEST_CASE("SerializerClassTest_SerializeStringNode", "[SerializerClassTest]")
         node_str_pair_t(fkyaml::node::string_scalar("test"), "test"),
         node_str_pair_t(fkyaml::node::string_scalar("foo bar"), "foo bar"));
 
-    fkyaml::serializer serializer;
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }

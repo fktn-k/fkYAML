@@ -22,8 +22,11 @@
 
 #include "fkYAML/detail/version_macros.hpp"
 #include "fkYAML/detail/assert.hpp"
+#include "fkYAML/detail/deserializer.hpp"
+#include "fkYAML/detail/input_adapter.hpp"
 #include "fkYAML/detail/iterator.hpp"
 #include "fkYAML/detail/node_t.hpp"
+#include "fkYAML/detail/serializer.hpp"
 #include "fkYAML/detail/stl_supplement.hpp"
 #include "fkYAML/detail/type_traits.hpp"
 #include "fkYAML/detail/yaml_version_t.hpp"
@@ -90,6 +93,11 @@ public:
 private:
     template <node_t>
     friend struct fkyaml::detail::external_node_constructor;
+
+    /** A type for YAML docs deserializers. */
+    using deserializer_type = detail::basic_deserializer<basic_node>;
+    /** A type for YAML docs serializers. */
+    using serializer_type = detail::basic_serializer<basic_node>;
 
     /**
      * @union node_value
@@ -427,6 +435,45 @@ public:
     }
 
 public:
+    /**
+     * @brief Deserialize an input source into a basic_node object.
+     *
+     * @tparam InputType A type of an input source.
+     * @param input An input source in YAML format.
+     * @return basic_node The result of deserialization.
+     */
+    template <typename InputType>
+    static basic_node deserialize(InputType&& input)
+    {
+        return deserializer_type().deserialize(detail::input_adapter(std::forward<InputType>(input)));
+    }
+
+    /**
+     * @brief Deserialize input iterators into a basic_node object.
+     *
+     * @tparam ItrType A type of input iterators.
+     * @param begin The beginning of input iterators.
+     * @param end The end of input iterators.
+     * @return basic_node The result of deserialization.
+     */
+    template <typename ItrType>
+    static basic_node deserialize(ItrType&& begin, ItrType&& end)
+    {
+        return deserializer_type().deserialize(
+            detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
+    }
+
+    /**
+     * @brief Serialize a basic_node object into a string.
+     *
+     * @param node A basic_node object.
+     * @return std::string The result of serialization.
+     */
+    static std::string serialize(const basic_node& node)
+    {
+        return serializer_type().serialize(node);
+    }
+
     /**
      * @brief A factory method for sequence basic_node objects without sequence_type objects.
      *

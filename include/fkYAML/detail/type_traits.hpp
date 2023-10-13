@@ -322,7 +322,7 @@ struct has_from_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
 };
 
 /**
- * @brief A type represent to_node function.
+ * @brief A type which represent to_node function.
  *
  * @tparam T A type which provides to_node function.
  * @tparam Args Argument types passed to to_node function.
@@ -356,6 +356,119 @@ struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
 
     // NOLINTNEXTLINE(readability-identifier-naming)
     static constexpr bool value = is_detected_exact<void, to_node_funcion_t, converter, BasicNodeType&, T>::value;
+};
+
+/**
+ * @brief A type which represents T::char_type;
+ *
+ * @tparam T A target type to check if it has char_type;
+ */
+template <typename T>
+using detect_char_type_helper_t = typename T::char_type;
+
+/**
+ * @brief Type traits to check if T has char_type as its member.
+ *
+ * @tparam T A target type.
+ * @tparam typename N/A
+ */
+template <typename T, typename = void>
+struct has_char_type : std::false_type
+{
+};
+
+/**
+ * @brief A partial specialization of has_char_type if T has char_type as its member.
+ *
+ * @tparam T A target type.
+ */
+template <typename T>
+struct has_char_type<T, enable_if_t<is_detected<detect_char_type_helper_t, T>::value>> : std::true_type
+{
+};
+
+/**
+ * @brief A type which represents get_character function.
+ *
+ * @tparam T A target type.
+ */
+template <typename T>
+using get_character_fn_t = decltype(std::declval<T>().get_character());
+
+/**
+ * @brief A type which respresents unget_character function.
+ *
+ * @tparam T A target type.
+ */
+template <typename T>
+using unget_character_fn_t = decltype(std::declval<T>().unget_character());
+
+/**
+ * @brief Type traits to check if InputAdapterType has get_character member function.
+ *
+ * @tparam InputAdapterType An input adapter type to check if it has get_character function.
+ * @tparam typename N/A
+ */
+template <typename InputAdapterType, typename = void>
+struct has_get_character : std::false_type
+{
+};
+
+/**
+ * @brief A partial specialization of has_get_character if InputAdapterType has get_character member function.
+ *
+ * @tparam InputAdapterType A type of a target input adapter.
+ */
+template <typename InputAdapterType>
+struct has_get_character<InputAdapterType, enable_if_t<is_detected<get_character_fn_t, InputAdapterType>::value>>
+    : std::true_type
+{
+};
+
+/**
+ * @brief Type traits to check if InputAdapterType has unget_character member function.
+ *
+ * @tparam InputAdapterType A type of a target input adapter.
+ * @tparam typename N/A
+ */
+template <typename InputAdapterType, typename = void>
+struct has_unget_character : std::false_type
+{
+};
+
+/**
+ * @brief A partial specialization of has_unget_character if InputAdapterType has unget_character member function.
+ *
+ * @tparam InputAdapterType
+ */
+template <typename InputAdapterType>
+struct has_unget_character<InputAdapterType, enable_if_t<is_detected<unget_character_fn_t, InputAdapterType>::value>>
+    : std::true_type
+{
+};
+
+/**
+ * @brief Type traits to check if T is an input adapter type.
+ *
+ * @tparam T A target type.
+ * @tparam typename N/A
+ */
+template <typename T, typename = void>
+struct is_input_adapter : std::false_type
+{
+};
+
+/**
+ * @brief A partial specialization of is_input_adapter if T is an input adapter type.
+ *
+ * @tparam InputAdapterType
+ */
+template <typename InputAdapterType>
+struct is_input_adapter<
+    InputAdapterType, enable_if_t<conjunction<
+                          has_char_type<InputAdapterType>, has_get_character<InputAdapterType>,
+                          has_unget_character<InputAdapterType>>::value>> : std::true_type
+{
 };
 
 /**

@@ -52,16 +52,46 @@ namespace detail
 template <bool Condition, typename T = void>
 using enable_if_t = typename std::enable_if<Condition, T>::type;
 
+/**
+ * @brief An alias template for std::remove_cv::type with C++11.
+ * @note std::remove_cv_t is available since C++14.
+ * @sa https://en.cppreference.com/w/cpp/types/remove_cv
+ *
+ * @tparam T A type from which const-volatile qualifiers are removed.
+ */
+template <typename T>
+using remove_cv_t = typename std::remove_cv<T>::type;
+
+/**
+ * @brief An alias template for std::remove_pointer::type with C++11.
+ * @note std::remove_pointer_t is available since C++14.
+ * @sa https://en.cppreference.com/w/cpp/types/remove_pointer
+ *
+ * @tparam T A type from which a pointer is removed.
+ */
+template <typename T>
+using remove_pointer_t = typename std::remove_pointer<T>::type;
+
 #else
 
 using std::enable_if_t;
+using std::remove_cv_t;
+using std::remove_pointer_t;
 
 #endif
 
 #ifndef FK_YAML_HAS_CXX_17
 
 /**
- * @brief A simple implementation to use std::void_t even with C++11-14.
+ * @brief A simple implementation to use std::bool_constant with C++11/C++14.
+ *
+ * @tparam Val
+ */
+template <bool Val>
+using bool_constant = std::integral_constant<bool, Val>;
+
+/**
+ * @brief A simple implementation to use std::void_t with C++11/C++14.
  * @note
  * std::conjunction is available since C++17.
  * This is applied when no traits are specified as inputs.
@@ -96,7 +126,7 @@ struct conjunction<First, Rest...> : std::conditional<First::value, conjunction<
 };
 
 /**
- * @brief A simple implementation to use std::disjunction even with C++11-14.
+ * @brief A simple implementation to use std::disjunction with C++11/C++14.
  * @note
  * std::disjunction is available since C++17.
  * This is applied when no traits are specified as inputs.
@@ -131,7 +161,7 @@ struct disjunction<First, Rest...> : std::conditional<First::value, First, disju
 };
 
 /**
- * @brief A simple implementation to use std::negation even with C++11-14.
+ * @brief A simple implementation to use std::negation with C++11/C++14.
  * @note std::negation is available since C++17.
  * @sa https://en.cppreference.com/w/cpp/types/negation
  *
@@ -154,7 +184,7 @@ struct make_void
 };
 
 /**
- * @brief A simple implementation to use std::void_t even with C++11-14.
+ * @brief A simple implementation to use std::void_t with C++11/C++14.
  * @note std::void_t is available since C++17.
  * @sa https://en.cppreference.com/w/cpp/types/void_t
  *
@@ -165,6 +195,7 @@ using void_t = typename make_void<Types...>::type;
 
 #else
 
+using std::bool_constant;
 using std::conjunction;
 using std::disjunction;
 using std::negation;
@@ -175,7 +206,7 @@ using std::void_t;
 #ifndef FK_YAML_HAS_CXX_20
 
 /**
- * @brief A simple implementation to use std::remove_cvref_t with C++11-17.
+ * @brief A simple implementation to use std::remove_cvref_t with C++11/C++14/C++17.
  * @note std::remove_cvref & std::remove_cvref_t are available since C++20.
  * @sa https://en.cppreference.com/w/cpp/types/remove_cvref
  *

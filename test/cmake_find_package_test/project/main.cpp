@@ -9,12 +9,10 @@
 #include <iostream>
 
 #include "fkYAML/node.hpp"
-#include "fkYAML/deserializer.hpp"
 
 int main()
 {
-    fkyaml::deserializer deserializer;
-    fkyaml::node node = deserializer.deserialize("test: true");
+    fkyaml::node node = fkyaml::node::deserialize("test: true");
 
     std::cout << "test: " << node["test"].to_string() << std::endl;
 
