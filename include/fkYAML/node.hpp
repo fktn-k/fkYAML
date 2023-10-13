@@ -435,12 +435,27 @@ public:
     }
 
 public:
+    /**
+     * @brief Deserialize an input source into a basic_node object.
+     *
+     * @tparam InputType A type of an input source.
+     * @param input An input source in YAML format.
+     * @return basic_node The result of deserialization.
+     */
     template <typename InputType>
     static basic_node deserialize(InputType&& input)
     {
         return deserializer_type().deserialize(detail::input_adapter(std::forward<InputType>(input)));
     }
 
+    /**
+     * @brief Deserialize input iterators into a basic_node object.
+     *
+     * @tparam ItrType A type of input iterators.
+     * @param begin The beginning of input iterators.
+     * @param end The end of input iterators.
+     * @return basic_node The result of deserialization.
+     */
     template <typename ItrType>
     static basic_node deserialize(ItrType&& begin, ItrType&& end)
     {
@@ -448,10 +463,15 @@ public:
             detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
 
+    /**
+     * @brief Serialize a basic_node object into a string.
+     *
+     * @param node A basic_node object.
+     * @return std::string The result of serialization.
+     */
     static std::string serialize(const basic_node& node)
     {
-        serializer_type serializer;
-        return serializer.serialize(node);
+        return serializer_type().serialize(node);
     }
 
     /**

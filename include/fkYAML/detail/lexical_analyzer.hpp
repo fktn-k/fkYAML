@@ -1139,9 +1139,7 @@ private:
     }
 
     /**
-     * @brief Get reference to the current character from the input buffer without position updates.
-     *
-     * @return const char& Constant reference to the current character.
+     * @brief Update position by moving backward.
      */
     void unget_character() noexcept
     {
@@ -1149,9 +1147,9 @@ private:
     }
 
     /**
-     * @brief Get reference to the next character from the input buffer without position updates.
+     * @brief Get current character from the input buffer without position updates.
      *
-     * @return const char& Constant reference to the next character.
+     * @return char_int_type The next character.
      */
     char_int_type get_current_character() noexcept
     {
@@ -1163,9 +1161,9 @@ private:
     }
 
     /**
-     * @brief Get reference to the next character from the input buffer with position updates.
+     * @brief Get the next character from the input buffer with position updates.
      *
-     * @return const char& Constant reference to the next character.
+     * @return char_int_type Constant reference to the next character.
      */
     char_int_type get_character() noexcept
     {
@@ -1174,6 +1172,14 @@ private:
         return m_last_char;
     }
 
+    /**
+     * @brief Get the string from input object.
+     *
+     * @param count The number of characters.
+     * @param str A container of a resulting string.
+     * @return true Succeeded in getting strings.
+     * @return false Failed to get strings.
+     */
     bool get_string_from_input(const int count, std::string& str) noexcept
     {
         str.clear();
@@ -1198,6 +1204,13 @@ private:
         return true;
     }
 
+    /**
+     * @brief Check if the next character is the expected one.
+     *
+     * @param expected_char An expected next character.
+     * @return true The next character is the expected one.
+     * @return false The next character is not the expected one.
+     */
     bool test_next_char(char_int_type expected_char) noexcept
     {
         char_int_type next = m_input_adapter.get_character();
