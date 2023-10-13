@@ -444,8 +444,8 @@ public:
     template <typename ItrType>
     static basic_node deserialize(ItrType&& begin, ItrType&& end)
     {
-        return deserializer_type().deserialize(detail::input_adapter(
-            std::forward<ItrType>(begin), std::forward<ItrType>(end)));
+        return deserializer_type().deserialize(
+            detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
 
     static std::string serialize(const basic_node& node)
