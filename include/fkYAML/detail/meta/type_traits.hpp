@@ -10,14 +10,14 @@
  * @file
  */
 
-#ifndef FK_YAML_DETAIL_TYPE_TRAITS_HPP_
-#define FK_YAML_DETAIL_TYPE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
+#define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
 
 #include <limits>
 #include <type_traits>
 
-#include "fkYAML/detail/version_macros.hpp"
-#include "fkYAML/detail/stl_supplement.hpp"
+#include "fkYAML/detail/macros/version_macros.hpp"
+#include "fkYAML/detail/meta/stl_supplement.hpp"
 
 /**
  * @namespace fkyaml
@@ -536,4 +536,4 @@ constexpr T static_const<T>::value;
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_ */

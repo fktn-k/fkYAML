@@ -10,8 +10,8 @@
  * @file
  */
 
-#ifndef FK_YAML_DETAIL_INPUT_ADAPTER_HPP_
-#define FK_YAML_DETAIL_INPUT_ADAPTER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
+#define FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
 
 #include <cstdio>
 #include <cstring>
@@ -19,8 +19,8 @@
 #include <iterator>
 #include <string>
 
-#include "fkYAML/detail/version_macros.hpp"
-#include "fkYAML/detail/stl_supplement.hpp"
+#include "fkYAML/detail/macros/version_macros.hpp"
+#include "fkYAML/detail/meta/stl_supplement.hpp"
 
 /**
  * @namespace fkyaml
@@ -384,4 +384,4 @@ inline stream_input_adapter input_adapter(std::istream& stream)
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_ADAPTER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_ */

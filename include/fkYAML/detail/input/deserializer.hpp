@@ -10,16 +10,16 @@
  * @file
  */
 
-#ifndef FK_YAML_DESERIALIZER_HPP_
-#define FK_YAML_DESERIALIZER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
+#define FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
 
 #include <cstdint>
 #include <unordered_map>
 
-#include "fkYAML/detail/version_macros.hpp"
-#include "fkYAML/detail/lexical_analyzer.hpp"
-#include "fkYAML/detail/type_traits.hpp"
-#include "fkYAML/detail/yaml_version_t.hpp"
+#include "fkYAML/detail/macros/version_macros.hpp"
+#include "fkYAML/detail/input/lexical_analyzer.hpp"
+#include "fkYAML/detail/meta/type_traits.hpp"
+#include "fkYAML/detail/types/yaml_version_t.hpp"
 #include "fkYAML/exception.hpp"
 
 /**
@@ -322,4 +322,4 @@ private:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DESERIALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_ */

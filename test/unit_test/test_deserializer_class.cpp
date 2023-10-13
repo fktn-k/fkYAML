@@ -8,8 +8,8 @@
 
 #include "catch2/catch.hpp"
 
-#include "fkYAML/detail/deserializer.hpp"
-#include "fkYAML/detail/input_adapter.hpp"
+#include "fkYAML/detail/input/deserializer.hpp"
+#include "fkYAML/detail/input/input_adapter.hpp"
 #include "fkYAML/node.hpp"
 
 TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTest]")

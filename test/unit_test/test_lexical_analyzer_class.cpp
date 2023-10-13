@@ -8,8 +8,8 @@
 
 #include "catch2/catch.hpp"
 
-#include "fkYAML/detail/input_adapter.hpp"
-#include "fkYAML/detail/lexical_analyzer.hpp"
+#include "fkYAML/detail/input/input_adapter.hpp"
+#include "fkYAML/detail/input/lexical_analyzer.hpp"
 #include "fkYAML/node.hpp"
 
 using pchar_lexer_t =
