@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <cfloat>
+#include <sstream>
 #include <map>
 
 #include "catch2/catch.hpp"
@@ -335,6 +336,36 @@ TEST_CASE("NodeClassTest_AliasMoveCtorTest", "[NodeClassTest]")
     REQUIRE(alias.is_boolean());
     REQUIRE_NOTHROW(alias.to_boolean());
     REQUIRE(alias.to_boolean() == true);
+}
+
+//
+// test cases for serialization/deserialization features
+//
+
+TEST_CASE("NodeClassTest_DeserializeTest", "[NodeClassTest]")
+{
+    char source[] = "foo: bar";
+    std::stringstream ss;
+    ss << source;
+
+    fkyaml::node node = GENERATE_REF(
+        fkyaml::node::deserialize("foo: bar"),
+        fkyaml::node::deserialize(&source[0]),
+        fkyaml::node::deserialize(&source[0], &source[8]),
+        fkyaml::node::deserialize(std::string(source)),
+        fkyaml::node::deserialize(ss));
+
+    REQUIRE(node.is_mapping());
+    REQUIRE(node.size() == 1);
+    REQUIRE(node.contains("foo"));
+    REQUIRE(node["foo"].is_string());
+    REQUIRE(node["foo"].get_value<std::string>() == "bar");
+}
+
+TEST_CASE("NodeClassTest_SerializeTest", "[NodeClassTest]")
+{
+    fkyaml::node node = fkyaml::node::deserialize("foo: bar");
+    REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");
 }
 
 //
