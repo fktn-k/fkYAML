@@ -15,7 +15,7 @@
 
 #include <cstdint>
 
-#include "fkYAML/detail/macros/version_macros.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
 
 /**
  * @namespace fkyaml

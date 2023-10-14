@@ -6,11 +6,11 @@
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include "catch2/catch.hpp"
-
 #include <string>
 
-#include "fkYAML/ordered_map.hpp"
+#include <catch2/catch.hpp>
+
+#include <fkYAML/ordered_map.hpp>
 
 TEST_CASE("OrderedMapClassTest_DefaultCtorTest", "[OrderedMapClassTest]")
 {

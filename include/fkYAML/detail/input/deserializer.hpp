@@ -16,11 +16,11 @@
 #include <cstdint>
 #include <unordered_map>
 
-#include "fkYAML/detail/macros/version_macros.hpp"
-#include "fkYAML/detail/input/lexical_analyzer.hpp"
-#include "fkYAML/detail/meta/type_traits.hpp"
-#include "fkYAML/detail/types/yaml_version_t.hpp"
-#include "fkYAML/exception.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/input/lexical_analyzer.hpp>
+#include <fkYAML/detail/meta/type_traits.hpp>
+#include <fkYAML/detail/types/yaml_version_t.hpp>
+#include <fkYAML/exception.hpp>
 
 /**
  * @namespace fkyaml

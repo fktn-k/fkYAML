@@ -44,6 +44,6 @@
         } /* namespace (inline namespace) */                                                                           \
         } // namespace fkyaml
 
-    #include "fkYAML/detail/macros/cpp_config_macros.hpp"
+    #include <fkYAML/detail/macros/cpp_config_macros.hpp>
 
 #endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)
