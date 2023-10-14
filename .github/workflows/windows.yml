@@ -13,6 +13,9 @@ concurrency:
   group: ${{github.workflow}}-${{github.ref || github.run_id}}
   cancel-in-progress: true
 
+env:
+  JOBS: 3
+
 jobs:
   msvc2019:
     timeout-minutes: 10
@@ -30,11 +33,11 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j${{env.JOBS}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{matrix.build_type}} --output-on-failure
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j${{env.JOBS}}
 
   msvc2022:
     timeout-minutes: 10
@@ -52,11 +55,11 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j${{env.JOBS}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{matrix.build_type}} --output-on-failure
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j${{env.JOBS}}
 
   mingw:
     timeout-minutes: 10
@@ -75,8 +78,8 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -S ${{github.workspace}} -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j${{env.JOBS}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{matrix.build_type}} --output-on-failure
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j${{env.JOBS}}

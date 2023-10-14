@@ -13,6 +13,9 @@ concurrency:
   group: ${{github.workflow}}-${{github.ref || github.run_id}}
   cancel-in-progress: true
 
+env:
+  JOBS: 4
+
 jobs:
   xcode_for_macos11:
     timeout-minutes: 10
@@ -32,11 +35,11 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config Debug
+      run: cmake --build ${{github.workspace}}/build --config Debug -j${{env.JOBS}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest -C Debug --output-on-failure
+      run: ctest -C Debug --output-on-failure -j${{env.JOBS}}
 
   xcode_for_macos12:
     timeout-minutes: 10
@@ -56,8 +59,8 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config Debug
+      run: cmake --build ${{github.workspace}}/build --config Debug -j${{env.JOBS}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest -C Debug --output-on-failure
+      run: ctest -C Debug --output-on-failure -j${{env.JOBS}}
