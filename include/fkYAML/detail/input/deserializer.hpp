@@ -18,7 +18,9 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
-#include <fkYAML/detail/meta/type_traits.hpp>
+#include <fkYAML/detail/meta/input_adapter_traits.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
 
@@ -44,7 +46,7 @@ namespace detail
 template <typename BasicNodeType>
 class basic_deserializer
 {
-    static_assert(detail::is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts basic_node<...>");
+    static_assert(is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts basic_node<...>");
 
     /** A type for sequence node value containers. */
     using sequence_type = typename BasicNodeType::sequence_type;

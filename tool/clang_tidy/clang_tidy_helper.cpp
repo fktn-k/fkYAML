@@ -15,9 +15,11 @@
 #include <fkYAML/detail/iterator.hpp>
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/detect.hpp>
+#include <fkYAML/detail/meta/input_adapter_traits.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
-#include <fkYAML/detail/output/serializer.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/output/serializer.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
 #include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>

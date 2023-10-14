@@ -23,7 +23,9 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
-#include <fkYAML/detail/meta/type_traits.hpp>
+#include <fkYAML/detail/meta/input_adapter_traits.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/exception.hpp>
 
 /**

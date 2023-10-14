@@ -25,6 +25,7 @@
 #include <fkYAML/detail/input/deserializer.hpp>
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/detail/iterator.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 #include <fkYAML/detail/output/serializer.hpp>
@@ -409,9 +410,9 @@ public:
         typename CompatibleType, typename U = detail::remove_cvref_t<CompatibleType>,
         detail::enable_if_t<
             detail::conjunction<
-                detail::negation<detail::is_basic_node<U>>,
-                detail::disjunction<
-                    std::is_same<CompatibleType, std::nullptr_t>, detail::is_compatible_type<basic_node, U>>>::value,
+                detail::negation<detail::is_basic_node<U>>, detail::disjunction<
+                                                                std::is_same<CompatibleType, std::nullptr_t>,
+                                                                detail::is_node_compatible_type<basic_node, U>>>::value,
             int> = 0>
     explicit basic_node(CompatibleType&& val) noexcept(
         noexcept(Converter<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))

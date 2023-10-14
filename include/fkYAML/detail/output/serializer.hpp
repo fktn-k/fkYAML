@@ -18,7 +18,7 @@
 #include <string>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
-#include <fkYAML/detail/meta/type_traits.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
 #include <fkYAML/exception.hpp>
 
