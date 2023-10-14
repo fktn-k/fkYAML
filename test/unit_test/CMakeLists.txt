@@ -119,13 +119,15 @@ if(FK_YAML_CODE_COVERAGE)
     target_link_libraries(${TEST_TARGET} PRIVATE --coverage)
   endif()
 
+  file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/include/fkYAML/*.hpp)
+
   add_custom_target(
     generate_test_coverage
     COMMAND ${CMAKE_CTEST_COMMAND} -C ${CMAKE_BUILD_TYPE} --output-on-failure
     COMMAND cd ${PROJECT_BINARY_DIR}/test/unit_test/CMakeFiles/${TEST_TARGET}.dir
     COMMAND ${LCOV_TOOL} --directory . --capture --output-file ${PROJECT_NAME}.info --rc
             lcov_branch_coverage=1
-    COMMAND ${LCOV_TOOL} -e ${PROJECT_NAME}.info ${PROJECT_SOURCE_DIR}/include/fkYAML/*.hpp
+    COMMAND ${LCOV_TOOL} -e ${PROJECT_NAME}.info ${SRC_FILES}
             --output-file ${PROJECT_NAME}.info.filtered --rc lcov_branch_coverage=1
     COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/imapdl/filterbr.py ${PROJECT_NAME}.info.filtered >
             ${PROJECT_NAME}.info.filtered.noexcept
