@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include "fkYAML/@REL_SRC_FILE@" // IWYU pragma: keep
+#include <fkYAML/@REL_SRC_FILE@> // IWYU pragma: keep
 
 // This is just a dummy main function for compilation.
 int main()

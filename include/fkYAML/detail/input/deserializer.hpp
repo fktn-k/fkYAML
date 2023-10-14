@@ -10,17 +10,19 @@
  * @file
  */
 
-#ifndef FK_YAML_DESERIALIZER_HPP_
-#define FK_YAML_DESERIALIZER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
+#define FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
 
 #include <cstdint>
 #include <unordered_map>
 
-#include "fkYAML/detail/version_macros.hpp"
-#include "fkYAML/detail/lexical_analyzer.hpp"
-#include "fkYAML/detail/type_traits.hpp"
-#include "fkYAML/detail/yaml_version_t.hpp"
-#include "fkYAML/exception.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/input/lexical_analyzer.hpp>
+#include <fkYAML/detail/meta/input_adapter_traits.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/types/yaml_version_t.hpp>
+#include <fkYAML/exception.hpp>
 
 /**
  * @namespace fkyaml
@@ -44,7 +46,7 @@ namespace detail
 template <typename BasicNodeType>
 class basic_deserializer
 {
-    static_assert(detail::is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts basic_node<...>");
+    static_assert(is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts basic_node<...>");
 
     /** A type for sequence node value containers. */
     using sequence_type = typename BasicNodeType::sequence_type;
@@ -322,4 +324,4 @@ private:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DESERIALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_ */

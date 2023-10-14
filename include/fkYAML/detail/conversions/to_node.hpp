@@ -10,14 +10,16 @@
  * @file
  */
 
-#ifndef FK_YAML_DETAIL_TO_NODE_HPP_
-#define FK_YAML_DETAIL_TO_NODE_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_
+#define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_
 
 #include <utility>
 
-#include "fkYAML/detail/version_macros.hpp"
-#include "fkYAML/detail/node_t.hpp"
-#include "fkYAML/detail/type_traits.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/types/node_t.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/meta/type_traits.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
 
 /**
  * @namespace fkyaml
@@ -360,4 +362,4 @@ FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TO_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_ */

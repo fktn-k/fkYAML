@@ -6,10 +6,10 @@
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include "catch2/catch.hpp"
+#include <catch2/catch.hpp>
 
-#include "fkYAML/detail/iterator.hpp"
-#include "fkYAML/node.hpp"
+#include <fkYAML/detail/iterator.hpp>
+#include <fkYAML/node.hpp>
 
 TEST_CASE("IteratorClassTest_SequenceCtorTest", "[IteratorClassTest]")
 {

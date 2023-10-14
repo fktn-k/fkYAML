@@ -10,8 +10,8 @@
  * @file
  */
 
-#ifndef FK_YAML_DETAIL_LEXICAL_ANALIZER_HPP_
-#define FK_YAML_DETAIL_LEXICAL_ANALIZER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
+#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 
 #include <cctype>
 #include <cmath>
@@ -21,10 +21,12 @@
 #include <string>
 #include <vector>
 
-#include "fkYAML/detail/version_macros.hpp"
-#include "fkYAML/detail/assert.hpp"
-#include "fkYAML/detail/type_traits.hpp"
-#include "fkYAML/exception.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/assert.hpp>
+#include <fkYAML/detail/meta/input_adapter_traits.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/exception.hpp>
 
 /**
  * @namespace fkyaml
@@ -1343,4 +1345,4 @@ private:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_LEXICAL_ANALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_ */

@@ -10,12 +10,12 @@
  * @file
  */
 
-#ifndef FK_YAML_DETAIL_YAML_VERSION_TYPE_HPP_
-#define FK_YAML_DETAIL_YAML_VERSION_TYPE_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
+#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
 
 #include <cstdint>
 
-#include "fkYAML/detail/version_macros.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
 
 /**
  * @namespace fkyaml
@@ -44,4 +44,4 @@ enum class yaml_version_t : std::uint32_t
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_YAML_VERSION_TYPE_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_ */

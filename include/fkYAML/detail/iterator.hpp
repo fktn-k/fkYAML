@@ -16,9 +16,9 @@
 #include <cstddef>
 #include <iterator>
 
-#include "fkYAML/detail/version_macros.hpp"
-#include "fkYAML/detail/type_traits.hpp"
-#include "fkYAML/exception.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/exception.hpp>
 
 /**
  * @namespace fkyaml

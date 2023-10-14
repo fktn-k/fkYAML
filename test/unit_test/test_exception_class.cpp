@@ -8,9 +8,9 @@
 
 #include <cstring>
 
-#include "catch2/catch.hpp"
+#include <catch2/catch.hpp>
 
-#include "fkYAML/exception.hpp"
+#include <fkYAML/exception.hpp>
 
 TEST_CASE("ExceptionClassTest_DefaultCtorTest", "[ExceptionClassTest]")
 {

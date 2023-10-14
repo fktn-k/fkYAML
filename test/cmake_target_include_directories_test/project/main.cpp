@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "fkYAML/node.hpp"
+#include <fkYAML/node.hpp>
 
 int main()
 {

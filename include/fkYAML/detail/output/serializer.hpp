@@ -10,17 +10,17 @@
  * @file
  */
 
-#ifndef FK_YAML_SERIALIZER_HPP_
-#define FK_YAML_SERIALIZER_HPP_
+#ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
+#define FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
 
 #include <cmath>
 #include <sstream>
 #include <string>
 
-#include "fkYAML/detail/version_macros.hpp"
-#include "fkYAML/detail/node_t.hpp"
-#include "fkYAML/detail/type_traits.hpp"
-#include "fkYAML/exception.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/types/node_t.hpp>
+#include <fkYAML/exception.hpp>
 
 FK_YAML_NAMESPACE_BEGIN
 
@@ -187,4 +187,4 @@ private:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_SERIALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_ */

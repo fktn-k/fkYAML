@@ -11,9 +11,9 @@
 #include <sstream>
 #include <map>
 
-#include "catch2/catch.hpp"
+#include <catch2/catch.hpp>
 
-#include "fkYAML/node.hpp"
+#include <fkYAML/node.hpp>
 
 //
 // test cases for constructors

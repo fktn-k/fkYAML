@@ -6,12 +6,12 @@
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include "catch2/catch.hpp"
-
 #include <limits>
 
-#include "fkYAML/detail/serializer.hpp"
-#include "fkYAML/node.hpp"
+#include <catch2/catch.hpp>
+
+#include <fkYAML/detail/output/serializer.hpp>
+#include <fkYAML/node.hpp>
 
 TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")
 {

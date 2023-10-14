@@ -15,9 +15,9 @@
 
 #include <utility>
 
-#include "fkYAML/detail/version_macros.hpp"
-#include "fkYAML/detail/from_node.hpp"
-#include "fkYAML/detail/to_node.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/conversions/from_node.hpp>
+#include <fkYAML/detail/conversions/to_node.hpp>
 
 FK_YAML_NAMESPACE_BEGIN
 
