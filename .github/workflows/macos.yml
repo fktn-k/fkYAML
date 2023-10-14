@@ -35,7 +35,7 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config Debug -j${{env.JOBS}}
+      run: cmake --build ${{github.workspace}}/build --config Debug -j ${{env.JOBS}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -59,7 +59,7 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config Debug -j${{env.JOBS}}
+      run: cmake --build ${{github.workspace}}/build --config Debug -j ${{env.JOBS}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build
