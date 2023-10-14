@@ -14,6 +14,7 @@
 #include "fkYAML/detail/input/lexical_analyzer.hpp"
 #include "fkYAML/detail/iterator.hpp"
 #include "fkYAML/detail/macros/version_macros.hpp"
+#include "fkYAML/detail/meta/detect.hpp"
 #include "fkYAML/detail/meta/type_traits.hpp"
 #include "fkYAML/detail/output/serializer.hpp"
 #include "fkYAML/detail/meta/stl_supplement.hpp"

@@ -17,6 +17,7 @@
 #include <type_traits>
 
 #include "fkYAML/detail/macros/version_macros.hpp"
+#include "fkYAML/detail/meta/detect.hpp"
 #include "fkYAML/detail/meta/stl_supplement.hpp"
 
 /**
@@ -214,75 +215,6 @@ template <typename T>
 struct is_complete_type<T, decltype(void(sizeof(T)))> : std::true_type
 {
 };
-
-/**
- * @struct none_such
- * @brief A dummy struct to represent detection failure.
- */
-struct none_such
-{
-    none_such() = delete;
-    ~none_such() = delete;
-    none_such(const none_such&) = delete;
-    none_such(none_such&&) = delete;
-    none_such& operator=(const none_such&) = delete;
-    none_such& operator=(none_such&&) = delete;
-};
-
-/**
- * @brief A helper for general type detection.
- *
- * @tparam Default A type to represent detection failure.
- * @tparam AlwaysVoid This must be void type.
- * @tparam Op A type for desired operation type.
- * @tparam Args Argument types passed to desired operation.
- */
-template <typename Default, typename AlwaysVoid, template <typename...> class Op, typename... Args>
-struct detect_helper : std::false_type
-{
-    using type = Default;
-};
-
-/**
- * @brief A partial specialization of detect_helper if desired operation type is found.
- *
- * @tparam Default A type to represent detection failure.
- * @tparam Op A type for desired operation type.
- * @tparam Args Argument types passed to desired operation.
- */
-template <typename Default, template <typename...> class Op, typename... Args>
-struct detect_helper<Default, void_t<Op<Args...>>, Op, Args...> : std::true_type
-{
-    using type = Op<Args...>;
-};
-
-/**
- * @brief Type traits to detect Op operation with Args argument types
- *
- * @tparam Op A desired operation type.
- * @tparam Args Argument types passed to desired operation.
- */
-template <template <typename...> class Op, typename... Args>
-using is_detected = detect_helper<none_such, void, Op, Args...>;
-
-/**
- * @brief Type traits to represent a detected type.
- *
- * @tparam Op A type for desired operation type.
- * @tparam Args Argument types passed to desired operation.
- */
-template <template <typename...> class Op, typename... Args>
-using detected_t = typename detect_helper<none_such, void, Op, Args...>::type;
-
-/**
- * @brief Type traits to check if Expected and a detected type are exactly the same.
- *
- * @tparam Expected An expected detection result type.
- * @tparam Op A type for desired operation.
- * @tparam Args Argument types passed to desired operation.
- */
-template <typename Expected, template <typename...> class Op, typename... Args>
-using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
 /**
  * @brief A type represent from_node function.
