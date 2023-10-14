@@ -57,7 +57,7 @@ clang-tidy:
 # pre-requisites: iwyu
 iwyu:
 	cmake -B build_iwyu -S . -DFK_YAML_RUN_IWYU=ON
-	cmake --build build_iwyu --target run_iwyu -j $JOBS
+	cmake --build build_iwyu --target run_iwyu -j $(JOBS)
 
 ##############################
 #   Runtime Code Analyzers   #
