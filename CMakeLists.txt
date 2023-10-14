@@ -18,7 +18,15 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(FK_YAML_INSTALL ON)
 endif()
 
-if(FK_YAML_CODE_COVERAGE)
+if(FK_YAML_CODE_COVERAGE OR FK_YAML_RUN_VALGRIND OR FK_YAML_RUN_CLANG_SANITIZERS)
+  if(FK_YAML_RUN_VALGRIND AND FK_YAML_RUN_CLANG_SANITIZERS)
+    message(FATAL_ERROR "FK_YAML_RUN_VALGRIND and FK_YAML_RUN_CLANG_SANITIZERS are mutually exclusive options.")
+  endif()
+
+  if(FK_YAML_RUN_CLANG_SANITIZERS AND NOT("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
+    message(FATAL_ERROR "Compiler must be clang when FK_YAML_RUN_CLANG_SANITIZERS is enabled.")
+  endif()
+
   # Generating code coverage depends on the unit test app. So force build it.
   set(FK_YAML_BUILD_TEST ON)
 endif()
@@ -33,7 +41,7 @@ if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       RESULT_VARIABLE GIT_SUBMOD_RET)
     if(NOT GIT_SUBMOD_RET EQUAL "0")
-      message(FATAL "Failed to fetch Catch2 as a git submodule.")
+      message(FATAL_ERROR "Failed to fetch Catch2 as a git submodule.")
     endif()
   endif()
   set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CATCH2_ROOT_DIR}/contrib")
@@ -74,6 +82,10 @@ target_include_directories(
   ${FK_YAML_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${FK_YAML_INCLUDE_BUILD_DIR}>
                                    $<INSTALL_INTERFACE:${FK_YAML_INCLUDE_INSTALL_DIR}>)
 
+#
+# Integrate with tools.
+#
+
 # Configure clang-tidy if enabled.
 if(FK_YAML_RUN_CLANG_TIDY)
   add_subdirectory(tool/clang_tidy)
@@ -82,11 +94,6 @@ endif()
 # Configure include-what-you-use if enabled.
 if(FK_YAML_RUN_IWYU)
   add_subdirectory(tool/iwyu)
-endif()
-
-# Configure targets for CI.
-if(FK_YAML_CI)
-  include(ci)
 endif()
 
 #
