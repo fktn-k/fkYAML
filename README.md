@@ -111,7 +111,7 @@ The `Deserializer` class provides an API for deserializing a YAML string into `n
 
 ```cpp
 #include <cassert>
-#include "fkYAML/node.hpp"
+#include <fkYAML/node.hpp>
 
 // ...
 
@@ -145,7 +145,7 @@ The `Serializer` class provides an API for serializing YAML node values into a s
 ```cpp
 #include <cmath>
 #include <string>
-#include "fkYAML/node.hpp"
+#include <fkYAML/node.hpp>
 
 // ...
 
@@ -171,7 +171,7 @@ std::string str = fkyaml::node::serialize(root);
 The `node` class provides APIs for building YAML nodes programatically.  
 
 ```cpp
-#include "fkYAML/node.hpp"
+#include <fkYAML/node.hpp>
 
 // ...
 
@@ -200,6 +200,54 @@ fkyaml::node another_root = fkyaml::node::mapping({
     { "baz", fkyaml::node(true) }
 });
 ```
+
+### Customize serialization/deserialization
+
+To make your own custom types convertible from/to ``fkyaml::node`` type, you can implement your own `to_node()` & `from_node()` **outside** of the fkyaml namespace.
+(Those functions will be called when you use `fkyaml::node::get_value\<CustomType\>` to get a CustomType object out of a `fkyaml::node` object.)
+```cpp
+#include <fkYAML/node_value_converter.hpp>
+
+namespace ns
+{
+
+struct CustomType
+{
+    std::string foo;
+    bool bar;
+    double baz;
+};
+
+// overload to_node() with the CustomType type.
+void to_node(fkyaml::node& n, const CustomType& c)
+{
+    n = fkyaml::node::mapping({
+        { "foo", fkyaml::node(c.foo) },
+        { "bar", fkyaml::node(c.bar) },
+        { "baz", fkyaml::node(c.baz) }
+    });
+}
+
+// overload from_node() with the CustomType type.
+void from_node(const fkyaml::node& n, CustomType& c)
+{
+    c.foo = n.get_value<std::string>();
+    c.bar = n.get_value<bool>();
+    c.baz = n.get_value<double>();
+}
+
+} // namespace ns
+
+// ...
+
+CustomType c { "yaml", true, 3.14 };
+// convert from CustomType to fkyaml::node.
+fkyaml::node n(c);
+// convert from fkyaml::node to CustomType.
+CustomType another_c = n.get_value<CustomType>();
+```
+To achieve customization like the above, your CustomType **MUST** be default constructible.  
+Furthermore, to make your own implementations of `to_node()` & `from_node()` called with the mechanism of ADL, they **MUST** be declared/implemented **OUTSIDE** of the fkyaml namespace.
 
 ## How to execute the unit tests
 
