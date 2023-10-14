@@ -12,8 +12,6 @@ TEST_SRCS = $(shell find test -type f \( -name '*.hpp' -o -name '*.cpp' \) | sor
 TOOL_SRCS = $(shell find tool -type f \( -name '*.cpp' -o -name '*.cpp.in' \) | sort)
 # list of CMake scripts in the project.
 CMAKE_SCRIPTS = $(shell find . -type f \( -name 'CMakeLists.txt' -o -name '*.cmake' \) -not -path './thirdparty/*' | sort)
-# flags for Clang Sanitizers
-SANITIZER_FLAGS = "-g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined,bounds,integer,nullability -fno-sanitize-recover=all -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base"
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
@@ -21,6 +19,9 @@ TARGET_MINOR_VERSION := 0
 TARGET_PATCH_VERSION := 1
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/VersioningMacros.hpp
+
+# system
+JOBS = $(($(shell grep cpu.cores /proc/cpuinfo | sort -u | sed 's/[^0-9]//g') + 1))
 
 ###############################################
 #   documentation of the Makefile's targets   #
@@ -51,12 +52,12 @@ clang-format:
 # pre-requisites: clang-tidy
 clang-tidy:
 	cmake -B build_clang_tidy -S . -DFK_YAML_RUN_CLANG_TIDY=ON
-	cmake --build build_clang_tidy --target run_clang_tidy
+	cmake --build build_clang_tidy --target run_clang_tidy -j $(JOBS)
 
 # pre-requisites: iwyu
 iwyu:
 	cmake -B build_iwyu -S . -DFK_YAML_RUN_IWYU=ON
-	cmake --build build_iwyu --target run_iwyu
+	cmake --build build_iwyu --target run_iwyu -j $(JOBS)
 
 ##############################
 #   Runtime Code Analyzers   #
@@ -64,17 +65,15 @@ iwyu:
 
 # pre-requisites: clang
 clang-sanitizers:
-	CXX=clang++ \
-	    CXXFLAGS=$(SANITIZER_FLAGS) \
-	    cmake -B build_clang_sanitizers -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
-	cmake --build build_clang_sanitizers --config Debug
-	ctest -C Debug --output-on-failure --test-dir build_clang_sanitizers
+	CXX=clang++ cmake -B build_clang_sanitizers -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_CLANG_SANITIZERS=ON
+	cmake --build build_clang_sanitizers --config Debug -j $(JOBS)
+	ctest -C Debug --output-on-failure --test-dir build_clang_sanitizers -j $(JOBS)
 
 # pre-requisites: valgrind
 valgrind:
 	cmake -B build_valgrind -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
-	cmake --build build_valgrind --config Debug
-	ctest -C Debug -T memcheck --test-dir build_valgrind
+	cmake --build build_valgrind --config Debug -j $(JOBS)
+	ctest -C Debug -T memcheck --test-dir build_valgrind -j $(JOBS)
 
 ###############################
 #   CMake Scripts Formatter   #
@@ -91,7 +90,7 @@ cmake-format:
 # pre-requisites: doxygen, graphviz
 doxygen:
 	cmake -B build_doxygen -S . -DFK_YAML_RUN_DOXYGEN=ON
-	cmake --build build_doxygen --target doxygen
+	cmake --build build_doxygen --target doxygen -j $(JOBS)
 
 ###############
 #   Version   #
@@ -147,7 +146,7 @@ update-version: update-version-macros update-project-version reuse CHANGELOG.md 
 # pre-requisites: lcov
 lcov-coverage:
 	cmake -B build_coverage -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_CODE_COVERAGE=ON
-	cmake --build build_coverage --config Debug --target generate_test_coverage
+	cmake --build build_coverage --config Debug --target generate_test_coverage -j $(JOBS)
 
 # pre-requisites: genhtml lcov
 html-coverage: lcov-coverage
