@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.1.1](https://github.com/fktn-k/fkYAML/releases/tag/v0.1.1) (2023-10-15)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.1.0...v0.1.1)
+
+- hotfix to support v0.1.0 APIs in cmake_fetch_content_test. ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.1.0](https://github.com/fktn-k/fkYAML/releases/tag/v0.1.0) (2023-10-15)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.0.1...v0.1.0)
