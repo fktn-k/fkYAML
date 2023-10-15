@@ -1245,8 +1245,6 @@ private:
 
     //!< An input buffer adapter to be analyzed.
     input_handler_type m_input_handler;
-    //!< A flag to determine whether the first input char has been retrieved.
-    bool m_is_first_input_char {true};
     //!< A temporal buffer to store a string to be parsed to an actual datum.
     input_string_type m_value_buffer;
     //!< The information set for input buffer.
