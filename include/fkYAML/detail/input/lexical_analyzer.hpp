@@ -1002,11 +1002,18 @@ private:
                     m_value_buffer.push_back(byte);
                     break;
                 }
-                // Multibyte characters are currently unsupported.
+                // TODO: Multibyte characters are not yet supported.
                 // Thus \N, \_, \L, \P \uXX, \UXXXX are currently unavailable.
                 default:
                     throw fkyaml::exception("Unsupported escape sequence found in a string token.");
                 }
+                continue;
+            }
+
+            // Handle unescaped control characters.
+            if (0x00 <= current && current <= 0x1F)
+            {
+                handle_unescaped_control_char(current);
                 continue;
             }
 
@@ -1017,76 +1024,84 @@ private:
                 continue;
             }
 
-            // Handle unescaped control characters.
-            switch (current)
-            {
-            // 0x00(NULL) has already been handled above.
-            case 0x01:
-                throw fkyaml::exception("Control character U+0001 (SOH) must be escaped to \\u0001.");
-            case 0x02:
-                throw fkyaml::exception("Control character U+0002 (STX) must be escaped to \\u0002.");
-            case 0x03:
-                throw fkyaml::exception("Control character U+0003 (ETX) must be escaped to \\u0003.");
-            case 0x04:
-                throw fkyaml::exception("Control character U+0004 (EOT) must be escaped to \\u0004.");
-            case 0x05:
-                throw fkyaml::exception("Control character U+0005 (ENQ) must be escaped to \\u0005.");
-            case 0x06:
-                throw fkyaml::exception("Control character U+0006 (ACK) must be escaped to \\u0006.");
-            case 0x07:
-                throw fkyaml::exception("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
-            case 0x08:
-                throw fkyaml::exception("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
-            case 0x09: // HT
-                m_value_buffer.push_back(current);
-                break;
-            // 0x0A(LF) has already been handled above.
-            case 0x0B:
-                throw fkyaml::exception("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
-            case 0x0C:
-                throw fkyaml::exception("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
-            // 0x0D(CR) has already been handled above.
-            case 0x0E:
-                throw fkyaml::exception("Control character U+000E (SO) must be escaped to \\u000E.");
-            case 0x0F:
-                throw fkyaml::exception("Control character U+000F (SI) must be escaped to \\u000F.");
-            case 0x10:
-                throw fkyaml::exception("Control character U+0010 (DLE) must be escaped to \\u0010.");
-            case 0x11:
-                throw fkyaml::exception("Control character U+0011 (DC1) must be escaped to \\u0011.");
-            case 0x12:
-                throw fkyaml::exception("Control character U+0012 (DC2) must be escaped to \\u0012.");
-            case 0x13:
-                throw fkyaml::exception("Control character U+0013 (DC3) must be escaped to \\u0013.");
-            case 0x14:
-                throw fkyaml::exception("Control character U+0014 (DC4) must be escaped to \\u0014.");
-            case 0x15:
-                throw fkyaml::exception("Control character U+0015 (NAK) must be escaped to \\u0015.");
-            case 0x16:
-                throw fkyaml::exception("Control character U+0016 (SYN) must be escaped to \\u0016.");
-            case 0x17:
-                throw fkyaml::exception("Control character U+0017 (ETB) must be escaped to \\u0017.");
-            case 0x18:
-                throw fkyaml::exception("Control character U+0018 (CAN) must be escaped to \\u0018.");
-            case 0x19:
-                throw fkyaml::exception("Control character U+0019 (EM) must be escaped to \\u0019.");
-            case 0x1A:
-                throw fkyaml::exception("Control character U+001A (SUB) must be escaped to \\u001A.");
-            case 0x1B:
-                throw fkyaml::exception("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
-            case 0x1C:
-                throw fkyaml::exception("Control character U+001C (FS) must be escaped to \\u001C.");
-            case 0x1D:
-                throw fkyaml::exception("Control character U+001D (GS) must be escaped to \\u001D.");
-            case 0x1E:
-                throw fkyaml::exception("Control character U+001E (RS) must be escaped to \\u001E.");
-            case 0x1F:
-                throw fkyaml::exception("Control character U+001F (US) must be escaped to \\u001F.");
-            // 0x20('0')~0x7E('~') have already been handled above.
-            // 16bit, 32bit characters are currently not supported.
-            default:
-                throw fkyaml::exception("Unsupported multibytes character found.");
-            }
+            // TODO: multibyte characters are not yet supported.
+            throw fkyaml::exception("Unsupported multibytes character found.");
+        }
+    }
+
+    /**
+     * @brief Handle unescaped control characters.
+     * 
+     * @param c A target character.
+     */
+    void handle_unescaped_control_char(char_int_type c)
+    {
+        FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
+
+        switch (c)
+        {
+        // 0x00(NULL) has already been handled above.
+        case 0x01:
+            throw fkyaml::exception("Control character U+0001 (SOH) must be escaped to \\u0001.");
+        case 0x02:
+            throw fkyaml::exception("Control character U+0002 (STX) must be escaped to \\u0002.");
+        case 0x03:
+            throw fkyaml::exception("Control character U+0003 (ETX) must be escaped to \\u0003.");
+        case 0x04:
+            throw fkyaml::exception("Control character U+0004 (EOT) must be escaped to \\u0004.");
+        case 0x05:
+            throw fkyaml::exception("Control character U+0005 (ENQ) must be escaped to \\u0005.");
+        case 0x06:
+            throw fkyaml::exception("Control character U+0006 (ACK) must be escaped to \\u0006.");
+        case 0x07:
+            throw fkyaml::exception("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
+        case 0x08:
+            throw fkyaml::exception("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
+        case 0x09: // HT
+            m_value_buffer.push_back(c);
+            break;
+        // 0x0A(LF) has already been handled above.
+        case 0x0B:
+            throw fkyaml::exception("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
+        case 0x0C:
+            throw fkyaml::exception("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
+        // 0x0D(CR) has already been handled above.
+        case 0x0E:
+            throw fkyaml::exception("Control character U+000E (SO) must be escaped to \\u000E.");
+        case 0x0F:
+            throw fkyaml::exception("Control character U+000F (SI) must be escaped to \\u000F.");
+        case 0x10:
+            throw fkyaml::exception("Control character U+0010 (DLE) must be escaped to \\u0010.");
+        case 0x11:
+            throw fkyaml::exception("Control character U+0011 (DC1) must be escaped to \\u0011.");
+        case 0x12:
+            throw fkyaml::exception("Control character U+0012 (DC2) must be escaped to \\u0012.");
+        case 0x13:
+            throw fkyaml::exception("Control character U+0013 (DC3) must be escaped to \\u0013.");
+        case 0x14:
+            throw fkyaml::exception("Control character U+0014 (DC4) must be escaped to \\u0014.");
+        case 0x15:
+            throw fkyaml::exception("Control character U+0015 (NAK) must be escaped to \\u0015.");
+        case 0x16:
+            throw fkyaml::exception("Control character U+0016 (SYN) must be escaped to \\u0016.");
+        case 0x17:
+            throw fkyaml::exception("Control character U+0017 (ETB) must be escaped to \\u0017.");
+        case 0x18:
+            throw fkyaml::exception("Control character U+0018 (CAN) must be escaped to \\u0018.");
+        case 0x19:
+            throw fkyaml::exception("Control character U+0019 (EM) must be escaped to \\u0019.");
+        case 0x1A:
+            throw fkyaml::exception("Control character U+001A (SUB) must be escaped to \\u001A.");
+        case 0x1B:
+            throw fkyaml::exception("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
+        case 0x1C:
+            throw fkyaml::exception("Control character U+001C (FS) must be escaped to \\u001C.");
+        case 0x1D:
+            throw fkyaml::exception("Control character U+001D (GS) must be escaped to \\u001D.");
+        case 0x1E:
+            throw fkyaml::exception("Control character U+001E (RS) must be escaped to \\u001E.");
+        case 0x1F:
+            throw fkyaml::exception("Control character U+001F (US) must be escaped to \\u001F.");
         }
     }
 
