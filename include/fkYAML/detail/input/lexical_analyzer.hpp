@@ -237,7 +237,6 @@ public:
                 m_input_handler.unget_range(3);
                 return m_last_token_type = scan_string();
             }
-
         }
         case 'F':
         case 'f': {
