@@ -139,7 +139,6 @@ public:
 
         switch (current)
         {
-        case '\0':
         case char_traits_type::eof(): // end of input buffer
             return lexical_token_t::END_OF_BUFFER;
         case ':': // key separater
