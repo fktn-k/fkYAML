@@ -14,6 +14,7 @@
 #define FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_
 
 #include <cmath>
+#include <cstdlib>
 #include <limits>
 #include <string>
 #include <type_traits>
