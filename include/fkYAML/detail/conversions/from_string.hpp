@@ -64,6 +64,20 @@ inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
     throw exception("Cannot convert a string into a boolean value.");
 }
 
+template <>
+inline long long from_string(const std::string& s, type_tag<long long> /*unused*/)
+{
+    char* endptr = nullptr;
+    const auto ret = std::strtoll(s.data(), &endptr, 0);
+
+    if (endptr != s.data() + s.size() || errno != 0)
+    {
+        throw exception("Failed to convert a string into an integer value.");
+    }
+
+    return ret;
+}
+
 template <typename SignedIntType>
 inline enable_if_t<
     conjunction<
@@ -82,10 +96,10 @@ from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
 }
 
 template <>
-inline long long from_string(const std::string& s, type_tag<long long> /*unused*/)
+inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/)
 {
     char* endptr = nullptr;
-    const auto ret = std::strtoll(s.data(), &endptr, 0);
+    const auto ret = std::strtoull(s.data(), &endptr, 0);
 
     if (endptr != s.data() + s.size() || errno != 0)
     {
@@ -110,20 +124,6 @@ from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
     }
 
     return static_cast<UnsignedIntType>(tmp_ret);
-}
-
-template <>
-inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/)
-{
-    char* endptr = nullptr;
-    const auto ret = std::strtoull(s.data(), &endptr, 0);
-
-    if (endptr != s.data() + s.size() || errno != 0)
-    {
-        throw exception("Failed to convert a string into an integer value.");
-    }
-
-    return ret;
 }
 
 template <>
