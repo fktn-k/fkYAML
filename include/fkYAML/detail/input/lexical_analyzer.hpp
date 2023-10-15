@@ -338,7 +338,7 @@ public:
     std::nullptr_t get_null() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
-        return from_string(m_value_buffer, type_tag<std::nullptr_t>{});
+        return from_string(m_value_buffer, type_tag<std::nullptr_t> {});
     }
 
     /**
@@ -350,7 +350,7 @@ public:
     boolean_type get_boolean() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
-        return from_string(m_value_buffer, type_tag<boolean_type>{});
+        return from_string(m_value_buffer, type_tag<boolean_type> {});
     }
 
     /**
@@ -361,7 +361,7 @@ public:
     integer_type get_integer() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
-        return from_string(m_value_buffer, type_tag<integer_type>{});
+        return from_string(m_value_buffer, type_tag<integer_type> {});
     }
 
     /**
@@ -372,7 +372,7 @@ public:
     float_number_type get_float_number() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
-        return from_string(m_value_buffer, type_tag<float_number_type>{});
+        return from_string(m_value_buffer, type_tag<float_number_type> {});
     }
 
     /**

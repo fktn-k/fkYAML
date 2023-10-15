@@ -36,7 +36,7 @@ namespace detail
 
 /**
  * @brief An input buffer handler.
- * 
+ *
  * @tparam InputAdapterType The type of the input adapter.
  */
 template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
@@ -54,7 +54,7 @@ public:
 
     /**
      * @brief Construct a new input_handler object.
-     * 
+     *
      * @param input_adapter An input adapter object
      */
     explicit input_handler(InputAdapterType&& input_adapter)
@@ -67,7 +67,7 @@ public:
 
     /**
      * @brief Get the character at the current position.
-     * 
+     *
      * @return int_type A character or EOF.
      */
     int_type get_current()
@@ -77,7 +77,7 @@ public:
 
     /**
      * @brief Get the character at next position.
-     * 
+     *
      * @return int_type A character or EOF.
      */
     int_type get_next()
@@ -101,7 +101,7 @@ public:
 
     /**
      * @brief Get the characters in the given range.
-     * 
+     *
      * @param length The length of characters retrieved from the current position.
      * @param str A string which will contain the resulting characters.
      * @return int_type 0 (for success) or EOF (for error).
@@ -145,7 +145,7 @@ public:
 
     /**
      * @brief Move backward the current position to the given range.
-     * 
+     *
      * @param length The length of moving backward.
      */
     void unget_range(size_t length)

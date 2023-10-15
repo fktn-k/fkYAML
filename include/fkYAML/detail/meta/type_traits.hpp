@@ -201,7 +201,7 @@ constexpr T static_const<T>::value;
 
 /**
  * @brief A helper structure for tag dispatch.
- * 
+ *
  * @tparam T A tag type.
  */
 template <typename T>
