@@ -71,7 +71,7 @@ inline long long from_string(const std::string& s, type_tag<long long> /*unused*
     char* endptr = nullptr;
     const auto ret = std::strtoll(s.data(), &endptr, 0);
 
-    if (endptr != s.data() + s.size() || errno != 0)
+    if (endptr != s.data() + s.size() || errno == ERANGE)
     {
         throw exception("Failed to convert a string into an integer value.");
     }
@@ -102,7 +102,7 @@ inline unsigned long long from_string(const std::string& s, type_tag<unsigned lo
     char* endptr = nullptr;
     const auto ret = std::strtoull(s.data(), &endptr, 0);
 
-    if (endptr != s.data() + s.size() || errno != 0)
+    if (endptr != s.data() + s.size() || errno == ERANGE)
     {
         throw exception("Failed to convert a string into an integer value.");
     }
