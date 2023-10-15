@@ -22,6 +22,7 @@ You can add YAML support into your projects by just including header files where
   - [Deserialize YAML formatted strings](#deserialize-yaml-formatted-strings)
   - [Serialize YAML node values](#serializing-yaml-node-values)
   - [Build YAML nodes programatically](#build-yaml-nodes-programatically)
+  - [Customize serialization/deserialization](#customize-serializationdeserialization)
 - [How to execute the unit tests](#how-to-execute-the-unit-tests)
 - [Supported compilers](#supported-compilers)
 - [License](#license)
@@ -49,6 +50,9 @@ The fkYAML library has two design goals:
 If your C++ project uses [CMake](https://cmake.org/) as the build system tool, there are several ways to integrate it with the fkYAML library:  
 
 - **use `add_subdirectory()`**  
+  <details>
+  <summary>See an example code snippet.</summary><div>
+
   ```cmake
   cmake_minimum_required(VERSION 3.8)
   project(YourProjectName)
@@ -59,7 +63,12 @@ If your C++ project uses [CMake](https://cmake.org/) as the build system tool, t
   target_link_libraries(your_app PRIVATE fkYAML::fkYAML)
   ```
 
+  </div></>
+
 - **use the `FetchContent` module**  
+  <details>
+  <summary>See an example code snnipet.</summary><details>
+
   ```cmake
   cmake_minimum_required(VERSION 3.11)
   project(YourProjectName)
@@ -75,9 +84,16 @@ If your C++ project uses [CMake](https://cmake.org/) as the build system tool, t
   add_executable(your_app main.cpp)
   target_link_library(your_app PRIVATE fkYAML::fkYAML)
   ```
+
+  </div></details>
+
 - **use `find_package()`**  
   Make sure the fkYAML library has been installed to your local machine.  
   See the [How to install](#how-to-install) section for detail.  
+
+  <details>
+  <summary>An example code snippet.</summary><div>
+
   ```cmake
   cmake_minimum_required(VERSION 3.8)
   project(YourProjectName)
@@ -87,6 +103,8 @@ If your C++ project uses [CMake](https://cmake.org/) as the build system tool, t
   add_executable(your_app main.cpp)
   target_link_library(your_app PRIVATE fkYAML::fkYAML)
   ```
+
+  </div></details>
 
 ## How to install
 The fkYAML library can be installed to your local machine by the following commands:  
@@ -109,9 +127,12 @@ Here are some examples to give you an idea how to use the fkYAML library.
 
 The `Deserializer` class provides an API for deserializing a YAML string into `node` objects.  
 
+<details>
+<summary>See an example code snippet.</summary><div>
+
 ```cpp
 #include <cassert>
-#include "fkYAML/node.hpp"
+#include <fkYAML/node.hpp>
 
 // ...
 
@@ -137,15 +158,19 @@ assert(root["foo"].get_value<std::string>() == "test");
 assert(root["bar"].get_value<double>() == 3.14);
 assert(root["baz"].get_value<bool>() == true);
 ```
+</div></details>
 
 ### Serializing YAML node values
 
 The `Serializer` class provides an API for serializing YAML node values into a string.  
 
+<details>
+<summary>See an example code snippet.</summary><div>
+
 ```cpp
 #include <cmath>
 #include <string>
-#include "fkYAML/node.hpp"
+#include <fkYAML/node.hpp>
 
 // ...
 
@@ -166,12 +191,17 @@ std::string str = fkyaml::node::serialize(root);
 // baz: true
 ```
 
+</div></details>
+
 ### Build YAML nodes programatically
 
 The `node` class provides APIs for building YAML nodes programatically.  
 
+<details>
+<summary>See an example code snippet.</summary><div>
+
 ```cpp
-#include "fkYAML/node.hpp"
+#include <fkYAML/node.hpp>
 
 // ...
 
@@ -201,6 +231,60 @@ fkyaml::node another_root = fkyaml::node::mapping({
 });
 ```
 
+</div></details>
+
+### Customize serialization/deserialization
+
+To make your own custom types convertible from/to ``fkyaml::node`` type, you can implement your own `to_node()` & `from_node()` **outside** of the fkyaml namespace.
+(Those functions will be called when you use `fkyaml::node::get_value\<CustomType\>` to get a CustomType object out of a `fkyaml::node` object.)
+
+<details>
+<summary>See an example code snippet.</summary><div>
+
+```cpp
+#include <fkYAML/node_value_converter.hpp>
+
+namespace ns
+{
+
+struct CustomType
+{
+    std::string foo;
+    bool bar;
+    double baz;
+};
+
+// overload to_node() with the CustomType type.
+void to_node(fkyaml::node& n, const CustomType& c)
+{
+    n = fkyaml::node::mapping({
+        { "foo", fkyaml::node(c.foo) },
+        { "bar", fkyaml::node(c.bar) },
+        { "baz", fkyaml::node(c.baz) }
+    });
+}
+
+// overload from_node() with the CustomType type.
+void from_node(const fkyaml::node& n, CustomType& c)
+{
+    c.foo = n.get_value<std::string>();
+    c.bar = n.get_value<bool>();
+    c.baz = n.get_value<double>();
+}
+
+} // namespace ns
+
+// ...
+
+CustomType c { "yaml", true, 3.14 };
+// convert from CustomType to fkyaml::node.
+fkyaml::node n(c);
+// convert from fkyaml::node to CustomType.
+CustomType another_c = n.get_value<CustomType>();
+```
+To achieve customization like the above, your CustomType **MUST** be default constructible.  
+Furthermore, to make your own implementations of `to_node()` & `from_node()` called with the mechanism of ADL, they **MUST** be declared/implemented **OUTSIDE** of the fkyaml namespace.
+
 ## How to execute the unit tests
 
 You can execute the unit tests with the following commands.  
@@ -212,8 +296,13 @@ $ cmake --build . --config Debug
 $ ctest -C Debug --output-on-failure
 ```
 
+</div></details>
+
 ## Supported compilers
 Currently, the following compilers are known to work and used in CI workflows:
+
+<details>
+<summary>See the supported OS/compiler table.</summary><div>
 
 | Compiler | Operating System | CI provider |
 |----------|------------------|-------------|
@@ -250,6 +339,8 @@ Currently, the following compilers are known to work and used in CI workflows:
 | MinGW-64 12.2.0 | Windows-10.0.20348 | GitHub Actions |
 | Visual Studio 16 2019 MSVC 19.29.30152.0 | Windows-10.0.17763 | GitHub Actions |
 | Visual Studio 17 2022 MSVC 19.35.32217.1 | Windows-10.0.20348 | GitHub Actions |
+
+</div></details>
 
 Requests for new compiler supports are welcome.  
 If you encounter a problem regarding compilers, please let us know by creating an issue or a PR with the information of your Operating System so that we can reproduce the same situation.  
