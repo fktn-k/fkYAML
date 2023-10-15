@@ -89,7 +89,7 @@ from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
     const auto tmp_ret = from_string(s, type_tag<long long> {});
     if (static_cast<long long>(std::numeric_limits<SignedIntType>::max()) < tmp_ret)
     {
-        throw exception("Failed to convert a string into an integer value.");
+        throw exception("Failed to convert a long long value into a SignedIntegerType value.");
     }
 
     return static_cast<SignedIntType>(tmp_ret);
@@ -120,7 +120,7 @@ from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
     const auto tmp_ret = from_string(s, type_tag<unsigned long long> {});
     if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret)
     {
-        throw exception("Failed to convert a string into an integer value.");
+        throw exception("Failed to convert an unsigned long long into an UnsignedInteger value.");
     }
 
     return static_cast<UnsignedIntType>(tmp_ret);
