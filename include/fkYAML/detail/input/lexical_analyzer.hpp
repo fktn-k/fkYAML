@@ -28,6 +28,7 @@
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/types/lexical_token_t.hpp>
 #include <fkYAML/exception.hpp>
 
 /**
@@ -42,34 +43,6 @@ FK_YAML_NAMESPACE_BEGIN
  */
 namespace detail
 {
-
-/**
- * @enum lexical_token_t
- * @brief Definition of lexical token types.
- */
-enum class lexical_token_t
-{
-    END_OF_BUFFER,         //!< the end of input buffer.
-    KEY_SEPARATOR,         //!< the key separater `:`
-    VALUE_SEPARATOR,       //!< the value separater `,`
-    ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
-    ALIAS_PREFIX,          //!< the character for alias prefix `*`
-    COMMENT_PREFIX,        //!< the character for comment prefix `#`
-    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
-    TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
-    INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
-    SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
-    SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
-    SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
-    MAPPING_BLOCK_PREFIX,  //!< the character for mapping block prefix `:`
-    MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
-    MAPPING_FLOW_END,      //!< the character for mapping end `}`
-    NULL_VALUE,            //!< a null value found. use get_null() to get a value.
-    BOOLEAN_VALUE,         //!< a boolean value found. use get_boolean() to get a value.
-    INTEGER_VALUE,         //!< an integer value found. use get_integer() to get a value.
-    FLOAT_NUMBER_VALUE,    //!< a float number value found. use get_float_number() to get a value.
-    STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
-};
 
 /**
  * @class lexical_analyzer
