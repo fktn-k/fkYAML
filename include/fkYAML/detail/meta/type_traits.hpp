@@ -199,6 +199,17 @@ template <typename T>
 constexpr T static_const<T>::value;
 #endif
 
+/**
+ * @brief A helper structure for tag dispatch.
+ * 
+ * @tparam T A tag type.
+ */
+template <typename T>
+struct type_tag
+{
+    using type = T;
+};
+
 } // namespace detail
 
 FK_YAML_NAMESPACE_END

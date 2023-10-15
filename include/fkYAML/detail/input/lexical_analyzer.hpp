@@ -23,6 +23,7 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
+#include <fkYAML/detail/conversions/from_string.hpp>
 #include <fkYAML/detail/input/input_handler.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
@@ -337,13 +338,7 @@ public:
     std::nullptr_t get_null() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
-
-        if (m_value_buffer == "null" || m_value_buffer == "Null" || m_value_buffer == "NULL" || m_value_buffer == "~")
-        {
-            return nullptr;
-        }
-
-        throw fkyaml::exception("Invalid request for a null value.");
+        return from_string(m_value_buffer, type_tag<std::nullptr_t>{});
     }
 
     /**
@@ -355,18 +350,7 @@ public:
     boolean_type get_boolean() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
-
-        if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
-        {
-            return static_cast<boolean_type>(true);
-        }
-
-        if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
-        {
-            return static_cast<boolean_type>(false);
-        }
-
-        throw fkyaml::exception("Invalid request for a boolean value.");
+        return from_string(m_value_buffer, type_tag<boolean_type>{});
     }
 
     /**
@@ -377,13 +361,7 @@ public:
     integer_type get_integer() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
-
-        char* endptr = nullptr;
-        const auto tmp_val = std::strtoll(m_value_buffer.data(), &endptr, 0);
-
-        FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
-
-        return static_cast<integer_type>(tmp_val);
+        return from_string(m_value_buffer, type_tag<integer_type>{});
     }
 
     /**
@@ -394,29 +372,7 @@ public:
     float_number_type get_float_number() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
-
-        if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF")
-        {
-            return std::numeric_limits<float_number_type>::infinity();
-        }
-
-        if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
-        {
-            static_assert(std::numeric_limits<float_number_type>::is_iec559, "IEEE 754 required.");
-            return -1 * std::numeric_limits<float_number_type>::infinity();
-        }
-
-        if (m_value_buffer == ".nan" || m_value_buffer == ".NaN" || m_value_buffer == ".NAN")
-        {
-            return std::nan("");
-        }
-
-        char* endptr = nullptr;
-        const double value = std::strtod(m_value_buffer.data(), &endptr);
-
-        FK_YAML_ASSERT(endptr == m_value_buffer.data() + m_value_buffer.size());
-
-        return static_cast<float_number_type>(value);
+        return from_string(m_value_buffer, type_tag<float_number_type>{});
     }
 
     /**
