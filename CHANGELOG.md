@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.1.0](https://github.com/fktn-k/fkYAML/releases/tag/v0.1.0) (2023-10-15)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.0.1...v0.1.0)
+
+- \#136 Auto-generate a helper source file for the clang-tidy tool [\#139](https://github.com/fktn-k/fkYAML/pull/139) ([fktn-k](https://github.com/fktn-k))
+- \#135 optimize build scripts [\#138](https://github.com/fktn-k/fkYAML/pull/138) ([fktn-k](https://github.com/fktn-k))
+- \#132 Classify source files in detail directory [\#137](https://github.com/fktn-k/fkYAML/pull/137) ([fktn-k](https://github.com/fktn-k))
+- \#126 Generalize serialization/deserialization features [\#134](https://github.com/fktn-k/fkYAML/pull/134) ([fktn-k](https://github.com/fktn-k))
+- \#127 Generalize conversions between nodes and native data [\#129](https://github.com/fktn-k/fkYAML/pull/129) ([fktn-k](https://github.com/fktn-k))
+
+- \#128 fixed filtering source files to generate full-spec coverage [\#140](https://github.com/fktn-k/fkYAML/pull/140) ([fktn-k](https://github.com/fktn-k))
+
+- \#127 Update examples in readme [\#141](https://github.com/fktn-k/fkYAML/pull/141) ([fktn-k](https://github.com/fktn-k))
+- \#128 moved internal impl to detail dir/namespace [\#131](https://github.com/fktn-k/fkYAML/pull/131) ([fktn-k](https://github.com/fktn-k))
+- \#123 Changed file naming convention [\#125](https://github.com/fktn-k/fkYAML/pull/125) ([fktn-k](https://github.com/fktn-k))
+- \#123 Change naming conventions to lower\_snake\_case [\#124](https://github.com/fktn-k/fkYAML/pull/124) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.0.1](https://github.com/fktn-k/fkYAML/releases/tag/v0.0.1) (2023-10-06)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.0.0...v0.0.1)

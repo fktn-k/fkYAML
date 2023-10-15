@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.0
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -16,7 +16,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "fkYAML/VersioningMacros.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
 
 /**
  * @namespace fkyaml
@@ -25,23 +25,23 @@
 FK_YAML_NAMESPACE_BEGIN
 
 /**
- * @class Exception
+ * @class exception
  * @brief A base exception class used in fkYAML library.
  */
-class Exception : public std::exception
+class exception : public std::exception
 {
 public:
     /**
-     * @brief Construct a new Exception object without any error messages.
+     * @brief Construct a new exception object without any error messages.
      */
-    Exception() = default;
+    exception() = default;
 
     /**
-     * @brief Construct a new Exception object with an error message.
+     * @brief Construct a new exception object with an error message.
      *
      * @param msg An error description message.
      */
-    explicit Exception(const char* msg)
+    explicit exception(const char* msg)
     {
         if (msg)
         {

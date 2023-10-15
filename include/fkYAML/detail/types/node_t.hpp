@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.0
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10,12 +10,12 @@
  * @file
  */
 
-#ifndef FK_YAML_NODE_TYPE_HPP_
-#define FK_YAML_NODE_TYPE_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_NODE_T_HPP_
+#define FK_YAML_DETAIL_TYPES_NODE_T_HPP_
 
 #include <cstdint>
 
-#include "fkYAML/VersioningMacros.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
 
 /**
  * @namespace fkyaml
@@ -24,10 +24,17 @@
 FK_YAML_NAMESPACE_BEGIN
 
 /**
- * @enum NodeType
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
+
+/**
+ * @enum node_t
  * @brief Definition of node value types.
  */
-enum class NodeType : std::uint32_t
+enum class node_t : std::uint32_t
 {
     SEQUENCE,     //!< sequence value type
     MAPPING,      //!< mapping value type
@@ -38,6 +45,8 @@ enum class NodeType : std::uint32_t
     STRING,       //!< string value type
 };
 
+} // namespace detail
+
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_TYPE_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP_ */

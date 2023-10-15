@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.0
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10,36 +10,42 @@
  * @file
  */
 
-#ifndef FK_YAML_SERIALIZER_HPP_
-#define FK_YAML_SERIALIZER_HPP_
+#ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
+#define FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
 
 #include <cmath>
 #include <sstream>
 #include <string>
 
-#include "fkYAML/VersioningMacros.hpp"
-#include "fkYAML/Exception.hpp"
-#include "fkYAML/Node.hpp"
-#include "fkYAML/NodeType.hpp"
-#include "fkYAML/TypeTraits.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/types/node_t.hpp>
+#include <fkYAML/exception.hpp>
 
 FK_YAML_NAMESPACE_BEGIN
+
+/**
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
 
 /**
  * @brief A basic implementation of serialization feature for YAML nodes.
  *
  * @tparam BasicNodeType A BasicNode template class instantiation.
  */
-template <typename BasicNodeType = Node>
-class BasicSerializer
+template <typename BasicNodeType>
+class basic_serializer
 {
-    static_assert(IsBasicNode<BasicNodeType>::value, "BasicSerializer only accepts (const) BasicNode<...>");
+    static_assert(detail::is_basic_node<BasicNodeType>::value, "basic_serializer only accepts basic_node<...>");
 
 public:
     /**
-     * @brief Construct a new BasicSerializer object.
+     * @brief Construct a new basic_serializer object.
      */
-    BasicSerializer() = default;
+    basic_serializer() = default;
 
     /**
      * @brief Serialize the given Node value.
@@ -47,10 +53,10 @@ public:
      * @param node A Node object to be serialized.
      * @return std::string A serialization result of the given Node value.
      */
-    std::string Serialize(BasicNodeType& node)
+    std::string serialize(const BasicNodeType& node)
     {
         std::string str {};
-        SerializeNode(node, 0, str);
+        serialize_node(node, 0, str);
         return str;
     }
 
@@ -62,51 +68,51 @@ private:
      * @param cur_indent The current indent width
      * @param str A string to hold serialization result.
      */
-    void SerializeNode(BasicNodeType& node, const uint32_t cur_indent, std::string& str)
+    void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str)
     {
-        switch (node.Type())
+        switch (node.type())
         {
-        case NodeType::SEQUENCE:
-            for (auto& seq_item : node)
+        case node_t::SEQUENCE:
+            for (const auto& seq_item : node)
             {
-                InsertIndentation(cur_indent, str);
+                insert_indentation(cur_indent, str);
                 str += "-";
-                if (seq_item.IsScalar())
+                if (seq_item.is_scalar())
                 {
                     str += " ";
-                    SerializeNode(seq_item, cur_indent, str);
+                    serialize_node(seq_item, cur_indent, str);
                     str += "\n";
                 }
                 else
                 {
                     str += "\n";
-                    SerializeNode(seq_item, cur_indent + 2, str);
+                    serialize_node(seq_item, cur_indent + 2, str);
                 }
             }
             break;
-        case NodeType::MAPPING:
-            for (auto itr = node.Begin(); itr != node.End(); ++itr)
+        case node_t::MAPPING:
+            for (auto itr = node.begin(); itr != node.end(); ++itr)
             {
-                InsertIndentation(cur_indent, str);
-                SerializeKey(itr.Key(), str);
-                if (itr->IsScalar())
+                insert_indentation(cur_indent, str);
+                serialize_key(itr.key(), str);
+                if (itr->is_scalar())
                 {
                     str += " ";
-                    SerializeNode(*itr, cur_indent, str);
+                    serialize_node(*itr, cur_indent, str);
                     str += "\n";
                 }
                 else
                 {
                     str += "\n";
-                    SerializeNode(*itr, cur_indent + 2, str);
+                    serialize_node(*itr, cur_indent + 2, str);
                 }
             }
             break;
-        case NodeType::NULL_OBJECT:
+        case node_t::NULL_OBJECT:
             str += "null";
             break;
-        case NodeType::BOOLEAN:
-            if (node.ToBoolean())
+        case node_t::BOOLEAN:
+            if (node.to_boolean())
             {
                 str += "true";
             }
@@ -115,11 +121,11 @@ private:
                 str += "false";
             }
             break;
-        case NodeType::INTEGER:
-            str += std::to_string(node.ToInteger());
+        case node_t::INTEGER:
+            str += std::to_string(node.to_integer());
             break;
-        case NodeType::FLOAT_NUMBER: {
-            typename BasicNodeType::float_number_type float_val = node.ToFloatNumber();
+        case node_t::FLOAT_NUMBER: {
+            typename BasicNodeType::float_number_type float_val = node.to_float_number();
             if (std::isnan(float_val))
             {
                 str += ".nan";
@@ -138,16 +144,16 @@ private:
             else
             {
                 std::stringstream ss;
-                ss << node.ToFloatNumber();
+                ss << node.to_float_number();
                 str += ss.str();
             }
             break;
         }
-        case NodeType::STRING:
-            str += node.ToString();
+        case node_t::STRING:
+            str += node.to_string();
             break;
         default:
-            throw Exception("Unsupported node type found.");
+            throw fkyaml::exception("Unsupported node type found.");
         }
     }
 
@@ -157,7 +163,7 @@ private:
      * @param key A key string to be serialized.
      * @param str A string to hold serialization result.
      */
-    void SerializeKey(const std::string& key, std::string& str)
+    void serialize_key(const std::string& key, std::string& str)
     {
         str += key + ":";
     }
@@ -168,7 +174,7 @@ private:
      * @param cur_indent The current indent width to be inserted.
      * @param str A string to hold serialization result.
      */
-    void InsertIndentation(const uint32_t cur_indent, std::string& str)
+    void insert_indentation(const uint32_t cur_indent, std::string& str)
     {
         for (uint32_t i = 0; i < cur_indent; ++i)
         {
@@ -177,11 +183,8 @@ private:
     }
 };
 
-/**
- * @brief default YAML node serializer.
- */
-using Serializer = BasicSerializer<>;
+} // namespace detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_SERIALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_ */

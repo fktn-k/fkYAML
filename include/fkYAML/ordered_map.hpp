@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.0
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -19,9 +19,9 @@
 #include <utility>
 #include <vector>
 
-#include "fkYAML/VersioningMacros.hpp"
-#include "fkYAML/Exception.hpp"
-#include "fkYAML/TypeTraits.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/meta/type_traits.hpp>
+#include <fkYAML/exception.hpp>
 
 /**
  * @namespace fkyaml
@@ -40,7 +40,7 @@ FK_YAML_NAMESPACE_BEGIN
 template <
     typename Key, typename Value, typename IgnoredCompare = std::less<Key>,
     typename Allocator = std::allocator<std::pair<const Key, Value>>>
-class OrderedMap : public std::vector<std::pair<const Key, Value>, Allocator>
+class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator>
 {
 public:
     /** A type for keys. */
@@ -62,20 +62,20 @@ public:
 
 public:
     /**
-     * @brief Construct a new OrderedMap object.
+     * @brief Construct a new ordered_map object.
      */
-    OrderedMap() noexcept(noexcept(Container()))
+    ordered_map() noexcept(noexcept(Container()))
         : Container(),
           m_compare()
     {
     }
 
     /**
-     * @brief Construct a new OrderedMap object with an initializer list.
+     * @brief Construct a new ordered_map object with an initializer list.
      *
      * @param init An initializer list to construct the inner container object.
      */
-    OrderedMap(std::initializer_list<value_type> init)
+    ordered_map(std::initializer_list<value_type> init)
         : Container {init},
           m_compare()
     {
@@ -83,13 +83,15 @@ public:
 
 public:
     /**
-     * @brief A subscript operator for OrderedMap objects.
+     * @brief A subscript operator for ordered_map objects.
      *
      * @tparam KeyType A type for the input key.
      * @param key A key to the target value.
      * @return mapped_type& Reference to a mapped_type object associated with the given key.
      */
-    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
+    template <
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     mapped_type& operator[](KeyType&& key) noexcept
     {
         return emplace(std::forward<KeyType>(key), mapped_type()).first->second;
@@ -99,12 +101,13 @@ public:
     /**
      * @brief Emplace a new key-value pair if the new key does not exist.
      *
-     * @param key A key to be emplaced to this OrderedMap object.
-     * @param value A value to be emplaced to this OrderedMap object.
+     * @param key A key to be emplaced to this ordered_map object.
+     * @param value A value to be emplaced to this ordered_map object.
      * @return std::pair<iterator, bool> A result of emplacement of the new key-value pair.
      */
-    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
-    // NOLINTNEXTLINE(readability-identifier-naming)
+    template <
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     std::pair<iterator, bool> emplace(KeyType&& key, const mapped_type& value) noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
@@ -125,8 +128,9 @@ public:
      * @param key A key to find a value with.
      * @return mapped_type& The value associated to the given key.
      */
-    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
-    // NOLINTNEXTLINE(readability-identifier-naming)
+    template <
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     mapped_type& at(KeyType&& key)
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
@@ -136,7 +140,7 @@ public:
                 return itr->second;
             }
         }
-        throw Exception("key not found.");
+        throw fkyaml::exception("key not found.");
     }
 
     /**
@@ -146,8 +150,9 @@ public:
      * @param key A key to find a value with.
      * @return const mapped_type& The value associated to the given key.
      */
-    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
-    // NOLINTNEXTLINE(readability-identifier-naming)
+    template <
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     const mapped_type& at(KeyType&& key) const
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
@@ -157,7 +162,7 @@ public:
                 return itr->second;
             }
         }
-        throw Exception("key not found.");
+        throw fkyaml::exception("key not found.");
     }
 
     /**
@@ -167,8 +172,9 @@ public:
      * @param key A key to find a value with.
      * @return iterator The iterator for the found value, or the result of end().
      */
-    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
-    // NOLINTNEXTLINE(readability-identifier-naming)
+    template <
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     iterator find(KeyType&& key) noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)
@@ -188,8 +194,9 @@ public:
      * @param key A key to find a value with.
      * @return const_iterator The constant iterator for the found value, or the result of end().
      */
-    template <typename KeyType, fkyaml::enable_if_t<IsUsableAsKeyType<key_compare, key_type, KeyType>::value, int> = 0>
-    // NOLINTNEXTLINE(readability-identifier-naming)
+    template <
+        typename KeyType,
+        detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
     const_iterator find(KeyType&& key) const noexcept
     {
         for (auto itr = this->begin(); itr != this->end(); ++itr)

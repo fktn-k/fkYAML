@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.0
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10,12 +10,12 @@
  * @file
  */
 
-#ifndef FK_YAML_YAML_VERSION_TYPE_HPP_
-#define FK_YAML_YAML_VERSION_TYPE_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
+#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
 
 #include <cstdint>
 
-#include "fkYAML/VersioningMacros.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
 
 /**
  * @namespace fkyaml
@@ -24,15 +24,24 @@
 FK_YAML_NAMESPACE_BEGIN
 
 /**
- * @enum YamlVersionType
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
+
+/**
+ * @enum yaml_version_t
  * @brief Definition of YAML version types.
  */
-enum class YamlVersionType : std::uint32_t
+enum class yaml_version_t : std::uint32_t
 {
     VER_1_1, //!< YAML version 1.1
     VER_1_2, //!< YAML version 1.2
 };
 
+} // namespace detail
+
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_YAML_VERSION_TYPE_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_ */

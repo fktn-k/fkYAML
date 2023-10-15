@@ -9,6 +9,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  JOBS: 3
+
 concurrency:
   group: ${{github.workflow}}-${{github.ref || github.run_id}}
   cancel-in-progress: true
@@ -30,11 +33,11 @@ jobs:
       run: cmake -B ${{github.workspace}}/build_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build_${{matrix.build_type}} --config ${{matrix.build_type}}
+      run: cmake --build ${{github.workspace}}/build_${{matrix.build_type}} --config ${{matrix.build_type}} -j ${{env.JOBS}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build_${{matrix.build_type}}
-      run: ctest -C ${{matrix.build_type}} --output-on-failure
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
 
   ci_test_clang_tidy:
     timeout-minutes: 10
@@ -134,9 +137,9 @@ jobs:
 
     - name: Build & Test
       run: |
-        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
         cd ${{github.workspace}}/build
-        ctest -C ${{matrix.build_type}} --output-on-failure
+        ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
 
   ci_test_gcc_cxx_standards:
     runs-on: ubuntu-latest
@@ -165,9 +168,9 @@ jobs:
 
     - name: Build & Test
       run: |
-        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
         cd ${{github.workspace}}/build
-        ctest -C ${{matrix.build_type}} --output-on-failure
+        ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
 
   ci_test_clang_versions:
     runs-on: ubuntu-latest
@@ -202,9 +205,9 @@ jobs:
 
     - name: Build & Test
       run: |
-        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
         cd ${{github.workspace}}/build
-        ctest -C ${{matrix.build_type}} --output-on-failure
+        ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
 
   ci_test_gcc_versions:
     runs-on: ubuntu-latest
@@ -233,6 +236,6 @@ jobs:
 
     - name: Build & Test
       run: |
-        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
         cd ${{github.workspace}}/build
-        ctest -C ${{matrix.build_type}} --output-on-failure
+        ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}

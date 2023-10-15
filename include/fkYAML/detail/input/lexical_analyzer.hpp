@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.0.1
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.0
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10,8 +10,8 @@
  * @file
  */
 
-#ifndef FK_YAML_LEXICAL_ANALIZER_HPP_
-#define FK_YAML_LEXICAL_ANALIZER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
+#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 
 #include <cctype>
 #include <cmath>
@@ -21,10 +21,12 @@
 #include <string>
 #include <vector>
 
-#include "fkYAML/VersioningMacros.hpp"
-#include "fkYAML/Assert.hpp"
-#include "fkYAML/Exception.hpp"
-#include "fkYAML/TypeTraits.hpp"
+#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/assert.hpp>
+#include <fkYAML/detail/meta/input_adapter_traits.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/exception.hpp>
 
 /**
  * @namespace fkyaml
@@ -33,10 +35,17 @@
 FK_YAML_NAMESPACE_BEGIN
 
 /**
- * @enum LexicalTokenType
+ * @namespace detail
+ * @brief namespace for internal implementations of fkYAML library.
+ */
+namespace detail
+{
+
+/**
+ * @enum lexical_token_t
  * @brief Definition of lexical token types.
  */
-enum class LexicalTokenType
+enum class lexical_token_t
 {
     END_OF_BUFFER,         //!< the end of input buffer.
     KEY_SEPARATOR,         //!< the key separater `:`
@@ -44,7 +53,7 @@ enum class LexicalTokenType
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
     ALIAS_PREFIX,          //!< the character for alias prefix `*`
     COMMENT_PREFIX,        //!< the character for comment prefix `#`
-    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use GetYamlVersion() to get a value.
+    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
     TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
     INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
     SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
@@ -53,26 +62,27 @@ enum class LexicalTokenType
     MAPPING_BLOCK_PREFIX,  //!< the character for mapping block prefix `:`
     MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
     MAPPING_FLOW_END,      //!< the character for mapping end `}`
-    NULL_VALUE,            //!< a null value found. use GetNull() to get a value.
-    BOOLEAN_VALUE,         //!< a boolean value found. use GetBoolean() to get a value.
-    INTEGER_VALUE,         //!< an integer value found. use GetInteger() to get a value.
-    FLOAT_NUMBER_VALUE,    //!< a float number value found. use GetFloatNumber() to get a value.
+    NULL_VALUE,            //!< a null value found. use get_null() to get a value.
+    BOOLEAN_VALUE,         //!< a boolean value found. use get_boolean() to get a value.
+    INTEGER_VALUE,         //!< an integer value found. use get_integer() to get a value.
+    FLOAT_NUMBER_VALUE,    //!< a float number value found. use get_float_number() to get a value.
     STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
 };
 
 /**
- * @class LexicalAnalyzer
+ * @class lexical_analyzer
  * @brief A class which lexically analizes YAML formatted inputs.
  *
  * @tparam BasicNodeType A type of the container for YAML values.
  */
-template <typename BasicNodeType>
-class LexicalAnalyzer
+template <
+    typename BasicNodeType, typename InputAdapterType,
+    enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_input_adapter<InputAdapterType>>::value, int> = 0>
+class lexical_analyzer
 {
 private:
-    static_assert(IsBasicNode<BasicNodeType>::value, "LexicalAnalyzer only accepts (const) BasicNode<...>");
-
-    using char_traits_type = std::char_traits<char>;
+    using char_traits_type = std::char_traits<typename InputAdapterType::char_type>;
+    using char_type = typename char_traits_type::char_type;
     using char_int_type = typename char_traits_type::int_type;
 
 public:
@@ -83,10 +93,10 @@ public:
 
 private:
     /**
-     * @struct Position
+     * @struct position
      * @brief Information set of analyzed data counters.
      */
-    struct Position
+    struct position
     {
         //!< The total read char counts from the input buffer.
         size_t total_read_char_counts = 0;
@@ -100,221 +110,232 @@ private:
 
 public:
     /**
-     * @brief Construct a new LexicalAnalyzer object.
+     * @brief Construct a new lexical_analyzer object.
      */
-    LexicalAnalyzer() = default;
+    explicit lexical_analyzer(InputAdapterType&& input_adapter)
+        : m_input_adapter(std::move(input_adapter)),
+          m_last_char(0),
+          m_value_buffer(),
+          m_position_info()
+    {
+    }
 
 public:
     /**
-     * @brief Set an input buffer to be analyzed by this LexicalAnalyzer.
-     *
-     * @param[in] input_buffer An input buffer to be analyzed.
-     */
-    void SetInputBuffer(const char* const input_buffer)
-    {
-        if (!input_buffer || input_buffer[0] == '\0')
-        {
-            throw Exception("The input buffer for lexical analysis is nullptr or empty.");
-        }
-        m_input_buffer = input_buffer;
-    }
-
-    /**
      * @brief Get the next lexical token type by scanning the left of the input buffer.
      *
-     * @return LexicalTokenType The next lexical token type.
+     * @return lexical_token_t The next lexical token type.
      */
-    LexicalTokenType GetNextToken()
+    lexical_token_t get_next_token()
     {
-        if (m_input_buffer.empty())
-        {
-            throw Exception("The next token is required before an input buffer is set.");
-        }
+        skip_white_spaces();
 
-        SkipWhiteSpaces();
-
-        const char& current = RefCurrentChar();
+        char_int_type current = get_current_character();
 
         if (0x00 <= current && current <= 0x7F && isdigit(current))
         {
-            return ScanNumber();
+            return scan_number();
         }
 
         switch (current)
         {
         case '\0':
-        case s_EOF: // end of input buffer
-            return LexicalTokenType::END_OF_BUFFER;
+        case char_traits_type::eof(): // end of input buffer
+            return lexical_token_t::END_OF_BUFFER;
         case ':': // key separater
-            switch (GetNextChar())
+            switch (get_character())
             {
             case ' ':
                 break;
             case '\r':
-                if (RefNextChar() == '\n')
+                if (!test_next_char('\n'))
                 {
-                    GetNextChar();
+                    return lexical_token_t::MAPPING_BLOCK_PREFIX;
                 }
             case '\n':
-                return LexicalTokenType::MAPPING_BLOCK_PREFIX;
+                get_character();
+                return lexical_token_t::MAPPING_BLOCK_PREFIX;
             default:
-                throw Exception("Half-width spaces or newline codes are required after a key separater(:).");
+                throw fkyaml::exception("Half-width spaces or newline codes are required after a key separater(:).");
             }
-            return LexicalTokenType::KEY_SEPARATOR;
+            get_character();
+            return lexical_token_t::KEY_SEPARATOR;
         case ',': // value separater
-            GetNextChar();
-            return LexicalTokenType::VALUE_SEPARATOR;
+            get_character();
+            return lexical_token_t::VALUE_SEPARATOR;
         case '&': { // anchor prefix
             m_value_buffer.clear();
             while (true)
             {
-                const char next = GetNextChar();
-                if (next == '\0' || next == '\r' || next == '\n')
+                char_int_type next = get_character();
+                if (next == char_traits_type::eof() || next == '\r' || next == '\n')
                 {
-                    throw Exception("An anchor label must be followed by some value.");
+                    throw fkyaml::exception("An anchor label must be followed by some value.");
                 }
                 if (next == ' ')
                 {
+                    get_character();
                     break;
                 }
                 m_value_buffer.push_back(next);
             }
-            return LexicalTokenType::ANCHOR_PREFIX;
+            return lexical_token_t::ANCHOR_PREFIX;
         }
         case '*': { // alias prefix
             m_value_buffer.clear();
             while (true)
             {
-                const char next = GetNextChar();
-                if (next == ' ' || next == '\r' || next == '\n' || next == '\0')
+                char_int_type next = get_character();
+                if (next == ' ' || next == '\r' || next == '\n' || next == char_traits_type::eof())
                 {
                     if (m_value_buffer.empty())
                     {
-                        throw Exception("An alias prefix must be followed by some anchor name.");
+                        throw fkyaml::exception("An alias prefix must be followed by some anchor name.");
                     }
+                    get_character();
                     break;
                 }
                 m_value_buffer.push_back(next);
             }
-            return LexicalTokenType::ALIAS_PREFIX;
+            return lexical_token_t::ALIAS_PREFIX;
         }
         case '#': // comment prefix
-            ScanComment();
-            return LexicalTokenType::COMMENT_PREFIX;
+            scan_comment();
+            return lexical_token_t::COMMENT_PREFIX;
         case '%': // directive prefix
-            return ScanDirective();
+            return scan_directive();
         case '-':
-            if (RefNextChar() == ' ')
+            if (!test_next_char(' '))
             {
-                UpdateIndentWidth();
-
-                // Move a cursor to the beginning of the next token.
-                GetNextChar();
-                GetNextChar();
-
-                return LexicalTokenType::SEQUENCE_BLOCK_PREFIX;
+                return scan_number();
             }
-            return ScanNumber();
+
+            // update_indent_width();
+
+            // Move a cursor to the beginning of the next token.
+            get_character();
+            get_character();
+
+            return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
         case '[': // sequence flow begin
-            GetNextChar();
-            return LexicalTokenType::SEQUENCE_FLOW_BEGIN;
+            get_character();
+            return lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
-            GetNextChar();
-            return LexicalTokenType::SEQUENCE_FLOW_END;
+            get_character();
+            return lexical_token_t::SEQUENCE_FLOW_END;
         case '{': // mapping flow begin
-            GetNextChar();
-            return LexicalTokenType::MAPPING_FLOW_BEGIN;
+            get_character();
+            return lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
-            GetNextChar();
-            return LexicalTokenType::MAPPING_FLOW_END;
+            get_character();
+            return lexical_token_t::MAPPING_FLOW_END;
         case '@':
-            throw Exception("Any token cannot start with at(@). It is a reserved indicator for YAML.");
+            throw fkyaml::exception("Any token cannot start with at(@). It is a reserved indicator for YAML.");
         case '`':
-            throw Exception("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
+            throw fkyaml::exception(
+                "Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
         case '\'':
-            return ScanString();
+            return scan_string();
         case '~':
             m_value_buffer = current;
-            return LexicalTokenType::NULL_VALUE;
+            return lexical_token_t::NULL_VALUE;
         case '+':
-            return ScanNumber();
+            return scan_number();
         case '.': {
-            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
-
-            if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
+            if (!get_string_from_input(4, m_value_buffer))
             {
-                m_value_buffer = tmp_str;
-                for (int i = 0; i < 4; ++i)
-                {
-                    GetNextChar();
-                }
-                return LexicalTokenType::FLOAT_NUMBER_VALUE;
+                return scan_string();
             }
 
-            if (tmp_str == ".nan" || tmp_str == ".NaN" || tmp_str == ".NAN")
+            if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF")
             {
-                m_value_buffer = tmp_str;
-                for (int i = 0; i < 4; ++i)
-                {
-                    GetNextChar();
-                }
-                return LexicalTokenType::FLOAT_NUMBER_VALUE;
+                get_character();
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
             }
 
-            return ScanString();
+            if (m_value_buffer == ".nan" || m_value_buffer == ".NaN" || m_value_buffer == ".NAN")
+            {
+                get_character();
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                unget_character();
+            }
+            m_last_char = current;
+            return scan_string();
         }
         case 'F':
         case 'f': {
-            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 5);
             // YAML specifies that only these words represent the boolean value `false`.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            if (tmp_str == "false" || tmp_str == "False" || tmp_str == "FALSE")
+            if (!get_string_from_input(5, m_value_buffer))
             {
-                m_value_buffer = tmp_str;
-                for (int i = 0; i < 5; ++i)
-                {
-                    GetNextChar();
-                }
-                return LexicalTokenType::BOOLEAN_VALUE;
+                return scan_string();
             }
-            return ScanString();
+
+            if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
+            {
+                get_character();
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                unget_character();
+            }
+            m_last_char = current;
+            return scan_string();
         }
         case 'N':
         case 'n': {
-            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
             // YAML specifies that these words and a tilde represent a null value.
             // Tildes are already checked above, so no check is needed here.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            if (tmp_str == "null" || tmp_str == "Null" || tmp_str == "NULL")
+            if (!get_string_from_input(4, m_value_buffer))
             {
-                m_value_buffer = tmp_str;
-                for (int i = 0; i < 4; ++i)
-                {
-                    GetNextChar();
-                }
-                return LexicalTokenType::NULL_VALUE;
+                return scan_string();
             }
-            return ScanString();
+
+            if (m_value_buffer == "null" || m_value_buffer == "Null" || m_value_buffer == "NULL")
+            {
+                get_character();
+                return lexical_token_t::NULL_VALUE;
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                unget_character();
+            }
+            m_last_char = current;
+            return scan_string();
         }
         case 'T':
         case 't': {
-            const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
             // YAML specifies that only these words represent the boolean value `true`.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            if (tmp_str == "true" || tmp_str == "True" || tmp_str == "TRUE")
+            if (!get_string_from_input(4, m_value_buffer))
             {
-                m_value_buffer = tmp_str;
-                for (int i = 0; i < 4; ++i)
-                {
-                    GetNextChar();
-                }
-                return LexicalTokenType::BOOLEAN_VALUE;
+                return scan_string();
             }
-            return ScanString();
+
+            if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
+            {
+                get_character();
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                unget_character();
+            }
+            m_last_char = current;
+            return scan_string();
         }
         default:
-            return ScanString();
+            return scan_string();
         }
     }
 
@@ -323,7 +344,7 @@ public:
      *
      * @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
      */
-    std::nullptr_t GetNull() const
+    std::nullptr_t get_null() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
 
@@ -332,7 +353,7 @@ public:
             return nullptr;
         }
 
-        throw Exception("Invalid request for a null value.");
+        throw fkyaml::exception("Invalid request for a null value.");
     }
 
     /**
@@ -341,7 +362,7 @@ public:
      * @return true  A string token is one of the followings: "true", "True", "TRUE".
      * @return false A string token is one of the followings: "false", "False", "FALSE".
      */
-    boolean_type GetBoolean() const
+    boolean_type get_boolean() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
 
@@ -355,7 +376,7 @@ public:
             return static_cast<boolean_type>(false);
         }
 
-        throw Exception("Invalid request for a boolean value.");
+        throw fkyaml::exception("Invalid request for a boolean value.");
     }
 
     /**
@@ -363,7 +384,7 @@ public:
      *
      * @return integer_type An integer value converted from the source string.
      */
-    integer_type GetInteger() const
+    integer_type get_integer() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
 
@@ -380,7 +401,7 @@ public:
      *
      * @return float_number_type A float number value converted from the source string.
      */
-    float_number_type GetFloatNumber() const
+    float_number_type get_float_number() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty());
 
@@ -413,7 +434,7 @@ public:
      *
      * @return const string_type& Constant reference to a scanned string.
      */
-    const string_type& GetString() const noexcept
+    const string_type& get_string() const noexcept
     {
         return m_value_buffer;
     }
@@ -423,7 +444,7 @@ public:
      *
      * @return const string_type& A YAML version specification.
      */
-    const string_type& GetYamlVersion() const
+    const string_type& get_yaml_version() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
         FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
@@ -436,7 +457,7 @@ public:
      *
      * @return uint32_t The latest indent width.
      */
-    uint32_t GetLatestIndentWidth() const noexcept
+    uint32_t get_latest_indent_width() const noexcept
     {
         return m_indent_width_stack.empty() ? 0 : m_indent_width_stack.back();
     }
@@ -448,7 +469,7 @@ private:
      * @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
      * @return char A integer converted from @a source.
      */
-    static char ConvertHexCharToByte(char source)
+    static char convert_hex_char_to_byte(char source)
     {
         if ('0' <= source && source <= '9')
         {
@@ -468,61 +489,63 @@ private:
             return static_cast<char>(source - 'a' + 10);
         }
 
-        throw Exception("Non-hexadecimal character has been given.");
+        throw fkyaml::exception("Non-hexadecimal character has been given.");
     }
 
     /**
      * @brief Skip until a newline code or a null character is found.
      *
-     * @return LexicalTokenType The lexical token type for comments
+     * @return lexical_token_t The lexical token type for comments
      */
-    LexicalTokenType ScanComment()
+    lexical_token_t scan_comment()
     {
-        FK_YAML_ASSERT(RefCurrentChar() == '#');
+        FK_YAML_ASSERT(get_current_character() == '#');
 
-        SkipUntilLineEnd();
-        return LexicalTokenType::COMMENT_PREFIX;
+        skip_until_line_end();
+        return lexical_token_t::COMMENT_PREFIX;
     }
 
     /**
      * @brief Scan directives starting with the prefix '%'
      * @note Currently, only %YAML directive is supported. If not, returns invalid or throws an exception.
      *
-     * @return LexicalTokenType The lexical token type for directives.
+     * @return lexical_token_t The lexical token type for directives.
      */
-    LexicalTokenType ScanDirective()
+    lexical_token_t scan_directive()
     {
-        FK_YAML_ASSERT(RefCurrentChar() == '%');
+        FK_YAML_ASSERT(get_current_character() == '%');
 
-        switch (GetNextChar())
+        switch (get_character())
         {
+        case char_traits_type::eof():
+            throw fkyaml::exception("invalid eof in a directive.");
         case 'T': {
-            if (GetNextChar() != 'A' || GetNextChar() != 'G')
+            if (get_character() != 'A' || get_character() != 'G')
             {
-                SkipUntilLineEnd();
-                return LexicalTokenType::INVALID_DIRECTIVE;
+                skip_until_line_end();
+                return lexical_token_t::INVALID_DIRECTIVE;
             }
-            if (GetNextChar() != ' ')
+            if (get_character() != ' ')
             {
-                throw Exception("There must be a half-width space between \"%TAG\" and tag info.");
+                throw fkyaml::exception("There must be a half-width space between \"%TAG\" and tag info.");
             }
             // TODO: parse tag directives' information
-            return LexicalTokenType::TAG_DIRECTIVE;
+            return lexical_token_t::TAG_DIRECTIVE;
         }
         case 'Y':
-            if (GetNextChar() != 'A' || GetNextChar() != 'M' || GetNextChar() != 'L')
+            if (get_character() != 'A' || get_character() != 'M' || get_character() != 'L')
             {
-                SkipUntilLineEnd();
-                return LexicalTokenType::INVALID_DIRECTIVE;
+                skip_until_line_end();
+                return lexical_token_t::INVALID_DIRECTIVE;
             }
-            if (GetNextChar() != ' ')
+            if (get_character() != ' ')
             {
-                throw Exception("There must be a half-width space between \"%YAML\" and a version number.");
+                throw fkyaml::exception("There must be a half-width space between \"%YAML\" and a version number.");
             }
-            return ScanYamlVersionDirective();
+            return scan_yaml_version_directive();
         default:
-            SkipUntilLineEnd();
-            return LexicalTokenType::INVALID_DIRECTIVE;
+            skip_until_line_end();
+            return lexical_token_t::INVALID_DIRECTIVE;
         }
     }
 
@@ -530,29 +553,29 @@ private:
      * @brief Scan a YAML version directive.
      * @note Only 1.1 and 1.2 are supported. If not, throws an exception.
      *
-     * @return LexicalTokenType The lexical token type for YAML version directives.
+     * @return lexical_token_t The lexical token type for YAML version directives.
      */
-    LexicalTokenType ScanYamlVersionDirective()
+    lexical_token_t scan_yaml_version_directive()
     {
         m_value_buffer.clear();
 
-        if (GetNextChar() != '1')
+        if (get_character() != '1')
         {
-            throw Exception("Invalid YAML major version found.");
+            throw fkyaml::exception("Invalid YAML major version found.");
         }
-        m_value_buffer.push_back(RefCurrentChar());
+        m_value_buffer.push_back(get_current_character());
 
-        if (GetNextChar() != '.')
+        if (get_character() != '.')
         {
-            throw Exception("A period must be followed after the YAML major version.");
+            throw fkyaml::exception("A period must be followed after the YAML major version.");
         }
-        m_value_buffer.push_back(RefCurrentChar());
+        m_value_buffer.push_back(get_current_character());
 
-        switch (GetNextChar())
+        switch (get_character())
         {
         case '1':
         case '2':
-            m_value_buffer.push_back(RefCurrentChar());
+            m_value_buffer.push_back(get_current_character());
             break;
         case '0':
         case '3':
@@ -562,42 +585,42 @@ private:
         case '7':
         case '8':
         case '9':
-            throw Exception("Unsupported YAML version.");
+            throw fkyaml::exception("Unsupported YAML version.");
         default:
-            throw Exception("YAML version must be specified with digits and periods.");
+            throw fkyaml::exception("YAML version must be specified with digits and periods.");
         }
 
-        if (GetNextChar() != ' ' && RefCurrentChar() != '\r' && RefCurrentChar() != '\n')
+        if (get_character() != ' ' && get_current_character() != '\r' && get_current_character() != '\n')
         {
-            throw Exception("Only YAML version 1.1/1.2 are supported.");
+            throw fkyaml::exception("Only YAML version 1.1/1.2 are supported.");
         }
 
-        return LexicalTokenType::YAML_VER_DIRECTIVE;
+        return lexical_token_t::YAML_VER_DIRECTIVE;
     }
 
     /**
      * @brief Scan and determine a number type(integer/float). This method is the entrypoint for all number
      * tokens.
      *
-     * @return LexicalTokenType A lexical token type for a determined number type.
+     * @return lexical_token_t A lexical token type for a determined number type.
      */
-    LexicalTokenType ScanNumber()
+    lexical_token_t scan_number()
     {
         m_value_buffer.clear();
 
-        const char current = RefCurrentChar();
+        char_int_type current = get_current_character();
         FK_YAML_ASSERT(std::isdigit(current) || current == '-' || current == '+');
 
         switch (current)
         {
         case '-':
             m_value_buffer.push_back(current);
-            return ScanNegativeNumber();
+            return scan_negative_number();
         case '+':
-            return ScanDecimalNumber();
+            return scan_decimal_number();
         case '0':
             m_value_buffer.push_back(current);
-            return ScanNumberAfterZeroAtFirst();
+            return scan_number_after_zero_at_first();
         case '1':
         case '2':
         case '3':
@@ -608,141 +631,139 @@ private:
         case '8':
         case '9':
             m_value_buffer.push_back(current);
-            return ScanDecimalNumber();
-        default:                                                           // LCOV_EXCL_LINE
-            throw Exception("Invalid character found in a number token."); // LCOV_EXCL_LINE
+            return scan_decimal_number();
+        default:                                                                   // LCOV_EXCL_LINE
+            throw fkyaml::exception("Invalid character found in a number token."); // LCOV_EXCL_LINE
         }
     }
 
     /**
      * @brief Scan a next character after the negative sign(-).
      *
-     * @return LexicalTokenType The lexical token type for either integer or float numbers.
+     * @return lexical_token_t The lexical token type for either integer or float numbers.
      */
-    LexicalTokenType ScanNegativeNumber()
+    lexical_token_t scan_negative_number()
     {
-        const char next = GetNextChar();
+        char_int_type next = get_character();
         FK_YAML_ASSERT(std::isdigit(next) || next == '.');
 
         if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
-            const LexicalTokenType ret = ScanDecimalNumber();
-            return (ret == LexicalTokenType::FLOAT_NUMBER_VALUE) ? ret : LexicalTokenType::INTEGER_VALUE;
+            const lexical_token_t ret = scan_decimal_number();
+            return (ret == lexical_token_t::FLOAT_NUMBER_VALUE) ? ret : lexical_token_t::INTEGER_VALUE;
         }
 
-        const std::string tmp_str = m_input_buffer.substr(m_position_info.total_read_char_counts, 4);
-        if (tmp_str == ".inf" || tmp_str == ".Inf" || tmp_str == ".INF")
+        if (get_string_from_input(4, m_value_buffer))
         {
-            m_value_buffer += tmp_str;
-            for (int i = 0; i < 4; ++i)
+            if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF")
             {
-                GetNextChar();
+                get_character();
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
             }
-            return LexicalTokenType::FLOAT_NUMBER_VALUE;
         }
-        throw Exception("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
+        throw fkyaml::exception("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
     }
 
     /**
      * @brief Scan a next character after '0' at the beginning of a token.
      *
-     * @return LexicalTokenType The lexical token type for one of number types(integer/float).
+     * @return lexical_token_t The lexical token type for one of number types(integer/float).
      */
-    LexicalTokenType ScanNumberAfterZeroAtFirst()
+    lexical_token_t scan_number_after_zero_at_first()
     {
-        const char& next = GetNextChar();
+        char_int_type next = get_character();
         switch (next)
         {
         case '.':
             m_value_buffer.push_back(next);
-            return ScanDecimalNumberAfterDecimalPoint();
+            return scan_decimal_number_after_decimal_point();
         case 'o':
             // Do not store 'o' since std::strtoull does not support "0o" but "0" as the prefix for octal numbers.
             // YAML specifies octal values start with the prefix "0o".
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            return ScanOctalNumber();
+            return scan_octal_number();
         case 'x':
             m_value_buffer.push_back(next);
-            return ScanHexadecimalNumber();
+            return scan_hexadecimal_number();
         default:
-            return LexicalTokenType::INTEGER_VALUE;
+            return lexical_token_t::INTEGER_VALUE;
         }
     }
 
     /**
      * @brief Scan a next character after a decimal point.
      *
-     * @return LexicalTokenType The lexical token type for float numbers.
+     * @return lexical_token_t The lexical token type for float numbers.
      */
-    LexicalTokenType ScanDecimalNumberAfterDecimalPoint()
+    lexical_token_t scan_decimal_number_after_decimal_point()
     {
-        const char& next = GetNextChar();
+        char_int_type next = get_character();
         FK_YAML_ASSERT(std::isdigit(next));
 
         if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
-            ScanDecimalNumber();
-            return LexicalTokenType::FLOAT_NUMBER_VALUE;
+            scan_decimal_number();
+            return lexical_token_t::FLOAT_NUMBER_VALUE;
         }
 
-        throw Exception("Invalid character found after a decimal point."); // LCOV_EXCL_LINE
+        throw fkyaml::exception("Invalid character found after a decimal point."); // LCOV_EXCL_LINE
     }
 
     /**
      * @brief Scan a next character after exponent(e/E).
      *
-     * @return LexicalTokenType The lexical token type for float numbers.
+     * @return lexical_token_t The lexical token type for float numbers.
      */
-    LexicalTokenType ScanDecimalNumberAfterExponent()
+    lexical_token_t scan_decimal_number_after_exponent()
     {
-        const char& next = GetNextChar();
+        char_int_type next = get_character();
         if (next == '+' || next == '-')
         {
             m_value_buffer.push_back(next);
-            ScanDecimalNumberAfterSign();
+            scan_decimal_number_after_sign();
         }
         else if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
-            ScanDecimalNumber();
+            scan_decimal_number();
         }
-        return LexicalTokenType::FLOAT_NUMBER_VALUE;
+        return lexical_token_t::FLOAT_NUMBER_VALUE;
     }
 
     /**
      * @brief Scan a next character after a sign(+/-) after exponent(e/E).
      *
-     * @return LexicalTokenType The lexical token type for one of number types(integer/float)
+     * @return lexical_token_t The lexical token type for one of number types(integer/float)
      */
-    LexicalTokenType ScanDecimalNumberAfterSign()
+    lexical_token_t scan_decimal_number_after_sign()
     {
-        const char& next = GetNextChar();
+        char_int_type next = get_character();
         FK_YAML_ASSERT(std::isdigit(next));
 
         if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
-            return ScanDecimalNumber();
+            return scan_decimal_number();
         }
 
-        throw Exception("Non-numeric character found after a sign(+/-) after exponent(e/E)."); // LCOV_EXCL_LINE
+        throw fkyaml::exception("Non-numeric character found after a sign(+/-) after exponent(e/E)."); // LCOV_EXCL_LINE
     }
 
     /**
      * @brief Scan a next character for decimal numbers.
      *
-     * @return LexicalTokenType The lexical token type for one of number types(integer/float)
+     * @return lexical_token_t The lexical token type for one of number types(integer/float)
      */
-    LexicalTokenType ScanDecimalNumber()
+    lexical_token_t scan_decimal_number()
     {
-        const char& next = GetNextChar();
+        char_int_type next = get_character();
 
         if (std::isdigit(next))
         {
             m_value_buffer.push_back(next);
-            return ScanDecimalNumber();
+            return scan_decimal_number();
         }
 
         if (next == '.')
@@ -750,75 +771,97 @@ private:
             if (m_value_buffer.find(next) != std::string::npos) // NOLINT(abseil-string-find-str-contains)
             {
                 // TODO: support this use case (e.g. version info like 1.0.0)
-                throw Exception("Multiple decimal points found in a token.");
+                throw fkyaml::exception("Multiple decimal points found in a token.");
             }
             m_value_buffer.push_back(next);
-            return ScanDecimalNumberAfterDecimalPoint();
+            return scan_decimal_number_after_decimal_point();
         }
 
         if (next == 'e' || next == 'E')
         {
             m_value_buffer.push_back(next);
-            return ScanDecimalNumberAfterExponent();
+            return scan_decimal_number_after_exponent();
         }
 
-        return LexicalTokenType::INTEGER_VALUE;
+        return lexical_token_t::INTEGER_VALUE;
     }
 
     /**
      * @brief Scan a next character for octal numbers.
      *
-     * @return LexicalTokenType The lexical token type for integers.
+     * @return lexical_token_t The lexical token type for integers.
      */
-    LexicalTokenType ScanOctalNumber()
+    lexical_token_t scan_octal_number()
     {
-        const char& next = GetNextChar();
+        char_int_type next = get_character();
         if ('0' <= next && next <= '7')
         {
             m_value_buffer.push_back(next);
-            ScanOctalNumber();
+            scan_octal_number();
         }
-        return LexicalTokenType::INTEGER_VALUE;
+        return lexical_token_t::INTEGER_VALUE;
     }
 
     /**
      * @brief Scan a next character for hexadecimal numbers.
      *
-     * @return LexicalTokenType The lexical token type for integers.
+     * @return lexical_token_t The lexical token type for integers.
      */
-    LexicalTokenType ScanHexadecimalNumber()
+    lexical_token_t scan_hexadecimal_number()
     {
-        const char& next = GetNextChar();
+        char_int_type next = get_character();
         if (std::isxdigit(next))
         {
             m_value_buffer.push_back(next);
-            ScanHexadecimalNumber();
+            scan_hexadecimal_number();
         }
-        return LexicalTokenType::INTEGER_VALUE;
+        return lexical_token_t::INTEGER_VALUE;
     }
 
     /**
      * @brief Scan a string token(unquoted/single-quoted/double-quoted).
      * @note Multibyte characters(including escaped ones) are currently unsupported.
      *
-     * @return LexicalTokenType The lexical token type for strings.
+     * @return lexical_token_t The lexical token type for strings.
      */
-    LexicalTokenType ScanString()
+    lexical_token_t scan_string()
     {
         m_value_buffer.clear();
 
-        const bool needs_last_double_quote = (RefCurrentChar() == '\"');
-        const bool needs_last_single_quote = (RefCurrentChar() == '\'');
+        const bool needs_last_double_quote = (get_current_character() == '\"');
+        const bool needs_last_single_quote = (get_current_character() == '\'');
         size_t start_pos_backup = m_position_info.total_read_char_counts;
-        char current = (needs_last_double_quote || needs_last_single_quote) ? GetNextChar() : RefCurrentChar();
+        char_int_type current =
+            (needs_last_double_quote || needs_last_single_quote) ? get_character() : get_current_character();
 
-        for (;; current = GetNextChar())
+        for (;; current = get_character())
         {
+            // Handle the end of input buffer.
+            if (current == char_traits_type::eof())
+            {
+                if (needs_last_double_quote)
+                {
+                    throw fkyaml::exception("Invalid end of input buffer in a double-quoted string token.");
+                }
+
+                if (needs_last_single_quote)
+                {
+                    throw fkyaml::exception("Invalid end of input buffer in a single-quoted string token.");
+                }
+
+                if (m_value_buffer.empty())
+                {
+                    throw fkyaml::exception("Empty string token reaches the end of input buffer.");
+                }
+
+                return lexical_token_t::STRING_VALUE;
+            }
+
             if (current == ' ')
             {
                 if (!needs_last_double_quote && !needs_last_single_quote)
                 {
-                    return LexicalTokenType::STRING_VALUE;
+                    return lexical_token_t::STRING_VALUE;
                 }
                 m_value_buffer.push_back(current);
                 continue;
@@ -828,13 +871,13 @@ private:
             {
                 if (needs_last_double_quote)
                 {
-                    GetNextChar();
-                    return LexicalTokenType::STRING_VALUE;
+                    get_character();
+                    return lexical_token_t::STRING_VALUE;
                 }
 
                 if (!needs_last_single_quote)
                 {
-                    throw Exception("Invalid double quotation mark found in a string token.");
+                    throw fkyaml::exception("Invalid double quotation mark found in a string token.");
                 }
 
                 // if the target is a single-quoted string token.
@@ -847,18 +890,18 @@ private:
             {
                 if (needs_last_double_quote || !needs_last_single_quote)
                 {
-                    throw Exception("Invalid single quotation mark found in a string token.");
+                    throw fkyaml::exception("Invalid single quotation mark found in a string token.");
                 }
 
                 // If single quotation marks are repeated twice in a single-quoted string token. they are considered as
                 // an escaped single quotation mark.
-                if (RefNextChar() == '\'')
+                if (test_next_char('\''))
                 {
-                    m_value_buffer.push_back(GetNextChar());
+                    m_value_buffer.push_back(get_character());
                     continue;
                 }
 
-                return LexicalTokenType::STRING_VALUE;
+                return lexical_token_t::STRING_VALUE;
             }
 
             // Handle colons.
@@ -871,22 +914,26 @@ private:
                     continue;
                 }
 
+                char_int_type next = get_character();
+                unget_character();
+                m_last_char = current;
+
                 // A colon as a key separator must be followed by a space or a newline code.
-                if (RefNextChar() != ' ' && RefNextChar() != '\r' && RefNextChar() != '\n')
+                if (next != ' ' && next != '\r' && next != '\n')
                 {
                     m_value_buffer.push_back(current);
                     continue;
                 }
 
-                if (RefNextChar() == '\r' || RefNextChar() == '\n')
+                if (next == '\r' || next == '\n')
                 {
                     size_t current_pos_backup = m_position_info.total_read_char_counts;
                     m_position_info.total_read_char_counts = start_pos_backup;
-                    UpdateIndentWidth();
+                    // update_indent_width();
                     m_position_info.total_read_char_counts = current_pos_backup;
                 }
 
-                return LexicalTokenType::STRING_VALUE;
+                return lexical_token_t::STRING_VALUE;
             }
 
             // Handle commas.
@@ -899,7 +946,7 @@ private:
                     continue;
                 }
 
-                return LexicalTokenType::STRING_VALUE;
+                return lexical_token_t::STRING_VALUE;
             }
 
             // Handle right square brackets.
@@ -918,7 +965,7 @@ private:
                     m_value_buffer.pop_back();
                 }
 
-                return LexicalTokenType::STRING_VALUE;
+                return lexical_token_t::STRING_VALUE;
             }
 
             // Handle right curly braces.
@@ -931,35 +978,19 @@ private:
                     continue;
                 }
 
-                return LexicalTokenType::STRING_VALUE;
+                return lexical_token_t::STRING_VALUE;
             }
 
             // Handle newline codes.
             if (current == '\r' || current == '\n')
             {
-                if (!needs_last_double_quote && !needs_last_single_quote)
+                if (!(needs_last_double_quote || needs_last_single_quote))
                 {
-                    return LexicalTokenType::STRING_VALUE;
+                    return lexical_token_t::STRING_VALUE;
                 }
 
-                SkipWhiteSpaces();
+                skip_white_spaces();
                 continue;
-            }
-
-            // Handle the end of input buffer.
-            if (current == '\0' || current == s_EOF)
-            {
-                if (needs_last_double_quote)
-                {
-                    throw Exception("Invalid end of input buffer in a double-quoted string token.");
-                }
-
-                if (needs_last_single_quote)
-                {
-                    throw Exception("Invalid end of input buffer in a single-quoted string token.");
-                }
-
-                return LexicalTokenType::STRING_VALUE;
             }
 
             // Handle escaped characters.
@@ -968,10 +999,10 @@ private:
             {
                 if (!needs_last_double_quote)
                 {
-                    throw Exception("Escaped characters are only available in a double-quoted string token.");
+                    throw fkyaml::exception("Escaped characters are only available in a double-quoted string token.");
                 }
 
-                current = GetNextChar();
+                current = get_character();
                 switch (current)
                 {
                 case 'a':
@@ -1014,7 +1045,7 @@ private:
                     char byte = 0;
                     for (int i = 1; i >= 0; --i)
                     {
-                        char four_bits = ConvertHexCharToByte(GetNextChar());
+                        char four_bits = convert_hex_char_to_byte(char_traits_type::to_char_type(get_character()));
                         // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
                         byte |= static_cast<char>(four_bits << (4 * i));
                     }
@@ -1024,7 +1055,7 @@ private:
                 // Multibyte characters are currently unsupported.
                 // Thus \N, \_, \L, \P \uXX, \UXXXX are currently unavailable.
                 default:
-                    throw Exception("Unsupported escape sequence found in a string token.");
+                    throw fkyaml::exception("Unsupported escape sequence found in a string token.");
                 }
                 continue;
             }
@@ -1041,125 +1072,162 @@ private:
             {
             // 0x00(NULL) has already been handled above.
             case 0x01:
-                throw Exception("Control character U+0001 (SOH) must be escaped to \\u0001.");
+                throw fkyaml::exception("Control character U+0001 (SOH) must be escaped to \\u0001.");
             case 0x02:
-                throw Exception("Control character U+0002 (STX) must be escaped to \\u0002.");
+                throw fkyaml::exception("Control character U+0002 (STX) must be escaped to \\u0002.");
             case 0x03:
-                throw Exception("Control character U+0003 (ETX) must be escaped to \\u0003.");
+                throw fkyaml::exception("Control character U+0003 (ETX) must be escaped to \\u0003.");
             case 0x04:
-                throw Exception("Control character U+0004 (EOT) must be escaped to \\u0004.");
+                throw fkyaml::exception("Control character U+0004 (EOT) must be escaped to \\u0004.");
             case 0x05:
-                throw Exception("Control character U+0005 (ENQ) must be escaped to \\u0005.");
+                throw fkyaml::exception("Control character U+0005 (ENQ) must be escaped to \\u0005.");
             case 0x06:
-                throw Exception("Control character U+0006 (ACK) must be escaped to \\u0006.");
+                throw fkyaml::exception("Control character U+0006 (ACK) must be escaped to \\u0006.");
             case 0x07:
-                throw Exception("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
+                throw fkyaml::exception("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
             case 0x08:
-                throw Exception("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
+                throw fkyaml::exception("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
             case 0x09: // HT
                 m_value_buffer.push_back(current);
                 break;
             // 0x0A(LF) has already been handled above.
             case 0x0B:
-                throw Exception("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
+                throw fkyaml::exception("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
             case 0x0C:
-                throw Exception("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
+                throw fkyaml::exception("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
             // 0x0D(CR) has already been handled above.
             case 0x0E:
-                throw Exception("Control character U+000E (SO) must be escaped to \\u000E.");
+                throw fkyaml::exception("Control character U+000E (SO) must be escaped to \\u000E.");
             case 0x0F:
-                throw Exception("Control character U+000F (SI) must be escaped to \\u000F.");
+                throw fkyaml::exception("Control character U+000F (SI) must be escaped to \\u000F.");
             case 0x10:
-                throw Exception("Control character U+0010 (DLE) must be escaped to \\u0010.");
+                throw fkyaml::exception("Control character U+0010 (DLE) must be escaped to \\u0010.");
             case 0x11:
-                throw Exception("Control character U+0011 (DC1) must be escaped to \\u0011.");
+                throw fkyaml::exception("Control character U+0011 (DC1) must be escaped to \\u0011.");
             case 0x12:
-                throw Exception("Control character U+0012 (DC2) must be escaped to \\u0012.");
+                throw fkyaml::exception("Control character U+0012 (DC2) must be escaped to \\u0012.");
             case 0x13:
-                throw Exception("Control character U+0013 (DC3) must be escaped to \\u0013.");
+                throw fkyaml::exception("Control character U+0013 (DC3) must be escaped to \\u0013.");
             case 0x14:
-                throw Exception("Control character U+0014 (DC4) must be escaped to \\u0014.");
+                throw fkyaml::exception("Control character U+0014 (DC4) must be escaped to \\u0014.");
             case 0x15:
-                throw Exception("Control character U+0015 (NAK) must be escaped to \\u0015.");
+                throw fkyaml::exception("Control character U+0015 (NAK) must be escaped to \\u0015.");
             case 0x16:
-                throw Exception("Control character U+0016 (SYN) must be escaped to \\u0016.");
+                throw fkyaml::exception("Control character U+0016 (SYN) must be escaped to \\u0016.");
             case 0x17:
-                throw Exception("Control character U+0017 (ETB) must be escaped to \\u0017.");
+                throw fkyaml::exception("Control character U+0017 (ETB) must be escaped to \\u0017.");
             case 0x18:
-                throw Exception("Control character U+0018 (CAN) must be escaped to \\u0018.");
+                throw fkyaml::exception("Control character U+0018 (CAN) must be escaped to \\u0018.");
             case 0x19:
-                throw Exception("Control character U+0019 (EM) must be escaped to \\u0019.");
+                throw fkyaml::exception("Control character U+0019 (EM) must be escaped to \\u0019.");
             case 0x1A:
-                throw Exception("Control character U+001A (SUB) must be escaped to \\u001A.");
+                throw fkyaml::exception("Control character U+001A (SUB) must be escaped to \\u001A.");
             case 0x1B:
-                throw Exception("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
+                throw fkyaml::exception("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
             case 0x1C:
-                throw Exception("Control character U+001C (FS) must be escaped to \\u001C.");
+                throw fkyaml::exception("Control character U+001C (FS) must be escaped to \\u001C.");
             case 0x1D:
-                throw Exception("Control character U+001D (GS) must be escaped to \\u001D.");
+                throw fkyaml::exception("Control character U+001D (GS) must be escaped to \\u001D.");
             case 0x1E:
-                throw Exception("Control character U+001E (RS) must be escaped to \\u001E.");
+                throw fkyaml::exception("Control character U+001E (RS) must be escaped to \\u001E.");
             case 0x1F:
-                throw Exception("Control character U+001F (US) must be escaped to \\u001F.");
+                throw fkyaml::exception("Control character U+001F (US) must be escaped to \\u001F.");
             // 0x20('0')~0x7E('~') have already been handled above.
             // 16bit, 32bit characters are currently not supported.
             default:
-                throw Exception("Unsupported multibytes character found.");
+                throw fkyaml::exception("Unsupported multibytes character found.");
             }
         }
     }
 
     /**
-     * @brief Get reference to the current character from the input buffer without position updates.
-     *
-     * @return const char& Constant reference to the current character.
+     * @brief Update position by moving backward.
      */
-    const char& RefCurrentChar() const noexcept
+    void unget_character() noexcept
     {
-        FK_YAML_ASSERT(m_position_info.total_read_char_counts <= m_input_buffer.size());
-        return m_input_buffer[m_position_info.total_read_char_counts];
+        m_input_adapter.unget_character();
     }
 
     /**
-     * @brief Get reference to the next character from the input buffer without position updates.
+     * @brief Get current character from the input buffer without position updates.
      *
-     * @return const char& Constant reference to the next character.
+     * @return char_int_type The next character.
      */
-    const char& RefNextChar() const noexcept
+    char_int_type get_current_character() noexcept
     {
-        FK_YAML_ASSERT(m_position_info.total_read_char_counts + 1 <= m_input_buffer.size());
-        return m_input_buffer[m_position_info.total_read_char_counts + 1];
-    }
-
-    /**
-     * @brief Get reference to the next character from the input buffer with position updates.
-     *
-     * @return const char& Constant reference to the next character.
-     */
-    const char& GetNextChar() noexcept
-    {
-        FK_YAML_ASSERT(m_position_info.total_read_char_counts + 1 <= m_input_buffer.size());
-
-        const char current = m_input_buffer[m_position_info.total_read_char_counts];
-        const char& next = m_input_buffer[++m_position_info.total_read_char_counts];
-        ++m_position_info.read_char_counts_in_line;
-        if (current == '\n' || (current == '\r' && next != '\n'))
+        if (m_is_first_input_char)
         {
-            ++m_position_info.total_read_line_counts;
-            m_position_info.prev_char_counts_in_line = m_position_info.read_char_counts_in_line;
-            m_position_info.read_char_counts_in_line = 0;
+            m_last_char = get_character();
         }
-        return next;
+        return m_last_char;
+    }
+
+    /**
+     * @brief Get the next character from the input buffer with position updates.
+     *
+     * @return char_int_type Constant reference to the next character.
+     */
+    char_int_type get_character() noexcept
+    {
+        m_is_first_input_char = false;
+        m_last_char = m_input_adapter.get_character();
+        return m_last_char;
+    }
+
+    /**
+     * @brief Get the string from input object.
+     *
+     * @param count The number of characters.
+     * @param str A container of a resulting string.
+     * @return true Succeeded in getting strings.
+     * @return false Failed to get strings.
+     */
+    bool get_string_from_input(const int count, std::string& str) noexcept
+    {
+        str.clear();
+        char_int_type backup = m_last_char;
+        str += m_last_char;
+
+        for (int i = 1; i < count; i++)
+        {
+            if (get_character() == char_traits_type::eof())
+            {
+                for (int j = i; j > 1; j--)
+                {
+                    unget_character();
+                }
+                m_last_char = backup;
+                str.clear();
+                return false;
+            }
+            str += m_last_char;
+        }
+
+        return true;
+    }
+
+    /**
+     * @brief Check if the next character is the expected one.
+     *
+     * @param expected_char An expected next character.
+     * @return true The next character is the expected one.
+     * @return false The next character is not the expected one.
+     */
+    bool test_next_char(char_int_type expected_char) noexcept
+    {
+        char_int_type next = m_input_adapter.get_character();
+        unget_character();
+        return next == expected_char;
     }
 
     /**
      * @brief Skip white spaces, tabs and newline codes until any other kind of character is found.
      */
-    void SkipWhiteSpaces()
+    void skip_white_spaces()
     {
         while (true)
         {
-            switch (RefCurrentChar())
+            switch (get_current_character())
             {
             case ' ':
             case '\t':
@@ -1169,37 +1237,41 @@ private:
             default:
                 return;
             }
-            GetNextChar();
+            get_character();
         }
     }
 
     /**
      * @brief Skip reading in the current line.
      */
-    void SkipUntilLineEnd()
+    void skip_until_line_end()
     {
         while (true)
         {
-            switch (RefCurrentChar())
+            switch (get_current_character())
             {
-            case '\r':
-                if (RefNextChar() == '\n')
-                {
-                    GetNextChar();
-                }
-            case '\n':
-                GetNextChar();
-            case '\0':
+            case char_traits_type::eof():
                 return;
+            case '\r':
+                if (get_character() == '\n')
+                {
+                    get_character();
+                }
+                return;
+            case '\n':
+                get_character();
+                return;
+            default:
+                break;
             }
-            GetNextChar();
+            get_character();
         }
     }
 
     /**
      * @brief Store an indent width of the current line.
      */
-    void UpdateIndentWidth()
+    void update_indent_width()
     {
         if (m_position_info.total_read_char_counts == 0)
         {
@@ -1208,9 +1280,7 @@ private:
         }
 
         size_t pos = m_position_info.total_read_char_counts - 1;
-        FK_YAML_ASSERT(pos < m_input_buffer.size());
         uint32_t indent_width = 0;
-        while (pos > 0 && m_input_buffer[pos] != '\r' && m_input_buffer[pos] != '\n')
         {
             --pos;
             ++indent_width;
@@ -1230,7 +1300,7 @@ private:
             {
                 if (indent_width != m_indent_width_stack.back() + 2)
                 {
-                    throw Exception("Indent width must be increased by 2.");
+                    throw fkyaml::exception("Indent width must be increased by 2.");
                 }
                 m_indent_width_stack.push_back(indent_width);
                 return;
@@ -1249,7 +1319,7 @@ private:
 
             if (!found)
             {
-                throw Exception("Failed to find matched indent width of a parent node.");
+                throw fkyaml::exception("Failed to find matched indent width of a parent node.");
             }
         }
 
@@ -1257,19 +1327,22 @@ private:
     }
 
 private:
-    //!< The value of EOF.
-    static constexpr char_int_type s_EOF = char_traits_type::eof();
-
-    //!< An input buffer to be analyzed.
-    string_type m_input_buffer {};
-    //!< The information set for the input buffer.
-    Position m_position_info {};
+    //!< An input buffer adapter to be analyzed.
+    InputAdapterType m_input_adapter;
+    //!< The most recent value read from the input buffer.
+    char_int_type m_last_char;
+    //!< A flag to determine whether the first input char has been retrieved.
+    bool m_is_first_input_char {true};
     //!< A temporal buffer to store a string to be parsed to an actual datum.
-    string_type m_value_buffer {};
+    string_type m_value_buffer;
+    //!< The information set for input buffer.
+    position m_position_info;
     //!< A stack to store indent width history.
     std::vector<uint32_t> m_indent_width_stack;
 };
 
+} // namespace detail
+
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_LEXICAL_ANALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_ */
