@@ -768,7 +768,7 @@ private:
 
         if (next == '.')
         {
-            if (m_value_buffer.find(next) != std::string::npos) // NOLINT(abseil-string-find-str-contains)
+            if (m_value_buffer.find(next) != string_type::npos) // NOLINT(abseil-string-find-str-contains)
             {
                 // TODO: support this use case (e.g. version info like 1.0.0)
                 throw fkyaml::exception("Multiple decimal points found in a token.");
@@ -1182,7 +1182,7 @@ private:
      * @return true Succeeded in getting strings.
      * @return false Failed to get strings.
      */
-    bool get_string_from_input(const int count, std::string& str) noexcept
+    bool get_string_from_input(const int count, string_type& str) noexcept
     {
         str.clear();
         char_int_type backup = m_last_char;
