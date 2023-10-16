@@ -517,7 +517,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanReservedIndicatorTokenTest", "[LexicalAn
     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::exception);
 }
 
-TEST_CASE("LexicalAnalyzerClassTest_ScanKeyBooleanvalue_pair_tTokenTest", "[LexicalAnalyzerClassTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeyBooleanValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     pchar_lexer_t lexer(fkyaml::detail::input_adapter("test: true"));
     fkyaml::detail::lexical_token_t token;
@@ -539,7 +539,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanKeyBooleanvalue_pair_tTokenTest", "[Lexi
     REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
 }
 
-TEST_CASE("LexicalAnalyzerClassTest_ScanKeyIntegervalue_pair_tTokenTest", "[LexicalAnalyzerClassTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeyIntegerValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     pchar_lexer_t lexer(fkyaml::detail::input_adapter("test: -5784"));
     fkyaml::detail::lexical_token_t token;
@@ -561,7 +561,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanKeyIntegervalue_pair_tTokenTest", "[Lexi
     REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
 }
 
-TEST_CASE("LexicalAnalyzerClassTest_ScanKeyFloatNumbervalue_pair_tTokenTest", "[LexicalAnalyzerClassTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeyFloatNumberValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     pchar_lexer_t lexer(fkyaml::detail::input_adapter("test: -5.58e-3"));
     fkyaml::detail::lexical_token_t token;
@@ -583,7 +583,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanKeyFloatNumbervalue_pair_tTokenTest", "[
     REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
 }
 
-TEST_CASE("LexicalAnalyzerClassTest_ScanKeyStringvalue_pair_tTokenTest", "[LexicalAnalyzerClassTest]")
+TEST_CASE("LexicalAnalyzerClassTest_ScanKeyStringValuePairTokenTest", "[LexicalAnalyzerClassTest]")
 {
     pchar_lexer_t lexer(fkyaml::detail::input_adapter("test: \"some value\""));
     fkyaml::detail::lexical_token_t token;
