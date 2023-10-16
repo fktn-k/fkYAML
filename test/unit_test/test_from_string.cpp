@@ -182,8 +182,7 @@ TEST_CASE("FromStringTest_FloatTest", "[FromStringTest]")
         REQUIRE(std::abs(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<float> {}) - 3.14f) < FLT_EPSILON);
 
         input = "3.40282347e+39";
-        REQUIRE_THROWS_AS(
-            fkyaml::detail::from_string(input, fkyaml::detail::type_tag<float> {}), fkyaml::exception);
+        REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<float> {}), fkyaml::exception);
     }
 }
 
@@ -219,7 +218,6 @@ TEST_CASE("FromStringTest_DoubleTest", "[FromStringTest]")
         REQUIRE(std::abs(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<double> {}) - 3.14) < DBL_EPSILON);
 
         input = "1.7976931348623157E+309";
-        REQUIRE_THROWS_AS(
-            fkyaml::detail::from_string(input, fkyaml::detail::type_tag<double> {}), fkyaml::exception);
+        REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<double> {}), fkyaml::exception);
     }
 }
