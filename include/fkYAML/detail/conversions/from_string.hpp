@@ -82,6 +82,29 @@ inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
 }
 
 /**
+ * @brief Specialization of from_string() for int values with std::string.
+ *
+ * @tparam  N/A
+ */
+template <>
+inline int from_string(const std::string& s, type_tag<int> /*unused*/)
+{
+    std::size_t idx = 0;
+    long ret = 0;
+
+    try
+    {
+        ret = std::stoi(s, &idx, 0);
+    }
+    catch (const std::exception& /*unused*/)
+    {
+        throw exception("Failed to convert a string into an int value.");
+    }
+
+    return ret;
+}
+
+/**
  * @brief Specialization of from_string() for long values with std::string.
  *
  * @tparam  N/A
@@ -89,10 +112,14 @@ inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
 template <>
 inline long from_string(const std::string& s, type_tag<long> /*unused*/)
 {
-    char* endptr = nullptr;
-    const auto ret = std::strtol(s.data(), &endptr, 0);
+    std::size_t idx = 0;
+    long ret = 0;
 
-    if (endptr != s.data() + s.size() || errno == ERANGE)
+    try
+    {
+        ret = std::stol(s, &idx, 0);
+    }
+    catch (const std::exception& /*unused*/)
     {
         throw exception("Failed to convert a string into a long value.");
     }
@@ -108,10 +135,14 @@ inline long from_string(const std::string& s, type_tag<long> /*unused*/)
 template <>
 inline long long from_string(const std::string& s, type_tag<long long> /*unused*/)
 {
-    char* endptr = nullptr;
-    const auto ret = std::strtoll(s.data(), &endptr, 0);
+    std::size_t idx = 0;
+    long long ret = 0;
 
-    if (endptr != s.data() + s.size() || errno == ERANGE)
+    try
+    {
+        ret = std::stoll(s, &idx, 0);
+    }
+    catch (const std::exception& /*unused*/)
     {
         throw exception("Failed to convert a string into a long long value.");
     }
@@ -120,20 +151,19 @@ inline long long from_string(const std::string& s, type_tag<long long> /*unused*
 }
 
 /**
- * @brief Partial specialization of from_string() for signed integer values (not long long) with std::string.
+ * @brief Partial specialization of from_string() for other signed integer types with std::string.
  *
  * @tparam SignedIntType A signed integer type other than long long.
  */
 template <typename SignedIntType>
 inline enable_if_t<
     conjunction<
-        is_non_bool_integral<SignedIntType>, std::is_signed<SignedIntType>,
-        negation<std::is_same<SignedIntType, long>>,
-        negation<std::is_same<SignedIntType, long long>>>::value,
+        is_non_bool_integral<SignedIntType>, std::is_signed<SignedIntType>, negation<std::is_same<SignedIntType, int>>,
+        negation<std::is_same<SignedIntType, long>>, negation<std::is_same<SignedIntType, long long>>>::value,
     SignedIntType>
 from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
 {
-    const auto tmp_ret = from_string(s, type_tag<long> {});
+    const auto tmp_ret = from_string(s, type_tag<int> {});
     if (static_cast<long long>(std::numeric_limits<SignedIntType>::max()) < tmp_ret)
     {
         throw exception("Failed to convert a long long value into a SignedIntegerType value.");
@@ -150,10 +180,14 @@ from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
 template <>
 inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /*unused*/)
 {
-    char* endptr = nullptr;
-    const auto ret = std::strtoul(s.data(), &endptr, 0);
+    std::size_t idx = 0;
+    unsigned long ret = 0;
 
-    if (endptr != s.data() + s.size() || errno == ERANGE)
+    try
+    {
+        ret = std::stoul(s, &idx, 0);
+    }
+    catch (const std::exception& /*unused*/)
     {
         throw exception("Failed to convert a string into an unsigned long value.");
     }
@@ -169,19 +203,23 @@ inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /
 template <>
 inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/)
 {
-    char* endptr = nullptr;
-    const auto ret = std::strtoull(s.data(), &endptr, 0);
+    std::size_t idx = 0;
+    unsigned long long ret = 0;
 
-    if (endptr != s.data() + s.size() || errno == ERANGE)
+    try
     {
-        throw exception("Failed to convert a string into an integer value.");
+        ret = std::stoull(s, &idx, 0);
+    }
+    catch (const std::exception& /*unused*/)
+    {
+        throw exception("Failed to convert a string into an unsigned long long value.");
     }
 
     return ret;
 }
 
 /**
- * @brief Partial specialization of from_string() for unsigned integer values (not unsigned long long) with std::string.
+ * @brief Partial specialization of from_string() for other unsigned integer types with std::string.
  *
  * @tparam UnsignedIntType An unsigned integer type other than unsigned long long.
  */
@@ -227,12 +265,16 @@ inline float from_string(const std::string& s, type_tag<float> /*unused*/)
         return std::nanf("");
     }
 
-    char* endptr = nullptr;
-    const auto ret = std::strtof(s.data(), &endptr);
+    std::size_t idx = 0;
+    float ret = 0.0f;
 
-    if (endptr != s.data() + s.size())
+    try
     {
-        throw exception("Failed to a string into a floating point number value.");
+        ret = std::stof(s, &idx);
+    }
+    catch (const std::exception& /*unused*/)
+    {
+        throw exception("Failed to a string into a float value.");
     }
 
     return ret;
@@ -262,47 +304,16 @@ inline double from_string(const std::string& s, type_tag<double> /*unused*/)
         return std::nan("");
     }
 
-    char* endptr = nullptr;
-    const auto ret = std::strtod(s.data(), &endptr);
+    std::size_t idx = 0;
+    double ret = 0.0;
 
-    if (endptr != s.data() + s.size())
+    try
     {
-        throw exception("Failed to a string into a floating point number value.");
+        ret = std::stod(s, &idx);
     }
-
-    return ret;
-}
-
-/**
- * @brief Specialization of from_string() for long double values with std::string.
- *
- * @tparam  N/A
- */
-template <>
-inline long double from_string(const std::string& s, type_tag<long double> /*unused*/)
-{
-    if (s == ".inf" || s == ".Inf" || s == ".INF")
+    catch (const std::exception& /*unused*/)
     {
-        return std::numeric_limits<long double>::infinity();
-    }
-
-    if (s == "-.inf" || s == "-.Inf" || s == "-.INF")
-    {
-        static_assert(std::numeric_limits<long double>::is_iec559, "IEEE 754 required.");
-        return -1 * std::numeric_limits<long double>::infinity();
-    }
-
-    if (s == ".nan" || s == ".NaN" || s == ".NAN")
-    {
-        return std::nanl("");
-    }
-
-    char* endptr = nullptr;
-    const auto ret = std::strtold(s.data(), &endptr);
-
-    if (endptr != s.data() + s.size())
-    {
-        throw exception("Failed to a string into a floating point number value.");
+        throw exception("Failed to a string into a double value.");
     }
 
     return ret;
