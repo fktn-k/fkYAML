@@ -1230,6 +1230,7 @@ private:
     }
 
 private:
+    //!< The value of EOF for the target characters.
     static constexpr char_int_type end_of_input = char_traits_type::eof();
 
     //!< An input buffer adapter to be analyzed.

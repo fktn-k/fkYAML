@@ -35,9 +35,20 @@ namespace detail
 
 using fkyaml::exception;
 
+/**
+ * @brief Convert a string YAML token to a ValueType object.
+ *
+ * @tparam ValueType A target value type.
+ * @tparam CharType The type of characters in a source string.
+ */
 template <typename ValueType, typename CharType>
 inline ValueType from_string(const std::basic_string<CharType>& s, type_tag<ValueType> /*unused*/);
 
+/**
+ * @brief Specialization of from_string() for null values with std::string
+ *
+ * @tparam  N/A
+ */
 template <>
 inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t> /*unused*/)
 {
@@ -49,6 +60,11 @@ inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t>
     throw exception("Cannot convert a string into a null value.");
 }
 
+/**
+ * @brief Specialization of from_string() for boolean values with std::string.
+ *
+ * @tparam  N/A
+ */
 template <>
 inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
 {
@@ -65,6 +81,11 @@ inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
     throw exception("Cannot convert a string into a boolean value.");
 }
 
+/**
+ * @brief Specialization of from_string() for long long values with std::string.
+ *
+ * @tparam  N/A
+ */
 template <>
 inline long long from_string(const std::string& s, type_tag<long long> /*unused*/)
 {
@@ -79,6 +100,11 @@ inline long long from_string(const std::string& s, type_tag<long long> /*unused*
     return ret;
 }
 
+/**
+ * @brief Partial specialization of from_string() for signed integer values (not long long) with std::string.
+ *
+ * @tparam SignedIntType A signed integer type other than long long.
+ */
 template <typename SignedIntType>
 inline enable_if_t<
     conjunction<
@@ -96,6 +122,11 @@ from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
     return static_cast<SignedIntType>(tmp_ret);
 }
 
+/**
+ * @brief Specialization of from_string() for unsigned long long values with std::string.
+ *
+ * @tparam  N/A
+ */
 template <>
 inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/)
 {
@@ -110,6 +141,11 @@ inline unsigned long long from_string(const std::string& s, type_tag<unsigned lo
     return ret;
 }
 
+/**
+ * @brief Partial specialization of from_string() for unsigned integer values (not unsigned long long) with std::string.
+ *
+ * @tparam UnsignedIntType An unsigned integer type other than unsigned long long.
+ */
 template <typename UnsignedIntType>
 inline enable_if_t<
     conjunction<
@@ -127,6 +163,11 @@ from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
     return static_cast<UnsignedIntType>(tmp_ret);
 }
 
+/**
+ * @brief Specialization of from_string() for float values with std::string.
+ *
+ * @tparam  N/A
+ */
 template <>
 inline float from_string(const std::string& s, type_tag<float> /*unused*/)
 {
@@ -157,6 +198,11 @@ inline float from_string(const std::string& s, type_tag<float> /*unused*/)
     return ret;
 }
 
+/**
+ * @brief Specialization of from_string() for double values with std::string.
+ *
+ * @tparam  N/A
+ */
 template <>
 inline double from_string(const std::string& s, type_tag<double> /*unused*/)
 {
@@ -187,6 +233,11 @@ inline double from_string(const std::string& s, type_tag<double> /*unused*/)
     return ret;
 }
 
+/**
+ * @brief Specialization of from_string() for long double values with std::string.
+ *
+ * @tparam  N/A
+ */
 template <>
 inline long double from_string(const std::string& s, type_tag<long double> /*unused*/)
 {

@@ -168,10 +168,14 @@ public:
     }
 
 private:
+    //!< The value of EOF for the target character type.
     static constexpr int_type end_of_input = char_traits_type::eof();
 
+    //!< An input adapter object.
     InputAdapterType m_input_adapter;
+    //!< Cached characters retrieved from an input adapter object.
     std::vector<int_type> m_cache;
+    //!< The current position in an input buffer.
     size_t m_cur_pos;
 };
 
