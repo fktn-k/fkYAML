@@ -82,6 +82,25 @@ inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
 }
 
 /**
+ * @brief Specialization of from_string() for long values with std::string.
+ *
+ * @tparam  N/A
+ */
+template <>
+inline long from_string(const std::string& s, type_tag<long> /*unused*/)
+{
+    char* endptr = nullptr;
+    const auto ret = std::strtol(s.data(), &endptr, 0);
+
+    if (endptr != s.data() + s.size() || errno == ERANGE)
+    {
+        throw exception("Failed to convert a string into a long value.");
+    }
+
+    return ret;
+}
+
+/**
  * @brief Specialization of from_string() for long long values with std::string.
  *
  * @tparam  N/A
@@ -94,7 +113,7 @@ inline long long from_string(const std::string& s, type_tag<long long> /*unused*
 
     if (endptr != s.data() + s.size() || errno == ERANGE)
     {
-        throw exception("Failed to convert a string into an integer value.");
+        throw exception("Failed to convert a string into a long long value.");
     }
 
     return ret;
@@ -109,17 +128,37 @@ template <typename SignedIntType>
 inline enable_if_t<
     conjunction<
         is_non_bool_integral<SignedIntType>, std::is_signed<SignedIntType>,
+        negation<std::is_same<SignedIntType, long>>,
         negation<std::is_same<SignedIntType, long long>>>::value,
     SignedIntType>
 from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
 {
-    const auto tmp_ret = from_string(s, type_tag<long long> {});
+    const auto tmp_ret = from_string(s, type_tag<long> {});
     if (static_cast<long long>(std::numeric_limits<SignedIntType>::max()) < tmp_ret)
     {
         throw exception("Failed to convert a long long value into a SignedIntegerType value.");
     }
 
     return static_cast<SignedIntType>(tmp_ret);
+}
+
+/**
+ * @brief Specialization of from_string() for unsigned long values with std::string.
+ *
+ * @tparam  N/A
+ */
+template <>
+inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /*unused*/)
+{
+    char* endptr = nullptr;
+    const auto ret = std::strtoul(s.data(), &endptr, 0);
+
+    if (endptr != s.data() + s.size() || errno == ERANGE)
+    {
+        throw exception("Failed to convert a string into an unsigned long value.");
+    }
+
+    return ret;
 }
 
 /**
@@ -150,11 +189,12 @@ template <typename UnsignedIntType>
 inline enable_if_t<
     conjunction<
         is_non_bool_integral<UnsignedIntType>, std::is_unsigned<UnsignedIntType>,
+        negation<std::is_same<UnsignedIntType, unsigned long>>,
         negation<std::is_same<UnsignedIntType, unsigned long long>>>::value,
     UnsignedIntType>
 from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
 {
-    const auto tmp_ret = from_string(s, type_tag<unsigned long long> {});
+    const auto tmp_ret = from_string(s, type_tag<unsigned long> {});
     if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret)
     {
         throw exception("Failed to convert an unsigned long long into an UnsignedInteger value.");
