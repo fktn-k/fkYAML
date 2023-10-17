@@ -59,6 +59,7 @@ add_executable(
   test_deserializer_class.cpp
   test_exception_class.cpp
   test_from_string.cpp
+  test_input_handler.cpp
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
   test_node_class.cpp

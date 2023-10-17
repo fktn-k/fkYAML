@@ -96,7 +96,6 @@ public:
             ++m_cur_pos;
         }
         return ret;
-        // return m_input_adapter.get_character();
     }
 
     /**
@@ -162,7 +161,19 @@ public:
      */
     bool test_next_char(char_type expected)
     {
-        bool ret = char_traits_type::eq(char_traits_type::to_char_type(get_next()), expected);
+        if (get_current() == end_of_input)
+        {
+            return false;
+        }
+
+        int_type next = get_next();
+        if (next == end_of_input)
+        {
+            unget();
+            return false;
+        }
+
+        bool ret = char_traits_type::eq(char_traits_type::to_char_type(next), expected);
         --m_cur_pos;
         return ret;
     }
