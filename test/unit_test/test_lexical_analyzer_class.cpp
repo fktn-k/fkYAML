@@ -88,9 +88,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
 
     SECTION("Test nothrow expected tokens with invalid content.")
     {
-        auto buffer = GENERATE(
-            std::string("%TUB"),
-            std::string("%TAC"));
+        auto buffer = GENERATE(std::string("%TUB"), std::string("%TAC"));
 
         str_lexer_t lexer(fkyaml::detail::input_adapter(buffer));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
