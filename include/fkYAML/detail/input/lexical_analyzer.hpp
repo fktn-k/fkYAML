@@ -186,8 +186,6 @@ public:
                 return m_last_token_type = scan_number();
             }
 
-            // update_indent_width();
-
             // Move a cursor to the beginning of the next token.
             m_input_handler.get_next();
             m_input_handler.get_next();
@@ -393,16 +391,6 @@ public:
         FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
 
         return m_value_buffer;
-    }
-
-    /**
-     * @brief Get the latest indent width stored in @a m_indent_width_stack.
-     *
-     * @return uint32_t The latest indent width.
-     */
-    uint32_t get_latest_indent_width() const noexcept
-    {
-        return m_indent_width_stack.empty() ? 0 : m_indent_width_stack.back();
     }
 
 private:
@@ -698,6 +686,10 @@ private:
             m_value_buffer.push_back(next);
             scan_decimal_number();
         }
+        else
+        {
+            throw fkyaml::exception("unexpected character found after exponent.");
+        }
         return lexical_token_t::FLOAT_NUMBER_VALUE;
     }
 
@@ -817,11 +809,6 @@ private:
                     throw fkyaml::exception("Invalid end of input buffer in a single-quoted string token.");
                 }
 
-                if (m_value_buffer.empty())
-                {
-                    throw fkyaml::exception("Empty string token reaches the end of input buffer.");
-                }
-
                 return lexical_token_t::STRING_VALUE;
             }
 
@@ -896,7 +883,6 @@ private:
                 {
                     size_t current_pos_backup = m_position_info.total_read_char_counts;
                     m_position_info.total_read_char_counts = start_pos_backup;
-                    // update_indent_width();
                     m_position_info.total_read_char_counts = current_pos_backup;
                 }
 
@@ -926,12 +912,6 @@ private:
                     continue;
                 }
 
-                // Trim trailing spaces already added to m_value_buffer.
-                while (m_value_buffer.back() == ' ')
-                {
-                    m_value_buffer.pop_back();
-                }
-
                 return lexical_token_t::STRING_VALUE;
             }
 
@@ -956,8 +936,8 @@ private:
                     return lexical_token_t::STRING_VALUE;
                 }
 
-                skip_white_spaces();
-                continue;
+                // TODO: Support multi-line string tokens.
+                throw fkyaml::exception("multi-line string tokens are unsupported.");
             }
 
             // Handle escaped characters.
@@ -1029,14 +1009,14 @@ private:
             }
 
             // Handle unescaped control characters.
-            if (0x00 <= current && current <= 0x1F)
+            if (current <= 0x1F)
             {
                 handle_unescaped_control_char(current);
                 continue;
             }
 
             // Handle ASCII characters except control characters.
-            if (0x20 <= current && current <= 0x7E)
+            if (current <= 0x7E)
             {
                 m_value_buffer.push_back(current);
                 continue;
@@ -1171,64 +1151,6 @@ private:
         }
     }
 
-    /**
-     * @brief Store an indent width of the current line.
-     */
-    void update_indent_width()
-    {
-        if (m_position_info.total_read_char_counts == 0)
-        {
-            m_indent_width_stack.push_back(0);
-            return;
-        }
-
-        size_t pos = m_position_info.total_read_char_counts - 1;
-        uint32_t indent_width = 0;
-        {
-            --pos;
-            ++indent_width;
-        }
-
-        if (pos == 0)
-        {
-            ++indent_width;
-        }
-
-        // TODO: This is a temporal restriction to accelerate development, and it should therefore be removed later.
-        // An indentation width is not restricted in the YAML specification.
-        // See "6.1. Indentation Spaces" section in https://yaml.org/spec/1.2.2/
-        if (!m_indent_width_stack.empty())
-        {
-            if (m_indent_width_stack.back() < indent_width)
-            {
-                if (indent_width != m_indent_width_stack.back() + 2)
-                {
-                    throw fkyaml::exception("Indent width must be increased by 2.");
-                }
-                m_indent_width_stack.push_back(indent_width);
-                return;
-            }
-
-            bool found = false;
-            for (size_t i = 0; i < m_indent_width_stack.size(); ++i)
-            {
-                if (indent_width == m_indent_width_stack.back())
-                {
-                    found = true;
-                    break;
-                }
-                m_indent_width_stack.pop_back();
-            }
-
-            if (!found)
-            {
-                throw fkyaml::exception("Failed to find matched indent width of a parent node.");
-            }
-        }
-
-        m_indent_width_stack.push_back(indent_width);
-    }
-
 private:
     //!< The value of EOF for the target characters.
     static constexpr char_int_type end_of_input = char_traits_type::eof();
@@ -1239,8 +1161,6 @@ private:
     input_string_type m_value_buffer;
     //!< The information set for input buffer.
     position m_position_info;
-    //!< A stack to store indent width history.
-    std::vector<uint32_t> m_indent_width_stack;
     //!< The last found token type.
     lexical_token_t m_last_token_type;
     //!< A temporal bool holder.
