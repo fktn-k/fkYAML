@@ -58,7 +58,7 @@ public:
         std::string str {};
         serialize_node(node, 0, str);
         return str;
-    }
+    } // LCOV_EXCL_LINE
 
 private:
     /**
@@ -152,8 +152,8 @@ private:
         case node_t::STRING:
             str += node.to_string();
             break;
-        default:
-            throw fkyaml::exception("Unsupported node type found.");
+        default:                                                     // LCOV_EXCL_LINE
+            throw fkyaml::exception("Unsupported node type found."); // LCOV_EXCL_LINE
         }
     }
 
