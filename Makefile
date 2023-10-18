@@ -32,7 +32,6 @@ all:
 	@echo "clang-sanitizers - check whether no runtime issue is detected while running the unit test app."
 	@echo "clang-tidy - check whether source files detect no issues during static code analysis."
 	@echo "cmake-format - check whether CMake scripts are well formatted."
-	@echo "cmake-lint - execute a linter for CMake scripts."
 	@echo "doxygen - generate the API documentation for the project with Doxygen."
 	@echo "html-coverage - generate HTML coverage report."
 	@echo "iwyu - check whether source files are each self-contained."

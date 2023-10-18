@@ -18,7 +18,7 @@ body:
       description: >
         Please provide an abstract description of the issue to the developers,
         and why you consider it to be a bug. Please include any specific links
-        to the documentation, JSON specification, or code.
+        to the documentation, YAML specification, or code.
     validations:
       required: true
   - type: textarea
