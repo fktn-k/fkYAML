@@ -9,7 +9,7 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/fktn-k/fkYAML)](https://api.reuse.software/info/github.com/fktn-k/fkYAML)
 
 # fkYAML
-fkYAML is a C++ header-only C++ library to deal with YAML.  
+fkYAML is a C++ header-only YAML library.  
 If you want portability & development speed-up, fkYAML is the way to go.  
 No need to build a library only for a third party project.  
 You can add YAML support into your projects by just including header files where it's needed.  
@@ -31,23 +31,48 @@ You can add YAML support into your projects by just including header files where
 
 ## Design Goals
 There are a lot of YAML library out there, and each may have its reason to exist.  
-The fkYAML library has two design goals:  
-- **Quick integration**.  
-  The whole code depends only on C++ standards on any kind of platforms so that it can be quickly integrated into any projects written in C++11 or later.  
-  No extenal dependencies, no sub-project, or no additional compiler flags are required.  
-  By just adding the fkYAML libary to your own C++ projects, everything should work fine with no extra requirements.  
-  If there should arise any issue, it's our fault. Please let us know by creating an issue or a PR to fix it up.
+The fkYAML library has 3 design goals:  
 
-- **Heavily tested**.  
-  The fkYAML library has been [unit-tested](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test) and covers as many lines and conditions of the code as possible. (You can see the actual coverage [here](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).)  
-  We check with [Valgrind](https://valgrind.org) and the [Clang Sanitizers](https://clang.llvm.org/docs/index.html) that there are no runtime issues such as memory leak.  
-  Furthermore, the quality of our codebase has been checked with [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/) and [CodeQL](https://codeql.github.com/docs/).  
-  GitHub Actions workflows run against every commit pushed on the main & develop branches to check that the fkYAML library can be successfully built/tested with a variety of compilers and C++ standards.  
-  See the [supported compilers](#supported-compilers) section for more details.
+#### :briefcase: **Portable**.  
+The whole code depends only on C++ standards, and is designed to work on any kind of platforms so that it can be imported into any C++ projects written in C++11 or later.  
+No external dependencies, no sub-project, or no additional compiler flags are required.  
+Besides that, the project supports [CMake](https://cmake.org/), which is widely used among various kinds of C++ projects as the de-facto standard software build system.  
+We believe those features will surely be useful for a lot of C++ developers.  
+
+#### :hammer: **Quickly integrated**.  
+By just copy-and-paste or use from CMake the fkYAML libary to your own C++ projects, everything should work fine with no other extra requirements than a compiler which supports C++.  
+Just follow the [How to integrate with existing C++ projects](#how-to-integrate-with-existing-c-projects) section, and you will be able to add YAML support to your own project.  
+If there should arise any issue, it might be our fault. Please let us know by creating an issue or a PR to fix it up.
+
+#### :memo: **Heavily tested**.  
+The fkYAML library has been [unit-tested](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test) and covers 100% of lines and conditions of the codebase. (You can see the actual coverage [here](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).)  
+We check with [Valgrind](https://valgrind.org) and the [Clang Sanitizers](https://clang.llvm.org/docs/index.html) that there are no runtime issues such as memory leak.  
+Furthermore, the quality of our codebase has been checked with [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/) and [CodeQL](https://codeql.github.com/docs/).  
+[GitHub Actions](https://docs.github.com/en/actions) workflows run against every commit pushed on the main & develop branches to ensure that the fkYAML library can be successfully built/tested with a variety of compilers and C++ standards.  
+See the [supported compilers](#supported-compilers) section for more details.
+
+## Support
+
+#### :question: **Questions**  
+If you have questions regarding the fkYAML library, feel free to [open a Q&A discussion](https://github.com/fktn-k/fkYAML/discussions/new?category=q-a) at GitHub.  
+
+#### :zap: Feature Requests
+If you have feature requests for the fkYAML library, let us know by [opening an Ideas discussion](https://github.com/fktn-k/fkYAML/discussions/new?category=ideas).  
+It's really helpful for us if you describe what the new feature aims at and/or why it's needed.
+
+#### :bug: **Bug Reports**  
+If you encounter a issue or find a bug, [open an issue](https://github.com/fktn-k/fkYAML/issues/new?assignees=&labels=kind%3A+bug&projects=&template=bug-report.yml).  
+Please describe your request, problem, or question as detailed as possible, and also mention the version of the library you are using as well as the version of your compiler and operating system.  
+Opening an issue at GitHub allows other users and contributors to this library to collabolate.  
+
+#### :closed_lock_with_key: Private Reports
+ If you want to make a private report (e.g., for a vulnerability or to attach an example that is not meant to be published), please send an email to <fktn.dev@gmail.com>.  
 
 ## How to Integrate with existing C++ projects
 
-If your C++ project uses [CMake](https://cmake.org/) as the build system tool, there are several ways to integrate it with the fkYAML library:  
+As briefly described above, the fkYAML library can be quickly introduced into you own project.  
+You can use it by just copy and past the fkYAML source files to your projects.  
+Also, if your C++ project uses [CMake](https://cmake.org/) as the build system, there are several ways to integrate it with the fkYAML library:  
 
 - **use `add_subdirectory()`**  
   <details>
@@ -63,11 +88,11 @@ If your C++ project uses [CMake](https://cmake.org/) as the build system tool, t
   target_link_libraries(your_app PRIVATE fkYAML::fkYAML)
   ```
 
-  </div></>
+  </div>
 
-- **use the `FetchContent` module**  
+- **use the `FetchContent` CMake module**  
   <details>
-  <summary>See an example code snnipet.</summary><details>
+  <summary>See an example code snippet.</summary><div>
 
   ```cmake
   cmake_minimum_required(VERSION 3.11)
@@ -92,7 +117,7 @@ If your C++ project uses [CMake](https://cmake.org/) as the build system tool, t
   See the [How to install](#how-to-install) section for detail.  
 
   <details>
-  <summary>An example code snippet.</summary><div>
+  <summary>See an example code snippet.</summary><div>
 
   ```cmake
   cmake_minimum_required(VERSION 3.8)
@@ -122,6 +147,7 @@ You can customize the installation path prefix with `-DCMAKE_INSTALL_PREFIX"` at
 ## Example usages
 
 Here are some examples to give you an idea how to use the fkYAML library.  
+For more information, click [here](https://fktn-k.github.io/fkYAML/) to see the API documentation.
 
 ### Deserialize YAML formatted strings
 
@@ -369,23 +395,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  
 SOFTWARE.  
 
-## Contact
-
-If you have questions regarding the fkYAML library, feel free to [open an issue](https://github.com/fktn-k/fkYAML/issues) at GitHub.  
-Please describe your request, problem, or question as detailed as possible, and also mention the version of the library you are using as well as the version of your compiler and operating system.  
-Opening an issue at GitHub allows other users and contributors to this library to collabolate.  
-If you want to make a private report (e.g., for a vulnerability or to attach an example that is not meant to be published), please send an email to <fktn.dev@gmail.com>.  
-
 ## Used third-party tools
 
 The fkYAML library itself depends only on C++ standards and licensed under the MIT licence.  
 However, it is built, tested and documented with a lot of third-party tools and services.  
+Thanks a lot!  
 
 - [**Clang**](https://clang.llvm.org/) for compilation, coding style checks, and/or static/runtime analysis.
 - [**CMake**](https://cmake.org/) for automation of build & testing.
+- [**cmake-format**](https://github.com/cheshirekow/cmake_format) as a linter for CMake scripts.
 - [**Coveralls**](https://coveralls.io/) to measure [code coverage](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).
 - [**Catch2**](https://github.com/catchorg/Catch2) as a unit-test framework.
 - [**Doxygen**](https://www.doxygen.nl/) as the API documentation generator.
+- [**github-changelog-generator**](https://github.com/github-changelog-generator/github-changelog-generator) to generate the [CHANGELOG.md](https://github.com/fktn-k/fkYAML/tree/develop/CHANGELOG.md) file.
 - [**include-what-you-use**](https://github.com/include-what-you-use/include-what-you-use) to check the fkYAML library source files are each self-contained.
-- [**lcov**](https://ltp.sourceforge.net/coverage/lcov.php) to process coverage information and create an HTML result view.
+- [**lcov**](https://ltp.sourceforge.net/coverage/lcov.php) to generate coverage data.
+- [**reuse-tool**](https://github.com/fsfe/reuse-tool) to generate license/copyright headers in source files to meet [REUSE software](https://reuse.software/) recommendations.
 - [**Valgrind**](https://valgrind.org/) for runtime memory leak check.
