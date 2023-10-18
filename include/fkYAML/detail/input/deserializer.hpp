@@ -88,14 +88,16 @@ public:
         {
             switch (type)
             {
-            case lexical_token_t::KEY_SEPARATOR:
-                if (m_node_stack.empty() || !m_node_stack.back()->is_mapping())
+            case lexical_token_t::KEY_SEPARATOR: {
+                bool is_stack_empty = m_node_stack.empty();
+                if (is_stack_empty)
                 {
-                    throw fkyaml::exception("A key separator found while a value token is expected.");
+                    throw fkyaml::exception("A key separator found without key.");
                 }
-                if (m_current_node->is_sequence() && m_current_node->size() == 1)
+                if (m_current_node->is_sequence())
                 {
                     // make sequence node to mapping node.
+                    // TODO: This is just a workaround. Need to be refactored to fix this way.
                     string_type tmp_str = m_current_node->operator[](0).to_string();
                     m_current_node->operator[](0) = BasicNodeType::mapping();
                     m_node_stack.emplace_back(m_current_node);
@@ -107,6 +109,7 @@ public:
                     set_yaml_version(*m_current_node);
                 }
                 break;
+            }
             case lexical_token_t::VALUE_SEPARATOR:
                 break;
             case lexical_token_t::ANCHOR_PREFIX: {
@@ -115,12 +118,13 @@ public:
                 break;
             }
             case lexical_token_t::ALIAS_PREFIX: {
-                m_anchor_name = lexer.get_string();
-                if (m_anchor_table.find(m_anchor_name) == m_anchor_table.end())
+                const string_type& alias_name = lexer.get_string();
+                auto itr = m_anchor_table.find(alias_name);
+                if (itr == m_anchor_table.end())
                 {
                     throw fkyaml::exception("The given anchor name must appear prior to the alias node.");
                 }
-                assign_node_value(BasicNodeType::alias_of(m_anchor_table.at(m_anchor_name)));
+                assign_node_value(BasicNodeType::alias_of(m_anchor_table.at(alias_name)));
                 break;
             }
             case lexical_token_t::COMMENT_PREFIX:
@@ -139,7 +143,8 @@ public:
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                 if (m_current_node->is_mapping())
                 {
-                    if (m_current_node->empty())
+                    bool is_empty = m_current_node->empty();
+                    if (is_empty)
                     {
                         *m_current_node = BasicNodeType::sequence();
                         break;
@@ -165,10 +170,6 @@ public:
                 set_yaml_version(*m_current_node);
                 break;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
-                if (m_current_node->is_mapping())
-                {
-                    throw fkyaml::exception("Cannot assign a mapping value as a key.");
-                }
                 *m_current_node = BasicNodeType::mapping();
                 set_yaml_version(*m_current_node);
                 break;
