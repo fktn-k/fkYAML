@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.1
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.2
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -58,7 +58,7 @@ public:
         std::string str {};
         serialize_node(node, 0, str);
         return str;
-    }
+    } // LCOV_EXCL_LINE
 
 private:
     /**
@@ -152,8 +152,8 @@ private:
         case node_t::STRING:
             str += node.to_string();
             break;
-        default:
-            throw fkyaml::exception("Unsupported node type found.");
+        default:                                                     // LCOV_EXCL_LINE
+            throw fkyaml::exception("Unsupported node type found."); // LCOV_EXCL_LINE
         }
     }
 

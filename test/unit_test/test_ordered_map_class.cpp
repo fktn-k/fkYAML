@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -74,9 +74,12 @@ TEST_CASE("OrderedMapClassTest_ConstAtTest", "[OrderedMapClassTest]")
     map_.emplace("buz", false);
     map_.emplace("foo", true);
     const fkyaml::ordered_map<std::string, bool> map__ = map_;
+    REQUIRE_NOTHROW(map__.at("buz"));
+    REQUIRE(map__.at("buz") == false);
     REQUIRE_NOTHROW(map__.at("foo"));
     REQUIRE(map__.at("foo") == true);
-    REQUIRE_THROWS_AS(map__.at("bar"), fkyaml::exception);
+    std::string key("bar");
+    REQUIRE_THROWS_AS(map__.at(key), fkyaml::exception);
 }
 
 TEST_CASE("OrderedMapClassTest_NonConstFindTest", "[OrderedMapClassTest]")

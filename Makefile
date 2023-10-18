@@ -1,4 +1,4 @@
-.PHONY: CHANGELOG.md update-version
+.PHONY: update-version-macros CHANGELOG.md update-version
 
 #################
 #   variables   #
@@ -16,9 +16,9 @@ CMAKE_SCRIPTS = $(shell find . -type f \( -name 'CMakeLists.txt' -o -name '*.cma
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 1
-TARGET_PATCH_VERSION := 1
+TARGET_PATCH_VERSION := 2
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
-VERSION_MACRO_FILE := include/fkYAML/VersioningMacros.hpp
+VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
 # system
 JOBS = $(($(shell grep cpu.cores /proc/cpuinfo | sort -u | sed 's/[^0-9]//g') + 1))
@@ -32,7 +32,6 @@ all:
 	@echo "clang-sanitizers - check whether no runtime issue is detected while running the unit test app."
 	@echo "clang-tidy - check whether source files detect no issues during static code analysis."
 	@echo "cmake-format - check whether CMake scripts are well formatted."
-	@echo "cmake-lint - execute a linter for CMake scripts."
 	@echo "doxygen - generate the API documentation for the project with Doxygen."
 	@echo "html-coverage - generate HTML coverage report."
 	@echo "iwyu - check whether source files are each self-contained."

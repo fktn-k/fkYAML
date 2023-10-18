@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.1
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.2
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -198,6 +198,17 @@ struct static_const
 template <typename T>
 constexpr T static_const<T>::value;
 #endif
+
+/**
+ * @brief A helper structure for tag dispatch.
+ *
+ * @tparam T A tag type.
+ */
+template <typename T>
+struct type_tag
+{
+    using type = T;
+};
 
 } // namespace detail
 
