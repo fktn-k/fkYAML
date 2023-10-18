@@ -28,7 +28,7 @@ TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTe
 
     SECTION("error cases")
     {
-        auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"));
+        auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"), std::string("- - : foo"));
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::exception);
     }
 }
@@ -580,6 +580,11 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
         REQUIRE_NOTHROW(test_pi_node.to_float_number());
         REQUIRE(test_pi_node.to_float_number() == 3.14);
     }
+
+    SECTION("Input source No.2. (invalid)")
+    {
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: }")), fkyaml::exception);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeInputWithCommentTest", "[DeserializerClassTest]")
@@ -648,6 +653,15 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
         REQUIRE_NOTHROW(foo_node.to_string());
         REQUIRE(foo_node.to_string().compare("one") == 0);
     }
+}
+
+TEST_CASE("DeserializerClassTest_TagDirectiveTest", "[DeserializerClassTest]")
+{
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    // TODO: add actual tests after tag directives get supported supported.
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%TAG foo bar")));
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeNoMachingAnchorTest", "[DeserializerClassTest]")
