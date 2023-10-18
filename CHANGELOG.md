@@ -1,10 +1,23 @@
 # Changelog
 
+## [v0.1.2](https://github.com/fktn-k/fkYAML/releases/tag/v0.1.2) (2023-10-18)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.1.1...v0.1.2)
+
+- \#150 Added tests  for basic\_deserializer class [\#155](https://github.com/fktn-k/fkYAML/pull/155) ([fktn-k](https://github.com/fktn-k))
+- \#150 added/modified unit tests for lexical\_analyzer test [\#154](https://github.com/fktn-k/fkYAML/pull/154) ([fktn-k](https://github.com/fktn-k))
+- \#150 Covered a missing branch in ordered\_map class [\#153](https://github.com/fktn-k/fkYAML/pull/153) ([fktn-k](https://github.com/fktn-k))
+- \#150 Excluded unreachable lines in serializer class test from coverage data [\#152](https://github.com/fktn-k/fkYAML/pull/152) ([fktn-k](https://github.com/fktn-k))
+- \#150 Add unit tests for input\_handler class [\#151](https://github.com/fktn-k/fkYAML/pull/151) ([fktn-k](https://github.com/fktn-k))
+- \#133 refactor lexer [\#146](https://github.com/fktn-k/fkYAML/pull/146) ([fktn-k](https://github.com/fktn-k))
+
+- Fix version\_macros.hpp file path in Makefile [\#147](https://github.com/fktn-k/fkYAML/pull/147) ([fktn-k](https://github.com/fktn-k))
+
+- Updated documents [\#156](https://github.com/fktn-k/fkYAML/pull/156) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.1.1](https://github.com/fktn-k/fkYAML/releases/tag/v0.1.1) (2023-10-15)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.1.0...v0.1.1)
-
-- hotfix to support v0.1.0 APIs in cmake_fetch_content_test. ([fktn-k](https://github.com/fktn-k))
 
 ## [v0.1.0](https://github.com/fktn-k/fkYAML/releases/tag/v0.1.0) (2023-10-15)
 
