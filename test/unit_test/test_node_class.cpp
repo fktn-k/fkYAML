@@ -2227,11 +2227,14 @@ TEST_CASE("NodeClassTest_SwapTest", "[NodeClassTest]")
     REQUIRE(rhs_node.to_boolean() == true);
 }
 
-TEST_CASE("NodeClassTest_StdSwapTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_ADLSwapTest", "[NodeClassTest]")
 {
     fkyaml::node lhs_node = fkyaml::node::boolean_scalar(true);
     fkyaml::node rhs_node = fkyaml::node::integer_scalar(123);
-    std::swap(lhs_node, rhs_node);
+
+    using std::swap;
+    swap(lhs_node, rhs_node);
+
     REQUIRE(lhs_node.is_integer());
     REQUIRE(lhs_node.to_integer() == 123);
     REQUIRE(rhs_node.is_boolean());
