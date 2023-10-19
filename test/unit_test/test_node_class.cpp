@@ -1547,9 +1547,9 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
 
         SECTION("test for float number values.")
         {
-            REQUIRE(fabsf(node.get_value<float>() - 3.14) < FLT_EPSILON);
-            REQUIRE(fabsf(node.get_value<double>() - 3.14) < DBL_EPSILON);
-            REQUIRE(fabsf(node.get_value<long double>() - 3.14) < LDBL_EPSILON);
+            REQUIRE(std::abs(node.get_value<float>() - 3.14) < std::numeric_limits<float>::epsilon());
+            REQUIRE(std::abs(node.get_value<double>() - 3.14) < std::numeric_limits<double>::epsilon());
+            REQUIRE(std::abs(node.get_value<long double>() - 3.14) < std::numeric_limits<long double>::epsilon());
         }
 
         SECTION("test for non-float-number values.")
