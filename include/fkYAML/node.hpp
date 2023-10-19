@@ -415,13 +415,13 @@ public:
                                                                 detail::is_node_compatible_type<basic_node, U>>>::value,
             int> = 0>
     explicit basic_node(CompatibleType&& val) noexcept(
-        noexcept(Converter<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
+        noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
         : m_node_type(node_t::NULL_OBJECT),
           m_yaml_version_type(yaml_version_t::VER_1_2),
           m_node_value(),
           m_anchor_name(nullptr)
     {
-        Converter<U>::to_node(*this, std::forward<CompatibleType>(val));
+        ConverterType<U>::to_node(*this, std::forward<CompatibleType>(val));
     }
 
     /**
@@ -1051,10 +1051,10 @@ public:
                 std::is_default_constructible<ValueType>, detail::has_from_node<basic_node, ValueType>>::value,
             int> = 0>
     T get_value() const noexcept(
-        noexcept(Converter<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
+        noexcept(ConverterType<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
     {
         auto ret = ValueType();
-        Converter<ValueType>::from_node(*this, ret);
+        ConverterType<ValueType>::from_node(*this, ret);
         return ret;
     }
 
