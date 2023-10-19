@@ -28,7 +28,7 @@ FK_YAML_NAMESPACE_BEGIN
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
-    template <typename, typename> class Converter>
+    template <typename, typename> class ConverterType>
 class basic_node;
 
 /**

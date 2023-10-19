@@ -57,7 +57,7 @@ template <
     template <typename, typename...> class SequenceType = std::vector,
     template <typename, typename, typename...> class MappingType = ordered_map, typename BooleanType = bool,
     typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
-    template <typename, typename = void> class Converter = node_value_converter>
+    template <typename, typename = void> class ConverterType = node_value_converter>
 class basic_node
 {
 public:
@@ -86,7 +86,7 @@ public:
      * @tparam SFINAE A type placeholder for SFINAE
      */
     template <typename T, typename SFINAE>
-    using value_converter_type = Converter<T, SFINAE>;
+    using value_converter_type = ConverterType<T, SFINAE>;
 
     using node_t = detail::node_t;
     using yaml_version_t = detail::yaml_version_t;
