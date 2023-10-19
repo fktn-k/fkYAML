@@ -1370,6 +1370,18 @@ private:
     std::string* m_anchor_name;
 };
 
+template <
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
+inline void swap(
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& lhs,
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>&
+        rhs) noexcept(noexcept(lhs.swap(rhs)))
+{
+    lhs.swap(rhs);
+}
+
 /**
  * @brief default YAML node value container.
  */
@@ -1394,23 +1406,5 @@ using node_float_number_type = typename node::float_number_type;
 using node_string_type = typename node::string_type;
 
 FK_YAML_NAMESPACE_END
-
-namespace std
-{
-
-/**
- * @brief A specialization of std::swap for Node class.
- *
- * @tparam N/A
- * @param lhs A Node object of left-hand-side.
- * @param rhs A Node object of right-hand-side.
- */
-template <>
-inline void swap<fkyaml::node>(fkyaml::node& lhs, fkyaml::node& rhs) noexcept(noexcept(lhs.swap(rhs)))
-{
-    lhs.swap(rhs);
-}
-
-} // namespace std
 
 #endif /* FK_YAML_NODE_HPP_ */
