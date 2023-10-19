@@ -218,7 +218,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f)
         throw exception("Floating point value overflow detected.");
     }
 
-    f = tmp_float;
+    f = static_cast<FloatType>(tmp_float);
 }
 
 /**

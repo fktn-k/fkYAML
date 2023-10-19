@@ -172,7 +172,7 @@ public:
      *
      * @param other An iterator object to be copied with.
      */
-    iterator(const iterator& other) noexcept // NOLINT(bugprone-exception-escape)
+    iterator(const iterator& other)
         : m_inner_iterator_type(other.m_inner_iterator_type)
     {
         switch (m_inner_iterator_type)
@@ -193,7 +193,7 @@ public:
      *
      * @param other An iterator object to be moved from.
      */
-    iterator(iterator&& other) noexcept // NOLINT(bugprone-exception-escape)
+    iterator(iterator&& other)
         : m_inner_iterator_type(other.m_inner_iterator_type)
     {
         switch (m_inner_iterator_type)
@@ -218,7 +218,7 @@ public:
      * @param rhs An iterator object to be copied with.
      * @return iterator& Reference to this iterator object.
      */
-    iterator& operator=(const iterator& rhs) noexcept // NOLINT(cert-oop54-cpp,bugprone-exception-escape)
+    iterator& operator=(const iterator& rhs) // NOLINT(cert-oop54-cpp)
     {
         if (&rhs == this)
         {
@@ -247,7 +247,7 @@ public:
      * @param rhs An iterator object to be moved from.
      * @return iterator& Reference to this iterator object.
      */
-    iterator& operator=(iterator&& rhs) noexcept // NOLINT(bugprone-exception-escape)
+    iterator& operator=(iterator&& rhs)
     {
         if (&rhs == this)
         {
@@ -275,7 +275,7 @@ public:
      *
      * @return pointer A pointer to the BasicNodeType object internally referenced by the actual iterator object.
      */
-    pointer operator->() noexcept // NOLINT(bugprone-exception-escape)
+    pointer operator->()
     {
         switch (m_inner_iterator_type)
         {
@@ -293,7 +293,7 @@ public:
      *
      * @return reference Reference to the Node object internally referenced by the actual iterator object.
      */
-    reference operator*() noexcept // NOLINT(bugprone-exception-escape)
+    reference operator*()
     {
         switch (m_inner_iterator_type)
         {
@@ -312,7 +312,7 @@ public:
      * @param i The difference from this Iterator object with which it moves forward.
      * @return Iterator& Reference to this Iterator object.
      */
-    iterator& operator+=(difference_type i) noexcept // NOLINT(bugprone-exception-escape)
+    iterator& operator+=(difference_type i)
     {
         switch (m_inner_iterator_type)
         {
@@ -346,7 +346,7 @@ public:
      *
      * @return iterator& Reference to this iterator object.
      */
-    iterator& operator++() noexcept // NOLINT(bugprone-exception-escape)
+    iterator& operator++()
     {
         switch (m_inner_iterator_type)
         {
@@ -380,7 +380,7 @@ public:
      * @param i The difference from this iterator object with which it moves backward.
      * @return iterator& Reference to this iterator object.
      */
-    iterator& operator-=(difference_type i) noexcept // NOLINT(bugprone-exception-escape)
+    iterator& operator-=(difference_type i)
     {
         return operator+=(-i);
     }
@@ -403,7 +403,7 @@ public:
      *
      * @return iterator& Reference to this iterator object.
      */
-    iterator& operator--() noexcept // NOLINT(bugprone-exception-escape)
+    iterator& operator--()
     {
         switch (m_inner_iterator_type)
         {
@@ -563,7 +563,7 @@ public:
      *
      * @return reference A reference to the YAML node for the current iterator.
      */
-    reference value() noexcept // NOLINT(bugprone-exception-escape)
+    reference value()
     {
         return operator*();
     }
