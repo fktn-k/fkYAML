@@ -122,12 +122,14 @@ public:
             {
             case ' ':
                 break;
-            case '\r':
-                if (m_input_handler.get_next() == '\n')
+            case '\r': {
+                char_int_type next = m_input_handler.get_next();
+                if (next == '\n')
                 {
                     m_input_handler.get_next();
                 }
                 return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
+            }
             case '\n':
                 m_input_handler.get_next();
                 return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
@@ -153,7 +155,7 @@ public:
                     m_input_handler.get_next();
                     break;
                 }
-                m_value_buffer.push_back(next);
+                m_value_buffer.push_back(char_traits_type::to_char_type(next));
             }
             return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
         }
@@ -171,7 +173,7 @@ public:
                     m_input_handler.get_next();
                     break;
                 }
-                m_value_buffer.push_back(next);
+                m_value_buffer.push_back(char_traits_type::to_char_type(next));
             }
             return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
         }
@@ -180,8 +182,9 @@ public:
             return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
         case '%': // directive prefix
             return m_last_token_type = scan_directive();
-        case '-':
-            if (!m_input_handler.test_next_char(' '))
+        case '-': {
+            bool is_next_space = m_input_handler.test_next_char(' ');
+            if (!is_next_space)
             {
                 return m_last_token_type = scan_number();
             }
@@ -191,6 +194,7 @@ public:
             m_input_handler.get_next();
 
             return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+        }
         case '[': // sequence flow begin
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
@@ -212,12 +216,13 @@ public:
         case '\'':
             return m_last_token_type = scan_string();
         case '~':
-            m_value_buffer = current;
+            m_value_buffer = char_traits_type::to_char_type(current);
             return m_last_token_type = lexical_token_t::NULL_VALUE;
         case '+':
             return m_last_token_type = scan_number();
         case '.': {
-            if (m_input_handler.get_range(4, m_value_buffer) == end_of_input)
+            char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
+            if (ret == end_of_input)
             {
                 return m_last_token_type = scan_string();
             }
@@ -240,7 +245,8 @@ public:
         case 'f': {
             // YAML specifies that only these words represent the boolean value `false`.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            if (m_input_handler.get_range(5, m_value_buffer) == end_of_input)
+            char_int_type ret = m_input_handler.get_range(5, m_value_buffer);
+            if (ret == end_of_input)
             {
                 return m_last_token_type = scan_string();
             }
@@ -264,7 +270,8 @@ public:
             // YAML specifies that these words and a tilde represent a null value.
             // Tildes are already checked above, so no check is needed here.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            if (m_input_handler.get_range(4, m_value_buffer) == end_of_input)
+            char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
+            if (ret == end_of_input)
             {
                 return m_last_token_type = scan_string();
             }
@@ -287,7 +294,8 @@ public:
         case 't': {
             // YAML specifies that only these words represent the boolean value `true`.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            if (m_input_handler.get_range(4, m_value_buffer) == end_of_input)
+            char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
+            if (ret == end_of_input)
             {
                 return m_last_token_type = scan_string();
             }
@@ -495,19 +503,19 @@ private:
         {
             throw fkyaml::exception("Invalid YAML major version found.");
         }
-        m_value_buffer.push_back(m_input_handler.get_current());
+        m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_current()));
 
         if (m_input_handler.get_next() != '.')
         {
             throw fkyaml::exception("A period must be followed after the YAML major version.");
         }
-        m_value_buffer.push_back(m_input_handler.get_current());
+        m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_current()));
 
         switch (m_input_handler.get_next())
         {
         case '1':
         case '2':
-            m_value_buffer.push_back(m_input_handler.get_current());
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_current()));
             break;
         case '0':
         case '3':
@@ -548,14 +556,14 @@ private:
         switch (current)
         {
         case '-':
-            m_value_buffer.push_back(current);
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
             ret = scan_negative_number();
             break;
         case '+':
             ret = scan_decimal_number();
             break;
         case '0':
-            m_value_buffer.push_back(current);
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
             ret = scan_number_after_zero_at_first();
             break;
         case '1':
@@ -567,7 +575,7 @@ private:
         case '7':
         case '8':
         case '9':
-            m_value_buffer.push_back(current);
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
             ret = scan_decimal_number();
             break;
         default:                                                                   // LCOV_EXCL_LINE
@@ -601,11 +609,12 @@ private:
 
         if (std::isdigit(next))
         {
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number();
         }
 
-        if (m_input_handler.get_range(4, m_value_buffer) != end_of_input)
+        char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
+        if (ret != end_of_input)
         {
             try
             {
@@ -634,7 +643,7 @@ private:
         switch (next)
         {
         case '.':
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number_after_decimal_point();
         case 'o':
             // Do not store 'o' since std::strtoull does not support "0o" but "0" as the prefix for octal numbers.
@@ -642,7 +651,7 @@ private:
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
             return scan_octal_number();
         case 'x':
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_hexadecimal_number();
         default:
             return lexical_token_t::INTEGER_VALUE;
@@ -660,7 +669,7 @@ private:
 
         if (std::isdigit(next))
         {
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             scan_decimal_number();
             return lexical_token_t::FLOAT_NUMBER_VALUE;
         }
@@ -678,12 +687,12 @@ private:
         char_int_type next = m_input_handler.get_next();
         if (next == '+' || next == '-')
         {
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             scan_decimal_number_after_sign();
         }
         else if (std::isdigit(next))
         {
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             scan_decimal_number();
         }
         else
@@ -704,7 +713,7 @@ private:
 
         if (std::isdigit(next))
         {
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number();
         }
 
@@ -722,24 +731,25 @@ private:
 
         if (std::isdigit(next))
         {
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number();
         }
 
         if (next == '.')
         {
-            if (m_value_buffer.find(next) != string_type::npos) // NOLINT(abseil-string-find-str-contains)
+            // NOLINTNEXTLINE(abseil-string-find-str-contains)
+            if (m_value_buffer.find(char_traits_type::to_char_type(next)) != string_type::npos)
             {
                 // TODO: support this use case (e.g. version info like 1.0.0)
                 throw fkyaml::exception("Multiple decimal points found in a token.");
             }
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number_after_decimal_point();
         }
 
         if (next == 'e' || next == 'E')
         {
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number_after_exponent();
         }
 
@@ -756,7 +766,7 @@ private:
         char_int_type next = m_input_handler.get_next();
         if ('0' <= next && next <= '7')
         {
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             scan_octal_number();
         }
         return lexical_token_t::INTEGER_VALUE;
@@ -772,7 +782,7 @@ private:
         char_int_type next = m_input_handler.get_next();
         if (std::isxdigit(next))
         {
-            m_value_buffer.push_back(next);
+            m_value_buffer.push_back(char_traits_type::to_char_type(next));
             scan_hexadecimal_number();
         }
         return lexical_token_t::INTEGER_VALUE;
@@ -818,7 +828,7 @@ private:
                 {
                     return lexical_token_t::STRING_VALUE;
                 }
-                m_value_buffer.push_back(current);
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 continue;
             }
 
@@ -836,7 +846,7 @@ private:
                 }
 
                 // if the target is a single-quoted string token.
-                m_value_buffer.push_back(current);
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 continue;
             }
 
@@ -850,9 +860,10 @@ private:
 
                 // If single quotation marks are repeated twice in a single-quoted string token. they are considered as
                 // an escaped single quotation mark.
-                if (m_input_handler.test_next_char('\''))
+                bool is_next_single_quote = m_input_handler.test_next_char('\'');
+                if (is_next_single_quote)
                 {
-                    m_value_buffer.push_back(m_input_handler.get_next());
+                    m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
                     continue;
                 }
 
@@ -865,7 +876,7 @@ private:
                 // Just regard a colon as a character if surrounded by quotation marks.
                 if (needs_last_double_quote || needs_last_single_quote)
                 {
-                    m_value_buffer.push_back(current);
+                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
                     continue;
                 }
 
@@ -875,7 +886,7 @@ private:
                 // A colon as a key separator must be followed by a space or a newline code.
                 if (next != ' ' && next != '\r' && next != '\n')
                 {
-                    m_value_buffer.push_back(current);
+                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
                     continue;
                 }
 
@@ -895,7 +906,7 @@ private:
                 // Just regard a comma as a character if surrounded by quotation marks.
                 if (needs_last_double_quote || needs_last_single_quote)
                 {
-                    m_value_buffer.push_back(current);
+                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
                     continue;
                 }
 
@@ -908,7 +919,7 @@ private:
                 // just regard a right square bracket as a character if surrounded by quotation marks.
                 if (needs_last_double_quote || needs_last_single_quote)
                 {
-                    m_value_buffer.push_back(current);
+                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
                     continue;
                 }
 
@@ -921,7 +932,7 @@ private:
                 // just regard a right curly brace as a character if surrounded by quotation marks.
                 if (needs_last_double_quote || needs_last_single_quote)
                 {
-                    m_value_buffer.push_back(current);
+                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
                     continue;
                 }
 
@@ -1018,7 +1029,7 @@ private:
             // Handle ASCII characters except control characters.
             if (current <= 0x7E)
             {
-                m_value_buffer.push_back(current);
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 continue;
             }
 
@@ -1056,7 +1067,7 @@ private:
         case 0x08:
             throw fkyaml::exception("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
         case 0x09: // HT
-            m_value_buffer.push_back(c);
+            m_value_buffer.push_back(char_traits_type::to_char_type(c));
             break;
         // 0x0A(LF) has already been handled above.
         case 0x0B:

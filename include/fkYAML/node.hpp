@@ -358,7 +358,7 @@ public:
      *
      * @param[in] rhs A basic_node object to be moved from.
      */
-    basic_node(basic_node&& rhs) noexcept // NOLINT(bugprone-exception-escape)
+    basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
           m_yaml_version_type(rhs.m_yaml_version_type),
           m_anchor_name(rhs.m_anchor_name)
@@ -396,8 +396,6 @@ public:
             m_node_value.p_string = rhs.m_node_value.p_string;
             rhs.m_node_value.p_string = nullptr;
             break;
-        default:                                                     // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported node value type."); // LCOV_EXCL_LINE
         }
 
         rhs.m_node_type = node_t::NULL_OBJECT;

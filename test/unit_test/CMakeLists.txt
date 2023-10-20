@@ -21,8 +21,12 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wno-terminate")
+  # necessary to build iterator class test.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-self-move")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-c++98-compat -Wno-c++98-compat-pedantic")
+  # necessary to build iterator class test.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-self-assign-overloaded -Wno-self-move")
 endif()
 
 # determine C++ standard used in unit test app.
