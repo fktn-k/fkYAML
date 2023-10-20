@@ -221,7 +221,7 @@ private:
         /** A pointer to the value of sequence type. */
         sequence_type* p_sequence;
         /** A pointer to the value of mapping type. This pointer is also used when node type is null. */
-        mapping_type* p_mapping;
+        mapping_type* p_mapping {nullptr};
         /** A value of boolean type. */
         boolean_type boolean;
         /** A value of integer type. */
@@ -283,13 +283,7 @@ public:
     /**
      * @brief Construct a new basic_node object of null type.
      */
-    basic_node() noexcept
-        : m_node_type(node_t::NULL_OBJECT),
-          m_yaml_version_type(yaml_version_t::VER_1_2),
-          m_node_value(),
-          m_anchor_name(nullptr)
-    {
-    }
+    basic_node() = default;
 
     /**
      * @brief Construct a new basic_node object with a specified type.
@@ -299,9 +293,7 @@ public:
      */
     explicit basic_node(const node_t type)
         : m_node_type(type),
-          m_yaml_version_type(yaml_version_t::VER_1_2),
-          m_node_value(type),
-          m_anchor_name(nullptr)
+          m_node_value(type)
     {
     }
 
@@ -312,8 +304,7 @@ public:
      */
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type),
-          m_anchor_name(nullptr)
+          m_yaml_version_type(rhs.m_yaml_version_type)
     {
         switch (m_node_type)
         {
@@ -414,10 +405,6 @@ public:
             int> = 0>
     explicit basic_node(CompatibleType&& val) noexcept(
         noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
-        : m_node_type(node_t::NULL_OBJECT),
-          m_yaml_version_type(yaml_version_t::VER_1_2),
-          m_node_value(),
-          m_anchor_name(nullptr)
     {
         ConverterType<U>::to_node(*this, std::forward<CompatibleType>(val));
     }
@@ -1359,13 +1346,13 @@ public:
 
 private:
     /** The current node value type. */
-    node_t m_node_type;
+    node_t m_node_type {node_t::NULL_OBJECT};
     /** The YAML version specification. */
-    yaml_version_t m_yaml_version_type;
+    yaml_version_t m_yaml_version_type {yaml_version_t::VER_1_2};
     /** The current node value. */
-    node_value m_node_value;
+    node_value m_node_value {};
     /** The anchor name for this node. */
-    std::string* m_anchor_name;
+    std::string* m_anchor_name {nullptr};
 };
 
 template <

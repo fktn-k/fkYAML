@@ -100,9 +100,9 @@ public:
     }
 
 private:
-    IterType m_current;
-    IterType m_begin;
-    IterType m_end;
+    IterType m_current {};
+    IterType m_begin {};
+    IterType m_end {};
 };
 
 /**
@@ -156,7 +156,7 @@ public:
     }
 
 private:
-    std::FILE* m_file;
+    std::FILE* m_file {nullptr};
 };
 
 /**
@@ -243,7 +243,7 @@ public:
     }
 
 private:
-    std::istream* m_istream;
+    std::istream* m_istream {nullptr};
 };
 
 ///////////////////////////////////
