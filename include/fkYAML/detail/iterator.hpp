@@ -570,9 +570,9 @@ public:
 
 private:
     /** A type of the internally-held iterator. */
-    iterator_t m_inner_iterator_type;
+    iterator_t m_inner_iterator_type {iterator_t::SEQUENCE};
     /** A holder of actual iterators. */
-    mutable iterator_holder m_iterator_holder;
+    mutable iterator_holder m_iterator_holder {};
 };
 
 } // namespace detail

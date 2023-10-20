@@ -313,13 +313,12 @@ private:
     }
 
 private:
-    BasicNodeType* m_current_node = nullptr;                 /** The currently focused YAML node. */
-    std::vector<BasicNodeType*> m_node_stack = {};           /** The stack of YAML nodes. */
-    yaml_version_t m_yaml_version = yaml_version_t::VER_1_2; /** The YAML version specification type. */
-    uint32_t m_current_indent_width = 0;                     /** The current indentation width. */
-    bool m_needs_anchor_impl = false; /** A flag to determine the need for YAML anchor node implementation */
+    BasicNodeType* m_current_node {nullptr};                 /** The currently focused YAML node. */
+    std::vector<BasicNodeType*> m_node_stack {};             /** The stack of YAML nodes. */
+    yaml_version_t m_yaml_version {yaml_version_t::VER_1_2}; /** The YAML version specification type. */
+    bool m_needs_anchor_impl {false}; /** A flag to determine the need for YAML anchor node implementation */
     string_type m_anchor_name {};     /** The last YAML anchor name. */
-    std::unordered_map<std::string, BasicNodeType> m_anchor_table = {}; /** The table of YAML anchor nodes. */
+    std::unordered_map<std::string, BasicNodeType> m_anchor_table {}; /** The table of YAML anchor nodes. */
 };
 
 } // namespace detail
