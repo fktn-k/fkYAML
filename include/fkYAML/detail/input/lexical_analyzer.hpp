@@ -68,24 +68,6 @@ public:
     using float_number_type = typename BasicNodeType::float_number_type;
     using string_type = typename BasicNodeType::string_type;
 
-private:
-    /**
-     * @struct position
-     * @brief Information set of analyzed data counters.
-     */
-    struct position
-    {
-        //!< The total read char counts from the input buffer.
-        size_t total_read_char_counts {0};
-        //!< The total read line counts.
-        size_t total_read_line_counts {0};
-        //!< The total read char counts in the current line.
-        size_t read_char_counts_in_line {0};
-        //!< The total char counts in the previous line.
-        size_t prev_char_counts_in_line {0};
-    };
-
-public:
     /**
      * @brief Construct a new lexical_analyzer object.
      */
@@ -94,7 +76,6 @@ public:
     {
     }
 
-public:
     /**
      * @brief Get the next lexical token type by scanning the left of the input buffer.
      *
@@ -798,7 +779,6 @@ private:
 
         const bool needs_last_double_quote = (m_input_handler.get_current() == '\"');
         const bool needs_last_single_quote = (m_input_handler.get_current() == '\'');
-        size_t start_pos_backup = m_position_info.total_read_char_counts;
         char_int_type current = (needs_last_double_quote || needs_last_single_quote) ? m_input_handler.get_next()
                                                                                      : m_input_handler.get_current();
 
@@ -886,13 +866,6 @@ private:
                 {
                     m_value_buffer.push_back(char_traits_type::to_char_type(current));
                     continue;
-                }
-
-                if (next == '\r' || next == '\n')
-                {
-                    size_t current_pos_backup = m_position_info.total_read_char_counts;
-                    m_position_info.total_read_char_counts = start_pos_backup;
-                    m_position_info.total_read_char_counts = current_pos_backup;
                 }
 
                 return lexical_token_t::STRING_VALUE;
@@ -1168,8 +1141,6 @@ private:
     input_handler_type m_input_handler;
     //!< A temporal buffer to store a string to be parsed to an actual datum.
     input_string_type m_value_buffer {};
-    //!< The information set for input buffer.
-    position m_position_info {};
     //!< The last found token type.
     lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
     //!< A temporal bool holder.
