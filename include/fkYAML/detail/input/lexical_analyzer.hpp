@@ -1165,7 +1165,7 @@ private:
     static constexpr char_int_type end_of_input = char_traits_type::eof();
 
     //!< An input buffer adapter to be analyzed.
-    input_handler_type m_input_handler {};
+    input_handler_type m_input_handler;
     //!< A temporal buffer to store a string to be parsed to an actual datum.
     input_string_type m_value_buffer {};
     //!< The information set for input buffer.
