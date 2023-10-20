@@ -77,7 +77,8 @@ private:
             {
                 insert_indentation(cur_indent, str);
                 str += "-";
-                if (seq_item.is_scalar())
+                bool is_scalar = seq_item.is_scalar();
+                if (is_scalar)
                 {
                     str += " ";
                     serialize_node(seq_item, cur_indent, str);
@@ -95,7 +96,8 @@ private:
             {
                 insert_indentation(cur_indent, str);
                 serialize_key(itr.key(), str);
-                if (itr->is_scalar())
+                bool is_scalar = itr->is_scalar();
+                if (is_scalar)
                 {
                     str += " ";
                     serialize_node(*itr, cur_indent, str);

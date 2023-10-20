@@ -122,12 +122,14 @@ public:
             {
             case ' ':
                 break;
-            case '\r':
-                if (m_input_handler.get_next() == '\n')
+            case '\r': {
+                char_int_type next = m_input_handler.get_next();
+                if (next == '\n')
                 {
                     m_input_handler.get_next();
                 }
                 return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
+            }
             case '\n':
                 m_input_handler.get_next();
                 return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
@@ -180,8 +182,9 @@ public:
             return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
         case '%': // directive prefix
             return m_last_token_type = scan_directive();
-        case '-':
-            if (!m_input_handler.test_next_char(' '))
+        case '-': {
+            bool is_next_space = m_input_handler.test_next_char(' ');
+            if (!is_next_space)
             {
                 return m_last_token_type = scan_number();
             }
@@ -191,6 +194,7 @@ public:
             m_input_handler.get_next();
 
             return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+        }
         case '[': // sequence flow begin
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
@@ -217,7 +221,8 @@ public:
         case '+':
             return m_last_token_type = scan_number();
         case '.': {
-            if (m_input_handler.get_range(4, m_value_buffer) == end_of_input)
+            char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
+            if (ret == end_of_input)
             {
                 return m_last_token_type = scan_string();
             }
@@ -240,7 +245,8 @@ public:
         case 'f': {
             // YAML specifies that only these words represent the boolean value `false`.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            if (m_input_handler.get_range(5, m_value_buffer) == end_of_input)
+            char_int_type ret = m_input_handler.get_range(5, m_value_buffer);
+            if (ret == end_of_input)
             {
                 return m_last_token_type = scan_string();
             }
@@ -264,7 +270,8 @@ public:
             // YAML specifies that these words and a tilde represent a null value.
             // Tildes are already checked above, so no check is needed here.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            if (m_input_handler.get_range(4, m_value_buffer) == end_of_input)
+            char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
+            if (ret == end_of_input)
             {
                 return m_last_token_type = scan_string();
             }
@@ -287,7 +294,8 @@ public:
         case 't': {
             // YAML specifies that only these words represent the boolean value `true`.
             // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            if (m_input_handler.get_range(4, m_value_buffer) == end_of_input)
+            char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
+            if (ret == end_of_input)
             {
                 return m_last_token_type = scan_string();
             }
@@ -605,7 +613,8 @@ private:
             return scan_decimal_number();
         }
 
-        if (m_input_handler.get_range(4, m_value_buffer) != end_of_input)
+        char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
+        if (ret != end_of_input)
         {
             try
             {
@@ -851,7 +860,8 @@ private:
 
                 // If single quotation marks are repeated twice in a single-quoted string token. they are considered as
                 // an escaped single quotation mark.
-                if (m_input_handler.test_next_char('\''))
+                bool is_next_single_quote = m_input_handler.test_next_char('\'');
+                if (is_next_single_quote)
                 {
                     m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
                     continue;
