@@ -18,6 +18,7 @@
 #include <string>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/conversions/to_string.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
 #include <fkYAML/exception.hpp>
@@ -111,44 +112,20 @@ private:
             }
             break;
         case node_t::NULL_OBJECT:
-            str += "null";
+            to_string(m_tmp_str_buff, nullptr);
+            str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
-            if (node.to_boolean())
-            {
-                str += "true";
-            }
-            else
-            {
-                str += "false";
-            }
+            to_string(m_tmp_str_buff, node.to_boolean());
+            str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
-            str += std::to_string(node.to_integer());
+            to_string(m_tmp_str_buff, node.to_integer());
+            str += m_tmp_str_buff;
             break;
         case node_t::FLOAT_NUMBER: {
-            typename BasicNodeType::float_number_type float_val = node.to_float_number();
-            if (std::isnan(float_val))
-            {
-                str += ".nan";
-            }
-            else if (std::isinf(float_val))
-            {
-                if (float_val == std::numeric_limits<typename BasicNodeType::float_number_type>::infinity())
-                {
-                    str += ".inf";
-                }
-                else
-                {
-                    str += "-.inf";
-                }
-            }
-            else
-            {
-                std::stringstream ss;
-                ss << node.to_float_number();
-                str += ss.str();
-            }
+            to_string(m_tmp_str_buff, node.to_float_number());
+            str += m_tmp_str_buff;
             break;
         }
         case node_t::STRING:
@@ -183,6 +160,10 @@ private:
             str += " ";
         }
     }
+
+private:
+    /** A temporal buffer for conversion from a scalar to a string. */
+    std::string m_tmp_str_buff;
 };
 
 } // namespace detail
