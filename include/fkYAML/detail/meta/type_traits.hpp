@@ -210,6 +210,45 @@ struct type_tag
     using type = T;
 };
 
+/**
+ * @brief A utility struct to retrieve the first type in variadic template arguments.
+ * 
+ * @tparam Types Types of variadic template arguments.
+ */
+template <typename... Types>
+struct get_head_type;
+
+/**
+ * @brief A specialization of get_head_type if variadic template has no arguments.
+ * 
+ * @tparam  N/A
+ */
+template <>
+struct get_head_type<>
+{
+    using type = void;
+};
+
+/**
+ * @brief A partial specialization of get_head_type if variadic template has one or more argument(s).
+ * 
+ * @tparam First The first type in the arguments
+ * @tparam Rest The rest of the types in the arguments.
+ */
+template <typename First, typename... Rest>
+struct get_head_type<First, Rest...>
+{
+    using type = First;
+};
+
+/**
+ * @brief An alias template to retrieve the first type in variadic template arguments.
+ * 
+ * @tparam Types Types of variadic template arguments.
+ */
+template <typename... Types>
+using head_type = typename get_head_type<Types...>::type;
+
 } // namespace detail
 
 FK_YAML_NAMESPACE_END

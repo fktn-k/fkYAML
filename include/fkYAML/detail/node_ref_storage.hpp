@@ -84,7 +84,9 @@ public:
      * @tparam Args Types of arguments to construct a basic_node object.
      * @param args Arguments to construct a basic_node object.
      */
-    template <typename... Args, enable_if_t<std::is_constructible<node_type, Args...>::value, int> = 0>
+    template <typename... Args, enable_if_t<conjunction<
+        negation<std::is_lvalue_reference<head_type<Args...>>>,
+        std::is_constructible<node_type, Args...>>::value, int> = 0>
     node_ref_storage(Args&&... args)
         : owned_value(std::forward<Args>(args)...)
     {
