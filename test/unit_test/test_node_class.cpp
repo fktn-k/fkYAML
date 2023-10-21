@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1547,9 +1547,9 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
 
         SECTION("test for float number values.")
         {
-            REQUIRE(fabsf(node.get_value<float>() - 3.14) < FLT_EPSILON);
-            REQUIRE(fabsf(node.get_value<double>() - 3.14) < DBL_EPSILON);
-            REQUIRE(fabsf(node.get_value<long double>() - 3.14) < LDBL_EPSILON);
+            REQUIRE(std::abs(node.get_value<float>() - 3.14) < std::numeric_limits<float>::epsilon());
+            REQUIRE(std::abs(node.get_value<double>() - 3.14) < std::numeric_limits<double>::epsilon());
+            REQUIRE(std::abs(node.get_value<long double>() - 3.14) < std::numeric_limits<long double>::epsilon());
         }
 
         SECTION("test for non-float-number values.")
@@ -2227,11 +2227,14 @@ TEST_CASE("NodeClassTest_SwapTest", "[NodeClassTest]")
     REQUIRE(rhs_node.to_boolean() == true);
 }
 
-TEST_CASE("NodeClassTest_StdSwapTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_ADLSwapTest", "[NodeClassTest]")
 {
     fkyaml::node lhs_node = fkyaml::node::boolean_scalar(true);
     fkyaml::node rhs_node = fkyaml::node::integer_scalar(123);
-    std::swap(lhs_node, rhs_node);
+
+    using std::swap;
+    swap(lhs_node, rhs_node);
+
     REQUIRE(lhs_node.is_integer());
     REQUIRE(lhs_node.to_integer() == 123);
     REQUIRE(rhs_node.is_boolean());

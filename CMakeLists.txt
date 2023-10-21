@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.8)
 
-#
-# Project name and version.
-#
+################################
+#   Project name and version   #
+################################
 
 project(
   fkYAML
-  VERSION 0.1.2
+  VERSION 0.1.3
   LANGUAGES CXX)
 
-#
-# Preparations depending on the specified build options.
-#
+#############################################################
+#   Preparations depending on the specified build options   #
+#############################################################
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   # Configure installation of the fkYAML library if this project is the main project.
@@ -47,9 +47,9 @@ if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
   set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CATCH2_ROOT_DIR}/contrib")
 endif()
 
-#
-# Configurations.
-#
+###########################################
+#   Configure variables for the library   #
+###########################################
 
 include(GNUInstallDirs)
 
@@ -70,9 +70,9 @@ set(FK_YAML_CMAKE_PROJECT_CONFIG_FILE "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAM
 set(FK_YAML_CMAKE_PROJECT_TARGETS_FILE "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Targets.cmake")
 set(FK_YAML_PKGCONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/pkgconfig")
 
-#
-# Create target and add include path.
-#
+##########################################
+#   Create target and add include path   #
+##########################################
 
 add_library(${FK_YAML_TARGET_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${FK_YAML_TARGET_NAME} ALIAS ${FK_YAML_TARGET_NAME})
@@ -82,9 +82,9 @@ target_include_directories(
   ${FK_YAML_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${FK_YAML_INCLUDE_BUILD_DIR}>
                                    $<INSTALL_INTERFACE:${FK_YAML_INCLUDE_INSTALL_DIR}>)
 
-#
-# Integrate with tools.
-#
+############################
+#   Integrate with tools   #
+############################
 
 # Configure clang-tidy if enabled.
 if(FK_YAML_RUN_CLANG_TIDY)
@@ -96,16 +96,16 @@ if(FK_YAML_RUN_IWYU)
   add_subdirectory(tool/iwyu)
 endif()
 
-#
-# Install a pkg-config file, so other tools can find this library.
-#
+#################################
+#   Install a pkg-config file   #
+#################################
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
                "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc")
 
-#
-# Create and configure the unit test target.
-#
+###########################
+#   Build the test apps   #
+###########################
 
 if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
   add_subdirectory(${CATCH2_ROOT_DIR})
@@ -114,17 +114,18 @@ if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
   add_subdirectory(test)
 endif()
 
-#
-# Generate API documentation if target == doxygen.
-#
+##################################
+#   Generate API documentation   #
+##################################
+
 if(FK_YAML_RUN_DOXYGEN)
   set(FK_YAML_DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
   add_subdirectory(docs)
 endif()
 
-#
-# Install header files, generate and install cmake config files for find_package()
-#
+#######################
+#   Install package   #
+#######################
 
 include(CMakePackageConfigHelpers)
 

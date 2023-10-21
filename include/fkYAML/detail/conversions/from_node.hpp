@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.2
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -218,7 +218,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f)
         throw exception("Floating point value overflow detected.");
     }
 
-    f = tmp_float;
+    f = static_cast<FloatType>(tmp_float);
 }
 
 /**

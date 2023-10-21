@@ -1,4 +1,8 @@
-# find lcov tool.
+###############################
+#   Prepare dependent tools   #
+###############################
+
+# find lcov tool for coverage data.
 if(FK_YAML_CODE_COVERAGE)
   find_program(LCOV_TOOL NAMES lcov REQUIRED)
   execute_process(
@@ -9,21 +13,15 @@ if(FK_YAML_CODE_COVERAGE)
   message(STATUS "lcov ${LCOV_TOOL_VERSION} (${LCOV_TOOL})")
 endif()
 
-# set compiler options for unit test app.
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-  endif()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /utf-8 /permissive-")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Z7")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Od")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wno-terminate")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-c++98-compat -Wno-c++98-compat-pedantic")
+# find Valgrind & prepare to use it as the target memory check tool.
+if(FK_YAML_RUN_VALGRIND)
+  find_program(MEMORYCHECK_COMMAND valgrind REQUIRED)
+  set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1")
 endif()
+
+############################################
+#   configure C++ standard for unit test   #
+############################################
 
 # determine C++ standard used in unit test app.
 if("${FK_YAML_TEST_TARGET_CXX_STANDARD}" STREQUAL "")
@@ -52,6 +50,90 @@ if(NOT compiler_supports_cxx_${FK_YAML_TEST_TARGET_CXX_STANDARD})
   return()
 endif()
 
+#################################
+#   Configure compile options   #
+#################################
+
+add_library(unit_test_config INTERFACE)
+target_link_libraries(unit_test_config INTERFACE Catch2::Catch2 ${FK_YAML_TARGET_NAME})
+target_compile_features(unit_test_config INTERFACE cxx_std_${FK_YAML_TEST_TARGET_CXX_STANDARD})
+set_target_properties(unit_test_config PROPERTIES CXX_EXTENTIONS OFF)
+target_compile_definitions(unit_test_config INTERFACE $<$<CONFIG:Release>:NDEBUG>)
+
+# Configure compile options in common
+target_compile_options(unit_test_config INTERFACE
+  # MSVC
+  $<$<CXX_COMPILER_ID:MSVC>:
+    /W4 /EHsc /utf-8 /permissive-
+    $<$<CONFIG:Debug>:/Z7>
+    $<$<CONFIG:Release>:/Od>
+  >
+
+  # GNU
+  $<$<CXX_COMPILER_ID:GNU>:
+    -Wall -Wextra -pedantic -Wpedantic --all-warnings --extra-warnings
+    -Wc++0x-compat
+    -Wno-self-move # necessary to build iterator class test.
+  >
+
+  # Clang
+  $<$<CXX_COMPILER_ID:Clang>:
+    -Wall -pedantic -Wno-c++98-compat -Wno-c++98-compat-pedantic
+    -Wno-self-assign-overloaded -Wno-self-move # necessary to build iterator class test.
+  >
+)
+
+# additional compile options for Clang Sanitizers.
+if(FK_YAML_RUN_CLANG_SANITIZERS)
+  target_compile_options(
+    unit_test_config
+    INTERFACE -O1
+              -g
+              -fno-omit-frame-pointer
+              -fsanitize=address,undefined,bounds,integer,nullability
+              -fno-sanitize-recover=all
+              -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+  )
+
+  if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(
+      unit_test_config
+      INTERFACE -fno-omit-frame-pointer
+                -fsanitize=address,undefined,bounds,integer,nullability
+                -fno-sanitize-recover=all
+                -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+    )
+  else()
+    target_link_libraries(
+      unit_test_config
+      INTERFACE -fno-omit-frame-pointer
+                -fsanitize=address,undefined,bounds,integer,nullability
+                -fno-sanitize-recover=all
+                -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+    )
+  endif()
+endif()
+
+# additional compile options for coverage.
+if(FK_YAML_CODE_COVERAGE)
+  target_compile_options(
+    unit_test_config
+    INTERFACE -O0        # no optimization
+              -g         # generate debug info
+              --coverage # set all required flags to generate code coverage data
+  )
+
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(unit_test_config INTERFACE --coverage)
+  else()
+    target_link_libraries(unit_test_config INTERFACE --coverage)
+  endif()
+endif()
+
+###########################
+#   Build unit test app   #
+###########################
+
 set(TEST_TARGET "fkYAMLUnitTest")
 
 add_executable(
@@ -67,60 +149,18 @@ add_executable(
   test_serializer_class.cpp
   main.cpp)
 
-target_include_directories(${TEST_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/include
-                                                  ${CMAKE_CURRENT_SOURCE_DIR})
-
-target_link_libraries(${TEST_TARGET} Catch2::Catch2)
-
-# set and require the target C++ standard. (defaults to C++11)
-target_compile_features(${TEST_TARGET} PRIVATE cxx_std_${FK_YAML_TEST_TARGET_CXX_STANDARD})
-
-set_target_properties(${TEST_TARGET} PROPERTIES CXX_EXTENTIONS OFF)
+target_link_libraries(${TEST_TARGET} PRIVATE unit_test_config)
 
 include(Catch)
 catch_discover_tests(${TEST_TARGET})
 
 add_dependencies(${TEST_TARGET} ${FK_YAML_TARGET_NAME})
 
-# configure for Valgrind.
-if(FK_YAML_RUN_VALGRIND)
-  find_program(MEMORYCHECK_COMMAND valgrind REQUIRED)
-  set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1")
-endif()
-
-# configure for Clang Sanitizers.
-if(FK_YAML_RUN_CLANG_SANITIZERS)
-  target_compile_options(
-    ${TEST_TARGET}
-    PRIVATE -O1
-            -g
-            -fno-omit-frame-pointer
-            -fsanitize=address,undefined,bounds,integer,nullability
-            -fno-sanitize-recover=all
-            -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
-    )
-  target_link_options(
-    ${TEST_TARGET}
-    PRIVATE -fno-omit-frame-pointer
-            -fsanitize=address,undefined,bounds,integer,nullability
-            -fno-sanitize-recover=all
-            -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
-  )
-endif()
+############################################
+#   Configure custom target for coverage   #
+############################################
 
 if(FK_YAML_CODE_COVERAGE)
-  target_compile_options(
-    ${TEST_TARGET}
-    PRIVATE -O0 # no optimization
-            -g # generate debug info
-            --coverage # set all required flags to generate code coverage data
-    )
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
-    target_link_options(${TEST_TARGET} PRIVATE --coverage)
-  else()
-    target_link_libraries(${TEST_TARGET} PRIVATE --coverage)
-  endif()
-
   file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/include/fkYAML/*.hpp)
 
   add_custom_target(
@@ -136,5 +176,6 @@ if(FK_YAML_CODE_COVERAGE)
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.info.filtered.noexcept
             ${PROJECT_BINARY_DIR}/coverage/fkYAML.info
     DEPENDS ${TEST_TARGET}
-    COMMENT "Execute unit test app with code coverage.")
+    COMMENT "Execute unit test app with code coverage."
+  )
 endif()

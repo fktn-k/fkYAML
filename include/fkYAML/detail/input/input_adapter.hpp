@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.2
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -100,9 +100,9 @@ public:
     }
 
 private:
-    IterType m_current;
-    IterType m_begin;
-    IterType m_end;
+    IterType m_current {};
+    IterType m_begin {};
+    IterType m_end {};
 };
 
 /**
@@ -156,7 +156,7 @@ public:
     }
 
 private:
-    std::FILE* m_file;
+    std::FILE* m_file {nullptr};
 };
 
 /**
@@ -243,7 +243,7 @@ public:
     }
 
 private:
-    std::istream* m_istream;
+    std::istream* m_istream {nullptr};
 };
 
 ///////////////////////////////////

@@ -1,3 +1,7 @@
+###############################
+#   Prepare dependent tools   #
+###############################
+
 # find the clang-tidy tool.
 find_program(CLANG_TIDY_EXE NAMES clang-tidy REQUIRED)
 execute_process(
@@ -7,7 +11,10 @@ execute_process(
 string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" CLANG_TIDY_VERSION "${CLANG_TIDY_VERSION}")
 message(STATUS "Found clang-tidy. location: ${CLANG_TIDY_EXE} version: ${CLANG_TIDY_VERSION}")
 
-# generate a helper souce file with library source file paths.
+####################################
+#   Generate a helper souce file   #
+####################################
+
 set(HELPER_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_helper.cpp")
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/include/fkYAML/*.hpp)
 foreach(SRC_FILE ${SRC_FILES})
@@ -16,11 +23,17 @@ foreach(SRC_FILE ${SRC_FILES})
 endforeach()
 file(APPEND ${HELPER_FILE_PATH} "\nint main() {\n    return 0;\n}")
 
-# set options for the clang-tidy tool.
+###########################################
+#   set options for the clang-tidy tool   #
+###########################################
+
 set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# build the helper source file to run the clang-tidy tool
+####################################
+#   build the helper source file   #
+####################################
+
 add_executable(ClangTidyHelper ${HELPER_FILE_PATH})
 target_include_directories(ClangTidyHelper PUBLIC ${FK_YAML_INCLUDE_BUILD_DIR})
 target_compile_options(ClangTidyHelper PUBLIC -O0) # no optimization

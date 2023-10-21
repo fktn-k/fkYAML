@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.2
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -58,8 +58,7 @@ public:
      * @param input_adapter An input adapter object
      */
     explicit input_handler(InputAdapterType&& input_adapter)
-        : m_input_adapter(std::move(input_adapter)),
-          m_cur_pos(0)
+        : m_input_adapter(std::move(input_adapter))
     {
         get_next();
         m_cur_pos = 0;
@@ -183,11 +182,11 @@ private:
     static constexpr int_type end_of_input = char_traits_type::eof();
 
     //!< An input adapter object.
-    InputAdapterType m_input_adapter;
+    InputAdapterType m_input_adapter {};
     //!< Cached characters retrieved from an input adapter object.
-    std::vector<int_type> m_cache;
+    std::vector<int_type> m_cache {};
     //!< The current position in an input buffer.
-    size_t m_cur_pos;
+    size_t m_cur_pos {0};
 };
 
 } // namespace detail

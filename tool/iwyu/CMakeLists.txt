@@ -1,3 +1,8 @@
+###############################
+#   Prepare dependent tools   #
+###############################
+
+# find include-what-you-use.
 find_program(IWYU_TOOL NAMES include-what-you-use iwyu REQUIRED)
 execute_process(
   COMMAND ${IWYU_TOOL} --version
@@ -5,6 +10,10 @@ execute_process(
   ERROR_VARIABLE IWYU_TOOL_VERSION)
 string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" IWYU_TOOL_VERSION "${IWYU_TOOL_VERSION}")
 message(STATUS "# iwyu # version: ${IWYU_TOOL_VERSION} path: ${IWYU_TOOL}")
+
+###############################
+#   Configure build targets   #
+###############################
 
 add_custom_target(run_iwyu COMMENT "Check if headers are self-contained.")
 

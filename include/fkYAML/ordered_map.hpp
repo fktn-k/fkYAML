@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.2
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -65,8 +65,7 @@ public:
      * @brief Construct a new ordered_map object.
      */
     ordered_map() noexcept(noexcept(Container()))
-        : Container(),
-          m_compare()
+        : Container()
     {
     }
 
@@ -76,8 +75,7 @@ public:
      * @param init An initializer list to construct the inner container object.
      */
     ordered_map(std::initializer_list<value_type> init)
-        : Container {init},
-          m_compare()
+        : Container {init}
     {
     }
 
@@ -210,7 +208,8 @@ public:
     }
 
 private:
-    key_compare m_compare; /** The object for comparing keys. */
+    /** The object for comparing keys. */
+    key_compare m_compare {};
 };
 
 FK_YAML_NAMESPACE_END

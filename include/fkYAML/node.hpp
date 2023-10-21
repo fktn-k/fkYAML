@@ -1,7 +1,7 @@
 /**
  *  _______   __ __   __  _____   __  __  __
  * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.2
+ * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
  * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
  *
  * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -57,7 +57,7 @@ template <
     template <typename, typename...> class SequenceType = std::vector,
     template <typename, typename, typename...> class MappingType = ordered_map, typename BooleanType = bool,
     typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
-    template <typename, typename = void> class Converter = node_value_converter>
+    template <typename, typename = void> class ConverterType = node_value_converter>
 class basic_node
 {
 public:
@@ -86,7 +86,7 @@ public:
      * @tparam SFINAE A type placeholder for SFINAE
      */
     template <typename T, typename SFINAE>
-    using value_converter_type = Converter<T, SFINAE>;
+    using value_converter_type = ConverterType<T, SFINAE>;
 
     using node_t = detail::node_t;
     using yaml_version_t = detail::yaml_version_t;
@@ -221,7 +221,7 @@ private:
         /** A pointer to the value of sequence type. */
         sequence_type* p_sequence;
         /** A pointer to the value of mapping type. This pointer is also used when node type is null. */
-        mapping_type* p_mapping;
+        mapping_type* p_mapping {nullptr};
         /** A value of boolean type. */
         boolean_type boolean;
         /** A value of integer type. */
@@ -283,13 +283,7 @@ public:
     /**
      * @brief Construct a new basic_node object of null type.
      */
-    basic_node() noexcept
-        : m_node_type(node_t::NULL_OBJECT),
-          m_yaml_version_type(yaml_version_t::VER_1_2),
-          m_node_value(),
-          m_anchor_name(nullptr)
-    {
-    }
+    basic_node() = default;
 
     /**
      * @brief Construct a new basic_node object with a specified type.
@@ -299,9 +293,7 @@ public:
      */
     explicit basic_node(const node_t type)
         : m_node_type(type),
-          m_yaml_version_type(yaml_version_t::VER_1_2),
-          m_node_value(type),
-          m_anchor_name(nullptr)
+          m_node_value(type)
     {
     }
 
@@ -312,8 +304,7 @@ public:
      */
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type),
-          m_anchor_name(nullptr)
+          m_yaml_version_type(rhs.m_yaml_version_type)
     {
         switch (m_node_type)
         {
@@ -358,7 +349,7 @@ public:
      *
      * @param[in] rhs A basic_node object to be moved from.
      */
-    basic_node(basic_node&& rhs) noexcept // NOLINT(bugprone-exception-escape)
+    basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
           m_yaml_version_type(rhs.m_yaml_version_type),
           m_anchor_name(rhs.m_anchor_name)
@@ -396,8 +387,6 @@ public:
             m_node_value.p_string = rhs.m_node_value.p_string;
             rhs.m_node_value.p_string = nullptr;
             break;
-        default:                                                     // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported node value type."); // LCOV_EXCL_LINE
         }
 
         rhs.m_node_type = node_t::NULL_OBJECT;
@@ -415,13 +404,9 @@ public:
                                                                 detail::is_node_compatible_type<basic_node, U>>>::value,
             int> = 0>
     explicit basic_node(CompatibleType&& val) noexcept(
-        noexcept(Converter<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
-        : m_node_type(node_t::NULL_OBJECT),
-          m_yaml_version_type(yaml_version_t::VER_1_2),
-          m_node_value(),
-          m_anchor_name(nullptr)
+        noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
     {
-        Converter<U>::to_node(*this, std::forward<CompatibleType>(val));
+        ConverterType<U>::to_node(*this, std::forward<CompatibleType>(val));
     }
 
     /**
@@ -1051,10 +1036,10 @@ public:
                 std::is_default_constructible<ValueType>, detail::has_from_node<basic_node, ValueType>>::value,
             int> = 0>
     T get_value() const noexcept(
-        noexcept(Converter<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
+        noexcept(ConverterType<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
     {
         auto ret = ValueType();
-        Converter<ValueType>::from_node(*this, ret);
+        ConverterType<ValueType>::from_node(*this, ret);
         return ret;
     }
 
@@ -1361,14 +1346,26 @@ public:
 
 private:
     /** The current node value type. */
-    node_t m_node_type;
+    node_t m_node_type {node_t::NULL_OBJECT};
     /** The YAML version specification. */
-    yaml_version_t m_yaml_version_type;
+    yaml_version_t m_yaml_version_type {yaml_version_t::VER_1_2};
     /** The current node value. */
-    node_value m_node_value;
+    node_value m_node_value {};
     /** The anchor name for this node. */
-    std::string* m_anchor_name;
+    std::string* m_anchor_name {nullptr};
 };
+
+template <
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
+inline void swap(
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& lhs,
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>&
+        rhs) noexcept(noexcept(lhs.swap(rhs)))
+{
+    lhs.swap(rhs);
+}
 
 /**
  * @brief default YAML node value container.
@@ -1394,23 +1391,5 @@ using node_float_number_type = typename node::float_number_type;
 using node_string_type = typename node::string_type;
 
 FK_YAML_NAMESPACE_END
-
-namespace std
-{
-
-/**
- * @brief A specialization of std::swap for Node class.
- *
- * @tparam N/A
- * @param lhs A Node object of left-hand-side.
- * @param rhs A Node object of right-hand-side.
- */
-template <>
-inline void swap<fkyaml::node>(fkyaml::node& lhs, fkyaml::node& rhs) noexcept(noexcept(lhs.swap(rhs)))
-{
-    lhs.swap(rhs);
-}
-
-} // namespace std
 
 #endif /* FK_YAML_NODE_HPP_ */
