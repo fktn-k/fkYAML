@@ -89,7 +89,7 @@ TEST_CASE("NodeClassTest_ThrowingSpecializationTypeCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_SequenceCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node node(fkyaml::node_sequence_type {fkyaml::node {true}, fkyaml::node {false}});
+    fkyaml::node node(fkyaml::node_sequence_type {fkyaml::node(true), fkyaml::node(false)});
     REQUIRE(node.type() == fkyaml::node::node_t::SEQUENCE);
     REQUIRE(node.is_sequence());
     REQUIRE(node.size() == 2);
@@ -101,7 +101,7 @@ TEST_CASE("NodeClassTest_SequenceCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_MappingCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node node(fkyaml::node_mapping_type {{"test", fkyaml::node {true}}});
+    fkyaml::node node(fkyaml::node_mapping_type {{"test", fkyaml::node(true)}});
     REQUIRE(node.type() == fkyaml::node::node_t::MAPPING);
     REQUIRE(node.is_mapping());
     REQUIRE(node.size() == 1);
@@ -336,6 +336,31 @@ TEST_CASE("NodeClassTest_AliasMoveCtorTest", "[NodeClassTest]")
     REQUIRE(alias.is_boolean());
     REQUIRE_NOTHROW(alias.to_boolean());
     REQUIRE(alias.to_boolean() == true);
+}
+
+TEST_CASE("NodeClassTest_InitializerListCtorTest", "[NodeClassTest]")
+{
+    fkyaml::node node = {
+        {std::string("foo"), 3.14},
+        {std::string("bar"), 123},
+        {std::string("baz"), {true, false}},
+    };
+
+    REQUIRE(node.contains("foo"));
+    REQUIRE(node["foo"].is_float_number());
+    REQUIRE(node["foo"].to_float_number() == 3.14);
+
+    REQUIRE(node.contains("bar"));
+    REQUIRE(node["bar"].is_integer());
+    REQUIRE(node["bar"].to_integer() == 123);
+
+    REQUIRE(node.contains("baz"));
+    REQUIRE(node["baz"].is_sequence());
+    REQUIRE(node["baz"].size() == 2);
+    REQUIRE(node["baz"].to_sequence()[0].is_boolean());
+    REQUIRE(node["baz"].to_sequence()[0].to_boolean() == true);
+    REQUIRE(node["baz"].to_sequence()[1].is_boolean());
+    REQUIRE(node["baz"].to_sequence()[1].to_boolean() == false);
 }
 
 //

@@ -74,6 +74,23 @@ struct is_basic_node<
 {
 };
 
+///////////////////////////////////
+//   is_node_ref_storage traits
+///////////////////////////////////
+
+template <typename>
+class node_ref_storage;
+
+template <typename T>
+struct is_node_ref_storage : std::false_type
+{
+};
+
+template <typename T>
+struct is_node_ref_storage<node_ref_storage<T>> : std::true_type
+{
+};
+
 ///////////////////////////////////////////////////////
 //   basic_node conversion API representative types
 ///////////////////////////////////////////////////////

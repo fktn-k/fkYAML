@@ -13,8 +13,10 @@
 #ifndef FK_YAML_NODE_HPP_
 #define FK_YAML_NODE_HPP_
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -28,6 +30,7 @@
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
+#include <fkYAML/detail/node_ref_storage.hpp>
 #include <fkYAML/detail/output/serializer.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
 #include <fkYAML/detail/types/yaml_version_t.hpp>
@@ -99,6 +102,8 @@ private:
     using deserializer_type = detail::basic_deserializer<basic_node>;
     /** A type for YAML docs serializers. */
     using serializer_type = detail::basic_serializer<basic_node>;
+    /** An alias type for std::initializer_list. */
+    using initializer_list_t = std::initializer_list<detail::node_ref_storage<basic_node>>;
 
     /**
      * @union node_value
@@ -395,18 +400,70 @@ public:
         rhs.m_anchor_name = nullptr;
     }
 
+    /**
+     * @brief Construct a new basic_node object from a value of compatible types.
+     *
+     * @tparam CompatibleType A type of native data which is compatible with node values.
+     * @tparam U A type of compatible native data type without qualifiers.
+     * @param val The value of compatible native data type.
+     */
     template <
         typename CompatibleType, typename U = detail::remove_cvref_t<CompatibleType>,
         detail::enable_if_t<
             detail::conjunction<
-                detail::negation<detail::is_basic_node<U>>, detail::disjunction<
-                                                                std::is_same<CompatibleType, std::nullptr_t>,
-                                                                detail::is_node_compatible_type<basic_node, U>>>::value,
+                detail::negation<detail::is_basic_node<U>>,
+                detail::disjunction<detail::is_node_compatible_type<basic_node, U>>>::value,
             int> = 0>
-    explicit basic_node(CompatibleType&& val) noexcept(
+    basic_node(CompatibleType&& val) noexcept(
         noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
     {
         ConverterType<U>::to_node(*this, std::forward<CompatibleType>(val));
+    }
+
+    /**
+     * @brief Construct a new basic node object with a node_ref_storage object.
+     *
+     * @tparam NodeRefStorageType A node_ref_storage template instance type.
+     * @param node_ref_storage A node_ref_storage object.
+     */
+    template <
+        typename NodeRefStorageType,
+        detail::enable_if_t<detail::is_node_ref_storage<NodeRefStorageType>::value, int> = 0>
+    basic_node(const NodeRefStorageType& node_ref_storage)
+        : basic_node(node_ref_storage.release())
+    {
+    }
+
+    /**
+     * @brief Construct a new basic node object with std::initializer_list.
+     *
+     * @param init An initializer list object.
+     */
+    basic_node(initializer_list_t init)
+    {
+        bool is_mapping =
+            std::all_of(init.begin(), init.end(), [](const detail::node_ref_storage<basic_node>& node_ref) {
+                return node_ref->is_sequence() && node_ref->size() == 2 && node_ref->operator[](0).is_string();
+            });
+
+        if (is_mapping)
+        {
+            m_node_type = node_t::MAPPING;
+            m_node_value.p_mapping = create_object<mapping_type>();
+
+            for (auto& elem_ref : init)
+            {
+                auto elem = elem_ref.release();
+                m_node_value.p_mapping->emplace(
+                    std::move(*((*(elem.m_node_value.p_sequence))[0].m_node_value.p_string)),
+                    std::move((*(elem.m_node_value.p_sequence))[1]));
+            }
+        }
+        else
+        {
+            m_node_type = node_t::SEQUENCE;
+            m_node_value.p_sequence = create_object<sequence_type>(init.begin(), init.end());
+        }
     }
 
     /**
