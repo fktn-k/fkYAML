@@ -145,6 +145,7 @@ add_executable(
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
   test_node_class.cpp
+  test_node_ref_storage_class.cpp
   test_ordered_map_class.cpp
   test_serializer_class.cpp
   main.cpp)
