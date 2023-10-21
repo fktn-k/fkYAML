@@ -43,7 +43,7 @@ TEST_CASE("NodeRefStorageTest_ArrowOperatorTest", "[NodeRefStorageTest]")
     REQUIRE(storage->is_integer());
     REQUIRE(storage->to_integer() == 123);
 
-    fkyaml::node node2 = { true, false };
+    fkyaml::node node2 = {true, false};
     fkyaml::detail::node_ref_storage<fkyaml::node> storage2(std::move(node2));
     REQUIRE(storage2->is_sequence());
     REQUIRE(storage2->size() == 2);
@@ -58,7 +58,7 @@ TEST_CASE("NodeRefStorageTest_ReleaseTest", "[NodeRefStorageTest]")
     REQUIRE(released_node.is_integer());
     REQUIRE(released_node.to_integer() == 123);
 
-    fkyaml::node node2 = { true, false };
+    fkyaml::node node2 = {true, false};
     fkyaml::detail::node_ref_storage<fkyaml::node> storage2(std::move(node2));
     fkyaml::node released_node2 = storage2.release();
     REQUIRE(released_node2.is_sequence());

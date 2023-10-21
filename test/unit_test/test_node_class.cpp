@@ -340,11 +340,10 @@ TEST_CASE("NodeClassTest_AliasMoveCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_InitializerListCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node node =
-    {
-        { std::string("foo"), 3.14 },
-        { std::string("bar"), 123 },
-        { std::string("baz"), { true, false } },
+    fkyaml::node node = {
+        {std::string("foo"), 3.14},
+        {std::string("bar"), 123},
+        {std::string("baz"), {true, false}},
     };
 
     REQUIRE(node.contains("foo"));
