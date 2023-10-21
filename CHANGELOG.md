@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.1.3](https://github.com/fktn-k/fkYAML/releases/tag/v0.1.3) (2023-10-21)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.1.2...v0.1.3)
+
+- \#166 Organize CMake scripts for testing [\#171](https://github.com/fktn-k/fkYAML/pull/171) ([fktn-k](https://github.com/fktn-k))
+- \#158 Added to\_string\(\) for serialization of YAML nodes. [\#170](https://github.com/fktn-k/fkYAML/pull/170) ([fktn-k](https://github.com/fktn-k))
+- \#164 Use default initial values for class member variables [\#168](https://github.com/fktn-k/fkYAML/pull/168) ([fktn-k](https://github.com/fktn-k))
+- \#18 Resolve warnings while building library/tests [\#165](https://github.com/fktn-k/fkYAML/pull/165) ([fktn-k](https://github.com/fktn-k))
+- \#145 Expand swap\(\) support for basic node [\#163](https://github.com/fktn-k/fkYAML/pull/163) ([fktn-k](https://github.com/fktn-k))
+
+- \#160 Added the Codacy badge to README.md [\#162](https://github.com/fktn-k/fkYAML/pull/162) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.1.2](https://github.com/fktn-k/fkYAML/releases/tag/v0.1.2) (2023-10-18)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.1.1...v0.1.2)
