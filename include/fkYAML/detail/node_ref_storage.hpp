@@ -53,7 +53,7 @@ public:
      *
      * @param n An rvalue basic_node object.
      */
-    node_ref_storage(node_type&& n)
+    explicit node_ref_storage(node_type&& n)
         : owned_value(std::move(n))
     {
     }
@@ -63,7 +63,7 @@ public:
      *
      * @param n An lvalue basic_node object.
      */
-    node_ref_storage(const node_type& n)
+    explicit node_ref_storage(const node_type& n)
         : value_ref(&n)
     {
     }
