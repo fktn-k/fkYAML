@@ -23,7 +23,7 @@ TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")
         NodeStrPair(
             fkyaml::node::sequence(
                 {fkyaml::node::mapping({{"foo", fkyaml::node::integer_scalar(-1234)}, {"bar", fkyaml::node()}})}),
-            "-\n  foo: -1234\n  bar: null\n"));
+            "-\n  bar: null\n  foo: -1234\n"));
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
@@ -34,7 +34,7 @@ TEST_CASE("SerializerClassTest_SerializeMappingNode", "[SerializerClassTest]")
     auto node_str_pair = GENERATE(
         NodeStrPair(
             fkyaml::node::mapping({{"foo", fkyaml::node::integer_scalar(-1234)}, {"bar", fkyaml::node()}}),
-            "foo: -1234\nbar: null\n"),
+            "bar: null\nfoo: -1234\n"),
         NodeStrPair(
             fkyaml::node::mapping(
                 {{"foo",
