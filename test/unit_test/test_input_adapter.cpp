@@ -14,7 +14,10 @@
 
 #include <fkYAML/detail/input/input_adapter.hpp>
 
-static constexpr char input_file_path[] = "test_data/input_adapter_test_data.txt";
+// generated in test/unit_test/CMakeLists.txt
+#include <test_data.hpp>
+
+static constexpr char input_file_path[] = FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt";
 
 TEST_CASE("InputAdapterTest_IteratorInputAdapterProviderTest", "[InputAdapterTest]")
 {
