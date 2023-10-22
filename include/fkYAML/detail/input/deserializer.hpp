@@ -13,6 +13,7 @@
 #ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
 #define FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
 
+#include <algorithm>
 #include <cstdint>
 #include <unordered_map>
 
@@ -84,6 +85,9 @@ public:
         m_current_node = &root;
 
         lexical_token_t type = lexer.get_next_token();
+        std::size_t cur_indent = lexer.get_last_token_begin_pos();
+        m_indent_stack.push_back(cur_indent);
+
         while (type != lexical_token_t::END_OF_BUFFER)
         {
             switch (type)
@@ -184,7 +188,7 @@ public:
             case lexical_token_t::NULL_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string());
+                    add_new_key(lexer.get_string(), cur_indent);
                     break;
                 }
 
@@ -195,7 +199,7 @@ public:
             case lexical_token_t::BOOLEAN_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string());
+                    add_new_key(lexer.get_string(), cur_indent);
                     break;
                 }
                 assign_node_value(BasicNodeType::boolean_scalar(lexer.get_boolean()));
@@ -203,7 +207,7 @@ public:
             case lexical_token_t::INTEGER_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string());
+                    add_new_key(lexer.get_string(), cur_indent);
                     break;
                 }
                 assign_node_value(BasicNodeType::integer_scalar(lexer.get_integer()));
@@ -211,7 +215,7 @@ public:
             case lexical_token_t::FLOAT_NUMBER_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string());
+                    add_new_key(lexer.get_string(), cur_indent);
                     break;
                 }
                 assign_node_value(BasicNodeType::float_number_scalar(lexer.get_float_number()));
@@ -219,7 +223,7 @@ public:
             case lexical_token_t::STRING_VALUE:
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string());
+                    add_new_key(lexer.get_string(), cur_indent);
                     break;
                 }
                 assign_node_value(BasicNodeType::string_scalar(lexer.get_string()));
@@ -229,6 +233,7 @@ public:
             }
 
             type = lexer.get_next_token();
+            cur_indent = lexer.get_last_token_begin_pos();
         }
 
         m_current_node = nullptr;
@@ -245,8 +250,31 @@ private:
      *
      * @param key a key string to be added to the current YAML node.
      */
-    void add_new_key(const string_type& key) noexcept
+    void add_new_key(const string_type& key, const std::size_t indent)
     {
+        if (indent < m_indent_stack.back())
+        {
+            auto target_itr = std::find(m_indent_stack.begin(), m_indent_stack.end(), indent);
+            if (target_itr == m_indent_stack.end())
+            {
+                throw fkyaml::exception("Detected invalid indentaion.");
+            }
+
+            auto pop_num = std::distance(target_itr, m_indent_stack.end()) - 1;
+            for (auto i = 0; i < pop_num; i++)
+            {
+                m_indent_stack.pop_back();
+
+                // move back to the previous container node.
+                m_current_node = m_node_stack.back();
+                m_node_stack.pop_back();
+            }
+        }
+        else if (indent > m_indent_stack.back())
+        {
+            m_indent_stack.push_back(indent);
+        }
+
         m_current_node->to_mapping().emplace(key, BasicNodeType());
         m_node_stack.push_back(m_current_node);
         m_current_node = &(m_current_node->to_mapping().at(key));
@@ -315,6 +343,7 @@ private:
 private:
     BasicNodeType* m_current_node {nullptr};                 /** The currently focused YAML node. */
     std::vector<BasicNodeType*> m_node_stack {};             /** The stack of YAML nodes. */
+    std::vector<std::size_t> m_indent_stack {};
     yaml_version_t m_yaml_version {yaml_version_t::VER_1_2}; /** The YAML version specification type. */
     bool m_needs_anchor_impl {false}; /** A flag to determine the need for YAML anchor node implementation */
     string_type m_anchor_name {};     /** The last YAML anchor name. */

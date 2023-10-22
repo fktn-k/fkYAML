@@ -86,6 +86,7 @@ public:
         skip_white_spaces();
 
         char_int_type current = m_input_handler.get_current();
+        m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
 
         if (0x00 <= current && current <= 0x7F && isdigit(current))
         {
@@ -296,6 +297,16 @@ public:
         default:
             return m_last_token_type = scan_string();
         }
+    }
+
+    /**
+     * @brief Get the beginning position of a last token.
+     *
+     * @return std::size_t The beginning position of a last token.
+     */
+    std::size_t get_last_token_begin_pos() const noexcept
+    {
+        return m_last_token_begin_pos;
     }
 
     /**
@@ -1141,6 +1152,7 @@ private:
     input_handler_type m_input_handler;
     //!< A temporal buffer to store a string to be parsed to an actual datum.
     input_string_type m_value_buffer {};
+    std::size_t m_last_token_begin_pos {0};
     //!< The last found token type.
     lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
     //!< A temporal bool holder.

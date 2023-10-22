@@ -82,6 +82,14 @@ TEST_CASE("DeserializerClassTest_DeserializeNumericKey", "[DeserializerClassTest
     REQUIRE(root[str_val_pair.second].to_string() == "foo");
 }
 
+TEST_CASE("DeserializerClassTest_DeserializeInvalidIndentation", "[DeserializerClassTest]")
+{
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  bar: baz\n qux: true")), fkyaml::exception);
+}
+
 TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerClassTest]")
 {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
@@ -506,6 +514,58 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(bar_node.is_string());
         REQUIRE_NOTHROW(bar_node.to_string());
         REQUIRE(bar_node.to_string() == foo_node.to_string());
+    }
+
+    SECTION("Input source No.8.")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  bar: baz\nqux: 123\nquux:\n  corge: grault")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 3);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_mapping());
+        REQUIRE(root["foo"].size() == 1);
+        REQUIRE(root["foo"].contains("bar"));
+        REQUIRE(root["foo"]["bar"].is_string());
+        REQUIRE(root["foo"]["bar"].to_string() == "baz");
+
+        REQUIRE(root.contains("qux"));
+        REQUIRE(root["qux"].is_integer());
+        REQUIRE(root["qux"].to_integer() == 123);
+
+        REQUIRE(root.contains("quux"));
+        REQUIRE(root["quux"].is_mapping());
+        REQUIRE(root["quux"].size() == 1);
+        REQUIRE(root["quux"].contains("corge"));
+        REQUIRE(root["quux"]["corge"].is_string());
+        REQUIRE(root["quux"]["corge"].to_string() == "grault");
+    }
+
+    SECTION("Input source No.9.")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  bar:\n    baz: 123\nqux: true")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_mapping());
+        REQUIRE(root["foo"].size() == 1);
+
+        REQUIRE(root["foo"].contains("bar"));
+        REQUIRE(root["foo"]["bar"].is_mapping());
+        REQUIRE(root["foo"]["bar"].size() == 1);
+
+        REQUIRE(root["foo"]["bar"].contains("baz"));
+        REQUIRE(root["foo"]["bar"]["baz"].is_integer());
+        REQUIRE(root["foo"]["bar"]["baz"].to_integer() == 123);
+
+        REQUIRE(root.contains("qux"));
+        REQUIRE(root["qux"].is_boolean());
+        REQUIRE(root["qux"].to_boolean() == true);
     }
 }
 
