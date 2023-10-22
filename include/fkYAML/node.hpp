@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
+#include <map>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -58,7 +59,7 @@ FK_YAML_NAMESPACE_BEGIN
  */
 template <
     template <typename, typename...> class SequenceType = std::vector,
-    template <typename, typename, typename...> class MappingType = ordered_map, typename BooleanType = bool,
+    template <typename, typename, typename...> class MappingType = std::map, typename BooleanType = bool,
     typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
     template <typename, typename = void> class ConverterType = node_value_converter>
 class basic_node
@@ -71,7 +72,10 @@ public:
 
     /** A type for sequence basic_node values. */
     using sequence_type = SequenceType<basic_node, std::allocator<basic_node>>;
-    /** A type for mapping basic_node values. */
+    /**
+     * @brief A type for mapping basic_node values.
+     * @note std::unordered_map is not supported since it does not allow incomplete types.
+     */
     using mapping_type = MappingType<StringType, basic_node>;
     /** A type for boolean basic_node values. */
     using boolean_type = BooleanType;
