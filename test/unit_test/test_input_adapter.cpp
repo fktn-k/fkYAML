@@ -42,8 +42,8 @@ TEST_CASE("InputAdapterTest_IteratorInputAdapterProviderTest", "[InputAdapterTes
     {
         std::string input_str(input);
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
-        REQUIRE(
-            std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<std::string::iterator>>::value);
+        using iterator_type = typename std::string::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 }
 
