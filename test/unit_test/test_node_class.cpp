@@ -375,7 +375,8 @@ TEST_CASE("NodeClassTest_DeserializeTest", "[NodeClassTest]")
 
     fkyaml::node node = GENERATE_REF(
         fkyaml::node::deserialize("foo: bar"),
-        fkyaml::node::deserialize(&source[0]),
+        fkyaml::node::deserialize(source),
+        fkyaml::node::deserialize(&source[0], sizeof(source)),
         fkyaml::node::deserialize(&source[0], &source[8]),
         fkyaml::node::deserialize(std::string(source)),
         fkyaml::node::deserialize(ss));

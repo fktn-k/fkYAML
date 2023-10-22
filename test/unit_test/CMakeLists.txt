@@ -141,6 +141,7 @@ add_executable(
   test_deserializer_class.cpp
   test_exception_class.cpp
   test_from_string.cpp
+  test_input_adapter.cpp
   test_input_handler.cpp
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
@@ -156,6 +157,11 @@ include(Catch)
 catch_discover_tests(${TEST_TARGET})
 
 add_dependencies(${TEST_TARGET} ${FK_YAML_TARGET_NAME})
+
+add_custom_command(
+  TARGET ${TEST_TARGET} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/test_data $<TARGET_FILE_DIR:${TEST_TARGET}>/test_data
+)
 
 ############################################
 #   Configure custom target for coverage   #
