@@ -6,7 +6,6 @@
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-
 #include <cstdio>
 #include <fstream>
 #include <string>
@@ -19,13 +18,12 @@
 #include <test_data.hpp>
 
 #ifdef _MSC_VER
-    #define DISABLE_C4996 __pragma(warning(push)) __pragma(warning(disable:4996))
-    #define ENABLE_C4996  __pragma(warning(pop))
+    #define DISABLE_C4996 __pragma(warning(push)) __pragma(warning(disable : 4996))
+    #define ENABLE_C4996 __pragma(warning(pop))
 #else
     #define DISABLE_C4996
     #define ENABLE_C4996
 #endif
-
 
 static constexpr char input_file_path[] = FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt";
 
@@ -70,9 +68,9 @@ TEST_CASE("InputAdapterTest_FileInputAdapterProviderTest", "[InputAdapterTest]")
 
     SECTION("valie FILE object pointer")
     {
-DISABLE_C4996
+        DISABLE_C4996
         FILE* p_file = std::fopen(input_file_path, "r");
-ENABLE_C4996
+        ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
@@ -115,9 +113,9 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
 
     SECTION("file_input_adapter")
     {
-DISABLE_C4996
+        DISABLE_C4996
         FILE* p_file = std::fopen(input_file_path, "r");
-ENABLE_C4996
+        ENABLE_C4996
 
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
