@@ -510,6 +510,12 @@ public:
             detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
 
+    template <typename PtrType, detail::enable_if_t<std::is_pointer<PtrType>::value, int> = 0>
+    static basic_node deserialize(PtrType&& ptr, std::size_t size)
+    {
+        return deserializer_type().deserialize(detail::input_adapter(std::forward<PtrType>(ptr), size));
+    }
+
     /**
      * @brief Serialize a basic_node object into a string.
      *

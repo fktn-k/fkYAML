@@ -53,14 +53,6 @@ template <typename T>
 using get_character_fn_t = decltype(std::declval<T>().get_character());
 
 /**
- * @brief A type which respresents unget_character function.
- *
- * @tparam T A target type.
- */
-template <typename T>
-using unget_character_fn_t = decltype(std::declval<T>().unget_character());
-
-/**
  * @brief Type traits to check if T has char_type as its member.
  *
  * @tparam T A target type.
@@ -107,28 +99,6 @@ struct has_get_character<InputAdapterType, enable_if_t<is_detected<get_character
 {
 };
 
-/**
- * @brief Type traits to check if InputAdapterType has unget_character member function.
- *
- * @tparam InputAdapterType A type of a target input adapter.
- * @tparam typename N/A
- */
-template <typename InputAdapterType, typename = void>
-struct has_unget_character : std::false_type
-{
-};
-
-/**
- * @brief A partial specialization of has_unget_character if InputAdapterType has unget_character member function.
- *
- * @tparam InputAdapterType
- */
-template <typename InputAdapterType>
-struct has_unget_character<InputAdapterType, enable_if_t<is_detected<unget_character_fn_t, InputAdapterType>::value>>
-    : std::true_type
-{
-};
-
 ////////////////////////////////
 //   is_input_adapter traits
 ////////////////////////////////
@@ -151,9 +121,9 @@ struct is_input_adapter : std::false_type
  */
 template <typename InputAdapterType>
 struct is_input_adapter<
-    InputAdapterType, enable_if_t<conjunction<
-                          has_char_type<InputAdapterType>, has_get_character<InputAdapterType>,
-                          has_unget_character<InputAdapterType>>::value>> : std::true_type
+    InputAdapterType,
+    enable_if_t<conjunction<has_char_type<InputAdapterType>, has_get_character<InputAdapterType>>::value>>
+    : std::true_type
 {
 };
 
