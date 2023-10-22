@@ -21,6 +21,7 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/exception.hpp>
 
 /**
  * @namespace fkyaml
@@ -66,10 +67,16 @@ public:
      */
     iterator_input_adapter(IterType begin, IterType end)
         : m_current(begin),
-          m_begin(begin),
           m_end(end)
     {
     }
+
+    // allow only move construct/assignment like other input adapters.
+    iterator_input_adapter(const iterator_input_adapter&) = delete;
+    iterator_input_adapter(iterator_input_adapter&& rhs) = default;
+    iterator_input_adapter& operator=(const iterator_input_adapter&) = delete;
+    iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
+    ~iterator_input_adapter() = default;
 
     /**
      * @brief Get a character at the current position and move forward.
@@ -88,20 +95,8 @@ public:
         return std::char_traits<char_type>::eof();
     }
 
-    /**
-     * @brief Move backward if the current position is not at the beginning.
-     */
-    void unget_character()
-    {
-        if (m_current != m_begin)
-        {
-            --m_current;
-        }
-    }
-
 private:
     IterType m_current {};
-    IterType m_begin {};
     IterType m_end {};
 };
 
@@ -121,7 +116,10 @@ public:
     file_input_adapter() = default;
 
     /**
-     * @brief Construct a new file_input_adapter object
+     * @brief Construct a new file_input_adapter object.
+     * @note
+     * This class doesn't call fopen() nor fclose().
+     * It's user's responsibility to call those functions.
      *
      * @param file A file handle for this adapter. (A non-null pointer is assumed.)
      */
@@ -144,15 +142,12 @@ public:
      */
     typename std::char_traits<char_type>::int_type get_character()
     {
-        return std::fgetc(m_file);
-    }
-
-    /**
-     * @brief Move backward if the current position is not at the beginning.
-     */
-    void unget_character()
-    {
-        (void)std::fseek(m_file, -1, SEEK_CUR);
+        int ret = std::fgetc(m_file);
+        if (ret != EOF)
+        {
+            return ret;
+        }
+        return std::char_traits<char_type>::eof();
     }
 
 private:
@@ -187,41 +182,8 @@ public:
     // allow only move construct/assignment
     stream_input_adapter(const stream_input_adapter&) = delete;
     stream_input_adapter& operator=(const stream_input_adapter&) = delete;
-
-    /**
-     * @brief Construct a new stream_input_adapter object.
-     *
-     * @param rhs An adapter whose values are to be moved to this object.
-     */
-    stream_input_adapter(stream_input_adapter&& rhs) noexcept
-        : m_istream(rhs.m_istream)
-    {
-        rhs.m_istream = nullptr;
-    }
-
-    /**
-     * @brief A move assignment operator for stream_input_adapter.
-     *
-     * @param rhs An adapter whose values are to be moved to this object.
-     * @return stream_input_adapter& Reference to this object.
-     */
-    stream_input_adapter& operator=(stream_input_adapter&& rhs) noexcept
-    {
-        if (&rhs == this)
-        {
-            return *this;
-        }
-
-        m_istream = rhs.m_istream;
-
-        rhs.m_istream = nullptr;
-
-        return *this;
-    }
-
-    /**
-     * @brief Destroy the stream_input_adapter object.
-     */
+    stream_input_adapter(stream_input_adapter&&) = default;
+    stream_input_adapter& operator=(stream_input_adapter&&) = default;
     ~stream_input_adapter() = default;
 
     /**
@@ -232,14 +194,6 @@ public:
     std::char_traits<char_type>::int_type get_character()
     {
         return m_istream->get();
-    }
-
-    /**
-     * @brief Move backward if the current position is not at the beginning.
-     */
-    void unget_character()
-    {
-        m_istream->unget();
     }
 
 private:
@@ -277,11 +231,17 @@ template <
                               conjunction<
                                   std::is_pointer<CharPtrType>, negation<std::is_array<CharPtrType>>,
                                   std::is_integral<remove_pointer_t<CharPtrType>>,
-                                  bool_constant<sizeof(remove_pointer_t<CharPtrType>) == 1>>::value,
+                                  bool_constant<sizeof(remove_pointer_t<CharPtrType>) == sizeof(char)>>::value,
                               int> = 0>
-inline auto input_adapter(CharPtrType ptr) -> decltype(input_adapter(ptr, ptr + std::strlen(ptr)))
+inline auto input_adapter(CharPtrType ptr, std::size_t size) -> decltype(input_adapter(ptr, ptr + size))
 {
-    return input_adapter(ptr, ptr + std::strlen(ptr));
+    // get the actual buffer size.
+    std::size_t i = 0;
+    for (; i < size && *(ptr + i) != '\0'; i++)
+    {
+    }
+    size = (i < size) ? i : size;
+    return input_adapter(ptr, ptr + size);
 }
 
 /**
@@ -294,7 +254,14 @@ inline auto input_adapter(CharPtrType ptr) -> decltype(input_adapter(ptr, ptr + 
 template <typename T, std::size_t N>
 inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array + N))
 {
-    return input_adapter(array, array + (N - 1));
+    // get the actual buffer size.
+    std::size_t i = 0;
+    const T null_char(0);
+    for (; i < N && array[i] != null_char; i++)
+    {
+    }
+    std::size_t size = (i < N - 1) ? i : N - 1;
+    return input_adapter(array, array + size);
 }
 
 /**
@@ -366,6 +333,10 @@ input_adapter(ContainerType&& container)
  */
 inline file_input_adapter input_adapter(std::FILE* file)
 {
+    if (!file)
+    {
+        throw fkyaml::exception("Invalid FILE object pointer.");
+    }
     return file_input_adapter(file);
 }
 
@@ -375,7 +346,7 @@ inline file_input_adapter input_adapter(std::FILE* file)
  * @param stream
  * @return stream_input_adapter
  */
-inline stream_input_adapter input_adapter(std::istream& stream)
+inline stream_input_adapter input_adapter(std::istream& stream) noexcept
 {
     return stream_input_adapter(stream);
 }
