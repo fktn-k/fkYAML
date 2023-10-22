@@ -87,7 +87,9 @@ TEST_CASE("DeserializerClassTest_DeserializeInvalidIndentation", "[DeserializerC
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
-    REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  bar: baz\n qux: true")), fkyaml::exception);
+    REQUIRE_THROWS_AS(
+        root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  bar: baz\n qux: true")),
+        fkyaml::exception);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerClassTest]")
@@ -519,7 +521,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
     SECTION("Input source No.8.")
     {
         REQUIRE_NOTHROW(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  bar: baz\nqux: 123\nquux:\n  corge: grault")));
+            root = deserializer.deserialize(
+                fkyaml::detail::input_adapter("foo:\n  bar: baz\nqux: 123\nquux:\n  corge: grault")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 3);

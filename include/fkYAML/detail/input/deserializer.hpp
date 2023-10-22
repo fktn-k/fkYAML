@@ -341,8 +341,8 @@ private:
     }
 
 private:
-    BasicNodeType* m_current_node {nullptr};                 /** The currently focused YAML node. */
-    std::vector<BasicNodeType*> m_node_stack {};             /** The stack of YAML nodes. */
+    BasicNodeType* m_current_node {nullptr};     /** The currently focused YAML node. */
+    std::vector<BasicNodeType*> m_node_stack {}; /** The stack of YAML nodes. */
     std::vector<std::size_t> m_indent_stack {};
     yaml_version_t m_yaml_version {yaml_version_t::VER_1_2}; /** The YAML version specification type. */
     bool m_needs_anchor_impl {false}; /** A flag to determine the need for YAML anchor node implementation */

@@ -258,5 +258,4 @@ TEST_CASE("InputHandlerTest_TestMultipleLinesTest", "[InputHandlerTest]")
         REQUIRE(handler.get_cur_pos_in_line() == 4);
         REQUIRE(handler.get_lines_read() == 1);
     }
-
 }
