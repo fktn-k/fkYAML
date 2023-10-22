@@ -53,10 +53,16 @@ public:
     using string_type = std::basic_string<char_type>;
 
 private:
+    /**
+     * @brief A set of information on the current position in an input buffer.
+     */
     struct position
     {
+        //!< The current position from the beginning of an input buffer.
         std::size_t cur_pos {0};
+        //!< The current position in the current line.
         std::size_t cur_pos_in_line {0};
+        //!< The number of lines which have already been read.
         std::size_t lines_read {0};
     };
 
@@ -224,11 +230,21 @@ public:
         return ret;
     }
 
+    /**
+     * @brief Get the current position in the current line.
+     *
+     * @return std::size_t The current position in the current line.
+     */
     std::size_t get_cur_pos_in_line() const noexcept
     {
         return m_position.cur_pos_in_line;
     }
 
+    /**
+     * @brief Get the number of lines which have already been read.
+     *
+     * @return std::size_t The number of lines which have already been read.
+     */
     std::size_t get_lines_read() const noexcept
     {
         return m_position.lines_read;
