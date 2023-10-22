@@ -63,7 +63,8 @@ TEST_CASE("OrderedMapClassTest_NonConstAtTest", "[OrderedMapClassTest]")
     map.emplace("foo", true);
     REQUIRE_NOTHROW(map.at("foo"));
     REQUIRE(map.at("foo") == true);
-    REQUIRE_THROWS_AS(map.at("bar"), fkyaml::exception);
+    std::string key("bar");
+    REQUIRE_THROWS_AS(map.at(key), fkyaml::exception);
 }
 
 TEST_CASE("OrderedMapClassTest_ConstAtTest", "[OrderedMapClassTest]")
