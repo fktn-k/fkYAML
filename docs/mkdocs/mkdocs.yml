@@ -1,0 +1,151 @@
+site_name: "fkYAML : A C++ header-only YAML library"
+site_author: Kensuke Fukutani
+site_url: https://fktn-k.github.io/fkYAML/
+
+repo_name: fktn-k/fkYAML
+repo_url: https://github.com/fktn-k/fkYAML
+
+copyright: Copyright &copy; 2023 Kensuke Fukutani
+
+theme:
+  name: material
+  language: en
+  palette:
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: blue grey
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.top
+    - content.tabs.link
+    - content.code.copy
+    - search.suggest
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.superfences:
+      # custom_fences:
+      #   - name: mermaid
+      #     class: mermaid
+      #     format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tilde
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/fktn-k
+  generator: false
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/hightlight.min.js
+  - javascripts/config.js
+
+extra_css:
+  - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css
+
+plugins:
+  - search:
+      lang: en
+  # - plantuml:
+  #     puml_url: https://www.plantuml.com/plantuml/
+
+nav:
+  - Home:
+      - Overview: index.md
+      - License: home/license.md
+      - Changelog: home/CHANGELOG.md
+  - "API Documentation":
+      - basic_node:
+          - basic_node: api/basic_node/index.md
+          - (constructor): api/basic_node/constructor.md
+          - (destructor): api/basic_node/destructor.md
+          - begin: api/basic_node/begin.md
+          - boolean_type: api/basic_node/boolean_type.md
+          - const_iterator: api/basic_node/const_iterator.md
+          - contains: api/basic_node/contains.md
+          - deserialize: api/basic_node/deserialize.md
+          - empty: api/basic_node/empty.md
+          - end: api/basic_node/end.md
+          - float_number_scalar: api/basic_node/float_number_scalar.md
+          - float_number_type: api/basic_node/float_number_type.md
+          - get_yaml_version: api/basic_node/get_yaml_version.md
+          - initializer_list_t: api/basic_node/initializer_list_t.md
+          - integer_scalar: api/basic_node/integer_scalar.md
+          - integer_type: api/basic_node/integer_type.md
+          - is_boolean: api/basic_node/is_boolean.md
+          - is_float_number: api/basic_node/is_float_number.md
+          - is_integer: api/basic_node/is_integer.md
+          - is_mapping: api/basic_node/is_mapping.md
+          - is_null: api/basic_node/is_null.md
+          - is_scalar: api/basic_node/is_scalar.md
+          - is_sequence: api/basic_node/is_sequence.md
+          - is_string: api/basic_node/is_string.md
+          - iterator: api/basic_node/iterator.md
+          - mapping_type: api/basic_node/mapping_type.md
+          - mapping: api/basic_node/mapping.md
+          - node_t: api/basic_node/node_t.md
+          - node: api/basic_node/node.md
+          - sequence_type: api/basic_node/sequence_type.md
+          - sequence: api/basic_node/sequence.md
+          - serialize: api/basic_node/serialize.md
+          - set_yaml_version: api/basic_node/set_yaml_version.md
+          - size: api/basic_node/size.md
+          - string_scalar: api/basic_node/string_scalar.md
+          - string_type: api/basic_node/string_type.md
+          - type: api/basic_node/type.md
+          - value_converter_type: api/basic_node/value_converter_type.md
+          - yaml_version_t: api/basic_node/yaml_version_t.md
+          - operator=: api/basic_node/operator=.md
+          - operator[]: api/basic_node/operator[].md
+      - exception:
+          - exception: api/exception/index.md
+          - (constructor): api/exception/constructor.md
+          - (destructor): api/exception/destructor.md
+          - what: api/exception/what.md
+      - macros:
+          - macros: api/macros/index.md
+      - node_value_converter:
+          - node_value_converter: api/node_value_converter/index.md
+          - from_node: api/node_value_converter/from_node.md
+          - to_node: api/node_value_converter/to_node.md
+      - ordered_map:
+          - ordered_map: api/ordered_map/index.md
+          - (constructor): api/ordered_map/constructor.md
+          - (destructor): api/ordered_map/destructor.md
+  - Tutorials: tutorials.md

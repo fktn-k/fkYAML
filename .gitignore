@@ -1,3 +1,6 @@
 build*
 .vscode/
 .vs/
+
+# documentation
+/docs/mkdocs/site/
