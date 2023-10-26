@@ -81,7 +81,7 @@ This class provides features to handle YAML nodes.
 | ----------------------------- | ------------------------------------------------------- |
 | [deserialize](deserialize.md) | deserializes a YAML formatted string into a basic_node. |
 | [serialize](serialize.md)     | serializes a basic_node into a YAML formatted string.   |
-|                               |                                                         |
+| [get_value](get_value.md)     | converts a basic_node into a target native data type.   |
 
 ### Iterators
 | Name              | Description                                              |

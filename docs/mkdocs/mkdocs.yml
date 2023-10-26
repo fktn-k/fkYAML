@@ -104,6 +104,7 @@ nav:
           - end: api/basic_node/end.md
           - float_number_scalar: api/basic_node/float_number_scalar.md
           - float_number_type: api/basic_node/float_number_type.md
+          - get_value: api/basic_node/get_value.md
           - get_yaml_version: api/basic_node/get_yaml_version.md
           - initializer_list_t: api/basic_node/initializer_list_t.md
           - integer_scalar: api/basic_node/integer_scalar.md

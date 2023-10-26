@@ -23,7 +23,9 @@ With the decided type, integer objects are stored directly inside a [`basic_node
 
     int main()
     {
-        std::cout << std::boolalpha << std::is_same<std::int64_t, fkyaml::node::integer_type>::value << std::endl;
+        std::cout << std::boolalpha
+                  << std::is_same<std::int64_t, fkyaml::node::integer_type>::value
+                  << std::endl;
         return 0;
     }
     ```

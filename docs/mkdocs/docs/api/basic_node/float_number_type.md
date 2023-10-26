@@ -26,7 +26,9 @@ With the decided type, floating point number objects are stored directly inside 
 
     int main()
     {
-        std::cout << std::boolalpha << std::is_same<double, fkyaml::node::float_number_type>::value << std::endl;
+        std::cout << std::boolalpha
+                  << std::is_same<double, fkyaml::node::float_number_type>::value
+                  << std::endl;
         return 0;
     }
     ```

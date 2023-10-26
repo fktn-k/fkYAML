@@ -1,0 +1,70 @@
+<small>Defined in header [`<fkYAML/node.hpp>`](https://github.com/fktn-k/fkYAML/blob/develop/include/fkYAML/node.hpp)</small>
+
+# <small>fkyaml::basic_node::</small>type
+
+```cpp
+node_t type() const noexcept;
+```
+
+Returns the type of the YAML node value as a value from the [`node_t`](node_t.md) enumeration.  
+
+### **Return Value**
+
+The type of the YAML node value.
+
+| Value Type            | Return Value         |
+| --------------------- | -------------------- |
+| sequence              | node_t::SEQUENCE     |
+| mapping               | node_t::MAPPING      |
+| null                  | node_t::NULL_OBJECT  |
+| boolean               | node_t::BOOLEAN      |
+| integer               | node_t::INTEGER      |
+| floating point number | node_t::FLOAT_NUMBER |
+| string                | node_t::STRING       |
+
+??? Example
+
+    ```cpp
+    #include <iomanip>
+    #include <iostream>
+    #include <fkYAML/node.hpp>
+
+    int main()
+    {
+        // create YAML nodes.
+        fkyaml::node sequence_node = {1, 2, 3};
+        fkyaml::node mapping_node = {{std::string("foo"), true}, {std::string("bar"), false}};
+        fkyaml::node null_node;
+        fkyaml::node boolean_node = true;
+        fkyaml::node integer_node = 256;
+        fkyaml::node float_node = 3.14;
+        fkyaml::node string_node = std::string("Hello, world!");
+
+        // call type()
+        std::cout << std::boolalpha;
+        std::cout << (sequence_node.type() == fkyaml::node::node_t::SEQUENCE) << std::endl;
+        std::cout << (mapping_node.type() == fkyaml::node::node_t::MAPPING) << std::endl;
+        std::cout << (null_node.type() == fkyaml::node::node_t::NULL_OBJECT) << std::endl;
+        std::cout << (boolean_node.type() == fkyaml::node::node_t::BOOLEAN) << std::endl;
+        std::cout << (integer_node.type() == fkyaml::node::node_t::INTEGER) << std::endl;
+        std::cout << (float_node.type() == fkyaml::node::node_t::FLOAT_NUMBER) << std::endl;
+        std::cout << (string_node.type() == fkyaml::node::node_t::STRING) << std::endl;
+
+        return 0;
+    };
+    ```
+
+    output:
+    ```bash
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    ```
+
+### **See Also**
+
+* [node_t](node_t.md)

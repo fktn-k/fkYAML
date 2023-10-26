@@ -52,12 +52,16 @@ template <
 class basic_node
 {
 public:
-    /** A type for constant iterators of basic_node containers. */
-    using const_iterator = fkyaml::detail::iterator<const basic_node>;
-    /** A type for iterators of basic_node containers. */
+    /// @brief A type for iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
     using iterator = fkyaml::detail::iterator<basic_node>;
 
-    /** A type for sequence basic_node values. */
+    /// @brief A type for constant iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
+    using const_iterator = fkyaml::detail::iterator<const basic_node>;
+
+    /// @brief A type for sequence basic_node values.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence_type/
     using sequence_type = SequenceType<basic_node, std::allocator<basic_node>>;
 
     /// @brief A type for mapping basic_node values.
@@ -77,7 +81,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/float_number_type/
     using float_number_type = FloatNumberType;
 
-    /** A type for string basic_node values. */
+    /// @brief A type for string basic_node values.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/string_type/
     using string_type = StringType;
 
     /**
@@ -802,126 +807,71 @@ public:
     }
 
 public:
-    /**
-     * @brief Returns the type of the current basic_node value.
-     *
-     * @return node_t The type of the current basic_node value.
-     * @retval node_t::SEQUENCE         sequence type.
-     * @retval node_t::MAPPINT          mapping type.
-     * @retval node_t::NULL_OBJECT      null type.
-     * @retval node_t::BOOLEAN          boolean type.
-     * @retval node_t::INTEGER          integer type.
-     * @retval node_t::FLOAT_NUMBER     float number type.
-     * @retval node_t::STRING           string type.
-     */
+    /// @brief Returns the type of the current basic_node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/type/
     node_t type() const noexcept
     {
         return m_node_type;
     }
 
-    /**
-     * @brief Tests whether the current basic_node value is of sequence type.
-     *
-     * @return bool A result of testing whetehre the current basic_node value is of sequence type.
-     * @retval true  The current basic_node value is of sequence type.
-     * @return false The current basic_node value is not of sequence type.
-     */
+    /// @brief Tests whether the current basic_node value is of sequence type.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_sequence/
     bool is_sequence() const noexcept
     {
         return m_node_type == node_t::SEQUENCE;
     }
 
-    /**
-     * @brief Tests whether the current basic_node value is of mapping type.
-     *
-     * @return bool A result of testing whetehre the current basic_node value is of mapping type.
-     * @retval true  The current basic_node value is of mapping type.
-     * @return false The current basic_node value is not of mapping type.
-     */
+    /// @brief Tests whether the current basic_node value is of mapping type.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_mapping/
     bool is_mapping() const noexcept
     {
         return m_node_type == node_t::MAPPING;
     }
 
-    /**
-     * @brief Tests whether the current basic_node value is of null type.
-     *
-     * @return bool A result of testing whetehre the current basic_node value is of null type.
-     * @retval true  The current basic_node value is of null type.
-     * @return false The current basic_node value is not of null type.
-     */
+    /// @brief Tests whether the current basic_node value is of null type.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_null/
     bool is_null() const noexcept
     {
         return m_node_type == node_t::NULL_OBJECT;
     }
 
-    /**
-     * @brief Tests whether the current basic_node value is of boolean type.
-     *
-     * @return bool A result of testing whetehre the current basic_node value is of boolean type.
-     * @retval true  The current basic_node value is of boolean type.
-     * @return false The current basic_node value is not of boolean type.
-     */
+    /// @brief Tests whether the current basic_node value is of boolean type.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_boolean/
     bool is_boolean() const noexcept
     {
         return m_node_type == node_t::BOOLEAN;
     }
 
-    /**
-     * @brief Tests whether the current basic_node value is of integer type.
-     *
-     * @return bool A result of testing whetehre the current basic_node value is of integer type.
-     * @retval true  The current basic_node value is of integer type.
-     * @return false The current basic_node value is not of integer type.
-     */
+    /// @brief Tests whether the current basic_node value is of integer type.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_integer/
     bool is_integer() const noexcept
     {
         return m_node_type == node_t::INTEGER;
     }
 
-    /**
-     * @brief Tests whether the current basic_node value is of float number type.
-     *
-     * @return bool A result of testing whetehre the current basic_node value is of float number type.
-     * @retval true  The current basic_node value is of float number type.
-     * @return false The current basic_node value is not of float number type.
-     */
+    /// @brief Tests whether the current basic_node value is of float number type.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_float_number/
     bool is_float_number() const noexcept
     {
         return m_node_type == node_t::FLOAT_NUMBER;
     }
 
-    /**
-     * @brief Tests whether the current basic_node value is of string type.
-     *
-     * @return bool A result of testing whetehre the current basic_node value is of string type.
-     * @retval true  The current basic_node value is of string type.
-     * @return false The current basic_node value is not of string type.
-     */
+    /// @brief Tests whether the current basic_node value is of string type.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_string/
     bool is_string() const noexcept
     {
         return m_node_type == node_t::STRING;
     }
 
-    /**
-     * @brief Tests whether the current basic_node value is of scalar types.
-     *
-     * @return bool A result of testing whetehre the current basic_node value is of scalar types.
-     * @retval true  The current basic_node value is of scalar types.
-     * @return false The current basic_node value is not of scalar types.
-     */
+    /// @brief Tests whether the current basic_node value is of scalar types.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_scalar/
     bool is_scalar() const noexcept
     {
         return !is_sequence() && !is_mapping();
     }
 
-    /**
-     * @brief Tests whether the current basic_node value (sequence, mapping, string) is empty.
-     *
-     * @return bool A result of testing whetehre the current basic_node value is empty.
-     * @retval true  The current basic_node value is empty.
-     * @return false The current basic_node value is not empty.
-     */
+    /// @brief Tests whether the current basic_node value (sequence, mapping, string) is empty.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/empty/
     bool empty() const
     {
         switch (m_node_type)
@@ -940,11 +890,8 @@ public:
         }
     }
 
-    /**
-     * @brief Returns the size of the current basic_node value (sequence, mapping, string).
-     *
-     * @return std::size_t The size of the current basic_node value.
-     */
+    /// @brief Returns the size of the current basic_node value (sequence, mapping, string).
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/size/
     std::size_t size() const
     {
         switch (m_node_type)
