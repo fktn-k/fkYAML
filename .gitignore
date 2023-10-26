@@ -4,3 +4,4 @@ build*
 
 # documentation
 /docs/mkdocs/site/
+/docs/mkdocs/venv/
