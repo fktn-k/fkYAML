@@ -39,7 +39,6 @@ This class provides features to handle YAML nodes.
 | [boolean_type](boolean_type.md)                 | The type used to store boolean node values.                |
 | [const_iterator](const_iterator.md)             | The type for constant iterators.                           |
 | [float_number_type](float_number_type.md)       | The type used to store float number node values.           |
-| [initializer_list_t](initializer_list_t.md)     | The type alias for constructor with std::initializer_list. |
 | [integer_type](integer_type.md)                 | The type used to store integer node values.                |
 | [iterator](iterator.md)                         | The type for non-constant iterators.                       |
 | [mapping_type](mapping_type.md)                 | The type used to store mapping node value containers.      |
@@ -57,11 +56,8 @@ This class provides features to handle YAML nodes.
 | [(constructor)](constructor.md)              |          | constructs a basic_node.                                      |
 | [(destructor)](destructor.md)                |          | destroys a basic_node, deallocating internal storage if used. |
 | [operator=](operator=.md)                    |          | assigns values to the basic_node.                             |
-| [float_number_scalar](float_number_scalar.md)| (static) | constructs a basic_node with a float number value.            |
-| [integer_scalar](integer_scalar.md)          | (static) | constructs a basic_node with an integer value.                |
 | [mapping](mapping.md)                        | (static) | constructs a basic_node with a mapping container.             |
 | [sequence](sequence.md)                      | (static) | constructs a basic_node with a sequence container.            |
-| [string_scalar](string_scalar.md)            | (static) | constructs a basic_node with a string value.                  |
 
 ### Inspection for Node Value Types
 | Name                                  | Description                                           |
@@ -77,11 +73,17 @@ This class provides features to handle YAML nodes.
 | [is_string](is_string.md)             | checks if a basic_node has a string node value.       |
 
 ### Conversions
-| Name                          | Description                                             |
-| ----------------------------- | ------------------------------------------------------- |
-| [deserialize](deserialize.md) | deserializes a YAML formatted string into a basic_node. |
-| [serialize](serialize.md)     | serializes a basic_node into a YAML formatted string.   |
-| [get_value](get_value.md)     | converts a basic_node into a target native data type.   |
+| Name                                  | Description                                             |
+| ------------------------------------- | ------------------------------------------------------- |
+| [deserialize](deserialize.md)         | deserializes a YAML formatted string into a basic_node. |
+| [serialize](serialize.md)             | serializes a basic_node into a YAML formatted string.   |
+| [get_value](get_value.md)             | converts a basic_node into a target native data type.   |
+| [to_sequence](to_sequence.md)         | gets reference to the sequence node value.              |
+| [to_mapping](to_mapping.md)           | gets reference to the mapping node value.               |
+| [to_boolean](to_boolean.md)           | gets reference to the boolean node value.               |
+| [to_integer](to_integer.md)           | gets reference to the integer node value.               |
+| [to_float_number](to_float_number.md) | gets reference to the floating point number node value. |
+| [to_string](to_string.md)             | gets reference to the string node value.                |
 
 ### Iterators
 | Name              | Description                                              |

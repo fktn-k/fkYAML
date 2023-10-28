@@ -80,10 +80,8 @@ extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css
 
 plugins:
-  - search:
-      lang: en
-  # - plantuml:
-  #     puml_url: https://www.plantuml.com/plantuml/
+  - search
+  - git-revision-date-localized
 
 nav:
   - Home:
@@ -95,6 +93,7 @@ nav:
           - basic_node: api/basic_node/index.md
           - (constructor): api/basic_node/constructor.md
           - (destructor): api/basic_node/destructor.md
+          - operator=: api/basic_node/operator=.md
           - begin: api/basic_node/begin.md
           - boolean_type: api/basic_node/boolean_type.md
           - const_iterator: api/basic_node/const_iterator.md
@@ -102,12 +101,9 @@ nav:
           - deserialize: api/basic_node/deserialize.md
           - empty: api/basic_node/empty.md
           - end: api/basic_node/end.md
-          - float_number_scalar: api/basic_node/float_number_scalar.md
           - float_number_type: api/basic_node/float_number_type.md
           - get_value: api/basic_node/get_value.md
           - get_yaml_version: api/basic_node/get_yaml_version.md
-          - initializer_list_t: api/basic_node/initializer_list_t.md
-          - integer_scalar: api/basic_node/integer_scalar.md
           - integer_type: api/basic_node/integer_type.md
           - is_boolean: api/basic_node/is_boolean.md
           - is_float_number: api/basic_node/is_float_number.md
@@ -127,12 +123,16 @@ nav:
           - serialize: api/basic_node/serialize.md
           - set_yaml_version: api/basic_node/set_yaml_version.md
           - size: api/basic_node/size.md
-          - string_scalar: api/basic_node/string_scalar.md
           - string_type: api/basic_node/string_type.md
+          - to_boolean: api/basic_node/to_boolean.md
+          - to_float_number: api/basic_node/to_float_number.md
+          - to_integer: api/basic_node/to_integer.md
+          - to_mapping: api/basic_node/to_mapping.md
+          - to_sequence: api/basic_node/to_sequence.md
+          - to_string: api/basic_node/to_string.md
           - type: api/basic_node/type.md
           - value_converter_type: api/basic_node/value_converter_type.md
           - yaml_version_t: api/basic_node/yaml_version_t.md
-          - operator=: api/basic_node/operator=.md
           - operator[]: api/basic_node/operator[].md
       - exception:
           - exception: api/exception/index.md

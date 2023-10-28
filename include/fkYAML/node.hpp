@@ -85,12 +85,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/string_type/
     using string_type = StringType;
 
-    /**
-     * @brief A helper alias to determine converter type for the given target native data type.
-     *
-     * @tparam T A target native data type.
-     * @tparam SFINAE A type placeholder for SFINAE
-     */
+    /// @brief A helper alias to determine converter type for the given target native data type.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/value_converter_type/
     template <typename T, typename SFINAE>
     using value_converter_type = ConverterType<T, SFINAE>;
 
@@ -106,11 +102,11 @@ private:
     template <node_t>
     friend struct fkyaml::detail::external_node_constructor;
 
-    /** A type for YAML docs deserializers. */
+    /// @brief A type for YAML docs deserializers.
     using deserializer_type = detail::basic_deserializer<basic_node>;
-    /** A type for YAML docs serializers. */
+    /// @brief A type for YAML docs serializers.
     using serializer_type = detail::basic_serializer<basic_node>;
-    /** An alias type for std::initializer_list. */
+    /// @brief A helper type alias for std::initializer_list.
     using initializer_list_t = std::initializer_list<detail::node_ref_storage<basic_node>>;
 
     /**
@@ -294,11 +290,11 @@ private:
 
 public:
     /// @brief Construct a new basic_node object of null type.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node() = default;
 
     /// @brief Construct a new basic_node object with a specified type.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor 
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     explicit basic_node(const node_t type)
         : m_node_type(type),
           m_node_value(type)
@@ -306,7 +302,7 @@ public:
     }
 
     /// @brief Copy constructor of the basic_node class.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
           m_yaml_version_type(rhs.m_yaml_version_type)
@@ -350,7 +346,7 @@ public:
     }
 
     /// @brief Move constructor of the basic_node class.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
           m_yaml_version_type(rhs.m_yaml_version_type),
@@ -398,7 +394,7 @@ public:
     }
 
     /// @brief Construct a new basic_node object from a value of compatible types.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     template <
         typename CompatibleType, typename U = detail::remove_cvref_t<CompatibleType>,
         detail::enable_if_t<
@@ -413,7 +409,7 @@ public:
     }
 
     /// @brief Construct a new basic node object with a node_ref_storage object.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     template <
         typename NodeRefStorageType,
         detail::enable_if_t<detail::is_node_ref_storage<NodeRefStorageType>::value, int> = 0>
@@ -423,7 +419,7 @@ public:
     }
 
     /// @brief Construct a new basic node object with std::initializer_list.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(initializer_list_t init)
     {
         bool is_mapping =
@@ -452,7 +448,7 @@ public:
     }
 
     /// @brief Destroy the basic_node object and its value storage.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/destructor
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/destructor/
     ~basic_node() noexcept // NOLINT(bugprone-exception-escape)
     {
         destroy_object<std::string>(m_anchor_name);
@@ -507,11 +503,8 @@ public:
         return serializer_type().serialize(node);
     }
 
-    /**
-     * @brief A factory method for sequence basic_node objects without sequence_type objects.
-     *
-     * @return basic_node A constructed basic_node object of sequence type.
-     */
+    /// @brief A factory method for sequence basic_node objects without sequence_type objects.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence/
     static basic_node sequence()
     {
         basic_node node;
@@ -521,12 +514,8 @@ public:
         return node;
     } // LCOV_EXCL_LINE
 
-    /**
-     * @brief A factory method for sequence basic_node objects with lvalue sequence_type objects.
-     *
-     * @param[in] seq A lvalue source of sequence type.
-     * @return basic_node A constructed basic_node object of sequence type.
-     */
+    /// @brief A factory method for sequence basic_node objects with lvalue sequence_type objects.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence/
     static basic_node sequence(const sequence_type& seq)
     {
         basic_node node;
@@ -536,12 +525,8 @@ public:
         return node;
     } // LCOV_EXCL_LINE
 
-    /**
-     * @brief A factory method for sequence basic_node objects with rvalue sequence_type objects.
-     *
-     * @param[in] seq A rvalue source of sequence type.
-     * @return basic_node A constructed basic_node object of sequence type.
-     */
+    /// @brief A factory method for sequence basic_node objects with rvalue sequence_type objects.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence/
     static basic_node sequence(sequence_type&& seq)
     {
         basic_node node;
@@ -551,11 +536,8 @@ public:
         return node;
     } // LCOV_EXCL_LINE
 
-    /**
-     * @brief A factory method for mapping basic_node objects without mapping_type objects.
-     *
-     * @return basic_node A constructed basic_node object of mapping type.
-     */
+    /// @brief A factory method for mapping basic_node objects without mapping_type objects.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping/
     static basic_node mapping()
     {
         basic_node node;
@@ -565,12 +547,8 @@ public:
         return node;
     } // LCOV_EXCL_LINE
 
-    /**
-     * @brief A factory method for mapping basic_node objects with lvalue mapping_type objects.
-     *
-     * @param[in] map A lvalue source of mapping type.
-     * @return basic_node A constructed basic_node object of mapping type.
-     */
+    /// @brief A factory method for mapping basic_node objects with lvalue mapping_type objects.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping/
     static basic_node mapping(const mapping_type& map)
     {
         basic_node node;
@@ -580,12 +558,8 @@ public:
         return node;
     } // LCOV_EXCL_LINE
 
-    /**
-     * @brief A factory method for mapping basic_node objects with rvalue mapping_type objects.
-     *
-     * @param[in] map A rvalue source of mapping type.
-     * @return basic_node A constructed basic_node object of mapping type.
-     */
+    /// @brief A factory method for mapping basic_node objects with rvalue mapping_type objects.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping/
     static basic_node mapping(mapping_type&& map)
     {
         basic_node node;

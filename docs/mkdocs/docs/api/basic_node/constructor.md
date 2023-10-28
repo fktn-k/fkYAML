@@ -3,7 +3,7 @@
 # <small>fkyaml::basic_node::</small>(constructor)
 
 Constructs new basic_node from a variety of data sources.  
-Available overloads
+Available overloads are described down below.  
 
 ## Overloads
 
@@ -273,3 +273,7 @@ If `init` contains a sequence of basic_node objects in which the number of basic
     foo: 1024
     ```
 ---
+
+## **See Also**
+
+* [basic_node](index.md)
