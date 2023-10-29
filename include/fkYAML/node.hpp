@@ -144,7 +144,7 @@ private:
                 float_val = static_cast<float_number_type>(0.0);
                 break;
             case node_t::STRING:
-                p_string = create_object<string_type>("");
+                p_string = create_object<string_type>();
                 break;
             default:                                                     // LCOV_EXCL_LINE
                 throw fkyaml::exception("Unsupported node value type."); // LCOV_EXCL_LINE
@@ -537,69 +537,6 @@ public:
         node.m_node_type = node_t::MAPPING;
         node.m_node_value.p_mapping = create_object<mapping_type>(std::move(map));
         FK_YAML_ASSERT(node.m_node_value.p_mapping != nullptr);
-        return node;
-    } // LCOV_EXCL_LINE
-
-    /// @brief A factory method for boolean scalar basic_node objects.
-    /// @todo delete this API b/c this can be achieved with constructor with std::initializer_list.
-    static basic_node boolean_scalar(const boolean_type boolean) noexcept
-    {
-        basic_node node;
-        node.m_node_type = node_t::BOOLEAN;
-        node.m_node_value.boolean = boolean;
-        return node;
-    }
-
-    /// @brief A factory method for integer scalar basic_node objects.
-    /// @todo delete this API b/c this can be achieved with constructor with std::initializer_list.
-    static basic_node integer_scalar(const integer_type integer) noexcept
-    {
-        basic_node node;
-        node.m_node_type = node_t::INTEGER;
-        node.m_node_value.integer = integer;
-        return node;
-    }
-
-    /// @brief A factory method for float number scalar basic_node objects.
-    /// @todo delete this API b/c this can be achieved with constructor with std::initializer_list.
-    static basic_node float_number_scalar(const float_number_type float_val) noexcept
-    {
-        basic_node node;
-        node.m_node_type = node_t::FLOAT_NUMBER;
-        node.m_node_value.float_val = float_val;
-        return node;
-    }
-
-    /// @brief A factory method for string basic_node objects without string_type objects.
-    /// @todo delete this API b/c this can be achieved with constructor with std::initializer_list.
-    static basic_node string_scalar()
-    {
-        basic_node node;
-        node.m_node_type = node_t::STRING;
-        node.m_node_value.p_string = create_object<string_type>();
-        FK_YAML_ASSERT(node.m_node_value.p_string != nullptr);
-        return node;
-    } // LCOV_EXCL_LINE
-
-    /// @brief A factory method for string basic_node objects with lvalue string_type objects.
-    /// @todo delete this API b/c this can be achieved with constructor with std::initializer_list.
-    static basic_node string_scalar(const string_type& str)
-    {
-        basic_node node;
-        node.m_node_type = node_t::STRING;
-        node.m_node_value.p_string = create_object<string_type>(str);
-        FK_YAML_ASSERT(node.m_node_value.p_string != nullptr);
-        return node;
-    } // LCOV_EXCL_LINE
-
-    /// @brief A factory method for string basic_node objects with rvalue string_type objects.
-    /// @todo delete this API b/c this can be achieved with constructor with std::initializer_list.
-    static basic_node string_scalar(string_type&& str)
-    {
-        basic_node node;
-        node.m_node_type = node_t::STRING;
-        node.m_node_value.p_string = create_object<string_type>(std::move(str));
-        FK_YAML_ASSERT(node.m_node_value.p_string != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 

@@ -84,7 +84,7 @@ TEST_CASE("NodeClassTest_ThrowingSpecializationTypeCtorTest", "[NodeClassTest]")
     };
 
     using NodeType = fkyaml::basic_node<std::vector, std::map, bool, int64_t, double, String>;
-    REQUIRE_THROWS_AS(NodeType::string_scalar(), fkyaml::exception);
+    REQUIRE_THROWS_AS(NodeType(NodeType::node_t::STRING), fkyaml::exception);
 }
 
 TEST_CASE("NodeClassTest_SequenceCtorTest", "[NodeClassTest]")
@@ -152,8 +152,7 @@ TEST_CASE("NodeClassTest_StringCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_SequenceCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node copied =
-        fkyaml::node::sequence({fkyaml::node::boolean_scalar(true), fkyaml::node::string_scalar("test")});
+    fkyaml::node copied = {true, std::string("test")};
     fkyaml::node node(copied);
     REQUIRE(node.is_sequence());
     REQUIRE_NOTHROW(node.size());
@@ -172,8 +171,7 @@ TEST_CASE("NodeClassTest_SequenceCopyCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_MappingCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node copied = fkyaml::node::mapping(
-        {{"test0", fkyaml::node::integer_scalar(123)}, {"test1", fkyaml::node::float_number_scalar(3.14)}});
+    fkyaml::node copied = {{std::string("test0"), 123}, {std::string("test1"), 3.14}};
     fkyaml::node node(copied);
     REQUIRE(node.is_mapping());
     REQUIRE_NOTHROW(node.size());
@@ -197,7 +195,7 @@ TEST_CASE("NodeClassTest_NullCopyCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_BooleanCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node copied = fkyaml::node::boolean_scalar(true);
+    fkyaml::node copied = true;
     fkyaml::node node(copied);
     REQUIRE(node.is_boolean());
     REQUIRE_NOTHROW(node.to_boolean());
@@ -206,7 +204,7 @@ TEST_CASE("NodeClassTest_BooleanCopyCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_IntegerCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node copied = fkyaml::node::integer_scalar(123);
+    fkyaml::node copied = 123;
     fkyaml::node node(copied);
     REQUIRE(node.is_integer());
     REQUIRE_NOTHROW(node.to_integer());
@@ -215,7 +213,7 @@ TEST_CASE("NodeClassTest_IntegerCopyCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_FloatNumberCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node copied = fkyaml::node::float_number_scalar(3.14);
+    fkyaml::node copied = 3.14;
     fkyaml::node node(copied);
     REQUIRE(node.is_float_number());
     REQUIRE_NOTHROW(node.to_float_number());
@@ -224,7 +222,7 @@ TEST_CASE("NodeClassTest_FloatNumberCopyCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_StringCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node copied = fkyaml::node::string_scalar("test");
+    fkyaml::node copied = std::string("test");
     fkyaml::node node(copied);
     REQUIRE(node.is_string());
     REQUIRE_NOTHROW(node.size());
@@ -235,7 +233,7 @@ TEST_CASE("NodeClassTest_StringCopyCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_AliasCopyCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node tmp = fkyaml::node::boolean_scalar(true);
+    fkyaml::node tmp = true;
     tmp.add_anchor_name("anchor_name");
     fkyaml::node tmp_alias = fkyaml::node::alias_of(tmp);
     fkyaml::node alias(tmp_alias);
@@ -246,8 +244,7 @@ TEST_CASE("NodeClassTest_AliasCopyCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_SequenceMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node moved =
-        fkyaml::node::sequence({fkyaml::node::boolean_scalar(true), fkyaml::node::string_scalar("test")});
+    fkyaml::node moved = {true, std::string("test")};
     fkyaml::node node(std::move(moved));
     REQUIRE(node.is_sequence());
     REQUIRE_NOTHROW(node.size());
@@ -266,8 +263,7 @@ TEST_CASE("NodeClassTest_SequenceMoveCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_MappingMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node moved = fkyaml::node::mapping(
-        {{"test0", fkyaml::node::integer_scalar(123)}, {"test1", fkyaml::node::float_number_scalar(3.14)}});
+    fkyaml::node moved = {{std::string("test0"), 123}, {std::string("test1"), 3.14}};
     fkyaml::node node(std::move(moved));
     REQUIRE(node.is_mapping());
     REQUIRE_NOTHROW(node.size());
@@ -291,7 +287,7 @@ TEST_CASE("NodeClassTest_NullMoveCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_BooleanMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node moved = fkyaml::node::boolean_scalar(true);
+    fkyaml::node moved = true;
     fkyaml::node node(std::move(moved));
     REQUIRE(node.is_boolean());
     REQUIRE_NOTHROW(node.to_boolean());
@@ -300,7 +296,7 @@ TEST_CASE("NodeClassTest_BooleanMoveCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_IntegerMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node moved = fkyaml::node::integer_scalar(123);
+    fkyaml::node moved = 123;
     fkyaml::node node(std::move(moved));
     REQUIRE(node.is_integer());
     REQUIRE_NOTHROW(node.to_integer());
@@ -309,7 +305,7 @@ TEST_CASE("NodeClassTest_IntegerMoveCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_FloatNumberMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node moved = fkyaml::node::float_number_scalar(3.14);
+    fkyaml::node moved = 3.14;
     fkyaml::node node(std::move(moved));
     REQUIRE(node.is_float_number());
     REQUIRE_NOTHROW(node.to_float_number());
@@ -318,7 +314,7 @@ TEST_CASE("NodeClassTest_FloatNumberMoveCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_StringMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node moved = fkyaml::node::string_scalar("test");
+    fkyaml::node moved = std::string("test");
     fkyaml::node node(std::move(moved));
     REQUIRE(node.is_string());
     REQUIRE_NOTHROW(node.size());
@@ -329,7 +325,7 @@ TEST_CASE("NodeClassTest_StringMoveCtorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_AliasMoveCtorTest", "[NodeClassTest]")
 {
-    fkyaml::node tmp = fkyaml::node::boolean_scalar(true);
+    fkyaml::node tmp = true;
     tmp.add_anchor_name("anchor_name");
     fkyaml::node tmp_alias = fkyaml::node::alias_of(tmp);
     fkyaml::node alias(std::move(tmp_alias));
@@ -344,6 +340,7 @@ TEST_CASE("NodeClassTest_InitializerListCtorTest", "[NodeClassTest]")
         {std::string("foo"), 3.14},
         {std::string("bar"), 123},
         {std::string("baz"), {true, false}},
+        {std::string("qux"), nullptr},
     };
 
     REQUIRE(node.contains("foo"));
@@ -361,6 +358,9 @@ TEST_CASE("NodeClassTest_InitializerListCtorTest", "[NodeClassTest]")
     REQUIRE(node["baz"].to_sequence()[0].to_boolean() == true);
     REQUIRE(node["baz"].to_sequence()[1].is_boolean());
     REQUIRE(node["baz"].to_sequence()[1].to_boolean() == false);
+
+    REQUIRE(node.contains("qux"));
+    REQUIRE(node["qux"].is_null());
 }
 
 //
@@ -446,7 +446,7 @@ TEST_CASE("NodeClassTest_MappingNodeFactoryTest", "[NodeClassTest]")
 
     SECTION("Test non-empty mapping node factory methods.")
     {
-        fkyaml::node_mapping_type map {{std::string("test"), fkyaml::node::boolean_scalar(true)}};
+        fkyaml::node_mapping_type map {{std::string("test"), true}};
 
         SECTION("Test lvalue mapping node factory method.")
         {
@@ -471,7 +471,7 @@ TEST_CASE("NodeClassTest_MappingNodeFactoryTest", "[NodeClassTest]")
 TEST_CASE("NodeClassTest_BooleanNodeFactoryTest", "[NodeClassTest]")
 {
     auto boolean = GENERATE(true, false);
-    fkyaml::node node = fkyaml::node::boolean_scalar(boolean);
+    fkyaml::node node = boolean;
     REQUIRE(node.is_boolean());
     REQUIRE(node.to_boolean() == boolean);
 }
@@ -482,7 +482,7 @@ TEST_CASE("NodeClassTest_IntegerNodeFactoryTest", "[NodeClassTest]")
         std::numeric_limits<fkyaml::node_integer_type>::min(),
         0,
         std::numeric_limits<fkyaml::node_integer_type>::max());
-    fkyaml::node node = fkyaml::node::integer_scalar(integer);
+    fkyaml::node node = integer;
     REQUIRE(node.is_integer());
     REQUIRE(node.to_integer() == integer);
 }
@@ -493,7 +493,7 @@ TEST_CASE("NodeClassTest_FloatNumberNodeFactoryTest", "[NodeClassTest]")
         std::numeric_limits<fkyaml::node_float_number_type>::min(),
         3.141592,
         std::numeric_limits<fkyaml::node_float_number_type>::max());
-    fkyaml::node node = fkyaml::node::float_number_scalar(float_val);
+    fkyaml::node node = float_val;
     REQUIRE(node.is_float_number());
     REQUIRE(node.to_float_number() == float_val);
 }
@@ -502,7 +502,7 @@ TEST_CASE("NodeClassTest_StringNodeFactoryTest", "[NodeClassTest]")
 {
     SECTION("Test empty string node factory method.")
     {
-        fkyaml::node node = fkyaml::node::string_scalar();
+        fkyaml::node node = std::string();
         REQUIRE(node.is_string());
         REQUIRE(node.size() == 0);
     }
@@ -510,7 +510,7 @@ TEST_CASE("NodeClassTest_StringNodeFactoryTest", "[NodeClassTest]")
     SECTION("Test lvalue string node factory method.")
     {
         fkyaml::node_string_type str("test");
-        fkyaml::node node = fkyaml::node::string_scalar(str);
+        fkyaml::node node = std::string(str);
         REQUIRE(node.is_string());
         REQUIRE(node.size() == str.size());
         REQUIRE(node.to_string() == str);
@@ -518,7 +518,7 @@ TEST_CASE("NodeClassTest_StringNodeFactoryTest", "[NodeClassTest]")
 
     SECTION("Test rvalue string node factory method.")
     {
-        fkyaml::node node = fkyaml::node::string_scalar("test");
+        fkyaml::node node = std::string("test");
         REQUIRE(node.is_string());
         REQUIRE(node.size() == 4);
         REQUIRE(node.to_string().compare("test") == 0);
@@ -527,7 +527,7 @@ TEST_CASE("NodeClassTest_StringNodeFactoryTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_AliasNodeFactoryTest", "[NodeClassTest]")
 {
-    fkyaml::node anchor = fkyaml::node::string_scalar("alias_test");
+    fkyaml::node anchor = std::string("alias_test");
 
     SECTION("Make sure BasicNode::alias_of() throws an exception without anchor name.")
     {
@@ -620,10 +620,10 @@ TEST_CASE("NodeClassTest_StringSubscriptOperatorTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::node::sequence(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-const lvalue throwing invocation.")
         {
@@ -689,10 +689,10 @@ TEST_CASE("NodeClassTest_IntegerSubscriptOperatorTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-const non-sequence nodes.")
         {
@@ -718,10 +718,10 @@ TEST_CASE("NodeClassTest_TypeGetterTest", "[NodeClassTest]")
         NodeTypePair(fkyaml::node::sequence(), fkyaml::node::node_t::SEQUENCE),
         NodeTypePair(fkyaml::node::mapping(), fkyaml::node::node_t::MAPPING),
         NodeTypePair(fkyaml::node(), fkyaml::node::node_t::NULL_OBJECT),
-        NodeTypePair(fkyaml::node::boolean_scalar(false), fkyaml::node::node_t::BOOLEAN),
-        NodeTypePair(fkyaml::node::integer_scalar(0), fkyaml::node::node_t::INTEGER),
-        NodeTypePair(fkyaml::node::float_number_scalar(0.0), fkyaml::node::node_t::FLOAT_NUMBER),
-        NodeTypePair(fkyaml::node::string_scalar(), fkyaml::node::node_t::STRING));
+        NodeTypePair(fkyaml::node(false), fkyaml::node::node_t::BOOLEAN),
+        NodeTypePair(fkyaml::node(0), fkyaml::node::node_t::INTEGER),
+        NodeTypePair(fkyaml::node(0.0), fkyaml::node::node_t::FLOAT_NUMBER),
+        NodeTypePair(fkyaml::node(std::string()), fkyaml::node::node_t::STRING));
 
     SECTION("Test non-alias node types.")
     {
@@ -760,10 +760,10 @@ TEST_CASE("NodeClassTest_is_sequenceTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-sequence node types")
         {
@@ -803,10 +803,10 @@ TEST_CASE("NodeClassTest_is_mappingTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::node::sequence(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-mapping node types")
         {
@@ -846,10 +846,10 @@ TEST_CASE("NodeClassTest_is_nullTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::node::sequence(),
             fkyaml::node::mapping(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-null node types")
         {
@@ -869,7 +869,7 @@ TEST_CASE("NodeClassTest_is_booleanTest", "[NodeClassTest]")
 {
     SECTION("Test boolean node type.")
     {
-        fkyaml::node node = fkyaml::node::boolean_scalar(false);
+        fkyaml::node node = false;
 
         SECTION("Test non-alias boolean node type.")
         {
@@ -890,9 +890,9 @@ TEST_CASE("NodeClassTest_is_booleanTest", "[NodeClassTest]")
             fkyaml::node::sequence(),
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-boolean node types")
         {
@@ -912,7 +912,7 @@ TEST_CASE("NodeClassTest_is_integerTest", "[NodeClassTest]")
 {
     SECTION("Test integer node type.")
     {
-        fkyaml::node node = fkyaml::node::integer_scalar(0);
+        fkyaml::node node = 0;
 
         SECTION("Test non-alias integer node type.")
         {
@@ -933,9 +933,9 @@ TEST_CASE("NodeClassTest_is_integerTest", "[NodeClassTest]")
             fkyaml::node::sequence(),
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-integer node types")
         {
@@ -955,7 +955,7 @@ TEST_CASE("NodeClassTest_IsFloatNumberTest", "[NodeClassTest]")
 {
     SECTION("Test float number node type.")
     {
-        fkyaml::node node = fkyaml::node::float_number_scalar(0.0);
+        fkyaml::node node = 0.0;
 
         SECTION("Test non-alias float number node type.")
         {
@@ -976,9 +976,9 @@ TEST_CASE("NodeClassTest_IsFloatNumberTest", "[NodeClassTest]")
             fkyaml::node::sequence(),
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-float-number node types")
         {
@@ -998,7 +998,7 @@ TEST_CASE("NodeClassTest_IsStringTest", "[NodeClassTest]")
 {
     SECTION("Test string node type.")
     {
-        fkyaml::node node = fkyaml::node::string_scalar();
+        fkyaml::node node = std::string();
 
         SECTION("Test non-alias string node type.")
         {
@@ -1019,9 +1019,9 @@ TEST_CASE("NodeClassTest_IsStringTest", "[NodeClassTest]")
             fkyaml::node::sequence(),
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0));
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0));
 
         SECTION("Test non-alias non-string node types")
         {
@@ -1043,10 +1043,10 @@ TEST_CASE("NodeClassTest_is_scalarTest", "[NodeClassTest]")
     {
         auto node = GENERATE(
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias scalar node types.")
         {
@@ -1085,10 +1085,10 @@ TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
         fkyaml::node::sequence(),
         fkyaml::node::mapping(),
         fkyaml::node(),
-        fkyaml::node::boolean_scalar(false),
-        fkyaml::node::integer_scalar(0),
-        fkyaml::node::float_number_scalar(0.0),
-        fkyaml::node::string_scalar());
+        fkyaml::node(false),
+        fkyaml::node(0),
+        fkyaml::node(0.0),
+        fkyaml::node(std::string()));
 
     SECTION("Test alias node types.")
     {
@@ -1107,7 +1107,7 @@ TEST_CASE("NodeClassTest_emptyTest", "[NodeClassTest]")
     {
         SECTION("Test empty container node emptiness.")
         {
-            auto node = GENERATE(fkyaml::node::sequence(), fkyaml::node::mapping(), fkyaml::node::string_scalar());
+            auto node = GENERATE(fkyaml::node::sequence(), fkyaml::node::mapping(), fkyaml::node(std::string()));
 
             SECTION("Test empty non-alias container node emptiness.")
             {
@@ -1129,7 +1129,7 @@ TEST_CASE("NodeClassTest_emptyTest", "[NodeClassTest]")
             auto node = GENERATE(
                 fkyaml::node::sequence(fkyaml::node_sequence_type(3)),
                 fkyaml::node::mapping(fkyaml::node_mapping_type {{"test", fkyaml::node()}}),
-                fkyaml::node::string_scalar("test"));
+                fkyaml::node(std::string("test")));
 
             SECTION("Test non-empty non-alias container node emptiness.")
             {
@@ -1151,9 +1151,9 @@ TEST_CASE("NodeClassTest_emptyTest", "[NodeClassTest]")
     {
         auto node = GENERATE(
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0));
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0));
 
         SECTION("Test non-const non-alias non-container node emptiness.")
         {
@@ -1223,10 +1223,10 @@ TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::node::sequence(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
         std::string key = "test";
 
         SECTION("Test non-alias non-mapping node with lvalue key.")
@@ -1266,7 +1266,7 @@ TEST_CASE("NodeClassTest_sizeGetterTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::node::sequence({fkyaml::node(), fkyaml::node(), fkyaml::node()}),
             fkyaml::node::mapping({{"test0", fkyaml::node()}, {"test1", fkyaml::node()}, {"test2", fkyaml::node()}}),
-            fkyaml::node::string_scalar("tmp"));
+            fkyaml::node(std::string("tmp")));
 
         SECTION("Test container node size.")
         {
@@ -1302,9 +1302,9 @@ TEST_CASE("NodeClassTest_sizeGetterTest", "[NodeClassTest]")
     {
         auto node = GENERATE(
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0));
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0));
 
         SECTION("Test non-const non-alias non-container node size.")
         {
@@ -1692,10 +1692,10 @@ TEST_CASE("NodeClassTest_ToSequenceTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-sequence nodes.")
         {
@@ -1777,10 +1777,10 @@ TEST_CASE("NodeClassTest_ToMappingTest", "[NodeClassTest]")
         auto node = GENERATE(
             fkyaml::node::sequence(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-mapping nodes.")
         {
@@ -1813,7 +1813,7 @@ TEST_CASE("NodeClassTest_ToBooleanTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
-        fkyaml::node node = fkyaml::node::boolean_scalar(true);
+        fkyaml::node node = true;
 
         SECTION("Test non-alias boolean node.")
         {
@@ -1851,9 +1851,9 @@ TEST_CASE("NodeClassTest_ToBooleanTest", "[NodeClassTest]")
             fkyaml::node::sequence(),
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-boolean nodes.")
         {
@@ -1887,7 +1887,7 @@ TEST_CASE("NodeClassTest_ToIntegerTest", "[NodeClassTest]")
     SECTION("Test nothrow expected nodes.")
     {
         fkyaml::node_integer_type integer = -123;
-        fkyaml::node node = fkyaml::node::integer_scalar(integer);
+        fkyaml::node node = integer;
 
         SECTION("Test non-alias  integer node.")
         {
@@ -1925,9 +1925,9 @@ TEST_CASE("NodeClassTest_ToIntegerTest", "[NodeClassTest]")
             fkyaml::node::sequence(),
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-integer nodes.")
         {
@@ -1961,7 +1961,7 @@ TEST_CASE("NodeClassTest_ToFloatNumberTest", "[NodeClassTest]")
     SECTION("Test nothrow expected nodes.")
     {
         fkyaml::node_float_number_type float_val = 123.45;
-        fkyaml::node node = fkyaml::node::float_number_scalar(float_val);
+        fkyaml::node node = float_val;
 
         SECTION("Test non-alias float number node.")
         {
@@ -1999,9 +1999,9 @@ TEST_CASE("NodeClassTest_ToFloatNumberTest", "[NodeClassTest]")
             fkyaml::node::sequence(),
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-alias non-float-number nodes.")
         {
@@ -2035,7 +2035,7 @@ TEST_CASE("NodeClassTest_ToStringTest", "[NodeClassTest]")
     SECTION("Test nothrow expected nodes.")
     {
         fkyaml::node_string_type str = "test";
-        fkyaml::node node = fkyaml::node::string_scalar(str);
+        fkyaml::node node = str;
 
         SECTION("Test non-alias string node.")
         {
@@ -2073,9 +2073,9 @@ TEST_CASE("NodeClassTest_ToStringTest", "[NodeClassTest]")
             fkyaml::node::sequence(),
             fkyaml::node::mapping(),
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0));
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0));
 
         SECTION("Test non-alias non-string nodes.")
         {
@@ -2155,10 +2155,10 @@ TEST_CASE("NodeClassTest_BeginTest", "[NodeClassTest]")
     {
         auto node = GENERATE(
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-const throwing node.")
         {
@@ -2220,10 +2220,10 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
     {
         auto node = GENERATE(
             fkyaml::node(),
-            fkyaml::node::boolean_scalar(false),
-            fkyaml::node::integer_scalar(0),
-            fkyaml::node::float_number_scalar(0.0),
-            fkyaml::node::string_scalar());
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(std::string()));
 
         SECTION("Test non-const throwing node.")
         {
@@ -2244,8 +2244,8 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_SwapTest", "[NodeClassTest]")
 {
-    fkyaml::node lhs_node = fkyaml::node::boolean_scalar(true);
-    fkyaml::node rhs_node = fkyaml::node::integer_scalar(123);
+    fkyaml::node lhs_node = true;
+    fkyaml::node rhs_node = 123;
     lhs_node.swap(rhs_node);
     REQUIRE(lhs_node.is_integer());
     REQUIRE(lhs_node.to_integer() == 123);
@@ -2255,8 +2255,8 @@ TEST_CASE("NodeClassTest_SwapTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_ADLSwapTest", "[NodeClassTest]")
 {
-    fkyaml::node lhs_node = fkyaml::node::boolean_scalar(true);
-    fkyaml::node rhs_node = fkyaml::node::integer_scalar(123);
+    fkyaml::node lhs_node = true;
+    fkyaml::node rhs_node = 123;
 
     using std::swap;
     swap(lhs_node, rhs_node);

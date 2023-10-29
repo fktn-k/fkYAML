@@ -202,7 +202,7 @@ public:
                     add_new_key(lexer.get_string(), cur_indent);
                     break;
                 }
-                assign_node_value(BasicNodeType::boolean_scalar(lexer.get_boolean()));
+                assign_node_value(BasicNodeType(lexer.get_boolean()));
                 break;
             case lexical_token_t::INTEGER_VALUE:
                 if (m_current_node->is_mapping())
@@ -210,7 +210,7 @@ public:
                     add_new_key(lexer.get_string(), cur_indent);
                     break;
                 }
-                assign_node_value(BasicNodeType::integer_scalar(lexer.get_integer()));
+                assign_node_value(BasicNodeType(lexer.get_integer()));
                 break;
             case lexical_token_t::FLOAT_NUMBER_VALUE:
                 if (m_current_node->is_mapping())
@@ -218,7 +218,7 @@ public:
                     add_new_key(lexer.get_string(), cur_indent);
                     break;
                 }
-                assign_node_value(BasicNodeType::float_number_scalar(lexer.get_float_number()));
+                assign_node_value(BasicNodeType(lexer.get_float_number()));
                 break;
             case lexical_token_t::STRING_VALUE:
                 if (m_current_node->is_mapping())
@@ -226,7 +226,7 @@ public:
                     add_new_key(lexer.get_string(), cur_indent);
                     break;
                 }
-                assign_node_value(BasicNodeType::string_scalar(lexer.get_string()));
+                assign_node_value(BasicNodeType(lexer.get_string()));
                 break;
             default:                                                         // LCOV_EXCL_LINE
                 throw fkyaml::exception("Unsupported lexical token found."); // LCOV_EXCL_LINE
