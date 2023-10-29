@@ -1,9 +1,7 @@
 <small>Defined in header [`<fkYAML/node.hpp>`](https://github.com/fktn-k/fkYAML/blob/develop/include/fkYAML/node.hpp)</small>
 
-# <small>fkyaml::basic_node::</small>to_mapping
+# <small>fkyaml::basic_node::</small>alias_of
 
 ```cpp
-mapping_type& to_mapping();
-
-const mapping_type& to_mapping() const;
+yaml_version_t alias_of(const basic_node& anchor) const noexcept;
 ```

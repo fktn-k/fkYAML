@@ -2,10 +2,36 @@
 
 # <small>fkyaml::basic_node::</small>(constructor)
 
-Constructs new basic_node from a variety of data sources.  
+```cpp
+basic_node() = default; // (1)
+
+explicit basic_node(const node_t type); // (2)
+
+basic_node(const basic_node& rhs); // (3)
+
+basic_node(basic_node&& rhs) noexcept; // (4)
+
+template <
+    typename CompatibleType, typename U = detail::remove_cv_ref_t<CompatibleType>,
+    detail::enable_if_t<
+        detail::conjunction<
+            detail::negation<detail::is_basic_json<U>>,
+            detail::disjunction<detail::is_node_compatible_type<basic_node, U>>>::value,
+        int> = 0>
+basic_node(CompatibleType&& val); // (5)
+
+template <
+    typename NodeRefStorageType,
+    detail::enable_if_t<detail::is_node_ref_storage<NodeRefStorageType>::value, int> = 0>
+basic_node(const NodeRefStorageType& node_ref_storage); // (6)
+
+basic_node(initializer_list_t init); // (7)
+```
+
+Constructs a new basic_node from a variety of data sources.  
 Available overloads are described down below.  
 
-## Overloads
+## Overload (1)
 
 ```cpp
 basic_node() = default;
@@ -31,7 +57,8 @@ The resulting basic_node has the [`node_t::NULL_OBJECT`](node_t.md) type.
     ```yaml
     null
     ```
----
+
+## Overload (2)
 
 ```cpp
 explicit basic_node(const node_t type);
@@ -62,7 +89,8 @@ The resulting basic_node has a default value for the given type.
     ```yaml
     0
     ```
----
+
+## Overload (3)
 
 ```cpp
 basic_node(const basic_node& rhs);
@@ -94,7 +122,8 @@ The resulting basic_node has the same type and value as `rhs`.
     ```yaml
     false
     ```
----
+
+## Overload (4)
 
 ```cpp
 basic_node(basic_node&& rhs) noexcept;
@@ -127,7 +156,8 @@ The value of the argument `rhs` after calling this move constructor, will be the
     ```yaml
     false
     ```
----
+
+## Overload (5)
 
 ```cpp
 template <
@@ -174,7 +204,8 @@ The resulting basic_node has the value of `val` and the type which is associated
     ```yaml
     3.141592
     ```
----
+
+## Overload (6)
 
 ```cpp
 template <
@@ -220,7 +251,8 @@ The resulting basic_node has the value of the referenced basic_node by `node_ref
     - true
     - false
     ```
----
+
+## Overload (7)
 
 ```cpp
 basic_node(initializer_list_t init);

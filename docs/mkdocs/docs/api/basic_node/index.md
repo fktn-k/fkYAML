@@ -51,13 +51,14 @@ This class provides features to handle YAML nodes.
 ## Member Functions
 
 ### Construction/Destruction
-| Name                                         |          | Description                                                   |
-|----------------------------------------------|----------|---------------------------------------------------------------|
-| [(constructor)](constructor.md)              |          | constructs a basic_node.                                      |
-| [(destructor)](destructor.md)                |          | destroys a basic_node, deallocating internal storage if used. |
-| [operator=](operator=.md)                    |          | assigns values to the basic_node.                             |
-| [mapping](mapping.md)                        | (static) | constructs a basic_node with a mapping container.             |
-| [sequence](sequence.md)                      | (static) | constructs a basic_node with a sequence container.            |
+| Name                            |          | Description                                                   |
+| ------------------------------- | -------- | ------------------------------------------------------------- |
+| [(constructor)](constructor.md) |          | constructs a basic_node.                                      |
+| [(destructor)](destructor.md)   |          | destroys a basic_node, deallocating internal storage if used. |
+| [operator=](operator=.md)       |          | assigns values to the basic_node.                             |
+| [mapping](mapping.md)           | (static) | constructs a basic_node with a mapping container.             |
+| [sequence](sequence.md)         | (static) | constructs a basic_node with a sequence container.            |
+| [alias_of](alias_of.md)         | (static) | constructs a basic_node with an anchor node.                  |
 
 ### Inspection for Node Value Types
 | Name                                  | Description                                           |
@@ -102,3 +103,9 @@ This class provides features to handle YAML nodes.
 | Name                        | Description                                 |
 |-----------------------------|---------------------------------------------|
 | [operator[]](operator[].md) | accesses an item specified by the key/index |
+
+### Aliasing Nodes
+| Name                                  | Description                                      |
+| ------------------------------------- | ------------------------------------------------ |
+| [add_anchor_name](add_anchor_name.md) | registers an anchor name to a basic_node object. |
+| [has_anchor_name](has_anchor_name.md) | checks if a basic_node has any anchor name.      |

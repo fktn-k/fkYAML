@@ -94,6 +94,8 @@ nav:
           - (constructor): api/basic_node/constructor.md
           - (destructor): api/basic_node/destructor.md
           - operator=: api/basic_node/operator=.md
+          - add_anchor_name: api/basic_node/add_anchor_name.md
+          - alias_of: api/basic_node/alias_of.md
           - begin: api/basic_node/begin.md
           - boolean_type: api/basic_node/boolean_type.md
           - const_iterator: api/basic_node/const_iterator.md
@@ -104,6 +106,7 @@ nav:
           - float_number_type: api/basic_node/float_number_type.md
           - get_value: api/basic_node/get_value.md
           - get_yaml_version: api/basic_node/get_yaml_version.md
+          - has_anchor_name: api/basic_node/has_anchor_name.md
           - integer_type: api/basic_node/integer_type.md
           - is_boolean: api/basic_node/is_boolean.md
           - is_float_number: api/basic_node/is_float_number.md
