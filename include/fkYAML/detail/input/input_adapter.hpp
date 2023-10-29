@@ -219,32 +219,6 @@ inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
 }
 
 /**
- * @brief A factory method for iterator_input_adapter objects with char* objects.
- * @note This function assumes a null-terminated string as an argument.
- *
- * @tparam CharPtrType A pointer type for char.
- * @param ptr A pointer to the beginning of a target null-terminated string.
- * @return decltype(input_adapter(ptr, ptr + std::strlen(ptr)))
- */
-template <
-    typename CharPtrType, enable_if_t<
-                              conjunction<
-                                  std::is_pointer<CharPtrType>, negation<std::is_array<CharPtrType>>,
-                                  std::is_integral<remove_pointer_t<CharPtrType>>,
-                                  bool_constant<sizeof(remove_pointer_t<CharPtrType>) == sizeof(char)>>::value,
-                              int> = 0>
-inline auto input_adapter(CharPtrType ptr, std::size_t size) -> decltype(input_adapter(ptr, ptr + size))
-{
-    // get the actual buffer size.
-    std::size_t i = 0;
-    for (; i < size && *(ptr + i) != '\0'; i++)
-    {
-    }
-    size = (i < size) ? i : size;
-    return input_adapter(ptr, ptr + size);
-}
-
-/**
  * @brief A factory method for iterator_input_adapter objects with C-style arrays.
  *
  * @tparam T A type of arrayed objects.

@@ -459,14 +459,6 @@ public:
             detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
 
-    /// @brief Deserialize an input string specified with a pointer and a size.
-    /// @todo Delete this API b/c this can be achieved with iterators and possibly yield undefined behavior.
-    template <typename PtrType, detail::enable_if_t<std::is_pointer<PtrType>::value, int> = 0>
-    static basic_node deserialize(PtrType&& ptr, std::size_t size)
-    {
-        return deserializer_type().deserialize(detail::input_adapter(std::forward<PtrType>(ptr), size));
-    }
-
     /// @brief Serialize a basic_node object into a string.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
     static std::string serialize(const basic_node& node)
