@@ -1041,11 +1041,7 @@ TEST_CASE("NodeClassTest_is_scalarTest", "[NodeClassTest]")
     SECTION("Test scalar node types.")
     {
         auto node = GENERATE(
-            fkyaml::node(),
-            fkyaml::node(false),
-            fkyaml::node(0),
-            fkyaml::node(0.0),
-            fkyaml::node(std::string()));
+            fkyaml::node(), fkyaml::node(false), fkyaml::node(0), fkyaml::node(0.0), fkyaml::node(std::string()));
 
         SECTION("Test non-alias scalar node types.")
         {
@@ -1148,11 +1144,7 @@ TEST_CASE("NodeClassTest_emptyTest", "[NodeClassTest]")
 
     SECTION("Test nothrow unexpected node emptiness.")
     {
-        auto node = GENERATE(
-            fkyaml::node(),
-            fkyaml::node(false),
-            fkyaml::node(0),
-            fkyaml::node(0.0));
+        auto node = GENERATE(fkyaml::node(), fkyaml::node(false), fkyaml::node(0), fkyaml::node(0.0));
 
         SECTION("Test non-const non-alias non-container node emptiness.")
         {
@@ -1299,11 +1291,7 @@ TEST_CASE("NodeClassTest_sizeGetterTest", "[NodeClassTest]")
 
     SECTION("Test nothrow unexpected node size.")
     {
-        auto node = GENERATE(
-            fkyaml::node(),
-            fkyaml::node(false),
-            fkyaml::node(0),
-            fkyaml::node(0.0));
+        auto node = GENERATE(fkyaml::node(), fkyaml::node(false), fkyaml::node(0), fkyaml::node(0.0));
 
         SECTION("Test non-const non-alias non-container node size.")
         {
@@ -2153,11 +2141,7 @@ TEST_CASE("NodeClassTest_BeginTest", "[NodeClassTest]")
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::node(),
-            fkyaml::node(false),
-            fkyaml::node(0),
-            fkyaml::node(0.0),
-            fkyaml::node(std::string()));
+            fkyaml::node(), fkyaml::node(false), fkyaml::node(0), fkyaml::node(0.0), fkyaml::node(std::string()));
 
         SECTION("Test non-const throwing node.")
         {
@@ -2218,11 +2202,7 @@ TEST_CASE("NodeClassTest_EndTest", "[NodeClassTest]")
     SECTION("Test nothrow unexpected nodes.")
     {
         auto node = GENERATE(
-            fkyaml::node(),
-            fkyaml::node(false),
-            fkyaml::node(0),
-            fkyaml::node(0.0),
-            fkyaml::node(std::string()));
+            fkyaml::node(), fkyaml::node(false), fkyaml::node(0), fkyaml::node(0.0), fkyaml::node(std::string()));
 
         SECTION("Test non-const throwing node.")
         {
