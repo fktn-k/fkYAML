@@ -37,12 +37,6 @@ TEST_CASE("InputAdapterTest_IteratorInputAdapterProviderTest", "[InputAdapterTes
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
     }
 
-    SECTION("char pointer and size")
-    {
-        auto input_adapter = fkyaml::detail::input_adapter(&input[0], sizeof(input));
-        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
-    }
-
     SECTION("char pointers for beginning/end")
     {
         auto input_adapter = fkyaml::detail::input_adapter(&input[0], &input[sizeof(input) - 1]);

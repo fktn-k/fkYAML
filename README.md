@@ -201,14 +201,11 @@ The `Serializer` class provides an API for serializing YAML node values into a s
 
 // ...
 
-fkyaml::node root = fkyaml::node::Mapping({
-    { "foo", fkyaml::node::string_scalar("test") },
-    { "bar", fkyaml::node::sequence({
-        fkyaml::node(3.14),
-        fkyaml::node(std::nan(""))
-    }) },
-    { "baz", fkyaml::node(true) }
-});
+fkyaml::node root = {
+    { std::string("foo"), std::string("test") },
+    { std::string("bar"), { 3.14, std::nan("") } },
+    { std::string("baz"), true }
+};
 
 std::string str = fkyaml::node::serialize(root);
 // foo: test
@@ -236,33 +233,27 @@ The `node` class provides APIs for building YAML nodes programatically.
 fkyaml::node root = fkyaml::node::mapping();
 
 // Add a string scalar node.
-root["foo"] = fkyaml::node(std::string("test"));
+root["foo"] = std::string("test");
 
 // Add a sequence node containing floating number scalar nodes.
-root["bar"] = fkyaml::node::sequence({ 
-    fkyaml::node(3.14),
-    fkyaml::node(std::nan(""))
-});
+root["bar"] = { 3.14, std::nan("") };
 
 // Add a boolean node.
-root["baz"] = fkyaml::node(true);
+root["baz"] = true;
 
 // Instead, you can build YAML nodes all at once.
-fkyaml::node another_root = fkyaml::node::mapping({
-    { "foo", fkyaml::node(std::string("test")) },
-    { "bar", fkyaml::node::sequence({
-        fkyaml::node(3.14),
-        fkyaml::node(std::nan(""))
-    }) },
-    { "baz", fkyaml::node(true) }
-});
+fkyaml::node another_root = {
+    { std::string("foo"), std::string("test") },
+    { std::string("bar"), { 3.14, std::nan("") } },
+    { std::string("baz"), true }
+};
 ```
 
 </div></details>
 
 ### Customize serialization/deserialization
 
-To make your own custom types convertible from/to ``fkyaml::node`` type, you can implement your own `to_node()` & `from_node()` **outside** of the fkyaml namespace.
+To make your own custom types convertible from/to `fkyaml::node` type, you can implement your own `to_node()` & `from_node()` **outside** of the fkyaml namespace.
 (Those functions will be called when you use `fkyaml::node::get_value\<CustomType\>` to get a CustomType object out of a `fkyaml::node` object.)
 
 <details>
