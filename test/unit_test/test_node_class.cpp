@@ -736,7 +736,7 @@ TEST_CASE("NodeClassTest_TypeGetterTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_is_sequenceTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IsSequenceTest", "[NodeClassTest]")
 {
     SECTION("Test sequence node type.")
     {
@@ -779,7 +779,7 @@ TEST_CASE("NodeClassTest_is_sequenceTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_is_mappingTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IsMappingTest", "[NodeClassTest]")
 {
     SECTION("Test mapping node type.")
     {
@@ -822,7 +822,7 @@ TEST_CASE("NodeClassTest_is_mappingTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_is_nullTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IsNullTest", "[NodeClassTest]")
 {
     SECTION("Test null node type.")
     {
@@ -865,7 +865,7 @@ TEST_CASE("NodeClassTest_is_nullTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_is_booleanTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IsBooleanTest", "[NodeClassTest]")
 {
     SECTION("Test boolean node type.")
     {
@@ -908,7 +908,7 @@ TEST_CASE("NodeClassTest_is_booleanTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_is_integerTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IsIntegerTest", "[NodeClassTest]")
 {
     SECTION("Test integer node type.")
     {
@@ -1037,7 +1037,7 @@ TEST_CASE("NodeClassTest_IsStringTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_is_scalarTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_IsScalarTest", "[NodeClassTest]")
 {
     SECTION("Test scalar node types.")
     {
@@ -1097,7 +1097,7 @@ TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
 // test cases for emptiness checker
 //
 
-TEST_CASE("NodeClassTest_emptyTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_EmptyTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected node emptiness.")
     {
@@ -1251,7 +1251,7 @@ TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
 // test cases for container size getter
 //
 
-TEST_CASE("NodeClassTest_sizeGetterTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_SizeGetterTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected node size.")
     {
@@ -1422,7 +1422,7 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
 
         SECTION("test for sequence value.")
         {
-            auto& seq = node.get_value_ref<fkyaml::node::sequence_type&>();
+            auto seq = node.get_value<fkyaml::node::sequence_type>();
             REQUIRE(seq.size() == 2);
             REQUIRE(seq[0].is_boolean());
             REQUIRE(seq[0].get_value<bool>() == true);
@@ -1448,7 +1448,7 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
 
         SECTION("test for mapping value.")
         {
-            auto& map = node.get_value_ref<fkyaml::node::mapping_type&>();
+            auto map = node.get_value<fkyaml::node::mapping_type>();
             REQUIRE(map.size() == 2);
             REQUIRE(map.find("test") != map.end());
             REQUIRE(map.at("test").is_float_number());
@@ -1622,7 +1622,7 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
 // test cases for value reference getters
 //
 
-TEST_CASE("NodeClassTest_ToSequenceTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_GetValueRefForSequenceTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
@@ -1712,7 +1712,7 @@ TEST_CASE("NodeClassTest_ToSequenceTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_ToMappingTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_GetValueRefForMappingTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
@@ -1797,7 +1797,7 @@ TEST_CASE("NodeClassTest_ToMappingTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_ToBooleanTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_GetValueRefForBooleanTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
@@ -1870,7 +1870,7 @@ TEST_CASE("NodeClassTest_ToBooleanTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_ToIntegerTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_GetValueRefForIntegerTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
@@ -1944,7 +1944,7 @@ TEST_CASE("NodeClassTest_ToIntegerTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_ToFloatNumberTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_GetValueRefForFloatNumberTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
@@ -2018,7 +2018,7 @@ TEST_CASE("NodeClassTest_ToFloatNumberTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_ToStringTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_GetValueRefForStringTest", "[NodeClassTest]")
 {
     SECTION("Test nothrow expected nodes.")
     {
