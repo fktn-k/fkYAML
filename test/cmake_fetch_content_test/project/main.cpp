@@ -14,7 +14,7 @@ int main()
 {
     fkyaml::node node = fkyaml::node::deserialize("test: true");
 
-    std::cout << "test: " << node["test"].to_string() << std::endl;
+    std::cout << "test: " << node["test"].get_value<fkyaml::node::boolean_type>() << std::endl;
 
     return 0;
 }
