@@ -102,12 +102,12 @@ public:
                 {
                     // make sequence node to mapping node.
                     // TODO: This is just a workaround. Need to be refactored to fix this way.
-                    string_type tmp_str = m_current_node->operator[](0).to_string();
+                    string_type tmp_str = m_current_node->operator[](0).template get_value<string_type>();
                     m_current_node->operator[](0) = BasicNodeType::mapping();
                     m_node_stack.emplace_back(m_current_node);
                     m_current_node = &(m_current_node->operator[](0));
                     set_yaml_version(*m_current_node);
-                    m_current_node->to_mapping().emplace(tmp_str, BasicNodeType());
+                    m_current_node->template get_value_ref<mapping_type&>().emplace(tmp_str, BasicNodeType());
                     m_node_stack.emplace_back(m_current_node);
                     m_current_node = &(m_current_node->operator[](tmp_str));
                     set_yaml_version(*m_current_node);
@@ -155,8 +155,8 @@ public:
                     }
 
                     // for the second or later mapping items in a sequence node.
-                    m_node_stack.back()->to_sequence().emplace_back(BasicNodeType::mapping());
-                    m_current_node = &(m_node_stack.back()->to_sequence().back());
+                    m_node_stack.back()->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
+                    m_current_node = &(m_node_stack.back()->template get_value_ref<sequence_type&>().back());
                     set_yaml_version(*m_current_node);
                     break;
                 }
@@ -275,9 +275,9 @@ private:
             m_indent_stack.push_back(indent);
         }
 
-        m_current_node->to_mapping().emplace(key, BasicNodeType());
+        m_current_node->template get_value_ref<mapping_type&>().emplace(key, BasicNodeType());
         m_node_stack.push_back(m_current_node);
-        m_current_node = &(m_current_node->to_mapping().at(key));
+        m_current_node = &(m_current_node->template get_value_ref<mapping_type&>().at(key));
     }
 
     /**
@@ -289,12 +289,12 @@ private:
     {
         if (m_current_node->is_sequence())
         {
-            m_current_node->to_sequence().emplace_back(std::move(node_value));
-            set_yaml_version(m_current_node->to_sequence().back());
+            m_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
+            set_yaml_version(m_current_node->template get_value_ref<sequence_type&>().back());
             if (m_needs_anchor_impl)
             {
-                m_current_node->to_sequence().back().add_anchor_name(m_anchor_name);
-                m_anchor_table[m_anchor_name] = m_current_node->to_sequence().back();
+                m_current_node->template get_value_ref<sequence_type&>().back().add_anchor_name(m_anchor_name);
+                m_anchor_table[m_anchor_name] = m_current_node->template get_value_ref<sequence_type&>().back();
                 m_needs_anchor_impl = false;
                 m_anchor_name.clear();
             }

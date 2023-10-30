@@ -42,6 +42,16 @@ namespace detail
 #ifndef FK_YAML_HAS_CXX_14
 
 /**
+ * @brief An alias template for std::add_pointer::type with C++11.
+ * @note std::add_pointer_t is available since C++14.
+ * @sa https://en.cppreference.com/w/cpp/types/add_pointer
+ *
+ * @tparam T A type to be added a pointer.
+ */
+template <typename T>
+using add_pointer_t = typename std::add_pointer<T>::type;
+
+/**
  * @brief An alias template for std::enable_if::type with C++11.
  * @note std::enable_if_t is available since C++14.
  * @sa https://en.cppreference.com/w/cpp/types/enable_if
@@ -72,11 +82,23 @@ using remove_cv_t = typename std::remove_cv<T>::type;
 template <typename T>
 using remove_pointer_t = typename std::remove_pointer<T>::type;
 
+/**
+ * @brief An alias template for std::remove_reference::type with C++11.
+ * @note std::remove_reference_t is available since C++14.
+ * @sa https://en.cppreference.com/w/cpp/types/remove_reference
+ *
+ * @tparam T A type from which a reference is removed.
+ */
+template <typename T>
+using remove_reference_t = typename std::remove_reference<T>::type;
+
 #else
 
+using std::add_pointer_t;
 using std::enable_if_t;
 using std::remove_cv_t;
 using std::remove_pointer_t;
+using std::remove_reference_t;
 
 #endif
 
