@@ -69,6 +69,8 @@ TEST_CASE("InputAdapterTest_FileInputAdapterProviderTest", "[InputAdapterTest]")
         REQUIRE(p_file != nullptr);
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        std::fclose(p_file);
     }
 }
 
@@ -129,6 +131,8 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == 'e');
         REQUIRE(input_adapter.get_character() == '.');
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter")
