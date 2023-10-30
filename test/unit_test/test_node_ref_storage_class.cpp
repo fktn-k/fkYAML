@@ -21,7 +21,7 @@ TEST_CASE("NodeRefStorageTest_CtorWithLvalueNodeTest", "[NodeRefStorageTest]")
 
     fkyaml::node retrieved_node = storage.release();
     REQUIRE(retrieved_node.is_boolean());
-    REQUIRE(retrieved_node.to_boolean() == true);
+    REQUIRE(retrieved_node.get_value<fkyaml::node::boolean_type>() == true);
 }
 
 TEST_CASE("NodeRefStorageTest_CtorWithRvalueNodeTest", "[NodeRefStorageTest]")
@@ -32,7 +32,7 @@ TEST_CASE("NodeRefStorageTest_CtorWithRvalueNodeTest", "[NodeRefStorageTest]")
 
     fkyaml::node retrieved_node = storage.release();
     REQUIRE(retrieved_node.is_float_number());
-    REQUIRE(retrieved_node.to_float_number() == 3.14);
+    REQUIRE(retrieved_node.get_value<fkyaml::node::float_number_type>() == 3.14);
 }
 
 TEST_CASE("NodeRefStorageTest_ArrowOperatorTest", "[NodeRefStorageTest]")
@@ -41,7 +41,7 @@ TEST_CASE("NodeRefStorageTest_ArrowOperatorTest", "[NodeRefStorageTest]")
     fkyaml::detail::node_ref_storage<fkyaml::node> storage(node);
     REQUIRE(storage.operator->() == &node);
     REQUIRE(storage->is_integer());
-    REQUIRE(storage->to_integer() == 123);
+    REQUIRE(storage->get_value<fkyaml::node::integer_type>() == 123);
 
     fkyaml::node node2 = {true, false};
     fkyaml::detail::node_ref_storage<fkyaml::node> storage2(std::move(node2));
@@ -56,7 +56,7 @@ TEST_CASE("NodeRefStorageTest_ReleaseTest", "[NodeRefStorageTest]")
     fkyaml::node released_node = storage.release();
     REQUIRE(&released_node != &node);
     REQUIRE(released_node.is_integer());
-    REQUIRE(released_node.to_integer() == 123);
+    REQUIRE(released_node.get_value<fkyaml::node::integer_type>() == 123);
 
     fkyaml::node node2 = {true, false};
     fkyaml::detail::node_ref_storage<fkyaml::node> storage2(std::move(node2));

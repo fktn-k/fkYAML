@@ -62,8 +62,8 @@ TEST_CASE("SerializeClassTest_SerializeFloatNumberNode", "[SerializeClassTest]")
     auto node_str_pair = GENERATE(
         NodeStrPair(fkyaml::node(3.14), "3.14"),
         NodeStrPair(fkyaml::node(-53.97), "-53.97"),
-        NodeStrPair(fkyaml::node(std::numeric_limits<fkyaml::node_float_number_type>::infinity()), ".inf"),
-        NodeStrPair(fkyaml::node(-1 * std::numeric_limits<fkyaml::node_float_number_type>::infinity()), "-.inf"),
+        NodeStrPair(fkyaml::node(std::numeric_limits<fkyaml::node::float_number_type>::infinity()), ".inf"),
+        NodeStrPair(fkyaml::node(-1 * std::numeric_limits<fkyaml::node::float_number_type>::infinity()), "-.inf"),
         NodeStrPair(fkyaml::node(std::nan("")), ".nan"));
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);

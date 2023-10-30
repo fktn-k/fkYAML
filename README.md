@@ -176,9 +176,9 @@ assert(root["bar"].is_float_number());
 assert(root["baz"].is_boolean());
 
 // You can get references to YAML node values like the followings:
-assert(root["foo"].to_string() == "test");
-assert(root["bar"].to_float_number() == 3.14);
-assert(root["baz"].to_boolean() == true);
+assert(root["foo"].get_value_ref<std::string&>() == "test");
+assert(root["bar"].get_value_ref<double&>() == 3.14);
+assert(root["baz"].get_value_ref<bool&>() == true);
 
 // You can get values of YAML node like the followings:
 assert(root["foo"].get_value<std::string>() == "test");
@@ -285,7 +285,7 @@ void to_node(fkyaml::node& n, const CustomType& c)
 // overload from_node() with the CustomType type.
 void from_node(const fkyaml::node& n, CustomType& c)
 {
-    c.foo = n.get_value<std::string>();
+    c.foo = n.get_value_ref<const std::string&>();
     c.bar = n.get_value<bool>();
     c.baz = n.get_value<double>();
 }
