@@ -208,7 +208,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
         fkyaml::node& test_1_node = test_node[1];
         REQUIRE(test_1_node.is_boolean());
         REQUIRE_NOTHROW(test_1_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(test_1_node.get_value<fkyaml::node::boolean_type>() == test_0_node.get_value<fkyaml::node::boolean_type>());
+        REQUIRE(
+            test_1_node.get_value<fkyaml::node::boolean_type>() == test_0_node.get_value<fkyaml::node::boolean_type>());
     }
 
     SECTION("Input source No.4.")
@@ -238,7 +239,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
         fkyaml::node& test_1_node = test_node[1];
         REQUIRE(test_1_node.is_integer());
         REQUIRE_NOTHROW(test_1_node.get_value<fkyaml::node::integer_type>());
-        REQUIRE(test_1_node.get_value<fkyaml::node::integer_type>() == test_0_node.get_value<fkyaml::node::integer_type>());
+        REQUIRE(
+            test_1_node.get_value<fkyaml::node::integer_type>() == test_0_node.get_value<fkyaml::node::integer_type>());
     }
 
     SECTION("Input source No.5.")
@@ -268,7 +270,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
         fkyaml::node& test_1_node = test_node[1];
         REQUIRE(test_1_node.is_integer());
         REQUIRE_NOTHROW(test_1_node.get_value<fkyaml::node::integer_type>());
-        REQUIRE(test_1_node.get_value<fkyaml::node::integer_type>() == test_0_node.get_value<fkyaml::node::integer_type>());
+        REQUIRE(
+            test_1_node.get_value<fkyaml::node::integer_type>() == test_0_node.get_value<fkyaml::node::integer_type>());
     }
 
     SECTION("Input source No.6.")
@@ -298,7 +301,9 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
         fkyaml::node& test_1_node = test_node[1];
         REQUIRE(test_1_node.is_float_number());
         REQUIRE_NOTHROW(test_1_node.get_value<fkyaml::node::float_number_type>());
-        REQUIRE(test_1_node.get_value<fkyaml::node::float_number_type>() == test_0_node.get_value<fkyaml::node::float_number_type>());
+        REQUIRE(
+            test_1_node.get_value<fkyaml::node::float_number_type>() ==
+            test_0_node.get_value<fkyaml::node::float_number_type>());
     }
 
     SECTION("Input source No.7.")
@@ -492,7 +497,9 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         fkyaml::node& bar_node = root["bar"];
         REQUIRE(bar_node.is_float_number());
         REQUIRE_NOTHROW(bar_node.get_value<fkyaml::node::float_number_type>());
-        REQUIRE(bar_node.get_value<fkyaml::node::float_number_type>() == foo_node.get_value<fkyaml::node::float_number_type>());
+        REQUIRE(
+            bar_node.get_value<fkyaml::node::float_number_type>() ==
+            foo_node.get_value<fkyaml::node::float_number_type>());
     }
 
     SECTION("Input source No.7.")
@@ -515,7 +522,9 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         fkyaml::node& bar_node = root["bar"];
         REQUIRE(bar_node.is_string());
         REQUIRE_NOTHROW(bar_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(bar_node.get_value_ref<fkyaml::node::string_type&>() == foo_node.get_value_ref<fkyaml::node::string_type&>());
+        REQUIRE(
+            bar_node.get_value_ref<fkyaml::node::string_type&>() ==
+            foo_node.get_value_ref<fkyaml::node::string_type&>());
     }
 
     SECTION("Input source No.8.")

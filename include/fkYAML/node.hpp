@@ -1101,24 +1101,6 @@ inline void swap(
 /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/node/
 using node = basic_node<>;
 
-/// @brief A default type for sequence node values.
-using node_sequence_type = typename node::sequence_type;
-
-/// @brief A default type for mapping node values.
-using node_mapping_type = typename node::mapping_type;
-
-/// @brief A default type for boolean node values.
-using node_boolean_type = typename node::boolean_type;
-
-/// @brief A default type for integer node values.
-using node_integer_type = typename node::integer_type;
-
-/// @brief A default type for float number node values.
-using node_float_number_type = typename node::float_number_type;
-
-/// @brief A default type for string node values.
-using node_string_type = typename node::string_type;
-
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_NODE_HPP_ */

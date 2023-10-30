@@ -62,7 +62,8 @@ TEST_CASE("IteratorClassTest_SequenceMoveCtorTest", "[IteratorClassTest]")
 TEST_CASE("IteratorClassTest_MappingMoveCtorTest", "[IteratorClassTest]")
 {
     fkyaml::node mapping = fkyaml::node::mapping({{"test", fkyaml::node()}});
-    fkyaml::detail::iterator<fkyaml::node> moved(fkyaml::detail::mapping_iterator_tag {}, mapping.get_value_ref<fkyaml::node::mapping_type&>().begin());
+    fkyaml::detail::iterator<fkyaml::node> moved(
+        fkyaml::detail::mapping_iterator_tag {}, mapping.get_value_ref<fkyaml::node::mapping_type&>().begin());
     fkyaml::detail::iterator<fkyaml::node> iterator(std::move(moved));
     REQUIRE(iterator.type() == fkyaml::detail::iterator_t::MAPPING);
     REQUIRE(iterator.key().compare("test") == 0);
