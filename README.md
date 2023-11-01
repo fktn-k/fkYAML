@@ -181,7 +181,7 @@ assert(root["bar"].get_value_ref<double&>() == 3.14);
 assert(root["baz"].get_value_ref<bool&>() == true);
 
 // You can get values of YAML node like the followings:
-assert(root["foo"].get_value<std::string>() == "test");
+assert(root["foo"].get_value_ref<std::string&>() == "test");
 assert(root["bar"].get_value<double>() == 3.14);
 assert(root["baz"].get_value<bool>() == true);
 ```
@@ -202,9 +202,9 @@ The `Serializer` class provides an API for serializing YAML node values into a s
 // ...
 
 fkyaml::node root = {
-    { std::string("foo"), std::string("test") },
-    { std::string("bar"), { 3.14, std::nan("") } },
-    { std::string("baz"), true }
+    { "foo", "test" },
+    { "bar", { 3.14, std::nan("") } },
+    { "baz", true }
 };
 
 std::string str = fkyaml::node::serialize(root);
@@ -233,7 +233,7 @@ The `node` class provides APIs for building YAML nodes programatically.
 fkyaml::node root = fkyaml::node::mapping();
 
 // Add a string scalar node.
-root["foo"] = std::string("test");
+root["foo"] = "test";
 
 // Add a sequence node containing floating number scalar nodes.
 root["bar"] = { 3.14, std::nan("") };
@@ -243,9 +243,9 @@ root["baz"] = true;
 
 // Instead, you can build YAML nodes all at once.
 fkyaml::node another_root = {
-    { std::string("foo"), std::string("test") },
-    { std::string("bar"), { 3.14, std::nan("") } },
-    { std::string("baz"), true }
+    { "foo", "test" },
+    { "bar", { 3.14, std::nan("") } },
+    { "baz", true }
 };
 ```
 
