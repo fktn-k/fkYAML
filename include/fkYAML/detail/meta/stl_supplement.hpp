@@ -13,6 +13,7 @@
 #ifndef FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
 #define FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
 
+#include <cstddef>
 #include <type_traits>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
@@ -63,6 +64,18 @@ template <bool Condition, typename T = void>
 using enable_if_t = typename std::enable_if<Condition, T>::type;
 
 /**
+ * @brief A simple implementation to use std::is_null_pointer with C++11.
+ * @note std::is_null_pointer is available since C++14.
+ * @sa https://en.cppreference.com/w/cpp/types/is_null_pointer
+ *
+ * @tparam T The type to be checked if it's equal to std::nullptr_t.
+ */
+template <typename T>
+struct is_null_pointer : std::is_same<std::nullptr_t, typename std::remove_cv<T>::type>
+{
+};
+
+/**
  * @brief An alias template for std::remove_cv::type with C++11.
  * @note std::remove_cv_t is available since C++14.
  * @sa https://en.cppreference.com/w/cpp/types/remove_cv
@@ -96,6 +109,7 @@ using remove_reference_t = typename std::remove_reference<T>::type;
 
 using std::add_pointer_t;
 using std::enable_if_t;
+using std::is_null_pointer;
 using std::remove_cv_t;
 using std::remove_pointer_t;
 using std::remove_reference_t;
