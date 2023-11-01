@@ -18,7 +18,7 @@ TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")
     using NodeStrPair = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
         NodeStrPair({true, false}, "- true\n- false\n"),
-        NodeStrPair({{{std::string("foo"), -1234}, {std::string("bar"), nullptr}}}, "-\n  bar: null\n  foo: -1234\n"));
+        NodeStrPair({{{"foo", -1234}, {"bar", nullptr}}}, "-\n  bar: null\n  foo: -1234\n"));
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
@@ -27,8 +27,8 @@ TEST_CASE("SerializerClassTest_SerializeMappingNode", "[SerializerClassTest]")
 {
     using NodeStrPair = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
-        NodeStrPair({{std::string("foo"), -1234}, {std::string("bar"), nullptr}}, "bar: null\nfoo: -1234\n"),
-        NodeStrPair({{std::string("foo"), {true, false}}}, "foo:\n  - true\n  - false\n"));
+        NodeStrPair({{"foo", -1234}, {"bar", nullptr}}, "bar: null\nfoo: -1234\n"),
+        NodeStrPair({{"foo", {true, false}}}, "foo:\n  - true\n  - false\n"));
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
@@ -72,9 +72,8 @@ TEST_CASE("SerializeClassTest_SerializeFloatNumberNode", "[SerializeClassTest]")
 TEST_CASE("SerializerClassTest_SerializeStringNode", "[SerializerClassTest]")
 {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
-    auto node_str_pair = GENERATE(
-        node_str_pair_t(fkyaml::node(std::string("test")), "test"),
-        node_str_pair_t(fkyaml::node(std::string("foo bar")), "foo bar"));
+    auto node_str_pair =
+        GENERATE(node_str_pair_t(fkyaml::node("test"), "test"), node_str_pair_t(fkyaml::node("foo bar"), "foo bar"));
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);

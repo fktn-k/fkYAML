@@ -195,6 +195,20 @@ struct external_node_constructor<node_t::STRING>
         n.m_node_value.p_string =
             BasicNodeType::template create_object<typename BasicNodeType::string_type>(std::move(s));
     }
+
+    template <
+        typename BasicNodeType, typename CompatibleStringType,
+        enable_if_t<
+            conjunction<
+                is_basic_node<BasicNodeType>,
+                negation<std::is_same<typename BasicNodeType::string_type, CompatibleStringType>>>::value,
+            int> = 0>
+    static void construct(BasicNodeType& n, const CompatibleStringType& s) noexcept
+    {
+        n.m_node_value.destroy(n.m_node_type);
+        n.m_node_type = node_t::STRING;
+        n.m_node_value.p_string = BasicNodeType::template create_object<typename BasicNodeType::string_type>(s);
+    }
 };
 
 /////////////////
@@ -307,15 +321,37 @@ inline void to_node(BasicNodeType& n, T f) noexcept
     external_node_constructor<node_t::FLOAT_NUMBER>::construct(n, f);
 }
 
+/**
+ * @brief to_node function for compatible strings.
+ *
+ * @tparam BasicNodeType A basic_node template instance type.
+ * @tparam T A compatible string type.
+ * @param n A basic_node object.
+ * @param s A compatible string object.
+ */
 template <
     typename BasicNodeType, typename T,
     enable_if_t<
         conjunction<
-            is_basic_node<BasicNodeType>, std::is_same<typename BasicNodeType::string_type, remove_cvref_t<T>>>::value,
+            is_basic_node<BasicNodeType>, negation<is_null_pointer<T>>,
+            std::is_constructible<typename BasicNodeType::string_type, const T&>>::value,
         int> = 0>
-inline void to_node(BasicNodeType& n, T&& s) noexcept
+inline void to_node(BasicNodeType& n, const T& s)
 {
-    external_node_constructor<node_t::STRING>::construct(n, std::forward<T>(s));
+    external_node_constructor<node_t::STRING>::construct(n, s);
+}
+
+/**
+ * @brief to_node function for rvalue string node values
+ *
+ * @tparam BasicNodeType A basic_node template instance type
+ * @param n A basic_node object.
+ * @param s An rvalue string node value.
+ */
+template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+inline void to_node(BasicNodeType& n, typename BasicNodeType::string_type&& s) noexcept
+{
+    external_node_constructor<node_t::STRING>::construct(n, std::move(s));
 }
 
 /**

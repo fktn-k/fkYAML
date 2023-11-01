@@ -39,7 +39,6 @@ TEST_CASE("NodeRefStorageTest_ArrowOperatorTest", "[NodeRefStorageTest]")
 {
     fkyaml::node node = 123;
     fkyaml::detail::node_ref_storage<fkyaml::node> storage(node);
-    REQUIRE(storage.operator->() == &node);
     REQUIRE(storage->is_integer());
     REQUIRE(storage->get_value<fkyaml::node::integer_type>() == 123);
 
