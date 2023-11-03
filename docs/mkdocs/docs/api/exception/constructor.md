@@ -3,11 +3,21 @@
 # <small>fkyaml::exception::</small>(constructor)
 
 ```cpp
-exception() = default;
+exception() = default; // (1)
+
+explicit exception(const char* msg); // (2)
 ```
 
-Constructs an exception without an error message.  
+Constructs an exception object.   
 You can specify an error message on constructing an exception with an overloaded constructor.  
+
+## Overload (1)
+
+```cpp
+exception() = default; // (1)
+```
+
+Constructs an exception object without an error message.
 
 ???+ Example
 
@@ -34,10 +44,10 @@ You can specify an error message on constructing an exception with an overloaded
 
     ```
 
-## Overloads
+## Overloads (2)
 
 ```cpp
-explicit exception(const char* msg);
+explicit exception(const char* msg); // (2)
 ```
 
 Constructs an exception with a given error message.  
@@ -72,3 +82,8 @@ The given error message can be retrieved by calling [`exception::what()`](what.m
     ```bash
     An error message.
     ```
+
+## **See Also**
+
+* [exception](index.md)
+* [what](what.md)

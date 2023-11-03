@@ -31,6 +31,7 @@ public:
     exception() = default;
 
     /// @brief Construct a new exception object with an error message.
+    /// @param[in] msg An error message.
     /// @sa https://fktn-k.github.io/fkYAML/api/exception/constructor/
     explicit exception(const char* msg)
     {
@@ -42,6 +43,7 @@ public:
 
 public:
     /// @brief Returns an error message internally held. If nothing, a non-null, empty string will be returned.
+    /// @return An error message internally held. The message might be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/exception/what/
     const char* what() const noexcept override
     {
