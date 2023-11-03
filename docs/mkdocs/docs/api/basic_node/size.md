@@ -11,9 +11,9 @@ Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not h
 
 ### **Return Value**
 
-Returns the size of a node value.
+The size of a node value.
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>
@@ -26,12 +26,12 @@ Returns the size of a node value.
         std::vector<fkyaml::node> nodes =
         {
             {1, 2, 3},
-            {{std::string("foo"), true}, {std::string("bar"), false}. {std::string("baz"), true}},
+            {{"foo", true}, {"bar", false}. {"baz", true}},
             fkyaml::node(),
             true,
             256,
             3.14,
-            std::string("foo")
+            "foo"
         };
 
         for (const auto& n : nodes)

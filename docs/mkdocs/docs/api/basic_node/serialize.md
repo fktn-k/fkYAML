@@ -15,11 +15,11 @@ That means that, even if a deserialized source input is written in flow styles, 
 ***node*** [in]
 :   A `basic_node` object to be serialized.
 
-### **Return Values**
+### **Return Value**
 
 The resulting string object from the serialization of the `node` object.
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -29,11 +29,11 @@ The resulting string object from the serialization of the `node` object.
     {
         // create a basic_node object.
         fkyaml::node n = {
-            {std::string("foo"), true},
-            {std::string("bar"), {1, 2, 3}},
-            {std::string("baz"), {
-                {std::string("qux"), 3.14},
-                {std::string("corge"), nullptr}
+            {"foo", true},
+            {"bar", {1, 2, 3}},
+            {"baz", {
+                {"qux", 3.14},
+                {"corge", nullptr}
             }}
         };
 

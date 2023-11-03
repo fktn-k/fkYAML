@@ -21,26 +21,19 @@
 
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @class node_value_converter
- * @brief An ADL friendly converter between basic_node objects and native data objects.
- *
- * @tparam ValueType A default target data type.
- * @tparam typename N/A
- */
+/// @brief An ADL friendly converter between basic_node objects and native data objects.
+/// @tparam ValueType A default target data type.
+/// @sa https://fktn-k.github.io/fkYAML/api/node_value_converter/
 template <typename ValueType, typename>
 class node_value_converter
 {
 public:
-    /**
-     * @brief Convert a YAML node value into compatible native data.
-     *
-     * @tparam BasicNodeType A basic_node template instance type.
-     * @tparam TargetType A native data type for conversion.
-     * @param n A basic_node object.
-     * @param val A native data object.
-     * @return decltype(::fkyaml::from_node(std::forward<BasicNodeType>(n), val), void())
-     */
+    /// @brief Convert a YAML node value into compatible native data.
+    /// @tparam BasicNodeType A basic_node template instance type.
+    /// @tparam TargetType A native data type for conversion.
+    /// @param n A basic_node object.
+    /// @param val A native data object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/node_value_converter/from_node/
     template <typename BasicNodeType, typename TargetType = ValueType>
     static auto from_node(BasicNodeType&& n, TargetType& val) noexcept(
         noexcept(::fkyaml::from_node(std::forward<BasicNodeType>(n), val)))
@@ -49,15 +42,12 @@ public:
         ::fkyaml::from_node(std::forward<BasicNodeType>(n), val);
     }
 
-    /**
-     * @brief Convert compatible native data into a YAML node.
-     *
-     * @tparam BasicNodeType A basic_node template instance type.
-     * @tparam TargetType A native data type for conversion.
-     * @param n A basic_node object.
-     * @param val A native data object.
-     * @return decltype(::fkyaml::to_node(n, std::forward<TargetType>(val)))
-     */
+    /// @brief Convert compatible native data into a YAML node.
+    /// @tparam BasicNodeType A basic_node template instance type.
+    /// @tparam TargetType A native data type for conversion.
+    /// @param n A basic_node object.
+    /// @param val A native data object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/node_value_converter/to_node/
     template <typename BasicNodeType, typename TargetType = ValueType>
     static auto to_node(BasicNodeType& n, TargetType&& val) noexcept(
         noexcept(::fkyaml::to_node(n, std::forward<TargetType>(val))))

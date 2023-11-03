@@ -16,7 +16,7 @@ To store floating point number objects in [`basic_node`](index.md) class, the ty
 If not explicitly specified, the default type `double` will be chosen.  
 With the decided type, floating point number objects are stored directly inside a [`basic_node`](index.md).  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

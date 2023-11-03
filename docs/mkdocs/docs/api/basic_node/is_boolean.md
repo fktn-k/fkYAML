@@ -12,7 +12,7 @@ Tests whether the node value type is [`node_t::BOOLEAN`](node_t.md).
 
 `true` if the type is [`node_t::BOOLEAN`](node_t.md), `false` otherwise.  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

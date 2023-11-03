@@ -12,7 +12,7 @@ enum class yaml_version_t
 
 This enumeration collects the used versions of YAML specification. It is used as meta data of a basic_node and the functions [`get_yaml_version`](get_yaml_version.md) and [`set_yaml_version`](set_yaml_version.md) rely on it.  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

@@ -16,7 +16,7 @@ To store boolean objects in [`basic_node`](index.md) class, the type is defined 
 If not explicitly specified, the default type `bool` will be chosen.  
 With the decided type, boolean objects are stored directly inside a [`basic_node`](index.md).  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

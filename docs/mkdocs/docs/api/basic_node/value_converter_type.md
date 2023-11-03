@@ -21,7 +21,7 @@ If you want to convert some type from/to `basic_node`, however, it is recommende
 ***SFINAE***
 : Type to add compile type checks via SFINAE. Usually `void` is given.
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

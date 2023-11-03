@@ -39,7 +39,7 @@ basic_node() = default;
 Default constructor. Constructs a basic_node with a null value.  
 The resulting basic_node has the [`node_t::NULL_OBJECT`](node_t.md) type.  
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -69,9 +69,9 @@ The resulting basic_node has a default value for the given type.
 ### **Parameters**
 
 ***`type`*** [in]
-:   A YAML node value.
+:   A YAML node type.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -101,9 +101,9 @@ The resulting basic_node has the same type and value as `rhs`.
 ### **Parameters**
 
 ***`rhs`*** [in]
-:   A basic node to be copied with.
+:   A basic_node object to be copied with.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -135,9 +135,9 @@ The value of the argument `rhs` after calling this move constructor, will be the
 ### **Parameters**
 
 ***`rhs`*** [in]
-:   A basic node to be moved from.
+:   A basic_node object to be moved from.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -185,7 +185,7 @@ The resulting basic_node has the value of `val` and the type which is associated
 ***`val`*** [in]
 :   The value of a compatible type.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -194,7 +194,7 @@ The resulting basic_node has the value of `val` and the type which is associated
     int main()
     {
         double pi = 3.141592;
-        fkyaml::node n(pi);
+        fkyaml::node n = pi;
         std::cout << fkyaml::node::serialize(n) << std::endl;
         return 0;
     }
@@ -232,7 +232,7 @@ The resulting basic_node has the value of the referenced basic_node by `node_ref
 ***`node_ref_storage`*** [in]
 :   A node_ref_storage template class object.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -262,24 +262,12 @@ The resulting basic_node has the value of a container (sequence or mapping) whic
 Basically, the basic_node objects in `init` are considered as a sequence node.
 If `init` contains a sequence of basic_node objects in which the number of basic_node objects is 2 and the first has the type of `node_t::STRING`, however, such a sequence is reinterpreted as a mapping node.  
 
-!!! Note
-
-    To avoid ambiguity between a sequence of `char` and a `std::string`, c-style char arrays are intentionally unsupported in this constructor.  
-    To contain a string in a `initializer_list_t` object, you must explicitly pass a `std::string` object as follows:  
-    ```cpp
-    // this is not supported.
-    fkyaml::node n = {"foo", "bar"};
-
-    // you must do this instead.
-    fkyaml::node n2 = {std::string("foo"), std::string("bar")};
-    ```
-
 ### **Parameters**
 
 ***`init`*** [in]
 :   A initializer list of basic_node objects.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -290,7 +278,7 @@ If `init` contains a sequence of basic_node objects in which the number of basic
         fkyaml::node n = {true, false};
         std::cout << fkyaml::node::serialize(n) << std::endl;
 
-        fkyaml::node n2 = {std::string("foo"), 1024};
+        fkyaml::node n2 = {"foo", 1024};
         std::cout << fkyaml::node::serialize(n2) << std::endl;
         return 0;
     }

@@ -12,7 +12,7 @@ Tests whether the node value type is [`node_t::STRING`](node_t.md).
 
 `true` if the type is [`node_t::STRING`](node_t.md), `false` otherwise.  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>
@@ -21,7 +21,7 @@ Tests whether the node value type is [`node_t::STRING`](node_t.md).
 
     int main()
     {
-        fkyaml::node n = std::string("foo");
+        fkyaml::node n = "foo";
         std::cout << std::boolalpha << n.is_string() << std::endl;
         return 0;
     }

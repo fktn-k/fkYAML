@@ -26,7 +26,7 @@ This enumeration collects the different YAML value types. They are internally us
     * [`float_number_type`](float_number_type.md) for float number scalar values
     * [`string_type`](string_type.md) for string scalar values
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>
@@ -37,12 +37,12 @@ This enumeration collects the different YAML value types. They are internally us
     {
         // create YAML nodes.
         fkyaml::node sequence_node = {1, 2, 3};
-        fkyaml::node mapping_node = {{std::string("foo"), true}, {std::string("bar"), false}};
+        fkyaml::node mapping_node = {{"foo", true}, {"bar", false}};
         fkyaml::node null_node;
         fkyaml::node boolean_node = true;
         fkyaml::node integer_node = 256;
         fkyaml::node float_node = 3.14;
-        fkyaml::node string_node = std::string("Hello, world!");
+        fkyaml::node string_node = "Hello, world!";
 
         // call type()
         std::cout << std::boolalpha;

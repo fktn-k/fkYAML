@@ -9,7 +9,7 @@ using iterator = detail::iterator<basic_node>;
 The type for iterators of [`basic_node`](index.md) containers.  
 This iterator type is commonly used for sequence and mapping container values.  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

@@ -22,7 +22,7 @@ The type of the YAML node value.
 | floating point number | node_t::FLOAT_NUMBER |
 | string                | node_t::STRING       |
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>
@@ -33,12 +33,12 @@ The type of the YAML node value.
     {
         // create YAML nodes.
         fkyaml::node sequence_node = {1, 2, 3};
-        fkyaml::node mapping_node = {{std::string("foo"), true}, {std::string("bar"), false}};
+        fkyaml::node mapping_node = {{"foo", true}, {"bar", false}};
         fkyaml::node null_node;
         fkyaml::node boolean_node = true;
         fkyaml::node integer_node = 256;
         fkyaml::node float_node = 3.14;
-        fkyaml::node string_node = std::string("Hello, world!");
+        fkyaml::node string_node = "Hello, world!";
 
         // call type()
         std::cout << std::boolalpha;

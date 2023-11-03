@@ -9,7 +9,7 @@ using const_iterator = detail::iterator<const basic_node>;
 The type for constant iterators of [`basic_node`](index.md) containers.  
 This iterator type is commonly used for sequence and mapping container values.  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

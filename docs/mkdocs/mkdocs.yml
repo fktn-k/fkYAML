@@ -104,7 +104,9 @@ nav:
           - empty: api/basic_node/empty.md
           - end: api/basic_node/end.md
           - float_number_type: api/basic_node/float_number_type.md
+          - get_anchor_name: api/basic_node/get_anchor_name.md
           - get_value: api/basic_node/get_value.md
+          - get_value_ref: api/basic_node/get_value_ref.md
           - get_yaml_version: api/basic_node/get_yaml_version.md
           - has_anchor_name: api/basic_node/has_anchor_name.md
           - integer_type: api/basic_node/integer_type.md
@@ -127,12 +129,7 @@ nav:
           - set_yaml_version: api/basic_node/set_yaml_version.md
           - size: api/basic_node/size.md
           - string_type: api/basic_node/string_type.md
-          - to_boolean: api/basic_node/to_boolean.md
-          - to_float_number: api/basic_node/to_float_number.md
-          - to_integer: api/basic_node/to_integer.md
-          - to_mapping: api/basic_node/to_mapping.md
-          - to_sequence: api/basic_node/to_sequence.md
-          - to_string: api/basic_node/to_string.md
+          - swap: api/basic_node/swap.md
           - type: api/basic_node/type.md
           - value_converter_type: api/basic_node/value_converter_type.md
           - yaml_version_t: api/basic_node/yaml_version_t.md
@@ -142,8 +139,7 @@ nav:
           - (constructor): api/exception/constructor.md
           - (destructor): api/exception/destructor.md
           - what: api/exception/what.md
-      - macros:
-          - macros: api/macros/index.md
+      - macros: api/macros.md
       - node_value_converter:
           - node_value_converter: api/node_value_converter/index.md
           - from_node: api/node_value_converter/from_node.md
@@ -152,4 +148,8 @@ nav:
           - ordered_map: api/ordered_map/index.md
           - (constructor): api/ordered_map/constructor.md
           - (destructor): api/ordered_map/destructor.md
+          - at: api/ordered_map/at.md
+          - emplace: api/ordered_map/emplace.md
+          - find: api/ordered_map/find.md
+          - operator[]: api/ordered_map/operator[].md
   - Tutorials: tutorials.md
