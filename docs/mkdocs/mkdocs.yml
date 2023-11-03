@@ -149,4 +149,8 @@ nav:
           - ordered_map: api/ordered_map/index.md
           - (constructor): api/ordered_map/constructor.md
           - (destructor): api/ordered_map/destructor.md
+          - at: api/ordered_map/at.md
+          - emplace: api/ordered_map/emplace.md
+          - find: api/ordered_map/find.md
+          - operator[]: api/ordered_map/operator[].md
   - Tutorials: tutorials.md
