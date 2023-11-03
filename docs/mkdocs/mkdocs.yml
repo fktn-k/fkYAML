@@ -139,8 +139,7 @@ nav:
           - (constructor): api/exception/constructor.md
           - (destructor): api/exception/destructor.md
           - what: api/exception/what.md
-      - macros:
-          - macros: api/macros/index.md
+      - macros: api/macros.md
       - node_value_converter:
           - node_value_converter: api/node_value_converter/index.md
           - from_node: api/node_value_converter/from_node.md
