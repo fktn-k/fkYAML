@@ -21,8 +21,8 @@ The resulting basic_node has the [`node_t::MAPPING`](node_t.md) type.
     int main()
     {
         fkyaml::node::mapping_type m = {
-            {fkyaml::node(std::string("foo")), fkyaml::node(false)},
-            {fkyaml::node(std::string("bar")), fkyaml::node(3.14)}
+            {"foo", false},
+            {"bar", 3.14}
         };
         fkyaml::node n = fkyaml::node::mapping(m);
         std::cout << fkyaml::node::serialize(n) << std::endl;

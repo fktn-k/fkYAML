@@ -26,12 +26,12 @@ Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not h
         std::vector<fkyaml::node> nodes =
         {
             {1, 2, 3},
-            {{std::string("foo"), true}, {std::string("bar"), false}},
+            {{"foo", true}, {"bar", false}},
             fkyaml::node(),
             true,
             256,
             3.14,
-            std::string("Hello, world!")
+            "Hello, world!"
         };
 
         for (const auto& n : nodes)

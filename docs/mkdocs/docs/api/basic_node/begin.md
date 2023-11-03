@@ -25,7 +25,7 @@ An iterator to the first element of a container node value (either sequence or m
     int main()
     {
         // create a sequence node.
-        fkyaml::node n = {std::string("foo"), std::string("bar")};
+        fkyaml::node n = {"foo", "bar"};
         // get an iterator to the first element.
         fkyaml::node::iterator it = n.begin();
         std::cout << fkyaml::node::serialize(*it) << std::endl;

@@ -26,12 +26,12 @@ The size of a node value.
         std::vector<fkyaml::node> nodes =
         {
             {1, 2, 3},
-            {{std::string("foo"), true}, {std::string("bar"), false}. {std::string("baz"), true}},
+            {{"foo", true}, {"bar", false}. {"baz", true}},
             fkyaml::node(),
             true,
             256,
             3.14,
-            std::string("foo")
+            "foo"
         };
 
         for (const auto& n : nodes)

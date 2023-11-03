@@ -19,16 +19,16 @@ This type is the default specialization of the [basic_node](index.md) class whic
         // create a YAML node.
         fkyaml::node n =
         {
-            {std::string("foo"), 3.14},
-            {std::string("bar"), true},
-            {std::string("baz"), nullptr},
-            {std::string("qux"), {
-                {std::string("corge"), {1, 2, 3}}
+            {"foo", 3.14},
+            {"bar", true},
+            {"baz", nullptr},
+            {"qux", {
+                {"corge", {1, 2, 3}}
             }}
         };
 
         // add a new value.
-        n["qux"]["key"] = {std::string("another"), std::string("value")};
+        n["qux"]["key"] = {"another", "value"};
 
         // output a YAML formatted string.
         std::cout << fkyaml::node::serialize(n) << std::endl;

@@ -31,7 +31,7 @@ Tests whether the node value type is one of the followings:
         fkyaml::node boolean_node = true;
         fkyaml::node integer_node = 256;
         fkyaml::node float_node = 3.14;
-        fkyaml::node string_node = std::string("Hello, world!");
+        fkyaml::node string_node = "Hello, world!";
 
         // call type()
         std::cout << std::boolalpha;
