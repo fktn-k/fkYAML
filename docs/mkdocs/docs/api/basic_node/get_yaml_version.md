@@ -8,14 +8,16 @@ yaml_version_t get_yaml_version() const noexcept;
 
 Returns the version of the YAML format applied for the `basic_node` object.  
 
-### **Return Values**
+### **Return Value**
+
+The version of the YAML format applied to the basic_node object.
 
 | YAML version | Return Value            |
 | ------------ | ----------------------- |
 | 1.1          | yaml_version_t::VER_1_1 |
 | 1.2          | yaml_version_t::VER_1_2 |
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

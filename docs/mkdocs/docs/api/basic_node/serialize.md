@@ -15,11 +15,11 @@ That means that, even if a deserialized source input is written in flow styles, 
 ***node*** [in]
 :   A `basic_node` object to be serialized.
 
-### **Return Values**
+### **Return Value**
 
 The resulting string object from the serialization of the `node` object.
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iostream>

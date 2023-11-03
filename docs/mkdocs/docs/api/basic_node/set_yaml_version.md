@@ -13,14 +13,7 @@ Sets the version of the YAML format to the `basic_node` object.
 ***version*** [in]
 :   A version of the YAML format.
 
-### **Return Values**
-
-| YAML version | Return Value            |
-| ------------ | ----------------------- |
-| 1.1          | yaml_version_t::VER_1_1 |
-| 1.2          | yaml_version_t::VER_1_2 |
-
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

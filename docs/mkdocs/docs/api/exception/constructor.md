@@ -9,7 +9,7 @@ exception() = default;
 Constructs an exception without an error message.  
 You can specify an error message on constructing an exception with an overloaded constructor.  
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -48,7 +48,7 @@ The given error message can be retrieved by calling [`exception::what()`](what.m
 ***`msg`*** [in]
 :   An error message for the exception. If `nullptr` is given, the resulting error message will be empty.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>

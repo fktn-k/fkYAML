@@ -74,17 +74,12 @@ This class provides features to handle YAML nodes.
 | [is_string](is_string.md)             | checks if a basic_node has a string node value.       |
 
 ### Conversions
-| Name                                  | Description                                             |
-| ------------------------------------- | ------------------------------------------------------- |
-| [deserialize](deserialize.md)         | deserializes a YAML formatted string into a basic_node. |
-| [serialize](serialize.md)             | serializes a basic_node into a YAML formatted string.   |
-| [get_value](get_value.md)             | converts a basic_node into a target native data type.   |
-| [to_sequence](to_sequence.md)         | gets reference to the sequence node value.              |
-| [to_mapping](to_mapping.md)           | gets reference to the mapping node value.               |
-| [to_boolean](to_boolean.md)           | gets reference to the boolean node value.               |
-| [to_integer](to_integer.md)           | gets reference to the integer node value.               |
-| [to_float_number](to_float_number.md) | gets reference to the floating point number node value. |
-| [to_string](to_string.md)             | gets reference to the string node value.                |
+| Name                              |          | Description                                                        |
+| --------------------------------- | -------- | ------------------------------------------------------------------ |
+| [deserialize](deserialize.md)     | (static) | deserializes a YAML formatted string into a basic_node.            |
+| [serialize](serialize.md)         | (static) | serializes a basic_node into a YAML formatted string.              |
+| [get_value](get_value.md)         |          | converts a basic_node into a target native data type.              |
+| [get_value_ref](get_value_ref.md) |          | converts a basic_node into reference to a target native data type. |
 
 ### Iterators
 | Name              | Description                                              |
@@ -105,7 +100,14 @@ This class provides features to handle YAML nodes.
 | [operator[]](operator[].md) | accesses an item specified by the key/index |
 
 ### Aliasing Nodes
-| Name                                  | Description                                      |
-| ------------------------------------- | ------------------------------------------------ |
-| [add_anchor_name](add_anchor_name.md) | registers an anchor name to a basic_node object. |
-| [has_anchor_name](has_anchor_name.md) | checks if a basic_node has any anchor name.      |
+| Name                                  | Description                                              |
+| ------------------------------------- | -------------------------------------------------------- |
+| [add_anchor_name](add_anchor_name.md) | registers an anchor name to a basic_node object.         |
+| [get_anchor_name](get_anchor_name.md) | gets an anchor name associated with a basic_node object. |
+| [has_anchor_name](has_anchor_name.md) | checks if a basic_node has any anchor name.              |
+
+### Modifiers
+
+| Name            | Description                      |
+| --------------- | -------------------------------- |
+| [swap](swap.md) | swaps the internally stored data |

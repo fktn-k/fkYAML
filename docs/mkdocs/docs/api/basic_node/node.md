@@ -8,7 +8,7 @@ using node = basic_node<>;
 
 This type is the default specialization of the [basic_node](index.md) class which uses the standard template types.  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iostream>

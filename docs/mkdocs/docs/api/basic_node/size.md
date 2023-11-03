@@ -11,9 +11,9 @@ Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not h
 
 ### **Return Value**
 
-Returns the size of a node value.
+The size of a node value.
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

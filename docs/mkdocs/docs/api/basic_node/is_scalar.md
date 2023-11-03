@@ -17,7 +17,7 @@ Tests whether the node value type is one of the followings:
 
 `true` if the type is a scalar type, `false` otherwise.  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

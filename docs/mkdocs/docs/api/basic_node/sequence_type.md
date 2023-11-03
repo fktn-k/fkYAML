@@ -12,7 +12,7 @@ To store sequence objects in [`basic_node`](index.md) class, the type is defined
 If not explicitly specified, the default type `std::vector` will be chosen.  
 Note that sequence objects are stored as pointers to the decided type in a [`basic_node`](index.md) so that the internal storage size will at most be 8 bytes.  
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

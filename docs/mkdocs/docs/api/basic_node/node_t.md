@@ -26,7 +26,7 @@ This enumeration collects the different YAML value types. They are internally us
     * [`float_number_type`](float_number_type.md) for float number scalar values
     * [`string_type`](string_type.md) for string scalar values
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

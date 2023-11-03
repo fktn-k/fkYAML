@@ -40,7 +40,7 @@ static basic_node deserialize(InputType&& input);
 ***`input`*** [in]
 :   An input source in the YAML format.
 
-### **Return Values**
+### **Return Value**
 
 The resulting `basic_node` object deserialized from the input source.  
 
@@ -67,13 +67,13 @@ static basic_node deserialize(ItrType&& begin, ItrType&& end);
 ***`end`*** [in]
 :   An iterator to the past-the-last element of an input sequence
 
-### **Return Values**
+### **Return Value**
 
 The resulting `basic_node` object deserialized from the pair of iterators.
 
 ## Examples
 
-??? Example "Example (a character array)"
+???+ Example "Example (a character array)"
 
     ```cpp
     #include <cstdint>
@@ -106,7 +106,7 @@ The resulting `basic_node` object deserialized from the pair of iterators.
     3.14
     ```
 
-??? Example "Example (a std::string object)"
+???+ Example "Example (a std::string object)"
 
     ```cpp
     #include <cstdint>
@@ -140,7 +140,7 @@ The resulting `basic_node` object deserialized from the pair of iterators.
     3.14
     ```
 
-??? Example "Example (a FILE pointer)"
+???+ Example "Example (a FILE pointer)"
 
     ```yaml title="input.yaml"
     foo: true
@@ -181,7 +181,7 @@ The resulting `basic_node` object deserialized from the pair of iterators.
     3.14
     ```
 
-??? Example "Example (a pair of iterators)"
+???+ Example "Example (a pair of iterators)"
 
     ```cpp
     #include <cstdint>

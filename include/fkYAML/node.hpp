@@ -111,16 +111,16 @@ private:
 
     /// @brief The actual storage for a YAML node value of the @ref basic_node class.
     /// @details This union combines the different sotrage types for the YAML value types defined in @ref node_t.
-    /// @note Container types are stored as pointers so that the size of this union should not exceed 64 bits by
+    /// @note Container types are stored as pointers so that the size of this union will not exceed 64 bits by
     /// default.
     union node_value
     {
-        /// @brief Construct a new basic_node Value object for null types.
+        /// @brief Constructs a new basic_node Value object for null types.
         node_value() = default;
 
-        /// @brief Construct a new basic_node Value object with basic_node types. The default value for the specified
+        /// @brief Constructs a new basic_node value object with a node type. The default value for the specified
         /// type will be assigned.
-        /// @param[in] type A Node type.
+        /// @param[in] type A node type.
         explicit node_value(node_t type)
         {
             switch (type)
@@ -151,9 +151,9 @@ private:
             }
         }
 
-        /// @brief Destroy the existing Node value. This process is recursive if the specified node type is fpr
+        /// @brief Destroys the existing Node value. This process is recursive if the specified node type is for
         /// containers.
-        /// @param[in] type A Node type to determine which Node value is destroyed.
+        /// @param[in] type A Node type to determine the value to be destroyed.
         void destroy(node_t type)
         {
             if (type == node_t::SEQUENCE || type == node_t::MAPPING)
@@ -217,22 +217,22 @@ private:
             }
         }
 
-        /** A pointer to the value of sequence type. */
+        /// A pointer to the value of sequence type.
         sequence_type* p_sequence;
-        /** A pointer to the value of mapping type. This pointer is also used when node type is null. */
+        /// A pointer to the value of mapping type. This pointer is also used when node type is null.
         mapping_type* p_mapping {nullptr};
-        /** A value of boolean type. */
+        /// A value of boolean type.
         boolean_type boolean;
-        /** A value of integer type. */
+        /// A value of integer type.
         integer_type integer;
-        /** A value of float number type. */
+        /// A value of float number type.
         float_number_type float_val;
-        /** A pointer to the value of string type. */
+        /// A pointer to the value of string type.
         string_type* p_string;
     };
 
 private:
-    /// @brief Allocates and constructs an object with specified type and arguments.
+    /// @brief Allocates and constructs an object with a given type and arguments.
     /// @tparam ObjType The target object type.
     /// @tparam ArgTypes The packed argument types for constructor arguments.
     /// @param[in] args A parameter pack for constructor arguments of the target object type.
@@ -273,11 +273,12 @@ private:
     }
 
 public:
-    /// @brief Construct a new basic_node object of null type.
+    /// @brief Constructs a new basic_node object of null type.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node() = default;
 
-    /// @brief Construct a new basic_node object with a specified type.
+    /// @brief Constructs a new basic_node object with a specified type.
+    /// @param[in] type A YAML node type.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     explicit basic_node(const node_t type)
         : m_node_type(type),
@@ -286,6 +287,7 @@ public:
     }
 
     /// @brief Copy constructor of the basic_node class.
+    /// @param[in] rhs A basic_node object to be copied with.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
@@ -330,6 +332,7 @@ public:
     }
 
     /// @brief Move constructor of the basic_node class.
+    /// @param[in] rhs A basic_node object to be moved from.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
@@ -378,6 +381,9 @@ public:
     }
 
     /// @brief Construct a new basic_node object from a value of compatible types.
+    /// @tparam CompatibleType Type of native data which is compatible with node values.
+    /// @tparam U Type of compatible native data without cv-qualifiers and reference.
+    /// @param[in] val The value of a compatible type.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     template <
         typename CompatibleType, typename U = detail::remove_cvref_t<CompatibleType>,
@@ -393,6 +399,8 @@ public:
     }
 
     /// @brief Construct a new basic node object with a node_ref_storage object.
+    /// @tparam NodeRefStorageType Type of basic_node with reference.
+    /// @param[in] node_ref_storage A node_ref_storage template class object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     template <
         typename NodeRefStorageType,
@@ -403,6 +411,7 @@ public:
     }
 
     /// @brief Construct a new basic node object with std::initializer_list.
+    /// @param[in] init A initializer list of basic_node objects.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(initializer_list_t init)
     {
@@ -443,6 +452,9 @@ public:
 
 public:
     /// @brief Deserialize an input source into a basic_node object.
+    /// @tparam InputType Type of a compatible input.
+    /// @param[in] input An input source in the YAML format.
+    /// @return The resulting basic_node object deserialized from the input source.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/
     template <typename InputType>
     static basic_node deserialize(InputType&& input)
@@ -451,6 +463,10 @@ public:
     }
 
     /// @brief Deserialize input iterators into a basic_node object.
+    /// @tparam ItrType Type of a compatible iterator.
+    /// @param[in] begin An iterator to the first element of an input sequence.
+    /// @param[in] end An iterator to the past-the-last element of an input sequence.
+    /// @return The resulting basic_node object deserialized from the pair of iterators.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/
     template <typename ItrType>
     static basic_node deserialize(ItrType&& begin, ItrType&& end)
@@ -460,6 +476,8 @@ public:
     }
 
     /// @brief Serialize a basic_node object into a string.
+    /// @param[in] node A basic_node object to be serialized.
+    /// @return The resulting string object from the serialization of the node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
     static std::string serialize(const basic_node& node)
     {
@@ -467,6 +485,7 @@ public:
     }
 
     /// @brief A factory method for sequence basic_node objects without sequence_type objects.
+    /// @return A YAML sequence node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence/
     static basic_node sequence()
     {
@@ -478,6 +497,8 @@ public:
     } // LCOV_EXCL_LINE
 
     /// @brief A factory method for sequence basic_node objects with lvalue sequence_type objects.
+    /// @param[in] seq A lvalue sequence node value.
+    /// @return A YAML sequence node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence/
     static basic_node sequence(const sequence_type& seq)
     {
@@ -489,6 +510,8 @@ public:
     } // LCOV_EXCL_LINE
 
     /// @brief A factory method for sequence basic_node objects with rvalue sequence_type objects.
+    /// @param[in] seq A rvalue sequence node value.
+    /// @return A YAML sequence node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence/
     static basic_node sequence(sequence_type&& seq)
     {
@@ -500,6 +523,7 @@ public:
     } // LCOV_EXCL_LINE
 
     /// @brief A factory method for mapping basic_node objects without mapping_type objects.
+    /// @return A YAML mapping node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping/
     static basic_node mapping()
     {
@@ -511,6 +535,8 @@ public:
     } // LCOV_EXCL_LINE
 
     /// @brief A factory method for mapping basic_node objects with lvalue mapping_type objects.
+    /// @param[in] map A lvalue mapping node value.
+    /// @return A YAML mapping node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping/
     static basic_node mapping(const mapping_type& map)
     {
@@ -522,6 +548,8 @@ public:
     } // LCOV_EXCL_LINE
 
     /// @brief A factory method for mapping basic_node objects with rvalue mapping_type objects.
+    /// @param[in] map A rvalue mapping node value.
+    /// @return A YAML mapping node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping/
     static basic_node mapping(mapping_type&& map)
     {
@@ -534,6 +562,8 @@ public:
 
     /// @brief A factory method for alias basic_node objects referencing the given anchor basic_node object.
     /// @note The given anchor basic_node must have a non-empty anchor name.
+    /// @param[in] anchor_node A basic_node object with an anchor name.
+    /// @return An alias YAML node created from the given anchor node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/alias_of/
     static basic_node alias_of(const basic_node& anchor_node)
     {
@@ -548,6 +578,8 @@ public:
 
 public:
     /// @brief A copy assignment operator of the basic_node class.
+    /// @param[in] rhs A lvalue basic_node object to be copied with.
+    /// @return Reference to this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator=/
     basic_node& operator=(const basic_node& rhs) noexcept
     {
@@ -556,6 +588,8 @@ public:
     }
 
     /// @brief A move assignment operator of the basic_node class.
+    /// @param[in] rhs A rvalue basic_node object to be moved from.
+    /// @return Reference to this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator=/
     basic_node& operator=(basic_node&& rhs) noexcept
     {
@@ -564,6 +598,8 @@ public:
     }
 
     /// @brief A subscript operator for non-const basic_node objects.
+    /// @param[in] index An index for an element in the YAML sequence node.
+    /// @return Reference to the YAML node at the given index.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     basic_node& operator[](std::size_t index) // NOLINT(readability-make-member-function-const)
     {
@@ -578,6 +614,8 @@ public:
     }
 
     /// @brief A subscript operator for const basic_node objects.
+    /// @param[in] index An index for an element in the YAML sequence node.
+    /// @return Constant reference to the YAML node at the given index.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     const basic_node& operator[](std::size_t index) const
     {
@@ -592,6 +630,9 @@ public:
     }
 
     /// @brief A subscript operator for non-const basic_node objects.
+    /// @tparam KeyType A type compatible with the key type of mapping node values.
+    /// @param[in] key A key to the target value in the YAML mapping node.
+    /// @return Reference to the YAML node associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<
@@ -610,6 +651,9 @@ public:
     }
 
     /// @brief A subscript operator for const basic_node objects.
+    /// @tparam KeyType A type compatible with the key type of mapping node values.
+    /// @param[in] key A key to the target value in the YAML mapping node.
+    /// @return Constant reference to the YAML node associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<
@@ -629,6 +673,7 @@ public:
 
 public:
     /// @brief Returns the type of the current basic_node value.
+    /// @return The type of the YAML node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/type/
     node_t type() const noexcept
     {
@@ -636,6 +681,7 @@ public:
     }
 
     /// @brief Tests whether the current basic_node value is of sequence type.
+    /// @return true if the type is sequence, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_sequence/
     bool is_sequence() const noexcept
     {
@@ -643,6 +689,7 @@ public:
     }
 
     /// @brief Tests whether the current basic_node value is of mapping type.
+    /// @return true if the type is mapping, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_mapping/
     bool is_mapping() const noexcept
     {
@@ -650,6 +697,7 @@ public:
     }
 
     /// @brief Tests whether the current basic_node value is of null type.
+    /// @return true if the type is null, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_null/
     bool is_null() const noexcept
     {
@@ -657,6 +705,7 @@ public:
     }
 
     /// @brief Tests whether the current basic_node value is of boolean type.
+    /// @return true if the type is boolean, false otherwise
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_boolean/
     bool is_boolean() const noexcept
     {
@@ -664,6 +713,7 @@ public:
     }
 
     /// @brief Tests whether the current basic_node value is of integer type.
+    /// @return true if the type is integer, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_integer/
     bool is_integer() const noexcept
     {
@@ -671,6 +721,7 @@ public:
     }
 
     /// @brief Tests whether the current basic_node value is of float number type.
+    /// @return true if the type is floating point number, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_float_number/
     bool is_float_number() const noexcept
     {
@@ -678,6 +729,7 @@ public:
     }
 
     /// @brief Tests whether the current basic_node value is of string type.
+    /// @return true if the type is string, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_string/
     bool is_string() const noexcept
     {
@@ -685,6 +737,7 @@ public:
     }
 
     /// @brief Tests whether the current basic_node value is of scalar types.
+    /// @return true if the type is scalar, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_scalar/
     bool is_scalar() const noexcept
     {
@@ -692,6 +745,7 @@ public:
     }
 
     /// @brief Tests whether the current basic_node value (sequence, mapping, string) is empty.
+    /// @return true if the node value is empty, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/empty/
     bool empty() const
     {
@@ -712,6 +766,7 @@ public:
     }
 
     /// @brief Returns the size of the current basic_node value (sequence, mapping, string).
+    /// @return The size of a node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/size/
     std::size_t size() const
     {
@@ -732,6 +787,9 @@ public:
     }
 
     /// @brief Check whether or not this basic_node object has a given key in its inner mapping Node value.
+    /// @tparam KeyType A type compatible with the key type of mapping node values.
+    /// @param[in] key A key to the target value in the YAML mapping node value.
+    /// @return true if the YAML node is a mapping and has the given key, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/contains/
     template <
         typename KeyType, detail::enable_if_t<
@@ -753,6 +811,7 @@ public:
     }
 
     /// @brief Get the YAML version specification for this basic_node object.
+    /// @return The version of the YAML format applied to the basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
     yaml_version_t get_yaml_version() const noexcept
     {
@@ -760,6 +819,7 @@ public:
     }
 
     /// @brief Set the YAML version specification for this basic_node object.
+    /// @param[in] A version of the YAML format.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     void set_yaml_version(const yaml_version_t version) noexcept
     {
@@ -767,6 +827,7 @@ public:
     }
 
     /// @brief Check whether or not this basic_node object has already had any anchor name.
+    /// @return true if ths basic_node has an anchor name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
     bool has_anchor_name() const noexcept
     {
@@ -776,6 +837,7 @@ public:
     /// @brief Get the anchor name associated to this basic_node object.
     /// @note Some anchor name must be set before calling this method. Call basic_node::HasAnchorName() to see if this
     /// basic_node object has any anchor name.
+    /// @return The anchor name associated to the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const
     {
@@ -798,6 +860,7 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
+    /// @param[in] anchor_name An anchor name.This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name)
     {
@@ -808,6 +871,9 @@ public:
 
     /// @brief Get the node value object converted into a given type.
     /// @note This function requires T objects to be default constructible.
+    /// @tparam T A compatible value type which might be cv-qualified or a reference type.
+    /// @tparam ValueType A compatible value type, without cv-qualifiers and reference by default.
+    /// @return A compatible native data value converted from the basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value/
     template <
         typename T, typename ValueType = detail::remove_cvref_t<T>,
@@ -823,12 +889,20 @@ public:
         return ret;
     }
 
+    /// @brief Explicit reference access to the internally stored YAML node value.
+    /// @tparam ReferenceType Reference type to the target YAML node value.
+    /// @return Reference to the internally stored YAML node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_ref/
     template <typename ReferenceType, detail::enable_if_t<std::is_reference<ReferenceType>::value, int> = 0>
     ReferenceType get_value_ref()
     {
         return get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
     }
 
+    /// @brief Explicit reference access to the internally stored YAML node value.
+    /// @tparam ReferenceType Constant reference type to the target YAML node value.
+    /// @return Constant reference to the internally stored YAML node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_ref/
     template <
         typename ReferenceType,
         detail::enable_if_t<
@@ -840,7 +914,8 @@ public:
         return get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
     }
 
-    /// @brief Swaps data with the specified basic_node object.
+    /// @brief Swaps the internally stored data with the specified basic_node object.
+    /// @param[in] rhs A basic_node object to be swapped with.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/swap/
     void swap(basic_node& rhs) noexcept
     {
@@ -858,6 +933,7 @@ public:
 
     /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const
     /// basic_node object. Throws exception if the basic_node value is not of container types.
+    /// @return An iterator to the first element of a YAML node value (either sequence or mapping).
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     iterator begin()
     {
@@ -876,6 +952,7 @@ public:
 
     /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a const
     /// basic_node object. Throws exception if the basic_node value is not of container types.
+    /// @return A constant iterator to the first element of a YAML node value (either sequence or mapping).
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     const_iterator begin() const
     {
@@ -894,6 +971,7 @@ public:
 
     /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a non-const
     /// basic_node object. Throws exception if the basic_node value is not of container types.
+    /// @return An iterator to the past-the end element of a YAML node value (either sequence or mapping).
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     iterator end()
     {
@@ -912,6 +990,7 @@ public:
 
     /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a const
     /// basic_node object. Throws exception if the basic_node value is not of container types.
+    /// @return A constant iterator to the past-the end element of a YAML node value (either sequence or mapping).
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     const_iterator end() const
     {
@@ -1084,6 +1163,8 @@ private:
 };
 
 /// @brief Swap function for basic_node objects.
+/// @param[in] lhs A left-side-hand basic_node object to be swapped with.
+/// @param[in] rhs A right-side-hand basic_node object to be swapped with.
 /// @sa https://fktn-k.github.io/fkYAML/api/swap/
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,

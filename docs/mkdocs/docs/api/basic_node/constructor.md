@@ -39,7 +39,7 @@ basic_node() = default;
 Default constructor. Constructs a basic_node with a null value.  
 The resulting basic_node has the [`node_t::NULL_OBJECT`](node_t.md) type.  
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -69,9 +69,9 @@ The resulting basic_node has a default value for the given type.
 ### **Parameters**
 
 ***`type`*** [in]
-:   A YAML node value.
+:   A YAML node type.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -101,9 +101,9 @@ The resulting basic_node has the same type and value as `rhs`.
 ### **Parameters**
 
 ***`rhs`*** [in]
-:   A basic node to be copied with.
+:   A basic_node object to be copied with.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -135,9 +135,9 @@ The value of the argument `rhs` after calling this move constructor, will be the
 ### **Parameters**
 
 ***`rhs`*** [in]
-:   A basic node to be moved from.
+:   A basic_node object to be moved from.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -185,7 +185,7 @@ The resulting basic_node has the value of `val` and the type which is associated
 ***`val`*** [in]
 :   The value of a compatible type.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -232,7 +232,7 @@ The resulting basic_node has the value of the referenced basic_node by `node_ref
 ***`node_ref_storage`*** [in]
 :   A node_ref_storage template class object.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -279,7 +279,7 @@ If `init` contains a sequence of basic_node objects in which the number of basic
 ***`init`*** [in]
 :   A initializer list of basic_node objects.
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>

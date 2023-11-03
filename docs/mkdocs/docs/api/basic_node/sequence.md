@@ -12,7 +12,7 @@ The factory method which constructs a basic_node with the [`node_t::SEQUENCE`](n
 Calling this API with no arguments will constructs a basic_node with an empty sequence node value.  
 The resulting basic_node has the [`node_t::SEQUENCE`](node_t.md) type.  
 
-??? example
+???+ Example
 
     ```cpp
     #include <iostream>

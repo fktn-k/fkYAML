@@ -20,7 +20,16 @@ basic_node& operator=(const basic_node& rhs) noexcept;
 Copy assignment operator.  
 Copies a YAML node value via the "copy and swap" strategy to enhance exception safety.  
 
-??? Example
+### **Parameters**
+
+***`rhs`*** [in]
+:   A lvalue basic_node object to be copied with.
+
+### **Return Value**
+
+Reference to this basic_node object.
+
+???+ Example
 
     ```cpp
     #include <iostream>
@@ -31,6 +40,49 @@ Copies a YAML node value via the "copy and swap" strategy to enhance exception s
         fkyaml::node n = true;
         fkyaml::node n2 = 123;
         n = n2;
+
+        std::cout << std::boolalpha << n.is_integer() << std::endl;
+        std::cout << n.get_value<std::int64_t>() << std::endl;
+
+        return 0;
+    }
+    ```
+
+    output:
+    ```bash
+    true
+    123
+    ```
+
+## Overload (2)
+
+```cpp
+basic_node& operator=(basic_node&& rhs) noexcept;
+```
+
+Move assignment operator.  
+Moves a YAML node value from the given node.  
+
+### **Parameters**
+
+***`rhs`*** [in]
+:   A rvalue basic_node object to be moved from.
+
+### **Return Value**
+
+Reference to this basic_node object.
+
+???+ Example
+
+    ```cpp
+    #include <iostream>
+    #include <fkYAML/node.hpp>
+
+    int main()
+    {
+        fkyaml::node n = true;
+        fkyaml::node n2 = 123;
+        n = std::move(n2);
 
         std::cout << std::boolalpha << n.is_integer() << std::endl;
         std::cout << n.get_value<std::int64_t>() << std::endl;

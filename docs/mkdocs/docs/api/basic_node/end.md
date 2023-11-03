@@ -16,7 +16,7 @@ Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not h
 
 An iterator to the past-the-last element of a container node value (either sequence or mapping).
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iostream>

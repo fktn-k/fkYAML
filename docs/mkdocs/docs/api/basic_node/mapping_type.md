@@ -33,7 +33,7 @@ Note that mapping objects are stored as pointers in a [`basic_node`](index.md) s
 `StringType`
 :   The type of keys and string scalar values. Defaults to `std::string`.
 
-??? Example
+???+ Example
 
     ```cpp
     #include <cstdint>

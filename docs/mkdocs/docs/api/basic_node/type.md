@@ -22,7 +22,7 @@ The type of the YAML node value.
 | floating point number | node_t::FLOAT_NUMBER |
 | string                | node_t::STRING       |
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>

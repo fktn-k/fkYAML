@@ -11,9 +11,9 @@ Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not h
 
 ### **Return Value**
 
-Returns `true` if the node value is empty, `false` otherwise.
+`true` if the node value is empty, `false` otherwise.
 
-??? Example
+???+ Example
 
     ```cpp
     #include <iomanip>
