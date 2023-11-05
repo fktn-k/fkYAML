@@ -32,7 +32,6 @@ all:
 	@echo "clang-sanitizers - check whether no runtime issue is detected while running the unit test app."
 	@echo "clang-tidy - check whether source files detect no issues during static code analysis."
 	@echo "cmake-format - check whether CMake scripts are well formatted."
-	@echo "doxygen - generate the API documentation for the project with Doxygen."
 	@echo "html-coverage - generate HTML coverage report."
 	@echo "iwyu - check whether source files are each self-contained."
 	@echo "lcov-coverage - generate coverage data with lcov."
@@ -81,15 +80,6 @@ valgrind:
 # pre-requisites: cmakelang
 cmake-format:
 	cmake-format $(CMAKE_SCRIPTS) -i -c .cmake-format.yaml
-
-#####################
-#   Documentation   #
-#####################
-
-# pre-requisites: doxygen, graphviz
-doxygen:
-	cmake -B build_doxygen -S . -DFK_YAML_RUN_DOXYGEN=ON
-	cmake --build build_doxygen --target doxygen -j $(JOBS)
 
 ###############
 #   Version   #
@@ -164,6 +154,5 @@ clean:
 		build_clang_sanitizers \
 		build_clang_tidy \
 		build_coverage \
-		build_doxygen \
 		build_iwyu \
 		build_valgrind
