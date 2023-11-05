@@ -88,7 +88,10 @@ nav:
       - Overview: index.md
       - License: home/license.md
       - Changelog: home/CHANGELOG.md
-  - "API Documentation":
+  - Tutorials: 
+      The First Steps: tutorials/index.md
+      CMake Integration: tutorials/cmake_integration.md
+  - API References:
       - basic_node:
           - basic_node: api/basic_node/index.md
           - (constructor): api/basic_node/constructor.md
@@ -152,4 +155,3 @@ nav:
           - emplace: api/ordered_map/emplace.md
           - find: api/ordered_map/find.md
           - operator[]: api/ordered_map/operator[].md
-  - Tutorials: tutorials.md
