@@ -1,10 +1,18 @@
 name: PublishDocs
 
+# make the documentation up to date with the develop branch
 on:
   push:
     branches:
-      - main
+      - develop
+    paths:
+      - docs/mkdocs/**
   workflow_dispatch:
+
+# no cancellation during uploads to avoid broken publications
+concurrency:
+  group: documentation
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -13,6 +21,7 @@ permissions:
 
 jobs:
   build:
+    if: github.repository == 'fktn-k/fkYAML'
     runs-on: ubuntu-latest
 
     steps:
@@ -20,13 +29,8 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install graphviz and doxygen
-        run: |
-          sudo apt update
-          sudo apt install -y --no-install-recommends graphviz doxygen
-
-      - name: Configure CMake
-        run: make doxygen
+      - name: Build documentation
+        run: make build -C docs/mkdocs
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
@@ -34,9 +38,10 @@ jobs:
       - name: Upload API documents
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ${{github.workspace}}/build_doxygen/doxygen/html
+          path: ${{github.workspace}}/docs/mkdocs/site
 
   deploy:
+    if: github.repository == 'fktn-k/fkYAML'
     needs: build
     environment:
       name: github-pages

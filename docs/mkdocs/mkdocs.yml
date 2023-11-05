@@ -89,8 +89,8 @@ nav:
       - License: home/license.md
       - Changelog: home/CHANGELOG.md
   - Tutorials: 
-      The First Steps: tutorials/index.md
-      CMake Integration: tutorials/cmake_integration.md
+      - The First Steps: tutorials/index.md
+      - CMake Integration: tutorials/cmake_integration.md
   - API References:
       - basic_node:
           - basic_node: api/basic_node/index.md

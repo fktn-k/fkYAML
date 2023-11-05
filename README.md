@@ -5,6 +5,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/cded6969c7344ea5be60ab472e13000f)](https://app.codacy.com/gh/fktn-k/fkYAML/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![CodeQL](https://github.com/fktn-k/fkYAML/workflows/CodeQL/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3ACodeQL)
 [![GitHub Releases](https://img.shields.io/github/release/fktn-k/fkYAML.svg)](https://github.com/fktn-k/fkYAML/releases/latest)
+[![Documentation](https://img.shields.io/badge/docs-here-blue.svg)](https://fktn-k.github.io/fkYAML)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/fktn-k/fkYAML/develop/LICENSE.txt)
 [![GitHub Issues](https://img.shields.io/github/issues/fktn-k/fkYAML.svg)](https://github.com/fktn-k/fkYAML/issues)
 [![REUSE status](https://api.reuse.software/badge/github.com/fktn-k/fkYAML)](https://api.reuse.software/info/github.com/fktn-k/fkYAML)
@@ -398,9 +399,10 @@ Thanks a lot!
 - [**cmake-format**](https://github.com/cheshirekow/cmake_format) as a linter for CMake scripts.
 - [**Coveralls**](https://coveralls.io/) to measure [code coverage](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).
 - [**Catch2**](https://github.com/catchorg/Catch2) as a unit-test framework.
-- [**Doxygen**](https://www.doxygen.nl/) as the API documentation generator.
 - [**github-changelog-generator**](https://github.com/github-changelog-generator/github-changelog-generator) to generate the [CHANGELOG.md](https://github.com/fktn-k/fkYAML/tree/develop/CHANGELOG.md) file.
 - [**include-what-you-use**](https://github.com/include-what-you-use/include-what-you-use) to check the fkYAML library source files are each self-contained.
 - [**lcov**](https://ltp.sourceforge.net/coverage/lcov.php) to generate coverage data.
+- [**Material for MkDocs**](https://squidfunk.github.io/mkdocs-material/) for the style of the documentation site.
+- [**MkDocs**](https://www.mkdocs.org/) as the documentation site generator.
 - [**reuse-tool**](https://github.com/fsfe/reuse-tool) to generate license/copyright headers in source files to meet [REUSE software](https://reuse.software/) recommendations.
 - [**Valgrind**](https://valgrind.org/) for runtime memory leak check.
