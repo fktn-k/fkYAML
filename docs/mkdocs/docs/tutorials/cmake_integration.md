@@ -1,8 +1,8 @@
 # CMake Integration
 
-Since we use CMake to build fkYAML, we also provide a couple of integration points for our users.  
+Since we use [CMake](https://cmake.org/) to build fkYAML, we also provide a couple of integration points for our users.  
 You can use the `fkYAML::fkYAML` interface target in CMake.  
-This target popultes the appropriate usage requirements for `INTERFACE_INCLUDE_DIRECTORIES`(https://cmake.org/cmake/help/latest/prop_tgt/INTERFACE_INCLUDE_DIRECTORIES.html) to point to the appropriate include directories and `INTERFACE_COMPILE_FEATURES`(https://cmake.org/cmake/help/latest/prop_tgt/INTERFACE_COMPILE_FEATURES.html) for the necessary C++11 flags.  
+This target popultes the appropriate usage requirements for [`INTERFACE_INCLUDE_DIRECTORIES`](https://cmake.org/cmake/help/latest/prop_tgt/INTERFACE_INCLUDE_DIRECTORIES.html) to point to the appropriate include directories and [`INTERFACE_COMPILE_FEATURES`](https://cmake.org/cmake/help/latest/prop_tgt/INTERFACE_COMPILE_FEATURES.html) for the necessary C++11 flags.  
 
 ## Possible solutions
 
