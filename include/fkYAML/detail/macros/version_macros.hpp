@@ -1,18 +1,16 @@
-/**
- *  _______   __ __   __  _____   __  __  __
- * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
- * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
- *
- * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
- * SPDX-License-Identifier: MIT
- *
- * @file
- */
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
 
 // Check version definitions if already defined.
 #if defined(FK_YAML_MAJOR_VERSION) && defined(FK_YAML_MINOR_VERSION) && defined(FK_YAML_PATCH_VERSION)
-    #if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 1 || FK_YAML_PATCH_VERSION != 3
+    #if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 2 || FK_YAML_PATCH_VERSION != 0
         #warning Already included a different version of the fkYAML library!
     #else
         // define macros to skip defining macros down below.
@@ -23,8 +21,8 @@
 #ifndef FK_YAML_VERCHECK_SUCCEEDED
 
     #define FK_YAML_MAJOR_VERSION 0
-    #define FK_YAML_MINOR_VERSION 1
-    #define FK_YAML_PATCH_VERSION 3
+    #define FK_YAML_MINOR_VERSION 2
+    #define FK_YAML_PATCH_VERSION 0
 
     #define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
 

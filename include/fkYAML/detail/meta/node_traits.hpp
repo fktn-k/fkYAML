@@ -1,14 +1,12 @@
-/**
- *  _______   __ __   __  _____   __  __  __
- * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
- * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
- *
- * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
- * SPDX-License-Identifier: MIT
- *
- * @file
- */
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
 
 #ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
 #define FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
@@ -71,6 +69,23 @@ template <
 struct is_basic_node<
     basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, Converter>>
     : std::true_type
+{
+};
+
+///////////////////////////////////
+//   is_node_ref_storage traits
+///////////////////////////////////
+
+template <typename>
+class node_ref_storage;
+
+template <typename T>
+struct is_node_ref_storage : std::false_type
+{
+};
+
+template <typename T>
+struct is_node_ref_storage<node_ref_storage<T>> : std::true_type
 {
 };
 

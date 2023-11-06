@@ -1,14 +1,12 @@
-/**
- *  _______   __ __   __  _____   __  __  __
- * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
- * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
- *
- * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
- * SPDX-License-Identifier: MIT
- *
- * @file
- */
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
 
 #ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 #define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
@@ -86,6 +84,7 @@ public:
         skip_white_spaces();
 
         char_int_type current = m_input_handler.get_current();
+        m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
 
         if (0x00 <= current && current <= 0x7F && isdigit(current))
         {
@@ -296,6 +295,16 @@ public:
         default:
             return m_last_token_type = scan_string();
         }
+    }
+
+    /**
+     * @brief Get the beginning position of a last token.
+     *
+     * @return std::size_t The beginning position of a last token.
+     */
+    std::size_t get_last_token_begin_pos() const noexcept
+    {
+        return m_last_token_begin_pos;
     }
 
     /**
@@ -1141,6 +1150,7 @@ private:
     input_handler_type m_input_handler;
     //!< A temporal buffer to store a string to be parsed to an actual datum.
     input_string_type m_value_buffer {};
+    std::size_t m_last_token_begin_pos {0};
     //!< The last found token type.
     lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
     //!< A temporal bool holder.

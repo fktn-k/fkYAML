@@ -1,14 +1,12 @@
-/**
- *  _______   __ __   __  _____   __  __  __
- * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
- * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
- *
- * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
- * SPDX-License-Identifier: MIT
- *
- * @file
- */
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
 
 #ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
 #define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
@@ -209,6 +207,45 @@ struct type_tag
 {
     using type = T;
 };
+
+/**
+ * @brief A utility struct to retrieve the first type in variadic template arguments.
+ *
+ * @tparam Types Types of variadic template arguments.
+ */
+template <typename... Types>
+struct get_head_type;
+
+/**
+ * @brief A specialization of get_head_type if variadic template has no arguments.
+ *
+ * @tparam  N/A
+ */
+template <>
+struct get_head_type<>
+{
+    using type = void;
+};
+
+/**
+ * @brief A partial specialization of get_head_type if variadic template has one or more argument(s).
+ *
+ * @tparam First The first type in the arguments
+ * @tparam Rest The rest of the types in the arguments.
+ */
+template <typename First, typename... Rest>
+struct get_head_type<First, Rest...>
+{
+    using type = First;
+};
+
+/**
+ * @brief An alias template to retrieve the first type in variadic template arguments.
+ *
+ * @tparam Types Types of variadic template arguments.
+ */
+template <typename... Types>
+using head_type = typename get_head_type<Types...>::type;
 
 } // namespace detail
 

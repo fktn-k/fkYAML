@@ -50,11 +50,23 @@ if(NOT compiler_supports_cxx_${FK_YAML_TEST_TARGET_CXX_STANDARD})
   return()
 endif()
 
+######################################
+#   Prepare to use test data files   #
+######################################
+
+# While executing CTest on Windows, just specifying a relative path seems not working.
+# This is a workaround to resolve the issue. (Delete it when a better solution is found.)
+file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/include/test_data.hpp "#ifndef FK_YAML_TEST_TEST_DATA_HPP_\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/test_data.hpp "#define FK_YAML_TEST_TEST_DATA_HPP_\n\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/test_data.hpp "#define FK_YAML_TEST_DATA_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/test_data\"\n\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/include/test_data.hpp "#endif /* FK_YAML_TEST_TEST_DATA_HPP_ */\n")
+
 #################################
 #   Configure compile options   #
 #################################
 
 add_library(unit_test_config INTERFACE)
+target_include_directories(unit_test_config INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_link_libraries(unit_test_config INTERFACE Catch2::Catch2 ${FK_YAML_TARGET_NAME})
 target_compile_features(unit_test_config INTERFACE cxx_std_${FK_YAML_TEST_TARGET_CXX_STANDARD})
 set_target_properties(unit_test_config PROPERTIES CXX_EXTENTIONS OFF)
@@ -141,10 +153,12 @@ add_executable(
   test_deserializer_class.cpp
   test_exception_class.cpp
   test_from_string.cpp
+  test_input_adapter.cpp
   test_input_handler.cpp
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
   test_node_class.cpp
+  test_node_ref_storage_class.cpp
   test_ordered_map_class.cpp
   test_serializer_class.cpp
   main.cpp)
@@ -155,6 +169,11 @@ include(Catch)
 catch_discover_tests(${TEST_TARGET})
 
 add_dependencies(${TEST_TARGET} ${FK_YAML_TARGET_NAME})
+
+add_custom_command(
+  TARGET ${TEST_TARGET} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/test_data $<TARGET_FILE_DIR:${TEST_TARGET}>/test_data
+)
 
 ############################################
 #   Configure custom target for coverage   #

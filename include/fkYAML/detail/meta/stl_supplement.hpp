@@ -1,18 +1,17 @@
-/**
- *  _______   __ __   __  _____   __  __  __
- * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
- * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
- *
- * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
- * SPDX-License-Identifier: MIT
- *
- * @file
- */
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
 
 #ifndef FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
 #define FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
 
+#include <cstddef>
 #include <type_traits>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
@@ -42,6 +41,16 @@ namespace detail
 #ifndef FK_YAML_HAS_CXX_14
 
 /**
+ * @brief An alias template for std::add_pointer::type with C++11.
+ * @note std::add_pointer_t is available since C++14.
+ * @sa https://en.cppreference.com/w/cpp/types/add_pointer
+ *
+ * @tparam T A type to be added a pointer.
+ */
+template <typename T>
+using add_pointer_t = typename std::add_pointer<T>::type;
+
+/**
  * @brief An alias template for std::enable_if::type with C++11.
  * @note std::enable_if_t is available since C++14.
  * @sa https://en.cppreference.com/w/cpp/types/enable_if
@@ -51,6 +60,18 @@ namespace detail
  */
 template <bool Condition, typename T = void>
 using enable_if_t = typename std::enable_if<Condition, T>::type;
+
+/**
+ * @brief A simple implementation to use std::is_null_pointer with C++11.
+ * @note std::is_null_pointer is available since C++14.
+ * @sa https://en.cppreference.com/w/cpp/types/is_null_pointer
+ *
+ * @tparam T The type to be checked if it's equal to std::nullptr_t.
+ */
+template <typename T>
+struct is_null_pointer : std::is_same<std::nullptr_t, typename std::remove_cv<T>::type>
+{
+};
 
 /**
  * @brief An alias template for std::remove_cv::type with C++11.
@@ -72,11 +93,24 @@ using remove_cv_t = typename std::remove_cv<T>::type;
 template <typename T>
 using remove_pointer_t = typename std::remove_pointer<T>::type;
 
+/**
+ * @brief An alias template for std::remove_reference::type with C++11.
+ * @note std::remove_reference_t is available since C++14.
+ * @sa https://en.cppreference.com/w/cpp/types/remove_reference
+ *
+ * @tparam T A type from which a reference is removed.
+ */
+template <typename T>
+using remove_reference_t = typename std::remove_reference<T>::type;
+
 #else
 
+using std::add_pointer_t;
 using std::enable_if_t;
+using std::is_null_pointer;
 using std::remove_cv_t;
 using std::remove_pointer_t;
+using std::remove_reference_t;
 
 #endif
 

@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project(
   fkYAML
-  VERSION 0.1.3
+  VERSION 0.2.0
   LANGUAGES CXX)
 
 #############################################################
@@ -112,15 +112,6 @@ if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
   include(CTest)
   enable_testing()
   add_subdirectory(test)
-endif()
-
-##################################
-#   Generate API documentation   #
-##################################
-
-if(FK_YAML_RUN_DOXYGEN)
-  set(FK_YAML_DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
-  add_subdirectory(docs)
 endif()
 
 #######################

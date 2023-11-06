@@ -1,14 +1,12 @@
-/**
- *  _______   __ __   __  _____   __  __  __
- * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
- * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
- *
- * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
- * SPDX-License-Identifier: MIT
- *
- * @file
- */
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
 
 #ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
 #define FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
@@ -116,20 +114,19 @@ private:
             str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
-            to_string(m_tmp_str_buff, node.to_boolean());
+            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::boolean_type>());
             str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
-            to_string(m_tmp_str_buff, node.to_integer());
+            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::integer_type>());
             str += m_tmp_str_buff;
             break;
-        case node_t::FLOAT_NUMBER: {
-            to_string(m_tmp_str_buff, node.to_float_number());
+        case node_t::FLOAT_NUMBER:
+            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::float_number_type>());
             str += m_tmp_str_buff;
             break;
-        }
         case node_t::STRING:
-            str += node.to_string();
+            str += node.template get_value_ref<const typename BasicNodeType::string_type&>();
             break;
         default:                                                     // LCOV_EXCL_LINE
             throw fkyaml::exception("Unsupported node type found."); // LCOV_EXCL_LINE

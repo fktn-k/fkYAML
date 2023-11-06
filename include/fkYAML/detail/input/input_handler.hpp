@@ -1,14 +1,12 @@
-/**
- *  _______   __ __   __  _____   __  __  __
- * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
- * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
- *
- * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
- * SPDX-License-Identifier: MIT
- *
- * @file
- */
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
 
 #ifndef FK_YAML_DETAIL_INPUT_INPUT_HANDLER_HPP_
 #define FK_YAML_DETAIL_INPUT_INPUT_HANDLER_HPP_
@@ -52,6 +50,21 @@ public:
     //!< The type of strings of the input buffer.
     using string_type = std::basic_string<char_type>;
 
+private:
+    /**
+     * @brief A set of information on the current position in an input buffer.
+     */
+    struct position
+    {
+        //!< The current position from the beginning of an input buffer.
+        std::size_t cur_pos {0};
+        //!< The current position in the current line.
+        std::size_t cur_pos_in_line {0};
+        //!< The number of lines which have already been read.
+        std::size_t lines_read {0};
+    };
+
+public:
     /**
      * @brief Construct a new input_handler object.
      *
@@ -61,7 +74,7 @@ public:
         : m_input_adapter(std::move(input_adapter))
     {
         get_next();
-        m_cur_pos = 0;
+        m_position.cur_pos = m_position.cur_pos_in_line = m_position.lines_read = 0;
     }
 
     /**
@@ -71,7 +84,7 @@ public:
      */
     int_type get_current()
     {
-        return m_cache[m_cur_pos];
+        return m_cache[m_position.cur_pos];
     }
 
     /**
@@ -81,19 +94,32 @@ public:
      */
     int_type get_next()
     {
+        int_type ret = end_of_input;
+
         // if already cached, return the cached value.
-        if (m_cur_pos + 1 < m_cache.size())
+        if (m_position.cur_pos + 1 < m_cache.size())
         {
-            return m_cache[++m_cur_pos];
+            ret = m_cache[++m_position.cur_pos];
+            ++m_position.cur_pos_in_line;
+        }
+        else
+        {
+            ret = m_input_adapter.get_character();
+            if (ret != end_of_input || m_cache[m_position.cur_pos] != end_of_input)
+            {
+                // cache the return value for possible later use.
+                m_cache.push_back(ret);
+                ++m_position.cur_pos;
+                ++m_position.cur_pos_in_line;
+            }
         }
 
-        int_type ret = m_input_adapter.get_character();
-        if (ret != end_of_input || m_cache[m_cur_pos] != end_of_input)
+        if (m_cache[m_position.cur_pos - 1] == '\n')
         {
-            // cache the return value for possible later use.
-            m_cache.push_back(ret);
-            ++m_cur_pos;
+            m_position.cur_pos_in_line = 0;
+            ++m_position.lines_read;
         }
+
         return ret;
     }
 
@@ -104,7 +130,7 @@ public:
      * @param str A string which will contain the resulting characters.
      * @return int_type 0 (for success) or EOF (for error).
      */
-    int_type get_range(size_t length, string_type& str)
+    int_type get_range(std::size_t length, string_type& str)
     {
         str.clear();
 
@@ -115,11 +141,15 @@ public:
 
         str += char_traits_type::to_char_type(get_current());
 
-        for (size_t i = 1; i < length; i++)
+        for (std::size_t i = 1; i < length; i++)
         {
             if (get_next() == end_of_input)
             {
-                m_cur_pos -= i;
+                // m_cur_pos -= i;
+                for (std::size_t j = i; j > 0; j--)
+                {
+                    unget();
+                }
                 str.clear();
                 return end_of_input;
             }
@@ -134,10 +164,28 @@ public:
      */
     void unget()
     {
-        if (m_cur_pos > 0)
+        if (m_position.cur_pos > 0)
         {
             // just move back the cursor. (no action for adapter)
-            --m_cur_pos;
+            --m_position.cur_pos;
+            --m_position.cur_pos_in_line;
+            if (m_cache[m_position.cur_pos] == '\n')
+            {
+                --m_position.lines_read;
+                m_position.cur_pos_in_line = 0;
+                if (m_position.cur_pos > 0)
+                {
+                    for (std::size_t i = m_position.cur_pos - 1; m_cache[i] != '\n'; i--)
+                    {
+                        if (i == 0)
+                        {
+                            m_position.cur_pos_in_line = m_position.cur_pos;
+                            break;
+                        }
+                        ++m_position.cur_pos_in_line;
+                    }
+                }
+            }
         }
     }
 
@@ -146,9 +194,12 @@ public:
      *
      * @param length The length of moving backward.
      */
-    void unget_range(size_t length)
+    void unget_range(std::size_t length)
     {
-        m_cur_pos = (m_cur_pos > length) ? m_cur_pos - length : 0;
+        for (std::size_t i = 0; i < length; i++)
+        {
+            unget();
+        }
     }
 
     /**
@@ -173,8 +224,28 @@ public:
         }
 
         bool ret = char_traits_type::eq(char_traits_type::to_char_type(next), expected);
-        --m_cur_pos;
+        unget();
         return ret;
+    }
+
+    /**
+     * @brief Get the current position in the current line.
+     *
+     * @return std::size_t The current position in the current line.
+     */
+    std::size_t get_cur_pos_in_line() const noexcept
+    {
+        return m_position.cur_pos_in_line;
+    }
+
+    /**
+     * @brief Get the number of lines which have already been read.
+     *
+     * @return std::size_t The number of lines which have already been read.
+     */
+    std::size_t get_lines_read() const noexcept
+    {
+        return m_position.lines_read;
     }
 
 private:
@@ -186,7 +257,7 @@ private:
     //!< Cached characters retrieved from an input adapter object.
     std::vector<int_type> m_cache {};
     //!< The current position in an input buffer.
-    size_t m_cur_pos {0};
+    position m_position {};
 };
 
 } // namespace detail

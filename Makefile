@@ -15,8 +15,8 @@ CMAKE_SCRIPTS = $(shell find . -type f \( -name 'CMakeLists.txt' -o -name '*.cma
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
-TARGET_MINOR_VERSION := 1
-TARGET_PATCH_VERSION := 3
+TARGET_MINOR_VERSION := 2
+TARGET_PATCH_VERSION := 0
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -32,7 +32,6 @@ all:
 	@echo "clang-sanitizers - check whether no runtime issue is detected while running the unit test app."
 	@echo "clang-tidy - check whether source files detect no issues during static code analysis."
 	@echo "cmake-format - check whether CMake scripts are well formatted."
-	@echo "doxygen - generate the API documentation for the project with Doxygen."
 	@echo "html-coverage - generate HTML coverage report."
 	@echo "iwyu - check whether source files are each self-contained."
 	@echo "lcov-coverage - generate coverage data with lcov."
@@ -82,15 +81,6 @@ valgrind:
 cmake-format:
 	cmake-format $(CMAKE_SCRIPTS) -i -c .cmake-format.yaml
 
-#####################
-#   Documentation   #
-#####################
-
-# pre-requisites: doxygen, graphviz
-doxygen:
-	cmake -B build_doxygen -S . -DFK_YAML_RUN_DOXYGEN=ON
-	cmake --build build_doxygen --target doxygen -j $(JOBS)
-
 ###############
 #   Version   #
 ###############
@@ -111,7 +101,7 @@ update-project-version:
 	$(shell sed -i 's/VERSION [0-9]\+\.[0-9]\+\.[0-9]\+/VERSION $(TARGET_VERSION_FULL)/' CMakeLists.txt)
 
 update-git-tag-ref:
-	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' README.md)
+	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' docs/mkdocs/docs/tutorials/cmake_integration.md)
 	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' test/cmake_fetch_content_test/project/CMakeLists.txt)
 
 # pre-requisites: pipx, reuse
@@ -164,6 +154,5 @@ clean:
 		build_clang_sanitizers \
 		build_clang_tidy \
 		build_coverage \
-		build_doxygen \
 		build_iwyu \
 		build_valgrind

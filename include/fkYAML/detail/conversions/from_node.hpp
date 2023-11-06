@@ -1,14 +1,12 @@
-/**
- *  _______   __ __   __  _____   __  __  __
- * |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
- * |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.1.3
- * |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
- *
- * SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
- * SPDX-License-Identifier: MIT
- *
- * @file
- */
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
 
 #ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
 #define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
@@ -57,7 +55,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_t
     {
         throw exception("The target node value type is not sequence type.");
     }
-    s = n.to_sequence();
+    s = n.template get_value_ref<const typename BasicNodeType::sequence_type&>();
 }
 
 /**
@@ -75,7 +73,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_ty
         throw exception("The target node value type is not mapping type.");
     }
 
-    for (auto pair : n.to_mapping())
+    for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>())
     {
         m.emplace(pair.first, pair.second);
     }
@@ -113,7 +111,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_ty
     {
         throw exception("The target node value type is not boolean type.");
     }
-    b = n.to_boolean();
+    b = n.template get_value_ref<const typename BasicNodeType::boolean_type&>();
 }
 
 /**
@@ -130,7 +128,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_ty
     {
         throw exception("The target node value type is not integer type.");
     }
-    i = n.to_integer();
+    i = n.template get_value_ref<const typename BasicNodeType::integer_type&>();
 }
 
 /**
@@ -156,12 +154,13 @@ inline void from_node(const BasicNodeType& n, IntegerType& i)
     }
 
     // under/overflow check.
-    typename BasicNodeType::integer_type tmp_int = n.to_integer();
-    if (tmp_int < static_cast<typename BasicNodeType::integer_type>(std::numeric_limits<IntegerType>::min()))
+    using node_int_type = typename BasicNodeType::integer_type;
+    node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
+    if (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min()))
     {
         throw exception("Integer value underflow detected.");
     }
-    if (static_cast<typename BasicNodeType::integer_type>(std::numeric_limits<IntegerType>::max()) < tmp_int)
+    if (static_cast<node_int_type>(std::numeric_limits<IntegerType>::max()) < tmp_int)
     {
         throw exception("Integer value overflow detected.");
     }
@@ -183,7 +182,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_numb
     {
         throw exception("The target node value type is not float number type.");
     }
-    f = n.to_float_number();
+    f = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
 }
 
 /**
@@ -208,7 +207,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f)
         throw exception("The target node value type is not float number type.");
     }
 
-    typename BasicNodeType::float_number_type tmp_float = n.to_float_number();
+    auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
     if (tmp_float < std::numeric_limits<FloatType>::min())
     {
         throw exception("Floating point value underflow detected.");
@@ -235,7 +234,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_typ
     {
         throw exception("The target node value type is not string type.");
     }
-    s = n.to_string();
+    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
 }
 
 /**
