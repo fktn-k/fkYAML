@@ -71,6 +71,9 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/fktn-k
   generator: false
+  analytics:
+    provider: google
+    property: G-3KS8Y4E3DZ
 
 extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/hightlight.min.js
