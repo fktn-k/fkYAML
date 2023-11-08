@@ -61,10 +61,10 @@ Reference, or constant reference, to the YAML node at the given index.
         fkyaml::node n = {123, 234, 345, 456};
 
         // print YAML nodes at the following indexes.
-        std::cout << fkyaml::node::serialize(n[0]) << std::endl;
-        std::cout << fkyaml::node::serialize(n[1]) << std::endl;
-        std::cout << fkyaml::node::serialize(n[2]) << std::endl;
-        std::cout << fkyaml::node::serialize(n[3]) << std::endl;
+        std::cout << n[0] << std::endl;
+        std::cout << n[1] << std::endl;
+        std::cout << n[2] << std::endl;
+        std::cout << n[3] << std::endl;
         return 0;
     }
     ```
@@ -123,8 +123,8 @@ Reference, or constant reference, to the YAML node associated with the given key
         fkyaml::node n = {{"foo", true}, {"bar", 123}};
 
         // print YAML nodes associated with the following keys.
-        std::cout << std::boolalpha << fkyaml::node::serialize(n["foo"]) << std::endl;
-        std::cout << fkyaml::node::serialize(n["bar"]) << std::endl;
+        std::cout << std::boolalpha << n["foo"] << std::endl;
+        std::cout << n["bar"] << std::endl;
 
         return 0;
     }
@@ -135,3 +135,4 @@ Reference, or constant reference, to the YAML node associated with the given key
 * [basic_node](index.md)
 * [size](size.md)
 * [contains](contains.md)
+* [operator<<](insertion_operator.md)

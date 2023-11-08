@@ -67,7 +67,7 @@ This function is usually called by the constructors of the [`basic_node`](../bas
 
         fkyaml::node n = b;
 
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
 
         return 0;
     }
@@ -85,3 +85,4 @@ This function is usually called by the constructors of the [`basic_node`](../bas
 * [node](../basic_node/node.md)
 * [basic_node::(constructor)](../basic_node/constructor.md)
 * [basic_node::serialize](../basic_node/serialize.md)
+* [operator<<(basic_node)](../basic_node/insertion_operator.md)

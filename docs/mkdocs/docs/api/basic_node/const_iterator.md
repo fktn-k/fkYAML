@@ -22,7 +22,7 @@ This iterator type is commonly used for sequence and mapping container values.
         const fkyaml::node sequence_node = {1, 2, 3};
         // get an iterator to the first sequence element.
         fkyaml::node::const_iterator it = sequence_node.begin();
-        std::cout << fkyaml::node::serialize(*it) << std::endl;
+        std::cout << *it << std::endl;
         return 0;
     };
     ```

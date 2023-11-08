@@ -49,7 +49,7 @@ An iterator to the target value if found, the result of end() otherwise.
         auto itr = om.find("foo");
         if (itr != om.end())
         {
-            std::cout << fkyaml::node::serialize(*itr) << std::endl;
+            std::cout << *itr << std::endl;
         }
 
         // search for a value with a key which does not exist.
@@ -74,3 +74,4 @@ An iterator to the target value if found, the result of end() otherwise.
 * [ordered_map](index.md)
 * [node](../basic_node/node.md)
 * [basic_node::serialize](../basic_node/serialize.md)
+* [operator<<(basic_node)](../basic_node/insertion_operator.md)

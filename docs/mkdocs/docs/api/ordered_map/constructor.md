@@ -71,7 +71,7 @@ The resulting ordered_map object has the same list of key-value pairs as the giv
 
         for (auto& pair : om)
         {
-            std::cout << pair.first << ": " << fkyaml::node::serialize(pair.second) << std::endl;
+            std::cout << pair.first << ": " << pair.second << std::endl;
         }
         return 0;
     }
@@ -89,3 +89,4 @@ The resulting ordered_map object has the same list of key-value pairs as the giv
 * [basic_node](../basic_node/index.md)
 * [basic_node::(constructor)](../basic_node/constructor.md)
 * [basic_node::serialize](../basic_node/serialize.md)
+* [operator<<(basic_node)](../basic_node/insertion_operator.md)

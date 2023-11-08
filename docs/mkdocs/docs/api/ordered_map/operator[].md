@@ -46,11 +46,11 @@ Possibly a default value of the `mapped_type` if the ordered_map does not contai
             { "bar", "baz" }
         };
 
-        std::cout << fkyaml::node::serialize(om["foo"]) << std::endl;
-        std::cout << fkyaml::node::serialize(om["bar"]) << std::endl;
+        std::cout << om["foo"] << std::endl;
+        std::cout << om["bar"] << std::endl;
 
         // accesses with a unknown key will create a new key-value pair with the default value.
-        std::cout << fkyaml::node::serialize(om["qux"]) << std::endl;
+        std::cout << om["qux"] << std::endl;
 
         return 0;
     }
@@ -69,3 +69,4 @@ Possibly a default value of the `mapped_type` if the ordered_map does not contai
 * [at](at.md)
 * [node](../basic_node/node.md)
 * [basic_node::serialize](../basic_node/serialize.md)
+* [operator<<(basic_node)](../basic_node/insertion_operator.md)

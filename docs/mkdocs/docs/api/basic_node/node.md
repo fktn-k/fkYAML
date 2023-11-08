@@ -31,7 +31,7 @@ This type is the default specialization of the [basic_node](index.md) class whic
         n["qux"]["key"] = {"another", "value"};
 
         // output a YAML formatted string.
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
     };
     ```
 
@@ -52,3 +52,4 @@ This type is the default specialization of the [basic_node](index.md) class whic
 ### **See Also**
 
 * [basic_node](index.md)
+* [operator<<](insertion_operator.md)
