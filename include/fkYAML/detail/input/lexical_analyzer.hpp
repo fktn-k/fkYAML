@@ -222,7 +222,7 @@ public:
         case 'F':
         case 'f': {
             // YAML specifies that only these words represent the boolean value `false`.
-            // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
             char_int_type ret = m_input_handler.get_range(5, m_value_buffer);
             if (ret == end_of_input)
             {
@@ -247,7 +247,7 @@ public:
         case 'n': {
             // YAML specifies that these words and a tilde represent a null value.
             // Tildes are already checked above, so no check is needed here.
-            // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
             char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
             if (ret == end_of_input)
             {
@@ -271,7 +271,7 @@ public:
         case 'T':
         case 't': {
             // YAML specifies that only these words represent the boolean value `true`.
-            // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
             char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
             if (ret == end_of_input)
             {
@@ -636,7 +636,7 @@ private:
         case 'o':
             // Do not store 'o' since std::strtoull does not support "0o" but "0" as the prefix for octal numbers.
             // YAML specifies octal values start with the prefix "0o".
-            // See "10.3.2. Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
             return scan_octal_number();
         case 'x':
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -813,7 +813,26 @@ private:
             {
                 if (!needs_last_double_quote && !needs_last_single_quote)
                 {
-                    return lexical_token_t::STRING_VALUE;
+                    // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
+                    // See "7.3.3 Plain Style" section in https://yaml.org/spec/1.2.2/
+                    current = m_input_handler.get_next();
+                    switch (current)
+                    {
+                    case ' ':
+                    case '\r':
+                    case '\n':
+                    case '{':
+                    case '}':
+                    case '[':
+                    case ']':
+                    case ',':
+                    case ':':
+                    case '#':
+                    case '\\':
+                        return lexical_token_t::STRING_VALUE;
+                    }
+                    m_input_handler.unget();
+                    current = m_input_handler.get_current();
                 }
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 continue;
@@ -932,7 +951,7 @@ private:
             }
 
             // Handle escaped characters.
-            // See "5.7. Escaped Characters" section in https://yaml.org/spec/1.2.2/
+            // See "5.7 Escaped Characters" section in https://yaml.org/spec/1.2.2/
             if (current == '\\')
             {
                 if (!needs_last_double_quote)

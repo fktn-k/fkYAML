@@ -68,20 +68,20 @@ See [the CMake Integration section]() for the other ways and modify the implemen
 
     ```yaml
     novels:
-      - title: "Robinson Crusoe"
-        author: "Daniel Defoe"
+      - title: Robinson Crusoe
+        author: Daniel Defoe
         year: 1678
-      - title: "Frankenstein"
-        author: "Jane Austen"
+      - title: Frankenstein
+        author: Jane Austen
         year: 1818
-      - title: "Moby-Dick"
-        author: "Herman Melville"
+      - title: Moby-Dick
+        author: Herman Melville
         year: 1851
-      - title: "Brave New World"
-        author: "Aldous Huxley"
+      - title: Brave New World
+        author: Aldous Huxley
         year: 1932
-      - title: "Never Let Me Go"
-        author: "Kazuo Ishiguro"
+      - title: Never Let Me Go
+        author: Kazuo Ishiguro
         year: 2005
     ```
 === "tutorial.cpp"
@@ -133,24 +133,24 @@ If you run the tutorial executable file, you will see the output like:
 ```bash
 novels:
   -
-    title: "Robinson Crusoe"
-    author: "Daniel Defoe"
+    title: Robinson Crusoe
+    author: Daniel Defoe
     year: 1678
   -
-    title: "Frankenstein"
-    author: "Jane Austen"
+    title: Frankenstein
+    author: Jane Austen
     year: 1818
   -
-    title: "Moby-Dick"
-    author: "Herman Melville"
+    title: Moby-Dick
+    author: Herman Melville
     year: 1851
   -
-    title: "Brave New World"
-    author: "Aldous Huxley"
+    title: Brave New World
+    author: Aldous Huxley
     year: 1932
   -
-    title: "Never Let Me Go"
-    author: "Kazuo Ishiguro"
+    title: Never Let Me Go
+    author: Kazuo Ishiguro
     year: 2005
 ```
 
@@ -241,20 +241,20 @@ Rebuild and run the application, and you'll see the output like:
 ```bash
 recommends:
   -
-    title: "Robinson Crusoe"
-    author: "Daniel Defoe"
+    title: Robinson Crusoe
+    author: Daniel Defoe
   -
-    title: "Frankenstein"
-    author: "Jane Austen"
+    title: Frankenstein
+    author: Jane Austen
   -
-    title: "Moby-Dick"
-    author: "Herman Melville"
+    title: Moby-Dick
+    author: Herman Melville
   -
-    title: "Brave New World"
-    author: "Aldous Huxley"
+    title: Brave New World
+    author: Aldous Huxley
   -
-    title: "Never Let Me Go"
-    author: "Kazuo Ishiguro"
+    title: Never Let Me Go
+    author: Kazuo Ishiguro
 ```
 
 ### :pill: Integrate with user-defined types
