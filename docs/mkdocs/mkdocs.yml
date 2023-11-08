@@ -152,6 +152,8 @@ nav:
           - node_value_converter: api/node_value_converter/index.md
           - from_node: api/node_value_converter/from_node.md
           - to_node: api/node_value_converter/to_node.md
+      - operator<<(basic_node): api/basic_node/insertion_operator.md
+      - operator>>(basic_node): api/basic_node/extraction_operator.md
       - ordered_map:
           - ordered_map: api/ordered_map/index.md
           - (constructor): api/ordered_map/constructor.md

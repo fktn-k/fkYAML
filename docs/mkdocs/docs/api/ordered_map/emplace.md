@@ -47,7 +47,7 @@ A pair consisting of an iterator to the inserted element, or the already-existin
         {
             std::cout << "insertion took place." << std::endl;
         }
-        std::cout << fkyaml::node::serialize(ret.first->second) << std::endl;
+        std::cout << ret.first->second << std::endl;
 
         // insert a value with an existing key.
         auto ret2 = om.emplace("foo", true);
@@ -55,7 +55,7 @@ A pair consisting of an iterator to the inserted element, or the already-existin
         {
             std::cout << "insertion did not take place." << std::endl;
         }
-        std::cout << fkyaml::node::serialize(ret2.first->second) << std::endl;
+        std::cout << ret2.first->second << std::endl;
 
         return 0;
     }
@@ -74,3 +74,4 @@ A pair consisting of an iterator to the inserted element, or the already-existin
 * [ordered_map](index.md)
 * [node](../basic_node/node.md)
 * [basic_node::serialize](../basic_node/serialize.md)
+* [operator<<(basic_node)](../basic_node/insertion_operator.md)

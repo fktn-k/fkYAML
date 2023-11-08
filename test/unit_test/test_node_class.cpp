@@ -8,12 +8,16 @@
 
 #include <cmath>
 #include <cfloat>
+#include <fstream>
 #include <sstream>
 #include <map>
 
 #include <catch2/catch.hpp>
 
 #include <fkYAML/node.hpp>
+
+// generated in test/unit_test/CMakeLists.txt
+#include <test_data.hpp>
 
 //
 // test cases for constructors
@@ -394,6 +398,28 @@ TEST_CASE("NodeClassTest_SerializeTest", "[NodeClassTest]")
 {
     fkyaml::node node = fkyaml::node::deserialize("foo: bar");
     REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");
+}
+
+TEST_CASE("NodeClassTest_InsertionOperatorTest", "[NodeClassTest]")
+{
+    fkyaml::node node = {{"foo", 123}, {"bar", nullptr}, {"baz", true}};
+    std::stringstream ss;
+    ss << node;
+
+    REQUIRE(ss.str() == "bar: null\nbaz: true\nfoo: 123\n");
+}
+
+TEST_CASE("NodeClassTest_ExtractionOperatorTest", "[NodeClassTest]")
+{
+    fkyaml::node node;
+    std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/extraction_operator_test_data.yml");
+    ifs >> node;
+
+    REQUIRE(node.is_mapping());
+    REQUIRE(node.size() == 3);
+    REQUIRE(node["foo"].get_value<int>() == 123);
+    REQUIRE(node["bar"].is_null());
+    REQUIRE(node["baz"].get_value<bool>() == true);
 }
 
 //

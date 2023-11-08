@@ -100,7 +100,7 @@ See [the CMake Integration section]() for the other ways and modify the implemen
         fkyaml::node root = fkyaml::node::deserialize(ifs);
 
         // print the deserialized YAML nodes by serializing them back.
-        std::cout << fkyaml::node::serialize() << std::endl;
+        std::cout << root << std::endl;
         return 0;
     }
     ```
@@ -230,7 +230,7 @@ int main()
     }
 
     // print the response YAML nodes.
-    std::cout << fkyaml::node::serialize(response) << std::endl;
+    std::cout << response << std::endl;
 
     return 0;
 }
@@ -328,7 +328,7 @@ int main()
     }
 
     // print the response YAML nodes.
-    std::cout << fkyaml::node::serialize(response) << std::endl;
+    std::cout << response << std::endl;
 
     return 0;
 }
