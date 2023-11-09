@@ -13,23 +13,14 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
-/**
- * @enum lexical_token_t
- * @brief Definition of lexical token types.
- */
+/// @brief Definition of lexical token types.
 enum class lexical_token_t
 {
     END_OF_BUFFER,         //!< the end of input buffer.

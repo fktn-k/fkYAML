@@ -28,10 +28,7 @@
  */
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
@@ -42,13 +39,10 @@ using fkyaml::exception;
 //   from_node   //
 ///////////////////
 
-/**
- * @brief from_node function for BasicNodeType::sequence_type objects.
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @param n A basic_node object.
- * @param s A sequence node value object.
- */
+/// @brief from_node function for BasicNodeType::sequence_type objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @param n A basic_node object.
+/// @param s A sequence node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_type& s)
 {
@@ -59,14 +53,11 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_t
     s = n.template get_value_ref<const typename BasicNodeType::sequence_type&>();
 }
 
-/**
- * @brief from_node function for objects of the std::vector of compatible types.
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @tparam CompatibleValueType A compatible type for BasicNodeType.
- * @param n A basic_node object.
- * @param s A vector of compatible type objects.
- */
+/// @brief from_node function for objects of the std::vector of compatible types.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatibleValueType A compatible type for BasicNodeType.
+/// @param n A basic_node object.
+/// @param s A vector of compatible type objects.
 template <
     typename BasicNodeType, typename CompatibleValueType,
     enable_if_t<
@@ -90,13 +81,10 @@ inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& 
     }
 }
 
-/**
- * @brief from_node function for BasicNodeType::mapping_type objects.
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @param n A basic_node object.
- * @param m A mapping node value object.
- */
+/// @brief from_node function for BasicNodeType::mapping_type objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @param n A basic_node object.
+/// @param m A mapping node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_type& m)
 {
@@ -111,13 +99,10 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_ty
     }
 }
 
-/**
- * @brief from_node function for null node values.
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @param n A basic_node object.
- * @param null A null node value object.
- */
+/// @brief from_node function for null node values.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @param n A basic_node object.
+/// @param null A null node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, std::nullptr_t& null)
 {
@@ -129,13 +114,10 @@ inline void from_node(const BasicNodeType& n, std::nullptr_t& null)
     null = nullptr;
 }
 
-/**
- * @brief from_node function for BasicNodeType::boolean_type objects.
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @param n A basic_node object.
- * @param b A boolean node value object.
- */
+/// @brief from_node function for BasicNodeType::boolean_type objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @param n A basic_node object.
+/// @param b A boolean node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_type& b)
 {
@@ -146,13 +128,10 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_ty
     b = n.template get_value_ref<const typename BasicNodeType::boolean_type&>();
 }
 
-/**
- * @brief from_node function for BasicNodeType::integer_type objects.
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @param n A basic_node object.
- * @param i An integer node value object.
- */
+/// @brief from_node function for BasicNodeType::integer_type objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @param n A basic_node object.
+/// @param i An integer node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_type& i)
 {
@@ -163,14 +142,11 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_ty
     i = n.template get_value_ref<const typename BasicNodeType::integer_type&>();
 }
 
-/**
- * @brief from_node function for other integer objects. (i.e., not BasicNodeType::integer_type)
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @tparam IntegerType An integer value type.
- * @param n A basic_node object.
- * @param i An integer node value object.
- */
+/// @brief from_node function for other integer objects. (i.e., not BasicNodeType::integer_type)
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam IntegerType An integer value type.
+/// @param n A basic_node object.
+/// @param i An integer node value object.
 template <
     typename BasicNodeType, typename IntegerType,
     enable_if_t<
@@ -200,13 +176,10 @@ inline void from_node(const BasicNodeType& n, IntegerType& i)
     i = static_cast<IntegerType>(tmp_int);
 }
 
-/**
- * @brief from_node function for BasicNodeType::float_number_type objects.
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @param n A basic_node object.
- * @param f A float number node value object.
- */
+/// @brief from_node function for BasicNodeType::float_number_type objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @param n A basic_node object.
+/// @param f A float number node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_number_type& f)
 {
@@ -217,14 +190,11 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_numb
     f = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
 }
 
-/**
- * @brief from_node function for other float number objects. (i.e., not BasicNodeType::float_number_type)
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @tparam FloatType A float number value type.
- * @param n A basic_node object.
- * @param f A float number node value object.
- */
+/// @brief from_node function for other float number objects. (i.e., not BasicNodeType::float_number_type)
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam FloatType A float number value type.
+/// @param n A basic_node object.
+/// @param f A float number node value object.
 template <
     typename BasicNodeType, typename FloatType,
     enable_if_t<
@@ -252,13 +222,10 @@ inline void from_node(const BasicNodeType& n, FloatType& f)
     f = static_cast<FloatType>(tmp_float);
 }
 
-/**
- * @brief from_node function for BasicNodeType::string_type objects.
- *
- * @tparam BasicNodeType A basic_node template instance type.
- * @param n A basic_node object.
- * @param s A string node value object.
- */
+/// @brief from_node function for BasicNodeType::string_type objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @param n A basic_node object.
+/// @param s A string node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_type& s)
 {
@@ -269,21 +236,16 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_typ
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
 }
 
-/**
- * @brief A function object to call from_node functions.
- * @note User-defined specialization is available by providing implementation **OUTSIDE** fkyaml namespace.
- */
+/// @brief A function object to call from_node functions.
+/// @note User-defined specialization is available by providing implementation **OUTSIDE** fkyaml namespace.
 struct from_node_fn
 {
-    /**
-     * @brief Call from_node function suitable for the given T type.
-     *
-     * @tparam BasicNodeType A basic_node template instance type.
-     * @tparam T A target value type assigned from the basic_node object.
-     * @param n A basic_node object.
-     * @param val A target object assigned from the basic_node object.
-     * @return decltype(from_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
-     */
+    /// @brief Call from_node function suitable for the given T type.
+    /// @tparam BasicNodeType A basic_node template instance type.
+    /// @tparam T A target value type assigned from the basic_node object.
+    /// @param n A basic_node object.
+    /// @param val A target object assigned from the basic_node object.
+    /// @return decltype(from_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
     template <typename BasicNodeType, typename T>
     auto operator()(const BasicNodeType& n, T&& val) const noexcept(noexcept(from_node(n, std::forward<T>(val))))
         -> decltype(from_node(n, std::forward<T>(val)))
@@ -301,9 +263,7 @@ namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-n
 {
 #endif
 
-/**
- * @brief A blobal object to represent ADL friendly from_node functor.
- */
+/// @brief A blobal object to represent ADL friendly from_node functor.
 // NOLINTNEXTLINE(misc-definitions-in-headers)
 FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail::from_node_fn>::value;
 

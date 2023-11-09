@@ -19,25 +19,16 @@
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
-/**
- * @brief A temporal storage for basic_node class objects.
- * @note This class makes it easier to handle lvalue basic_node objects in basic_node ctor with std::initializer_list.
- *
- * @tparam BasicNodeType A basic_node template instance type.
- */
+/// @brief A temporal storage for basic_node class objects.
+/// @note This class makes it easier to handle lvalue basic_node objects in basic_node ctor with std::initializer_list.
+/// @tparam BasicNodeType A basic_node template instance type.
 template <typename BasicNodeType>
 class node_ref_storage
 {
@@ -46,42 +37,30 @@ class node_ref_storage
     using node_type = BasicNodeType;
 
 public:
-    /**
-     * @brief Construct a new node ref storage object with an rvalue basic_node object.
-     *
-     * @param n An rvalue basic_node object.
-     */
+    /// @brief Construct a new node ref storage object with an rvalue basic_node object.
+    /// @param n An rvalue basic_node object.
     node_ref_storage(node_type&& n)
         : owned_value(std::move(n))
     {
     }
 
-    /**
-     * @brief Construct a new node ref storage object with an lvalue basic_node object.
-     *
-     * @param n An lvalue basic_node object.
-     */
+    /// @brief Construct a new node ref storage object with an lvalue basic_node object.
+    /// @param n An lvalue basic_node object.
     node_ref_storage(const node_type& n)
         : value_ref(&n)
     {
     }
 
-    /**
-     * @brief Construct a new node ref storage object with a std::initializer_list object.
-     *
-     * @param init A std::initializer_list object.
-     */
+    /// @brief Construct a new node ref storage object with a std::initializer_list object.
+    /// @param init A std::initializer_list object.
     node_ref_storage(std::initializer_list<node_ref_storage> init)
         : owned_value(init)
     {
     }
 
-    /**
-     * @brief Construct a new node ref storage object with variadic template arguments
-     *
-     * @tparam Args Types of arguments to construct a basic_node object.
-     * @param args Arguments to construct a basic_node object.
-     */
+    /// @brief Construct a new node ref storage object with variadic template arguments
+    /// @tparam Args Types of arguments to construct a basic_node object.
+    /// @param args Arguments to construct a basic_node object.
     template <typename... Args, enable_if_t<std::is_constructible<node_type, Args...>::value, int> = 0>
     node_ref_storage(Args&&... args)
         : owned_value(std::forward<Args>(args)...)
@@ -95,30 +74,24 @@ public:
     node_ref_storage& operator=(node_ref_storage&&) = default;
 
 public:
-    /**
-     * @brief An arrow operator for node_ref_storage objects.
-     *
-     * @return const node_type* A constant pointer to a basic_node object.
-     */
+    /// @brief An arrow operator for node_ref_storage objects.
+    /// @return const node_type* A constant pointer to a basic_node object.
     const node_type* operator->() const
     {
         return value_ref ? value_ref : &owned_value;
     }
 
-    /**
-     * @brief Releases a basic_node object internally held.
-     *
-     * @return node_type A basic_node object internally held.
-     */
+    /// @brief Releases a basic_node object internally held.
+    /// @return node_type A basic_node object internally held.
     node_type release() const
     {
         return value_ref ? *value_ref : std::move(owned_value);
     }
 
 private:
-    /** A storage for a basic_node object given with rvalue reference. */
+    /// A storage for a basic_node object given with rvalue reference.
     mutable node_type owned_value = nullptr;
-    /** A pointer to a basic_node object given with lvalue reference. */
+    /// A pointer to a basic_node object given with lvalue reference.
     const node_type* value_ref = nullptr;
 };
 

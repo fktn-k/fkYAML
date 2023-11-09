@@ -42,12 +42,8 @@ FK_YAML_NAMESPACE_BEGIN
 namespace detail
 {
 
-/**
- * @class lexical_analyzer
- * @brief A class which lexically analizes YAML formatted inputs.
- *
- * @tparam BasicNodeType A type of the container for YAML values.
- */
+/// @brief A class which lexically analizes YAML formatted inputs.
+/// @tparam BasicNodeType A type of the container for YAML values.
 template <
     typename BasicNodeType, typename InputAdapterType,
     enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_input_adapter<InputAdapterType>>::value, int> = 0>
@@ -66,19 +62,15 @@ public:
     using float_number_type = typename BasicNodeType::float_number_type;
     using string_type = typename BasicNodeType::string_type;
 
-    /**
-     * @brief Construct a new lexical_analyzer object.
-     */
+    /// @brief Construct a new lexical_analyzer object.
+    /// @param input_adapter An input adapter object.
     explicit lexical_analyzer(InputAdapterType&& input_adapter)
         : m_input_handler(std::move(input_adapter))
     {
     }
 
-    /**
-     * @brief Get the next lexical token type by scanning the left of the input buffer.
-     *
-     * @return lexical_token_t The next lexical token type.
-     */
+    /// @brief Get the next lexical token type by scanning the left of the input buffer.
+    /// @return lexical_token_t The next lexical token type.
     lexical_token_t get_next_token()
     {
         skip_white_spaces();
@@ -297,21 +289,15 @@ public:
         }
     }
 
-    /**
-     * @brief Get the beginning position of a last token.
-     *
-     * @return std::size_t The beginning position of a last token.
-     */
+    /// @brief Get the beginning position of a last token.
+    /// @return std::size_t The beginning position of a last token.
     std::size_t get_last_token_begin_pos() const noexcept
     {
         return m_last_token_begin_pos;
     }
 
-    /**
-     * @brief Convert from string to null and get the converted value.
-     *
-     * @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
-     */
+    /// @brief Convert from string to null and get the converted value.
+    /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
     std::nullptr_t get_null() const
     {
         if (m_last_token_type == lexical_token_t::NULL_VALUE)
@@ -321,12 +307,9 @@ public:
         throw fkyaml::exception("Invalid request for a null value.");
     }
 
-    /**
-     * @brief Convert from string to boolean and get the converted value.
-     *
-     * @return true  A string token is one of the followings: "true", "True", "TRUE".
-     * @return false A string token is one of the followings: "false", "False", "FALSE".
-     */
+    /// @brief Convert from string to boolean and get the converted value.
+    /// @return true  A string token is one of the followings: "true", "True", "TRUE".
+    /// @return false A string token is one of the followings: "false", "False", "FALSE".
     boolean_type get_boolean() const
     {
         if (m_last_token_type == lexical_token_t::BOOLEAN_VALUE)
@@ -336,11 +319,8 @@ public:
         throw fkyaml::exception("Invalid request for a boolean value.");
     }
 
-    /**
-     * @brief Convert from string to integer and get the converted value.
-     *
-     * @return integer_type An integer value converted from the source string.
-     */
+    /// @brief Convert from string to integer and get the converted value.
+    /// @return integer_type An integer value converted from the source string.
     integer_type get_integer() const
     {
         if (m_last_token_type == lexical_token_t::INTEGER_VALUE)
@@ -350,11 +330,8 @@ public:
         throw fkyaml::exception("Invalid request for an integer value.");
     }
 
-    /**
-     * @brief Convert from string to float number and get the converted value.
-     *
-     * @return float_number_type A float number value converted from the source string.
-     */
+    /// @brief Convert from string to float number and get the converted value.
+    /// @return float_number_type A float number value converted from the source string.
     float_number_type get_float_number() const
     {
         if (m_last_token_type == lexical_token_t::FLOAT_NUMBER_VALUE)
@@ -364,11 +341,8 @@ public:
         throw fkyaml::exception("Invalid request for a float number value.");
     }
 
-    /**
-     * @brief Get a scanned string value.
-     *
-     * @return const string_type& Constant reference to a scanned string.
-     */
+    /// @brief Get a scanned string value.
+    /// @return const string_type& Constant reference to a scanned string.
     const string_type& get_string() const noexcept
     {
         // TODO: Provide support for different string types between nodes & inputs.
@@ -376,11 +350,8 @@ public:
         return m_value_buffer;
     }
 
-    /**
-     * @brief Get the YAML version specification.
-     *
-     * @return const string_type& A YAML version specification.
-     */
+    /// @brief Get the YAML version specification.
+    /// @return const string_type& A YAML version specification.
     const string_type& get_yaml_version() const
     {
         FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
@@ -390,12 +361,9 @@ public:
     }
 
 private:
-    /**
-     * @brief A utility function to convert a hexadecimal character to an integer.
-     *
-     * @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
-     * @return char A integer converted from @a source.
-     */
+    /// @brief A utility function to convert a hexadecimal character to an integer.
+    /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
+    /// @return char A integer converted from @a source.
     static char convert_hex_char_to_byte(char source)
     {
         if ('0' <= source && source <= '9')
@@ -419,11 +387,8 @@ private:
         throw fkyaml::exception("Non-hexadecimal character has been given.");
     }
 
-    /**
-     * @brief Skip until a newline code or a null character is found.
-     *
-     * @return lexical_token_t The lexical token type for comments
-     */
+    /// @brief Skip until a newline code or a null character is found.
+    /// @return lexical_token_t The lexical token type for comments
     lexical_token_t scan_comment()
     {
         FK_YAML_ASSERT(m_input_handler.get_current() == '#');
@@ -432,12 +397,9 @@ private:
         return lexical_token_t::COMMENT_PREFIX;
     }
 
-    /**
-     * @brief Scan directives starting with the prefix '%'
-     * @note Currently, only %YAML directive is supported. If not, returns invalid or throws an exception.
-     *
-     * @return lexical_token_t The lexical token type for directives.
-     */
+    /// @brief Scan directives starting with the prefix '%'
+    /// @note Currently, only %YAML directive is supported. If not, returns invalid or throws an exception.
+    /// @return lexical_token_t The lexical token type for directives.
     lexical_token_t scan_directive()
     {
         FK_YAML_ASSERT(m_input_handler.get_current() == '%');
@@ -477,12 +439,9 @@ private:
         }
     }
 
-    /**
-     * @brief Scan a YAML version directive.
-     * @note Only 1.1 and 1.2 are supported. If not, throws an exception.
-     *
-     * @return lexical_token_t The lexical token type for YAML version directives.
-     */
+    /// @brief Scan a YAML version directive.
+    /// @note Only 1.1 and 1.2 are supported. If not, throws an exception.
+    /// @return lexical_token_t The lexical token type for YAML version directives.
     lexical_token_t scan_yaml_version_directive()
     {
         m_value_buffer.clear();
@@ -527,12 +486,9 @@ private:
         return lexical_token_t::YAML_VER_DIRECTIVE;
     }
 
-    /**
-     * @brief Scan and determine a number type(integer/float). This method is the entrypoint for all number
-     * tokens.
-     *
-     * @return lexical_token_t A lexical token type for a determined number type.
-     */
+    /// @brief Scan and determine a number type(integer/float). This method is the entrypoint for all number
+    /// tokens.
+    /// @return lexical_token_t A lexical token type for a determined number type.
     lexical_token_t scan_number()
     {
         m_value_buffer.clear();
@@ -585,11 +541,8 @@ private:
         return ret;
     }
 
-    /**
-     * @brief Scan a next character after the negative sign(-).
-     *
-     * @return lexical_token_t The lexical token type for either integer or float numbers.
-     */
+    /// @brief Scan a next character after the negative sign(-).
+    /// @return lexical_token_t The lexical token type for either integer or float numbers.
     lexical_token_t scan_negative_number()
     {
         char_int_type next = m_input_handler.get_next();
@@ -620,11 +573,8 @@ private:
         throw fkyaml::exception("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
     }
 
-    /**
-     * @brief Scan a next character after '0' at the beginning of a token.
-     *
-     * @return lexical_token_t The lexical token type for one of number types(integer/float).
-     */
+    /// @brief Scan a next character after '0' at the beginning of a token.
+    /// @return lexical_token_t The lexical token type for one of number types(integer/float).
     lexical_token_t scan_number_after_zero_at_first()
     {
         char_int_type next = m_input_handler.get_next();
@@ -646,11 +596,8 @@ private:
         }
     }
 
-    /**
-     * @brief Scan a next character after a decimal point.
-     *
-     * @return lexical_token_t The lexical token type for float numbers.
-     */
+    /// @brief Scan a next character after a decimal point.
+    /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_decimal_point()
     {
         char_int_type next = m_input_handler.get_next();
@@ -665,11 +612,8 @@ private:
         throw fkyaml::exception("Invalid character found after a decimal point."); // LCOV_EXCL_LINE
     }
 
-    /**
-     * @brief Scan a next character after exponent(e/E).
-     *
-     * @return lexical_token_t The lexical token type for float numbers.
-     */
+    /// @brief Scan a next character after exponent(e/E).
+    /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_exponent()
     {
         char_int_type next = m_input_handler.get_next();
@@ -690,11 +634,8 @@ private:
         return lexical_token_t::FLOAT_NUMBER_VALUE;
     }
 
-    /**
-     * @brief Scan a next character after a sign(+/-) after exponent(e/E).
-     *
-     * @return lexical_token_t The lexical token type for one of number types(integer/float)
-     */
+    /// @brief Scan a next character after a sign(+/-) after exponent(e/E).
+    /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number_after_sign()
     {
         char_int_type next = m_input_handler.get_next();
@@ -708,11 +649,8 @@ private:
         throw fkyaml::exception("Non-numeric character found after a sign(+/-) after exponent(e/E)."); // LCOV_EXCL_LINE
     }
 
-    /**
-     * @brief Scan a next character for decimal numbers.
-     *
-     * @return lexical_token_t The lexical token type for one of number types(integer/float)
-     */
+    /// @brief Scan a next character for decimal numbers.
+    /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number()
     {
         char_int_type next = m_input_handler.get_next();
@@ -744,11 +682,8 @@ private:
         return lexical_token_t::INTEGER_VALUE;
     }
 
-    /**
-     * @brief Scan a next character for octal numbers.
-     *
-     * @return lexical_token_t The lexical token type for integers.
-     */
+    /// @brief Scan a next character for octal numbers.
+    /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_octal_number()
     {
         char_int_type next = m_input_handler.get_next();
@@ -760,11 +695,8 @@ private:
         return lexical_token_t::INTEGER_VALUE;
     }
 
-    /**
-     * @brief Scan a next character for hexadecimal numbers.
-     *
-     * @return lexical_token_t The lexical token type for integers.
-     */
+    /// @brief Scan a next character for hexadecimal numbers.
+    /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_hexadecimal_number()
     {
         char_int_type next = m_input_handler.get_next();
@@ -776,12 +708,9 @@ private:
         return lexical_token_t::INTEGER_VALUE;
     }
 
-    /**
-     * @brief Scan a string token(unquoted/single-quoted/double-quoted).
-     * @note Multibyte characters(including escaped ones) are currently unsupported.
-     *
-     * @return lexical_token_t The lexical token type for strings.
-     */
+    /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
+    /// @note Multibyte characters(including escaped ones) are currently unsupported.
+    /// @return lexical_token_t The lexical token type for strings.
     lexical_token_t scan_string()
     {
         m_value_buffer.clear();
@@ -1037,11 +966,8 @@ private:
         }
     }
 
-    /**
-     * @brief Handle unescaped control characters.
-     *
-     * @param c A target character.
-     */
+    /// @brief Handle unescaped control characters.
+    /// @param c A target character.
     void handle_unescaped_control_char(char_int_type c)
     {
         FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
@@ -1113,9 +1039,7 @@ private:
         }
     }
 
-    /**
-     * @brief Skip white spaces, tabs and newline codes until any other kind of character is found.
-     */
+    /// @brief Skip white spaces, tabs and newline codes until any other kind of character is found.
     void skip_white_spaces()
     {
         while (true)
@@ -1134,9 +1058,7 @@ private:
         }
     }
 
-    /**
-     * @brief Skip reading in the current line.
-     */
+    /// @brief Skip reading in the current line.
     void skip_until_line_end()
     {
         while (true)
@@ -1162,21 +1084,21 @@ private:
     }
 
 private:
-    //!< The value of EOF for the target characters.
+    /// The value of EOF for the target characters.
     static constexpr char_int_type end_of_input = char_traits_type::eof();
 
-    //!< An input buffer adapter to be analyzed.
+    /// An input buffer adapter to be analyzed.
     input_handler_type m_input_handler;
-    //!< A temporal buffer to store a string to be parsed to an actual datum.
+    /// A temporal buffer to store a string to be parsed to an actual datum.
     input_string_type m_value_buffer {};
     std::size_t m_last_token_begin_pos {0};
-    //!< The last found token type.
+    /// The last found token type.
     lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
-    //!< A temporal bool holder.
+    /// A temporal bool holder.
     boolean_type m_boolean_val {false};
-    //!< A temporal integer holder.
+    /// A temporal integer holder.
     integer_type m_integer_val {0};
-    //!< A temporal floating point number holder.
+    /// A temporal floating point number holder.
     float_number_type m_float_val {0.0};
 };
 

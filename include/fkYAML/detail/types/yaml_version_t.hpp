@@ -15,23 +15,14 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
-/**
- * @enum yaml_version_t
- * @brief Definition of YAML version types.
- */
+/// @brief Definition of YAML version types.
 enum class yaml_version_t : std::uint32_t
 {
     VER_1_1, //!< YAML version 1.1

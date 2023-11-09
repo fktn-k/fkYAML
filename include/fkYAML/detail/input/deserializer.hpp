@@ -24,25 +24,15 @@
 #include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
-/**
- * @class basic_deserializer
- * @brief A class which provides the feature of deserializing YAML documents.
- *
- * @tparam BasicNodeType A type of the container for deserialized YAML values.
- */
+/// @brief A class which provides the feature of deserializing YAML documents.
+/// @tparam BasicNodeType A type of the container for deserialized YAML values.
 template <typename BasicNodeType>
 class basic_deserializer
 {
@@ -62,18 +52,13 @@ class basic_deserializer
     using string_type = typename BasicNodeType::string_type;
 
 public:
-    /**
-     * @brief Construct a new basic_deserializer object.
-     */
+    /// @brief Construct a new basic_deserializer object.
     basic_deserializer() = default;
 
 public:
-    /**
-     * @brief Deserialize a YAML-formatted source string into a YAML node.
-     *
-     * @param source A YAML-formatted source string.
-     * @return BasicNodeType A root YAML node deserialized from the source string.
-     */
+    /// @brief Deserialize a YAML-formatted source string into a YAML node.
+    /// @param source A YAML-formatted source string.
+    /// @return BasicNodeType A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     BasicNodeType deserialize(InputAdapterType&& input_adapter)
     {
@@ -244,11 +229,8 @@ public:
     }
 
 private:
-    /**
-     * @brief Add new key string to the current YAML node.
-     *
-     * @param key a key string to be added to the current YAML node.
-     */
+    /// @brief Add new key string to the current YAML node.
+    /// @param key a key string to be added to the current YAML node.
     void add_new_key(const string_type& key, const std::size_t indent)
     {
         if (indent < m_indent_stack.back())
@@ -279,11 +261,8 @@ private:
         m_current_node = &(m_current_node->template get_value_ref<mapping_type&>().at(key));
     }
 
-    /**
-     * @brief Assign node value to the current node.
-     *
-     * @param node_value A rvalue BasicNodeType object to be assigned to the current node.
-     */
+    /// @brief Assign node value to the current node.
+    /// @param node_value A rvalue BasicNodeType object to be assigned to the current node.
     void assign_node_value(BasicNodeType&& node_value) noexcept
     {
         if (m_current_node->is_sequence())
@@ -314,21 +293,15 @@ private:
         m_node_stack.pop_back();
     }
 
-    /**
-     * @brief Set the yaml_version_t object to the given node.
-     *
-     * @param node A BasicNodeType object to be set the yaml_version_t object.
-     */
+    /// @brief Set the yaml_version_t object to the given node.
+    /// @param node A BasicNodeType object to be set the yaml_version_t object.
     void set_yaml_version(BasicNodeType& node) noexcept
     {
         node.set_yaml_version(m_yaml_version);
     }
 
-    /**
-     * @brief Update the target YAML version with an input string.
-     *
-     * @param version_str A YAML version string.
-     */
+    /// @brief Update the target YAML version with an input string.
+    /// @param version_str A YAML version string.
     void update_yaml_version_from(const string_type& version_str) noexcept
     {
         if (version_str == "1.1")
@@ -340,13 +313,20 @@ private:
     }
 
 private:
-    BasicNodeType* m_current_node {nullptr};     /** The currently focused YAML node. */
-    std::vector<BasicNodeType*> m_node_stack {}; /** The stack of YAML nodes. */
+    /// The currently focused YAML node.
+    BasicNodeType* m_current_node {nullptr};
+    /// The stack of YAML nodes.
+    std::vector<BasicNodeType*> m_node_stack {};
+    /// The stack of indentation widths.
     std::vector<std::size_t> m_indent_stack {};
-    yaml_version_t m_yaml_version {yaml_version_t::VER_1_2}; /** The YAML version specification type. */
-    bool m_needs_anchor_impl {false}; /** A flag to determine the need for YAML anchor node implementation */
-    string_type m_anchor_name {};     /** The last YAML anchor name. */
-    std::unordered_map<std::string, BasicNodeType> m_anchor_table {}; /** The table of YAML anchor nodes. */
+    /// The YAML version specification type.
+    yaml_version_t m_yaml_version {yaml_version_t::VER_1_2};
+    /// A flag to determine the need for YAML anchor node implementation.
+    bool m_needs_anchor_impl {false};
+    /// The last YAML anchor name.
+    string_type m_anchor_name {};
+    /// The table of YAML anchor nodes.
+    std::unordered_map<std::string, BasicNodeType> m_anchor_table {};
 };
 
 } // namespace detail

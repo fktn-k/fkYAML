@@ -16,23 +16,14 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
-/**
- * @struct nonesuch
- * @brief A dummy struct to represent detection failure.
- */
+/// @brief A dummy struct to represent detection failure.
 struct nonesuch
 {
     nonesuch() = delete;
@@ -43,63 +34,51 @@ struct nonesuch
     nonesuch& operator=(nonesuch&&) = delete;
 };
 
+/// @brief namespace to implement detector type traits
 namespace detector_impl
 {
 
-/**
- * @brief A helper for general type detection.
- *
- * @tparam Default A type to represent detection failure.
- * @tparam AlwaysVoid This must be void type.
- * @tparam Op A type for desired operation type.
- * @tparam Args Argument types passed to desired operation.
- */
+/// @brief A helper for general type detection.
+/// @tparam Default A type to represent detection failure.
+/// @tparam AlwaysVoid This must be void type.
+/// @tparam Op A type for desired operation type.
+/// @tparam Args Argument types passed to desired operation.
 template <typename Default, typename AlwaysVoid, template <typename...> class Op, typename... Args>
 struct detector : std::false_type
 {
+    /// @brief A type which represents detection failure.
     using type = Default;
 };
 
-/**
- * @brief A partial specialization of detector if desired operation type is found.
- *
- * @tparam Default A type to represent detection failure.
- * @tparam Op A type for desired operation type.
- * @tparam Args Argument types passed to desired operation.
- */
+/// @brief A partial specialization of detector if desired operation type is found.
+/// @tparam Default A type to represent detection failure.
+/// @tparam Op A type for desired operation type.
+/// @tparam Args Argument types passed to desired operation.
 template <typename Default, template <typename...> class Op, typename... Args>
 struct detector<Default, void_t<Op<Args...>>, Op, Args...> : std::true_type
 {
+    /// @brief A detected type.
     using type = Op<Args...>;
 };
 
 } // namespace detector_impl
 
-/**
- * @brief Type traits to detect Op operation with Args argument types
- *
- * @tparam Op A desired operation type.
- * @tparam Args Argument types passed to desired operation.
- */
+/// @brief Type traits to detect Op operation with Args argument types
+/// @tparam Op A desired operation type.
+/// @tparam Args Argument types passed to desired operation.
 template <template <typename...> class Op, typename... Args>
 using is_detected = detector_impl::detector<nonesuch, void, Op, Args...>;
 
-/**
- * @brief Type traits to represent a detected type.
- *
- * @tparam Op A type for desired operation type.
- * @tparam Args Argument types passed to desired operation.
- */
+/// @brief Type traits to represent a detected type.
+/// @tparam Op A type for desired operation type.
+/// @tparam Args Argument types passed to desired operation.
 template <template <typename...> class Op, typename... Args>
 using detected_t = typename detector_impl::detector<nonesuch, void, Op, Args...>::type;
 
-/**
- * @brief Type traits to check if Expected and a detected type are exactly the same.
- *
- * @tparam Expected An expected detection result type.
- * @tparam Op A type for desired operation.
- * @tparam Args Argument types passed to desired operation.
- */
+/// @brief Type traits to check if Expected and a detected type are exactly the same.
+/// @tparam Expected An expected detection result type.
+/// @tparam Op A type for desired operation.
+/// @tparam Args Argument types passed to desired operation.
 template <typename Expected, template <typename...> class Op, typename... Args>
 using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
