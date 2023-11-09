@@ -150,6 +150,7 @@ set(TEST_TARGET "fkYAMLUnitTest")
 
 add_executable(
   ${TEST_TARGET}
+  test_custom_from_node.cpp
   test_deserializer_class.cpp
   test_exception_class.cpp
   test_from_string.cpp

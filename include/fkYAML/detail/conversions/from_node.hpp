@@ -13,6 +13,7 @@
 
 #include <limits>
 #include <utility>
+#include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
@@ -56,6 +57,37 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_t
         throw exception("The target node value type is not sequence type.");
     }
     s = n.template get_value_ref<const typename BasicNodeType::sequence_type&>();
+}
+
+/**
+ * @brief from_node function for objects of the std::vector of compatible types.
+ *
+ * @tparam BasicNodeType A basic_node template instance type.
+ * @tparam CompatibleValueType A compatible type for BasicNodeType.
+ * @param n A basic_node object.
+ * @param s A vector of compatible type objects.
+ */
+template <
+    typename BasicNodeType, typename CompatibleValueType,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>, negation<is_basic_node<CompatibleValueType>>,
+            has_from_node<BasicNodeType, CompatibleValueType>,
+            negation<std::is_same<std::vector<CompatibleValueType>, typename BasicNodeType::sequence_type>>>::value,
+        int> = 0>
+inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& s)
+{
+    if (!n.is_sequence())
+    {
+        throw exception("The target node value is not sequence type.");
+    }
+
+    s.reserve(n.size());
+
+    for (const auto& elem : n)
+    {
+        s.emplace_back(elem.template get_value<CompatibleValueType>());
+    }
 }
 
 /**
