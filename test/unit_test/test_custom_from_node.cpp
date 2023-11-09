@@ -64,3 +64,16 @@ TEST_CASE("FromNodeTest_UserDefinedTypeVectorTest", "[FromNodeTest]")
     REQUIRE(novels[1].author == "Mary Shelly");
     REQUIRE(novels[1].year == 1818);
 }
+
+TEST_CASE("FromNodeTest_UserDefinedTypeVectorErrorTest", "[FromNodeTest]")
+{
+    std::string input = "novels:\n"
+                        "  - title: Robinson Crusoe\n"
+                        "    author: Daniel Defoe\n"
+                        "    year: 1678\n"
+                        "  - title: Frankenstein\n"
+                        "    author: Mary Shelly\n"
+                        "    year: 1818\n";
+    fkyaml::node node = fkyaml::node::deserialize(input);
+    REQUIRE_THROWS_AS(node.get_value<std::vector<test::novel>>(), fkyaml::exception);
+}
