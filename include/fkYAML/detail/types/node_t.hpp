@@ -15,23 +15,14 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
-/**
- * @enum node_t
- * @brief Definition of node value types.
- */
+/// @brief Definition of node value types.
 enum class node_t : std::uint32_t
 {
     SEQUENCE,     //!< sequence value type

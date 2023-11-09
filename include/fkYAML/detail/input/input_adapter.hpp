@@ -21,16 +21,10 @@
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/exception.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
@@ -38,31 +32,22 @@ namespace detail
 //   input_adapter   //
 ///////////////////////
 
-/**
- * @class iterator_input_adapter
- * @brief An input adapter for iterators.
- * @note This adapter requires at least bidirectional iterator tag.
- *
- * @tparam IterType An iterator type.
- */
+/// @brief An input adapter for iterators.
+/// @note This adapter requires at least bidirectional iterator tag.
+/// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter
 {
 public:
-    /** A type for characters used in this input adapter. */
+    /// A type for characters used in this input adapter.
     using char_type = typename std::iterator_traits<IterType>::value_type;
 
-    /**
-     * @brief Construct a new iterator_input_adapter object.
-     */
+    /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
 
-    /**
-     * @brief Construct a new iterator_input_adapter object.
-     *
-     * @param begin The beginning of iteraters.
-     * @param end The end of iterators.
-     */
+    /// @brief Construct a new iterator_input_adapter object.
+    /// @param begin The beginning of iteraters.
+    /// @param end The end of iterators.
     iterator_input_adapter(IterType begin, IterType end)
         : m_current(begin),
           m_end(end)
@@ -76,11 +61,8 @@ public:
     iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
     ~iterator_input_adapter() = default;
 
-    /**
-     * @brief Get a character at the current position and move forward.
-     *
-     * @return std::char_traits<char_type>::int_type A character or EOF.
-     */
+    /// @brief Get a character at the current position and move forward.
+    /// @return std::char_traits<char_type>::int_type A character or EOF.
     typename std::char_traits<char_type>::int_type get_character()
     {
         if (m_current != m_end)
@@ -94,33 +76,27 @@ public:
     }
 
 private:
+    /// The iterator at the current position.
     IterType m_current {};
+    /// The iterator at the end of input.
     IterType m_end {};
 };
 
-/**
- * @class file_input_adapter
- * @brief An input adapter for C-style file handles.
- */
+/// @brief An input adapter for C-style file handles.
 class file_input_adapter
 {
 public:
-    /** A type for characters used in this input adapter. */
+    /// A type for characters used in this input adapter.
     using char_type = char;
 
-    /**
-     * @brief Construct a new file_input_adapter object.
-     */
+    /// @brief Construct a new file_input_adapter object.
     file_input_adapter() = default;
 
-    /**
-     * @brief Construct a new file_input_adapter object.
-     * @note
-     * This class doesn't call fopen() nor fclose().
-     * It's user's responsibility to call those functions.
-     *
-     * @param file A file handle for this adapter. (A non-null pointer is assumed.)
-     */
+    /// @brief Construct a new file_input_adapter object.
+    /// @note
+    /// This class doesn't call fopen() nor fclose().
+    /// It's user's responsibility to call those functions.
+    /// @param file A file handle for this adapter. (A non-null pointer is assumed.)
     explicit file_input_adapter(std::FILE* file)
         : m_file(file)
     {
@@ -133,11 +109,8 @@ public:
     file_input_adapter& operator=(file_input_adapter&&) = default;
     ~file_input_adapter() = default;
 
-    /**
-     * @brief Get a character at the current position and move forward.
-     *
-     * @return std::char_traits<char_type>::int_type A character or EOF.
-     */
+    /// @brief Get a character at the current position and move forward.
+    /// @return std::char_traits<char_type>::int_type A character or EOF.
     typename std::char_traits<char_type>::int_type get_character()
     {
         int ret = std::fgetc(m_file);
@@ -149,29 +122,22 @@ public:
     }
 
 private:
+    /// A pointer to the input file handle.
     std::FILE* m_file {nullptr};
 };
 
-/**
- * @class stream_input_adapter
- * @brief An input adapter for streams
- */
+/// @brief An input adapter for streams
 class stream_input_adapter
 {
 public:
-    /** A type for characters used in this input adapter. */
+    /// A type for characters used in this input adapter.
     using char_type = char;
 
-    /**
-     * @brief Construct a new stream_input_adapter object.
-     */
+    /// @brief Construct a new stream_input_adapter object.
     stream_input_adapter() = default;
 
-    /**
-     * @brief Construct a new stream_input_adapter object.
-     *
-     * @param is A reference to the target input stream.
-     */
+    /// @brief Construct a new stream_input_adapter object.
+    /// @param is A reference to the target input stream.
     explicit stream_input_adapter(std::istream& is)
         : m_istream(&is)
     {
@@ -184,17 +150,15 @@ public:
     stream_input_adapter& operator=(stream_input_adapter&&) = default;
     ~stream_input_adapter() = default;
 
-    /**
-     * @brief Get a character at the current position and move forward.
-     *
-     * @return std::char_traits<char_type>::int_type A character or EOF.
-     */
+    /// @brief Get a character at the current position and move forward.
+    /// @return std::char_traits<char_type>::int_type A character or EOF.
     std::char_traits<char_type>::int_type get_character()
     {
         return m_istream->get();
     }
 
 private:
+    /// A pointer to the input stream object.
     std::istream* m_istream {nullptr};
 };
 
@@ -202,27 +166,21 @@ private:
 //   iterator_adapter provider   //
 ///////////////////////////////////
 
-/**
- * @brief A factory method for iterator_input_adapter objects with ieterator values.
- *
- * @tparam ItrType An iterator type.
- * @param begin The beginning of iterators.
- * @param end The end of iterators.
- * @return iterator_input_adapter<ItrType> An iterator_input_adapter object for the target iterator type.
- */
+/// @brief A factory method for iterator_input_adapter objects with ieterator values.
+/// @tparam ItrType An iterator type.
+/// @param begin The beginning of iterators.
+/// @param end The end of iterators.
+/// @return iterator_input_adapter<ItrType> An iterator_input_adapter object for the target iterator type.
 template <typename ItrType>
 inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
 {
     return iterator_input_adapter<ItrType>(begin, end);
 }
 
-/**
- * @brief A factory method for iterator_input_adapter objects with C-style arrays.
- *
- * @tparam T A type of arrayed objects.
- * @tparam N A size of an array.
- * @return decltype(input_adapter(array, array + N)) An iterator_input_adapter object for the target array.
- */
+/// @brief A factory method for iterator_input_adapter objects with C-style arrays.
+/// @tparam T A type of arrayed objects.
+/// @tparam N A size of an array.
+/// @return decltype(input_adapter(array, array + N)) An iterator_input_adapter object for the target array.
 template <typename T, std::size_t N>
 inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array + N))
 {
@@ -236,45 +194,34 @@ inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array 
     return input_adapter(array, array + size);
 }
 
-/**
- * @brief A namespace to implement container_input_adapter_factory for internal use.
- */
+/// @brief A namespace to implement container_input_adapter_factory for internal use.
 namespace container_input_adapter_factory_impl
 {
 
 using std::begin;
 using std::end;
 
-/**
- * @brief A factory of input adapters for containers.
- *
- * @tparam ContainerType A container type.
- * @tparam typename N/A
- */
+/// @brief A factory of input adapters for containers.
+/// @tparam ContainerType A container type.
+/// @tparam typename N/A
 template <typename ContainerType, typename = void>
 struct container_input_adapter_factory
 {
 };
 
-/**
- * @brief A partial specialization of container_input_adapter_factory if begin()/end() are available for ContainerType.
- *
- * @tparam ContainerType A container type.
- */
+/// @brief A partial specialization of container_input_adapter_factory if begin()/end() are available for ContainerType.
+/// @tparam ContainerType A container type.
 template <typename ContainerType>
 struct container_input_adapter_factory<
     ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>>
 {
-    /** A type for resulting input adapter object. */
+    /// A type for resulting input adapter object.
     using adapter_type =
         decltype(input_adapter(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>())));
 
-    /**
-     * @brief A factory method of input adapter objects for the target container objects.
-     *
-     * @param container
-     * @return adapter_type
-     */
+    /// @brief A factory method of input adapter objects for the target container objects.
+    /// @param container
+    /// @return adapter_type
     static adapter_type create(const ContainerType& container)
     {
         return input_adapter(begin(container), end(container));
@@ -283,13 +230,10 @@ struct container_input_adapter_factory<
 
 } // namespace container_input_adapter_factory_impl
 
-/**
- * @brief A factory method for iterator_input_adapter objects with containers.
- *
- * @tparam ContainerType A container type.
- * @param container A container object.
- * @return container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::adapter_type
- */
+/// @brief A factory method for iterator_input_adapter objects with containers.
+/// @tparam ContainerType A container type.
+/// @param container A container object.
+/// @return container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::adapter_type
 template <typename ContainerType>
 inline typename container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::adapter_type
 input_adapter(ContainerType&& container)
@@ -297,12 +241,9 @@ input_adapter(ContainerType&& container)
     return container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::create(container);
 }
 
-/**
- * @brief A factory method for file_input_adapter objects with C-style file handles.
- *
- * @param file A file handle.
- * @return file_input_adapter A file_input_adapter object.
- */
+/// @brief A factory method for file_input_adapter objects with C-style file handles.
+/// @param file A file handle.
+/// @return file_input_adapter A file_input_adapter object.
 inline file_input_adapter input_adapter(std::FILE* file)
 {
     if (!file)
@@ -312,12 +253,9 @@ inline file_input_adapter input_adapter(std::FILE* file)
     return file_input_adapter(file);
 }
 
-/**
- * @brief
- *
- * @param stream
- * @return stream_input_adapter
- */
+/// @brief
+/// @param stream
+/// @return stream_input_adapter
 inline stream_input_adapter input_adapter(std::istream& stream) noexcept
 {
     return stream_input_adapter(stream);
