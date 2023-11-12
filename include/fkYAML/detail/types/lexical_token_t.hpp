@@ -43,6 +43,8 @@ enum class lexical_token_t
     INTEGER_VALUE,         //!< an integer value found. use get_integer() to get a value.
     FLOAT_NUMBER_VALUE,    //!< a float number value found. use get_float_number() to get a value.
     STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
+    END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
+    END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
 };
 
 } // namespace detail

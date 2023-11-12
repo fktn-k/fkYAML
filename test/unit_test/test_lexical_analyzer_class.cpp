@@ -124,6 +124,44 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanEmptyDirectiveTest", "[LexicalAnalyzerCl
     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::exception);
 }
 
+TEST_CASE("LexicalAnalyzerClassTest_ScanEndOfDirectivesTest", "[LexicalAnalyzerClassTest]")
+{
+    pchar_lexer_t lexer(fkyaml::detail::input_adapter("%YAML 1.2\n---\nfoo: bar"));
+    fkyaml::detail::lexical_token_t token;
+
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
+    REQUIRE(lexer.get_yaml_version() == "1.2");
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(lexer.get_string() == "foo");
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(lexer.get_string() == "bar");
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanEndOfDocumentsTest", "[LexicalAnalyzerClassTest]")
+{
+    pchar_lexer_t lexer(fkyaml::detail::input_adapter("%YAML 1.2\n---\n..."));
+    fkyaml::detail::lexical_token_t token;
+
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
+    REQUIRE(lexer.get_yaml_version() == "1.2");
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_DOCUMENT);
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+}
+
 TEST_CASE("LexicalAnalyzerClassTest_ScanColonTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::detail::lexical_token_t token;
@@ -396,6 +434,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string("none"), fkyaml::node::string_type("none")),
         value_pair_t(std::string(".NET"), fkyaml::node::string_type(".NET")),
         value_pair_t(std::string(".on"), fkyaml::node::string_type(".on")),
+        value_pair_t(std::string(".n"), fkyaml::node::string_type(".n")),
         value_pair_t(std::string("foo]"), fkyaml::node::string_type("foo")),
         value_pair_t(std::string("foo:bar"), fkyaml::node::string_type("foo:bar")),
         value_pair_t(std::string("foo bar"), fkyaml::node::string_type("foo bar")),

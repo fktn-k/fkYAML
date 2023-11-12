@@ -750,3 +750,17 @@ TEST_CASE("DeserializerClassTest_DeserializeNoMachingAnchorTest", "[Deserializer
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("foo: *anchor")), fkyaml::exception);
 }
+
+TEST_CASE("DeserializerClassTest_DeserializeDocumentWithMarkersTest", "[DeserializerClassTest]")
+{
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.2\n---\nfoo: one\n...")));
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.size() == 1);
+    REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
+
+    REQUIRE(root.contains("foo"));
+    REQUIRE(root["foo"].get_value_ref<std::string&>() == "one");
+}
