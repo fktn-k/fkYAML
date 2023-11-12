@@ -98,8 +98,7 @@ TEST_CASE("DeserializerClassTest_DeserializeDuplicateKeys", "[DeserializerClassT
     fkyaml::node root;
 
     REQUIRE_THROWS_AS(
-        root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\nfoo: baz")),
-        fkyaml::exception);
+        root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\nfoo: baz")), fkyaml::exception);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerClassTest]")
