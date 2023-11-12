@@ -256,7 +256,15 @@ private:
             m_indent_stack.push_back(indent);
         }
 
-        m_current_node->template get_value_ref<mapping_type&>().emplace(key, BasicNodeType());
+        // check key duplication in the current mapping.
+        mapping_type& map = m_current_node->template get_value_ref<mapping_type&>();
+        auto itr = map.find(key);
+        if (itr != map.end())
+        {
+            throw fkyaml::exception("Detected duplication in mapping keys.");
+        }
+
+        map.emplace(key, BasicNodeType());
         m_node_stack.push_back(m_current_node);
         m_current_node = &(m_current_node->template get_value_ref<mapping_type&>().at(key));
     }

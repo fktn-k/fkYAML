@@ -92,6 +92,15 @@ TEST_CASE("DeserializerClassTest_DeserializeInvalidIndentation", "[DeserializerC
         fkyaml::exception);
 }
 
+TEST_CASE("DeserializerClassTest_DeserializeDuplicateKeys", "[DeserializerClassTest]")
+{
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    REQUIRE_THROWS_AS(
+        root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\nfoo: baz")), fkyaml::exception);
+}
+
 TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerClassTest]")
 {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
