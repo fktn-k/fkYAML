@@ -212,6 +212,11 @@ public:
                 }
                 assign_node_value(BasicNodeType(lexer.get_string()));
                 break;
+            case lexical_token_t::END_OF_DIRECTIVES:
+                break;
+            case lexical_token_t::END_OF_DOCUMENT:
+                // TODO: This token should be handled to support multiple documents.
+                break;
             default:                                                         // LCOV_EXCL_LINE
                 throw fkyaml::exception("Unsupported lexical token found."); // LCOV_EXCL_LINE
             }

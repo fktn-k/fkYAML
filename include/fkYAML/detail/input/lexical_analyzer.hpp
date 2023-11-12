@@ -156,6 +156,18 @@ public:
             bool is_next_space = m_input_handler.test_next_char(' ');
             if (!is_next_space)
             {
+                char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
+                if (ret != end_of_input)
+                {
+                    if (m_value_buffer == "---")
+                    {
+                        m_input_handler.get_next();
+                        return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
+                    }
+
+                    // revert change in the position to the one before comparison above.
+                    m_input_handler.unget_range(2);
+                }
                 return m_last_token_type = scan_number();
             }
 
@@ -192,24 +204,37 @@ public:
             return m_last_token_type = scan_number();
         case '.': {
             char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
-            if (ret == end_of_input)
+            if (ret != end_of_input)
             {
-                return m_last_token_type = scan_string();
+                try
+                {
+                    // try convert to an infinite/nan value.
+                    m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
+                    m_input_handler.get_next();
+                    return m_last_token_type = lexical_token_t::FLOAT_NUMBER_VALUE;
+                }
+                catch (const fkyaml::exception& /*unused*/)
+                {
+                    // revert change in the position to the one before comparison above.
+                    m_input_handler.unget_range(3);
+                    return m_last_token_type = scan_string();
+                }
             }
 
-            try
+            ret = m_input_handler.get_range(3, m_value_buffer);
+            if (ret != end_of_input)
             {
-                // try convert to an infinite/nan value.
-                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                m_input_handler.get_next();
-                return m_last_token_type = lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-            catch (const fkyaml::exception& /*unused*/)
-            {
+                if (m_value_buffer == "...")
+                {
+                    m_input_handler.get_next();
+                    return m_last_token_type = lexical_token_t::END_OF_DOCUMENT;
+                }
+
                 // revert change in the position to the one before comparison above.
-                m_input_handler.unget_range(3);
-                return m_last_token_type = scan_string();
+                m_input_handler.unget_range(2);
             }
+
+            return m_last_token_type = scan_string();
         }
         case 'F':
         case 'f': {
