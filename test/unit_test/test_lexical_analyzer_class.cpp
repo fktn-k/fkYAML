@@ -550,7 +550,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidStringTokenTest", "[LexicalAnalyz
         std::string("\"\\x^\""),
         std::string("\"\\x{\""),
         std::string("\'\\t\'"),
-        std::string("\"\\N\""));
+        std::string("\"\\Q\""));
 
     str_lexer_t lexer(fkyaml::detail::input_adapter(buffer));
     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::exception);
