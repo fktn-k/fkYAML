@@ -1292,7 +1292,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockMappingTokenTest", "[LexicalAnalyze
 
     SECTION("Input source No.1.")
     {
-        pchar_lexer_t lexer(fkyaml::detail::input_adapter("test:\n  bool: true\n  foo: bar\n  pi: 3.14"));
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter("test:\n  bool: true\n  foo: \'bar\'\n  pi: 3.14"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);

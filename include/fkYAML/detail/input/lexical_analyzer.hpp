@@ -827,6 +827,8 @@ private:
                     continue;
                 }
 
+                // move the current position for next scanning.
+                m_input_handler.get_next();
                 return lexical_token_t::STRING_VALUE;
             }
 
