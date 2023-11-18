@@ -69,7 +69,6 @@ public:
 
         lexical_token_t type = lexer.get_next_token();
         std::size_t cur_indent = lexer.get_last_token_begin_pos();
-        m_indent_stack.push_back(cur_indent);
 
         while (type != lexical_token_t::END_OF_BUFFER)
         {
@@ -114,16 +113,22 @@ public:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
-                if (m_current_node->is_mapping())
+                if (m_current_node->is_sequence())
                 {
                     bool is_empty = m_current_node->empty();
                     if (is_empty)
                     {
-                        *m_current_node = BasicNodeType::sequence();
-                        break;
+                        m_indent_stack.push_back(cur_indent);
                     }
-
-                    // for the second or later mapping items in a sequence node.
+                    break;
+                }
+                if (m_current_node->is_mapping())
+                {
+                    if (m_node_stack.empty())
+                    {
+                        throw fkyaml::exception("Invalid sequence block prefix(- ) found.");
+                    }
+                    // for mappings in a sequence.
                     m_node_stack.back()->template get_value_ref<sequence_type&>().emplace_back(
                         BasicNodeType::mapping());
                     m_current_node = &(m_node_stack.back()->template get_value_ref<sequence_type&>().back());
@@ -140,9 +145,19 @@ public:
                 m_node_stack.pop_back();
                 break;
             case lexical_token_t::MAPPING_BLOCK_PREFIX:
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
+                {
+                    *m_current_node = BasicNodeType::sequence();
+                    set_yaml_version(*m_current_node);
+                    cur_indent = lexer.get_last_token_begin_pos();
+                    continue;
+                }
+
                 *m_current_node = BasicNodeType::mapping();
                 set_yaml_version(*m_current_node);
-                break;
+                cur_indent = lexer.get_last_token_begin_pos();
+                continue;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::mapping();
                 set_yaml_version(*m_current_node);
@@ -164,24 +179,19 @@ public:
 
                 if (m_current_node->is_sequence())
                 {
-                    bool is_empty = m_current_node->empty();
-                    const string_type& str = lexer.get_string();
+                    string_type str = lexer.get_string();
                     type = lexer.get_next_token();
-                    cur_indent = lexer.get_last_token_begin_pos();
 
                     // check if the current target token is a key or not.
-                    if (is_empty && (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX))
+                    if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        // create a mapping inside the current sequence.
-                        m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
-                        m_current_node->operator[](0).template get_value_ref<mapping_type&>().emplace(str, BasicNodeType());
-                        m_node_stack.emplace_back(m_current_node);
-                        m_node_stack.emplace_back(&(m_current_node->operator[](0)));
-                        m_current_node = &(m_current_node->operator[](0)[str]);
+                        add_new_key(str, cur_indent);
+                        cur_indent = lexer.get_last_token_begin_pos();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType());
+                    cur_indent = lexer.get_last_token_begin_pos();
                     continue;
                 }
 
@@ -197,25 +207,20 @@ public:
 
                 if (m_current_node->is_sequence())
                 {
-                    bool is_empty = m_current_node->empty();
                     boolean_type boolean = lexer.get_boolean();
-                    const string_type& str = lexer.get_string();
+                    string_type str = lexer.get_string();
                     type = lexer.get_next_token();
-                    cur_indent = lexer.get_last_token_begin_pos();
 
                     // check if the current target token is a key or not.
-                    if (is_empty && (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX))
+                    if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        // create a mapping inside the current sequence.
-                        m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
-                        m_current_node->operator[](0).template get_value_ref<mapping_type&>().emplace(str, BasicNodeType());
-                        m_node_stack.emplace_back(m_current_node);
-                        m_node_stack.emplace_back(&(m_current_node->operator[](0)));
-                        m_current_node = &(m_current_node->operator[](0)[str]);
+                        add_new_key(str, cur_indent);
+                        cur_indent = lexer.get_last_token_begin_pos();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType(boolean));
+                    cur_indent = lexer.get_last_token_begin_pos();
                     continue;
                 }
 
@@ -231,25 +236,20 @@ public:
 
                 if (m_current_node->is_sequence())
                 {
-                    bool is_empty = m_current_node->empty();
                     integer_type integer = lexer.get_integer();
-                    const string_type& str = lexer.get_string();
+                    string_type str = lexer.get_string();
                     type = lexer.get_next_token();
-                    cur_indent = lexer.get_last_token_begin_pos();
 
                     // check if the current target token is a key or not.
-                    if (is_empty && (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX))
+                    if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        // create a mapping inside the current sequence.
-                        m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
-                        m_current_node->operator[](0).template get_value_ref<mapping_type&>().emplace(str, BasicNodeType());
-                        m_node_stack.emplace_back(m_current_node);
-                        m_node_stack.emplace_back(&(m_current_node->operator[](0)));
-                        m_current_node = &(m_current_node->operator[](0)[str]);
+                        add_new_key(str, cur_indent);
+                        cur_indent = lexer.get_last_token_begin_pos();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType(integer));
+                    cur_indent = lexer.get_last_token_begin_pos();
                     continue;
                 }
 
@@ -265,25 +265,20 @@ public:
 
                 if (m_current_node->is_sequence())
                 {
-                    bool is_empty = m_current_node->empty();
                     float_number_type float_val = lexer.get_float_number();
-                    const string_type& str = lexer.get_string();
+                    string_type str = lexer.get_string();
                     type = lexer.get_next_token();
-                    cur_indent = lexer.get_last_token_begin_pos();
 
                     // check if the current target token is a key or not.
-                    if (is_empty && (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX))
+                    if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        // create a mapping inside the current sequence.
-                        m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
-                        m_current_node->operator[](0).template get_value_ref<mapping_type&>().emplace(str, BasicNodeType());
-                        m_node_stack.emplace_back(m_current_node);
-                        m_node_stack.emplace_back(&(m_current_node->operator[](0)));
-                        m_current_node = &(m_current_node->operator[](0)[str]);
+                        add_new_key(str, cur_indent);
+                        cur_indent = lexer.get_last_token_begin_pos();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType(float_val));
+                    cur_indent = lexer.get_last_token_begin_pos();
                     continue;
                 }
 
@@ -297,26 +292,21 @@ public:
                     break;
                 }
 
-                const string_type& str = lexer.get_string();
+                string_type str = lexer.get_string();
                 if (m_current_node->is_sequence())
                 {
-                    bool is_empty = m_current_node->empty();
                     type = lexer.get_next_token();
-                    cur_indent = lexer.get_last_token_begin_pos();
 
                     // check if the current target token is a key or not.
-                    if (is_empty && (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX))
+                    if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        // create a mapping inside the current sequence.
-                        m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
-                        m_current_node->operator[](0).template get_value_ref<mapping_type&>().emplace(str, BasicNodeType());
-                        m_node_stack.emplace_back(m_current_node);
-                        m_node_stack.emplace_back(&(m_current_node->operator[](0)));
-                        m_current_node = &(m_current_node->operator[](0)[str]);
+                        add_new_key(str, cur_indent);
+                        cur_indent = lexer.get_last_token_begin_pos();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType(str));
+                    cur_indent = lexer.get_last_token_begin_pos();
                     continue;
                 }
 
@@ -340,6 +330,7 @@ public:
         m_needs_anchor_impl = false;
         m_anchor_table.clear();
         m_node_stack.clear();
+        m_indent_stack.clear();
 
         return root;
     }
@@ -349,40 +340,51 @@ private:
     /// @param key a key string to be added to the current YAML node.
     void add_new_key(const string_type& key, const std::size_t indent)
     {
-        if (indent < m_indent_stack.back())
+        if (!m_indent_stack.empty() && indent < m_indent_stack.back())
         {
-            auto target_itr = std::find(m_indent_stack.begin(), m_indent_stack.end(), indent);
-            if (target_itr == m_indent_stack.end())
+            auto target_itr = std::find(m_indent_stack.rbegin(), m_indent_stack.rend(), indent);
+            if (target_itr == m_indent_stack.rend())
             {
                 throw fkyaml::exception("Detected invalid indentaion.");
             }
 
-            auto pop_num = std::distance(target_itr, m_indent_stack.end()) - 1;
+            auto pop_num = std::distance(m_indent_stack.rbegin(), target_itr);
             for (auto i = 0; i < pop_num; i++)
             {
-                m_indent_stack.pop_back();
-
                 // move back to the previous container node.
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
+                m_indent_stack.pop_back();
             }
         }
-        else if (indent > m_indent_stack.back())
+
+        if (m_current_node->is_sequence())
+        {
+            m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
+            m_node_stack.push_back(m_current_node);
+            m_indent_stack.push_back(indent);
+            m_current_node = &(m_current_node->operator[](m_current_node->size() - 1));
+        }
+
+        mapping_type& map = m_current_node->template get_value_ref<mapping_type&>();
+        bool is_empty = map.empty();
+        if (is_empty)
         {
             m_indent_stack.push_back(indent);
         }
-
-        // check key duplication in the current mapping.
-        mapping_type& map = m_current_node->template get_value_ref<mapping_type&>();
-        auto itr = map.find(key);
-        if (itr != map.end())
+        else
         {
-            throw fkyaml::exception("Detected duplication in mapping keys.");
+            // check key duplication in the current mapping if not empty.
+            auto itr = map.find(key);
+            if (itr != map.end())
+            {
+                throw fkyaml::exception("Detected duplication in mapping keys.");
+            }
         }
 
         map.emplace(key, BasicNodeType());
         m_node_stack.push_back(m_current_node);
-        m_current_node = &(m_current_node->template get_value_ref<mapping_type&>().at(key));
+        m_current_node = &(m_current_node->operator[](key));
     }
 
     /// @brief Assign node value to the current node.

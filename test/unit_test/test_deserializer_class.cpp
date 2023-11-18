@@ -588,6 +588,28 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root["qux"].is_boolean());
         REQUIRE(root["qux"].get_value<fkyaml::node::boolean_type>() == true);
     }
+
+    SECTION("Input source No.10.")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  - bar\n  - 123\nbaz: qux")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_sequence());
+        REQUIRE(root["foo"].size() == 2);
+
+        REQUIRE(root["foo"][0].is_string());
+        REQUIRE(root["foo"][0].get_value_ref<std::string&>() == "bar");
+
+        REQUIRE(root["foo"][1].is_integer());
+        REQUIRE(root["foo"][1].get_value<int>() == 123);
+
+        REQUIRE(root.contains("baz"));
+        REQUIRE(root["baz"].is_string());
+        REQUIRE(root["baz"].get_value_ref<std::string&>() == "qux");
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerClassTest]")
