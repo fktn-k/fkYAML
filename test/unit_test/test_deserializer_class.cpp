@@ -610,6 +610,178 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root["baz"].is_string());
         REQUIRE(root["baz"].get_value_ref<std::string&>() == "qux");
     }
+
+    SECTION("Input source No.11.")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  - bar: baz\nqux: corge")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_sequence());
+        REQUIRE(root["foo"].size() == 1);
+
+        REQUIRE(root["foo"][0].is_mapping());
+        REQUIRE(root["foo"][0].size() == 1);
+
+        REQUIRE(root["foo"][0].contains("bar"));
+        REQUIRE(root["foo"][0]["bar"].is_string());
+        REQUIRE(root["foo"][0]["bar"].get_value_ref<std::string&>() == "baz");
+
+        REQUIRE(root.contains("qux"));
+        REQUIRE(root["qux"].is_string());
+        REQUIRE(root["qux"].get_value_ref<std::string&>() == "corge");
+    }
+
+    SECTION("Input source No.12.")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  - bar: true\n    baz: 123\nqux: corge")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_sequence());
+        REQUIRE(root["foo"].size() == 1);
+
+        REQUIRE(root["foo"][0].is_mapping());
+        REQUIRE(root["foo"][0].size() == 2);
+
+        REQUIRE(root["foo"][0].contains("bar"));
+        REQUIRE(root["foo"][0]["bar"].is_boolean());
+        REQUIRE(root["foo"][0]["bar"].get_value<bool>() == true);
+
+        REQUIRE(root["foo"][0].contains("baz"));
+        REQUIRE(root["foo"][0]["baz"].is_integer());
+        REQUIRE(root["foo"][0]["baz"].get_value<int>() == 123);
+
+        REQUIRE(root.contains("qux"));
+        REQUIRE(root["qux"].is_string());
+        REQUIRE(root["qux"].get_value_ref<std::string&>() == "corge");
+    }
+
+    SECTION("Input source No.13.")
+    {
+        auto input_adapter = fkyaml::detail::input_adapter(
+            "stuff:\n"
+            "  - id: \"foo\"\n"
+            "    name: Foo\n"
+            "    tags:\n"
+            "      - baz\n"
+            "    params:\n"
+            "      key: 1\n"
+            "  - id: \"bar\"\n"
+            "    name: Bar"
+        );
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(std::move(input_adapter)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+
+        REQUIRE(root.contains("stuff"));
+        REQUIRE(root["stuff"].is_sequence());
+        REQUIRE(root["stuff"].size() == 2);
+
+        REQUIRE(root["stuff"][0].is_mapping());
+        REQUIRE(root["stuff"][0].size() == 4);
+
+        REQUIRE(root["stuff"][0].contains("id"));
+        REQUIRE(root["stuff"][0]["id"].is_string());
+        REQUIRE(root["stuff"][0]["id"].get_value_ref<std::string&>() == "foo");
+
+        REQUIRE(root["stuff"][0].contains("name"));
+        REQUIRE(root["stuff"][0]["name"].is_string());
+        REQUIRE(root["stuff"][0]["name"].get_value_ref<std::string&>() == "Foo");
+
+        REQUIRE(root["stuff"][0].contains("tags"));
+        REQUIRE(root["stuff"][0]["tags"].is_sequence());
+        REQUIRE(root["stuff"][0]["tags"].size() == 1);
+
+        REQUIRE(root["stuff"][0]["tags"][0].is_string());
+        REQUIRE(root["stuff"][0]["tags"][0].get_value_ref<std::string&>() == "baz");
+
+        REQUIRE(root["stuff"][0].contains("params"));
+        REQUIRE(root["stuff"][0]["params"].is_mapping());
+        REQUIRE(root["stuff"][0]["params"].size() == 1);
+
+        REQUIRE(root["stuff"][0]["params"].contains("key"));
+        REQUIRE(root["stuff"][0]["params"]["key"].is_integer());
+        REQUIRE(root["stuff"][0]["params"]["key"].get_value<int>() == 1);
+
+        REQUIRE(root["stuff"][1].is_mapping());
+        REQUIRE(root["stuff"][1].size() == 2);
+
+        REQUIRE(root["stuff"][1].contains("id"));
+        REQUIRE(root["stuff"][1]["id"].is_string());
+        REQUIRE(root["stuff"][1]["id"].get_value_ref<std::string&>() == "bar");
+
+        REQUIRE(root["stuff"][1].contains("name"));
+        REQUIRE(root["stuff"][1]["name"].is_string());
+        REQUIRE(root["stuff"][1]["name"].get_value_ref<std::string&>() == "Bar");
+    }
+
+    SECTION("Input source No.14.")
+    {
+        auto input_adapter = fkyaml::detail::input_adapter(
+            "stuff:\n"
+            "  - id: \"foo\"\n"
+            "    name: Foo\n"
+            "    params:\n"
+            "      key: 1\n"
+            "    tags:\n"
+            "      - baz\n"
+            "  - id: \"bar\"\n"
+            "    name: Bar"
+        );
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(std::move(input_adapter)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+
+        REQUIRE(root.contains("stuff"));
+        REQUIRE(root["stuff"].is_sequence());
+        REQUIRE(root["stuff"].size() == 2);
+
+        REQUIRE(root["stuff"][0].is_mapping());
+        REQUIRE(root["stuff"][0].size() == 4);
+
+        REQUIRE(root["stuff"][0].contains("id"));
+        REQUIRE(root["stuff"][0]["id"].is_string());
+        REQUIRE(root["stuff"][0]["id"].get_value_ref<std::string&>() == "foo");
+
+        REQUIRE(root["stuff"][0].contains("name"));
+        REQUIRE(root["stuff"][0]["name"].is_string());
+        REQUIRE(root["stuff"][0]["name"].get_value_ref<std::string&>() == "Foo");
+
+        REQUIRE(root["stuff"][0].contains("tags"));
+        REQUIRE(root["stuff"][0]["tags"].is_sequence());
+        REQUIRE(root["stuff"][0]["tags"].size() == 1);
+
+        REQUIRE(root["stuff"][0]["tags"][0].is_string());
+        REQUIRE(root["stuff"][0]["tags"][0].get_value_ref<std::string&>() == "baz");
+
+        REQUIRE(root["stuff"][0].contains("params"));
+        REQUIRE(root["stuff"][0]["params"].is_mapping());
+        REQUIRE(root["stuff"][0]["params"].size() == 1);
+
+        REQUIRE(root["stuff"][0]["params"].contains("key"));
+        REQUIRE(root["stuff"][0]["params"]["key"].is_integer());
+        REQUIRE(root["stuff"][0]["params"]["key"].get_value<int>() == 1);
+
+        REQUIRE(root["stuff"][1].is_mapping());
+        REQUIRE(root["stuff"][1].size() == 2);
+
+        REQUIRE(root["stuff"][1].contains("id"));
+        REQUIRE(root["stuff"][1]["id"].is_string());
+        REQUIRE(root["stuff"][1]["id"].get_value_ref<std::string&>() == "bar");
+
+        REQUIRE(root["stuff"][1].contains("name"));
+        REQUIRE(root["stuff"][1]["name"].is_string());
+        REQUIRE(root["stuff"][1]["name"].get_value_ref<std::string&>() == "Bar");
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerClassTest]")

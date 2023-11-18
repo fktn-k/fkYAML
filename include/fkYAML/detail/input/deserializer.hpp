@@ -119,6 +119,15 @@ public:
                     if (is_empty)
                     {
                         m_indent_stack.push_back(cur_indent);
+                        break;
+                    }
+
+                    // move back to the previous sequence if necessary.
+                    while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back())
+                    {
+                        m_current_node = m_node_stack.back();
+                        m_node_stack.pop_back();
+                        m_indent_stack.pop_back();
                     }
                     break;
                 }
@@ -128,10 +137,20 @@ public:
                     {
                         throw fkyaml::exception("Invalid sequence block prefix(- ) found.");
                     }
+
+                    // move back to the previous sequence if necessary.
+                    while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back())
+                    {
+                        m_current_node = m_node_stack.back();
+                        m_node_stack.pop_back();
+                        m_indent_stack.pop_back();
+                    }
+
                     // for mappings in a sequence.
-                    m_node_stack.back()->template get_value_ref<sequence_type&>().emplace_back(
+                    m_current_node->template get_value_ref<sequence_type&>().emplace_back(
                         BasicNodeType::mapping());
-                    m_current_node = &(m_node_stack.back()->template get_value_ref<sequence_type&>().back());
+                    m_node_stack.push_back(m_current_node);
+                    m_current_node = &(m_current_node->template get_value_ref<sequence_type&>().back());
                     set_yaml_version(*m_current_node);
                     break;
                 }
@@ -362,7 +381,6 @@ private:
         {
             m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
             m_node_stack.push_back(m_current_node);
-            m_indent_stack.push_back(indent);
             m_current_node = &(m_current_node->operator[](m_current_node->size() - 1));
         }
 
