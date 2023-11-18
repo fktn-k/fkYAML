@@ -147,8 +147,7 @@ public:
                     }
 
                     // for mappings in a sequence.
-                    m_current_node->template get_value_ref<sequence_type&>().emplace_back(
-                        BasicNodeType::mapping());
+                    m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
                     m_node_stack.push_back(m_current_node);
                     m_current_node = &(m_current_node->template get_value_ref<sequence_type&>().back());
                     set_yaml_version(*m_current_node);

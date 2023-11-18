@@ -591,7 +591,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.10.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  - bar\n  - 123\nbaz: qux")));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  - bar\n  - 123\nbaz: qux")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
@@ -613,7 +614,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.11.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  - bar: baz\nqux: corge")));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  - bar: baz\nqux: corge")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
@@ -636,7 +638,9 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.12.")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  - bar: true\n    baz: 123\nqux: corge")));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(
+                fkyaml::detail::input_adapter("foo:\n  - bar: true\n    baz: 123\nqux: corge")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
@@ -663,17 +667,15 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.13.")
     {
-        auto input_adapter = fkyaml::detail::input_adapter(
-            "stuff:\n"
-            "  - id: \"foo\"\n"
-            "    name: Foo\n"
-            "    tags:\n"
-            "      - baz\n"
-            "    params:\n"
-            "      key: 1\n"
-            "  - id: \"bar\"\n"
-            "    name: Bar"
-        );
+        auto input_adapter = fkyaml::detail::input_adapter("stuff:\n"
+                                                           "  - id: \"foo\"\n"
+                                                           "    name: Foo\n"
+                                                           "    tags:\n"
+                                                           "      - baz\n"
+                                                           "    params:\n"
+                                                           "      key: 1\n"
+                                                           "  - id: \"bar\"\n"
+                                                           "    name: Bar");
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(std::move(input_adapter)));
 
@@ -724,17 +726,15 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("Input source No.14.")
     {
-        auto input_adapter = fkyaml::detail::input_adapter(
-            "stuff:\n"
-            "  - id: \"foo\"\n"
-            "    name: Foo\n"
-            "    params:\n"
-            "      key: 1\n"
-            "    tags:\n"
-            "      - baz\n"
-            "  - id: \"bar\"\n"
-            "    name: Bar"
-        );
+        auto input_adapter = fkyaml::detail::input_adapter("stuff:\n"
+                                                           "  - id: \"foo\"\n"
+                                                           "    name: Foo\n"
+                                                           "    params:\n"
+                                                           "      key: 1\n"
+                                                           "    tags:\n"
+                                                           "      - baz\n"
+                                                           "  - id: \"bar\"\n"
+                                                           "    name: Bar");
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(std::move(input_adapter)));
 
