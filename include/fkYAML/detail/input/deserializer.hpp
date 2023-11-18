@@ -131,28 +131,26 @@ public:
                     }
                     break;
                 }
-                if (m_current_node->is_mapping())
+
+                // if the current node is a mapping.
+                if (m_node_stack.empty())
                 {
-                    if (m_node_stack.empty())
-                    {
-                        throw fkyaml::exception("Invalid sequence block prefix(- ) found.");
-                    }
-
-                    // move back to the previous sequence if necessary.
-                    while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back())
-                    {
-                        m_current_node = m_node_stack.back();
-                        m_node_stack.pop_back();
-                        m_indent_stack.pop_back();
-                    }
-
-                    // for mappings in a sequence.
-                    m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
-                    m_node_stack.push_back(m_current_node);
-                    m_current_node = &(m_current_node->template get_value_ref<sequence_type&>().back());
-                    set_yaml_version(*m_current_node);
-                    break;
+                    throw fkyaml::exception("Invalid sequence block prefix(- ) found.");
                 }
+
+                // move back to the previous sequence if necessary.
+                while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back())
+                {
+                    m_current_node = m_node_stack.back();
+                    m_node_stack.pop_back();
+                    m_indent_stack.pop_back();
+                }
+
+                // for mappings in a sequence.
+                m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
+                m_node_stack.push_back(m_current_node);
+                m_current_node = &(m_current_node->template get_value_ref<sequence_type&>().back());
+                set_yaml_version(*m_current_node);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::sequence();
@@ -361,7 +359,8 @@ private:
         if (!m_indent_stack.empty() && indent < m_indent_stack.back())
         {
             auto target_itr = std::find(m_indent_stack.rbegin(), m_indent_stack.rend(), indent);
-            if (target_itr == m_indent_stack.rend())
+            bool is_indent_valid = (target_itr != m_indent_stack.rend());
+            if (!is_indent_valid)
             {
                 throw fkyaml::exception("Detected invalid indentaion.");
             }

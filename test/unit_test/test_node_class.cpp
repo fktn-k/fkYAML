@@ -1627,7 +1627,7 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
 
         SECTION("test for string value.")
         {
-            auto& str = node.get_value_ref<fkyaml::node::string_type&>();
+            auto str = node.get_value<fkyaml::node::string_type>();
             REQUIRE(str.size() == 4);
             REQUIRE(str == "test");
         }
