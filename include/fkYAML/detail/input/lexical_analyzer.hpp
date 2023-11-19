@@ -1259,23 +1259,23 @@ private:
 
     void handle_unicode_code_point(uint32_t code_point)
     {
+        bool is_valid = false;
+
         if (code_point < 0x80)
         {
             m_value_buffer.push_back(static_cast<char_type>(code_point & 0x007F));
-            return;
+            is_valid = true;
         }
-
-        if (0x80 <= code_point && code_point <= 0x7FF)
+        else if (code_point <= 0x7FF)
         {
             uint16_t utf8_encoded = 0b1100'0000'1000'0000;
             utf8_encoded |= static_cast<uint16_t>((code_point & 0x07C0) << 2);
             utf8_encoded |= static_cast<uint16_t>((code_point & 0x003F));
             m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0xFF00) >> 8));
             m_value_buffer.push_back(static_cast<char_type>(utf8_encoded & 0x00FF));
-            return;
+            is_valid = true;
         }
-
-        if (0x800 <= code_point && code_point <= 0xFFFF)
+        else if (code_point <= 0xFFFF)
         {
             uint32_t utf8_encoded = 0b1110'0000'1000'0000'1000'0000;
             utf8_encoded |= static_cast<uint32_t>((code_point & 0xF000) << 4);
@@ -1284,10 +1284,9 @@ private:
             m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0xFF0000) >> 16));
             m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0x00FF00) >> 8));
             m_value_buffer.push_back(static_cast<char_type>(utf8_encoded & 0x0000FF));
-            return;
+            is_valid = true;
         }
-
-        if (0x10000 <= code_point && code_point <= 0x10FFFF)
+        else if (code_point <= 0x10FFFF)
         {
             uint32_t utf8_encoded = 0b1111'0000'1000'0000'1000'0000'1000'0000;
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x1C0000) << 6);
@@ -1298,10 +1297,13 @@ private:
             m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0x00FF0000) >> 16));
             m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0x0000FF00) >> 8));
             m_value_buffer.push_back(static_cast<char_type>(utf8_encoded & 0x000000FF));
-            return;
+            is_valid = true;
         }
 
-        throw fkyaml::exception("Invalid Unicode code point.");
+        if (!is_valid)
+        {
+            throw fkyaml::exception("Invalid Unicode code point.");
+        }
     }
 
     /// @brief Skip white spaces, tabs and newline codes until any other kind of character is found.
