@@ -389,7 +389,7 @@ private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
-    static char convert_hex_char_to_byte(char source)
+    static char convert_hex_char_to_byte(char_int_type source)
     {
         if ('0' <= source && source <= '9')
         {
@@ -940,7 +940,7 @@ private:
                     m_value_buffer.push_back('\r');
                     break;
                 case 'e':
-                    m_value_buffer.push_back('\u001B');
+                    m_value_buffer.push_back(char_type(0x1B));
                     break;
                 case ' ':
                     m_value_buffer.push_back(' ');
@@ -954,20 +954,52 @@ private:
                 case '\\':
                     m_value_buffer.push_back('\\');
                     break;
+                case 'N': // next line
+                    handle_unicode_code_point(0x85u);
+                    break;
+                case '_': // non-breaking space
+                    handle_unicode_code_point(0xA0u);
+                    break;
+                case 'L': // line separator
+                    handle_unicode_code_point(0x2028u);
+                    break;
+                case 'P': // paragraph separator
+                    handle_unicode_code_point(0x2029u);
+                    break;
                 case 'x': {
-                    char byte = 0;
+                    uint32_t code_point = 0;
                     for (int i = 1; i >= 0; --i)
                     {
-                        char four_bits =
-                            convert_hex_char_to_byte(char_traits_type::to_char_type(m_input_handler.get_next()));
+                        char four_bits = convert_hex_char_to_byte(m_input_handler.get_next());
                         // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-                        byte |= static_cast<char>(four_bits << (4 * i));
+                        code_point |= static_cast<uint32_t>(four_bits << (4 * i));
                     }
-                    m_value_buffer.push_back(byte);
+                    handle_unicode_code_point(code_point);
                     break;
                 }
-                // TODO: Multibyte characters are not yet supported.
-                // Thus \N, \_, \L, \P \uXX, \UXXXX are currently unavailable.
+                case 'u': {
+                    uint32_t code_point = 0;
+                    for (int i = 3; i >= 0; --i)
+                    {
+                        char four_bits = convert_hex_char_to_byte(m_input_handler.get_next());
+                        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+                        code_point |= static_cast<uint32_t>(four_bits << (4 * i));
+                    }
+                    handle_unicode_code_point(code_point);
+                    break;
+                }
+                case 'U': {
+                    uint32_t code_point = 0;
+                    for (int i = 7; i >= 0; --i)
+                    {
+                        current = m_input_handler.get_next();
+                        char four_bits = convert_hex_char_to_byte(current);
+                        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+                        code_point |= static_cast<uint32_t>(four_bits << (4 * i));
+                    }
+                    handle_unicode_code_point(code_point);
+                    break;
+                }
                 default:
                     throw fkyaml::exception("Unsupported escape sequence found in a string token.");
                 }
@@ -1222,6 +1254,55 @@ private:
             throw fkyaml::exception("Control character U+001E (RS) must be escaped to \\u001E.");
         case 0x1F:
             throw fkyaml::exception("Control character U+001F (US) must be escaped to \\u001F.");
+        }
+    }
+
+    void handle_unicode_code_point(uint32_t code_point)
+    {
+        bool is_valid = false;
+
+        if (code_point < 0x80)
+        {
+            m_value_buffer.push_back(static_cast<char_type>(code_point & 0x007F));
+            is_valid = true;
+        }
+        else if (code_point <= 0x7FF)
+        {
+            uint16_t utf8_encoded = 0b1100000010000000;
+            utf8_encoded |= static_cast<uint16_t>((code_point & 0x07C0) << 2);
+            utf8_encoded |= static_cast<uint16_t>((code_point & 0x003F));
+            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0xFF00) >> 8));
+            m_value_buffer.push_back(static_cast<char_type>(utf8_encoded & 0x00FF));
+            is_valid = true;
+        }
+        else if (code_point <= 0xFFFF)
+        {
+            uint32_t utf8_encoded = 0b111000001000000010000000;
+            utf8_encoded |= static_cast<uint32_t>((code_point & 0xF000) << 4);
+            utf8_encoded |= static_cast<uint32_t>((code_point & 0x0FC0) << 2);
+            utf8_encoded |= static_cast<uint32_t>((code_point & 0x003F));
+            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0xFF0000) >> 16));
+            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0x00FF00) >> 8));
+            m_value_buffer.push_back(static_cast<char_type>(utf8_encoded & 0x0000FF));
+            is_valid = true;
+        }
+        else if (code_point <= 0x10FFFF)
+        {
+            uint32_t utf8_encoded = 0b11110000100000001000000010000000;
+            utf8_encoded |= static_cast<uint32_t>((code_point & 0x1C0000) << 6);
+            utf8_encoded |= static_cast<uint32_t>((code_point & 0x03F000) << 4);
+            utf8_encoded |= static_cast<uint32_t>((code_point & 0x000FC0) << 2);
+            utf8_encoded |= static_cast<uint32_t>((code_point & 0x00003F));
+            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0xFF000000) >> 24));
+            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0x00FF0000) >> 16));
+            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0x0000FF00) >> 8));
+            m_value_buffer.push_back(static_cast<char_type>(utf8_encoded & 0x000000FF));
+            is_valid = true;
+        }
+
+        if (!is_valid)
+        {
+            throw fkyaml::exception("Invalid Unicode code point.");
         }
     }
 
