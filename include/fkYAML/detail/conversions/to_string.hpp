@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.1
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -21,40 +21,53 @@
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
+/// @brief Converts a ValueType object to a string YAML token.
+/// @tparam ValueType A source value type.
+/// @tparam CharType The type of characters for the conversion result.
+/// @param s A resulting output string.
+/// @param v A source value.
 template <typename ValueType, typename CharType>
-inline void to_string(std::basic_string<CharType>& s, ValueType);
+inline void to_string(std::basic_string<CharType>& s, ValueType v);
 
+/// @brief Specialization of to_string() for null values.
+/// @param s A resulting string YAML token.
+/// @param (unused) nullptr
 template <>
 inline void to_string(std::string& s, std::nullptr_t /*unused*/)
 {
     s = "null";
 }
 
+/// @brief Specialization of to_string() for booleans.
+/// @param s A resulting string YAML token.
+/// @param b A boolean source value.
 template <>
 inline void to_string(std::string& s, bool b)
 {
     s = b ? "true" : "false";
 }
 
+/// @brief Specialization of to_string() for integers.
+/// @tparam IntegerType An integer type.
+/// @param s A resulting string YAML token.
+/// @param i An integer source value.
 template <typename IntegerType>
 inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(std::string& s, IntegerType i)
 {
     s = std::to_string(i);
 }
 
+/// @brief Specialization of to_string() for floating point numbers.
+/// @tparam FloatType A floating point number type.
+/// @param s A resulting string YAML token.
+/// @param f A floating point number source value.
 template <typename FloatType>
 inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(std::string& s, FloatType f)
 {

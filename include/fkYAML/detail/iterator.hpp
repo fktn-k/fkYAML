@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.1
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -18,158 +18,120 @@
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/exception.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
-/**
- * @struct sequence_iterator_tag
- * @brief A tag which tells Iterator will contain sequence value iterator.
- */
+/// @brief A tag which tells Iterator will contain sequence value iterator.
 struct sequence_iterator_tag
 {
 };
 
-/**
- * @struct mapping_iterator_tag
- * @brief A tag which tells Iterator will contain mapping value iterator.
- */
+/// @brief A tag which tells Iterator will contain mapping value iterator.
 struct mapping_iterator_tag
 {
 };
 
-/**
- * @struct iterator_traits
- * @brief The template definitions of type informations used in @ref Iterator class
- *
- * @tparam ValueType The type of iterated elements.
- */
+/// @brief The template definitions of type informations used in @ref Iterator class
+/// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 struct iterator_traits
 {
-    /** A type of iterated elements. */
+    /// A type of iterated elements.
     using value_type = ValueType;
-    /** A type to represent difference between iterators. */
+    /// A type to represent difference between iterators.
     using difference_type = std::ptrdiff_t;
-    /** A type to represent iterator sizes. */
+    /// A type to represent iterator sizes.
     using size_type = std::size_t;
-    /** A type of an element pointer. */
+    /// A type of an element pointer.
     using pointer = value_type*;
-    /** A type of reference to an element. */
+    /// A type of reference to an element.
     using reference = value_type&;
 };
 
-/**
- * @brief A specialization of @ref iterator_traits for constant value types.
- *
- * @tparam ValueType The type of iterated elements.
- */
+/// @brief A specialization of @ref iterator_traits for constant value types.
+/// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 struct iterator_traits<const ValueType>
 {
-    /** A type of iterated elements. */
+    /// A type of iterated elements.
     using value_type = ValueType;
-    /** A type to represent difference between iterators. */
+    /// A type to represent difference between iterators.
     using difference_type = std::ptrdiff_t;
-    /** A type to represent iterator sizes. */
+    /// A type to represent iterator sizes.
     using size_type = std::size_t;
-    /** A type of a constant element pointer. */
+    /// A type of a constant element pointer.
     using pointer = const value_type*;
-    /** A type of constant reference to an element. */
+    /// A type of constant reference to an element.
     using reference = const value_type&;
 };
 
-/**
- * @enum iterator_t
- * @brief Definitions of iterator types for iterators internally held.
- */
+/// @brief Definitions of iterator types for iterators internally held.
 enum class iterator_t
 {
     SEQUENCE, //!< sequence iterator type.
     MAPPING,  //!< mapping iterator type.
 };
 
-/**
- * @class iterator
- * @brief A class which holds iterators either of sequence or mapping type
- *
- * @tparam ValueType The type of iterated elements.
- */
+/// @brief A class which holds iterators either of sequence or mapping type
+/// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 class iterator
 {
 public:
-    /** A type for iterator traits of instantiated @Iterator template class. */
+    /// A type for iterator traits of instantiated @Iterator template class.
     using ItrTraitsType = iterator_traits<ValueType>;
 
-    /** A type for iterator category tag. */
+    /// A type for iterator category tag.
     using iterator_category = std::bidirectional_iterator_tag;
-    /** A type of iterated element. */
+    /// A type of iterated element.
     using value_type = typename ItrTraitsType::value_type;
-    /** A type to represent differences between iterators. */
+    /// A type to represent differences between iterators.
     using difference_type = typename ItrTraitsType::difference_type;
-    /** A type to represent container sizes. */
+    /// A type to represent container sizes.
     using size_type = typename ItrTraitsType::size_type;
-    /** A type of an element pointer. */
+    /// A type of an element pointer.
     using pointer = typename ItrTraitsType::pointer;
-    /** A type of reference to an element. */
+    /// A type of reference to an element.
     using reference = typename ItrTraitsType::reference;
 
 private:
-    /** A type of non-const version of iterated elements. */
+    /// A type of non-const version of iterated elements.
     using NonConstValueType = typename std::remove_const<ValueType>::type;
 
     static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts basic_node<...>");
 
-    /**
-     * @struct iterator_holder
-     * @brief The actual storage for iterators internally held in @ref Iterator.
-     */
+    /// @brief The actual storage for iterators internally held in @ref Iterator.
     struct iterator_holder
     {
-        /** A sequence iterator object. */
+        /// A sequence iterator object.
         typename NonConstValueType::sequence_type::iterator sequence_iterator {};
-        /** A mapping iterator object. */
+        /// A mapping iterator object.
         typename NonConstValueType::mapping_type::iterator mapping_iterator {};
     };
 
 public:
-    /**
-     * @brief Construct a new iterator object with sequence iterator object.
-     *
-     * @param[in] itr An sequence iterator object.
-     */
+    /// @brief Construct a new iterator object with sequence iterator object.
+    /// @param[in] itr An sequence iterator object.
     iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept
         : m_inner_iterator_type(iterator_t::SEQUENCE)
     {
         m_iterator_holder.sequence_iterator = itr;
     }
 
-    /**
-     * @brief Construct a new iterator object with mapping iterator object.
-     *
-     * @param[in] itr An mapping iterator object.
-     */
+    /// @brief Construct a new iterator object with mapping iterator object.
+    /// @param[in] itr An mapping iterator object.
     iterator(mapping_iterator_tag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
         : m_inner_iterator_type(iterator_t::MAPPING)
     {
         m_iterator_holder.mapping_iterator = itr;
     }
 
-    /**
-     * @brief Copy constructor of the iterator class.
-     *
-     * @param other An iterator object to be copied with.
-     */
+    /// @brief Copy constructor of the iterator class.
+    /// @param other An iterator object to be copied with.
     iterator(const iterator& other)
         : m_inner_iterator_type(other.m_inner_iterator_type)
     {
@@ -186,11 +148,8 @@ public:
         }
     }
 
-    /**
-     * @brief Move constructor of the iterator class.
-     *
-     * @param other An iterator object to be moved from.
-     */
+    /// @brief Move constructor of the iterator class.
+    /// @param other An iterator object to be moved from.
     iterator(iterator&& other)
         : m_inner_iterator_type(other.m_inner_iterator_type)
     {
@@ -207,15 +166,13 @@ public:
         }
     }
 
+    /// @brief Destroys an iterator.
     ~iterator() = default;
 
 public:
-    /**
-     * @brief A copy assignment operator of the iterator class.
-     *
-     * @param rhs An iterator object to be copied with.
-     * @return iterator& Reference to this iterator object.
-     */
+    /// @brief A copy assignment operator of the iterator class.
+    /// @param rhs An iterator object to be copied with.
+    /// @return iterator& Reference to this iterator object.
     iterator& operator=(const iterator& rhs) // NOLINT(cert-oop54-cpp)
     {
         if (&rhs == this)
@@ -239,12 +196,9 @@ public:
         return *this;
     }
 
-    /**
-     * @brief A move assignment operator of the iterator class.
-     *
-     * @param rhs An iterator object to be moved from.
-     * @return iterator& Reference to this iterator object.
-     */
+    /// @brief A move assignment operator of the iterator class.
+    /// @param rhs An iterator object to be moved from.
+    /// @return iterator& Reference to this iterator object.
     iterator& operator=(iterator&& rhs)
     {
         if (&rhs == this)
@@ -268,11 +222,8 @@ public:
         return *this;
     }
 
-    /**
-     * @brief An arrow operator of the iterator class.
-     *
-     * @return pointer A pointer to the BasicNodeType object internally referenced by the actual iterator object.
-     */
+    /// @brief An arrow operator of the iterator class.
+    /// @return pointer A pointer to the BasicNodeType object internally referenced by the actual iterator object.
     pointer operator->()
     {
         switch (m_inner_iterator_type)
@@ -286,11 +237,8 @@ public:
         }
     }
 
-    /**
-     * @brief A dereference operator of the iterator class.
-     *
-     * @return reference Reference to the Node object internally referenced by the actual iterator object.
-     */
+    /// @brief A dereference operator of the iterator class.
+    /// @return reference Reference to the Node object internally referenced by the actual iterator object.
     reference operator*()
     {
         switch (m_inner_iterator_type)
@@ -304,12 +252,9 @@ public:
         }
     }
 
-    /**
-     * @brief A compound assignment operator by sum of the Iterator class.
-     *
-     * @param i The difference from this Iterator object with which it moves forward.
-     * @return Iterator& Reference to this Iterator object.
-     */
+    /// @brief A compound assignment operator by sum of the Iterator class.
+    /// @param i The difference from this Iterator object with which it moves forward.
+    /// @return Iterator& Reference to this Iterator object.
     iterator& operator+=(difference_type i)
     {
         switch (m_inner_iterator_type)
@@ -326,12 +271,9 @@ public:
         return *this;
     }
 
-    /**
-     * @brief A plus operator of the iterator class.
-     *
-     * @param i The difference from this iterator object.
-     * @return iterator An iterator object which has been added @a i.
-     */
+    /// @brief A plus operator of the iterator class.
+    /// @param i The difference from this iterator object.
+    /// @return iterator An iterator object which has been added @a i.
     iterator operator+(difference_type i) const noexcept
     {
         auto result = *this;
@@ -339,11 +281,8 @@ public:
         return result;
     }
 
-    /**
-     * @brief An pre-increment operator of the iterator class.
-     *
-     * @return iterator& Reference to this iterator object.
-     */
+    /// @brief An pre-increment operator of the iterator class.
+    /// @return iterator& Reference to this iterator object.
     iterator& operator++()
     {
         switch (m_inner_iterator_type)
@@ -360,11 +299,8 @@ public:
         return *this;
     }
 
-    /**
-     * @brief A post-increment opretor of the iterator class.
-     *
-     * @return iterator An iterator object which has been incremented.
-     */
+    /// @brief A post-increment opretor of the iterator class.
+    /// @return iterator An iterator object which has been incremented.
     iterator operator++(int) & noexcept // NOLINT(cert-dcl21-cpp)
     {
         auto result = *this;
@@ -372,23 +308,17 @@ public:
         return result;
     }
 
-    /**
-     * @brief A compound assignment operator by difference of the iterator class.
-     *
-     * @param i The difference from this iterator object with which it moves backward.
-     * @return iterator& Reference to this iterator object.
-     */
+    /// @brief A compound assignment operator by difference of the iterator class.
+    /// @param i The difference from this iterator object with which it moves backward.
+    /// @return iterator& Reference to this iterator object.
     iterator& operator-=(difference_type i)
     {
         return operator+=(-i);
     }
 
-    /**
-     * @brief A minus operator of the iterator class.
-     *
-     * @param i The difference from this iterator object.
-     * @return iterator An iterator object from which has been subtracted @ i.
-     */
+    /// @brief A minus operator of the iterator class.
+    /// @param i The difference from this iterator object.
+    /// @return iterator An iterator object from which has been subtracted @ i.
     iterator operator-(difference_type i) noexcept
     {
         auto result = *this;
@@ -396,11 +326,8 @@ public:
         return result;
     }
 
-    /**
-     * @brief A pre-decrement operator of the iterator class.
-     *
-     * @return iterator& Reference to this iterator object.
-     */
+    /// @brief A pre-decrement operator of the iterator class.
+    /// @return iterator& Reference to this iterator object.
     iterator& operator--()
     {
         switch (m_inner_iterator_type)
@@ -417,11 +344,8 @@ public:
         return *this;
     }
 
-    /**
-     * @brief A post-decrement operator of the iterator class
-     *
-     * @return iterator An iterator object which has been decremented.
-     */
+    /// @brief A post-decrement operator of the iterator class
+    /// @return iterator An iterator object which has been decremented.
     iterator operator--(int) & noexcept // NOLINT(cert-dcl21-cpp)
     {
         auto result = *this;
@@ -429,13 +353,10 @@ public:
         return result;
     }
 
-    /**
-     * @brief An equal-to operator of the iterator class.
-     *
-     * @param rhs An iterator object to be compared with this iterator object.
-     * @return true  This iterator object is equal to the other.
-     * @return false This iterator object is not equal to the other.
-     */
+    /// @brief An equal-to operator of the iterator class.
+    /// @param rhs An iterator object to be compared with this iterator object.
+    /// @return true  This iterator object is equal to the other.
+    /// @return false This iterator object is not equal to the other.
     bool operator==(const iterator& rhs) const
     {
         if (m_inner_iterator_type != rhs.m_inner_iterator_type)
@@ -454,25 +375,19 @@ public:
         }
     }
 
-    /**
-     * @brief An not-equal-to operator of the iterator class.
-     *
-     * @param rhs An iterator object to be compared with this iterator object.
-     * @return true  This iterator object is not equal to the other.
-     * @return false This iterator object is equal to the other.
-     */
+    /// @brief An not-equal-to operator of the iterator class.
+    /// @param rhs An iterator object to be compared with this iterator object.
+    /// @return true  This iterator object is not equal to the other.
+    /// @return false This iterator object is equal to the other.
     bool operator!=(const iterator& rhs) const
     {
         return !operator==(rhs);
     }
 
-    /**
-     * @brief A less-than operator of the iterator class.
-     *
-     * @param rhs An iterator object to be compared with this iterator object.
-     * @return true  This iterator object is less than the other.
-     * @return false This iterator object is not less than the other.
-     */
+    /// @brief A less-than operator of the iterator class.
+    /// @param rhs An iterator object to be compared with this iterator object.
+    /// @return true  This iterator object is less than the other.
+    /// @return false This iterator object is not less than the other.
     bool operator<(const iterator& rhs) const
     {
         if (m_inner_iterator_type != rhs.m_inner_iterator_type)
@@ -491,58 +406,43 @@ public:
         }
     }
 
-    /**
-     * @brief A less-than-or-equal-to operator of the iterator class.
-     *
-     * @param rhs An iterator object to be compared with this iterator object.
-     * @return true  This iterator object is either less than or equal to the other.
-     * @return false This iterator object is neither less than nor equal to the other.
-     */
+    ///  @brief A less-than-or-equal-to operator of the iterator class.
+    ///  @param rhs An iterator object to be compared with this iterator object.
+    ///  @return true  This iterator object is either less than or equal to the other.
+    ///  @return false This iterator object is neither less than nor equal to the other.
     bool operator<=(const iterator& rhs) const
     {
         return !rhs.operator<(*this);
     }
 
-    /**
-     * @brief A greater-than operator of the iterator class.
-     *
-     * @param rhs An iterator object to be compared with this iterator object.
-     * @return true  This iterator object is greater than the other.
-     * @return false This iterator object is not greater than the other.
-     */
+    /// @brief A greater-than operator of the iterator class.
+    /// @param rhs An iterator object to be compared with this iterator object.
+    /// @return true  This iterator object is greater than the other.
+    /// @return false This iterator object is not greater than the other.
     bool operator>(const iterator& rhs) const
     {
         return !operator<=(rhs);
     }
 
-    /**
-     * @brief A greater-than-or-equal-to operator of the iterator class.
-     *
-     * @param rhs An iterator object to be compared with this iterator object.
-     * @return true  This iterator object is either greater than or equal to the other.
-     * @return false This iterator object is neither greater than nor equal to the other.
-     */
+    /// @brief A greater-than-or-equal-to operator of the iterator class.
+    /// @param rhs An iterator object to be compared with this iterator object.
+    /// @return true  This iterator object is either greater than or equal to the other.
+    /// @return false This iterator object is neither greater than nor equal to the other.
     bool operator>=(const iterator& rhs) const
     {
         return !operator<(rhs);
     }
 
 public:
-    /**
-     * @brief Get the type of the internal iterator implementation.
-     *
-     * @return iterator_t The type of the internal iterator implementation.
-     */
+    /// @brief Get the type of the internal iterator implementation.
+    /// @return iterator_t The type of the internal iterator implementation.
     iterator_t type() const noexcept
     {
         return m_inner_iterator_type;
     }
 
-    /**
-     * @brief Get the key string of the YAML mapping node for the current iterator.
-     *
-     * @return const std::string& The key string of the YAML mapping node for the current iterator.
-     */
+    /// @brief Get the key string of the YAML mapping node for the current iterator.
+    /// @return const std::string& The key string of the YAML mapping node for the current iterator.
     const std::string& key() const
     {
         switch (m_inner_iterator_type)
@@ -556,20 +456,17 @@ public:
         }
     }
 
-    /**
-     * @brief Get the reference of the YAML node for the current iterator.
-     *
-     * @return reference A reference to the YAML node for the current iterator.
-     */
+    /// @brief Get the reference of the YAML node for the current iterator.
+    /// @return reference A reference to the YAML node for the current iterator.
     reference value()
     {
         return operator*();
     }
 
 private:
-    /** A type of the internally-held iterator. */
+    /// A type of the internally-held iterator.
     iterator_t m_inner_iterator_type {iterator_t::SEQUENCE};
-    /** A holder of actual iterators. */
+    /// A holder of actual iterators.
     mutable iterator_holder m_iterator_holder {};
 };
 

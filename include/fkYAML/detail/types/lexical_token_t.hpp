@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.1
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -13,23 +13,14 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
+/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
+/// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
 
-/**
- * @enum lexical_token_t
- * @brief Definition of lexical token types.
- */
+/// @brief Definition of lexical token types.
 enum class lexical_token_t
 {
     END_OF_BUFFER,         //!< the end of input buffer.
@@ -52,6 +43,8 @@ enum class lexical_token_t
     INTEGER_VALUE,         //!< an integer value found. use get_integer() to get a value.
     FLOAT_NUMBER_VALUE,    //!< a float number value found. use get_float_number() to get a value.
     STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
+    END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
+    END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
 };
 
 } // namespace detail

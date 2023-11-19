@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.1
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1174,6 +1174,44 @@ inline void swap(
         rhs) noexcept(noexcept(lhs.swap(rhs)))
 {
     lhs.swap(rhs);
+}
+
+/// @brief Insertion operator for basic_node template class. A wrapper for the serialization feature.
+/// @param[in] os An output stream object.
+/// @param[in] n A basic_node object.
+/// @return Reference to the output stream object `os`.
+/// @sa https://fktn-k.github.io/fkYAML/api/basic_node/insertion_operator/
+template <
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
+inline std::ostream& operator<<(
+    std::ostream& os,
+    const basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>&
+        n)
+{
+    os << basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>::
+            serialize(n);
+    return os;
+}
+
+/// @brief Extraction operator for basic_node template class. A wrapper for the deserialization feature with input
+/// streams.
+/// @param[in] is An input stream object.
+/// @param[in] n A basic_node object.
+/// @return Reference to the input stream object `is`.
+/// @sa https://fktn-k.github.io/fkYAML/api/basic_node/extraction_operator/
+template <
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
+inline std::istream& operator>>(
+    std::istream& is,
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& n)
+{
+    n = basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>::
+        deserialize(is);
+    return is;
 }
 
 /// @brief default YAML node value container.

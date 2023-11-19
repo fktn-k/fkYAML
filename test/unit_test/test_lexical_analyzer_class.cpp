@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -122,6 +122,44 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanEmptyDirectiveTest", "[LexicalAnalyzerCl
 {
     pchar_lexer_t lexer(fkyaml::detail::input_adapter("%"));
     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::exception);
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanEndOfDirectivesTest", "[LexicalAnalyzerClassTest]")
+{
+    pchar_lexer_t lexer(fkyaml::detail::input_adapter("%YAML 1.2\n---\nfoo: bar"));
+    fkyaml::detail::lexical_token_t token;
+
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
+    REQUIRE(lexer.get_yaml_version() == "1.2");
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(lexer.get_string() == "foo");
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(lexer.get_string() == "bar");
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanEndOfDocumentsTest", "[LexicalAnalyzerClassTest]")
+{
+    pchar_lexer_t lexer(fkyaml::detail::input_adapter("%YAML 1.2\n---\n..."));
+    fkyaml::detail::lexical_token_t token;
+
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
+    REQUIRE(lexer.get_yaml_version() == "1.2");
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_DOCUMENT);
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanColonTest", "[LexicalAnalyzerClassTest]")
@@ -396,8 +434,10 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string("none"), fkyaml::node::string_type("none")),
         value_pair_t(std::string(".NET"), fkyaml::node::string_type(".NET")),
         value_pair_t(std::string(".on"), fkyaml::node::string_type(".on")),
+        value_pair_t(std::string(".n"), fkyaml::node::string_type(".n")),
         value_pair_t(std::string("foo]"), fkyaml::node::string_type("foo")),
         value_pair_t(std::string("foo:bar"), fkyaml::node::string_type("foo:bar")),
+        value_pair_t(std::string("foo bar"), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("\"foo bar\""), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("\"foo:bar\""), fkyaml::node::string_type("foo:bar")),
         value_pair_t(std::string("\"foo,bar\""), fkyaml::node::string_type("foo,bar")),
@@ -416,6 +456,10 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string("\"foo\\\"bar\""), fkyaml::node::string_type("foo\"bar")),
         value_pair_t(std::string("\"foo\\/bar\""), fkyaml::node::string_type("foo/bar")),
         value_pair_t(std::string("\"foo\\\\bar\""), fkyaml::node::string_type("foo\\bar")),
+        value_pair_t(std::string("\"foo\\Nbar\""), fkyaml::node::string_type("foo\u0085bar")),
+        value_pair_t(std::string("\"foo\\_bar\""), fkyaml::node::string_type("foo\u00A0bar")),
+        value_pair_t(std::string("\"foo\\Lbar\""), fkyaml::node::string_type("foo\u2028bar")),
+        value_pair_t(std::string("\"foo\\Pbar\""), fkyaml::node::string_type("foo\u2029bar")),
         value_pair_t(std::string("\"\\x30\\x2B\\x6d\""), fkyaml::node::string_type("0+m")),
         value_pair_t(std::string("\'foo bar\'"), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("\'foo\'\'bar\'"), fkyaml::node::string_type("foo\'bar")),
@@ -424,6 +468,163 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string("\'foo}bar\'"), fkyaml::node::string_type("foo}bar")),
         value_pair_t(std::string("\'foo\"bar\'"), fkyaml::node::string_type("foo\"bar")),
         value_pair_t(std::string("\'foo:bar\'"), fkyaml::node::string_type("foo:bar")));
+
+    str_lexer_t lexer(fkyaml::detail::input_adapter(value_pair.first));
+    fkyaml::detail::lexical_token_t token;
+
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE_NOTHROW(lexer.get_string());
+    REQUIRE(lexer.get_string() == value_pair.second);
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanMultiByteCharStringTokenTest", "[LexicalAnalyzerClassTest]")
+{
+    using char_traits_t = std::char_traits<char>;
+    auto mb_char = GENERATE(
+        std::string {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x80)},
+        std::string {char_traits_t::to_char_type(0xDF), char_traits_t::to_char_type(0xBF)},
+        std::string {
+            char_traits_t::to_char_type(0xE0), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xEC), char_traits_t::to_char_type(0xBF), char_traits_t::to_char_type(0xBF)},
+        std::string {
+            char_traits_t::to_char_type(0xED), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xED), char_traits_t::to_char_type(0x9F), char_traits_t::to_char_type(0xBF)},
+        std::string {
+            char_traits_t::to_char_type(0xEE), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xEF), char_traits_t::to_char_type(0xBF), char_traits_t::to_char_type(0xBF)},
+        std::string {
+            char_traits_t::to_char_type(0xF0),
+            char_traits_t::to_char_type(0x90),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF0),
+            char_traits_t::to_char_type(0xBF),
+            char_traits_t::to_char_type(0xBF),
+            char_traits_t::to_char_type(0xBF)},
+        std::string {
+            char_traits_t::to_char_type(0xF1),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF3),
+            char_traits_t::to_char_type(0xBF),
+            char_traits_t::to_char_type(0xBF),
+            char_traits_t::to_char_type(0xBF)},
+        std::string {
+            char_traits_t::to_char_type(0xF4),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF4),
+            char_traits_t::to_char_type(0x8F),
+            char_traits_t::to_char_type(0xBF),
+            char_traits_t::to_char_type(0xBF)});
+
+    str_lexer_t lexer(fkyaml::detail::input_adapter(mb_char));
+    fkyaml::detail::lexical_token_t token;
+
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE_NOTHROW(lexer.get_string());
+    REQUIRE(lexer.get_string() == mb_char);
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanEscapedUnicodeStringTokenTest", "[LexicalAnalyzerClassTest]")
+{
+    using value_pair_t = std::pair<std::string, std::string>;
+    using char_traits_t = std::char_traits<char>;
+    auto value_pair = GENERATE(
+        value_pair_t(std::string("\"\\x00\""), std::string {char_traits_t::to_char_type(0x00)}),
+        value_pair_t(std::string("\"\\x40\""), std::string {char_traits_t::to_char_type(0x40)}),
+        value_pair_t(std::string("\"\\x7F\""), std::string {char_traits_t::to_char_type(0x7F)}),
+        value_pair_t(std::string("\"\\u0000\""), std::string {char_traits_t::to_char_type(0x00)}),
+        value_pair_t(std::string("\"\\u0040\""), std::string {char_traits_t::to_char_type(0x40)}),
+        value_pair_t(std::string("\"\\u007F\""), std::string {char_traits_t::to_char_type(0x7F)}),
+        value_pair_t(
+            std::string("\"\\u0080\""),
+            std::string {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\u0400\""),
+            std::string {char_traits_t::to_char_type(0xD0), char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\u07FF\""),
+            std::string {char_traits_t::to_char_type(0xDF), char_traits_t::to_char_type(0xBF)}),
+        value_pair_t(
+            std::string("\"\\u0800\""),
+            std::string {
+                char_traits_t::to_char_type(0xE0),
+                char_traits_t::to_char_type(0xA0),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\u8000\""),
+            std::string {
+                char_traits_t::to_char_type(0xE8),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\uFFFF\""),
+            std::string {
+                char_traits_t::to_char_type(0xEF),
+                char_traits_t::to_char_type(0xBF),
+                char_traits_t::to_char_type(0xBF)}),
+        value_pair_t(std::string("\"\\U00000000\""), std::string {char_traits_t::to_char_type(0x00)}),
+        value_pair_t(std::string("\"\\U00000040\""), std::string {char_traits_t::to_char_type(0x40)}),
+        value_pair_t(std::string("\"\\U0000007F\""), std::string {char_traits_t::to_char_type(0x7F)}),
+        value_pair_t(
+            std::string("\"\\U00000080\""),
+            std::string {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U00000400\""),
+            std::string {char_traits_t::to_char_type(0xD0), char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U000007FF\""),
+            std::string {char_traits_t::to_char_type(0xDF), char_traits_t::to_char_type(0xBF)}),
+        value_pair_t(
+            std::string("\"\\U00000800\""),
+            std::string {
+                char_traits_t::to_char_type(0xE0),
+                char_traits_t::to_char_type(0xA0),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U00008000\""),
+            std::string {
+                char_traits_t::to_char_type(0xE8),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U0000FFFF\""),
+            std::string {
+                char_traits_t::to_char_type(0xEF),
+                char_traits_t::to_char_type(0xBF),
+                char_traits_t::to_char_type(0xBF)}),
+        value_pair_t(
+            std::string("\"\\U00010000\""),
+            std::string {
+                char_traits_t::to_char_type(0xF0),
+                char_traits_t::to_char_type(0x90),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U00080000\""),
+            std::string {
+                char_traits_t::to_char_type(0xF2),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U0010FFFF\""),
+            std::string {
+                char_traits_t::to_char_type(0xF4),
+                char_traits_t::to_char_type(0x8F),
+                char_traits_t::to_char_type(0xBF),
+                char_traits_t::to_char_type(0xBF)}));
 
     str_lexer_t lexer(fkyaml::detail::input_adapter(value_pair.first));
     fkyaml::detail::lexical_token_t token;
@@ -452,10 +653,142 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidStringTokenTest", "[LexicalAnalyz
         std::string("\"\\x^\""),
         std::string("\"\\x{\""),
         std::string("\'\\t\'"),
-        std::string("\"\\N\""),
-        std::string("\u7F80"));
+        std::string("\"\\Q\""),
+        std::string("\"\\U00110000\""));
 
     str_lexer_t lexer(fkyaml::detail::input_adapter(buffer));
+    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::exception);
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidMultiByteCharStringTokenTest", "[LexicalAnalyzerClassTest]")
+{
+    using char_traits_t = std::char_traits<char>;
+    auto mb_char = GENERATE(
+        std::string {char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)},
+        std::string {char_traits_t::to_char_type(0xC1), char_traits_t::to_char_type(0x80)},
+        std::string {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x7F)},
+        std::string {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0xC0)},
+        std::string {
+            char_traits_t::to_char_type(0xE0), char_traits_t::to_char_type(0x7F), char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xE0), char_traits_t::to_char_type(0xC0), char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xE0), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x7F)},
+        std::string {
+            char_traits_t::to_char_type(0xE0), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0xC0)},
+        std::string {
+            char_traits_t::to_char_type(0xED), char_traits_t::to_char_type(0x7F), char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xED), char_traits_t::to_char_type(0xA0), char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xED), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x7F)},
+        std::string {
+            char_traits_t::to_char_type(0xED), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0xC0)},
+        std::string {
+            char_traits_t::to_char_type(0xEE), char_traits_t::to_char_type(0x7F), char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xEE), char_traits_t::to_char_type(0xC0), char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xEF), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x7F)},
+        std::string {
+            char_traits_t::to_char_type(0xEF), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0xC0)},
+        std::string {
+            char_traits_t::to_char_type(0xF0),
+            char_traits_t::to_char_type(0x8F),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF0),
+            char_traits_t::to_char_type(0xC0),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF0),
+            char_traits_t::to_char_type(0x90),
+            char_traits_t::to_char_type(0x7F),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF0),
+            char_traits_t::to_char_type(0x90),
+            char_traits_t::to_char_type(0xC0),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF0),
+            char_traits_t::to_char_type(0x90),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x7F)},
+        std::string {
+            char_traits_t::to_char_type(0xF0),
+            char_traits_t::to_char_type(0x90),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0xC0)},
+        std::string {
+            char_traits_t::to_char_type(0xF1),
+            char_traits_t::to_char_type(0x7F),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF1),
+            char_traits_t::to_char_type(0xC0),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF1),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x7F),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF1),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0xC0),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF1),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x7F)},
+        std::string {
+            char_traits_t::to_char_type(0xF1),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0xC0)},
+        std::string {
+            char_traits_t::to_char_type(0xF4),
+            char_traits_t::to_char_type(0x7F),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF4),
+            char_traits_t::to_char_type(0x90),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF4),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x7F),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF4),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0xC0),
+            char_traits_t::to_char_type(0x80)},
+        std::string {
+            char_traits_t::to_char_type(0xF4),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x7F)},
+        std::string {
+            char_traits_t::to_char_type(0xF4),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0xC0)},
+        std::string {
+            char_traits_t::to_char_type(0xF5),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80),
+            char_traits_t::to_char_type(0x80)});
+
+    str_lexer_t lexer(fkyaml::detail::input_adapter(mb_char));
     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::exception);
 }
 
@@ -1063,7 +1396,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockMappingTokenTest", "[LexicalAnalyze
 
     SECTION("Input source No.1.")
     {
-        pchar_lexer_t lexer(fkyaml::detail::input_adapter("test:\n  bool: true\n  foo: bar\n  pi: 3.14"));
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter("test:\n  bool: true\n  foo: \'bar\'\n  pi: 3.14"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);

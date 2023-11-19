@@ -48,7 +48,7 @@ The resulting basic_node has the [`node_t::NULL_OBJECT`](node_t.md) type.
     int main()
     {
         fkyaml::node n;
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
         return 0;
     }
     ```
@@ -80,7 +80,7 @@ The resulting basic_node has a default value for the given type.
     int main()
     {
         fkyaml::node n(fkyaml::node::node_t::INTEGER);
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
         return 0;
     }
     ```
@@ -113,7 +113,7 @@ The resulting basic_node has the same type and value as `rhs`.
     {
         fkyaml::node n(fkyaml::node::node_t::BOOLEAN);
         fkyaml::node n2(n);
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
         return 0;
     }
     ```
@@ -147,7 +147,7 @@ The value of the argument `rhs` after calling this move constructor, will be the
     {
         fkyaml::node n(fkyaml::node::node_t::BOOLEAN);
         fkyaml::node n2(n);
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
         return 0;
     }
     ```
@@ -195,7 +195,7 @@ The resulting basic_node has the value of `val` and the type which is associated
     {
         double pi = 3.141592;
         fkyaml::node n = pi;
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
         return 0;
     }
     ```
@@ -241,7 +241,7 @@ The resulting basic_node has the value of the referenced basic_node by `node_ref
     int main()
     {
         fkyaml::node n({true, false});
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
         return 0;
     }
     ```
@@ -276,10 +276,10 @@ If `init` contains a sequence of basic_node objects in which the number of basic
     int main()
     {
         fkyaml::node n = {true, false};
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
 
         fkyaml::node n2 = {"foo", 1024};
-        std::cout << fkyaml::node::serialize(n2) << std::endl;
+        std::cout << n2 << std::endl;
         return 0;
     }
     ```
@@ -297,3 +297,4 @@ If `init` contains a sequence of basic_node objects in which the number of basic
 ## **See Also**
 
 * [basic_node](index.md)
+* [operator<<](insertion_operator.md)

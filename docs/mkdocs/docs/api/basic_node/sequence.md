@@ -22,7 +22,7 @@ The resulting basic_node has the [`node_t::SEQUENCE`](node_t.md) type.
     {
         fkyaml::node::sequence_type s = {fkyaml::node(true), fkyaml::node(false)};
         fkyaml::node n = fkyaml::node::sequence(s);
-        std::cout << fkyaml::node::serialize(n) << std::endl;
+        std::cout << n << std::endl;
         return 0;
     }
     ```
@@ -38,3 +38,4 @@ The resulting basic_node has the [`node_t::SEQUENCE`](node_t.md) type.
 
 * [basic_node](index.md)
 * [node_t](node_t.md)
+* [operator<<](insertion_operator.md)

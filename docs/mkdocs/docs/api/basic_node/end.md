@@ -30,7 +30,7 @@ An iterator to the past-the-last element of a container node value (either seque
         fkyaml::node::iterator it = n.end();
         // decrement the iterator to point to the last element.
         --it;
-        std::cout << fkyaml::node::serialize(*it) << std::endl;
+        std::cout << *it << std::endl;
         return 0;
     }
     ```
@@ -47,3 +47,4 @@ An iterator to the past-the-last element of a container node value (either seque
 * [iterator](iterator.md)  
 * [const_iterator](const_iterator.md)
 * [begin](begin.md)
+* [operator<<](insertion_operator.md)

@@ -68,20 +68,20 @@ See [the CMake Integration section]() for the other ways and modify the implemen
 
     ```yaml
     novels:
-      - title: "Robinson Crusoe"
-        author: "Daniel Defoe"
+      - title: Robinson Crusoe
+        author: Daniel Defoe
         year: 1678
-      - title: "Frankenstein"
-        author: "Jane Austen"
+      - title: Frankenstein
+        author: Jane Austen
         year: 1818
-      - title: "Moby-Dick"
-        author: "Herman Melville"
+      - title: Moby-Dick
+        author: Herman Melville
         year: 1851
-      - title: "Brave New World"
-        author: "Aldous Huxley"
+      - title: Brave New World
+        author: Aldous Huxley
         year: 1932
-      - title: "Never Let Me Go"
-        author: "Kazuo Ishiguro"
+      - title: Never Let Me Go
+        author: Kazuo Ishiguro
         year: 2005
     ```
 === "tutorial.cpp"
@@ -100,7 +100,7 @@ See [the CMake Integration section]() for the other ways and modify the implemen
         fkyaml::node root = fkyaml::node::deserialize(ifs);
 
         // print the deserialized YAML nodes by serializing them back.
-        std::cout << fkyaml::node::serialize() << std::endl;
+        std::cout << root << std::endl;
         return 0;
     }
     ```
@@ -133,24 +133,24 @@ If you run the tutorial executable file, you will see the output like:
 ```bash
 novels:
   -
-    title: "Robinson Crusoe"
-    author: "Daniel Defoe"
+    title: Robinson Crusoe
+    author: Daniel Defoe
     year: 1678
   -
-    title: "Frankenstein"
-    author: "Jane Austen"
+    title: Frankenstein
+    author: Mary Shelly
     year: 1818
   -
-    title: "Moby-Dick"
-    author: "Herman Melville"
+    title: Moby-Dick
+    author: Herman Melville
     year: 1851
   -
-    title: "Brave New World"
-    author: "Aldous Huxley"
+    title: Brave New World
+    author: Aldous Huxley
     year: 1932
   -
-    title: "Never Let Me Go"
-    author: "Kazuo Ishiguro"
+    title: Never Let Me Go
+    author: Kazuo Ishiguro
     year: 2005
 ```
 
@@ -230,7 +230,7 @@ int main()
     }
 
     // print the response YAML nodes.
-    std::cout << fkyaml::node::serialize(response) << std::endl;
+    std::cout << response << std::endl;
 
     return 0;
 }
@@ -241,30 +241,30 @@ Rebuild and run the application, and you'll see the output like:
 ```bash
 recommends:
   -
-    title: "Robinson Crusoe"
-    author: "Daniel Defoe"
+    title: Robinson Crusoe
+    author: Daniel Defoe
   -
-    title: "Frankenstein"
-    author: "Jane Austen"
+    title: Frankenstein
+    author: Mary Shelly
   -
-    title: "Moby-Dick"
-    author: "Herman Melville"
+    title: Moby-Dick
+    author: Herman Melville
   -
-    title: "Brave New World"
-    author: "Aldous Huxley"
+    title: Brave New World
+    author: Aldous Huxley
   -
-    title: "Never Let Me Go"
-    author: "Kazuo Ishiguro"
+    title: Never Let Me Go
+    author: Kazuo Ishiguro
 ```
 
 ### :pill: Integrate with user-defined types
 
-As described in the API Reference pages for [`from_node()`](../api/node_value_converter/from_node.md) and [`to_node()`](../api/node_value_converter/to_node.md) functions, you can specialize deserialization for user-defined types.  
+As described in the API Reference pages for [`from_node()`](../api/node_value_converter/from_node.md) and [`to_node()`](../api/node_value_converter/to_node.md) functions, you can specialize serialization and deserialization for user-defined types.  
 Note that you don't need to implement specializations for STL types (such as std::vector or std::string) because the fkYAML library has already implemented them.  
 
 The updated code snippet down below shows how the specializations for user-defined types can reduce boilerplate code.  
 
-```cpp title="tutorial.cpp" hl_lines="6-38 55-60"
+```cpp title="tutorial.cpp" hl_lines="6-39 53-54 56-57 59-61"
 #include <fstream>
 #include <iostream>
 #include <utility>
@@ -292,6 +292,7 @@ void from_node(const fkyaml::node& node, novel& novel)
 {
     novel.title = node["title"].get_value_ref<const std::string&>();
     novel.author = node["author"].get_value_ref<const std::string&>();
+    novel.year = node["year"].get_value<int>();
 }
 
 void to_node(fkyaml::node& node, const recommend& recommend)
@@ -316,19 +317,19 @@ int main()
     fkyaml::node response = { "recommends", fkyaml::node::sequence() };
     auto& recommends = response["recommends"].get_value_ref<fkyaml::node::sequence_type&>();
 
-    // generate recommendations by extracting "title" & "author" values.
-    for (auto& novel_node : root["novels"])
-    {
-        // get novel directly from the node.
-        ns::novel novel = novel_node.get_value<ns::novel>();
+    // get novels directly from the node.
+    auto novels = root["novels"].get_value<std::vector<ns::novel>>();
 
+    // generate recommendations by extracting "title" & "author" values.
+    for (auto& novel : novels)
+    {
         // create a recommendation node directly with a recommend object.
         ns::recommend recommend = { std::move(novel.title), std::move(novel.author) };
         recommends.emplace_back(recommend);
     }
 
     // print the response YAML nodes.
-    std::cout << fkyaml::node::serialize(response) << std::endl;
+    std::cout << response << std::endl;
 
     return 0;
 }

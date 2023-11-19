@@ -1,3 +1,48 @@
+# **fkYAML version 0.2.1**
+
+!!! abstract Release Packages
+
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.2.1/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.2.1/fkYAML.zip)
+
+## Summary
+
+This release supports the UTF-8 encoding (both escaped/unescaped) in parsing YAML documents.  
+Furthermore, bugs in the deserialization feature have also been fixed.  
+
+!!! warning CAVEAT
+
+    The fkYAML library is an alpha quality software, at most.  
+    It would take a while until this library gets stabled version, since implementation and maintenance has been/will be done by a single developer.  
+    If you find a bug or wanted features, please open a discussion/issue to let me know.  
+    Any kind of contribution is very much welcomed.  
+
+## What's Changed
+
+### :zap: Improvements
+
+- \#209 support escaped unicode [\#215](https://github.com/fktn-k/fkYAML/pull/215) ([fktn-k](https://github.com/fktn-k))
+- \#209 Support unescaped UTF-8 input characters in deserialization [\#210](https://github.com/fktn-k/fkYAML/pull/210) ([fktn-k](https://github.com/fktn-k))
+- \#207 Support markers for the end of directives/documents [\#208](https://github.com/fktn-k/fkYAML/pull/208) ([fktn-k](https://github.com/fktn-k))
+- \#190 Support specialization of deserialization for a vector of user-defined type objects [\#203](https://github.com/fktn-k/fkYAML/pull/203) ([fktn-k](https://github.com/fktn-k))
+- \#195 Implement insertion/extraction operators for basic\_node template class [\#201](https://github.com/fktn-k/fkYAML/pull/201) ([fktn-k](https://github.com/fktn-k))
+
+
+### :bug: Bug Fixes
+
+- \#211 Fix indentation handling [\#213](https://github.com/fktn-k/fkYAML/pull/213) ([fktn-k](https://github.com/fktn-k))
+- \#211 fixed bug in parsing single quoted strings [\#212](https://github.com/fktn-k/fkYAML/pull/212) ([fktn-k](https://github.com/fktn-k))
+- \#205 Detect duplicate keys as an error [\#206](https://github.com/fktn-k/fkYAML/pull/206) ([fktn-k](https://github.com/fktn-k))
+- \#200 Allow a space in unquoted strings [\#202](https://github.com/fktn-k/fkYAML/pull/202) ([fktn-k](https://github.com/fktn-k))
+
+### :memo: Documentation
+
+- Unified doxygen comment style [\#204](https://github.com/fktn-k/fkYAML/pull/204) ([fktn-k](https://github.com/fktn-k))
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.2.0...v0.2.1
+
+---
+
 # **fkYAML version 0.2.0**
 
 !!! abstract "Release Packages"

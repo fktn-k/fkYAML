@@ -45,8 +45,8 @@ Reference, or constant reference, to a `mapped_type` object associated with the 
             { "bar", "baz" }
         };
 
-        std::cout << fkyaml::node::serialize(om.at("foo")) << std::endl;
-        std::cout << fkyaml::node::serialize(om.at("bar")) << std::endl;
+        std::cout << om.at("foo") << std::endl;
+        std::cout << om.at("bar") << std::endl;
 
         // accesses with a unknown key will throw an exception.
         try
@@ -75,4 +75,5 @@ Reference, or constant reference, to a `mapped_type` object associated with the 
 * [operator[]](operator[].md)
 * [node](../basic_node/node.md)
 * [basic_node::serialize](../basic_node/serialize.md)
+* [operator<<(basic_node)](../basic_node/insertion_operator.md)
 * [exception::what](../exception/what.md)
