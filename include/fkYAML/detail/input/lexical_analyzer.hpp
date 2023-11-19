@@ -1268,7 +1268,7 @@ private:
         }
         else if (code_point <= 0x7FF)
         {
-            uint16_t utf8_encoded = 0b1100'0000'1000'0000;
+            uint16_t utf8_encoded = 0b1100000010000000;
             utf8_encoded |= static_cast<uint16_t>((code_point & 0x07C0) << 2);
             utf8_encoded |= static_cast<uint16_t>((code_point & 0x003F));
             m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0xFF00) >> 8));
@@ -1277,7 +1277,7 @@ private:
         }
         else if (code_point <= 0xFFFF)
         {
-            uint32_t utf8_encoded = 0b1110'0000'1000'0000'1000'0000;
+            uint32_t utf8_encoded = 0b111000001000000010000000;
             utf8_encoded |= static_cast<uint32_t>((code_point & 0xF000) << 4);
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x0FC0) << 2);
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x003F));
@@ -1288,7 +1288,7 @@ private:
         }
         else if (code_point <= 0x10FFFF)
         {
-            uint32_t utf8_encoded = 0b1111'0000'1000'0000'1000'0000'1000'0000;
+            uint32_t utf8_encoded = 0b11110000100000001000000010000000;
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x1C0000) << 6);
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x03F000) << 4);
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x000FC0) << 2);
