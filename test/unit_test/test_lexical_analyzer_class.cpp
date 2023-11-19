@@ -547,25 +547,84 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanEscapedUnicodeStringTokenTest", "[Lexica
         value_pair_t(std::string("\"\\u0000\""), std::string {char_traits_t::to_char_type(0x00)}),
         value_pair_t(std::string("\"\\u0040\""), std::string {char_traits_t::to_char_type(0x40)}),
         value_pair_t(std::string("\"\\u007F\""), std::string {char_traits_t::to_char_type(0x7F)}),
-        value_pair_t(std::string("\"\\u0080\""), std::string {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\u0400\""), std::string {char_traits_t::to_char_type(0xD0), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\u07FF\""), std::string {char_traits_t::to_char_type(0xDF), char_traits_t::to_char_type(0xBF)}),
-        value_pair_t(std::string("\"\\u0800\""), std::string {char_traits_t::to_char_type(0xE0), char_traits_t::to_char_type(0xA0), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\u8000\""), std::string {char_traits_t::to_char_type(0xE8), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\uFFFF\""), std::string {char_traits_t::to_char_type(0xEF), char_traits_t::to_char_type(0xBF), char_traits_t::to_char_type(0xBF)}),
+        value_pair_t(
+            std::string("\"\\u0080\""),
+            std::string {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\u0400\""),
+            std::string {char_traits_t::to_char_type(0xD0), char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\u07FF\""),
+            std::string {char_traits_t::to_char_type(0xDF), char_traits_t::to_char_type(0xBF)}),
+        value_pair_t(
+            std::string("\"\\u0800\""),
+            std::string {
+                char_traits_t::to_char_type(0xE0),
+                char_traits_t::to_char_type(0xA0),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\u8000\""),
+            std::string {
+                char_traits_t::to_char_type(0xE8),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\uFFFF\""),
+            std::string {
+                char_traits_t::to_char_type(0xEF),
+                char_traits_t::to_char_type(0xBF),
+                char_traits_t::to_char_type(0xBF)}),
         value_pair_t(std::string("\"\\U00000000\""), std::string {char_traits_t::to_char_type(0x00)}),
         value_pair_t(std::string("\"\\U00000040\""), std::string {char_traits_t::to_char_type(0x40)}),
         value_pair_t(std::string("\"\\U0000007F\""), std::string {char_traits_t::to_char_type(0x7F)}),
-        value_pair_t(std::string("\"\\U00000080\""), std::string {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\U00000400\""), std::string {char_traits_t::to_char_type(0xD0), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\U000007FF\""), std::string {char_traits_t::to_char_type(0xDF), char_traits_t::to_char_type(0xBF)}),
-        value_pair_t(std::string("\"\\U00000800\""), std::string {char_traits_t::to_char_type(0xE0), char_traits_t::to_char_type(0xA0), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\U00008000\""), std::string {char_traits_t::to_char_type(0xE8), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\U0000FFFF\""), std::string {char_traits_t::to_char_type(0xEF), char_traits_t::to_char_type(0xBF), char_traits_t::to_char_type(0xBF)}),
-        value_pair_t(std::string("\"\\U00010000\""), std::string {char_traits_t::to_char_type(0xF0), char_traits_t::to_char_type(0x90), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\U00080000\""), std::string {char_traits_t::to_char_type(0xF2), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(std::string("\"\\U0010FFFF\""), std::string {char_traits_t::to_char_type(0xF4), char_traits_t::to_char_type(0x8F), char_traits_t::to_char_type(0xBF), char_traits_t::to_char_type(0xBF)})
-    );
+        value_pair_t(
+            std::string("\"\\U00000080\""),
+            std::string {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U00000400\""),
+            std::string {char_traits_t::to_char_type(0xD0), char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U000007FF\""),
+            std::string {char_traits_t::to_char_type(0xDF), char_traits_t::to_char_type(0xBF)}),
+        value_pair_t(
+            std::string("\"\\U00000800\""),
+            std::string {
+                char_traits_t::to_char_type(0xE0),
+                char_traits_t::to_char_type(0xA0),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U00008000\""),
+            std::string {
+                char_traits_t::to_char_type(0xE8),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U0000FFFF\""),
+            std::string {
+                char_traits_t::to_char_type(0xEF),
+                char_traits_t::to_char_type(0xBF),
+                char_traits_t::to_char_type(0xBF)}),
+        value_pair_t(
+            std::string("\"\\U00010000\""),
+            std::string {
+                char_traits_t::to_char_type(0xF0),
+                char_traits_t::to_char_type(0x90),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U00080000\""),
+            std::string {
+                char_traits_t::to_char_type(0xF2),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80),
+                char_traits_t::to_char_type(0x80)}),
+        value_pair_t(
+            std::string("\"\\U0010FFFF\""),
+            std::string {
+                char_traits_t::to_char_type(0xF4),
+                char_traits_t::to_char_type(0x8F),
+                char_traits_t::to_char_type(0xBF),
+                char_traits_t::to_char_type(0xBF)}));
 
     str_lexer_t lexer(fkyaml::detail::input_adapter(value_pair.first));
     fkyaml::detail::lexical_token_t token;
