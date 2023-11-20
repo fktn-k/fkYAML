@@ -17,6 +17,8 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/conversions/to_string.hpp>
+#include <fkYAML/detail/input/input_adapter.hpp>
+#include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
 #include <fkYAML/exception.hpp>
@@ -111,9 +113,120 @@ private:
             to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::float_number_type>());
             str += m_tmp_str_buff;
             break;
-        case node_t::STRING:
-            str += node.template get_value_ref<const typename BasicNodeType::string_type&>();
+        case node_t::STRING: {
+            using string_type = typename BasicNodeType::string_type;
+
+            // Check if the string value contains a character needed to be escaped on output.
+            const string_type& s = node.template get_value_ref<const string_type&>();
+            string_type escaped;
+            bool has_escape = false;
+            size_t size = s.size();
+            for (size_t i = 0; i < size; i++)
+            {
+                switch (s[i])
+                {
+                case '\a':
+                    escaped += "\\a";
+                    has_escape = true;
+                    break;
+                case '\b':
+                    escaped += "\\b";
+                    has_escape = true;
+                    break;
+                case '\t':
+                    escaped += "\\t";
+                    has_escape = true;
+                    break;
+                case '\n':
+                    escaped += "\\n";
+                    has_escape = true;
+                    break;
+                case '\v':
+                    escaped += "\\v";
+                    has_escape = true;
+                    break;
+                case '\f':
+                    escaped += "\\f";
+                    has_escape = true;
+                    break;
+                case '\r':
+                    escaped += "\\r";
+                    has_escape = true;
+                    break;
+                case 0x1B:
+                    escaped += "\\e";
+                    has_escape = true;
+                    break;
+                case '\"':
+                    escaped += "\\\"";
+                    has_escape = true;
+                    break;
+                case '\\':
+                    escaped += "\\\\";
+                    has_escape = true;
+                    break;
+                default:
+                    if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u))
+                    {
+                        escaped += "\\N";
+                        i++;
+                        has_escape = true;
+                        break;
+                    }
+                    if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u))
+                    {
+                        escaped += "\\_";
+                        i++;
+                        has_escape = true;
+                        break;
+                    }
+                    if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u))
+                    {
+                        escaped += "\\L";
+                        i += 2;
+                        has_escape = true;
+                        break;
+                    }
+                    if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u))
+                    {
+                        escaped += "\\P";
+                        i += 2;
+                        has_escape = true;
+                        break;
+                    }
+                    escaped += s[i];
+                    break;
+                }
+            }
+
+            if (has_escape)
+            {
+                // There's no other token type with escapes than strings.
+                // Also, escapes must be in double-quoted strings.
+                str += '\"';
+                str += escaped;
+                str += '\"';
+                break;
+            }
+
+            auto adapter = input_adapter(s);
+            lexical_analyzer<BasicNodeType, decltype(adapter)> lexer(std::move(adapter));
+            lexical_token_t token_type = lexer.get_next_token();
+
+            if (token_type != lexical_token_t::STRING_VALUE)
+            {
+                // Surround a string value with double quotes to keep semantic equality.
+                // Without them, serialized values will become non-string. (e.g., "1" -> 1)
+                str += '\"';
+                str += s;
+                str += '\"';
+            }
+            else
+            {
+                str += s;
+            }
             break;
+        }
         default:                                                     // LCOV_EXCL_LINE
             throw fkyaml::exception("Unsupported node type found."); // LCOV_EXCL_LINE
         }
