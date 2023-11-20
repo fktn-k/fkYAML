@@ -192,6 +192,8 @@ TEST_CASE("InputHandlerTest_TestNextCharTest", "[InputHandlerTest]")
 
     REQUIRE(handler.get_next() == 's');
     REQUIRE(handler.get_next() == 't');
+    REQUIRE(handler.test_next_char('t') == false);
+
     REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
     REQUIRE(handler.test_next_char('t') == false);
     REQUIRE(handler.get_cur_pos_in_line() == 4);
