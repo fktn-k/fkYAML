@@ -813,23 +813,19 @@ private:
             // Handle single quotation marks.
             if (current == '\'')
             {
-                if (needs_last_double_quote || !needs_last_single_quote)
+                if (needs_last_single_quote)
                 {
-                    throw fkyaml::exception("Invalid single quotation mark found in a string token.");
+                    // If single quotation marks are repeated twice in a single-quoted string token, they are considered as
+                    // an escaped single quotation mark.
+                    current = m_input_handler.get_next();
+                    if (current != '\'')
+                    {
+                        return lexical_token_t::STRING_VALUE;
+                    }
                 }
 
-                // If single quotation marks are repeated twice in a single-quoted string token. they are considered as
-                // an escaped single quotation mark.
-                bool is_next_single_quote = m_input_handler.test_next_char('\'');
-                if (is_next_single_quote)
-                {
-                    m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
-                    continue;
-                }
-
-                // move the current position for next scanning.
-                m_input_handler.get_next();
-                return lexical_token_t::STRING_VALUE;
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                continue;
             }
 
             // Handle colons.
