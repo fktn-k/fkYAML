@@ -815,8 +815,8 @@ private:
             {
                 if (needs_last_single_quote)
                 {
-                    // If single quotation marks are repeated twice in a single-quoted string token, they are considered as
-                    // an escaped single quotation mark.
+                    // If single quotation marks are repeated twice in a single-quoted string token, they are considered
+                    // as an escaped single quotation mark.
                     current = m_input_handler.get_next();
                     if (current != '\'')
                     {
