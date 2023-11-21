@@ -72,7 +72,7 @@ TEST_CASE("SerializeClassTest_SerializeFloatNumberNode", "[SerializeClassTest]")
 TEST_CASE("SerializerClassTest_SerializeStringNode", "[SerializerClassTest]")
 {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
-    const char NEXT_LINE[] = { char(0xC2u), char(0x85u), char(0) };
+    const char NEXT_LINE[] = {char(0xC2u), char(0x85u), char(0)};
 
     auto node_str_pair = GENERATE_REF(
         node_str_pair_t("test", "test"),
@@ -138,9 +138,15 @@ TEST_CASE("SerializerClassTest_SerializeStringNode", "[SerializerClassTest]")
         node_str_pair_t(fkyaml::node::string_type({char(0xC3u), char(0xA0u)}), std::string({char(0xC3u), char(0xA0u)})),
         node_str_pair_t(fkyaml::node::string_type({char(0xC2u), char(0xA1u)}), std::string({char(0xC2u), char(0xA1u)})),
         node_str_pair_t(fkyaml::node::string_type({char(0xE2u), char(0x80u), char(0xA8u)}), "\"\\L\""),
-        node_str_pair_t(fkyaml::node::string_type({char(0xE3u), char(0x80u), char(0xA8u)}), std::string({char(0xE3u), char(0x80u), char(0xA8u)})),
-        node_str_pair_t(fkyaml::node::string_type({char(0xE2u), char(0x81u), char(0xA8u)}), std::string({char(0xE2u), char(0x81u), char(0xA8u)})),
-        node_str_pair_t(fkyaml::node::string_type({char(0xE2u), char(0x80u), char(0xAAu)}), std::string({char(0xE2u), char(0x80u), char(0xAAu)})),
+        node_str_pair_t(
+            fkyaml::node::string_type({char(0xE3u), char(0x80u), char(0xA8u)}),
+            std::string({char(0xE3u), char(0x80u), char(0xA8u)})),
+        node_str_pair_t(
+            fkyaml::node::string_type({char(0xE2u), char(0x81u), char(0xA8u)}),
+            std::string({char(0xE2u), char(0x81u), char(0xA8u)})),
+        node_str_pair_t(
+            fkyaml::node::string_type({char(0xE2u), char(0x80u), char(0xAAu)}),
+            std::string({char(0xE2u), char(0x80u), char(0xAAu)})),
         node_str_pair_t(fkyaml::node::string_type({char(0xE2u), char(0x80u), char(0xA9u)}), "\"\\P\""));
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
