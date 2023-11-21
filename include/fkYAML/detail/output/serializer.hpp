@@ -125,6 +125,30 @@ private:
             {
                 switch (s[i])
                 {
+                case 0x01:
+                    escaped += "\\u0001";
+                    has_escape = true;
+                    break;
+                case 0x02:
+                    escaped += "\\u0002";
+                    has_escape = true;
+                    break;
+                case 0x03:
+                    escaped += "\\u0003";
+                    has_escape = true;
+                    break;
+                case 0x04:
+                    escaped += "\\u0004";
+                    has_escape = true;
+                    break;
+                case 0x05:
+                    escaped += "\\u0005";
+                    has_escape = true;
+                    break;
+                case 0x06:
+                    escaped += "\\u0006";
+                    has_escape = true;
+                    break;
                 case '\a':
                     escaped += "\\a";
                     has_escape = true;
@@ -153,8 +177,76 @@ private:
                     escaped += "\\r";
                     has_escape = true;
                     break;
+                case 0x0E:
+                    escaped += "\\u000E";
+                    has_escape = true;
+                    break;
+                case 0x0F:
+                    escaped += "\\u000F";
+                    has_escape = true;
+                    break;
+                case 0x10:
+                    escaped += "\\u0010";
+                    has_escape = true;
+                    break;
+                case 0x11:
+                    escaped += "\\u0011";
+                    has_escape = true;
+                    break;
+                case 0x12:
+                    escaped += "\\u0012";
+                    has_escape = true;
+                    break;
+                case 0x13:
+                    escaped += "\\u0013";
+                    has_escape = true;
+                    break;
+                case 0x14:
+                    escaped += "\\u0014";
+                    has_escape = true;
+                    break;
+                case 0x15:
+                    escaped += "\\u0015";
+                    has_escape = true;
+                    break;
+                case 0x16:
+                    escaped += "\\u0016";
+                    has_escape = true;
+                    break;
+                case 0x17:
+                    escaped += "\\u0017";
+                    has_escape = true;
+                    break;
+                case 0x18:
+                    escaped += "\\u0018";
+                    has_escape = true;
+                    break;
+                case 0x19:
+                    escaped += "\\u0019";
+                    has_escape = true;
+                    break;
+                case 0x1A:
+                    escaped += "\\u001A";
+                    has_escape = true;
+                    break;
                 case 0x1B:
                     escaped += "\\e";
+                    has_escape = true;
+                    break;
+                case 0x1C:
+                    escaped += "\\u001C";
+                    has_escape = true;
+                    break;
+                case 0x1D:
+                    escaped += "\\u001D";
+                    has_escape = true;
+                    break;
+                case 0x1E:
+                    escaped += "\\u001E";
+                    has_escape = true;
+                    break;
+                case 0x1F:
+                    escaped += "\\u001F";
                     has_escape = true;
                     break;
                 case '\"':
