@@ -22,6 +22,7 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/from_string.hpp>
+#include <fkYAML/detail/encodings/utf8_encoding.hpp>
 #include <fkYAML/detail/input/input_handler.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
@@ -951,51 +952,42 @@ private:
                     m_value_buffer.push_back('\\');
                     break;
                 case 'N': // next line
-                    handle_unicode_code_point(0x85u);
+                    utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
+                    for (size_t i = 0; i < m_encoded_size; i++)
+                    {
+                        m_value_buffer.push_back(m_encode_buffer[i]);
+                    }
                     break;
                 case '_': // non-breaking space
-                    handle_unicode_code_point(0xA0u);
+                    utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
+                    for (size_t i = 0; i < m_encoded_size; i++)
+                    {
+                        m_value_buffer.push_back(m_encode_buffer[i]);
+                    }
                     break;
                 case 'L': // line separator
-                    handle_unicode_code_point(0x2028u);
+                    utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
+                    for (size_t i = 0; i < m_encoded_size; i++)
+                    {
+                        m_value_buffer.push_back(m_encode_buffer[i]);
+                    }
                     break;
                 case 'P': // paragraph separator
-                    handle_unicode_code_point(0x2029u);
-                    break;
-                case 'x': {
-                    uint32_t code_point = 0;
-                    for (int i = 1; i >= 0; --i)
+                    utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
+                    for (size_t i = 0; i < m_encoded_size; i++)
                     {
-                        char four_bits = convert_hex_char_to_byte(m_input_handler.get_next());
-                        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-                        code_point |= static_cast<uint32_t>(four_bits << (4 * i));
+                        m_value_buffer.push_back(m_encode_buffer[i]);
                     }
-                    handle_unicode_code_point(code_point);
                     break;
-                }
-                case 'u': {
-                    uint32_t code_point = 0;
-                    for (int i = 3; i >= 0; --i)
-                    {
-                        char four_bits = convert_hex_char_to_byte(m_input_handler.get_next());
-                        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-                        code_point |= static_cast<uint32_t>(four_bits << (4 * i));
-                    }
-                    handle_unicode_code_point(code_point);
+                case 'x':
+                    handle_escaped_unicode(1);
                     break;
-                }
-                case 'U': {
-                    uint32_t code_point = 0;
-                    for (int i = 7; i >= 0; --i)
-                    {
-                        current = m_input_handler.get_next();
-                        char four_bits = convert_hex_char_to_byte(current);
-                        // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-                        code_point |= static_cast<uint32_t>(four_bits << (4 * i));
-                    }
-                    handle_unicode_code_point(code_point);
+                case 'u':
+                    handle_escaped_unicode(2);
                     break;
-                }
+                case 'U':
+                    handle_escaped_unicode(4);
+                    break;
                 default:
                     throw fkyaml::exception("Unsupported escape sequence found in a string token.");
                 }
@@ -1017,166 +1009,48 @@ private:
             }
 
             // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
-            //   1st Byte: 0xC2..0xDF
-            //   2nd Byte: 0x80..0xBF
-            if (0xC2 <= current && current <= 0xDF)
+            if (current <= 0xDF)
             {
-                char_int_type second_byte_char = m_input_handler.get_next();
-                if (0x80 <= second_byte_char && second_byte_char <= 0xBF)
+                std::array<char_int_type, 2> byte_array = {{current, m_input_handler.get_next()}};
+                if (!utf8_encoding::validate(byte_array))
                 {
-                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                    m_value_buffer.push_back(char_traits_type::to_char_type(second_byte_char));
-                    continue;
+                    throw fkyaml::exception("ill-formed UTF-8 encoded character found");
                 }
+
+                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
+                continue;
+            }
+
+            // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
+            if (current <= 0xEF)
+            {
+                std::array<char_int_type, 3> byte_array = {
+                    {current, m_input_handler.get_next(), m_input_handler.get_next()}};
+                if (!utf8_encoding::validate(byte_array))
+                {
+                    throw fkyaml::exception("ill-formed UTF-8 encoded character found");
+                }
+
+                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
+
+                continue;
+            }
+
+            // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
+            std::array<char_int_type, 4> byte_array = {
+                {current, m_input_handler.get_next(), m_input_handler.get_next(), m_input_handler.get_next()}};
+            if (!utf8_encoding::validate(byte_array))
+            {
                 throw fkyaml::exception("ill-formed UTF-8 encoded character found");
             }
 
-            // Handle 3-byte characters encoded in UTF-8. (U+1000..U+CFFF)
-            //   1st Byte: 0xE0..0xEC
-            //   2nd Byte: 0x80..0xBF
-            //   3rd Byte: 0x80..0xBF
-            if (0xE0 <= current && current <= 0xEC)
-            {
-                char_int_type second_byte_char = m_input_handler.get_next();
-                if (0x80 <= second_byte_char && second_byte_char <= 0xBF)
-                {
-                    char_int_type third_byte_char = m_input_handler.get_next();
-                    if (0x80 <= third_byte_char && third_byte_char <= 0xBF)
-                    {
-                        m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                        m_value_buffer.push_back(char_traits_type::to_char_type(second_byte_char));
-                        m_value_buffer.push_back(char_traits_type::to_char_type(third_byte_char));
-                        continue;
-                    }
-                }
-                throw fkyaml::exception("ill-formed UTF-8 encoded character found");
-            }
-
-            // Handle 3-byte characters encoded in UTF-8. (U+D000..U+D7FF)
-            //   1st Byte: 0xED
-            //   2nd Byte: 0x80..0x9F
-            //   3rd Byte: 0x80..0xBF
-            if (current == 0xED)
-            {
-                char_int_type second_byte_char = m_input_handler.get_next();
-                if (0x80 <= second_byte_char && second_byte_char <= 0x9F)
-                {
-                    char_int_type third_byte_char = m_input_handler.get_next();
-                    if (0x80 <= third_byte_char && third_byte_char <= 0xBF)
-                    {
-                        m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                        m_value_buffer.push_back(char_traits_type::to_char_type(second_byte_char));
-                        m_value_buffer.push_back(char_traits_type::to_char_type(third_byte_char));
-                        continue;
-                    }
-                }
-                throw fkyaml::exception("ill-formed UTF-8 encoded character found");
-            }
-
-            // Handle 3-byte characters encoded in UTF-8. (U+E000..U+FFFF)
-            //   1st Byte: 0xEE..0xEF
-            //   2nd Byte: 0x80..0xBF
-            //   3rd Byte: 0x80..0xBF
-            if (current == 0xEE || current == 0xEF)
-            {
-                char_int_type second_byte_char = m_input_handler.get_next();
-                if (0x80 <= second_byte_char && second_byte_char <= 0xBF)
-                {
-                    char_int_type third_byte_char = m_input_handler.get_next();
-                    if (0x80 <= third_byte_char && third_byte_char <= 0xBF)
-                    {
-                        m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                        m_value_buffer.push_back(char_traits_type::to_char_type(second_byte_char));
-                        m_value_buffer.push_back(char_traits_type::to_char_type(third_byte_char));
-                        continue;
-                    }
-                }
-                throw fkyaml::exception("ill-formed UTF-8 encoded character found");
-            }
-
-            // Handle 4-byte characters encoded in UTF-8. (U+10000..U+3FFFF)
-            //   1st Byte: 0xF0
-            //   2nd Byte: 0x90..0xBF
-            //   3rd Byte: 0x80..0xBF
-            //   4th Byte: 0x80..0xBF
-            if (current == 0xF0)
-            {
-                char_int_type second_byte_char = m_input_handler.get_next();
-                if (0x90 <= second_byte_char && second_byte_char <= 0xBF)
-                {
-                    char_int_type third_byte_char = m_input_handler.get_next();
-                    if (0x80 <= third_byte_char && third_byte_char <= 0xBF)
-                    {
-                        char_int_type fourth_byte_char = m_input_handler.get_next();
-                        if (0x80 <= fourth_byte_char && fourth_byte_char <= 0xBF)
-                        {
-                            m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                            m_value_buffer.push_back(char_traits_type::to_char_type(second_byte_char));
-                            m_value_buffer.push_back(char_traits_type::to_char_type(third_byte_char));
-                            m_value_buffer.push_back(char_traits_type::to_char_type(fourth_byte_char));
-                            continue;
-                        }
-                    }
-                }
-                throw fkyaml::exception("ill-formed UTF-8 encoded character found");
-            }
-
-            // Handle 4-byte characters encoded in UTF-8. (U+40000..U+FFFFF)
-            //   1st Byte: 0xF1..0xF3
-            //   2nd Byte: 0x80..0xBF
-            //   3rd Byte: 0x80..0xBF
-            //   4th Byte: 0x80..0xBF
-            if (0xF1 <= current && current <= 0xF3)
-            {
-                char_int_type second_byte_char = m_input_handler.get_next();
-                if (0x80 <= second_byte_char && second_byte_char <= 0xBF)
-                {
-                    char_int_type third_byte_char = m_input_handler.get_next();
-                    if (0x80 <= third_byte_char && third_byte_char <= 0xBF)
-                    {
-                        char_int_type fourth_byte_char = m_input_handler.get_next();
-                        if (0x80 <= fourth_byte_char && fourth_byte_char <= 0xBF)
-                        {
-                            m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                            m_value_buffer.push_back(char_traits_type::to_char_type(second_byte_char));
-                            m_value_buffer.push_back(char_traits_type::to_char_type(third_byte_char));
-                            m_value_buffer.push_back(char_traits_type::to_char_type(fourth_byte_char));
-                            continue;
-                        }
-                    }
-                }
-                throw fkyaml::exception("ill-formed UTF-8 encoded character found");
-            }
-
-            // Handle 4-byte characters encoded in UTF-8. (U+100000..U+10FFFF)
-            //   1st Byte: 0xF4
-            //   2nd Byte: 0x80..0x8F
-            //   3rd Byte: 0x80..0xBF
-            //   4th Byte: 0x80..0xBF
-            if (current == 0xF4)
-            {
-                char_int_type second_byte_char = m_input_handler.get_next();
-                if (0x80 <= second_byte_char && second_byte_char <= 0x8F)
-                {
-                    char_int_type third_byte_char = m_input_handler.get_next();
-                    if (0x80 <= third_byte_char && third_byte_char <= 0xBF)
-                    {
-                        char_int_type fourth_byte_char = m_input_handler.get_next();
-                        if (0x80 <= fourth_byte_char && fourth_byte_char <= 0xBF)
-                        {
-                            m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                            m_value_buffer.push_back(char_traits_type::to_char_type(second_byte_char));
-                            m_value_buffer.push_back(char_traits_type::to_char_type(third_byte_char));
-                            m_value_buffer.push_back(char_traits_type::to_char_type(fourth_byte_char));
-                            continue;
-                        }
-                    }
-                }
-                throw fkyaml::exception("ill-formed UTF-8 encoded character found");
-            }
-
-            // remaining bytes (0x80..0xC1 and 0xF5..0xFF) are ill formed.
-            throw fkyaml::exception("Unsupported multibytes character found.");
+            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
+            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
+            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
+            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[3]));
         }
     }
 
@@ -1253,52 +1127,22 @@ private:
         }
     }
 
-    void handle_unicode_code_point(uint32_t code_point)
+    void handle_escaped_unicode(int bytes_to_read)
     {
-        bool is_valid = false;
-
-        if (code_point < 0x80)
+        int read_size = bytes_to_read * 2;
+        char32_t code_point = 0;
+        for (int i = read_size - 1; i >= 0; i--)
         {
-            m_value_buffer.push_back(static_cast<char_type>(code_point & 0x007F));
-            is_valid = true;
-        }
-        else if (code_point <= 0x7FF)
-        {
-            uint16_t utf8_encoded = 0b1100000010000000;
-            utf8_encoded |= static_cast<uint16_t>((code_point & 0x07C0) << 2);
-            utf8_encoded |= static_cast<uint16_t>((code_point & 0x003F));
-            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0xFF00) >> 8));
-            m_value_buffer.push_back(static_cast<char_type>(utf8_encoded & 0x00FF));
-            is_valid = true;
-        }
-        else if (code_point <= 0xFFFF)
-        {
-            uint32_t utf8_encoded = 0b111000001000000010000000;
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0xF000) << 4);
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0x0FC0) << 2);
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0x003F));
-            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0xFF0000) >> 16));
-            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0x00FF00) >> 8));
-            m_value_buffer.push_back(static_cast<char_type>(utf8_encoded & 0x0000FF));
-            is_valid = true;
-        }
-        else if (code_point <= 0x10FFFF)
-        {
-            uint32_t utf8_encoded = 0b11110000100000001000000010000000;
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0x1C0000) << 6);
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0x03F000) << 4);
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0x000FC0) << 2);
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0x00003F));
-            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0xFF000000) >> 24));
-            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0x00FF0000) >> 16));
-            m_value_buffer.push_back(static_cast<char_type>((utf8_encoded & 0x0000FF00) >> 8));
-            m_value_buffer.push_back(static_cast<char_type>(utf8_encoded & 0x000000FF));
-            is_valid = true;
+            char four_bits = convert_hex_char_to_byte(m_input_handler.get_next());
+            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+            code_point |= static_cast<char32_t>(four_bits << (4 * i));
         }
 
-        if (!is_valid)
+        // Treats the code point as a UTF-32 encoded character.
+        utf8_encoding::from_utf32(code_point, m_encode_buffer, m_encoded_size);
+        for (size_t i = 0; i < m_encoded_size; i++)
         {
-            throw fkyaml::exception("Invalid Unicode code point.");
+            m_value_buffer.push_back(m_encode_buffer[i]);
         }
     }
 
@@ -1354,6 +1198,8 @@ private:
     input_handler_type m_input_handler;
     /// A temporal buffer to store a string to be parsed to an actual datum.
     input_string_type m_value_buffer {};
+    std::array<char, 4> m_encode_buffer {};
+    std::size_t m_encoded_size {0};
     std::size_t m_last_token_begin_pos {0};
     /// The last found token type.
     lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};

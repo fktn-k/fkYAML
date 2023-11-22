@@ -162,6 +162,7 @@ add_executable(
   test_node_ref_storage_class.cpp
   test_ordered_map_class.cpp
   test_serializer_class.cpp
+  test_utf8_encoding_class.cpp
   main.cpp)
 
 target_link_libraries(${TEST_TARGET} PRIVATE unit_test_config)
