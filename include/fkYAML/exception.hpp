@@ -106,7 +106,9 @@ private:
     std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16)
     {
         std::stringstream ss;
-        ss << "invalid_encoding: " << msg << " in=[ 0x" << std::hex << u16[0] << ", 0x" << std::hex << u16[1] << " ]";
+        ss << "invalid_encoding: " << msg;
+        // uint16_t is large enough for UTF-16 encoded elements.
+        ss << " in=[ 0x" << std::hex << uint16_t(u16[0]) << ", 0x" << std::hex << uint16_t(u16[1]) << " ]";
         return ss.str();
     }
 
@@ -117,7 +119,8 @@ private:
     std::string generate_error_message(const char* msg, char32_t u32)
     {
         std::stringstream ss;
-        ss << "invalid_encoding: " << msg << " in=0x" << std::hex << u32;
+        // uint32_t is large enough for UTF-32 encoded elements.
+        ss << "invalid_encoding: " << msg << " in=0x" << std::hex << uint32_t(u32);
         return ss.str();
     }
 };
