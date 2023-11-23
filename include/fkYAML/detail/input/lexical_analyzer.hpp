@@ -105,7 +105,7 @@ public:
                 m_input_handler.get_next();
                 return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
             default:
-                throw fkyaml::exception("Half-width spaces or newline codes are required after a key separater(:).");
+                emit_error("Half-width spaces or newline codes are required after a key separater(:).");
             }
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
@@ -119,7 +119,7 @@ public:
                 char_int_type next = m_input_handler.get_next();
                 if (next == end_of_input || next == '\r' || next == '\n')
                 {
-                    throw fkyaml::exception("An anchor label must be followed by some value.");
+                    emit_error("An anchor label must be followed by some value.");
                 }
                 if (next == ' ')
                 {
@@ -139,7 +139,7 @@ public:
                 {
                     if (m_value_buffer.empty())
                     {
-                        throw fkyaml::exception("An alias prefix must be followed by some anchor name.");
+                        emit_error("An alias prefix must be followed by some anchor name.");
                     }
                     m_input_handler.get_next();
                     break;
@@ -191,10 +191,9 @@ public:
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::MAPPING_FLOW_END;
         case '@':
-            throw fkyaml::exception("Any token cannot start with at(@). It is a reserved indicator for YAML.");
+            emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
         case '`':
-            throw fkyaml::exception(
-                "Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
+            emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
         case '\'':
             return m_last_token_type = scan_string();
@@ -322,6 +321,13 @@ public:
         return m_last_token_begin_pos;
     }
 
+    /// @brief Get the number of lines already processed.
+    /// @return std::size_t The number of lines already processed.
+    std::size_t get_lines_processed() const noexcept
+    {
+        return m_input_handler.get_lines_read();
+    }
+
     /// @brief Convert from string to null and get the converted value.
     /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
     std::nullptr_t get_null() const
@@ -330,7 +336,7 @@ public:
         {
             return nullptr;
         }
-        throw fkyaml::exception("Invalid request for a null value.");
+        emit_error("Invalid request for a null value.");
     }
 
     /// @brief Convert from string to boolean and get the converted value.
@@ -342,7 +348,7 @@ public:
         {
             return m_boolean_val;
         }
-        throw fkyaml::exception("Invalid request for a boolean value.");
+        emit_error("Invalid request for a boolean value.");
     }
 
     /// @brief Convert from string to integer and get the converted value.
@@ -353,7 +359,7 @@ public:
         {
             return m_integer_val;
         }
-        throw fkyaml::exception("Invalid request for an integer value.");
+        emit_error("Invalid request for an integer value.");
     }
 
     /// @brief Convert from string to float number and get the converted value.
@@ -364,7 +370,7 @@ public:
         {
             return m_float_val;
         }
-        throw fkyaml::exception("Invalid request for a float number value.");
+        emit_error("Invalid request for a float number value.");
     }
 
     /// @brief Get a scanned string value.
@@ -390,7 +396,7 @@ private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
-    static char convert_hex_char_to_byte(char_int_type source)
+    char convert_hex_char_to_byte(char_int_type source)
     {
         if ('0' <= source && source <= '9')
         {
@@ -410,7 +416,7 @@ private:
             return static_cast<char>(source - 'a' + 10);
         }
 
-        throw fkyaml::exception("Non-hexadecimal character has been given.");
+        emit_error("Non-hexadecimal character has been given.");
     }
 
     /// @brief Skip until a newline code or a null character is found.
@@ -433,7 +439,7 @@ private:
         switch (m_input_handler.get_next())
         {
         case end_of_input:
-            throw fkyaml::exception("invalid eof in a directive.");
+            emit_error("invalid eof in a directive.");
         case 'T': {
             if (m_input_handler.get_next() != 'A' || m_input_handler.get_next() != 'G')
             {
@@ -442,7 +448,7 @@ private:
             }
             if (m_input_handler.get_next() != ' ')
             {
-                throw fkyaml::exception("There must be a half-width space between \"%TAG\" and tag info.");
+                emit_error("There must be a half-width space between \"%TAG\" and tag info.");
             }
             // TODO: parse tag directives' information
             return lexical_token_t::TAG_DIRECTIVE;
@@ -456,7 +462,7 @@ private:
             }
             if (m_input_handler.get_next() != ' ')
             {
-                throw fkyaml::exception("There must be a half-width space between \"%YAML\" and a version number.");
+                emit_error("There must be a half-width space between \"%YAML\" and a version number.");
             }
             return scan_yaml_version_directive();
         default:
@@ -474,13 +480,13 @@ private:
 
         if (m_input_handler.get_next() != '1')
         {
-            throw fkyaml::exception("Invalid YAML major version found.");
+            emit_error("Invalid YAML major version found.");
         }
         m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_current()));
 
         if (m_input_handler.get_next() != '.')
         {
-            throw fkyaml::exception("A period must be followed after the YAML major version.");
+            emit_error("A period must be followed after the YAML major version.");
         }
         m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_current()));
 
@@ -498,15 +504,15 @@ private:
         case '7':
         case '8':
         case '9':
-            throw fkyaml::exception("Unsupported YAML version.");
+            emit_error("Unsupported YAML version.");
         default:
-            throw fkyaml::exception("YAML version must be specified with digits and periods.");
+            emit_error("YAML version must be specified with digits and periods.");
         }
 
         if (m_input_handler.get_next() != ' ' && m_input_handler.get_current() != '\r' &&
             m_input_handler.get_current() != '\n')
         {
-            throw fkyaml::exception("Only YAML version 1.1/1.2 are supported.");
+            emit_error("Only YAML version 1.1/1.2 are supported.");
         }
 
         return lexical_token_t::YAML_VER_DIRECTIVE;
@@ -548,8 +554,8 @@ private:
             m_value_buffer.push_back(char_traits_type::to_char_type(current));
             ret = scan_decimal_number();
             break;
-        default:                                                                   // LCOV_EXCL_LINE
-            throw fkyaml::exception("Invalid character found in a number token."); // LCOV_EXCL_LINE
+        default:                                                      // LCOV_EXCL_LINE
+            emit_error("Invalid character found in a number token."); // LCOV_EXCL_LINE
         }
 
         switch (ret)
@@ -596,7 +602,7 @@ private:
             }
         }
 
-        throw fkyaml::exception("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
+        emit_error("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
     }
 
     /// @brief Scan a next character after '0' at the beginning of a token.
@@ -635,7 +641,7 @@ private:
             return lexical_token_t::FLOAT_NUMBER_VALUE;
         }
 
-        throw fkyaml::exception("Invalid character found after a decimal point."); // LCOV_EXCL_LINE
+        emit_error("Invalid character found after a decimal point."); // LCOV_EXCL_LINE
     }
 
     /// @brief Scan a next character after exponent(e/E).
@@ -655,7 +661,7 @@ private:
         }
         else
         {
-            throw fkyaml::exception("unexpected character found after exponent.");
+            emit_error("unexpected character found after exponent.");
         }
         return lexical_token_t::FLOAT_NUMBER_VALUE;
     }
@@ -672,7 +678,7 @@ private:
             return scan_decimal_number();
         }
 
-        throw fkyaml::exception("Non-numeric character found after a sign(+/-) after exponent(e/E)."); // LCOV_EXCL_LINE
+        emit_error("Non-numeric character found after a sign(+/-) after exponent(e/E)."); // LCOV_EXCL_LINE
     }
 
     /// @brief Scan a next character for decimal numbers.
@@ -693,7 +699,7 @@ private:
             if (m_value_buffer.find(char_traits_type::to_char_type(next)) != string_type::npos)
             {
                 // TODO: support this use case (e.g. version info like 1.0.0)
-                throw fkyaml::exception("Multiple decimal points found in a token.");
+                emit_error("Multiple decimal points found in a token.");
             }
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number_after_decimal_point();
@@ -753,12 +759,12 @@ private:
             {
                 if (needs_last_double_quote)
                 {
-                    throw fkyaml::exception("Invalid end of input buffer in a double-quoted string token.");
+                    emit_error("Invalid end of input buffer in a double-quoted string token.");
                 }
 
                 if (needs_last_single_quote)
                 {
-                    throw fkyaml::exception("Invalid end of input buffer in a single-quoted string token.");
+                    emit_error("Invalid end of input buffer in a single-quoted string token.");
                 }
 
                 return lexical_token_t::STRING_VALUE;
@@ -803,7 +809,7 @@ private:
 
                 if (!needs_last_single_quote)
                 {
-                    throw fkyaml::exception("Invalid double quotation mark found in a string token.");
+                    emit_error("Invalid double quotation mark found in a string token.");
                 }
 
                 // if the target is a single-quoted string token.
@@ -900,7 +906,7 @@ private:
                 }
 
                 // TODO: Support multi-line string tokens.
-                throw fkyaml::exception("multi-line string tokens are unsupported.");
+                emit_error("multi-line string tokens are unsupported.");
             }
 
             // Handle escaped characters.
@@ -909,7 +915,7 @@ private:
             {
                 if (!needs_last_double_quote)
                 {
-                    throw fkyaml::exception("Escaped characters are only available in a double-quoted string token.");
+                    emit_error("Escaped characters are only available in a double-quoted string token.");
                 }
 
                 current = m_input_handler.get_next();
@@ -989,7 +995,7 @@ private:
                     handle_escaped_unicode(4);
                     break;
                 default:
-                    throw fkyaml::exception("Unsupported escape sequence found in a string token.");
+                    emit_error("Unsupported escape sequence found in a string token.");
                 }
                 continue;
             }
@@ -1014,7 +1020,7 @@ private:
                 std::array<char_int_type, 2> byte_array = {{current, m_input_handler.get_next()}};
                 if (!utf8_encoding::validate(byte_array))
                 {
-                    throw fkyaml::exception("ill-formed UTF-8 encoded character found");
+                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
                 }
 
                 m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
@@ -1029,7 +1035,7 @@ private:
                     {current, m_input_handler.get_next(), m_input_handler.get_next()}};
                 if (!utf8_encoding::validate(byte_array))
                 {
-                    throw fkyaml::exception("ill-formed UTF-8 encoded character found");
+                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
                 }
 
                 m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
@@ -1044,7 +1050,7 @@ private:
                 {current, m_input_handler.get_next(), m_input_handler.get_next(), m_input_handler.get_next()}};
             if (!utf8_encoding::validate(byte_array))
             {
-                throw fkyaml::exception("ill-formed UTF-8 encoded character found");
+                throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
             }
 
             m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
@@ -1064,66 +1070,66 @@ private:
         {
         // 0x00(NULL) has already been handled above.
         case 0x01:
-            throw fkyaml::exception("Control character U+0001 (SOH) must be escaped to \\u0001.");
+            emit_error("Control character U+0001 (SOH) must be escaped to \\u0001.");
         case 0x02:
-            throw fkyaml::exception("Control character U+0002 (STX) must be escaped to \\u0002.");
+            emit_error("Control character U+0002 (STX) must be escaped to \\u0002.");
         case 0x03:
-            throw fkyaml::exception("Control character U+0003 (ETX) must be escaped to \\u0003.");
+            emit_error("Control character U+0003 (ETX) must be escaped to \\u0003.");
         case 0x04:
-            throw fkyaml::exception("Control character U+0004 (EOT) must be escaped to \\u0004.");
+            emit_error("Control character U+0004 (EOT) must be escaped to \\u0004.");
         case 0x05:
-            throw fkyaml::exception("Control character U+0005 (ENQ) must be escaped to \\u0005.");
+            emit_error("Control character U+0005 (ENQ) must be escaped to \\u0005.");
         case 0x06:
-            throw fkyaml::exception("Control character U+0006 (ACK) must be escaped to \\u0006.");
+            emit_error("Control character U+0006 (ACK) must be escaped to \\u0006.");
         case 0x07:
-            throw fkyaml::exception("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
+            emit_error("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
         case 0x08:
-            throw fkyaml::exception("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
+            emit_error("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
         case 0x09: // HT
             m_value_buffer.push_back(char_traits_type::to_char_type(c));
             break;
         // 0x0A(LF) has already been handled above.
         case 0x0B:
-            throw fkyaml::exception("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
+            emit_error("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
         case 0x0C:
-            throw fkyaml::exception("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
+            emit_error("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
         // 0x0D(CR) has already been handled above.
         case 0x0E:
-            throw fkyaml::exception("Control character U+000E (SO) must be escaped to \\u000E.");
+            emit_error("Control character U+000E (SO) must be escaped to \\u000E.");
         case 0x0F:
-            throw fkyaml::exception("Control character U+000F (SI) must be escaped to \\u000F.");
+            emit_error("Control character U+000F (SI) must be escaped to \\u000F.");
         case 0x10:
-            throw fkyaml::exception("Control character U+0010 (DLE) must be escaped to \\u0010.");
+            emit_error("Control character U+0010 (DLE) must be escaped to \\u0010.");
         case 0x11:
-            throw fkyaml::exception("Control character U+0011 (DC1) must be escaped to \\u0011.");
+            emit_error("Control character U+0011 (DC1) must be escaped to \\u0011.");
         case 0x12:
-            throw fkyaml::exception("Control character U+0012 (DC2) must be escaped to \\u0012.");
+            emit_error("Control character U+0012 (DC2) must be escaped to \\u0012.");
         case 0x13:
-            throw fkyaml::exception("Control character U+0013 (DC3) must be escaped to \\u0013.");
+            emit_error("Control character U+0013 (DC3) must be escaped to \\u0013.");
         case 0x14:
-            throw fkyaml::exception("Control character U+0014 (DC4) must be escaped to \\u0014.");
+            emit_error("Control character U+0014 (DC4) must be escaped to \\u0014.");
         case 0x15:
-            throw fkyaml::exception("Control character U+0015 (NAK) must be escaped to \\u0015.");
+            emit_error("Control character U+0015 (NAK) must be escaped to \\u0015.");
         case 0x16:
-            throw fkyaml::exception("Control character U+0016 (SYN) must be escaped to \\u0016.");
+            emit_error("Control character U+0016 (SYN) must be escaped to \\u0016.");
         case 0x17:
-            throw fkyaml::exception("Control character U+0017 (ETB) must be escaped to \\u0017.");
+            emit_error("Control character U+0017 (ETB) must be escaped to \\u0017.");
         case 0x18:
-            throw fkyaml::exception("Control character U+0018 (CAN) must be escaped to \\u0018.");
+            emit_error("Control character U+0018 (CAN) must be escaped to \\u0018.");
         case 0x19:
-            throw fkyaml::exception("Control character U+0019 (EM) must be escaped to \\u0019.");
+            emit_error("Control character U+0019 (EM) must be escaped to \\u0019.");
         case 0x1A:
-            throw fkyaml::exception("Control character U+001A (SUB) must be escaped to \\u001A.");
+            emit_error("Control character U+001A (SUB) must be escaped to \\u001A.");
         case 0x1B:
-            throw fkyaml::exception("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
+            emit_error("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
         case 0x1C:
-            throw fkyaml::exception("Control character U+001C (FS) must be escaped to \\u001C.");
+            emit_error("Control character U+001C (FS) must be escaped to \\u001C.");
         case 0x1D:
-            throw fkyaml::exception("Control character U+001D (GS) must be escaped to \\u001D.");
+            emit_error("Control character U+001D (GS) must be escaped to \\u001D.");
         case 0x1E:
-            throw fkyaml::exception("Control character U+001E (RS) must be escaped to \\u001E.");
+            emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
         case 0x1F:
-            throw fkyaml::exception("Control character U+001F (US) must be escaped to \\u001F.");
+            emit_error("Control character U+001F (US) must be escaped to \\u001F.");
         }
     }
 
@@ -1188,6 +1194,11 @@ private:
             }
             m_input_handler.get_next();
         }
+    }
+
+    [[noreturn]] void emit_error(const char* msg) const
+    {
+        throw fkyaml::parse_error(msg, m_input_handler.get_lines_read(), m_input_handler.get_cur_pos_in_line());
     }
 
 private:
