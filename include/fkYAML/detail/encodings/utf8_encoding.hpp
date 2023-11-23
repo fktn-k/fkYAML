@@ -13,7 +13,6 @@
 
 #include <array>
 #include <cstdint>
-#include <cuchar>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/exception.hpp>
