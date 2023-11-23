@@ -226,10 +226,6 @@ private:
     IterType m_current {};
     /// The iterator at the end of input.
     IterType m_end {};
-    /// The buffer for decoding characters read from the input.
-    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements to be read from the input next time.
-    std::size_t m_elems_to_read {2};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
     /// The next index in `m_utf8_buffer` to read.
