@@ -197,7 +197,9 @@ public:
     /// @param[out] utf8_bytes UTF-8 encoded bytes.
     /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
     /// @param[out] encoded_size The size of UTF-encoded bytes.
-    static void from_utf16(std::array<char16_t, 2> utf16, std::array<char, 4>& utf8_bytes, std::size_t& consumed_size, std::size_t& encoded_size)
+    static void from_utf16(
+        std::array<char16_t, 2> utf16, std::array<char, 4>& utf8_bytes, std::size_t& consumed_size,
+        std::size_t& encoded_size)
     {
         utf8_bytes.fill(0);
         consumed_size = 0;

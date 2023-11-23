@@ -210,13 +210,21 @@ TEST_CASE("UTF8EncodingClassTest_FromUTF16Test", "[UTF8EncodingClassTest]")
             test_params {{{char16_t(0xD7FFu)}}, {{char(0xEDu), char(0x9Fu), char(0xBFu)}}, 1, 3},
             test_params {{{char16_t(0xE000u)}}, {{char(0xEEu), char(0x80u), char(0x80u)}}, 1, 3},
             test_params {{{char16_t(0xE001u)}}, {{char(0xEEu), char(0x80u), char(0x81u)}}, 1, 3},
-            test_params {{{char16_t(0xD800u), char16_t(0xDC00u)}}, {{char(0xF0u), char(0x90u), char(0x80u), char(0x80u)}}, 2, 4},
-            test_params {{{char16_t(0xD801u), char16_t(0xDC00u)}}, {{char(0xF0u), char(0x90u), char(0x90u), char(0x80u)}}, 2, 4},
-            test_params {{{char16_t(0xD800u), char16_t(0xDC01u)}}, {{char(0xF0u), char(0x90u), char(0x80u), char(0x81u)}}, 2, 4},
-            test_params {{{char16_t(0xDBFEu), char16_t(0xDFFFu)}}, {{char(0xF4u), char(0x8Fu), char(0xAFu), char(0xBFu)}}, 2, 4},
-            test_params {{{char16_t(0xDBFFu), char16_t(0xDFFEu)}}, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBEu)}}, 2, 4},
-            test_params {{{char16_t(0xDBFFu), char16_t(0xDFFFu)}}, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBFu)}}, 2, 4}
-        );
+            test_params {
+                {{char16_t(0xD800u), char16_t(0xDC00u)}}, {{char(0xF0u), char(0x90u), char(0x80u), char(0x80u)}}, 2, 4},
+            test_params {
+                {{char16_t(0xD801u), char16_t(0xDC00u)}}, {{char(0xF0u), char(0x90u), char(0x90u), char(0x80u)}}, 2, 4},
+            test_params {
+                {{char16_t(0xD800u), char16_t(0xDC01u)}}, {{char(0xF0u), char(0x90u), char(0x80u), char(0x81u)}}, 2, 4},
+            test_params {
+                {{char16_t(0xDBFEu), char16_t(0xDFFFu)}}, {{char(0xF4u), char(0x8Fu), char(0xAFu), char(0xBFu)}}, 2, 4},
+            test_params {
+                {{char16_t(0xDBFFu), char16_t(0xDFFEu)}}, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBEu)}}, 2, 4},
+            test_params {
+                {{char16_t(0xDBFFu), char16_t(0xDFFFu)}},
+                {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBFu)}},
+                2,
+                4});
 
         std::array<char, 4> utf8_bytes;
         std::size_t consumed_size;
@@ -234,14 +242,15 @@ TEST_CASE("UTF8EncodingClassTest_FromUTF16Test", "[UTF8EncodingClassTest]")
         auto utf16 = GENERATE(
             std::array<char16_t, 2> {{char16_t(0xDC00u), char16_t(0xDC00u)}},
             std::array<char16_t, 2> {{char16_t(0xDBFFu), char16_t(0xDBFFu)}},
-            std::array<char16_t, 2> {{char16_t(0xDBFFu), char16_t(0xE000u)}}
-        );
+            std::array<char16_t, 2> {{char16_t(0xDBFFu), char16_t(0xE000u)}});
 
         std::array<char, 4> utf8_bytes;
         std::size_t consumed_size;
         std::size_t encoded_size;
 
-        REQUIRE_THROWS_AS(fkyaml::detail::utf8_encoding::from_utf16(utf16, utf8_bytes, consumed_size, encoded_size), fkyaml::exception);
+        REQUIRE_THROWS_AS(
+            fkyaml::detail::utf8_encoding::from_utf16(utf16, utf8_bytes, consumed_size, encoded_size),
+            fkyaml::exception);
     }
 }
 
@@ -268,8 +277,7 @@ TEST_CASE("UTF8EncodingClassTest_FromUTF32Test", "[UTF8EncodingClassTest]")
         test_params {0x010000u, {{char(0xF0u), char(0x90u), char(0x80u), char(0x80u)}}, 4},
         test_params {0x010001u, {{char(0xF0u), char(0x90u), char(0x80u), char(0x81u)}}, 4},
         test_params {0x10FFFEu, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBEu)}}, 4},
-        test_params {0x10FFFFu, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBFu)}}, 4}
-    );
+        test_params {0x10FFFFu, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBFu)}}, 4});
 
     std::array<char, 4> utf8_bytes;
     std::size_t size;
