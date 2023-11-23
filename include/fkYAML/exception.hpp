@@ -15,6 +15,7 @@
 #include <string>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/types/node_t.hpp>
 
 /// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
@@ -51,6 +52,20 @@ public:
 private:
     /// An error message holder.
     std::string m_error_msg {};
+};
+
+/// @brief A exception class indicating an invalid type conversion.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/
+class type_error : public exception
+{
+public:
+    /// @brief Construct a new type_error object with an error message and a node type.
+    /// @param[in] msg An error message.
+    /// @param[in] type The type of a source node value.
+    explicit type_error(const char* msg, detail::node_t type)
+        : exception(std::string(std::string("type_error: ") + std::string(msg) + " type=" + detail::to_string(type)).c_str())
+    {
+    }
 };
 
 FK_YAML_NAMESPACE_END

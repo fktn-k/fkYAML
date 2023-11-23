@@ -48,7 +48,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_t
 {
     if (!n.is_sequence())
     {
-        throw exception("The target node value type is not sequence type.");
+        throw type_error("The target node value type is not sequence type.", n.type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::sequence_type&>();
 }
@@ -70,7 +70,7 @@ inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& 
 {
     if (!n.is_sequence())
     {
-        throw exception("The target node value is not sequence type.");
+        throw type_error("The target node value is not sequence type.", n.type());
     }
 
     s.reserve(n.size());
@@ -90,7 +90,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_ty
 {
     if (!n.is_mapping())
     {
-        throw exception("The target node value type is not mapping type.");
+        throw type_error("The target node value type is not mapping type.", n.type());
     }
 
     for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>())
@@ -109,7 +109,7 @@ inline void from_node(const BasicNodeType& n, std::nullptr_t& null)
     // to ensure the target node value type is null.
     if (!n.is_null())
     {
-        throw exception("The target node value type is not null type.");
+        throw type_error("The target node value type is not null type.", n.type());
     }
     null = nullptr;
 }
@@ -123,7 +123,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_ty
 {
     if (!n.is_boolean())
     {
-        throw exception("The target node value type is not boolean type.");
+        throw type_error("The target node value type is not boolean type.", n.type());
     }
     b = n.template get_value_ref<const typename BasicNodeType::boolean_type&>();
 }
@@ -137,7 +137,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_ty
 {
     if (!n.is_integer())
     {
-        throw exception("The target node value type is not integer type.");
+        throw type_error("The target node value type is not integer type.", n.type());
     }
     i = n.template get_value_ref<const typename BasicNodeType::integer_type&>();
 }
@@ -158,7 +158,7 @@ inline void from_node(const BasicNodeType& n, IntegerType& i)
 {
     if (!n.is_integer())
     {
-        throw exception("The target node value type is not integer type.");
+        throw type_error("The target node value type is not integer type.", n.type());
     }
 
     // under/overflow check.
@@ -185,7 +185,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_numb
 {
     if (!n.is_float_number())
     {
-        throw exception("The target node value type is not float number type.");
+        throw type_error("The target node value type is not float number type.", n.type());
     }
     f = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
 }
@@ -206,7 +206,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f)
 {
     if (!n.is_float_number())
     {
-        throw exception("The target node value type is not float number type.");
+        throw type_error("The target node value type is not float number type.", n.type());
     }
 
     auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
@@ -231,7 +231,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_typ
 {
     if (!n.is_string())
     {
-        throw exception("The target node value type is not string type.");
+        throw type_error("The target node value type is not string type.", n.type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
 }

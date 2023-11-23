@@ -603,7 +603,7 @@ public:
     {
         if (!is_sequence())
         {
-            throw fkyaml::exception("The target node is not of a sequence type.");
+            throw fkyaml::type_error("The target node is not of a sequence type.", m_node_type);
         }
 
         FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
@@ -619,7 +619,7 @@ public:
     {
         if (!is_sequence())
         {
-            throw fkyaml::exception("The target node is not of a sequence type.");
+            throw fkyaml::type_error("The target node is not of a sequence type.", m_node_type);
         }
 
         FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
@@ -641,7 +641,7 @@ public:
     {
         if (!is_mapping())
         {
-            throw fkyaml::exception("The target node is not of a mapping type.");
+            throw fkyaml::type_error("The target node is not of a mapping type.", m_node_type);
         }
 
         FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
@@ -662,7 +662,7 @@ public:
     {
         if (!is_mapping())
         {
-            throw fkyaml::exception("The target node is not of a mapping type.");
+            throw fkyaml::type_error("The target node is not of a mapping type.", m_node_type);
         }
 
         FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
@@ -759,7 +759,7 @@ public:
             FK_YAML_ASSERT(m_node_value.p_string != nullptr);
             return m_node_value.p_string->empty();
         default:
-            throw fkyaml::exception("The target node is not of a container type.");
+            throw fkyaml::type_error("The target node is not of a container type.", m_node_type);
         }
     }
 
@@ -780,7 +780,7 @@ public:
             FK_YAML_ASSERT(m_node_value.p_string != nullptr);
             return m_node_value.p_string->size();
         default:
-            throw fkyaml::exception("The target node is not of a container type.");
+            throw fkyaml::type_error("The target node is not of a container type.", m_node_type);
         }
     }
 
@@ -944,7 +944,7 @@ public:
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
             return {detail::mapping_iterator_tag(), m_node_value.p_mapping->begin()};
         default:
-            throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
+            throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", m_node_type);
         }
     }
 
@@ -963,7 +963,7 @@ public:
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
             return {detail::mapping_iterator_tag(), m_node_value.p_mapping->begin()};
         default:
-            throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
+            throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", m_node_type);
         }
     }
 
@@ -982,7 +982,7 @@ public:
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
             return {detail::mapping_iterator_tag(), m_node_value.p_mapping->end()};
         default:
-            throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
+            throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", m_node_type);
         }
     }
 
@@ -1001,7 +1001,7 @@ public:
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
             return {detail::mapping_iterator_tag(), m_node_value.p_mapping->end()};
         default:
-            throw fkyaml::exception("The target node is neither of sequence nor mapping types.");
+            throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", m_node_type);
         }
     }
 
@@ -1013,7 +1013,7 @@ private:
     {
         if (!is_sequence())
         {
-            throw fkyaml::exception("The node value is not a sequence.");
+            throw fkyaml::type_error("The node value is not a sequence.", m_node_type);
         }
         return *(m_node_value.p_sequence);
     }
@@ -1025,7 +1025,7 @@ private:
     {
         if (!is_sequence())
         {
-            throw fkyaml::exception("The node value is not a sequence.");
+            throw fkyaml::type_error("The node value is not a sequence.", m_node_type);
         }
         return *(m_node_value.p_sequence);
     }
@@ -1037,7 +1037,7 @@ private:
     {
         if (!is_mapping())
         {
-            throw fkyaml::exception("The node value is not a mapping.");
+            throw fkyaml::type_error("The node value is not a mapping.", m_node_type);
         }
         return *(m_node_value.p_mapping);
     }
@@ -1049,7 +1049,7 @@ private:
     {
         if (!is_mapping())
         {
-            throw fkyaml::exception("The node value is not a mapping.");
+            throw fkyaml::type_error("The node value is not a mapping.", m_node_type);
         }
         return *(m_node_value.p_mapping);
     }
@@ -1061,7 +1061,7 @@ private:
     {
         if (!is_boolean())
         {
-            throw fkyaml::exception("The node value is not a boolean.");
+            throw fkyaml::type_error("The node value is not a boolean.", m_node_type);
         }
         return m_node_value.boolean;
     }
@@ -1073,7 +1073,7 @@ private:
     {
         if (!is_boolean())
         {
-            throw fkyaml::exception("The node value is not a boolean.");
+            throw fkyaml::type_error("The node value is not a boolean.", m_node_type);
         }
         return m_node_value.boolean;
     }
@@ -1085,7 +1085,7 @@ private:
     {
         if (!is_integer())
         {
-            throw fkyaml::exception("The node value is not an integer.");
+            throw fkyaml::type_error("The node value is not an integer.", m_node_type);
         }
         return m_node_value.integer;
     }
@@ -1097,7 +1097,7 @@ private:
     {
         if (!is_integer())
         {
-            throw fkyaml::exception("The node value is not an integer.");
+            throw fkyaml::type_error("The node value is not an integer.", m_node_type);
         }
         return m_node_value.integer;
     }
@@ -1109,7 +1109,7 @@ private:
     {
         if (!is_float_number())
         {
-            throw fkyaml::exception("The node value is not a floating point number.");
+            throw fkyaml::type_error("The node value is not a floating point number.", m_node_type);
         }
         return m_node_value.float_val;
     }
@@ -1121,7 +1121,7 @@ private:
     {
         if (!is_float_number())
         {
-            throw fkyaml::exception("The node value is not a floating point number.");
+            throw fkyaml::type_error("The node value is not a floating point number.", m_node_type);
         }
         return m_node_value.float_val;
     }
@@ -1133,7 +1133,7 @@ private:
     {
         if (!is_string())
         {
-            throw fkyaml::exception("The node value is not a string.");
+            throw fkyaml::type_error("The node value is not a string.", m_node_type);
         }
         return *(m_node_value.p_string);
     }
@@ -1145,7 +1145,7 @@ private:
     {
         if (!is_string())
         {
-            throw fkyaml::exception("The node value is not a string.");
+            throw fkyaml::type_error("The node value is not a string.", m_node_type);
         }
         return *(m_node_value.p_string);
     }
