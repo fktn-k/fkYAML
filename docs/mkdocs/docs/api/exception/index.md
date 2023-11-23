@@ -13,6 +13,7 @@ A basic exception class used in the fkYAML library.
 | Type                                    | Description                                          |
 | --------------------------------------- | ---------------------------------------------------- |
 | [invalid_encoding](invalid_encoding.md) | The exception indicating an encoding error.          |
+| [parse_error](parse_error.md)           | The exception indicating an error in parsing.        |
 | [type_error](type_error.md)             | The exception indicating an invalid type conversion. |
 
 ## Member Functions

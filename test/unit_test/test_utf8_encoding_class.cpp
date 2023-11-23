@@ -296,7 +296,6 @@ TEST_CASE("UTF8EncodingClassTest_FromUTF32Test", "[UTF8EncodingClassTest]")
         std::size_t encoded_size;
 
         REQUIRE_THROWS_AS(
-            fkyaml::detail::utf8_encoding::from_utf32(utf32, utf8_bytes, encoded_size),
-            fkyaml::invalid_encoding);
+            fkyaml::detail::utf8_encoding::from_utf32(utf32, utf8_bytes, encoded_size), fkyaml::invalid_encoding);
     }
 }

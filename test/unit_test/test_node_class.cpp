@@ -1565,7 +1565,7 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
         SECTION("test for non-integer node value.")
         {
             fkyaml::node non_int_node(true);
-            REQUIRE_THROWS_AS(non_int_node.get_value<int32_t>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(non_int_node.get_value<int32_t>(), fkyaml::type_error);
         }
 
         SECTION("test underflowable integer type.")
@@ -1605,7 +1605,7 @@ TEST_CASE("NodeClassTest_GetValueTest", "[NodeClassTest]")
         SECTION("test for non-float-number node value.")
         {
             fkyaml::node non_float_num_node(true);
-            REQUIRE_THROWS_AS(non_float_num_node.get_value<float>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(non_float_num_node.get_value<float>(), fkyaml::type_error);
         }
 
         SECTION("test underflowable float number type.")

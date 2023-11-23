@@ -122,6 +122,24 @@ private:
     }
 };
 
+/// @brief An exception class indicating an error in parsing.
+class parse_error : public exception
+{
+public:
+    explicit parse_error(const char* msg, std::size_t lines, std::size_t cols_in_line)
+        : exception(generate_error_message(msg, lines, cols_in_line).c_str())
+    {
+    }
+
+private:
+    std::string generate_error_message(const char* msg, std::size_t lines, std::size_t cols_in_line)
+    {
+        std::stringstream ss;
+        ss << "parse_error: " << msg << " (at line " << lines << ", column " << cols_in_line << ")";
+        return ss.str();
+    }
+};
+
 /// @brief An exception class indicating an invalid type conversion.
 /// @sa https://fktn-k.github.io/fkYAML/api/exception/type_error/
 class type_error : public exception
