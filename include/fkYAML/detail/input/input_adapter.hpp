@@ -169,6 +169,75 @@ private:
     std::size_t m_utf8_buf_size {0};
 };
 
+/// @brief An input adapter for iterators of type char32_t.
+/// @note This adapter requires at least bidirectional iterator tag.
+/// @tparam IterType An iterator type.
+template <typename IterType>
+class iterator_input_adapter<
+    IterType,
+    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char32_t>::value>>
+{
+public:
+    /// A type for characters used in this input adapter.
+    using char_type = char;
+
+    /// @brief Construct a new iterator_input_adapter object.
+    iterator_input_adapter() = default;
+
+    /// @brief Construct a new iterator_input_adapter object.
+    /// @param begin The beginning of iteraters.
+    /// @param end The end of iterators.
+    iterator_input_adapter(IterType begin, IterType end)
+        : m_current(begin),
+          m_end(end)
+    {
+    }
+
+    // allow only move construct/assignment like other input adapters.
+    iterator_input_adapter(const iterator_input_adapter&) = delete;
+    iterator_input_adapter(iterator_input_adapter&& rhs) = default;
+    iterator_input_adapter& operator=(const iterator_input_adapter&) = delete;
+    iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
+    ~iterator_input_adapter() = default;
+
+    /// @brief Get a character at the current position and move forward.
+    /// @return std::char_traits<char_type>::int_type A character or EOF.
+    typename std::char_traits<char_type>::int_type get_character()
+    {
+        if (m_utf8_buf_index == m_utf8_buf_size)
+        {
+            if (m_current == m_end)
+            {
+                return std::char_traits<char_type>::eof();
+            }
+
+            utf8_encoding::from_utf32(*m_current, m_utf8_buffer, m_utf8_buf_size);
+            ++m_current;
+            m_utf8_buf_index = 0;
+        }
+
+        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
+        ++m_utf8_buf_index;
+        return ret;
+    }
+
+private:
+    /// The iterator at the current position.
+    IterType m_current {};
+    /// The iterator at the end of input.
+    IterType m_end {};
+    /// The buffer for decoding characters read from the input.
+    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
+    /// The number of elements to be read from the input next time.
+    std::size_t m_elems_to_read {2};
+    /// The buffer for UTF-8 encoded characters.
+    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
+    /// The next index in `m_utf8_buffer` to read.
+    std::size_t m_utf8_buf_index {0};
+    /// The number of bytes in `m_utf8_buffer`.
+    std::size_t m_utf8_buf_size {0};
+};
+
 /// @brief An input adapter for C-style file handles.
 class file_input_adapter
 {
