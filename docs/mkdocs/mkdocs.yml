@@ -147,6 +147,8 @@ nav:
           - (constructor): api/exception/constructor.md
           - (destructor): api/exception/destructor.md
           - what: api/exception/what.md
+          - invalid_encoding: api/exception/invalid_encoding.md
+          - type_error: api/exception/type_error.md
       - macros: api/macros.md
       - node_value_converter:
           - node_value_converter: api/node_value_converter/index.md

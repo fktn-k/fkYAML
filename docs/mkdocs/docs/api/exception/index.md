@@ -8,17 +8,24 @@ class exception : public std::exception;
 
 A basic exception class used in the fkYAML library.
 
+## Derived Classes
+
+| Type                                    | Description                                          |
+| --------------------------------------- | ---------------------------------------------------- |
+| [invalid_encoding](invalid_encoding.md) | The exception indicating an encoding error.          |
+| [type_error](type_error.md)             | The exception indicating an invalid type conversion. |
+
 ## Member Functions
 
 ### Construction/Destruction
 
-| Type                            | Description              |
-|---------------------------------|--------------------------|
+| Name                            | Description              |
+| ------------------------------- | ------------------------ |
 | [(constructor)](constructor.md) | constructs an exception. |
 | [(destructor)](destructor.md)   | destroys an exception.   |
 
 ### Operation
 
-| Type            | Description                                |
-|-----------------|--------------------------------------------|
+| Name            | Description                                |
+| --------------- | ------------------------------------------ |
 | [what](what.md) | provides an error message for a exception. |

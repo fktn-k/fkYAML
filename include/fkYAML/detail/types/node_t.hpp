@@ -39,14 +39,22 @@ inline std::string to_string(node_t t)
 {
     switch (t)
     {
-    case node_t::SEQUENCE: return "sequence";
-    case node_t::MAPPING: return "mapping";
-    case node_t::NULL_OBJECT: return "null";
-    case node_t::BOOLEAN: return "boolean";
-    case node_t::INTEGER: return "integer";
-    case node_t::FLOAT_NUMBER: return "float";
-    case node_t::STRING: return "string";
-    default: return "";
+    case node_t::SEQUENCE:
+        return "sequence";
+    case node_t::MAPPING:
+        return "mapping";
+    case node_t::NULL_OBJECT:
+        return "null";
+    case node_t::BOOLEAN:
+        return "boolean";
+    case node_t::INTEGER:
+        return "integer";
+    case node_t::FLOAT_NUMBER:
+        return "float";
+    case node_t::STRING:
+        return "string";
+    default:       // LCOV_EXCL_LINE
+        return ""; // LCOV_EXCL_LINE
     }
 }
 

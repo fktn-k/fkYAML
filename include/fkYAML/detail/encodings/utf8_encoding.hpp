@@ -256,7 +256,7 @@ public:
 
         if (!is_valid)
         {
-            throw fkyaml::exception("Invalid UTF-16 encoding detected.");
+            throw fkyaml::invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
         }
     }
 
@@ -315,7 +315,7 @@ public:
 
         if (!is_valid)
         {
-            throw fkyaml::exception("Invalid UTF-32 encoding detected.");
+            throw fkyaml::invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
         }
     }
 };

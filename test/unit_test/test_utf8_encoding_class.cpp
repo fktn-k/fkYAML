@@ -250,39 +250,53 @@ TEST_CASE("UTF8EncodingClassTest_FromUTF16Test", "[UTF8EncodingClassTest]")
 
         REQUIRE_THROWS_AS(
             fkyaml::detail::utf8_encoding::from_utf16(utf16, utf8_bytes, consumed_size, encoded_size),
-            fkyaml::exception);
+            fkyaml::invalid_encoding);
     }
 }
 
 TEST_CASE("UTF8EncodingClassTest_FromUTF32Test", "[UTF8EncodingClassTest]")
 {
-    struct test_params
+    SECTION("valid UTF-32 character")
     {
-        char32_t utf32;
+        struct test_params
+        {
+            char32_t utf32;
+            std::array<char, 4> utf8_bytes;
+            std::size_t size;
+        };
+        auto params = GENERATE(
+            test_params {0x00u, {{char(0x00u)}}, 1},
+            test_params {0x01u, {{char(0x01u)}}, 1},
+            test_params {0x7Eu, {{char(0x7Eu)}}, 1},
+            test_params {0x7Fu, {{char(0x7Fu)}}, 1},
+            test_params {0x0080u, {{char(0xC2u), char(0x80u)}}, 2},
+            test_params {0x0081u, {{char(0xC2u), char(0x81u)}}, 2},
+            test_params {0x07FEu, {{char(0xDFu), char(0xBEu)}}, 2},
+            test_params {0x07FFu, {{char(0xDFu), char(0xBFu)}}, 2},
+            test_params {0x0800u, {{char(0xE0u), char(0xA0u), char(0x80u)}}, 3},
+            test_params {0x0801u, {{char(0xE0u), char(0xA0u), char(0x81u)}}, 3},
+            test_params {0xFFFFu, {{char(0xEFu), char(0xBFu), char(0xBFu)}}, 3},
+            test_params {0x010000u, {{char(0xF0u), char(0x90u), char(0x80u), char(0x80u)}}, 4},
+            test_params {0x010001u, {{char(0xF0u), char(0x90u), char(0x80u), char(0x81u)}}, 4},
+            test_params {0x10FFFEu, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBEu)}}, 4},
+            test_params {0x10FFFFu, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBFu)}}, 4});
+
         std::array<char, 4> utf8_bytes;
         std::size_t size;
-    };
-    auto params = GENERATE(
-        test_params {0x00u, {{char(0x00u)}}, 1},
-        test_params {0x01u, {{char(0x01u)}}, 1},
-        test_params {0x7Eu, {{char(0x7Eu)}}, 1},
-        test_params {0x7Fu, {{char(0x7Fu)}}, 1},
-        test_params {0x0080u, {{char(0xC2u), char(0x80u)}}, 2},
-        test_params {0x0081u, {{char(0xC2u), char(0x81u)}}, 2},
-        test_params {0x07FEu, {{char(0xDFu), char(0xBEu)}}, 2},
-        test_params {0x07FFu, {{char(0xDFu), char(0xBFu)}}, 2},
-        test_params {0x0800u, {{char(0xE0u), char(0xA0u), char(0x80u)}}, 3},
-        test_params {0x0801u, {{char(0xE0u), char(0xA0u), char(0x81u)}}, 3},
-        test_params {0xFFFFu, {{char(0xEFu), char(0xBFu), char(0xBFu)}}, 3},
-        test_params {0x010000u, {{char(0xF0u), char(0x90u), char(0x80u), char(0x80u)}}, 4},
-        test_params {0x010001u, {{char(0xF0u), char(0x90u), char(0x80u), char(0x81u)}}, 4},
-        test_params {0x10FFFEu, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBEu)}}, 4},
-        test_params {0x10FFFFu, {{char(0xF4u), char(0x8Fu), char(0xBFu), char(0xBFu)}}, 4});
+        fkyaml::detail::utf8_encoding::from_utf32(params.utf32, utf8_bytes, size);
 
-    std::array<char, 4> utf8_bytes;
-    std::size_t size;
-    fkyaml::detail::utf8_encoding::from_utf32(params.utf32, utf8_bytes, size);
+        REQUIRE(utf8_bytes == params.utf8_bytes);
+        REQUIRE(size == params.size);
+    }
 
-    REQUIRE(utf8_bytes == params.utf8_bytes);
-    REQUIRE(size == params.size);
+    SECTION("invalid UTF-32 character")
+    {
+        char32_t utf32 = 0x110000u;
+        std::array<char, 4> utf8_bytes;
+        std::size_t encoded_size;
+
+        REQUIRE_THROWS_AS(
+            fkyaml::detail::utf8_encoding::from_utf32(utf32, utf8_bytes, encoded_size),
+            fkyaml::invalid_encoding);
+    }
 }

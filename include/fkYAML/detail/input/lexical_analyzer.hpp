@@ -1014,7 +1014,7 @@ private:
                 std::array<char_int_type, 2> byte_array = {{current, m_input_handler.get_next()}};
                 if (!utf8_encoding::validate(byte_array))
                 {
-                    throw fkyaml::exception("ill-formed UTF-8 encoded character found");
+                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
                 }
 
                 m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
@@ -1029,7 +1029,7 @@ private:
                     {current, m_input_handler.get_next(), m_input_handler.get_next()}};
                 if (!utf8_encoding::validate(byte_array))
                 {
-                    throw fkyaml::exception("ill-formed UTF-8 encoded character found");
+                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
                 }
 
                 m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
@@ -1044,7 +1044,7 @@ private:
                 {current, m_input_handler.get_next(), m_input_handler.get_next(), m_input_handler.get_next()}};
             if (!utf8_encoding::validate(byte_array))
             {
-                throw fkyaml::exception("ill-formed UTF-8 encoded character found");
+                throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
             }
 
             m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));

@@ -789,7 +789,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidMultiByteCharStringTokenTest", "[
             char_traits_t::to_char_type(0x80)});
 
     str_lexer_t lexer(fkyaml::detail::input_adapter(mb_char));
-    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::exception);
+    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::invalid_encoding);
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanUnescapedControlCharacter", "[LexicalAnalyzerClassTest]")
