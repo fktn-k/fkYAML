@@ -180,6 +180,43 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
     }
 }
 
+inline encode_t detect_encoding_and_skip_bom(std::FILE* file)
+{
+    uint8_t bytes[4] = { 0xFFu, 0xFFu, 0xFFu, 0xFFu };
+    for (std::size_t i = 0; i < 4; i++)
+    {
+        char byte = 0;
+        std::size_t size = std::fread(&byte, sizeof(char), 1, file);
+        if (size != sizeof(char))
+        {
+            break;
+        }
+        bytes[i] = uint8_t(byte & 0xFF);
+    }
+
+    encode_t encode_type = detect_encoding_type(bytes[0], bytes[1], bytes[2], bytes[3]);
+    switch (encode_type)
+    {
+    case encode_t::UTF_8_BOM:
+        fseek(file, 3, SEEK_SET);
+        break;
+    case encode_t::UTF_16BE_BOM:
+    case encode_t::UTF_16LE_BOM:
+        fseek(file, 2, SEEK_SET);
+        break;
+    case encode_t::UTF_32BE_BOM:
+    case encode_t::UTF_32LE_BOM:
+        fseek(file, 4, SEEK_SET);
+        break;
+    default:
+        // Move back to the beginning of the file contents if a BOM doesn't exist.
+        fseek(file, 0, SEEK_SET);
+        break;
+    }
+
+    return encode_type;
+}
+
 } // namespace detail
 
 FK_YAML_NAMESPACE_END

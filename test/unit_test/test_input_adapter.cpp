@@ -149,6 +149,31 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
     }
 
+    SECTION("file_input_adapter for UTF-8")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
+
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
+        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
+    }
+
     ////////////////////
     //   UTF-8(BOM)   //
     ////////////////////
@@ -199,6 +224,31 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == 'e');
         REQUIRE(input_adapter.get_character() == '.');
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+    }
+
+    SECTION("file_input_adapter for UTF-8(BOM)")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8bom.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
+
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
+        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
     }
 
     //////////////////
@@ -288,6 +338,31 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
     }
 
+    SECTION("file_input_adapter for UTF-16BE")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16ben.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
+
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
+        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
+    }
+
     ///////////////////////
     //   UTF-16BE(BOM)   //
     ///////////////////////
@@ -373,6 +448,31 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == int_type(0x80u));
         REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+    }
+
+    SECTION("file_input_adapter for UTF-16BE(BOM)")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16bebom.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
+
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
+        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
     }
 
     //////////////////
@@ -462,6 +562,31 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
     }
 
+    SECTION("file_input_adapter for UTF-16LE")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16len.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
+
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
+        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
+    }
+
     ///////////////////////
     //   UTF-16LE(BOM)   //
     ///////////////////////
@@ -547,6 +672,31 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == int_type(0x80u));
         REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+    }
+
+    SECTION("file_input_adapter for UTF-16LE(BOM)")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16lebom.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
+
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
+        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
     }
 
     //////////////////
@@ -636,6 +786,31 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
     }
 
+    SECTION("file_input_adapter for UTF-32BE")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32ben.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
+
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
+        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
+    }
+
     ///////////////////////
     //   UTF-32BE(BOM)   //
     ///////////////////////
@@ -721,6 +896,31 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == int_type(0x80u));
         REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+    }
+
+    SECTION("file_input_adapter for UTF-32BE(BOM)")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32bebom.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
+
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
+        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
     }
 
     //////////////////
@@ -810,6 +1010,31 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
     }
 
+    SECTION("file_input_adapter for UTF-32LE")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32len.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
+
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
+        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+
+        std::fclose(p_file);
+    }
+
     ///////////////////////
     //   UTF-32LE(BOM)   //
     ///////////////////////
@@ -897,29 +1122,26 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
     }
 
-    SECTION("file_input_adapter")
+    SECTION("file_input_adapter for UTF-32LE(BOM)")
     {
         DISABLE_C4996
-        FILE* p_file = std::fopen(input_file_path, "r");
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32lebom.txt", "r");
         ENABLE_C4996
 
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
         using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        using int_type = typename char_traits_type::int_type;
 
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == ' ');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 'o');
-        REQUIRE(input_adapter.get_character() == 'u');
-        REQUIRE(input_adapter.get_character() == 'r');
-        REQUIRE(input_adapter.get_character() == 'c');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == '.');
+        REQUIRE(input_adapter.get_character() == 'a');
+        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
+        REQUIRE(input_adapter.get_character() == int_type(0x81u));
+        REQUIRE(input_adapter.get_character() == int_type(0x82u));
+        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
+        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
+        REQUIRE(input_adapter.get_character() == int_type(0x80u));
+        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
         REQUIRE(input_adapter.get_character() == char_traits_type::eof());
 
         std::fclose(p_file);

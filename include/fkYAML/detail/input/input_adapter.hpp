@@ -55,6 +55,7 @@ public:
     /// @brief Construct a new iterator_input_adapter object.
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
+    /// @param encode_type The encoding type for this input adapter.
     iterator_input_adapter(IterType begin, IterType end, encode_t encode_type)
         : m_current(begin),
           m_end(end),
@@ -247,6 +248,7 @@ public:
     /// @brief Construct a new iterator_input_adapter object.
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
+    /// @param encode_type The encoding type for this input adapter.
     iterator_input_adapter(IterType begin, IterType end, encode_t encode_type)
         : m_current(begin),
           m_end(end),
@@ -348,6 +350,7 @@ public:
     /// @brief Construct a new iterator_input_adapter object.
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
+    /// @param encode_type The encoding type for this input adapter.
     iterator_input_adapter(IterType begin, IterType end, encode_t encode_type)
         : m_current(begin),
           m_end(end),
@@ -434,8 +437,10 @@ public:
     /// This class doesn't call fopen() nor fclose().
     /// It's user's responsibility to call those functions.
     /// @param file A file handle for this adapter. (A non-null pointer is assumed.)
-    explicit file_input_adapter(std::FILE* file)
-        : m_file(file)
+    /// @param encode_type The encoding type for this input adapter.
+    explicit file_input_adapter(std::FILE* file, encode_t encode_type)
+        : m_file(file),
+          m_encode_type(encode_type)
     {
     }
 
@@ -450,17 +455,161 @@ public:
     /// @return std::char_traits<char_type>::int_type A character or EOF.
     typename std::char_traits<char_type>::int_type get_character()
     {
-        int ret = std::fgetc(m_file);
-        if (ret != EOF)
+        switch (m_encode_type)
         {
-            return ret;
+        case encode_t::UTF_8_N:
+        case encode_t::UTF_8_BOM:
+            return get_character_for_utf8();
+        case encode_t::UTF_16BE_N:
+        case encode_t::UTF_16BE_BOM:
+        case encode_t::UTF_16LE_N:
+        case encode_t::UTF_16LE_BOM:
+            return get_character_for_utf16();
+        case encode_t::UTF_32BE_N:
+        case encode_t::UTF_32BE_BOM:
+        case encode_t::UTF_32LE_N:
+        case encode_t::UTF_32LE_BOM:
+            return get_character_for_utf32();
+        default:
+            // should not come here.
+            return std::char_traits<char_type>::eof();
+        }
+    }
+
+private:
+    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
+    /// @return A UTF-8 encoded byte at the current position, or EOF.
+    typename std::char_traits<char_type>::int_type get_character_for_utf8()
+    {
+        char ch = 0;
+        size_t size = std::fread(&ch, sizeof(char), 1, m_file);
+        if (size == sizeof(char))
+        {
+            return std::char_traits<char_type>::to_int_type(ch);
         }
         return std::char_traits<char_type>::eof();
+    }
+
+    /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
+    /// @return A UTF-8 encoded byte at the current position, or EOF.
+    typename std::char_traits<char_type>::int_type get_character_for_utf16()
+    {
+        if (m_utf8_buf_index == m_utf8_buf_size)
+        {
+            char byte = 0;
+            size_t size = std::fread(&byte, sizeof(char), 1, m_file);
+            if (size != sizeof(char))
+            {
+                return std::char_traits<char_type>::eof();
+            }
+
+            do
+            {
+                switch (m_encode_type)
+                {
+                case encode_t::UTF_16BE_N:
+                case encode_t::UTF_16BE_BOM:
+                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(byte) << 8);
+                    size = std::fread(&byte, sizeof(char), 1, m_file);
+                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(byte));
+                    break;
+                case encode_t::UTF_16LE_N:
+                case encode_t::UTF_16LE_BOM: {
+                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(byte));
+                    size = std::fread(&byte, sizeof(char), 1, m_file);
+                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(byte) << 8);
+                    break;
+                }
+                default:
+                    // should not come here.
+                    break;
+                }
+
+                --m_elems_to_read;
+            } while (m_elems_to_read > 0 && std::fread(&byte, sizeof(char), 1, m_file) == sizeof(char));
+
+            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, m_elems_to_read, m_utf8_buf_size);
+
+            if (m_elems_to_read == 1)
+            {
+                m_encoded_buffer[0] = m_encoded_buffer[1];
+                m_encoded_buffer[1] = 0;
+            }
+
+            m_utf8_buf_index = 0;
+        }
+
+        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
+        ++m_utf8_buf_index;
+        return ret;
+    }
+
+    /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
+    /// @return A UTF-8 encoded byte at the current position, or EOF.
+    typename std::char_traits<char_type>::int_type get_character_for_utf32()
+    {
+        if (m_utf8_buf_index == m_utf8_buf_size)
+        {
+            char byte = 0;
+            std::size_t size = std::fread(&byte, sizeof(char), 1, m_file);
+            if (size != sizeof(char))
+            {
+                return std::char_traits<char_type>::eof();
+            }
+
+            char32_t utf32 = 0;
+            switch (m_encode_type)
+            {
+            case encode_t::UTF_32BE_N:
+            case encode_t::UTF_32BE_BOM:
+                utf32 = char32_t(uint8_t(byte) << 24);
+                size = std::fread(&byte, sizeof(char), 1, m_file);
+                utf32 |= char32_t(uint8_t(byte) << 16);
+                size = std::fread(&byte, sizeof(char), 1, m_file);
+                utf32 |= char32_t(uint8_t(byte) << 8);
+                size = std::fread(&byte, sizeof(char), 1, m_file);
+                utf32 |= char32_t(uint8_t(byte));
+                break;
+            case encode_t::UTF_32LE_N:
+            case encode_t::UTF_32LE_BOM: {
+                utf32 = char32_t(uint8_t(byte));
+                size = std::fread(&byte, sizeof(char), 1, m_file);
+                utf32 |= char32_t(uint8_t(byte) << 8);
+                size = std::fread(&byte, sizeof(char), 1, m_file);
+                utf32 |= char32_t(uint8_t(byte) << 16);
+                size = std::fread(&byte, sizeof(char), 1, m_file);
+                utf32 |= char32_t(uint8_t(byte) << 24);
+                break;
+            }
+            default:
+                // should not come here.
+                break;
+            }
+
+            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
+            m_utf8_buf_index = 0;
+        }
+
+        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
+        ++m_utf8_buf_index;
+        return ret;
     }
 
 private:
     /// A pointer to the input file handle.
     std::FILE* m_file {nullptr};
+    /// The encoding type for this input adapter.
+    encode_t m_encode_type {encode_t::UTF_8_N};
+    /// The buffer for decoding characters read from the input.
+    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
+    /// The number of elements to be read from the input next time.
+    std::size_t m_elems_to_read {2};
+    /// The buffer for UTF-8 encoded characters.
+    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
+    /// The next index in `m_utf8_buffer` to read.
+    std::size_t m_utf8_buf_index {0};
+    /// The number of bytes in `m_utf8_buffer`.
+    std::size_t m_utf8_buf_size {0};
 };
 
 /// @brief An input adapter for streams
@@ -581,7 +730,8 @@ inline file_input_adapter input_adapter(std::FILE* file)
     {
         throw fkyaml::exception("Invalid FILE object pointer.");
     }
-    return file_input_adapter(file);
+    encode_t encode_type = detect_encoding_and_skip_bom(file);
+    return file_input_adapter(file, encode_type);
 }
 
 /// @brief
