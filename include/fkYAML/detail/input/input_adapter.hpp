@@ -624,8 +624,9 @@ public:
 
     /// @brief Construct a new stream_input_adapter object.
     /// @param is A reference to the target input stream.
-    explicit stream_input_adapter(std::istream& is)
-        : m_istream(&is)
+    explicit stream_input_adapter(std::istream& is, encode_t encode_type)
+        : m_istream(&is),
+          m_encode_type(encode_type)
     {
     }
 
@@ -640,12 +641,155 @@ public:
     /// @return std::char_traits<char_type>::int_type A character or EOF.
     std::char_traits<char_type>::int_type get_character()
     {
+        switch (m_encode_type)
+        {
+        case encode_t::UTF_8_N:
+        case encode_t::UTF_8_BOM:
+            return get_character_for_utf8();
+        case encode_t::UTF_16BE_N:
+        case encode_t::UTF_16BE_BOM:
+        case encode_t::UTF_16LE_N:
+        case encode_t::UTF_16LE_BOM:
+            return get_character_for_utf16();
+        case encode_t::UTF_32BE_N:
+        case encode_t::UTF_32BE_BOM:
+        case encode_t::UTF_32LE_N:
+        case encode_t::UTF_32LE_BOM:
+            return get_character_for_utf32();
+        default:
+            // should not come here.
+            return std::char_traits<char_type>::eof();
+        }
+    }
+
+private:
+    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
+    /// @return A UTF-8 encoded byte at the current position, or EOF.
+    typename std::char_traits<char_type>::int_type get_character_for_utf8()
+    {
         return m_istream->get();
+    }
+
+    /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
+    /// @return A UTF-8 encoded byte at the current position, or EOF.
+    typename std::char_traits<char_type>::int_type get_character_for_utf16()
+    {
+        if (m_utf8_buf_index == m_utf8_buf_size)
+        {
+            do
+            {
+                char ch = 0;
+                m_istream->read(&ch, 1);
+                if (m_istream->gcount() != 1)
+                {
+                    return std::char_traits<char_type>::eof();
+                }
+
+                switch (m_encode_type)
+                {
+                case encode_t::UTF_16BE_N:
+                case encode_t::UTF_16BE_BOM:
+                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(ch) << 8);
+                    m_istream->read(&ch, 1);
+                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(ch));
+                    break;
+                case encode_t::UTF_16LE_N:
+                case encode_t::UTF_16LE_BOM: {
+                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(ch));
+                    m_istream->read(&ch, 1);
+                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(ch) << 8);
+                    break;
+                }
+                default:
+                    // should not come here.
+                    break;
+                }
+
+                --m_elems_to_read;
+            } while (m_elems_to_read > 0);
+
+            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, m_elems_to_read, m_utf8_buf_size);
+
+            if (m_elems_to_read == 1)
+            {
+                m_encoded_buffer[0] = m_encoded_buffer[1];
+                m_encoded_buffer[1] = 0;
+            }
+
+            m_utf8_buf_index = 0;
+        }
+
+        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
+        ++m_utf8_buf_index;
+        return ret;
+    }
+
+    /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
+    /// @return A UTF-8 encoded byte at the current position, or EOF.
+    typename std::char_traits<char_type>::int_type get_character_for_utf32()
+    {
+        if (m_utf8_buf_index == m_utf8_buf_size)
+        {
+            char ch = 0;
+            m_istream->read(&ch, 1);
+            if (m_istream->gcount() != 1)
+            {
+                return std::char_traits<char_type>::eof();
+            }
+
+            char32_t utf32 = 0;
+            switch (m_encode_type)
+            {
+            case encode_t::UTF_32BE_N:
+            case encode_t::UTF_32BE_BOM:
+                utf32 = char32_t(ch << 24);
+                m_istream->read(&ch, 1);
+                utf32 |= char32_t(ch << 16);
+                m_istream->read(&ch, 1);
+                utf32 |= char32_t(ch << 8);
+                m_istream->read(&ch, 1);
+                utf32 |= char32_t(ch);
+                break;
+            case encode_t::UTF_32LE_N:
+            case encode_t::UTF_32LE_BOM: {
+                utf32 = char32_t(ch);
+                m_istream->read(&ch, 1);
+                utf32 |= char32_t(ch << 8);
+                m_istream->read(&ch, 1);
+                utf32 |= char32_t(ch << 16);
+                m_istream->read(&ch, 1);
+                utf32 |= char32_t(ch << 24);
+                break;
+            }
+            default:
+                // should not come here.
+                break;
+            }
+
+            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
+            m_utf8_buf_index = 0;
+        }
+
+        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
+        ++m_utf8_buf_index;
+        return ret;
     }
 
 private:
     /// A pointer to the input stream object.
     std::istream* m_istream {nullptr};
+    /// The encoding type for this input adapter.
+    encode_t m_encode_type {encode_t::UTF_8_N};
+    /// The buffer for decoding characters read from the input.
+    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
+    /// The number of elements to be read from the input next time.
+    std::size_t m_elems_to_read {2};
+    /// The buffer for UTF-8 encoded characters.
+    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
+    /// The next index in `m_utf8_buffer` to read.
+    std::size_t m_utf8_buf_index {0};
+    /// The number of bytes in `m_utf8_buffer`.
+    std::size_t m_utf8_buf_size {0};
 };
 
 /////////////////////////////////
@@ -739,7 +883,8 @@ inline file_input_adapter input_adapter(std::FILE* file)
 /// @return stream_input_adapter
 inline stream_input_adapter input_adapter(std::istream& stream) noexcept
 {
-    return stream_input_adapter(stream);
+    encode_t encode_type = detect_encoding_and_skip_bom(stream);
+    return stream_input_adapter(stream, encode_type);
 }
 
 } // namespace detail
