@@ -67,10 +67,11 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingTypeTest", "[EncodeDetectorTest]")
         pair_t {{0, 0x7Fu, 1, 1}, fkyaml::detail::encode_t::UTF_16BE_N},
         pair_t {{1, 0, 1, 1}, fkyaml::detail::encode_t::UTF_16LE_N},
         pair_t {{0x40u, 0, 1, 1}, fkyaml::detail::encode_t::UTF_16LE_N},
-        pair_t {{0x7Fu, 0, 1, 1}, fkyaml::detail::encode_t::UTF_16LE_N}
-    );
+        pair_t {{0x7Fu, 0, 1, 1}, fkyaml::detail::encode_t::UTF_16LE_N});
 
-    REQUIRE(fkyaml::detail::detect_encoding_type(params.first[0], params.first[1], params.first[2], params.first[3]) == params.second);
+    REQUIRE(
+        fkyaml::detail::detect_encoding_type(params.first[0], params.first[1], params.first[2], params.first[3]) ==
+        params.second);
 }
 
 TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTest]")

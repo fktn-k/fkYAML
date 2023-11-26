@@ -94,7 +94,7 @@ inline encode_t detect_encoding_type(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t
 template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
 inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
 {
-    uint8_t bytes[4] = { 0xFFu, 0xFFu, 0xFFu, 0xFFu };
+    uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     switch (ElemSize)
     {
     case sizeof(char): {
@@ -182,7 +182,7 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
 
 inline encode_t detect_encoding_and_skip_bom(std::FILE* file)
 {
-    uint8_t bytes[4] = { 0xFFu, 0xFFu, 0xFFu, 0xFFu };
+    uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     for (std::size_t i = 0; i < 4; i++)
     {
         char byte = 0;
@@ -219,7 +219,7 @@ inline encode_t detect_encoding_and_skip_bom(std::FILE* file)
 
 inline encode_t detect_encoding_and_skip_bom(std::istream& is)
 {
-    uint8_t bytes[4] = { 0xFFu, 0xFFu, 0xFFu, 0xFFu };
+    uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     for (std::size_t i = 0; i < 4; i++)
     {
         int ret = is.get();
