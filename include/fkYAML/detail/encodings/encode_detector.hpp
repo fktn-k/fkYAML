@@ -222,14 +222,16 @@ inline encode_t detect_encoding_and_skip_bom(std::istream& is)
     uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     for (std::size_t i = 0; i < 4; i++)
     {
-        int ret = is.get();
-        if (ret == std::char_traits<char>::eof())
+        char ch = 0;
+        is.read(&ch, 1);
+        std::streamsize size = is.gcount();
+        if (size != 1)
         {
             // without this, seekg() fails in the switch-case statement below.
             is.clear();
             break;
         }
-        bytes[i] = uint8_t(std::char_traits<char>::to_char_type(ret) & 0xFFu);
+        bytes[i] = uint8_t(ch & 0xFF);
     }
 
     encode_t encode_type = detect_encoding_type(bytes[0], bytes[1], bytes[2], bytes[3]);

@@ -126,7 +126,7 @@ private:
                 {
                 case encode_t::UTF_16BE_N:
                 case encode_t::UTF_16BE_BOM:
-                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(*m_current << 8);
+                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(*m_current) << 8);
                     ++m_current;
                     m_encoded_buffer[2 - m_elems_to_read] |= char16_t(*m_current);
                     break;
@@ -134,7 +134,7 @@ private:
                 case encode_t::UTF_16LE_BOM: {
                     m_encoded_buffer[2 - m_elems_to_read] = char16_t(*m_current);
                     ++m_current;
-                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(*m_current << 8);
+                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(*m_current) << 8);
                     break;
                 }
                 default: // LCOV_EXCL_LINE
