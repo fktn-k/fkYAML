@@ -225,6 +225,8 @@ inline encode_t detect_encoding_and_skip_bom(std::istream& is)
         int ret = is.get();
         if (ret == std::char_traits<char>::eof())
         {
+            // without this, seekg() fails in the switch-case statement below.
+            is.clear();
             break;
         }
         bytes[i] = uint8_t(std::char_traits<char>::to_char_type(ret) & 0xFFu);

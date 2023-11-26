@@ -89,9 +89,9 @@ public:
         case encode_t::UTF_32LE_N:
         case encode_t::UTF_32LE_BOM:
             return get_character_for_utf32();
-        default:
+        default: // LCOV_EXCL_LINE
             // should not come here.
-            return std::char_traits<char_type>::eof();
+            return std::char_traits<char_type>::eof(); // LCOV_EXCL_LINE
         }
     }
 
@@ -137,9 +137,9 @@ private:
                     m_encoded_buffer[2 - m_elems_to_read] |= char16_t(*m_current << 8);
                     break;
                 }
-                default:
+                default: // LCOV_EXCL_LINE
                     // should not come here.
-                    break;
+                    break; // LCOV_EXCL_LINE
                 }
                 ++m_current;
                 --m_elems_to_read;
@@ -196,9 +196,9 @@ private:
                 utf32 |= char32_t(*m_current << 24);
                 break;
             }
-            default:
+            default: // LCOV_EXCL_LINE
                 // should not come here.
-                break;
+                break; // LCOV_EXCL_LINE
             }
 
             utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
@@ -289,9 +289,9 @@ public:
                     m_encoded_buffer[2 - m_elems_to_read] |= char16_t((tmp & 0xFF00u) >> 8);
                     break;
                 }
-                default:
+                default: // LCOV_EXCL_LINE
                     // should not come here.
-                    break;
+                    break; // LCOV_EXCL_LINE
                 }
                 ++m_current;
                 --m_elems_to_read;
@@ -392,9 +392,9 @@ public:
                 utf32 |= char32_t((tmp & 0x000000FFu) << 24);
                 break;
             }
-            default:
+            default: // LCOV_EXCL_LINE
                 // should not come here.
-                break;
+                break; // LCOV_EXCL_LINE
             }
 
             utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
@@ -470,9 +470,9 @@ public:
         case encode_t::UTF_32LE_N:
         case encode_t::UTF_32LE_BOM:
             return get_character_for_utf32();
-        default:
+        default: // LCOV_EXCL_LINE
             // should not come here.
-            return std::char_traits<char_type>::eof();
+            return std::char_traits<char_type>::eof(); // LCOV_EXCL_LINE
         }
     }
 
@@ -520,9 +520,9 @@ private:
                     m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(byte) << 8);
                     break;
                 }
-                default:
+                default: // LCOV_EXCL_LINE
                     // should not come here.
-                    break;
+                    break; // LCOV_EXCL_LINE
                 }
 
                 --m_elems_to_read;
@@ -581,9 +581,9 @@ private:
                 utf32 |= char32_t(uint8_t(byte) << 24);
                 break;
             }
-            default:
+            default: // LCOV_EXCL_LINE
                 // should not come here.
-                break;
+                break; // LCOV_EXCL_LINE
             }
 
             utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
@@ -656,9 +656,9 @@ public:
         case encode_t::UTF_32LE_N:
         case encode_t::UTF_32LE_BOM:
             return get_character_for_utf32();
-        default:
+        default: // LCOV_EXCL_LINE
             // should not come here.
-            return std::char_traits<char_type>::eof();
+            return std::char_traits<char_type>::eof(); // LCOV_EXCL_LINE
         }
     }
 
@@ -680,7 +680,8 @@ private:
             {
                 char ch = 0;
                 m_istream->read(&ch, 1);
-                if (m_istream->gcount() != 1)
+                std::streamsize size = m_istream->gcount();
+                if (size != 1)
                 {
                     return std::char_traits<char_type>::eof();
                 }
@@ -700,9 +701,9 @@ private:
                     m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(ch) << 8);
                     break;
                 }
-                default:
+                default: // LCOV_EXCL_LINE
                     // should not come here.
-                    break;
+                    break; // LCOV_EXCL_LINE
                 }
 
                 --m_elems_to_read;
@@ -732,7 +733,8 @@ private:
         {
             char ch = 0;
             m_istream->read(&ch, 1);
-            if (m_istream->gcount() != 1)
+            std::streamsize size = m_istream->gcount();
+            if (size != 1)
             {
                 return std::char_traits<char_type>::eof();
             }
@@ -761,9 +763,9 @@ private:
                 utf32 |= char32_t(ch << 24);
                 break;
             }
-            default:
+            default: // LCOV_EXCL_LINE
                 // should not come here.
-                break;
+                break; // LCOV_EXCL_LINE
             }
 
             utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
