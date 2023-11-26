@@ -563,21 +563,21 @@ private:
             case encode_t::UTF_32BE_N:
             case encode_t::UTF_32BE_BOM:
                 utf32 = char32_t(uint8_t(byte) << 24);
-                size = std::fread(&byte, sizeof(char), 1, m_file);
+                std::fread(&byte, sizeof(char), 1, m_file);
                 utf32 |= char32_t(uint8_t(byte) << 16);
-                size = std::fread(&byte, sizeof(char), 1, m_file);
+                std::fread(&byte, sizeof(char), 1, m_file);
                 utf32 |= char32_t(uint8_t(byte) << 8);
-                size = std::fread(&byte, sizeof(char), 1, m_file);
+                std::fread(&byte, sizeof(char), 1, m_file);
                 utf32 |= char32_t(uint8_t(byte));
                 break;
             case encode_t::UTF_32LE_N:
             case encode_t::UTF_32LE_BOM: {
                 utf32 = char32_t(uint8_t(byte));
-                size = std::fread(&byte, sizeof(char), 1, m_file);
+                std::fread(&byte, sizeof(char), 1, m_file);
                 utf32 |= char32_t(uint8_t(byte) << 8);
-                size = std::fread(&byte, sizeof(char), 1, m_file);
+                std::fread(&byte, sizeof(char), 1, m_file);
                 utf32 |= char32_t(uint8_t(byte) << 16);
-                size = std::fread(&byte, sizeof(char), 1, m_file);
+                std::fread(&byte, sizeof(char), 1, m_file);
                 utf32 |= char32_t(uint8_t(byte) << 24);
                 break;
             }
