@@ -56,7 +56,7 @@ Let's start with a really simple example.
 Say you have an example.yaml file and now you want to load the contents.  
 Note that the following example files assumes that you have installed the fkYAML library somewhere on your machine.  
 See [the CMake Integration section]() for the other ways and modify the implementation if necessary.  
-Also, Make sure the example.yaml file is encoded in the UTF-8 format.  
+Also, make sure the example.yaml file is encoded in either the UTF-8, UTF-16BE/LE or UTF-32BE/LE format.  
 
 ```title="Project Structure"
 .
