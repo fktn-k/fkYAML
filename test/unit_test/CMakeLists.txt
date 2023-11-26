@@ -152,6 +152,7 @@ add_executable(
   ${TEST_TARGET}
   test_custom_from_node.cpp
   test_deserializer_class.cpp
+  test_encode_detector.cpp
   test_exception_class.cpp
   test_from_string.cpp
   test_input_adapter.cpp

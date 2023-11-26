@@ -19,9 +19,10 @@ Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization pro
 !!! note "Supported Unicode Encodings"
 
     fkYAML supports UTF-8, UTF-16 and UTF-32 encodings for input characters.  
-    Note that input characters must be encoded in the UTF-8 format when deserializing with `FILE*` or `std::istreams` objects.  
-    An array/container of `char`, `char16_t` and `char32_t` denotes that its contents are encoded in the UTF-8, UTF-16 and UTF-32 format, respectively.  
-    The deserialization process internally converts input characters into the the UTF-8 encoded ones if they are encoded in the UTF-16 or UTF-32 format.  
+    As the YAML specification shows [(here)](https://yaml.org/spec/1.2.2/#52-character-encodings), all input streams must begin with either a byte order mark(BOM) or an ASCII character, which will allow the encoding to be deduced by the pattern of the first few bytes of the input sequence.  
+    If a stream with `char` as a character type is used (including FILE pointers), the encoding will be automatically detected in the deserialization process, while an array/container of `char16_t` and `char32_t` denotes that its contents are encoded in the UTF-16BE/LE and UTF-32BE/LE format, respectively.  
+    Furthermore, a byte order mark (BOM) can be put only at the beginning of an input sequence.  
+    The deserialization process internally converts input characters into the UTF-8 encoded ones if they are encoded in the UTF-16 or UTF-32 format.  
 
 ## Overload (1)
 
