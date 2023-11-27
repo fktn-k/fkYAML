@@ -2,8 +2,8 @@
 
 !!! abstract Release Packages
 
-    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.2.1/fkYAML.tgz)
-    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.2.1/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.2.2/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.2.2/fkYAML.zip)
 
 ## Summary
 
