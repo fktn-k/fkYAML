@@ -1,3 +1,37 @@
+# **fkYAML version 0.2.2**
+
+!!! abstract Release Packages
+
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.2.1/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.2.1/fkYAML.zip)
+
+## Summary
+
+This release supports the UTF-8, UTF-16BE/LE, and UTF-32BE/LE encodings including BOMs in parsing YAML documents, and improved the contents of error messages by adding runtime information when exceptions are thrown.  
+Furthermore, bugs in the deserialization/serialization features have also been fixed.  
+
+!!! warning CAVEAT
+
+    The fkYAML library is an alpha quality software, at most.  
+    It would take a while until this library gets stabled version, since implementation and maintenance has been/will be done by a single developer.  
+    If you find a bug or wanted features, please open a discussion/issue to let me know.  
+    Any kind of contribution is very much welcomed.  
+
+## What's Changed
+
+### :zap: Improvements
+
+- \#209 Support auto-detection of Unicode encoding types including BOMs [\#223](https://github.com/fktn-k/fkYAML/pull/223) ([fktn-k](https://github.com/fktn-k))
+- \#214 Emit more descriptive errors [\#222](https://github.com/fktn-k/fkYAML/pull/222) ([fktn-k](https://github.com/fktn-k))
+- \#209 support UTF-16 / UTF-32 for deserialization input characters [\#221](https://github.com/fktn-k/fkYAML/pull/221) ([fktn-k](https://github.com/fktn-k))
+
+### :bug: Bug Fixes
+
+- \#218 Fixed lacking quotes & escapes during serializtion [\#220](https://github.com/fktn-k/fkYAML/pull/220) ([fktn-k](https://github.com/fktn-k))
+- \#217 Fix parse errors on strings containing single quotes [\#219](https://github.com/fktn-k/fkYAML/pull/219) ([fktn-k](https://github.com/fktn-k))
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.2.1...v0.2.2
+
 # **fkYAML version 0.2.1**
 
 !!! abstract Release Packages

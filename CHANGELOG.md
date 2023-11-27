@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.2.2](https://github.com/fktn-k/fkYAML/releases/tag/v0.2.2) (2023-11-27)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.2.1...v0.2.2)
+
+- \#209 Support auto-detection of Unicode encoding types including BOMs [\#223](https://github.com/fktn-k/fkYAML/pull/223) ([fktn-k](https://github.com/fktn-k))
+- \#214 Emit more descriptive errors [\#222](https://github.com/fktn-k/fkYAML/pull/222) ([fktn-k](https://github.com/fktn-k))
+- \#209 support UTF-16 / UTF-32 for deserialization input characters [\#221](https://github.com/fktn-k/fkYAML/pull/221) ([fktn-k](https://github.com/fktn-k))
+
+- \#218 Fixed lacking quotes & escapes during serializtion [\#220](https://github.com/fktn-k/fkYAML/pull/220) ([fktn-k](https://github.com/fktn-k))
+- \#217 Fix parse errors on strings containing single quotes [\#219](https://github.com/fktn-k/fkYAML/pull/219) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.2.1](https://github.com/fktn-k/fkYAML/releases/tag/v0.2.1) (2023-11-19)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.2.0...v0.2.1)
