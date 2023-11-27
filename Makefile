@@ -1,4 +1,4 @@
-.PHONY: update-version-macros CHANGELOG.md update-version
+.PHONY: update-version-macros CHANGELOG.md update-version fkYAML.natvis
 
 #################
 #   variables   #
@@ -80,6 +80,17 @@ valgrind:
 # pre-requisites: cmakelang
 cmake-format:
 	cmake-format $(CMAKE_SCRIPTS) -i -c .cmake-format.yaml
+
+#############################
+#   Natvis File Generator   #
+#############################
+
+fkYAML.natvis:
+	python3 -m venv venv
+	venv/bin/pip install --upgrade pip
+	venv/bin/pip install jinja2
+	venv/bin/python3 ./tool/natvis_generator/natvis_generator.py $(TARGET_VERSION_FULL)
+	rm -rf venv
 
 ###############
 #   Version   #
