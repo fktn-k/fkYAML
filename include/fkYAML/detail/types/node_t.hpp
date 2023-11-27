@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,6 +12,7 @@
 #define FK_YAML_DETAIL_TYPES_NODE_T_HPP_
 
 #include <cstdint>
+#include <string>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -33,6 +34,29 @@ enum class node_t : std::uint32_t
     FLOAT_NUMBER, //!< float number value type
     STRING,       //!< string value type
 };
+
+inline std::string to_string(node_t t)
+{
+    switch (t)
+    {
+    case node_t::SEQUENCE:
+        return "sequence";
+    case node_t::MAPPING:
+        return "mapping";
+    case node_t::NULL_OBJECT:
+        return "null";
+    case node_t::BOOLEAN:
+        return "boolean";
+    case node_t::INTEGER:
+        return "integer";
+    case node_t::FLOAT_NUMBER:
+        return "float";
+    case node_t::STRING:
+        return "string";
+    default:       // LCOV_EXCL_LINE
+        return ""; // LCOV_EXCL_LINE
+    }
+}
 
 } // namespace detail
 

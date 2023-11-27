@@ -152,6 +152,7 @@ add_executable(
   ${TEST_TARGET}
   test_custom_from_node.cpp
   test_deserializer_class.cpp
+  test_encode_detector.cpp
   test_exception_class.cpp
   test_from_string.cpp
   test_input_adapter.cpp
@@ -162,6 +163,7 @@ add_executable(
   test_node_ref_storage_class.cpp
   test_ordered_map_class.cpp
   test_serializer_class.cpp
+  test_utf8_encoding_class.cpp
   main.cpp)
 
 target_link_libraries(${TEST_TARGET} PRIVATE unit_test_config)

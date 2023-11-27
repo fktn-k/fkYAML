@@ -57,7 +57,7 @@ Since CMake v3.11, [`FetchContent`](https://cmake.org/cmake/help/latest/module/F
     FetchContent_Declare(
         fkYAML
         GIT_REPOSITORY https://github.com/fktn-k/fkYAML.git
-        GIT_TAG v0.2.1
+        GIT_TAG v0.2.2
     )
     FetchContent_MakeAvailable(fkYAML)
 

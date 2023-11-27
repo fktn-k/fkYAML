@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -69,6 +69,7 @@ public:
 
         lexical_token_t type = lexer.get_next_token();
         std::size_t cur_indent = lexer.get_last_token_begin_pos();
+        std::size_t cur_line = lexer.get_lines_processed();
 
         while (type != lexical_token_t::END_OF_BUFFER)
         {
@@ -78,7 +79,7 @@ public:
                 bool is_stack_empty = m_node_stack.empty();
                 if (is_stack_empty)
                 {
-                    throw fkyaml::exception("A key separator found without key.");
+                    throw fkyaml::parse_error("A key separator found without key.", cur_line, cur_indent);
                 }
                 break;
             }
@@ -94,7 +95,8 @@ public:
                 auto itr = m_anchor_table.find(alias_name);
                 if (itr == m_anchor_table.end())
                 {
-                    throw fkyaml::exception("The given anchor name must appear prior to the alias node.");
+                    throw fkyaml::parse_error(
+                        "The given anchor name must appear prior to the alias node.", cur_line, cur_indent);
                 }
                 assign_node_value(BasicNodeType::alias_of(m_anchor_table.at(alias_name)));
                 break;
@@ -135,7 +137,7 @@ public:
                 // if the current node is a mapping.
                 if (m_node_stack.empty())
                 {
-                    throw fkyaml::exception("Invalid sequence block prefix(- ) found.");
+                    throw fkyaml::parse_error("Invalid sequence block prefix(- ) found.", cur_line, cur_indent);
                 }
 
                 // move back to the previous sequence if necessary.
@@ -167,12 +169,14 @@ public:
                     *m_current_node = BasicNodeType::sequence();
                     set_yaml_version(*m_current_node);
                     cur_indent = lexer.get_last_token_begin_pos();
+                    cur_line = lexer.get_lines_processed();
                     continue;
                 }
 
                 *m_current_node = BasicNodeType::mapping();
                 set_yaml_version(*m_current_node);
                 cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
                 continue;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::mapping();
@@ -181,7 +185,7 @@ public:
             case lexical_token_t::MAPPING_FLOW_END:
                 if (!m_current_node->is_mapping())
                 {
-                    throw fkyaml::exception("Invalid mapping flow ending found.");
+                    throw fkyaml::parse_error("Invalid mapping flow ending found.", cur_line, cur_indent);
                 }
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
@@ -189,7 +193,7 @@ public:
             case lexical_token_t::NULL_VALUE: {
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string(), cur_indent);
+                    add_new_key(lexer.get_string(), cur_indent, cur_line);
                     break;
                 }
 
@@ -201,13 +205,15 @@ public:
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        add_new_key(str, cur_indent);
+                        add_new_key(str, cur_indent, cur_line);
                         cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType());
                     cur_indent = lexer.get_last_token_begin_pos();
+                    cur_line = lexer.get_lines_processed();
                     continue;
                 }
 
@@ -217,7 +223,7 @@ public:
             case lexical_token_t::BOOLEAN_VALUE: {
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string(), cur_indent);
+                    add_new_key(lexer.get_string(), cur_indent, cur_line);
                     break;
                 }
 
@@ -230,13 +236,15 @@ public:
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        add_new_key(str, cur_indent);
+                        add_new_key(str, cur_indent, cur_line);
                         cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType(boolean));
                     cur_indent = lexer.get_last_token_begin_pos();
+                    cur_line = lexer.get_lines_processed();
                     continue;
                 }
 
@@ -246,7 +254,7 @@ public:
             case lexical_token_t::INTEGER_VALUE: {
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string(), cur_indent);
+                    add_new_key(lexer.get_string(), cur_indent, cur_line);
                     break;
                 }
 
@@ -259,13 +267,15 @@ public:
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        add_new_key(str, cur_indent);
+                        add_new_key(str, cur_indent, cur_line);
                         cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType(integer));
                     cur_indent = lexer.get_last_token_begin_pos();
+                    cur_line = lexer.get_lines_processed();
                     continue;
                 }
 
@@ -275,7 +285,7 @@ public:
             case lexical_token_t::FLOAT_NUMBER_VALUE: {
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string(), cur_indent);
+                    add_new_key(lexer.get_string(), cur_indent, cur_line);
                     break;
                 }
 
@@ -288,13 +298,15 @@ public:
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        add_new_key(str, cur_indent);
+                        add_new_key(str, cur_indent, cur_line);
                         cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType(float_val));
                     cur_indent = lexer.get_last_token_begin_pos();
+                    cur_line = lexer.get_lines_processed();
                     continue;
                 }
 
@@ -304,7 +316,7 @@ public:
             case lexical_token_t::STRING_VALUE: {
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string(), cur_indent);
+                    add_new_key(lexer.get_string(), cur_indent, cur_line);
                     break;
                 }
 
@@ -316,13 +328,15 @@ public:
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        add_new_key(str, cur_indent);
+                        add_new_key(str, cur_indent, cur_line);
                         cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
                         continue;
                     }
 
                     assign_node_value(BasicNodeType(str));
                     cur_indent = lexer.get_last_token_begin_pos();
+                    cur_line = lexer.get_lines_processed();
                     continue;
                 }
 
@@ -334,12 +348,13 @@ public:
             case lexical_token_t::END_OF_DOCUMENT:
                 // TODO: This token should be handled to support multiple documents.
                 break;
-            default:                                                         // LCOV_EXCL_LINE
-                throw fkyaml::exception("Unsupported lexical token found."); // LCOV_EXCL_LINE
+            default:                                                                                 // LCOV_EXCL_LINE
+                throw fkyaml::parse_error("Unsupported lexical token found.", cur_line, cur_indent); // LCOV_EXCL_LINE
             }
 
             type = lexer.get_next_token();
             cur_indent = lexer.get_last_token_begin_pos();
+            cur_line = lexer.get_lines_processed();
         }
 
         m_current_node = nullptr;
@@ -354,7 +369,7 @@ public:
 private:
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
-    void add_new_key(const string_type& key, const std::size_t indent)
+    void add_new_key(const string_type& key, const std::size_t indent, const std::size_t line)
     {
         if (!m_indent_stack.empty() && indent < m_indent_stack.back())
         {
@@ -362,7 +377,7 @@ private:
             bool is_indent_valid = (target_itr != m_indent_stack.rend());
             if (!is_indent_valid)
             {
-                throw fkyaml::exception("Detected invalid indentaion.");
+                throw fkyaml::parse_error("Detected invalid indentaion.", line, indent);
             }
 
             auto pop_num = std::distance(m_indent_stack.rbegin(), target_itr);
@@ -394,7 +409,7 @@ private:
             auto itr = map.find(key);
             if (itr != map.end())
             {
-                throw fkyaml::exception("Detected duplication in mapping keys.");
+                throw fkyaml::parse_error("Detected duplication in mapping keys.", line, indent);
             }
         }
 

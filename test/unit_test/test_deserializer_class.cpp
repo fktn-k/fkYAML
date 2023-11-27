@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -29,7 +29,8 @@ TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTe
     SECTION("error cases")
     {
         auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"), std::string("- - : foo"));
-        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::exception);
+        REQUIRE_THROWS_AS(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
     }
 }
 
@@ -175,7 +176,7 @@ TEST_CASE("DeserializerClassTest_DeserializeInvalidIndentation", "[DeserializerC
 
     REQUIRE_THROWS_AS(
         root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  bar: baz\n qux: true")),
-        fkyaml::exception);
+        fkyaml::parse_error);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeDuplicateKeys", "[DeserializerClassTest]")
@@ -184,7 +185,7 @@ TEST_CASE("DeserializerClassTest_DeserializeDuplicateKeys", "[DeserializerClassT
     fkyaml::node root;
 
     REQUIRE_THROWS_AS(
-        root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\nfoo: baz")), fkyaml::exception);
+        root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\nfoo: baz")), fkyaml::parse_error);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerClassTest]")
@@ -944,7 +945,7 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
 
     SECTION("Input source No.2. (invalid)")
     {
-        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: }")), fkyaml::exception);
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: }")), fkyaml::parse_error);
     }
 }
 
@@ -1028,7 +1029,7 @@ TEST_CASE("DeserializerClassTest_TagDirectiveTest", "[DeserializerClassTest]")
 TEST_CASE("DeserializerClassTest_DeserializeNoMachingAnchorTest", "[DeserializerClassTest]")
 {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
-    REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("foo: *anchor")), fkyaml::exception);
+    REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("foo: *anchor")), fkyaml::parse_error);
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeDocumentWithMarkersTest", "[DeserializerClassTest]")

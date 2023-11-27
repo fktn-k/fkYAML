@@ -16,6 +16,14 @@ static basic_node deserialize(PtrType&& ptr, std::size_t size); // (3)
 Deserializes from compatible input sources.  
 Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization process detects an error from the input sources.  
 
+!!! note "Supported Unicode Encodings"
+
+    fkYAML supports UTF-8, UTF-16 and UTF-32 encodings for input characters.  
+    As the YAML specification shows [(here)](https://yaml.org/spec/1.2.2/#52-character-encodings), all input streams must begin with either a byte order mark(BOM) or an ASCII character, which will allow the encoding to be deduced by the pattern of the first few bytes of the input sequence.  
+    If a stream with `char` as a character type is used (including FILE pointers), the encoding will be automatically detected in the deserialization process, while an array/container of `char16_t` and `char32_t` denotes that its contents are encoded in the UTF-16BE/LE and UTF-32BE/LE format, respectively.  
+    Furthermore, a byte order mark (BOM) can be put only at the beginning of an input sequence.  
+    The deserialization process internally converts input characters into the UTF-8 encoded ones if they are encoded in the UTF-16 or UTF-32 format.  
+
 ## Overload (1)
 
 ```cpp
@@ -30,10 +38,10 @@ static basic_node deserialize(InputType&& input);
 
     * an `std::istream` object
     * a `FILE` pointer (must not be `nullptr`)
-    * a C-style array of characters
-    * a pointer to a null-terminated string of single byte characters.
+    * a C-style array of characters (`char`, `char16_t` or `char32_t`. See the "Supported Unicode Encodings" above.)
+        * char[N], char16_t[N], or char32_t[N] (N: the size of an array)
     * a container `obj` for which `begin(obj)` and `end(obj)` produces a valid pair of iterators
-        * std::string, std::array<char>, and the likes.
+        * std::basic_string, std::array, and the likes.
 
 ### **Parameters**
 

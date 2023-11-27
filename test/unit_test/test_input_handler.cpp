@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -192,6 +192,8 @@ TEST_CASE("InputHandlerTest_TestNextCharTest", "[InputHandlerTest]")
 
     REQUIRE(handler.get_next() == 's');
     REQUIRE(handler.get_next() == 't');
+    REQUIRE(handler.test_next_char('t') == false);
+
     REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
     REQUIRE(handler.test_next_char('t') == false);
     REQUIRE(handler.get_cur_pos_in_line() == 4);
