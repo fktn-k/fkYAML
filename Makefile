@@ -91,7 +91,6 @@ update-params-for-natvis:
 
 fkYAML.natvis: update-params-for-natvis
 	make -C ./tool/natvis_generator generate
-	rm -rf venv
 
 ###############
 #   Version   #
