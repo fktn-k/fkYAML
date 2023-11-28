@@ -32,6 +32,7 @@ all:
 	@echo "clang-sanitizers - check whether no runtime issue is detected while running the unit test app."
 	@echo "clang-tidy - check whether source files detect no issues during static code analysis."
 	@echo "cmake-format - check whether CMake scripts are well formatted."
+	@echo "fkYAML.natvis - generate the Natvis debugger visualization file."
 	@echo "html-coverage - generate HTML coverage report."
 	@echo "iwyu - check whether source files are each self-contained."
 	@echo "lcov-coverage - generate coverage data with lcov."
@@ -81,15 +82,15 @@ valgrind:
 cmake-format:
 	cmake-format $(CMAKE_SCRIPTS) -i -c .cmake-format.yaml
 
-#############################
-#   Natvis File Generator   #
-#############################
+##########################################
+#   Natvis Debugger Visualization File   #
+##########################################
 
-fkYAML.natvis:
-	python3 -m venv venv
-	venv/bin/pip install --upgrade pip
-	venv/bin/pip install jinja2
-	venv/bin/python3 ./tool/natvis_generator/natvis_generator.py $(TARGET_VERSION_FULL)
+update-params-for-natvis:
+	echo { \"version\": \"$(TARGET_VERSION_FULL)\" } > ./tool/natvis_generator/params.json
+
+fkYAML.natvis: update-params-for-natvis
+	make -C ./tool/natvis_generator generate
 	rm -rf venv
 
 ###############
@@ -136,7 +137,7 @@ CHANGELOG.md:
 		--release-url https://github.com/fktn-k/fkYAML/releases/tag/%s \
 		--future-release v$(TARGET_VERSION_FULL)
 
-update-version: update-version-macros update-project-version reuse CHANGELOG.md update-git-tag-ref
+update-version: fkYAML.natvis update-version-macros update-project-version reuse update-git-tag-ref CHANGELOG.md 
 	@echo "updated version to $(TARGET_VERSION_FULL)"
 
 ################

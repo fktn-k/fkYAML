@@ -7,4 +7,4 @@
 /docs/mkdocs/venv/
 
 # natvis generator
-/venv/
+/tool/natvis_generator/venv/
