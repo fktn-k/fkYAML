@@ -82,6 +82,15 @@ target_include_directories(
   ${FK_YAML_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${FK_YAML_INCLUDE_BUILD_DIR}>
                                    $<INSTALL_INTERFACE:${FK_YAML_INCLUDE_INSTALL_DIR}>)
 
+# add .natvis file to apply custom debug view for MSVC
+if(MSVC)
+  set(FK_YAML_INSTALL_NATVIS ON)
+  set(FK_YAML_NATVIS_FILE "fkYAML.natvis")
+  target_sources(
+    ${FK_YAML_TARGET_NAME} INTERFACE $<INSTALL_INTERFACE:${FK_YAML_NATVIS_FILE}>
+                                     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${FK_YAML_NATVIS_FILE}>)
+endif()
+
 ############################
 #   Integrate with tools   #
 ############################
@@ -129,6 +138,10 @@ if(FK_YAML_INSTALL)
   install(DIRECTORY "${FK_YAML_INCLUDE_BUILD_DIR}" DESTINATION include)
   install(FILES "${FK_YAML_CMAKE_PROJECT_CONFIG_FILE}" "${FK_YAML_CMAKE_VERSION_CONFIG_FILE}"
           DESTINATION "${FK_YAML_CONFIG_INSTALL_DIR}")
+  if(FK_YAML_INSTALL_NATVIS)
+    install(FILES ${FK_YAML_NATVIS_FILE}
+            DESTINATION .)
+  endif()
   export(
     TARGETS ${FK_YAML_TARGET_NAME}
     NAMESPACE ${PROJECT_NAME}::
