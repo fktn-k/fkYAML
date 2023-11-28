@@ -10,6 +10,7 @@ def check_version_format(ver):
         raise ValueError('Invalid semantic version specified. ver=' + ver)
     return ver
 
+
 if __name__ == '__main__':
 
     with open('params.json') as j:
