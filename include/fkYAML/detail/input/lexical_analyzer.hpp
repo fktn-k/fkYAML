@@ -57,6 +57,19 @@ private:
     using char_int_type = typename char_traits_type::int_type;
     using input_string_type = typename input_handler_type::string_type;
 
+    enum class block_style_indicator_t
+    {
+        LITERAL, //!< keeps newlines inside the block as they are indicated by a pipe `|`.
+        FOLDED,  //!< replaces newlines inside the block with spaces indicated by a right angle bracket `>`.
+    };
+
+    enum class chomping_indicator_t
+    {
+        STRIP, //!< excludes final line breaks and traiing empty lines indicated by `-`.
+        KEEP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
+        CLIP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
+    };
+
 public:
     using boolean_type = typename BasicNodeType::boolean_type;
     using integer_type = typename BasicNodeType::integer_type;
@@ -235,6 +248,18 @@ public:
             }
 
             return m_last_token_type = scan_string();
+        }
+        case '|': {
+            chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
+            std::size_t indent = 0;
+            get_block_style_metadata(chomp_type, indent);
+            return m_last_token_type = scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+        }
+        case '>': {
+            chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
+            std::size_t indent = 0;
+            get_block_style_metadata(chomp_type, indent);
+            return m_last_token_type = scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
         case 'F':
         case 'f': {
@@ -1060,6 +1085,235 @@ private:
         }
     }
 
+    lexical_token_t scan_block_style_string_token(block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent)
+    {
+        m_value_buffer.clear();
+
+        // Handle leading all-space lines.
+        char_int_type current = m_input_handler.get_current();
+        for (;; current = m_input_handler.get_next())
+        {
+            if (current == ' ')
+            {
+                continue;
+            }
+
+            if (current == '\r')
+            {
+                current = m_input_handler.get_next();
+            }
+            if (current == '\n')
+            {
+                m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                continue;
+            }
+
+            if (current == end_of_input)
+            {
+                if (chomp != chomping_indicator_t::KEEP)
+                {
+                    m_value_buffer.clear();
+                }
+                return lexical_token_t::STRING_VALUE;
+            }
+
+            break;
+        }
+
+        std::size_t cur_indent = m_input_handler.get_cur_pos_in_line();
+        if (indent > 0 && cur_indent < indent)
+        {
+            emit_error("A block style scalar is less indented than the indicated level.");
+        }
+
+        // TODO: preserve and compare the last indentation with `cur_indent`
+        if (indent == 0)
+        {
+            indent = cur_indent;
+        }
+
+        int chars_in_line = 0;
+        bool is_extra_indented = false;
+        if (cur_indent > indent)
+        {
+            std::size_t diff = cur_indent - indent;
+            if (style == block_style_indicator_t::FOLDED)
+            {
+                m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                is_extra_indented = true;
+            }
+            while (diff > 0)
+            {
+                m_value_buffer.push_back(char_traits_type::to_char_type(' '));
+                --diff;
+                ++chars_in_line;
+            }
+        }
+
+        for (; current != end_of_input; current = m_input_handler.get_next())
+        {
+            if (current == '\r')
+            {
+                // Ignore CR assuming the next character is LF.
+                continue;
+            }
+
+            if (current == '\n')
+            {
+                if (style == block_style_indicator_t::LITERAL)
+                {
+                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                }
+                else // block_style_indicator_t::FOLDED
+                {
+                    if (chars_in_line == 0)
+                    {
+                        // Just append a newline if the current line is empty.
+                        m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                        is_extra_indented = false;
+                        continue;
+                    }
+
+                    if (is_extra_indented)
+                    {
+                        // A line being more indented is not folded.
+                        m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                        chars_in_line = 0;
+                        is_extra_indented = false;
+                        continue;
+                    }
+
+                    // Append a newline if the next line is an empty line.
+                    bool is_end_of_token = false;
+                    bool is_next_empty = false;
+                    for (std::size_t i = 0; i < indent; i++)
+                    {
+                        current = m_input_handler.get_next();
+                        if (current == ' ')
+                        {
+                            continue;
+                        }
+
+                        if (current == '\r')
+                        {
+                            current = m_input_handler.get_next();
+                        }
+                        if (current == '\n')
+                        {
+                            is_next_empty = true;
+                            break;
+                        }
+
+                        is_end_of_token = true;
+                        break;
+                    }
+
+                    if (is_end_of_token)
+                    {
+                        m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                        break;
+                    }
+
+                    if (is_next_empty)
+                    {
+                        m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                    }
+                    else
+                    {
+                        switch (m_input_handler.get_next())
+                        {
+                        case '\r': {
+                            m_input_handler.get_next();
+                            FK_YAML_ASSERT(m_input_handler.get_current() == '\n');
+                            m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                            break;
+                        }
+                        case '\n':
+                            m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                            break;
+                        case ' ':
+                            // The next line is more indented, so a newline will be appended in the next loop.
+                            m_input_handler.unget();
+                            break;
+                        default:
+                            m_value_buffer.push_back(char_traits_type::to_char_type(' '));
+                            m_input_handler.unget();
+                            break;
+                        }
+                    }
+                }
+
+                // Reset the values for the next line.
+                chars_in_line = 0;
+                is_extra_indented = false;
+
+                continue;
+            }
+
+            // Handle indentation
+            cur_indent = m_input_handler.get_cur_pos_in_line();
+            if (cur_indent < indent)
+            {
+                if (current != ' ')
+                {
+                    // Interpret less indented non-space characters as the start of next token.
+                    break;
+                }
+                // skip a space if not yet indented enough
+                continue;
+            }
+
+            if (style == block_style_indicator_t::FOLDED && chars_in_line == 0 && current == ' ')
+            {
+                // A line being more indented is not folded.
+                m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                is_extra_indented = true;
+            }
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            ++chars_in_line;
+        }
+
+        // Manipulate the trailing line endings chomping indicator type.
+        switch (chomp)
+        {
+        case chomping_indicator_t::STRIP:
+            while (true)
+            {
+                // Empty strings are handled above, so no check for the case.
+                auto last_char = m_value_buffer.back();
+                if (last_char != '\n')
+                {
+                    break;
+                }
+                m_value_buffer.pop_back();
+            }
+            break;
+        case chomping_indicator_t::CLIP: {
+            auto last_char = m_value_buffer.back();
+            if (last_char != '\n')
+            {
+                // No need to chomp the trailing newlines.
+                break;
+            }
+            while (true)
+            {
+                // Strings with only newlines are handled above, so no check for the case.
+                auto second_last_char = m_value_buffer[m_value_buffer.size() - 2];
+                if (second_last_char != '\n')
+                {
+                    break;
+                }
+                m_value_buffer.pop_back();
+            }
+            break;
+        }
+        case chomping_indicator_t::KEEP:
+            break;
+        }
+
+        return lexical_token_t::STRING_VALUE;
+    }
+
     /// @brief Handle unescaped control characters.
     /// @param c A target character.
     void handle_unescaped_control_char(char_int_type c)
@@ -1150,6 +1404,38 @@ private:
         {
             m_value_buffer.push_back(m_encode_buffer[i]);
         }
+    }
+
+    void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
+    {
+        char_int_type ch = m_input_handler.get_next();
+
+        chomp_type = chomping_indicator_t::CLIP;
+        if (ch == '-')
+        {
+            chomp_type = chomping_indicator_t::STRIP;
+            ch = m_input_handler.get_next();
+        }
+        else if (ch == '+')
+        {
+            chomp_type = chomping_indicator_t::KEEP;
+            ch = m_input_handler.get_next();
+        }
+
+        if (ch == '0')
+        {
+            emit_error("An indentation level for a block style scalar cannot be \'0\'");
+        }
+
+        indent = 0;
+        if (std::isdigit(ch))
+        {
+            indent = convert_hex_char_to_byte(ch);
+            ch = m_input_handler.get_next();
+        }
+
+        // skip characters including comments.
+        skip_until_line_end();
     }
 
     /// @brief Skip white spaces, tabs and newline codes until any other kind of character is found.
