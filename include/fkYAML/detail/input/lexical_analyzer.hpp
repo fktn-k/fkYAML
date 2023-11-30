@@ -253,13 +253,15 @@ public:
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             std::size_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type = scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            return m_last_token_type =
+                       scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
         }
         case '>': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             std::size_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type = scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            return m_last_token_type =
+                       scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
         case 'F':
         case 'f': {
@@ -1085,7 +1087,8 @@ private:
         }
     }
 
-    lexical_token_t scan_block_style_string_token(block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent)
+    lexical_token_t scan_block_style_string_token(
+        block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent)
     {
         m_value_buffer.clear();
 

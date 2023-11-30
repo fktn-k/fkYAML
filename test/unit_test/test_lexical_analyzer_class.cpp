@@ -845,9 +845,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("empty literal string scalar with strip chomping")
     {
-        const char input[] =
-            "|-\r\n"
-            "  \r\n";
+        const char input[] = "|-\r\n"
+                             "  \r\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -857,9 +856,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("empty literal string scalar with clip chomping")
     {
-        const char input[] =
-            "|\r\n"
-            "  \r\n";
+        const char input[] = "|\r\n"
+                             "  \r\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -869,9 +867,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("empty literal string scalar with keep chomping")
     {
-        const char input[] =
-            "|+\r\n"
-            "  \r\n";
+        const char input[] = "|+\r\n"
+                             "  \r\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -881,9 +878,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal string scalar with 0 indent level.")
     {
-        const char input[] =
-            "|0\n"
-            "foo";
+        const char input[] = "|0\n"
+                             "foo";
 
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -891,9 +887,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("less indented literal string scalar")
     {
-        const char input[] =
-            "|2\n"
-            " foo";
+        const char input[] = "|2\n"
+                             " foo";
 
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -901,10 +896,9 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal scalar with the first line being more indented than the indicated level")
     {
-        const char input[] =
-            "|2\n"
-            "    foo\n"
-            "  bar\n";
+        const char input[] = "|2\n"
+                             "    foo\n"
+                             "  bar\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -914,10 +908,9 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal string scalar with windows style newlines.")
     {
-        const char input[] =
-            "|\r\n"
-            "  foo\r\n"
-            "  bar\r\n";
+        const char input[] = "|\r\n"
+                             "  foo\r\n"
+                             "  bar\r\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -927,14 +920,13 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal string scalar with implicit indentation and strip chomping.")
     {
-        const char input[] =
-            "|-\n"
-            "\n"
-            "  foo\n"
-            "  bar\n"
-            "\n"
-            "  baz\n"
-            "\n";
+        const char input[] = "|-\n"
+                             "\n"
+                             "  foo\n"
+                             "  bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -944,13 +936,12 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal string scalar with explicit indentation and strip chomping.")
     {
-        const char input[] =
-            "|-2\n"
-            "  foo\n"
-            "    bar\n"
-            "\n"
-            "  baz\n"
-            "\n";
+        const char input[] = "|-2\n"
+                             "  foo\n"
+                             "    bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -960,14 +951,13 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal string scalar with implicit indentation and clip chomping.")
     {
-        const char input[] =
-            "|\n"
-            "\n"
-            "  foo\n"
-            "  bar\n"
-            "\n"
-            "  baz\n"
-            "\n";
+        const char input[] = "|\n"
+                             "\n"
+                             "  foo\n"
+                             "  bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -977,13 +967,12 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal string scalar with explicit indentation and clip chomping.")
     {
-        const char input[] =
-            "|2\n"
-            "  foo\n"
-            "    bar\n"
-            "\n"
-            "  baz\n"
-            "\n";
+        const char input[] = "|2\n"
+                             "  foo\n"
+                             "    bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -993,12 +982,11 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal string scalar with clip chomping and no trailing newlines")
     {
-        const char input[] =
-            "|2\n"
-            "  foo\n"
-            "    bar\n"
-            "\n"
-            "  baz";
+        const char input[] = "|2\n"
+                             "  foo\n"
+                             "    bar\n"
+                             "\n"
+                             "  baz";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1008,14 +996,13 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal string scalar with implicit indentation and keep chomping.")
     {
-        const char input[] =
-            "|+\n"
-            "\n"
-            "  foo\n"
-            "  bar\n"
-            "\n"
-            "  baz\n"
-            "\n";
+        const char input[] = "|+\n"
+                             "\n"
+                             "  foo\n"
+                             "  bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1025,13 +1012,12 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerC
 
     SECTION("literal string scalar with explicit indentation and keep chomping.")
     {
-        const char input[] =
-            "|+2\n"
-            "  foo\n"
-            "    bar\n"
-            "\n"
-            "  baz\n"
-            "\n";
+        const char input[] = "|+2\n"
+                             "  foo\n"
+                             "    bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1046,9 +1032,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("empty folded string scalar with strip chomping")
     {
-        const char input[] =
-            ">-\r\n"
-            "  \r\n";
+        const char input[] = ">-\r\n"
+                             "  \r\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1058,9 +1043,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("empty folded string scalar with clip chomping")
     {
-        const char input[] =
-            ">\r\n"
-            "  \r\n";
+        const char input[] = ">\r\n"
+                             "  \r\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1070,9 +1054,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("empty folded string scalar with keep chomping")
     {
-        const char input[] =
-            ">+\r\n"
-            "  \r\n";
+        const char input[] = ">+\r\n"
+                             "  \r\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1082,9 +1065,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("folded string scalar with 0 indent level.")
     {
-        const char input[] =
-            "|0\n"
-            "foo";
+        const char input[] = "|0\n"
+                             "foo";
 
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -1092,9 +1074,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("less indented folded string scalar")
     {
-        const char input[] =
-            ">2\n"
-            " foo";
+        const char input[] = ">2\n"
+                             " foo";
 
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -1102,10 +1083,9 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("folded string scalar with the first line being more indented than the indicated level")
     {
-        const char input[] =
-            ">2\n"
-            "    foo\n"
-            "  bar\n";
+        const char input[] = ">2\n"
+                             "    foo\n"
+                             "  bar\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1115,10 +1095,9 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("folded string scalar with the non-first line being more indented than the indicated level")
     {
-        const char input[] =
-            ">2\n"
-            "  foo\n"
-            "    bar\n";
+        const char input[] = ">2\n"
+                             "  foo\n"
+                             "    bar\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1128,13 +1107,12 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("folded string scalar with windows style newlines.")
     {
-        const char input[] =
-            ">\r\n"
-            "  foo\r\n"
-            "  \r\n"
-            "\r\n"
-            "  bar\r\n"
-            " \r\n";
+        const char input[] = ">\r\n"
+                             "  foo\r\n"
+                             "  \r\n"
+                             "\r\n"
+                             "  bar\r\n"
+                             " \r\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1144,12 +1122,11 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("folded string scalar with implicit indentation and strip chomping.")
     {
-        const char input[] =
-            ">-\n"
-            "  foo\n"
-            "  bar\n"
-            " \n"
-            "\n";
+        const char input[] = ">-\n"
+                             "  foo\n"
+                             "  bar\n"
+                             " \n"
+                             "\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1159,12 +1136,11 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("folded string scalar with implicit indentation and clip chomping.")
     {
-        const char input[] =
-            ">\n"
-            "  foo\n"
-            "  bar\n"
-            "  \n"
-            "\n";
+        const char input[] = ">\n"
+                             "  foo\n"
+                             "  bar\n"
+                             "  \n"
+                             "\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1174,12 +1150,11 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerCl
 
     SECTION("folded string scalar with implicit indentation and keep chomping.")
     {
-        const char input[] =
-            ">+\n"
-            "  foo\n"
-            "  bar\n"
-            " \n"
-            "\n";
+        const char input[] = ">+\n"
+                             "  foo\n"
+                             "  bar\n"
+                             " \n"
+                             "\n";
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
