@@ -31,7 +31,6 @@ all:
 	@echo "clang-format - check whether source files are well formatted."
 	@echo "clang-sanitizers - check whether no runtime issue is detected while running the unit test app."
 	@echo "clang-tidy - check whether source files detect no issues during static code analysis."
-	@echo "cmake-format - check whether CMake scripts are well formatted."
 	@echo "fkYAML.natvis - generate the Natvis debugger visualization file."
 	@echo "html-coverage - generate HTML coverage report."
 	@echo "iwyu - check whether source files are each self-contained."
@@ -73,14 +72,6 @@ valgrind:
 	cmake -B build_valgrind -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
 	cmake --build build_valgrind --config Debug -j $(JOBS)
 	ctest -C Debug -T memcheck --test-dir build_valgrind -j $(JOBS)
-
-###############################
-#   CMake Scripts Formatter   #
-###############################
-
-# pre-requisites: cmakelang
-cmake-format:
-	cmake-format $(CMAKE_SCRIPTS) -i -c .cmake-format.yaml
 
 ##########################################
 #   Natvis Debugger Visualization File   #
