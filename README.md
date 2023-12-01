@@ -160,7 +160,6 @@ Thanks a lot!
 
 - [**Clang**](https://clang.llvm.org/) for compilation, coding style checks, and/or static/runtime analysis.
 - [**CMake**](https://cmake.org/) for automation of build & testing.
-- [**cmake-format**](https://github.com/cheshirekow/cmake_format) as a linter for CMake scripts.
 - [**Coveralls**](https://coveralls.io/) to measure [code coverage](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).
 - [**Catch2**](https://github.com/catchorg/Catch2) as a unit-test framework.
 - [**github-changelog-generator**](https://github.com/github-changelog-generator/github-changelog-generator) to generate the [CHANGELOG.md](https://github.com/fktn-k/fkYAML/tree/develop/CHANGELOG.md) file.
