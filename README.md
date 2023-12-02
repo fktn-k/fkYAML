@@ -154,8 +154,7 @@ SOFTWARE.
 
 ## How to contribute
 
-See the [`CONTRIBUTING.md`](https://github.com/fktn-k/fkYAML/blob/develop/CONTRIBUTING.md) file for information.  
-We 
+See the [`CONTRIBUTING.md`](https://github.com/fktn-k/fkYAML/blob/develop/CONTRIBUTING.md) file for detailed information.  
 
 ## Used third-party tools
 
