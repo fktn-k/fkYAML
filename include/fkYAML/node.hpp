@@ -1238,8 +1238,8 @@ inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
     return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);
 }
 
-} // inline namespace yaml_literals
-} // inline namespace literals
+} // namespace yaml_literals
+} // namespace literals
 
 FK_YAML_NAMESPACE_END
 
