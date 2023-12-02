@@ -1218,6 +1218,29 @@ inline std::istream& operator>>(
 /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/node/
 using node = basic_node<>;
 
+inline namespace literals
+{
+inline namespace yaml_literals
+{
+
+inline fkyaml::node operator"" _yaml(const char* s, std::size_t n)
+{
+    return fkyaml::node::deserialize((const char*)s, (const char*)s + n);
+}
+
+inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n)
+{
+    return fkyaml::node::deserialize((const char16_t*)s, (const char16_t*)s + n);
+}
+
+inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
+{
+    return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);
+}
+
+} // inline namespace yaml_literals
+} // inline namespace literals
+
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_NODE_HPP_ */
