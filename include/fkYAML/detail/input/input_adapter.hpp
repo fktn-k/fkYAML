@@ -117,24 +117,27 @@ private:
         {
             if (m_current == m_end)
             {
-                return std::char_traits<char_type>::eof();
+                if (m_encoded_buf_size == 0)
+                {
+                    return std::char_traits<char_type>::eof();
+                }
             }
 
-            while (m_current != m_end && m_elems_to_read > 0)
+            while (m_current != m_end && m_encoded_buf_size < 2)
             {
                 switch (m_encode_type)
                 {
                 case encode_t::UTF_16BE_N:
                 case encode_t::UTF_16BE_BOM:
-                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(*m_current) << 8);
+                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(*m_current) << 8);
                     ++m_current;
-                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(*m_current);
+                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(*m_current);
                     break;
                 case encode_t::UTF_16LE_N:
                 case encode_t::UTF_16LE_BOM: {
-                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(*m_current);
+                    m_encoded_buffer[m_encoded_buf_size] = char16_t(*m_current);
                     ++m_current;
-                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(*m_current) << 8);
+                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(*m_current) << 8);
                     break;
                 }
                 default: // LCOV_EXCL_LINE
@@ -142,16 +145,18 @@ private:
                     break; // LCOV_EXCL_LINE
                 }
                 ++m_current;
-                --m_elems_to_read;
+                ++m_encoded_buf_size;
             }
 
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, m_elems_to_read, m_utf8_buf_size);
+            std::size_t consumed_size = 0;
+            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
 
-            if (m_elems_to_read == 1)
+            if (consumed_size == 1)
             {
                 m_encoded_buffer[0] = m_encoded_buffer[1];
                 m_encoded_buffer[1] = 0;
             }
+            m_encoded_buf_size -= consumed_size;
 
             m_utf8_buf_index = 0;
         }
@@ -220,8 +225,8 @@ private:
     encode_t m_encode_type {encode_t::UTF_8_N};
     /// The buffer for decoding characters read from the input.
     std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements to be read from the input next time.
-    std::size_t m_elems_to_read {2};
+    /// The number of elements in `m_encoded_buffer`.
+    std::size_t m_encoded_buf_size {0};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
     /// The next index in `m_utf8_buffer` to read.
@@ -271,22 +276,25 @@ public:
         {
             if (m_current == m_end)
             {
-                return std::char_traits<char_type>::eof();
+                if (m_encoded_buf_size == 0)
+                {
+                    return std::char_traits<char_type>::eof();
+                }
             }
 
-            while (m_current != m_end && m_elems_to_read > 0)
+            while (m_current != m_end && m_encoded_buf_size < 2)
             {
                 switch (m_encode_type)
                 {
                 case encode_t::UTF_16BE_N:
                 case encode_t::UTF_16BE_BOM:
-                    m_encoded_buffer[2 - m_elems_to_read] = *m_current;
+                    m_encoded_buffer[m_encoded_buf_size] = *m_current;
                     break;
                 case encode_t::UTF_16LE_N:
                 case encode_t::UTF_16LE_BOM: {
                     char16_t tmp = *m_current;
-                    m_encoded_buffer[2 - m_elems_to_read] = char16_t((tmp & 0x00FFu) << 8);
-                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t((tmp & 0xFF00u) >> 8);
+                    m_encoded_buffer[m_encoded_buf_size] = char16_t((tmp & 0x00FFu) << 8);
+                    m_encoded_buffer[m_encoded_buf_size] |= char16_t((tmp & 0xFF00u) >> 8);
                     break;
                 }
                 default: // LCOV_EXCL_LINE
@@ -294,16 +302,18 @@ public:
                     break; // LCOV_EXCL_LINE
                 }
                 ++m_current;
-                --m_elems_to_read;
+                ++m_encoded_buf_size;
             }
 
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, m_elems_to_read, m_utf8_buf_size);
+            std::size_t consumed_size = 0;
+            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
 
-            if (m_elems_to_read == 1)
+            if (consumed_size == 1)
             {
                 m_encoded_buffer[0] = m_encoded_buffer[1];
                 m_encoded_buffer[1] = 0;
             }
+            m_encoded_buf_size -= consumed_size;
 
             m_utf8_buf_index = 0;
         }
@@ -322,8 +332,8 @@ private:
     encode_t m_encode_type {encode_t::UTF_16BE_N};
     /// The buffer for decoding characters read from the input.
     std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements to be read from the input next time.
-    std::size_t m_elems_to_read {2};
+    /// The number of elements in `m_encoded_buffer`.
+    std::size_t m_encoded_buf_size {0};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
     /// The next index in `m_utf8_buffer` to read.
@@ -483,7 +493,7 @@ private:
     {
         char ch = 0;
         size_t size = std::fread(&ch, sizeof(char), 1, m_file);
-        if (size == sizeof(char))
+        if (size == 1)
         {
             return std::char_traits<char_type>::to_int_type(ch);
         }
@@ -496,28 +506,20 @@ private:
     {
         if (m_utf8_buf_index == m_utf8_buf_size)
         {
-            char byte = 0;
-            size_t size = std::fread(&byte, sizeof(char), 1, m_file);
-            if (size != sizeof(char))
-            {
-                return std::char_traits<char_type>::eof();
-            }
-
-            do
+            char chars[2] = {0, 0};
+            while (m_encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2)
             {
                 switch (m_encode_type)
                 {
                 case encode_t::UTF_16BE_N:
                 case encode_t::UTF_16BE_BOM:
-                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(byte) << 8);
-                    size = std::fread(&byte, sizeof(char), 1, m_file);
-                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(byte));
+                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << 8);
+                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]));
                     break;
                 case encode_t::UTF_16LE_N:
                 case encode_t::UTF_16LE_BOM: {
-                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(byte));
-                    size = std::fread(&byte, sizeof(char), 1, m_file);
-                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(byte) << 8);
+                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]));
+                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]) << 8);
                     break;
                 }
                 default: // LCOV_EXCL_LINE
@@ -525,16 +527,23 @@ private:
                     break; // LCOV_EXCL_LINE
                 }
 
-                --m_elems_to_read;
-            } while (m_elems_to_read > 0 && std::fread(&byte, sizeof(char), 1, m_file) == sizeof(char));
+                ++m_encoded_buf_size;
+            }
 
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, m_elems_to_read, m_utf8_buf_size);
+            if (m_encoded_buf_size == 0)
+            {
+                return std::char_traits<char_type>::eof();
+            }
 
-            if (m_elems_to_read == 1)
+            std::size_t consumed_size = 0;
+            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
+
+            if (consumed_size == 1)
             {
                 m_encoded_buffer[0] = m_encoded_buffer[1];
                 m_encoded_buffer[1] = 0;
             }
+            m_encoded_buf_size -= consumed_size;
 
             m_utf8_buf_index = 0;
         }
@@ -550,9 +559,9 @@ private:
     {
         if (m_utf8_buf_index == m_utf8_buf_size)
         {
-            char byte = 0;
-            std::size_t size = std::fread(&byte, sizeof(char), 1, m_file);
-            if (size != sizeof(char))
+            char chars[4] = {0, 0, 0, 0};
+            std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
+            if (size != 4)
             {
                 return std::char_traits<char_type>::eof();
             }
@@ -562,23 +571,17 @@ private:
             {
             case encode_t::UTF_32BE_N:
             case encode_t::UTF_32BE_BOM:
-                utf32 = char32_t(uint8_t(byte) << 24);
-                std::fread(&byte, sizeof(char), 1, m_file);
-                utf32 |= char32_t(uint8_t(byte) << 16);
-                std::fread(&byte, sizeof(char), 1, m_file);
-                utf32 |= char32_t(uint8_t(byte) << 8);
-                std::fread(&byte, sizeof(char), 1, m_file);
-                utf32 |= char32_t(uint8_t(byte));
+                utf32 = char32_t(uint8_t(chars[0]) << 24);
+                utf32 |= char32_t(uint8_t(chars[1]) << 16);
+                utf32 |= char32_t(uint8_t(chars[2]) << 8);
+                utf32 |= char32_t(uint8_t(chars[3]));
                 break;
             case encode_t::UTF_32LE_N:
             case encode_t::UTF_32LE_BOM: {
-                utf32 = char32_t(uint8_t(byte));
-                std::fread(&byte, sizeof(char), 1, m_file);
-                utf32 |= char32_t(uint8_t(byte) << 8);
-                std::fread(&byte, sizeof(char), 1, m_file);
-                utf32 |= char32_t(uint8_t(byte) << 16);
-                std::fread(&byte, sizeof(char), 1, m_file);
-                utf32 |= char32_t(uint8_t(byte) << 24);
+                utf32 = char32_t(uint8_t(chars[0]));
+                utf32 |= char32_t(uint8_t(chars[1]) << 8);
+                utf32 |= char32_t(uint8_t(chars[2]) << 16);
+                utf32 |= char32_t(uint8_t(chars[3]) << 24);
                 break;
             }
             default: // LCOV_EXCL_LINE
@@ -602,8 +605,8 @@ private:
     encode_t m_encode_type {encode_t::UTF_8_N};
     /// The buffer for decoding characters read from the input.
     std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements to be read from the input next time.
-    std::size_t m_elems_to_read {2};
+    /// The number of elements in `m_encoded_buffer`.
+    std::size_t m_encoded_buf_size {0};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
     /// The next index in `m_utf8_buffer` to read.
@@ -676,29 +679,31 @@ private:
     {
         if (m_utf8_buf_index == m_utf8_buf_size)
         {
-            do
+            while (m_encoded_buf_size < 2)
             {
-                char ch = 0;
-                m_istream->read(&ch, 1);
+                char chars[2] = {0, 0};
+                m_istream->read(&chars[0], 2);
                 std::streamsize size = m_istream->gcount();
-                if (size != 1)
+                if (size != 2)
                 {
-                    return std::char_traits<char_type>::eof();
+                    if (m_encoded_buf_size == 0)
+                    {
+                        return std::char_traits<char_type>::eof();
+                    }
+                    break;
                 }
 
                 switch (m_encode_type)
                 {
                 case encode_t::UTF_16BE_N:
                 case encode_t::UTF_16BE_BOM:
-                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(ch) << 8);
-                    m_istream->read(&ch, 1);
-                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(ch));
+                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << 8);
+                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]));
                     break;
                 case encode_t::UTF_16LE_N:
                 case encode_t::UTF_16LE_BOM: {
-                    m_encoded_buffer[2 - m_elems_to_read] = char16_t(uint8_t(ch));
-                    m_istream->read(&ch, 1);
-                    m_encoded_buffer[2 - m_elems_to_read] |= char16_t(uint8_t(ch) << 8);
+                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]));
+                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]) << 8);
                     break;
                 }
                 default: // LCOV_EXCL_LINE
@@ -706,16 +711,18 @@ private:
                     break; // LCOV_EXCL_LINE
                 }
 
-                --m_elems_to_read;
-            } while (m_elems_to_read > 0);
+                ++m_encoded_buf_size;
+            };
 
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, m_elems_to_read, m_utf8_buf_size);
+            std::size_t consumed_size = 0;
+            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
 
-            if (m_elems_to_read == 1)
+            if (consumed_size == 1)
             {
                 m_encoded_buffer[0] = m_encoded_buffer[1];
                 m_encoded_buffer[1] = 0;
             }
+            m_encoded_buf_size -= consumed_size;
 
             m_utf8_buf_index = 0;
         }
@@ -784,8 +791,8 @@ private:
     encode_t m_encode_type {encode_t::UTF_8_N};
     /// The buffer for decoding characters read from the input.
     std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements to be read from the input next time.
-    std::size_t m_elems_to_read {2};
+    /// The number of elements in `m_encoded_buffer`.
+    std::size_t m_encoded_buf_size {0};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
     /// The next index in `m_utf8_buffer` to read.
