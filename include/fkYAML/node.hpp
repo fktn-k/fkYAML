@@ -1238,6 +1238,14 @@ inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
     return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);
 }
 
+#if defined(__cpp_char8_t)
+inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n)
+{
+    // TODO: This is a workaround. `char8_t` string literals should be supported in `input_adapter`
+    return fkyaml::node::deserialize((const char*)s, (const char*)s + n);
+}
+#endif
+
 } // namespace yaml_literals
 } // namespace literals
 
