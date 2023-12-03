@@ -144,8 +144,6 @@ private:
             case node_t::STRING:
                 p_string = create_object<string_type>();
                 break;
-            default:                                                     // LCOV_EXCL_LINE
-                throw fkyaml::exception("Unsupported node value type."); // LCOV_EXCL_LINE
             }
         }
 
@@ -317,13 +315,10 @@ public:
             m_node_value.p_string = create_object<string_type>(*(rhs.m_node_value.p_string));
             FK_YAML_ASSERT(m_node_value.p_string != nullptr);
             break;
-        default:                                                       // LCOV_EXCL_LINE
-            throw fkyaml::exception("Not supported node value type."); // LCOV_EXCL_LINE
         }
 
         if (rhs.m_anchor_name)
         {
-            destroy_object<std::string>(m_anchor_name);
             m_anchor_name = create_object<std::string>(*(rhs.m_anchor_name));
             FK_YAML_ASSERT(m_anchor_name != nullptr);
         }
@@ -403,7 +398,7 @@ public:
     template <
         typename NodeRefStorageType,
         detail::enable_if_t<detail::is_node_ref_storage<NodeRefStorageType>::value, int> = 0>
-    basic_node(const NodeRefStorageType& node_ref_storage)
+    basic_node(const NodeRefStorageType& node_ref_storage) noexcept
         : basic_node(node_ref_storage.release())
     {
     }

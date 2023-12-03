@@ -319,15 +319,13 @@ private:
             }
             break;
         }
-        default:                                                     // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported node type found."); // LCOV_EXCL_LINE
         }
     }
 
     /// @brief Serialize mapping keys.
     /// @param key A key string to be serialized.
     /// @param str A string to hold serialization result.
-    void serialize_key(const std::string& key, std::string& str)
+    void serialize_key(const std::string& key, std::string& str) const noexcept
     {
         str += key + ":";
     }
@@ -335,7 +333,7 @@ private:
     /// @brief Insert indentation to the serialization result.
     /// @param cur_indent The current indent width to be inserted.
     /// @param str A string to hold serialization result.
-    void insert_indentation(const uint32_t cur_indent, std::string& str)
+    void insert_indentation(const uint32_t cur_indent, std::string& str) const noexcept
     {
         for (uint32_t i = 0; i < cur_indent; ++i)
         {

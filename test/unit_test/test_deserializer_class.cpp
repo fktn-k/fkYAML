@@ -12,6 +12,16 @@
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/node.hpp>
 
+TEST_CASE("DeserializerClassTest_DeserializeEmptyInput", "[DeserializerClassTest]")
+{
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(" ")));
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.empty());
+}
+
 TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTest]")
 {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;

@@ -32,9 +32,6 @@ FK_YAML_NAMESPACE_BEGIN
 namespace detail
 {
 
-// Avoid ambiguity between fkyaml::exception and std::exception
-using fkyaml::exception;
-
 ///////////////////
 //   from_node   //
 ///////////////////

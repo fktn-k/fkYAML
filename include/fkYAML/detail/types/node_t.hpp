@@ -35,7 +35,7 @@ enum class node_t : std::uint32_t
     STRING,       //!< string value type
 };
 
-inline std::string to_string(node_t t)
+inline std::string to_string(node_t t) noexcept
 {
     switch (t)
     {

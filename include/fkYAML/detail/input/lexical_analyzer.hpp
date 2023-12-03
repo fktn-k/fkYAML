@@ -423,7 +423,7 @@ private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
-    char convert_hex_char_to_byte(char_int_type source)
+    char convert_hex_char_to_byte(char_int_type source) const
     {
         if ('0' <= source && source <= '9')
         {

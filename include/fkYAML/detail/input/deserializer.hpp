@@ -71,15 +71,18 @@ public:
         std::size_t cur_indent = lexer.get_last_token_begin_pos();
         std::size_t cur_line = lexer.get_lines_processed();
 
-        while (type != lexical_token_t::END_OF_BUFFER)
+        do
         {
             switch (type)
             {
+            case lexical_token_t::END_OF_BUFFER:
+                // This handles an empty input.
+                break;
             case lexical_token_t::KEY_SEPARATOR: {
                 bool is_stack_empty = m_node_stack.empty();
                 if (is_stack_empty)
                 {
-                    throw fkyaml::parse_error("A key separator found without key.", cur_line, cur_indent);
+                    throw parse_error("A key separator found without key.", cur_line, cur_indent);
                 }
                 break;
             }
@@ -95,7 +98,7 @@ public:
                 auto itr = m_anchor_table.find(alias_name);
                 if (itr == m_anchor_table.end())
                 {
-                    throw fkyaml::parse_error(
+                    throw parse_error(
                         "The given anchor name must appear prior to the alias node.", cur_line, cur_indent);
                 }
                 assign_node_value(BasicNodeType::alias_of(m_anchor_table.at(alias_name)));
@@ -137,7 +140,7 @@ public:
                 // if the current node is a mapping.
                 if (m_node_stack.empty())
                 {
-                    throw fkyaml::parse_error("Invalid sequence block prefix(- ) found.", cur_line, cur_indent);
+                    throw parse_error("Invalid sequence block prefix(- ) found.", cur_line, cur_indent);
                 }
 
                 // move back to the previous sequence if necessary.
@@ -185,7 +188,7 @@ public:
             case lexical_token_t::MAPPING_FLOW_END:
                 if (!m_current_node->is_mapping())
                 {
-                    throw fkyaml::parse_error("Invalid mapping flow ending found.", cur_line, cur_indent);
+                    throw parse_error("Invalid mapping flow ending found.", cur_line, cur_indent);
                 }
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
@@ -348,14 +351,12 @@ public:
             case lexical_token_t::END_OF_DOCUMENT:
                 // TODO: This token should be handled to support multiple documents.
                 break;
-            default:                                                                                 // LCOV_EXCL_LINE
-                throw fkyaml::parse_error("Unsupported lexical token found.", cur_line, cur_indent); // LCOV_EXCL_LINE
             }
 
             type = lexer.get_next_token();
             cur_indent = lexer.get_last_token_begin_pos();
             cur_line = lexer.get_lines_processed();
-        }
+        } while (type != lexical_token_t::END_OF_BUFFER);
 
         m_current_node = nullptr;
         m_needs_anchor_impl = false;
@@ -377,7 +378,7 @@ private:
             bool is_indent_valid = (target_itr != m_indent_stack.rend());
             if (!is_indent_valid)
             {
-                throw fkyaml::parse_error("Detected invalid indentaion.", line, indent);
+                throw parse_error("Detected invalid indentaion.", line, indent);
             }
 
             auto pop_num = std::distance(m_indent_stack.rbegin(), target_itr);
@@ -409,7 +410,7 @@ private:
             auto itr = map.find(key);
             if (itr != map.end())
             {
-                throw fkyaml::parse_error("Detected duplication in mapping keys.", line, indent);
+                throw parse_error("Detected duplication in mapping keys.", line, indent);
             }
         }
 

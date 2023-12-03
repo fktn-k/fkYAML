@@ -28,8 +28,6 @@ FK_YAML_NAMESPACE_BEGIN
 namespace detail
 {
 
-using fkyaml::exception;
-
 /// @brief Convert a string YAML token to a ValueType object.
 /// @tparam ValueType A target value type.
 /// @tparam CharType The type of characters in a source string.
