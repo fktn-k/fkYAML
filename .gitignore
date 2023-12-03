@@ -1,7 +1,10 @@
-build*
-.vscode/
-.vs/
+/build*
+/.vscode/
+/.vs/
 
 # documentation
 /docs/mkdocs/site/
 /docs/mkdocs/venv/
+
+# natvis generator
+/tool/natvis_generator/venv/

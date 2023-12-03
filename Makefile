@@ -1,4 +1,4 @@
-.PHONY: update-version-macros CHANGELOG.md update-version
+.PHONY: update-version-macros CHANGELOG.md update-version fkYAML.natvis
 
 #################
 #   variables   #
@@ -16,7 +16,7 @@ CMAKE_SCRIPTS = $(shell find . -type f \( -name 'CMakeLists.txt' -o -name '*.cma
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 2
-TARGET_PATCH_VERSION := 2
+TARGET_PATCH_VERSION := 3
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -31,7 +31,7 @@ all:
 	@echo "clang-format - check whether source files are well formatted."
 	@echo "clang-sanitizers - check whether no runtime issue is detected while running the unit test app."
 	@echo "clang-tidy - check whether source files detect no issues during static code analysis."
-	@echo "cmake-format - check whether CMake scripts are well formatted."
+	@echo "fkYAML.natvis - generate the Natvis debugger visualization file."
 	@echo "html-coverage - generate HTML coverage report."
 	@echo "iwyu - check whether source files are each self-contained."
 	@echo "lcov-coverage - generate coverage data with lcov."
@@ -73,13 +73,15 @@ valgrind:
 	cmake --build build_valgrind --config Debug -j $(JOBS)
 	ctest -C Debug -T memcheck --test-dir build_valgrind -j $(JOBS)
 
-###############################
-#   CMake Scripts Formatter   #
-###############################
+##########################################
+#   Natvis Debugger Visualization File   #
+##########################################
 
-# pre-requisites: cmakelang
-cmake-format:
-	cmake-format $(CMAKE_SCRIPTS) -i -c .cmake-format.yaml
+update-params-for-natvis:
+	echo { \"version\": \"$(TARGET_VERSION_FULL)\" } > ./tool/natvis_generator/params.json
+
+fkYAML.natvis: update-params-for-natvis
+	make -C ./tool/natvis_generator generate
 
 ###############
 #   Version   #
@@ -125,7 +127,7 @@ CHANGELOG.md:
 		--release-url https://github.com/fktn-k/fkYAML/releases/tag/%s \
 		--future-release v$(TARGET_VERSION_FULL)
 
-update-version: update-version-macros update-project-version reuse CHANGELOG.md update-git-tag-ref
+update-version: fkYAML.natvis update-version-macros update-project-version reuse update-git-tag-ref CHANGELOG.md 
 	@echo "updated version to $(TARGET_VERSION_FULL)"
 
 ################

@@ -1,9 +1,41 @@
+# **fkYAML version 0.2.3**
+
+!!! abstract Release Packages
+
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.2.3/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.2.3/fkYAML.zip)
+
+## Summary
+
+This release contains support for the deserialization of YAML block style scalars and the user-defined string literals for YAML node objects.  
+A bug in parsing UTF-16 encoded inputs has also been fixed in this release.  
+Furthermore, from this release on, natvis debugger visualization file is/will be contained when fkYAML is built with the MSVC environments for better debugging experience.  
+
+## What's Changed
+
+### :zap: Improvements
+- Feature/232 user defined literal for deserialization [\#235](https://github.com/fktn-k/fkYAML/pull/235) ([fktn-k](https://github.com/fktn-k))
+- \#159 Support block scalar styles [\#228](https://github.com/fktn-k/fkYAML/pull/228) ([fktn-k](https://github.com/fktn-k))
+- Feature/226 add natvis file [\#227](https://github.com/fktn-k/fkYAML/pull/227) ([fktn-k](https://github.com/fktn-k))
+
+### :bug: Bug Fixes
+- fixed parsing UTF-16 encoded inputs which do not end with a surrogate… [\#234](https://github.com/fktn-k/fkYAML/pull/234) ([fktn-k](https://github.com/fktn-k))
+
+### :memo: Documentation
+- Improved contribution guide [\#231](https://github.com/fktn-k/fkYAML/pull/231) ([fktn-k](https://github.com/fktn-k))
+- Removed dependency on the cmake-format tool [\#230](https://github.com/fktn-k/fkYAML/pull/230) ([fktn-k](https://github.com/fktn-k))
+- Fixed wrong URLs in the releases page of the documentation [\#225](https://github.com/fktn-k/fkYAML/pull/225) ([fktn-k](https://github.com/fktn-k))
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.2.2...v0.2.3
+
+---
+
 # **fkYAML version 0.2.2**
 
 !!! abstract Release Packages
 
-    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.2.1/fkYAML.tgz)
-    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.2.1/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.2.2/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.2.2/fkYAML.zip)
 
 ## Summary
 
@@ -31,6 +63,8 @@ Furthermore, bugs in the deserialization/serialization features have also been f
 - \#217 Fix parse errors on strings containing single quotes [\#219](https://github.com/fktn-k/fkYAML/pull/219) ([fktn-k](https://github.com/fktn-k))
 
 **Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.2.1...v0.2.2
+
+---
 
 # **fkYAML version 0.2.1**
 

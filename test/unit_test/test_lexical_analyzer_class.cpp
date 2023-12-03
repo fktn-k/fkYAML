@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -839,6 +839,330 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanUnescapedControlCharacter", "[LexicalAna
     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
 }
 
+TEST_CASE("LexicalAnalyzerClassTest_ScanLiteralStringScalar", "[LexicalAnalyzerClassTest]")
+{
+    fkyaml::detail::lexical_token_t token;
+
+    SECTION("empty literal string scalar with strip chomping")
+    {
+        const char input[] = "|-\r\n"
+                             "  \r\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "");
+    }
+
+    SECTION("empty literal string scalar with clip chomping")
+    {
+        const char input[] = "|\r\n"
+                             "  \r\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "");
+    }
+
+    SECTION("empty literal string scalar with keep chomping")
+    {
+        const char input[] = "|+\r\n"
+                             "  \r\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "\n");
+    }
+
+    SECTION("literal string scalar with 0 indent level.")
+    {
+        const char input[] = "|0\n"
+                             "foo";
+
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("less indented literal string scalar")
+    {
+        const char input[] = "|2\n"
+                             " foo";
+
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("literal scalar with the first line being more indented than the indicated level")
+    {
+        const char input[] = "|2\n"
+                             "    foo\n"
+                             "  bar\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "  foo\nbar\n");
+    }
+
+    SECTION("literal string scalar with windows style newlines.")
+    {
+        const char input[] = "|\r\n"
+                             "  foo\r\n"
+                             "  bar\r\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo\nbar\n");
+    }
+
+    SECTION("literal string scalar with implicit indentation and strip chomping.")
+    {
+        const char input[] = "|-\n"
+                             "\n"
+                             "  foo\n"
+                             "  bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "\nfoo\nbar\n\nbaz");
+    }
+
+    SECTION("literal string scalar with explicit indentation and strip chomping.")
+    {
+        const char input[] = "|-2\n"
+                             "  foo\n"
+                             "    bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo\n  bar\n\nbaz");
+    }
+
+    SECTION("literal string scalar with implicit indentation and clip chomping.")
+    {
+        const char input[] = "|\n"
+                             "\n"
+                             "  foo\n"
+                             "  bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "\nfoo\nbar\n\nbaz\n");
+    }
+
+    SECTION("literal string scalar with explicit indentation and clip chomping.")
+    {
+        const char input[] = "|2\n"
+                             "  foo\n"
+                             "    bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo\n  bar\n\nbaz\n");
+    }
+
+    SECTION("literal string scalar with clip chomping and no trailing newlines")
+    {
+        const char input[] = "|2\n"
+                             "  foo\n"
+                             "    bar\n"
+                             "\n"
+                             "  baz";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo\n  bar\n\nbaz");
+    }
+
+    SECTION("literal string scalar with implicit indentation and keep chomping.")
+    {
+        const char input[] = "|+\n"
+                             "\n"
+                             "  foo\n"
+                             "  bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "\nfoo\nbar\n\nbaz\n\n");
+    }
+
+    SECTION("literal string scalar with explicit indentation and keep chomping.")
+    {
+        const char input[] = "|+2\n"
+                             "  foo\n"
+                             "    bar\n"
+                             "\n"
+                             "  baz\n"
+                             "\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo\n  bar\n\nbaz\n\n");
+    }
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanFoldedStringScalar", "[LexicalAnalyzerClassTest]")
+{
+    fkyaml::detail::lexical_token_t token;
+
+    SECTION("empty folded string scalar with strip chomping")
+    {
+        const char input[] = ">-\r\n"
+                             "  \r\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "");
+    }
+
+    SECTION("empty folded string scalar with clip chomping")
+    {
+        const char input[] = ">\r\n"
+                             "  \r\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "");
+    }
+
+    SECTION("empty folded string scalar with keep chomping")
+    {
+        const char input[] = ">+\r\n"
+                             "  \r\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "\n");
+    }
+
+    SECTION("folded string scalar with 0 indent level.")
+    {
+        const char input[] = "|0\n"
+                             "foo";
+
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("less indented folded string scalar")
+    {
+        const char input[] = ">2\n"
+                             " foo";
+
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("folded string scalar with the first line being more indented than the indicated level")
+    {
+        const char input[] = ">2\n"
+                             "    foo\n"
+                             "  bar\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "\n  foo\nbar\n");
+    }
+
+    SECTION("folded string scalar with the non-first line being more indented than the indicated level")
+    {
+        const char input[] = ">2\n"
+                             "  foo\n"
+                             "    bar\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo\n  bar\n");
+    }
+
+    SECTION("folded string scalar with windows style newlines.")
+    {
+        const char input[] = ">\r\n"
+                             "  foo\r\n"
+                             "  \r\n"
+                             "\r\n"
+                             "  bar\r\n"
+                             " \r\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo\n\nbar\n");
+    }
+
+    SECTION("folded string scalar with implicit indentation and strip chomping.")
+    {
+        const char input[] = ">-\n"
+                             "  foo\n"
+                             "  bar\n"
+                             " \n"
+                             "\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo bar");
+    }
+
+    SECTION("folded string scalar with implicit indentation and clip chomping.")
+    {
+        const char input[] = ">\n"
+                             "  foo\n"
+                             "  bar\n"
+                             "  \n"
+                             "\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo bar\n");
+    }
+
+    SECTION("folded string scalar with implicit indentation and keep chomping.")
+    {
+        const char input[] = ">+\n"
+                             "  foo\n"
+                             "  bar\n"
+                             " \n"
+                             "\n";
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo bar\n\n");
+    }
+}
+
 TEST_CASE("LexicalAnalyzerClassTest_ScanAnchorTokenTest", "[LexicalAnalyzerClassTest]")
 {
     fkyaml::detail::lexical_token_t token;
@@ -1445,6 +1769,100 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockMappingTokenTest", "[LexicalAnalyze
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
         REQUIRE(lexer.get_string().compare("pi") == 0);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
+        REQUIRE_NOTHROW(lexer.get_float_number());
+        REQUIRE(lexer.get_float_number() == 3.14);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("input soure No.2.")
+    {
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter("test: |\n  a literal scalar.\nfoo: \'bar\'\npi: 3.14"));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "test");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "a literal scalar.\n");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "foo");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "bar");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "pi");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
+        REQUIRE_NOTHROW(lexer.get_float_number());
+        REQUIRE(lexer.get_float_number() == 3.14);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("input soure No.3.")
+    {
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter("test: >\n  a literal scalar.\nfoo: \'bar\'\npi: 3.14"));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "test");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "a literal scalar.\n");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "foo");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "bar");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE_NOTHROW(lexer.get_string());
+        REQUIRE(lexer.get_string() == "pi");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);

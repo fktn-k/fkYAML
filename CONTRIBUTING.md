@@ -1,8 +1,8 @@
 # How to contribute
 
-Thank you for visiting the fkYAML project. If you make any contribution for this project, it will surely be some help for other users in the future.  
+Thank you for visiting the fkYAML project. If you make any contribution for this project, it will surely be some help for us and other users in the future.  
 
-To make it as easy as possible for you to contribute and for me to keep an overview, here are a few guidelines which should help us avoid all kinds of unnecessary work or disappointment. And of course, this document is subject to discussion, so please [create a discussion](https://github.com/fktn-k/fkYAML/discussions) or a pull request if you find a way to improve it!
+To make it as easy as possible for you to contribute and for me to keep an overview, here are a few guidelines which should help us avoid all kinds of unnecessary work or disappointment. And of course, this document itself is subject to discussion, so please [create a discussion](https://github.com/fktn-k/fkYAML/discussions) or a pull request if you find a way to improve it!
 
 ## Private reports
 
@@ -23,27 +23,50 @@ Clearly describe the request/issue:
 
 For questions, feature or support requests, please [open a discussion](https://github.com/fktn-k/fkYAML/discussions/new).  
 
-## Files to change
+## Contribution Steps
 
-To make changes, you need to edit the following files:
+Basically, follow [the contribution guideline](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) on the GitHub Docs.  
+To make changes to the fkYAML project, you need to edit the following files:
 
-1. [`include/fkYAML/*.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/include/fkYAML) - These files are the sources of the fkYAML library.
+1. [`include/fkYAML/**.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/include/fkYAML) - These files are the sources of the fkYAML library.
 
-2. [`test/unit_test/*.cpp`](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test) - These files contain the [Catch2](https://github.com/catchorg/Catch2) unit tests from which current coverage data is generated. (Click [here](https://coveralls.io/github/fktn-k/fkYAML) to see current coverage of the library's code.)
+2. [`test/unit_test/*.cpp`](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test) - These files contain the [Catch2](https://github.com/catchorg/Catch2) unit tests from which current coverage data is generated. (Click [here](https://coveralls.io/github/fktn-k/fkYAML) to see the current coverage of the library's code.)
 
-If you add or change a feature, please also add a unit test to the associated file(s) to keep covering 100% of the lines/branches in the fkYAML library.  
+3. [`docs/mkdocs/docs/**.md`](https://github.com/fktn-k/fkYAML/tree/develop/docs/mkdocs/docs) - These files are the sources of the documentation from which [MkDocs](https://www.mkdocs.org/) generates the documentation.  
+
+If you have added or changed a feature, please also add a unit test to the associated file(s) to keep covering 100% of the lines/branches in the fkYAML library, and add/modify sufficient descriptions to keep the documentation to be up-to-date as well.  
+
 The unit tests can be compiled and executed with:
 
-```sh
-$ mkdir build
-$ cd build
-$ cmake .. -DFK_YAML_BUILD_TEST=ON
-$ cmake --build .
-$ ctest
+```bash
+$ cd path/to/fkYAML
+$ cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
+$ cmake --build build --config Debug
+$ ctest -C Debug --test-dir build --output-on-failure
 ```
 
 The test cases are also executed with various combinations of compilers and operating systems on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
-As the policy of this project, all the workflow checks must be passed before merging.
+As the policy of this project, all the workflow checks must be passed before merging.  
+
+Also, you can build & check the updated documentation on your local environment by executing the following commands:
+
+```bash
+$ cd path/to/fkYAML
+$ make -C docs/mkdocs serve
+```
+
+The commands above will automatically install all the dependencies using [Python venv](https://docs.python.org/3.10/library/venv.html) with the [`requirements.txt`](https://github.com/fktn-k/fkYAML/blob/develop/docs/mkdocs/requirements.txt) file. The generated documentation will be available by accessing http://127.0.0.1:8000/.
+
+## Before Opening a PR
+
+[GitHub Actions](https://github.com/fktn-k/fkYAML/actions) will test the updated project with the following Clang tools with the specific versions listed down below once you open a PR for your changes. So, it would be more efficient to check if your changes follow the predefined rules on your local environment in advance.  
+
+| Clang Tool Name                                                                                   | Version |
+| ------------------------------------------------------------------------------------------------- | ------- |
+| [Clang-Format](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormat.html)                | 14.0.0  |
+| [Clang-Tidy](https://releases.llvm.org/14.0.0/tools/clang/tools/extra/docs/clang-tidy/index.html) | 14.0.0  |
+
+Those Clang tools, however, do not seem to gurantee backward compatibility and their behaviours vary from version to version. So, it is highly recommended to use the specific versions listed above to avoid unnecessary confusion.  
 
 ## Note
 
@@ -61,4 +84,4 @@ This can result in failing unit tests which run successfully without those tools
 The following areas really need contribution:
 
 - Extending the **continuous integration** to support more compilers, platforms, package managers, and/or operating systems, such as Android NDK, Intel's Compiler, or 32bit operating systems.
-- Introducing **benchmarks** to measure the processing cost of this library. Though efficiency is not everything, speed and memory consumption are very important characteristics for C++ developers, so having proper comparisons would be reasonable for both contributors and users.
+- Introducing **benchmarks** to measure the processing cost of this library. Though efficiency is not everything, speed and memory consumption are very important characteristics for C++ developers. So, having proper comparisons would be reasonable for both contributors and users.

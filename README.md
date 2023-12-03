@@ -44,7 +44,7 @@ More detailed, exclusive descriptions with example usages for each fkYAML API ar
 ### :mag: **Heavily Tested**  
 fkYAML has been [unit-tested](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test) and its test suite covers 100% of lines and conditions of the codebase. (You can see the actual coverage [here](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).)  
 We check with [Valgrind](https://valgrind.org) and the [Clang Sanitizers](https://clang.llvm.org/docs/index.html) that there are no runtime issues such as memory leak.  
-Furthermore, the quality of our codebase has been checked with [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/) and [CodeQL](https://codeql.github.com/docs/).  
+Furthermore, the quality of our codebase has been checked with [Clang-Tidy](https://releases.llvm.org/14.0.0/tools/clang/tools/extra/docs/clang-tidy/index.html) and [CodeQL](https://codeql.github.com/docs/).  
 [GitHub Actions](https://docs.github.com/en/actions) workflows run against every commit pushed on the main & develop branches to ensure that the fkYAML library can be successfully built/tested with a variety of compilers and C++ standards.  
 See the [supported compilers](#supported-compilers) section for more details.
 
@@ -152,15 +152,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  
 SOFTWARE.  
 
+## How to contribute
+
+See the [`CONTRIBUTING.md`](https://github.com/fktn-k/fkYAML/blob/develop/CONTRIBUTING.md) file for detailed information.  
+
 ## Used third-party tools
 
 The fkYAML library itself depends only on C++ standards and licensed under the MIT licence.  
 However, it is built, tested and documented with a lot of third-party tools and services.  
 Thanks a lot!  
 
-- [**Clang**](https://clang.llvm.org/) for compilation, coding style checks, and/or static/runtime analysis.
+- [**Clang**](https://clang.llvm.org/) for compilation, coding style checks, and static/runtime analysis.
 - [**CMake**](https://cmake.org/) for automation of build & testing.
-- [**cmake-format**](https://github.com/cheshirekow/cmake_format) as a linter for CMake scripts.
 - [**Coveralls**](https://coveralls.io/) to measure [code coverage](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).
 - [**Catch2**](https://github.com/catchorg/Catch2) as a unit-test framework.
 - [**github-changelog-generator**](https://github.com/github-changelog-generator/github-changelog-generator) to generate the [CHANGELOG.md](https://github.com/fktn-k/fkYAML/tree/develop/CHANGELOG.md) file.
