@@ -1218,27 +1218,45 @@ inline std::istream& operator>>(
 /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/node/
 using node = basic_node<>;
 
+/// @brief namespace for user-defined literals for the fkYAML library.
 inline namespace literals
 {
+/// @brief namespace for user-defined literals for YAML node objects.
 inline namespace yaml_literals
 {
 
+/// @brief The user-defined string literal which deserializes a `char` array into a `node` object.
+/// @param s An input `char` array.
+/// @param n The size of `s`.
+/// @return The resulting `node` object deserialized from `s`.
 inline fkyaml::node operator"" _yaml(const char* s, std::size_t n)
 {
     return fkyaml::node::deserialize((const char*)s, (const char*)s + n);
 }
 
+/// @brief The user-defined string literal which deserializes a `char16_t` array into a `node` object.
+/// @param s An input `char16_t` array.
+/// @param n The size of `s`.
+/// @return The resulting `node` object deserialized from `s`.
 inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n)
 {
     return fkyaml::node::deserialize((const char16_t*)s, (const char16_t*)s + n);
 }
 
+/// @brief The user-defined string literal which deserializes a `char32_t` array into a `node` object.
+/// @param s An input `char32_t` array.
+/// @param n The size of `s`.
+/// @return The resulting `node` object deserialized from `s`.
 inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
 {
     return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);
 }
 
 #if defined(__cpp_char8_t)
+/// @brief The user-defined string literal which deserializes a `char8_t` array into a `node` object.
+/// @param s An input `char8_t` array.
+/// @param n The size of `s`.
+/// @return The resulting `node` object deserialized from `s`.
 inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n)
 {
     // TODO: This is a workaround. `char8_t` string literals should be supported in `input_adapter`
