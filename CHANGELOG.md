@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.2.3](https://github.com/fktn-k/fkYAML/releases/tag/v0.2.3) (2023-12-03)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.2.2...v0.2.3)
+
+- Feature/232 user defined literal for deserialization [\#235](https://github.com/fktn-k/fkYAML/pull/235) ([fktn-k](https://github.com/fktn-k))
+- \#159 Support block scalar styles [\#228](https://github.com/fktn-k/fkYAML/pull/228) ([fktn-k](https://github.com/fktn-k))
+- Feature/226 add natvis file [\#227](https://github.com/fktn-k/fkYAML/pull/227) ([fktn-k](https://github.com/fktn-k))
+
+- fixed parsing UTF-16 encoded inputs which do not end with a surrogate… [\#234](https://github.com/fktn-k/fkYAML/pull/234) ([fktn-k](https://github.com/fktn-k))
+
+- Improved contribution guide [\#231](https://github.com/fktn-k/fkYAML/pull/231) ([fktn-k](https://github.com/fktn-k))
+- Removed dependency on the cmake-format tool [\#230](https://github.com/fktn-k/fkYAML/pull/230) ([fktn-k](https://github.com/fktn-k))
+- Fixed wrong URLs in the releases page of the documentation [\#225](https://github.com/fktn-k/fkYAML/pull/225) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.2.2](https://github.com/fktn-k/fkYAML/releases/tag/v0.2.2) (2023-11-27)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.2.1...v0.2.2)
