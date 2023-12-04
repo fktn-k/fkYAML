@@ -39,14 +39,14 @@ class node_ref_storage
 public:
     /// @brief Construct a new node ref storage object with an rvalue basic_node object.
     /// @param n An rvalue basic_node object.
-    node_ref_storage(node_type&& n) noexcept(std::is_nothrow_move_constructible<node_type>::value)
+    explicit node_ref_storage(node_type&& n) noexcept(std::is_nothrow_move_constructible<node_type>::value)
         : owned_value(std::move(n))
     {
     }
 
     /// @brief Construct a new node ref storage object with an lvalue basic_node object.
     /// @param n An lvalue basic_node object.
-    node_ref_storage(const node_type& n) noexcept
+    explicit node_ref_storage(const node_type& n) noexcept
         : value_ref(&n)
     {
     }
