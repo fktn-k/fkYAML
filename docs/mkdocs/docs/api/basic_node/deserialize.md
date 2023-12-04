@@ -8,9 +8,6 @@ static basic_node deserialize(InputType&& input); // (1)
 
 template <typename ItrType>
 static basic_node deserialize(ItrType&& begin, ItrType&& end); // (2)
-
-template <typename PtrType, detail::enable_if_t<std::is_pointer<PtrType>::value, int> = 0>
-static basic_node deserialize(PtrType&& ptr, std::size_t size); // (3)
 ```
 
 Deserializes from compatible input sources.  

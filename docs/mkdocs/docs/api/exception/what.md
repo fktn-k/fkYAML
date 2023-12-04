@@ -3,7 +3,7 @@
 # <small>fkyaml::exception::</small>what
 
 ```cpp
-const char* what();
+const char* what() const noexcept;
 ```
 
 Returns an error message for an exception. If nothing, a non-null, empty string will be returned.  

@@ -104,7 +104,7 @@ If the node is not a mapping, a [`fkyaml::exception`](../exception/index.md) wil
 
 ### **Parameters**
 
-***key*** [in]
+***`key`*** [in]
 :   A key to the target value in the YAML mapping node.
 
 ### **Return Value**

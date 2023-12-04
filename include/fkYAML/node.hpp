@@ -1224,6 +1224,7 @@ inline namespace yaml_literals
 /// @param s An input `char` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
+/// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char* s, std::size_t n)
 {
     return fkyaml::node::deserialize((const char*)s, (const char*)s + n);
@@ -1233,6 +1234,7 @@ inline fkyaml::node operator"" _yaml(const char* s, std::size_t n)
 /// @param s An input `char16_t` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
+/// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n)
 {
     return fkyaml::node::deserialize((const char16_t*)s, (const char16_t*)s + n);
@@ -1242,6 +1244,7 @@ inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n)
 /// @param s An input `char32_t` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
+/// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
 {
     return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);
