@@ -65,7 +65,7 @@ public:
 
     /// @brief Get the character at the current position.
     /// @return int_type A character or EOF.
-    int_type get_current()
+    int_type get_current() const noexcept
     {
         return m_cache[m_position.cur_pos];
     }

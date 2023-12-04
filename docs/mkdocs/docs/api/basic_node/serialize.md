@@ -12,7 +12,7 @@ That means that, even if a deserialized source input is written in flow styles, 
 
 ### **Parameters**
 
-***node*** [in]
+***`node`*** [in]
 :   A `basic_node` object to be serialized.
 
 ### **Return Value**

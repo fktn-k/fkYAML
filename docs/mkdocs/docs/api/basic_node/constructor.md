@@ -18,12 +18,13 @@ template <
             detail::negation<detail::is_basic_json<U>>,
             detail::disjunction<detail::is_node_compatible_type<basic_node, U>>>::value,
         int> = 0>
-basic_node(CompatibleType&& val); // (5)
+basic_node(CompatibleType&& val) noexcept(
+    noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>()))); // (5)
 
 template <
     typename NodeRefStorageType,
     detail::enable_if_t<detail::is_node_ref_storage<NodeRefStorageType>::value, int> = 0>
-basic_node(const NodeRefStorageType& node_ref_storage); // (6)
+basic_node(const NodeRefStorageType& node_ref_storage) noexcept; // (6)
 
 basic_node(initializer_list_t init); // (7)
 ```
@@ -167,7 +168,8 @@ template <
             detail::negation<detail::is_basic_json<U>>,
             detail::disjunction<detail::is_node_compatible_type<basic_node, U>>>::value,
         int> = 0>
-basic_node(CompatibleType&& val);
+basic_node(CompatibleType&& val) noexcept(
+    noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>()))); // (5)
 ```
 Constructs a basic_node with a value of a compatible type.  
 The resulting basic_node has the value of `val` and the type which is associated with `CompatibleType`.  
@@ -211,7 +213,7 @@ The resulting basic_node has the value of `val` and the type which is associated
 template <
     typename NodeRefStorageType,
     detail::enable_if_t<detail::is_node_ref_storage<NodeRefStorageType>::value, int> = 0>
-basic_node(const NodeRefStorageType& node_ref_storage);
+basic_node(const NodeRefStorageType& node_ref_storage) noexcept;
 ```
 Constructs a basic_node with a node_ref_storage.  
 The resulting basic_node has the value of the referenced basic_node by `node_ref_storage`.  

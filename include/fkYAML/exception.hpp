@@ -34,7 +34,7 @@ public:
     /// @brief Construct a new exception object with an error message.
     /// @param[in] msg An error message.
     /// @sa https://fktn-k.github.io/fkYAML/api/exception/constructor/
-    explicit exception(const char* msg)
+    explicit exception(const char* msg) noexcept
     {
         if (msg)
         {
@@ -62,7 +62,7 @@ class invalid_encoding : public exception
 {
 public:
     template <std::size_t N>
-    explicit invalid_encoding(const char* msg, std::array<int, N> u8)
+    explicit invalid_encoding(const char* msg, std::array<int, N> u8) noexcept
         : exception(generate_error_message(msg, u8).c_str())
     {
     }
@@ -71,7 +71,7 @@ public:
     /// @param msg An error message.
     /// @param u16_h The first UTF-16 encoded element used for the UTF-8 encoding.
     /// @param u16_l The second UTF-16 encoded element used for the UTF-8 encoding.
-    explicit invalid_encoding(const char* msg, std::array<char16_t, 2> u16)
+    explicit invalid_encoding(const char* msg, std::array<char16_t, 2> u16) noexcept
         : exception(generate_error_message(msg, u16).c_str())
     {
     }
@@ -79,14 +79,14 @@ public:
     /// @brief Construct a new invalid_encoding object for UTF-32 related errors.
     /// @param msg An error message.
     /// @param u32 The UTF-32 encoded element used for the UTF-8 encoding.
-    explicit invalid_encoding(const char* msg, char32_t u32)
+    explicit invalid_encoding(const char* msg, char32_t u32) noexcept
         : exception(generate_error_message(msg, u32).c_str())
     {
     }
 
 private:
     template <std::size_t N>
-    std::string generate_error_message(const char* msg, std::array<int, N> u8)
+    std::string generate_error_message(const char* msg, std::array<int, N> u8) const noexcept
     {
         std::stringstream ss;
         ss << "invalid_encoding: " << msg << " in=[ 0x" << std::hex << u8[0];
@@ -103,7 +103,7 @@ private:
     /// @param h The first UTF-16 encoded element used for the UTF-8 encoding.
     /// @param l The second UTF-16 encoded element used for the UTF-8 encoding.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16)
+    std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16) const noexcept
     {
         std::stringstream ss;
         ss << "invalid_encoding: " << msg;
@@ -116,7 +116,7 @@ private:
     /// @param msg An error message.
     /// @param u32 The UTF-32 encoded element used for the UTF-8 encoding.
     /// @return A genereated error message.
-    std::string generate_error_message(const char* msg, char32_t u32)
+    std::string generate_error_message(const char* msg, char32_t u32) const noexcept
     {
         std::stringstream ss;
         // uint32_t is large enough for UTF-32 encoded elements.
@@ -129,13 +129,13 @@ private:
 class parse_error : public exception
 {
 public:
-    explicit parse_error(const char* msg, std::size_t lines, std::size_t cols_in_line)
+    explicit parse_error(const char* msg, std::size_t lines, std::size_t cols_in_line) noexcept
         : exception(generate_error_message(msg, lines, cols_in_line).c_str())
     {
     }
 
 private:
-    std::string generate_error_message(const char* msg, std::size_t lines, std::size_t cols_in_line)
+    std::string generate_error_message(const char* msg, std::size_t lines, std::size_t cols_in_line) const noexcept
     {
         std::stringstream ss;
         ss << "parse_error: " << msg << " (at line " << lines << ", column " << cols_in_line << ")";
@@ -151,7 +151,7 @@ public:
     /// @brief Construct a new type_error object with an error message and a node type.
     /// @param[in] msg An error message.
     /// @param[in] type The type of a source node value.
-    explicit type_error(const char* msg, detail::node_t type)
+    explicit type_error(const char* msg, detail::node_t type) noexcept
         : exception(generate_error_message(msg, type).c_str())
     {
     }
@@ -161,7 +161,7 @@ private:
     /// @param msg An error message.
     /// @param type The type of a source node value.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, detail::node_t type)
+    std::string generate_error_message(const char* msg, detail::node_t type) const noexcept
     {
         std::stringstream ss;
         ss << "type_error: " << msg << " type=" << detail::to_string(type);

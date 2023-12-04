@@ -21,7 +21,7 @@ If the node value is not a mapping, this API will throw an [`fkyaml::exception`]
 
 ## **Parameters**
 
-***key*** [in]
+***`key`*** [in]
 :   A key to the target value in the YAML mapping node value.
 
 ## **Return Value**
