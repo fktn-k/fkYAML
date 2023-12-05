@@ -664,6 +664,131 @@ public:
         return m_node_value.p_mapping->operator[](std::forward<KeyType>(key));
     }
 
+    /// @brief An equal-to operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true if both types and values are equal, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator==/
+    bool operator==(const basic_node& rhs) const noexcept
+    {
+        if (m_node_type != rhs.m_node_type)
+        {
+            return false;
+        }
+
+        bool ret = false;
+        switch (m_node_type)
+        {
+        case node_t::SEQUENCE:
+            ret = (*(m_node_value.p_sequence) == *(rhs.m_node_value.p_sequence));
+            break;
+        case node_t::MAPPING:
+            ret = (*(m_node_value.p_mapping) == *(rhs.m_node_value.p_mapping));
+            break;
+        case node_t::NULL_OBJECT:
+            // Always true for comparisons between null nodes.
+            ret = true;
+            break;
+        case node_t::BOOLEAN:
+            ret = (m_node_value.boolean == rhs.m_node_value.boolean);
+            break;
+        case node_t::INTEGER:
+            ret = (m_node_value.integer == rhs.m_node_value.integer);
+            break;
+        case node_t::FLOAT_NUMBER:
+            ret =
+                (std::abs(m_node_value.float_val - rhs.m_node_value.float_val) <
+                 std::numeric_limits<float_number_type>::epsilon());
+            break;
+        case node_t::STRING:
+            ret = (*(m_node_value.p_string) == *(rhs.m_node_value.p_string));
+            break;
+        }
+
+        return ret;
+    }
+
+    /// @brief A not-equal-to operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true if either types or values are different, false otherwise.
+    bool operator!=(const basic_node& rhs) const noexcept
+    {
+        return !operator==(rhs);
+    }
+
+    /// @brief A less-than operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true this basic_node object is less than `rhs`.
+    bool operator<(const basic_node& rhs) const noexcept
+    {
+        if (operator==(rhs))
+        {
+            return false;
+        }
+
+        if (uint32_t(m_node_type) < uint32_t(rhs.m_node_type))
+        {
+            return true;
+        }
+
+        if (m_node_type != rhs.m_node_type)
+        {
+            return false;
+        }
+
+        bool ret = false;
+        switch (m_node_type)
+        {
+        case node_t::SEQUENCE:
+            ret = (*(m_node_value.p_sequence) < *(rhs.m_node_value.p_sequence));
+            break;
+        case node_t::MAPPING:
+            ret = (*(m_node_value.p_mapping) < *(rhs.m_node_value.p_mapping));
+            break;
+        case node_t::NULL_OBJECT: // LCOV_EXCL_LINE
+            // Will not come here since null nodes are alyways the same.
+            break; // LCOV_EXCL_LINE
+        case node_t::BOOLEAN:
+            // false < true
+            ret = (!m_node_value.boolean && rhs.m_node_value.boolean);
+            break;
+        case node_t::INTEGER:
+            ret = (m_node_value.integer < rhs.m_node_value.integer);
+            break;
+        case node_t::FLOAT_NUMBER:
+            ret = (m_node_value.float_val < rhs.m_node_value.float_val);
+            break;
+        case node_t::STRING:
+            ret = (*(m_node_value.p_string) < *(rhs.m_node_value.p_string));
+            break;
+        }
+
+        return ret;
+    }
+
+    /// @brief A less-than-or-equal-to operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true this basic_node object is less than or equal to `rhs`.
+    bool operator<=(const basic_node& rhs) const noexcept
+    {
+        return !rhs.operator<(*this);
+    }
+
+    /// @brief A greater-than operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true this basic_node object is greater than `rhs`.
+    bool operator>(const basic_node& rhs) const noexcept
+    {
+        return !operator<=(rhs);
+    }
+
+    /// @brief A greater-than-or-equal-to operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true this basic_node object is greater than or equal to `rhs`.
+    bool operator>=(const basic_node& rhs) const noexcept
+    {
+        return !operator<(rhs);
+    }
+
 public:
     /// @brief Returns the type of the current basic_node value.
     /// @return The type of the YAML node value.

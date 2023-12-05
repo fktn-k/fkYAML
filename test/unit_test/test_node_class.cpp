@@ -839,6 +839,538 @@ TEST_CASE("NodeClassTest_IntegerSubscriptOperatorTest", "[NodeClassTest]")
 }
 
 //
+// test cases for operators for comparisons between nodes
+//
+
+TEST_CASE("NodeClassTest_EqualToOperatorTest", "[NodeClassTest]")
+{
+    SECTION("The same type and value.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123, "foo"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {nullptr, nullptr},
+            fkyaml::node {true, true},
+            fkyaml::node {123, 123},
+            fkyaml::node {3.14, 3.14},
+            fkyaml::node {"foo", "foo"});
+        REQUIRE(params[0] == params[1]);
+    }
+
+    SECTION("The same type but different values.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {false, 456, "bar"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"baz", 456}, {"qux", false}}},
+            fkyaml::node {true, false},
+            fkyaml::node {123, 456},
+            fkyaml::node {3.14, 1.41},
+            fkyaml::node {"foo", "bar"});
+        REQUIRE_FALSE(params[0] == params[1]);
+    }
+
+    SECTION("Different types")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {{true, 123, "foo"}, nullptr},
+            fkyaml::node {{true, 123, "foo"}, true},
+            fkyaml::node {{true, 123, "foo"}, 123},
+            fkyaml::node {{true, 123, "foo"}, 3.14},
+            fkyaml::node {{true, 123, "foo"}, "foo"},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {true, 123, "foo"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, nullptr},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, true},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 123},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 3.14},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, "foo"},
+            fkyaml::node {nullptr, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {nullptr, true},
+            fkyaml::node {nullptr, 123},
+            fkyaml::node {nullptr, 3.14},
+            fkyaml::node {nullptr, "foo"},
+            fkyaml::node {true, {true, 123, "foo"}},
+            fkyaml::node {true, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, nullptr},
+            fkyaml::node {true, 123},
+            fkyaml::node {true, 3.14},
+            fkyaml::node {true, "foo"},
+            fkyaml::node {123, {true, 123, "foo"}},
+            fkyaml::node {123, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {123, nullptr},
+            fkyaml::node {123, true},
+            fkyaml::node {123, 3.14},
+            fkyaml::node {123, "foo"},
+            fkyaml::node {3.14, {true, 123, "foo"}},
+            fkyaml::node {3.14, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {3.14, nullptr},
+            fkyaml::node {3.14, true},
+            fkyaml::node {3.14, 123},
+            fkyaml::node {3.14, "foo"},
+            fkyaml::node {"foo", {true, 123, "foo"}},
+            fkyaml::node {"foo", {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {"foo", nullptr},
+            fkyaml::node {"foo", true},
+            fkyaml::node {"foo", 123},
+            fkyaml::node {"foo", 3.14});
+        REQUIRE_FALSE(params[0] == params[1]);
+    }
+}
+
+TEST_CASE("NodeClassTest_NotEqualToOperatorTest", "[NodeClassTest]")
+{
+    SECTION("The same type and value.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123, "foo"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {nullptr, nullptr},
+            fkyaml::node {true, true},
+            fkyaml::node {123, 123},
+            fkyaml::node {3.14, 3.14},
+            fkyaml::node {"foo", "foo"});
+        REQUIRE_FALSE(params[0] != params[1]);
+    }
+
+    SECTION("The same type but different values.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {false, 456, "bar"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"baz", 456}, {"qux", false}}},
+            fkyaml::node {true, false},
+            fkyaml::node {123, 456},
+            fkyaml::node {3.14, 1.41},
+            fkyaml::node {"foo", "bar"});
+        REQUIRE(params[0] != params[1]);
+    }
+
+    SECTION("Different types")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {{true, 123, "foo"}, nullptr},
+            fkyaml::node {{true, 123, "foo"}, true},
+            fkyaml::node {{true, 123, "foo"}, 123},
+            fkyaml::node {{true, 123, "foo"}, 3.14},
+            fkyaml::node {{true, 123, "foo"}, "foo"},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {true, 123, "foo"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, nullptr},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, true},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 123},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 3.14},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, "foo"},
+            fkyaml::node {nullptr, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {nullptr, true},
+            fkyaml::node {nullptr, 123},
+            fkyaml::node {nullptr, 3.14},
+            fkyaml::node {nullptr, "foo"},
+            fkyaml::node {true, {true, 123, "foo"}},
+            fkyaml::node {true, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, nullptr},
+            fkyaml::node {true, 123},
+            fkyaml::node {true, 3.14},
+            fkyaml::node {true, "foo"},
+            fkyaml::node {123, {true, 123, "foo"}},
+            fkyaml::node {123, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {123, nullptr},
+            fkyaml::node {123, true},
+            fkyaml::node {123, 3.14},
+            fkyaml::node {123, "foo"},
+            fkyaml::node {3.14, {true, 123, "foo"}},
+            fkyaml::node {3.14, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {3.14, nullptr},
+            fkyaml::node {3.14, true},
+            fkyaml::node {3.14, 123},
+            fkyaml::node {3.14, "foo"},
+            fkyaml::node {"foo", {true, 123, "foo"}},
+            fkyaml::node {"foo", {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {"foo", nullptr},
+            fkyaml::node {"foo", true},
+            fkyaml::node {"foo", 123},
+            fkyaml::node {"foo", 3.14});
+        REQUIRE(params[0] != params[1]);
+    }
+}
+
+TEST_CASE("NodeClassTest_LessThanOperatorTest", "[NodeClassTest]")
+{
+    SECTION("The same type and value.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123, "foo"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {nullptr, nullptr},
+            fkyaml::node {true, true},
+            fkyaml::node {123, 123},
+            fkyaml::node {3.14, 3.14},
+            fkyaml::node {"foo", "foo"});
+        REQUIRE_FALSE(params[0] < params[1]);
+    }
+
+    SECTION("The same type and the target value is less than the compared one.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123}, {true, 123, "foo"}},
+            fkyaml::node {{{"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {false, true},
+            fkyaml::node {123, 456},
+            fkyaml::node {3.14, 4.25},
+            fkyaml::node {"foo", "qux"});
+        REQUIRE(params[0] < params[1]);
+    }
+
+    SECTION("The same type but the target value is greater than the compared one.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"bar", true}}},
+            fkyaml::node {true, false},
+            fkyaml::node {456, 123},
+            fkyaml::node {4.25, 3.14},
+            fkyaml::node {"qux", "foo"});
+        REQUIRE_FALSE(params[0] < params[1]);
+    }
+
+    SECTION("The numeric value of the target type is less than that of the compared one")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {{true, 123, "foo"}, nullptr},
+            fkyaml::node {{true, 123, "foo"}, true},
+            fkyaml::node {{true, 123, "foo"}, 123},
+            fkyaml::node {{true, 123, "foo"}, 3.14},
+            fkyaml::node {{true, 123, "foo"}, "foo"},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, nullptr},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, true},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 123},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 3.14},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, "foo"},
+            fkyaml::node {nullptr, true},
+            fkyaml::node {nullptr, 123},
+            fkyaml::node {nullptr, 3.14},
+            fkyaml::node {nullptr, "foo"},
+            fkyaml::node {true, 123},
+            fkyaml::node {true, 3.14},
+            fkyaml::node {true, "foo"},
+            fkyaml::node {123, 3.14},
+            fkyaml::node {123, "foo"},
+            fkyaml::node {3.14, "foo"});
+        REQUIRE(params[0] < params[1]);
+    }
+
+    SECTION("The numeric value of the target type is greater than that of the compared one")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, {true, 123, "foo"}},
+            fkyaml::node {true, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, nullptr},
+            fkyaml::node {123, {true, 123, "foo"}},
+            fkyaml::node {123, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {123, nullptr},
+            fkyaml::node {123, true},
+            fkyaml::node {3.14, {true, 123, "foo"}},
+            fkyaml::node {3.14, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {3.14, nullptr},
+            fkyaml::node {3.14, true},
+            fkyaml::node {3.14, 123},
+            fkyaml::node {"foo", {true, 123, "foo"}},
+            fkyaml::node {"foo", {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {"foo", nullptr},
+            fkyaml::node {"foo", true},
+            fkyaml::node {"foo", 123},
+            fkyaml::node {"foo", 3.14});
+        REQUIRE_FALSE(params[0] < params[1]);
+    }
+}
+
+TEST_CASE("NodeClassTest_LessThanOrEqualToOperatorTest", "[NodeClassTest]")
+{
+    SECTION("The same type and value.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123, "foo"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {nullptr, nullptr},
+            fkyaml::node {true, true},
+            fkyaml::node {123, 123},
+            fkyaml::node {3.14, 3.14},
+            fkyaml::node {"foo", "foo"});
+        REQUIRE(params[0] <= params[1]);
+    }
+
+    SECTION("The same type and the target value is less than the compared one.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123}, {true, 123, "foo"}},
+            fkyaml::node {{{"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {false, true},
+            fkyaml::node {123, 456},
+            fkyaml::node {3.14, 4.25},
+            fkyaml::node {"foo", "qux"});
+        REQUIRE(params[0] <= params[1]);
+    }
+
+    SECTION("The same type but the target value is greater than the compared one.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"bar", true}}},
+            fkyaml::node {true, false},
+            fkyaml::node {456, 123},
+            fkyaml::node {4.25, 3.14},
+            fkyaml::node {"qux", "foo"});
+        REQUIRE_FALSE(params[0] <= params[1]);
+    }
+
+    SECTION("The numeric value of the target type is less than that of the compared one")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {{true, 123, "foo"}, nullptr},
+            fkyaml::node {{true, 123, "foo"}, true},
+            fkyaml::node {{true, 123, "foo"}, 123},
+            fkyaml::node {{true, 123, "foo"}, 3.14},
+            fkyaml::node {{true, 123, "foo"}, "foo"},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, nullptr},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, true},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 123},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 3.14},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, "foo"},
+            fkyaml::node {nullptr, true},
+            fkyaml::node {nullptr, 123},
+            fkyaml::node {nullptr, 3.14},
+            fkyaml::node {nullptr, "foo"},
+            fkyaml::node {true, 123},
+            fkyaml::node {true, 3.14},
+            fkyaml::node {true, "foo"},
+            fkyaml::node {123, 3.14},
+            fkyaml::node {123, "foo"},
+            fkyaml::node {3.14, "foo"});
+        REQUIRE(params[0] <= params[1]);
+    }
+
+    SECTION("The numeric value of the target type is greater than that of the compared one")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, {true, 123, "foo"}},
+            fkyaml::node {true, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, nullptr},
+            fkyaml::node {123, {true, 123, "foo"}},
+            fkyaml::node {123, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {123, nullptr},
+            fkyaml::node {123, true},
+            fkyaml::node {3.14, {true, 123, "foo"}},
+            fkyaml::node {3.14, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {3.14, nullptr},
+            fkyaml::node {3.14, true},
+            fkyaml::node {3.14, 123},
+            fkyaml::node {"foo", {true, 123, "foo"}},
+            fkyaml::node {"foo", {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {"foo", nullptr},
+            fkyaml::node {"foo", true},
+            fkyaml::node {"foo", 123},
+            fkyaml::node {"foo", 3.14});
+        REQUIRE_FALSE(params[0] <= params[1]);
+    }
+}
+
+TEST_CASE("NodeClassTest_GreaterThanOperatorTest", "[NodeClassTest]")
+{
+    SECTION("The same type and value.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123, "foo"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {nullptr, nullptr},
+            fkyaml::node {true, true},
+            fkyaml::node {123, 123},
+            fkyaml::node {3.14, 3.14},
+            fkyaml::node {"foo", "foo"});
+        REQUIRE_FALSE(params[0] > params[1]);
+    }
+
+    SECTION("The same type and the target value is less than the compared one.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123}, {true, 123, "foo"}},
+            fkyaml::node {{{"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {false, true},
+            fkyaml::node {123, 456},
+            fkyaml::node {3.14, 4.25},
+            fkyaml::node {"foo", "qux"});
+        REQUIRE_FALSE(params[0] > params[1]);
+    }
+
+    SECTION("The same type but the target value is greater than the compared one.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"bar", true}}},
+            fkyaml::node {true, false},
+            fkyaml::node {456, 123},
+            fkyaml::node {4.25, 3.14},
+            fkyaml::node {"qux", "foo"});
+        REQUIRE(params[0] > params[1]);
+    }
+
+    SECTION("The numeric value of the target type is less than that of the compared one")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {{true, 123, "foo"}, nullptr},
+            fkyaml::node {{true, 123, "foo"}, true},
+            fkyaml::node {{true, 123, "foo"}, 123},
+            fkyaml::node {{true, 123, "foo"}, 3.14},
+            fkyaml::node {{true, 123, "foo"}, "foo"},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, nullptr},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, true},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 123},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 3.14},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, "foo"},
+            fkyaml::node {nullptr, true},
+            fkyaml::node {nullptr, 123},
+            fkyaml::node {nullptr, 3.14},
+            fkyaml::node {nullptr, "foo"},
+            fkyaml::node {true, 123},
+            fkyaml::node {true, 3.14},
+            fkyaml::node {true, "foo"},
+            fkyaml::node {123, 3.14},
+            fkyaml::node {123, "foo"},
+            fkyaml::node {3.14, "foo"});
+        REQUIRE_FALSE(params[0] > params[1]);
+    }
+
+    SECTION("The numeric value of the target type is greater than that of the compared one")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, {true, 123, "foo"}},
+            fkyaml::node {true, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, nullptr},
+            fkyaml::node {123, {true, 123, "foo"}},
+            fkyaml::node {123, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {123, nullptr},
+            fkyaml::node {123, true},
+            fkyaml::node {3.14, {true, 123, "foo"}},
+            fkyaml::node {3.14, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {3.14, nullptr},
+            fkyaml::node {3.14, true},
+            fkyaml::node {3.14, 123},
+            fkyaml::node {"foo", {true, 123, "foo"}},
+            fkyaml::node {"foo", {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {"foo", nullptr},
+            fkyaml::node {"foo", true},
+            fkyaml::node {"foo", 123},
+            fkyaml::node {"foo", 3.14});
+        REQUIRE(params[0] > params[1]);
+    }
+}
+
+TEST_CASE("NodeClassTest_GreaterThanOrEqualToOperatorTest", "[NodeClassTest]")
+{
+    SECTION("The same type and value.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123, "foo"}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {nullptr, nullptr},
+            fkyaml::node {true, true},
+            fkyaml::node {123, 123},
+            fkyaml::node {3.14, 3.14},
+            fkyaml::node {"foo", "foo"});
+        REQUIRE(params[0] >= params[1]);
+    }
+
+    SECTION("The same type and the target value is less than the compared one.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123}, {true, 123, "foo"}},
+            fkyaml::node {{{"bar", true}}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {false, true},
+            fkyaml::node {123, 456},
+            fkyaml::node {3.14, 4.25},
+            fkyaml::node {"foo", "qux"});
+        REQUIRE_FALSE(params[0] >= params[1]);
+    }
+
+    SECTION("The same type but the target value is greater than the compared one.")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {true, 123}},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {{"bar", true}}},
+            fkyaml::node {true, false},
+            fkyaml::node {456, 123},
+            fkyaml::node {4.25, 3.14},
+            fkyaml::node {"qux", "foo"});
+        REQUIRE(params[0] >= params[1]);
+    }
+
+    SECTION("The numeric value of the target type is less than that of the compared one")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{true, 123, "foo"}, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {{true, 123, "foo"}, nullptr},
+            fkyaml::node {{true, 123, "foo"}, true},
+            fkyaml::node {{true, 123, "foo"}, 123},
+            fkyaml::node {{true, 123, "foo"}, 3.14},
+            fkyaml::node {{true, 123, "foo"}, "foo"},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, nullptr},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, true},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 123},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, 3.14},
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, "foo"},
+            fkyaml::node {nullptr, true},
+            fkyaml::node {nullptr, 123},
+            fkyaml::node {nullptr, 3.14},
+            fkyaml::node {nullptr, "foo"},
+            fkyaml::node {true, 123},
+            fkyaml::node {true, 3.14},
+            fkyaml::node {true, "foo"},
+            fkyaml::node {123, 3.14},
+            fkyaml::node {123, "foo"},
+            fkyaml::node {3.14, "foo"});
+        REQUIRE_FALSE(params[0] >= params[1]);
+    }
+
+    SECTION("The numeric value of the target type is greater than that of the compared one")
+    {
+        auto params = GENERATE(
+            fkyaml::node {{{"foo", 123}, {"bar", true}}, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {true, 123, "foo"}},
+            fkyaml::node {nullptr, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, {true, 123, "foo"}},
+            fkyaml::node {true, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {true, nullptr},
+            fkyaml::node {123, {true, 123, "foo"}},
+            fkyaml::node {123, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {123, nullptr},
+            fkyaml::node {123, true},
+            fkyaml::node {3.14, {true, 123, "foo"}},
+            fkyaml::node {3.14, {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {3.14, nullptr},
+            fkyaml::node {3.14, true},
+            fkyaml::node {3.14, 123},
+            fkyaml::node {"foo", {true, 123, "foo"}},
+            fkyaml::node {"foo", {{"foo", 123}, {"bar", true}}},
+            fkyaml::node {"foo", nullptr},
+            fkyaml::node {"foo", true},
+            fkyaml::node {"foo", 123},
+            fkyaml::node {"foo", 3.14});
+        REQUIRE(params[0] >= params[1]);
+    }
+}
+
+//
 // test cases for type property getter/checkers
 //
 
