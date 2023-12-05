@@ -667,7 +667,7 @@ public:
     /// @brief An equal-to operator of the basic_node class.
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true if both types and values are equal, false otherwise.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator==/
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_eq/
     bool operator==(const basic_node& rhs) const noexcept
     {
         if (m_node_type != rhs.m_node_type)
@@ -710,6 +710,7 @@ public:
     /// @brief A not-equal-to operator of the basic_node class.
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true if either types or values are different, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_ne/
     bool operator!=(const basic_node& rhs) const noexcept
     {
         return !operator==(rhs);
@@ -718,6 +719,7 @@ public:
     /// @brief A less-than operator of the basic_node class.
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true this basic_node object is less than `rhs`.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_lt/
     bool operator<(const basic_node& rhs) const noexcept
     {
         if (operator==(rhs))
@@ -768,6 +770,7 @@ public:
     /// @brief A less-than-or-equal-to operator of the basic_node class.
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true this basic_node object is less than or equal to `rhs`.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_le/
     bool operator<=(const basic_node& rhs) const noexcept
     {
         return !rhs.operator<(*this);
@@ -776,6 +779,7 @@ public:
     /// @brief A greater-than operator of the basic_node class.
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true this basic_node object is greater than `rhs`.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_gt/
     bool operator>(const basic_node& rhs) const noexcept
     {
         return !operator<=(rhs);
@@ -784,6 +788,7 @@ public:
     /// @brief A greater-than-or-equal-to operator of the basic_node class.
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true this basic_node object is greater than or equal to `rhs`.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_ge/
     bool operator>=(const basic_node& rhs) const noexcept
     {
         return !operator<(rhs);
