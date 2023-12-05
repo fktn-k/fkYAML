@@ -142,6 +142,12 @@ nav:
           - value_converter_type: api/basic_node/value_converter_type.md
           - yaml_version_t: api/basic_node/yaml_version_t.md
           - operator[]: api/basic_node/operator[].md
+          - operator==: api/basic_node/operator_eq.md
+          - operator!=: api/basic_node/operator_ne.md
+          - operator<: api/basic_node/operator_lt.md
+          - operator<=: api/basic_node/operator_le.md
+          - operator>: api/basic_node/operator_gt.md
+          - operator>=: api/basic_node/operator_ge.md
       - exception:
           - exception: api/exception/index.md
           - (constructor): api/exception/constructor.md

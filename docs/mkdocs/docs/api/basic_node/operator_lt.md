@@ -1,0 +1,91 @@
+<small>Defined in header [`<fkYAML/node.hpp>`](https://github.com/fktn-k/fkYAML/blob/develop/include/fkYAML/node.hpp)</small>
+
+# <small>fkyaml::basic_node::</small>operator<
+
+```cpp
+bool operator<(const basic_node& rhs) const noexcept;
+```
+
+Less-than operator.  
+Check if `this` object is less than `rhs` according to the following rules:  
+
+* If the values are of the same [`node_t`](node_t.md) type, their stored values are compared according to their respective `operator<`.
+* Two `basic_node` objects are always equal if both of them are of the [`node_t::NULL_OBJECT`](node_t.md) type.
+* If the values are of different [`node_t`](node_t.md) types, the stored values are ignored and the order of the types are considered. The order of the types is as followed (top < bottom):
+    * node_t::SEQUENCE
+    * node_t::MAPPING
+    * node_t::NULL_OBJECT
+    * node_t::BOOLEAN
+    * node_t::INTEGER
+    * node_t::FLOAT_NUMBER
+    * node_t::STRING
+* If the values are of the [`node_t::BOOLEAN`](node_t.md) type, a value whose stored value is `false` is less than a value whose stored value is `true`.
+
+## **Parameters**
+
+***`rhs`*** [in]
+:   A `basic_node` object to be compared with `this` object.
+
+## **Return Value**
+
+`true` if `this` is less than `rhs`, `false` otherwise.
+
+???+ Example
+
+    ```cpp
+    #include <iomanip>
+    #include <iostream>
+    #include <fkYAML/node.hpp>
+
+    int main()
+    {
+        fkyaml::node seq_1 = {1, 2, 3};
+        fkyaml::node seq_2 = {1, 2, 4};
+        fkyaml::node map_1 = {{"foo", true}, {"bar", 123}};
+        fkyaml::node map_1 = {{"bar", 123}, {"foo", true}};
+        fkyaml::node null_1 = nullptr;
+        fkyaml::node null_2 = nullptr;
+        fkyaml::node bool_1 = false;
+        fkyaml::node bool_2 = true;
+        fkyaml::node integer_1 = 321;
+        fkyaml::node integer_2 = 123;
+        fkyaml::node float_1 = 1.23;
+        fkyaml::node float_2 = 3.14;
+        fkyaml::node string_1 = "foo";
+        fkyaml::node string_2 = "bar";
+
+        // the same type
+        std::cout << std::boolalpha;
+        std::cout << seq_1 < seq_2 << std::endl;
+        std::cout << map_1 < map_2 << std::endl;
+        std::cout << null_1 < null_2 << std::endl;
+        std::cout << bool_1 < bool_2 << std::endl;
+        std::cout << integer_1 < integer_2 << std::endl;
+        std::cout << float_1 < float_2 << std::endl;
+        std::cout << string_1 < string_2 << std::endl;
+
+        // different types
+        std::cout << bool_1 < string_1 << std::endl;
+        std::cout << float_2 < seq_2 << std::endl;
+
+        return 0;
+    }
+    ```
+
+    output:
+    ```bash
+    true
+    false
+    false
+    true
+    false
+    true
+    false
+    true
+    false
+    ```
+
+## **See Also**
+
+* [basic_node](index.md)
+* [operator==](operator_eq.md)
