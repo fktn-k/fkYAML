@@ -590,6 +590,11 @@ public:
         return *this;
     }
 
+    /// @brief A subscript operator of the basic_node class with a key of a compatible type with basic_node.
+    /// @tparam KeyType A key type compatible with basic_node
+    /// @param key A key to the target value in a sequence/mapping node.
+    /// @return The value associated with the given key, or a default basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<
                               detail::conjunction<
@@ -620,6 +625,11 @@ public:
         return m_node_value.p_mapping->operator[](std::move(n));
     }
 
+    /// @brief A subscript operator of the basic_node class with a key of a compatible type with basic_node.
+    /// @tparam KeyType A key type compatible with basic_node
+    /// @param key A key to the target value in a sequence/mapping node.
+    /// @return The value associated with the given key, or a default basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<
                               detail::conjunction<
@@ -650,6 +660,11 @@ public:
         return m_node_value.p_mapping->operator[](std::move(node_key));
     }
 
+    /// @brief A subscript operator of the basic_node class with a basic_node key object.
+    /// @tparam KeyType A key type which is a kind of the basic_node template class.
+    /// @param key A key to the target value in a sequence/mapping node.
+    /// @return The value associated with the given key, or a default basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
     basic_node& operator[](KeyType&& key)
@@ -674,6 +689,11 @@ public:
         return m_node_value.p_mapping->operator[](std::forward<KeyType>(key));
     }
 
+    /// @brief A subscript operator of the basic_node class with a basic_node key object.
+    /// @tparam KeyType A key type which is a kind of the basic_node template class.
+    /// @param key A key to the target value in a sequence/mapping node.
+    /// @return The value associated with the given key, or a default basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
     const basic_node& operator[](KeyType&& key) const
@@ -943,6 +963,11 @@ public:
         }
     }
 
+    /// @brief Check whether or not this basic_node object has a given key in its inner mapping node value.
+    /// @tparam KeyType A key type compatible with basic_node.
+    /// @param key A key to the target value in the mapping node value.
+    /// @return true if the target node is a mapping and has the given key, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/contains/
     template <
         typename KeyType, detail::enable_if_t<
                               detail::conjunction<
@@ -965,7 +990,7 @@ public:
     }
 
     /// @brief Check whether or not this basic_node object has a given key in its inner mapping Node value.
-    /// @tparam KeyType A type compatible with the key type of mapping node values.
+    /// @tparam KeyType A key type which is a kind of basic_node template class.
     /// @param[in] key A key to the target value in the YAML mapping node value.
     /// @return true if the YAML node is a mapping and has the given key, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/contains/

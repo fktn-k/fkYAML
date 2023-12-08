@@ -5,19 +5,25 @@
 ```cpp
 template <
     typename KeyType, detail::enable_if_t<
-                            detail::is_usable_as_key_type<
-                                typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+                            detail::conjunction<
+                                detail::negation<detail::is_basic_node<detail::remove_cvref_t<KeyType>>>,
+                                detail::is_node_compatible_type<basic_node, detail::remove_cvref_t<KeyType>>>::value,
                             int> = 0>
-bool contains(KeyType&& key) const;
+bool contains(KeyType&& key) const; // (1) A compatible key object with basic_node type
+
+template <
+    typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+bool contains(KeyType&& key) const; // (2) A basic_node object
 ```
 
 Checks if the YAML node has the given key.  
-If the node value is not a mapping, this API will throw an [`fkyaml::exception`](../exception/index.md).  
+If the node value is not a mapping, this API will throw an [`fkyaml::type_error`](../exception/type_error.md).  
+The `KeyType` can be a compatible type with [`fkyaml::basic_node`](index.md) or a kind of [`fkyaml::basic_node`](index.md) template class.
 
 ## **Template Parameters**
 
 ***KeyType***
-:   A type compatible with the key type of mapping node values.
+:   A type which is compatible with or a kind of [`fkyaml::basic_node`](index.md).
 
 ## **Parameters**
 
@@ -43,7 +49,7 @@ If the node value is not a mapping, this API will throw an [`fkyaml::exception`]
         // check if the node has the following keys.
         std::cout << std::boolalpha;
         std::cout << n.contains("foo") << std::endl;
-        std::cout << n.contains("baz") << std::endl;
+        std::cout << n.contains(fkyaml::node("baz")) << std::endl;
 
         // create a YAML node. (not mapping)
         fkyaml::node n2 = "qux";
@@ -66,3 +72,4 @@ If the node value is not a mapping, this API will throw an [`fkyaml::exception`]
 
 * [basic_node](index.md)
 * [mapping_type](mapping_type.md)
+* [type_error](../exception/type_error.md)
