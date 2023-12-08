@@ -685,9 +685,9 @@ TEST_CASE("NodeClassTest_AliasNodeFactoryTest", "[NodeClassTest]")
 // test cases for subscript operators
 //
 
-TEST_CASE("NodeClassTest_StringSubscriptOperatorTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_SubscriptOperatorTest", "[NodeClassTest]")
 {
-    SECTION("Test nothrow expected string subscript operators.")
+    SECTION("Test nothrow expected subscript operators for mapping nodes.")
     {
         fkyaml::node::mapping_type map {{"test", fkyaml::node()}};
 
@@ -702,28 +702,10 @@ TEST_CASE("NodeClassTest_StringSubscriptOperatorTest", "[NodeClassTest]")
                 REQUIRE(node[key].is_null());
             }
 
-            SECTION("Test the non-const alias lvalue string subscript operator.")
-            {
-                std::string key = "test";
-                node.add_anchor_name("anchor_name");
-                fkyaml::node alias = fkyaml::node::alias_of(node);
-                REQUIRE_NOTHROW(alias[key]);
-                REQUIRE(alias[key].is_null());
-            }
-
             SECTION("Test the non-const rvalue string subscript operator.")
             {
                 REQUIRE_NOTHROW(node["test"]);
                 REQUIRE(node["test"].is_null());
-            }
-
-            SECTION("Test the const alias lvalue string subscript operator.")
-            {
-                std::string key = "test";
-                node.add_anchor_name("anchor_name");
-                const fkyaml::node alias = fkyaml::node::alias_of(node);
-                REQUIRE_NOTHROW(alias[key]);
-                REQUIRE(alias[key].is_null());
             }
         }
 
@@ -735,105 +717,141 @@ TEST_CASE("NodeClassTest_StringSubscriptOperatorTest", "[NodeClassTest]")
             SECTION("Test the const lvalue string subscript operator.")
             {
                 REQUIRE_NOTHROW(node[key]);
-                REQUIRE(node[key].is_null());
             }
 
             SECTION("Test the const rvalue string subscript operator.")
             {
                 REQUIRE_NOTHROW(node["test"]);
-                REQUIRE(node["test"].is_null());
+            }
+        }
+
+        SECTION("Test the non-const string node subscript operators.")
+        {
+            fkyaml::node node = fkyaml::node::mapping(map);
+            fkyaml::node node_key = "test";
+
+            SECTION("Test the non-const lvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node[node_key]);
+            }
+
+            SECTION("Test the non-const rvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node[std::move(node_key)]);
+            }
+        }
+
+        SECTION("Test the const string node subscript operators.")
+        {
+            const fkyaml::node node = fkyaml::node::mapping(map);
+            fkyaml::node node_key = "test";
+
+            SECTION("Test the non-const lvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node[node_key]);
+            }
+
+            SECTION("Test the non-const rvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node[std::move(node_key)]);
             }
         }
     }
 
-    SECTION("Test throwing expected string subscript operator.")
-    {
-        auto node = GENERATE(
-            fkyaml::node::sequence(),
-            fkyaml::node(),
-            fkyaml::node(false),
-            fkyaml::node(0),
-            fkyaml::node(0.0),
-            fkyaml::node(""));
-
-        SECTION("Test non-const lvalue throwing invocation.")
-        {
-            std::string key = "test";
-            REQUIRE_THROWS_AS(node[key], fkyaml::type_error);
-        }
-
-        SECTION("Test const lvalue throwing invocation.")
-        {
-            std::string key = "test";
-            const fkyaml::node const_node = node;
-            REQUIRE_THROWS_AS(const_node[key], fkyaml::type_error);
-        }
-
-        SECTION("Test non-const rvalue throwing invocation.")
-        {
-            REQUIRE_THROWS_AS(node["test"], fkyaml::type_error);
-        }
-
-        SECTION("Test const rvalue throwing invocation.")
-        {
-            const fkyaml::node const_node = node;
-            REQUIRE_THROWS_AS(const_node["test"], fkyaml::type_error);
-        }
-    }
-}
-
-TEST_CASE("NodeClassTest_IntegerSubscriptOperatorTest", "[NodeClassTest]")
-{
-    SECTION("Test nothrow expected integer subscript operators.")
+    SECTION("Test nothrow expected subscript operators for sequence nodes.")
     {
         fkyaml::node node = fkyaml::node::sequence();
         node.get_value_ref<fkyaml::node::sequence_type&>().emplace_back();
 
-        SECTION("Test non-const non-alias integer subscript operators")
+        SECTION("Test non-const integer subscript operators")
         {
             REQUIRE_NOTHROW(node[0]);
         }
 
-        SECTION("Test non-const alias integer subscript operators")
-        {
-            node.add_anchor_name("anchor_name");
-            fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias[0]);
-        }
-
-        SECTION("Test const non-alias integer subscript operators")
+        SECTION("Test const integer subscript operators")
         {
             const fkyaml::node const_node = node;
             REQUIRE_NOTHROW(const_node[0]);
         }
 
-        SECTION("Test const alias integer subscript operators")
+        SECTION("Test non-const integer subscript operators")
         {
-            node.add_anchor_name("anchor_name");
-            const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias[0]);
+            REQUIRE_NOTHROW(node[fkyaml::node(0)]);
+        }
+
+        SECTION("Test const integer subscript operators")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node[fkyaml::node(0)]);
         }
     }
 
-    SECTION("Test throwing expected integer subscript operator.")
+    SECTION("Test throwing expected subscript operator for sequence nodes.")
     {
-        auto node = GENERATE(
-            fkyaml::node::mapping(),
-            fkyaml::node(),
-            fkyaml::node(false),
-            fkyaml::node(0),
-            fkyaml::node(0.0),
-            fkyaml::node(""));
+        fkyaml::node node = fkyaml::node::sequence();
+        node.get_value_ref<fkyaml::node::sequence_type&>().emplace_back();
 
-        SECTION("Test non-const non-sequence nodes.")
+        SECTION("Test non-const node with a non-integer value.")
+        {
+            REQUIRE_THROWS_AS(node[fkyaml::node::sequence_type()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[fkyaml::node::mapping_type()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[nullptr], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[false], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[0.0], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[""], fkyaml::type_error);
+        }
+
+        SECTION("Test const node with a non-integer value.")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node[fkyaml::node::sequence_type()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[fkyaml::node::mapping_type()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[nullptr], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[false], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[0.0], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[""], fkyaml::type_error);
+        }
+
+        fkyaml::node node_key =
+            GENERATE(fkyaml::node::mapping(), fkyaml::node(), fkyaml::node(false), fkyaml::node(0.0), fkyaml::node(""));
+
+        SECTION("Test non-const node with a non-integer node.")
+        {
+            REQUIRE_THROWS_AS(node[node_key], fkyaml::type_error);
+        }
+
+        SECTION("Test const node with a non-integer node.")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node[node_key], fkyaml::type_error);
+        }
+    }
+
+    SECTION("Test throwing expected subscript operator for scalar nodes.")
+    {
+        auto node = GENERATE(fkyaml::node(), fkyaml::node(false), fkyaml::node(0), fkyaml::node(0.0), fkyaml::node(""));
+        fkyaml::node node_key = 0;
+
+        SECTION("Test non-const node with an integer.")
         {
             REQUIRE_THROWS_AS(node[0], fkyaml::type_error);
         }
 
-        SECTION("Test const non-sequence nodes.")
+        SECTION("Test const node with an integer.")
         {
             const fkyaml::node const_node = node;
             REQUIRE_THROWS_AS(const_node[0], fkyaml::type_error);
+        }
+
+        SECTION("Test non-const node with an integer node.")
+        {
+            REQUIRE_THROWS_AS(node[node_key], fkyaml::type_error);
+        }
+
+        SECTION("Test const node with an integer node.")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node[node_key], fkyaml::type_error);
         }
     }
 }
@@ -1845,30 +1863,16 @@ TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
     SECTION("Test mapping node.")
     {
         fkyaml::node node = fkyaml::node::mapping({{"test", fkyaml::node()}});
-        std::string key = "test";
 
-        SECTION("Test non-alias mapping node with lvalue key.")
+        SECTION("Test mapping node with a string key.")
         {
-            REQUIRE(node.contains(key));
+            REQUIRE(node.contains("test"));
         }
 
-        SECTION("Test alias mapping node with lvalue key.")
+        SECTION("Test mapping node with a string node key.")
         {
-            node.add_anchor_name("anchor_name");
-            fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE(node.contains(key));
-        }
-
-        SECTION("Test non-alias mapping node with rvalue key.")
-        {
-            REQUIRE(node.contains(std::move(key)));
-        }
-
-        SECTION("Test alias mapping node with rvalue key.")
-        {
-            node.add_anchor_name("anchor_name");
-            fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE(node.contains(std::move(key)));
+            fkyaml::node node_key = "test";
+            REQUIRE(node.contains(node_key));
         }
     }
 
@@ -1881,30 +1885,16 @@ TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
             fkyaml::node(0),
             fkyaml::node(0.0),
             fkyaml::node(""));
-        std::string key = "test";
 
-        SECTION("Test non-alias non-mapping node with lvalue key.")
+        SECTION("Test non-mapping node with a key.")
         {
-            REQUIRE_FALSE(node.contains(key));
+            REQUIRE_FALSE(node.contains("test"));
         }
 
-        SECTION("Test alias non-mapping node with lvalue key.")
+        SECTION("Test non-mapping node with a node key.")
         {
-            node.add_anchor_name("anchor_name");
-            fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_FALSE(alias.contains(key));
-        }
-
-        SECTION("Test non-alias non-mapping node with rvalue key.")
-        {
-            REQUIRE_FALSE(node.contains(std::move(key)));
-        }
-
-        SECTION("Test alias non-mapping node with rvalue key.")
-        {
-            node.add_anchor_name("anchor_name");
-            fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_FALSE(alias.contains(std::move(key)));
+            fkyaml::node node_key = "test";
+            REQUIRE_FALSE(node.contains(node_key));
         }
     }
 }

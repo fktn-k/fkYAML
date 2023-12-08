@@ -63,14 +63,14 @@ TEST_CASE("DeserializerClassTest_DeserializeNullValue", "[DeserializerClassTes]"
     SECTION("key not in a sequence.")
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Null: test")));
-        REQUIRE(root.contains("Null"));
+        REQUIRE(root.contains(nullptr));
     }
 
     SECTION("key in a sequence.")
     {
         auto input = GENERATE(std::string("test:\n  - null: foo"), std::string("test:\n  - null:\n      - true"));
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-        REQUIRE(root["test"][0].contains("null"));
+        REQUIRE(root["test"][0].contains(nullptr));
     }
 
     SECTION("mapping value.")
@@ -94,14 +94,14 @@ TEST_CASE("DeserializerClassTest_DeserializeBooleanValue", "[DeserializerClassTe
     SECTION("key not in a sequence.")
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("true: test")));
-        REQUIRE(root.contains("true"));
+        REQUIRE(root.contains(true));
     }
 
     SECTION("key in a sequence.")
     {
         auto input = GENERATE(std::string("test:\n  - false: foo"), std::string("test:\n  - false:\n      - null"));
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-        REQUIRE(root["test"][0].contains("false"));
+        REQUIRE(root["test"][0].contains(false));
     }
 
     SECTION("mapping value.")
@@ -125,14 +125,14 @@ TEST_CASE("DeserializerClassTest_DeserializeIntegerKey", "[DeserializerClassTest
     SECTION("key not in a sequence.")
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("123: test")));
-        REQUIRE(root.contains("123"));
+        REQUIRE(root.contains(123));
     }
 
     SECTION("key in a sequence.")
     {
         auto input = GENERATE(std::string("test:\n  - 123: foo"), std::string("test:\n  - 123:\n      - true"));
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-        REQUIRE(root["test"][0].contains("123"));
+        REQUIRE(root["test"][0].contains(123));
     }
 
     SECTION("mapping value.")
@@ -156,14 +156,14 @@ TEST_CASE("DeserializerClassTest_DeserializeFloatingPointNumberKey", "[Deseriali
     SECTION("key not in a sequence.")
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("3.14: test")));
-        REQUIRE(root.contains("3.14"));
+        REQUIRE(root.contains(3.14));
     }
 
     SECTION("key in a sequence.")
     {
         auto input = GENERATE(std::string("test:\n  - .inf: foo"), std::string("test:\n  - .inf:\n      - true"));
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-        REQUIRE(root["test"][0].contains(".inf"));
+        REQUIRE(root["test"][0].contains(std::numeric_limits<fkyaml::node::float_number_type>::infinity()));
     }
 
     SECTION("mapping value.")

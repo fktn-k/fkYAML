@@ -82,7 +82,8 @@ private:
             for (auto itr = node.begin(); itr != node.end(); ++itr)
             {
                 insert_indentation(cur_indent, str);
-                serialize_key(itr.key(), str);
+                serialize_node(itr.key(), cur_indent, str);
+                str += ":";
                 bool is_scalar = itr->is_scalar();
                 if (is_scalar)
                 {
@@ -320,14 +321,6 @@ private:
             break;
         }
         }
-    }
-
-    /// @brief Serialize mapping keys.
-    /// @param key A key string to be serialized.
-    /// @param str A string to hold serialization result.
-    void serialize_key(const std::string& key, std::string& str) const noexcept
-    {
-        str += key + ":";
     }
 
     /// @brief Insert indentation to the serialization result.

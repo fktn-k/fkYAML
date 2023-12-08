@@ -100,13 +100,8 @@ struct is_compatible_integer_type_impl : std::false_type
 /// @tparam CompatibleIntegerType A compatible integer type.
 template <typename TargetIntegerType, typename CompatibleIntegerType>
 struct is_compatible_integer_type_impl<
-    TargetIntegerType, CompatibleIntegerType,
-    enable_if_t<conjunction<
-        std::is_integral<TargetIntegerType>, is_non_bool_integral<CompatibleIntegerType>,
-        std::is_constructible<TargetIntegerType, CompatibleIntegerType>,
-        disjunction<
-            is_all_signed<TargetIntegerType, CompatibleIntegerType>,
-            is_all_unsigned<TargetIntegerType, CompatibleIntegerType>>>::value>> : std::true_type
+    TargetIntegerType, CompatibleIntegerType, enable_if_t<is_non_bool_integral<CompatibleIntegerType>::value>>
+    : std::true_type
 {
 };
 

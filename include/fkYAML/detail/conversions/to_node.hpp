@@ -286,10 +286,7 @@ inline void to_node(BasicNodeType& n, T b) noexcept
 /// @param i An integer object.
 template <
     typename BasicNodeType, typename T,
-    enable_if_t<
-        conjunction<
-            is_basic_node<BasicNodeType>, is_compatible_integer_type<typename BasicNodeType::integer_type, T>>::value,
-        int> = 0>
+    enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_non_bool_integral<T>>::value, int> = 0>
 inline void to_node(BasicNodeType& n, T i) noexcept
 {
     external_node_constructor<node_t::INTEGER>::construct(n, i);
