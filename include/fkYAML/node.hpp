@@ -943,16 +943,34 @@ public:
         }
     }
 
+    template <
+        typename KeyType, detail::enable_if_t<
+                              detail::conjunction<
+                                  detail::negation<detail::is_basic_node<detail::remove_cvref_t<KeyType>>>,
+                                  detail::is_node_compatible_type<basic_node, detail::remove_cvref_t<KeyType>>>::value,
+                              int> = 0>
+    bool contains(KeyType&& key) const
+    {
+        switch (m_node_type)
+        {
+        case node_t::MAPPING: {
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+            mapping_type& map = *m_node_value.p_mapping;
+            basic_node node_key = std::forward<KeyType>(key);
+            return map.find(node_key) != map.end();
+        }
+        default:
+            return false;
+        }
+    }
+
     /// @brief Check whether or not this basic_node object has a given key in its inner mapping Node value.
     /// @tparam KeyType A type compatible with the key type of mapping node values.
     /// @param[in] key A key to the target value in the YAML mapping node value.
     /// @return true if the YAML node is a mapping and has the given key, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/contains/
     template <
-        typename KeyType, detail::enable_if_t<
-                              detail::is_usable_as_key_type<
-                                  typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
-                              int> = 0>
+        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
     bool contains(KeyType&& key) const
     {
         switch (m_node_type)

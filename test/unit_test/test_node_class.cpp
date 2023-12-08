@@ -1863,30 +1863,16 @@ TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
     SECTION("Test mapping node.")
     {
         fkyaml::node node = fkyaml::node::mapping({{"test", fkyaml::node()}});
-        std::string key = "test";
 
-        SECTION("Test non-alias mapping node with lvalue key.")
+        SECTION("Test mapping node with a string key.")
         {
-            REQUIRE(node.contains(key));
+            REQUIRE(node.contains("test"));
         }
 
-        SECTION("Test alias mapping node with lvalue key.")
+        SECTION("Test mapping node with a string node key.")
         {
-            node.add_anchor_name("anchor_name");
-            fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE(node.contains(key));
-        }
-
-        SECTION("Test non-alias mapping node with rvalue key.")
-        {
-            REQUIRE(node.contains(std::move(key)));
-        }
-
-        SECTION("Test alias mapping node with rvalue key.")
-        {
-            node.add_anchor_name("anchor_name");
-            fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE(node.contains(std::move(key)));
+            fkyaml::node node_key = "test";
+            REQUIRE(node.contains(node_key));
         }
     }
 
@@ -1899,30 +1885,16 @@ TEST_CASE("NodeClassTest_ContainsTest", "[NodeClassTest]")
             fkyaml::node(0),
             fkyaml::node(0.0),
             fkyaml::node(""));
-        std::string key = "test";
 
-        SECTION("Test non-alias non-mapping node with lvalue key.")
+        SECTION("Test non-mapping node with a key.")
         {
-            REQUIRE_FALSE(node.contains(key));
+            REQUIRE_FALSE(node.contains("test"));
         }
 
-        SECTION("Test alias non-mapping node with lvalue key.")
+        SECTION("Test non-mapping node with a node key.")
         {
-            node.add_anchor_name("anchor_name");
-            fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_FALSE(alias.contains(key));
-        }
-
-        SECTION("Test non-alias non-mapping node with rvalue key.")
-        {
-            REQUIRE_FALSE(node.contains(std::move(key)));
-        }
-
-        SECTION("Test alias non-mapping node with rvalue key.")
-        {
-            node.add_anchor_name("anchor_name");
-            fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_FALSE(alias.contains(std::move(key)));
+            fkyaml::node node_key = "test";
+            REQUIRE_FALSE(node.contains(node_key));
         }
     }
 }

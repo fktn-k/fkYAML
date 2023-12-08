@@ -196,19 +196,18 @@ public:
             case lexical_token_t::NULL_VALUE: {
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string(), cur_indent, cur_line);
+                    add_new_key(BasicNodeType(), cur_indent, cur_line);
                     break;
                 }
 
                 if (m_current_node->is_sequence())
                 {
-                    string_type str = lexer.get_string();
                     type = lexer.get_next_token();
 
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        add_new_key(str, cur_indent, cur_line);
+                        add_new_key(BasicNodeType(), cur_indent, cur_line);
                         cur_indent = lexer.get_last_token_begin_pos();
                         cur_line = lexer.get_lines_processed();
                         continue;
@@ -226,20 +225,19 @@ public:
             case lexical_token_t::BOOLEAN_VALUE: {
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string(), cur_indent, cur_line);
+                    add_new_key(lexer.get_boolean(), cur_indent, cur_line);
                     break;
                 }
 
                 if (m_current_node->is_sequence())
                 {
                     boolean_type boolean = lexer.get_boolean();
-                    string_type str = lexer.get_string();
                     type = lexer.get_next_token();
 
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        add_new_key(str, cur_indent, cur_line);
+                        add_new_key(boolean, cur_indent, cur_line);
                         cur_indent = lexer.get_last_token_begin_pos();
                         cur_line = lexer.get_lines_processed();
                         continue;
@@ -257,20 +255,19 @@ public:
             case lexical_token_t::INTEGER_VALUE: {
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string(), cur_indent, cur_line);
+                    add_new_key(lexer.get_integer(), cur_indent, cur_line);
                     break;
                 }
 
                 if (m_current_node->is_sequence())
                 {
                     integer_type integer = lexer.get_integer();
-                    string_type str = lexer.get_string();
                     type = lexer.get_next_token();
 
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        add_new_key(str, cur_indent, cur_line);
+                        add_new_key(integer, cur_indent, cur_line);
                         cur_indent = lexer.get_last_token_begin_pos();
                         cur_line = lexer.get_lines_processed();
                         continue;
@@ -288,20 +285,19 @@ public:
             case lexical_token_t::FLOAT_NUMBER_VALUE: {
                 if (m_current_node->is_mapping())
                 {
-                    add_new_key(lexer.get_string(), cur_indent, cur_line);
+                    add_new_key(lexer.get_float_number(), cur_indent, cur_line);
                     break;
                 }
 
                 if (m_current_node->is_sequence())
                 {
                     float_number_type float_val = lexer.get_float_number();
-                    string_type str = lexer.get_string();
                     type = lexer.get_next_token();
 
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
-                        add_new_key(str, cur_indent, cur_line);
+                        add_new_key(float_val, cur_indent, cur_line);
                         cur_indent = lexer.get_last_token_begin_pos();
                         cur_line = lexer.get_lines_processed();
                         continue;
