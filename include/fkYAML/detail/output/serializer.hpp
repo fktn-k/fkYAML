@@ -82,7 +82,7 @@ private:
             for (auto itr = node.begin(); itr != node.end(); ++itr)
             {
                 insert_indentation(cur_indent, str);
-                serialize_key(itr.key(), str);
+                serialize_key(itr.key().template get_value_ref<const std::string&>(), str);
                 bool is_scalar = itr->is_scalar();
                 if (is_scalar)
                 {

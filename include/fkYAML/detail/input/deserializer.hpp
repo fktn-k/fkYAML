@@ -370,7 +370,7 @@ public:
 private:
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
-    void add_new_key(const string_type& key, const std::size_t indent, const std::size_t line)
+    void add_new_key(const BasicNodeType& key, const std::size_t indent, const std::size_t line)
     {
         if (!m_indent_stack.empty() && indent < m_indent_stack.back())
         {

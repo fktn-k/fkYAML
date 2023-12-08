@@ -420,7 +420,7 @@ public:
 
     /// @brief Get the key string of the YAML mapping node for the current iterator.
     /// @return const std::string& The key string of the YAML mapping node for the current iterator.
-    const std::string& key() const
+    const typename ValueType::mapping_type::key_type& key() const
     {
         if (m_inner_iterator_type == iterator_t::SEQUENCE)
         {
