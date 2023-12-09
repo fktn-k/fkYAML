@@ -879,6 +879,48 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root["stuff"][1]["name"].is_string());
         REQUIRE(root["stuff"][1]["name"].get_value_ref<std::string&>() == "Bar");
     }
+
+    SECTION("Input source No.15.")
+    {
+        auto input_adapter = fkyaml::detail::input_adapter("null: 3.14\n"
+                                                           "foo:\n"
+                                                           "  ? bar\n"
+                                                           "  : baz\n"
+                                                           "? ? foo\n"
+                                                           "  : bar\n"
+                                                           ": baz\n"
+                                                           "? - 123\n"
+                                                           "  - foo:\n"
+                                                           "      bar: baz\n"
+                                                           ": true");
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(std::move(input_adapter)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 4);
+
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root[nullptr].is_float_number());
+        REQUIRE(root[nullptr].get_value<double>() == 3.14);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_mapping());
+        REQUIRE(root["foo"].size() == 1);
+
+        REQUIRE(root["foo"].contains("bar"));
+        REQUIRE(root["foo"]["bar"].is_string());
+        REQUIRE(root["foo"]["bar"].get_value_ref<std::string&>() == "baz");
+
+        fkyaml::node key = {{"foo", "bar"}};
+        REQUIRE(root.contains(key));
+        REQUIRE(root[key].is_string());
+        REQUIRE(root[key].get_value_ref<std::string&>() == "baz");
+
+        key = {123, {{"foo", {{"bar", "baz"}}}}};
+        REQUIRE(root.contains(key));
+        REQUIRE(root[key].is_boolean());
+        REQUIRE(root[key].get_value<bool>() == true);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerClassTest]")

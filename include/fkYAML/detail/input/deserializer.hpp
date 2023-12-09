@@ -78,12 +78,75 @@ public:
             case lexical_token_t::END_OF_BUFFER:
                 // This handles an empty input.
                 break;
+            case lexical_token_t::EXPLICIT_KEY_PREFIX: {
+                bool needs_to_move_back = !m_indent_stack.empty() && cur_indent < m_indent_stack.back().first;
+                if (needs_to_move_back)
+                {
+                    auto target_itr = std::find_if( // LCOV_EXCL_LINE
+                        m_indent_stack.rbegin(),
+                        m_indent_stack.rend(),
+                        [cur_indent](std::pair<std::size_t, bool> p) { return cur_indent > p.first; });
+
+                    auto pop_num = std::distance(m_indent_stack.rbegin(), target_itr);
+                    for (auto i = 0; i < pop_num; i++)
+                    {
+                        // move back to the previous container node.
+                        m_current_node = m_node_stack.back();
+                        m_node_stack.pop_back();
+                        m_indent_stack.pop_back();
+                    }
+                }
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
+                {
+                    m_node_stack.push_back(m_current_node);
+                    m_indent_stack.emplace_back(lexer.get_last_token_begin_pos(), true);
+                    m_current_node = new BasicNodeType(node_t::SEQUENCE);
+                    set_yaml_version(*m_current_node);
+                    break;
+                }
+
+                if (m_current_node->is_null())
+                {
+                    *m_current_node = BasicNodeType::mapping();
+                }
+
+                m_node_stack.push_back(m_current_node);
+                m_indent_stack.emplace_back(cur_indent, true);
+                m_current_node = new BasicNodeType();
+                set_yaml_version(*m_current_node);
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+
+                continue;
+            }
             case lexical_token_t::KEY_SEPARATOR: {
                 bool is_stack_empty = m_node_stack.empty();
                 if (is_stack_empty)
                 {
                     throw parse_error("A key separator found without key.", cur_line, cur_indent);
                 }
+
+                bool is_implicit = m_indent_stack.empty() || cur_indent > m_indent_stack.back().first;
+                if (is_implicit)
+                {
+                    break;
+                }
+
+                while (!m_indent_stack.back().second)
+                {
+                    m_current_node = m_node_stack.back();
+                    m_node_stack.pop_back();
+                    m_indent_stack.pop_back();
+                }
+                BasicNodeType* key_node = m_current_node;
+                m_node_stack.back()->template get_value_ref<mapping_type&>().emplace(*key_node, BasicNodeType());
+                m_current_node = &(m_node_stack.back()->operator[](*key_node));
+                delete key_node;
+                key_node = nullptr;
+                m_node_stack.push_back(m_node_stack.back());
+                m_indent_stack.back().second = false;
                 break;
             }
             case lexical_token_t::VALUE_SEPARATOR:
@@ -123,12 +186,12 @@ public:
                     bool is_empty = m_current_node->empty();
                     if (is_empty)
                     {
-                        m_indent_stack.push_back(cur_indent);
+                        m_indent_stack.emplace_back(cur_indent, false);
                         break;
                     }
 
                     // move back to the previous sequence if necessary.
-                    while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back())
+                    while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back().first)
                     {
                         m_current_node = m_node_stack.back();
                         m_node_stack.pop_back();
@@ -144,7 +207,7 @@ public:
                 }
 
                 // move back to the previous sequence if necessary.
-                while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back())
+                while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back().first)
                 {
                     m_current_node = m_node_stack.back();
                     m_node_stack.pop_back();
@@ -368,9 +431,12 @@ private:
     /// @param key a key string to be added to the current YAML node.
     void add_new_key(const BasicNodeType& key, const std::size_t indent, const std::size_t line)
     {
-        if (!m_indent_stack.empty() && indent < m_indent_stack.back())
+        if (!m_indent_stack.empty() && indent < m_indent_stack.back().first)
         {
-            auto target_itr = std::find(m_indent_stack.rbegin(), m_indent_stack.rend(), indent);
+            auto target_itr =
+                std::find_if(m_indent_stack.rbegin(), m_indent_stack.rend(), [indent](std::pair<std::size_t, bool> p) {
+                    return indent == p.first;
+                });
             bool is_indent_valid = (target_itr != m_indent_stack.rend());
             if (!is_indent_valid)
             {
@@ -398,7 +464,7 @@ private:
         bool is_empty = map.empty();
         if (is_empty)
         {
-            m_indent_stack.push_back(indent);
+            m_indent_stack.emplace_back(indent, false);
         }
         else
         {
@@ -443,8 +509,11 @@ private:
             m_needs_anchor_impl = false;
             m_anchor_name.clear();
         }
-        m_current_node = m_node_stack.back();
-        m_node_stack.pop_back();
+        if (!m_indent_stack.back().second)
+        {
+            m_current_node = m_node_stack.back();
+            m_node_stack.pop_back();
+        }
     }
 
     /// @brief Set the yaml_version_t object to the given node.
@@ -472,7 +541,7 @@ private:
     /// The stack of YAML nodes.
     std::vector<BasicNodeType*> m_node_stack {};
     /// The stack of indentation widths.
-    std::vector<std::size_t> m_indent_stack {};
+    std::vector<std::pair<std::size_t /*indent*/, bool /*is_explicit_key*/>> m_indent_stack {};
     /// The YAML version specification type.
     yaml_version_t m_yaml_version {yaml_version_t::VER_1_2};
     /// A flag to determine the need for YAML anchor node implementation.

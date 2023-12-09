@@ -100,7 +100,16 @@ public:
         switch (current)
         {
         case end_of_input: // end of input buffer
-            return lexical_token_t::END_OF_BUFFER;
+            return m_last_token_type = lexical_token_t::END_OF_BUFFER;
+        case '?':
+            switch (m_input_handler.get_next())
+            {
+            case ' ':
+                return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
+            default:
+                m_input_handler.unget();
+                return m_last_token_type = scan_string();
+            }
         case ':': // key separater
             switch (m_input_handler.get_next())
             {

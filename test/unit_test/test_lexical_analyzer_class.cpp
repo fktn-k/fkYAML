@@ -432,6 +432,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string("test"), fkyaml::node::string_type("test")),
         value_pair_t(std::string("nop"), fkyaml::node::string_type("nop")),
         value_pair_t(std::string("none"), fkyaml::node::string_type("none")),
+        value_pair_t(std::string("?test"), fkyaml::node::string_type("?test")),
         value_pair_t(std::string(".NET"), fkyaml::node::string_type(".NET")),
         value_pair_t(std::string(".on"), fkyaml::node::string_type(".on")),
         value_pair_t(std::string(".n"), fkyaml::node::string_type(".n")),
