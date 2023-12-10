@@ -318,6 +318,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_8_N);
         REQUIRE(std::ftell(p_file) == 0);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with UTF-8(BOM) encoding")
@@ -330,6 +332,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_8_BOM);
         REQUIRE(std::ftell(p_file) == 3);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with UTF-16BE encoding")
@@ -342,6 +346,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_16BE_N);
         REQUIRE(std::ftell(p_file) == 0);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with UTF-16BE(BOM) encoding")
@@ -354,6 +360,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_16BE_BOM);
         REQUIRE(std::ftell(p_file) == 2);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with UTF-16LE encoding")
@@ -366,6 +374,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_16LE_N);
         REQUIRE(std::ftell(p_file) == 0);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with UTF-16LE(BOM) encoding")
@@ -378,6 +388,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_16LE_BOM);
         REQUIRE(std::ftell(p_file) == 2);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with UTF-32BE encoding")
@@ -390,6 +402,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_32BE_N);
         REQUIRE(std::ftell(p_file) == 0);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with UTF-32BE(BOM) encoding")
@@ -402,6 +416,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_32BE_BOM);
         REQUIRE(std::ftell(p_file) == 4);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with UTF-32LE encoding")
@@ -414,6 +430,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_32LE_N);
         REQUIRE(std::ftell(p_file) == 0);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with UTF-32LE(BOM) encoding")
@@ -426,6 +444,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_32LE_BOM);
         REQUIRE(std::ftell(p_file) == 4);
+
+        std::fclose(p_file);
     }
 
     SECTION("FILE* object with an empty input file")
@@ -438,6 +458,8 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTes
         fkyaml::detail::encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
         REQUIRE(ret == fkyaml::detail::encode_t::UTF_8_N);
         REQUIRE(std::ftell(p_file) == 0);
+
+        std::fclose(p_file);
     }
 
     /////////////////////////////
