@@ -101,7 +101,8 @@ public:
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     m_node_stack.push_back(m_current_node);
-                    m_indent_stack.emplace_back(lexer.get_last_token_begin_pos(), true);
+                    m_indent_stack.emplace_back(cur_indent, true);
+                    m_indent_stack.emplace_back(lexer.get_last_token_begin_pos(), false);
                     m_current_node = new BasicNodeType(node_t::SEQUENCE);
                     set_yaml_version(*m_current_node);
                     break;

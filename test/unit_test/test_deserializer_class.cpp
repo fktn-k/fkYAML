@@ -891,7 +891,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
                                                            ": baz\n"
                                                            "? - 123\n"
                                                            "  - foo:\n"
-                                                           "      bar: baz\n"
+                                                           "      ? bar\n"
+                                                           "      : baz\n"
                                                            ": true");
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(std::move(input_adapter)));
