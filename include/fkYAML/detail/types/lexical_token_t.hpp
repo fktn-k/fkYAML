@@ -24,6 +24,7 @@ namespace detail
 enum class lexical_token_t
 {
     END_OF_BUFFER,         //!< the end of input buffer.
+    EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
     KEY_SEPARATOR,         //!< the key separater `:`
     VALUE_SEPARATOR,       //!< the value separater `,`
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
