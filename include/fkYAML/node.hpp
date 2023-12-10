@@ -410,7 +410,7 @@ public:
     {
         bool is_mapping =
             std::all_of(init.begin(), init.end(), [](const detail::node_ref_storage<basic_node>& node_ref) {
-                return node_ref->is_sequence() && node_ref->size() == 2 && node_ref->operator[](0).is_string();
+                return node_ref->is_sequence() && node_ref->size() == 2;
             });
 
         if (is_mapping)
@@ -422,8 +422,7 @@ public:
             {
                 auto elem = elem_ref.release();
                 m_node_value.p_mapping->emplace(
-                    std::move(*((*(elem.m_node_value.p_sequence))[0].m_node_value.p_string)),
-                    std::move((*(elem.m_node_value.p_sequence))[1]));
+                    std::move((*(elem.m_node_value.p_sequence))[0]), std::move((*(elem.m_node_value.p_sequence))[1]));
             }
         }
         else

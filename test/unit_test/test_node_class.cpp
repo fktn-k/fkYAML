@@ -344,30 +344,39 @@ TEST_CASE("NodeClassTest_InitializerListCtorTest", "[NodeClassTest]")
 {
     fkyaml::node node = {
         {"foo", 3.14},
-        {"bar", 123},
-        {"baz", {true, false}},
-        {"qux", nullptr},
-    };
+        {true, 123},
+        {567, {true, false}},
+        {{true, 1.57}, nullptr},
+        {{{"bar", nullptr}}, {{"baz", "qux"}}}};
+
+    REQUIRE(node.is_mapping());
+    REQUIRE(node.size() == 5);
 
     REQUIRE(node.contains("foo"));
     REQUIRE(node["foo"].is_float_number());
     REQUIRE(node["foo"].get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
 
-    REQUIRE(node.contains("bar"));
-    REQUIRE(node["bar"].is_integer());
-    REQUIRE(node["bar"].get_value_ref<fkyaml::node::integer_type&>() == 123);
+    REQUIRE(node.contains(true));
+    REQUIRE(node[true].is_integer());
+    REQUIRE(node[true].get_value_ref<fkyaml::node::integer_type&>() == 123);
 
-    REQUIRE(node.contains("baz"));
-    REQUIRE(node["baz"].is_sequence());
-    REQUIRE(node["baz"].size() == 2);
-    auto& baz_seq = node["baz"].get_value_ref<fkyaml::node::sequence_type&>();
-    REQUIRE(baz_seq[0].is_boolean());
-    REQUIRE(baz_seq[0].get_value_ref<fkyaml::node::boolean_type&>() == true);
-    REQUIRE(baz_seq[1].is_boolean());
-    REQUIRE(baz_seq[1].get_value_ref<fkyaml::node::boolean_type&>() == false);
+    REQUIRE(node.contains(567));
+    REQUIRE(node[567].is_sequence());
+    REQUIRE(node[567].size() == 2);
+    REQUIRE(node[567][0].is_boolean());
+    REQUIRE(node[567][0].get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE(node[567][1].is_boolean());
+    REQUIRE(node[567][1].get_value_ref<fkyaml::node::boolean_type&>() == false);
 
-    REQUIRE(node.contains("qux"));
-    REQUIRE(node["qux"].is_null());
+    REQUIRE(node.contains(fkyaml::node {true, 1.57}));
+    REQUIRE(node[fkyaml::node {true, 1.57}].is_null());
+
+    REQUIRE(node.contains(fkyaml::node {{"bar", nullptr}}));
+    REQUIRE(node[fkyaml::node {{"bar", nullptr}}].is_mapping());
+    REQUIRE(node[fkyaml::node {{"bar", nullptr}}].size() == 1);
+    REQUIRE(node[fkyaml::node {{"bar", nullptr}}].contains("baz"));
+    REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].is_string());
+    REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].get_value_ref<fkyaml::node::string_type&>() == "qux");
 }
 
 //
