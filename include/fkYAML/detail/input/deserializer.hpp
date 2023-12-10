@@ -148,7 +148,16 @@ public:
                 key_node = nullptr;
                 m_node_stack.push_back(m_node_stack.back());
                 m_indent_stack.back().second = false;
-                break;
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
+                {
+                    *m_current_node = BasicNodeType::sequence();
+                    set_yaml_version(*m_current_node);
+                }
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::VALUE_SEPARATOR:
                 break;
@@ -264,10 +273,9 @@ public:
                     break;
                 }
 
+                type = lexer.get_next_token();
                 if (m_current_node->is_sequence())
                 {
-                    type = lexer.get_next_token();
-
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
@@ -283,8 +291,21 @@ public:
                     continue;
                 }
 
+                if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
+                {
+                    if (cur_line == lexer.get_lines_processed())
+                    {
+                        *m_current_node = BasicNodeType::mapping();
+                        add_new_key(BasicNodeType(), cur_indent, cur_line);
+                        cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
+                        continue;
+                    }
+                }
                 assign_node_value(BasicNodeType());
-                break;
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::BOOLEAN_VALUE: {
                 if (m_current_node->is_mapping())
@@ -293,11 +314,10 @@ public:
                     break;
                 }
 
+                boolean_type boolean = lexer.get_boolean();
+                type = lexer.get_next_token();
                 if (m_current_node->is_sequence())
                 {
-                    boolean_type boolean = lexer.get_boolean();
-                    type = lexer.get_next_token();
-
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
@@ -313,8 +333,21 @@ public:
                     continue;
                 }
 
-                assign_node_value(BasicNodeType(lexer.get_boolean()));
-                break;
+                if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
+                {
+                    if (cur_line == lexer.get_lines_processed())
+                    {
+                        *m_current_node = BasicNodeType::mapping();
+                        add_new_key(boolean, cur_indent, cur_line);
+                        cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
+                        continue;
+                    }
+                }
+                assign_node_value(BasicNodeType(boolean));
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::INTEGER_VALUE: {
                 if (m_current_node->is_mapping())
@@ -323,11 +356,10 @@ public:
                     break;
                 }
 
+                integer_type integer = lexer.get_integer();
+                type = lexer.get_next_token();
                 if (m_current_node->is_sequence())
                 {
-                    integer_type integer = lexer.get_integer();
-                    type = lexer.get_next_token();
-
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
                     {
@@ -343,8 +375,21 @@ public:
                     continue;
                 }
 
-                assign_node_value(BasicNodeType(lexer.get_integer()));
-                break;
+                if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
+                {
+                    if (cur_line == lexer.get_lines_processed())
+                    {
+                        *m_current_node = BasicNodeType::mapping();
+                        add_new_key(integer, cur_indent, cur_line);
+                        cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
+                        continue;
+                    }
+                }
+                assign_node_value(BasicNodeType(integer));
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::FLOAT_NUMBER_VALUE: {
                 if (m_current_node->is_mapping())
@@ -353,10 +398,10 @@ public:
                     break;
                 }
 
+                float_number_type float_val = lexer.get_float_number();
+                type = lexer.get_next_token();
                 if (m_current_node->is_sequence())
                 {
-                    float_number_type float_val = lexer.get_float_number();
-                    type = lexer.get_next_token();
 
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
@@ -373,8 +418,21 @@ public:
                     continue;
                 }
 
-                assign_node_value(BasicNodeType(lexer.get_float_number()));
-                break;
+                if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
+                {
+                    if (cur_line == lexer.get_lines_processed())
+                    {
+                        *m_current_node = BasicNodeType::mapping();
+                        add_new_key(float_val, cur_indent, cur_line);
+                        cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
+                        continue;
+                    }
+                }
+                assign_node_value(BasicNodeType(float_val));
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::STRING_VALUE: {
                 if (m_current_node->is_mapping())
@@ -384,9 +442,9 @@ public:
                 }
 
                 string_type str = lexer.get_string();
+                type = lexer.get_next_token();
                 if (m_current_node->is_sequence())
                 {
-                    type = lexer.get_next_token();
 
                     // check if the current target token is a key or not.
                     if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
@@ -403,8 +461,21 @@ public:
                     continue;
                 }
 
+                if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
+                {
+                    if (cur_line == lexer.get_lines_processed())
+                    {
+                        *m_current_node = BasicNodeType::mapping();
+                        add_new_key(str, cur_indent, cur_line);
+                        cur_indent = lexer.get_last_token_begin_pos();
+                        cur_line = lexer.get_lines_processed();
+                        continue;
+                    }
+                }
                 assign_node_value(BasicNodeType(str));
-                break;
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::END_OF_DIRECTIVES:
                 break;

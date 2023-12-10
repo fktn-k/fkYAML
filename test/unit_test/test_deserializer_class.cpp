@@ -888,12 +888,13 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
                                                            "  : baz\n"
                                                            "? ? foo\n"
                                                            "  : bar\n"
-                                                           ": baz\n"
+                                                           ": - baz\n"
+                                                           "  - qux\n"
                                                            "? - 123\n"
                                                            "  - foo:\n"
                                                            "      ? bar\n"
                                                            "      : baz\n"
-                                                           ": true");
+                                                           ": one: true");
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(std::move(input_adapter)));
 
@@ -914,13 +915,21 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
         fkyaml::node key = {{"foo", "bar"}};
         REQUIRE(root.contains(key));
-        REQUIRE(root[key].is_string());
-        REQUIRE(root[key].get_value_ref<std::string&>() == "baz");
+        REQUIRE(root[key].is_sequence());
+        REQUIRE(root[key].size() == 2);
+        REQUIRE(root[key][0].is_string());
+        REQUIRE(root[key][0].get_value_ref<std::string&>() == "baz");
+        REQUIRE(root[key][1].is_string());
+        REQUIRE(root[key][1].get_value_ref<std::string&>() == "qux");
 
         key = {123, {{"foo", {{"bar", "baz"}}}}};
         REQUIRE(root.contains(key));
-        REQUIRE(root[key].is_boolean());
-        REQUIRE(root[key].get_value<bool>() == true);
+        REQUIRE(root[key].is_mapping());
+        REQUIRE(root[key].size() == 1);
+
+        REQUIRE(root[key].contains("one"));
+        REQUIRE(root[key]["one"].is_boolean());
+        REQUIRE(root[key]["one"].get_value<bool>() == true);
     }
 }
 
