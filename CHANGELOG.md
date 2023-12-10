@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.3.0](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.0) (2023-12-10)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.2.3...v0.3.0)
+
+- Add GCC compiler versions tested in GA workflows [\#248](https://github.com/fktn-k/fkYAML/pull/248) ([fktn-k](https://github.com/fktn-k))
+- \#240 Support non-string-scalar node keys in basic\_node ctor with std::initializer\_list [\#247](https://github.com/fktn-k/fkYAML/pull/247) ([fktn-k](https://github.com/fktn-k))
+- \#240 Support explicit block mappings & non-scalar nodes as mapping keys [\#245](https://github.com/fktn-k/fkYAML/pull/245) ([fktn-k](https://github.com/fktn-k))
+- \#240 Support non-string scalar nodes as mapping keys [\#244](https://github.com/fktn-k/fkYAML/pull/244) ([fktn-k](https://github.com/fktn-k))
+- \#240 implement node comparison [\#243](https://github.com/fktn-k/fkYAML/pull/243) ([fktn-k](https://github.com/fktn-k))
+- Feature/238 apply correct noexcept [\#241](https://github.com/fktn-k/fkYAML/pull/241) ([fktn-k](https://github.com/fktn-k))
+
+- Fixed missing callings of `fclose()` in the unit tests [\#246](https://github.com/fktn-k/fkYAML/pull/246) ([fktn-k](https://github.com/fktn-k))
+
+- Update copyright description [\#249](https://github.com/fktn-k/fkYAML/pull/249) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.2.3](https://github.com/fktn-k/fkYAML/releases/tag/v0.2.3) (2023-12-03)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.2.2...v0.2.3)
