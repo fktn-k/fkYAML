@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,6 +11,16 @@
 #include <fkYAML/detail/input/deserializer.hpp>
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/node.hpp>
+
+TEST_CASE("DeserializerClassTest_DeserializeEmptyInput", "[DeserializerClassTest]")
+{
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(" ")));
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.empty());
+}
 
 TEST_CASE("DeserializerClassTest_DeserializeKeySeparator", "[DeserializerClassTest]")
 {
@@ -53,14 +63,14 @@ TEST_CASE("DeserializerClassTest_DeserializeNullValue", "[DeserializerClassTes]"
     SECTION("key not in a sequence.")
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Null: test")));
-        REQUIRE(root.contains("Null"));
+        REQUIRE(root.contains(nullptr));
     }
 
     SECTION("key in a sequence.")
     {
         auto input = GENERATE(std::string("test:\n  - null: foo"), std::string("test:\n  - null:\n      - true"));
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-        REQUIRE(root["test"][0].contains("null"));
+        REQUIRE(root["test"][0].contains(nullptr));
     }
 
     SECTION("mapping value.")
@@ -84,14 +94,14 @@ TEST_CASE("DeserializerClassTest_DeserializeBooleanValue", "[DeserializerClassTe
     SECTION("key not in a sequence.")
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("true: test")));
-        REQUIRE(root.contains("true"));
+        REQUIRE(root.contains(true));
     }
 
     SECTION("key in a sequence.")
     {
         auto input = GENERATE(std::string("test:\n  - false: foo"), std::string("test:\n  - false:\n      - null"));
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-        REQUIRE(root["test"][0].contains("false"));
+        REQUIRE(root["test"][0].contains(false));
     }
 
     SECTION("mapping value.")
@@ -115,14 +125,14 @@ TEST_CASE("DeserializerClassTest_DeserializeIntegerKey", "[DeserializerClassTest
     SECTION("key not in a sequence.")
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("123: test")));
-        REQUIRE(root.contains("123"));
+        REQUIRE(root.contains(123));
     }
 
     SECTION("key in a sequence.")
     {
         auto input = GENERATE(std::string("test:\n  - 123: foo"), std::string("test:\n  - 123:\n      - true"));
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-        REQUIRE(root["test"][0].contains("123"));
+        REQUIRE(root["test"][0].contains(123));
     }
 
     SECTION("mapping value.")
@@ -146,14 +156,14 @@ TEST_CASE("DeserializerClassTest_DeserializeFloatingPointNumberKey", "[Deseriali
     SECTION("key not in a sequence.")
     {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("3.14: test")));
-        REQUIRE(root.contains("3.14"));
+        REQUIRE(root.contains(3.14));
     }
 
     SECTION("key in a sequence.")
     {
         auto input = GENERATE(std::string("test:\n  - .inf: foo"), std::string("test:\n  - .inf:\n      - true"));
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-        REQUIRE(root["test"][0].contains(".inf"));
+        REQUIRE(root["test"][0].contains(std::numeric_limits<fkyaml::node::float_number_type>::infinity()));
     }
 
     SECTION("mapping value.")
@@ -868,6 +878,58 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root["stuff"][1].contains("name"));
         REQUIRE(root["stuff"][1]["name"].is_string());
         REQUIRE(root["stuff"][1]["name"].get_value_ref<std::string&>() == "Bar");
+    }
+
+    SECTION("Input source No.15.")
+    {
+        auto input_adapter = fkyaml::detail::input_adapter("null: 3.14\n"
+                                                           "foo:\n"
+                                                           "  ? bar\n"
+                                                           "  : baz\n"
+                                                           "? - 123\n"
+                                                           "  - foo:\n"
+                                                           "      ? bar\n"
+                                                           "      : baz\n"
+                                                           ": one: true\n"
+                                                           "? ? foo\n"
+                                                           "  : bar\n"
+                                                           ": - baz\n"
+                                                           "  - qux\n");
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(std::move(input_adapter)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 4);
+
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root[nullptr].is_float_number());
+        REQUIRE(root[nullptr].get_value<double>() == 3.14);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_mapping());
+        REQUIRE(root["foo"].size() == 1);
+
+        REQUIRE(root["foo"].contains("bar"));
+        REQUIRE(root["foo"]["bar"].is_string());
+        REQUIRE(root["foo"]["bar"].get_value_ref<std::string&>() == "baz");
+
+        fkyaml::node key = {123, {{"foo", {{"bar", "baz"}}}}};
+        REQUIRE(root.contains(key));
+        REQUIRE(root[key].is_mapping());
+        REQUIRE(root[key].size() == 1);
+
+        REQUIRE(root[key].contains("one"));
+        REQUIRE(root[key]["one"].is_boolean());
+        REQUIRE(root[key]["one"].get_value<bool>() == true);
+
+        key = {{"foo", "bar"}};
+        REQUIRE(root.contains(key));
+        REQUIRE(root[key].is_sequence());
+        REQUIRE(root[key].size() == 2);
+        REQUIRE(root[key][0].is_string());
+        REQUIRE(root[key][0].get_value_ref<std::string&>() == "baz");
+        REQUIRE(root[key][1].is_string());
+        REQUIRE(root[key][1].get_value_ref<std::string&>() == "qux");
     }
 }
 

@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -56,7 +56,7 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type)
+    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
           m_encode_type(encode_type)
@@ -74,31 +74,33 @@ public:
     /// @return std::char_traits<char_type>::int_type A character or EOF.
     typename std::char_traits<char_type>::int_type get_character()
     {
+        typename std::char_traits<char_type>::int_type ret = 0;
         switch (m_encode_type)
         {
         case encode_t::UTF_8_N:
         case encode_t::UTF_8_BOM:
-            return get_character_for_utf8();
+            ret = get_character_for_utf8();
+            break;
         case encode_t::UTF_16BE_N:
         case encode_t::UTF_16BE_BOM:
         case encode_t::UTF_16LE_N:
         case encode_t::UTF_16LE_BOM:
-            return get_character_for_utf16();
+            ret = get_character_for_utf16();
+            break;
         case encode_t::UTF_32BE_N:
         case encode_t::UTF_32BE_BOM:
         case encode_t::UTF_32LE_N:
         case encode_t::UTF_32LE_BOM:
-            return get_character_for_utf32();
-        default: // LCOV_EXCL_LINE
-            // should not come here.
-            return std::char_traits<char_type>::eof(); // LCOV_EXCL_LINE
+            ret = get_character_for_utf32();
+            break;
         }
+        return ret;
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8()
+    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
     {
         if (m_current != m_end)
         {
@@ -254,7 +256,7 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type)
+    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
           m_encode_type(encode_type)
@@ -361,7 +363,7 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type)
+    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
           m_encode_type(encode_type)
@@ -448,7 +450,7 @@ public:
     /// It's user's responsibility to call those functions.
     /// @param file A file handle for this adapter. (A non-null pointer is assumed.)
     /// @param encode_type The encoding type for this input adapter.
-    explicit file_input_adapter(std::FILE* file, encode_t encode_type)
+    explicit file_input_adapter(std::FILE* file, encode_t encode_type) noexcept
         : m_file(file),
           m_encode_type(encode_type)
     {
@@ -465,31 +467,33 @@ public:
     /// @return std::char_traits<char_type>::int_type A character or EOF.
     typename std::char_traits<char_type>::int_type get_character()
     {
+        typename std::char_traits<char_type>::int_type ret = 0;
         switch (m_encode_type)
         {
         case encode_t::UTF_8_N:
         case encode_t::UTF_8_BOM:
-            return get_character_for_utf8();
+            ret = get_character_for_utf8();
+            break;
         case encode_t::UTF_16BE_N:
         case encode_t::UTF_16BE_BOM:
         case encode_t::UTF_16LE_N:
         case encode_t::UTF_16LE_BOM:
-            return get_character_for_utf16();
+            ret = get_character_for_utf16();
+            break;
         case encode_t::UTF_32BE_N:
         case encode_t::UTF_32BE_BOM:
         case encode_t::UTF_32LE_N:
         case encode_t::UTF_32LE_BOM:
-            return get_character_for_utf32();
-        default: // LCOV_EXCL_LINE
-            // should not come here.
-            return std::char_traits<char_type>::eof(); // LCOV_EXCL_LINE
+            ret = get_character_for_utf32();
+            break;
         }
+        return ret;
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8()
+    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
     {
         char ch = 0;
         size_t size = std::fread(&ch, sizeof(char), 1, m_file);
@@ -627,7 +631,7 @@ public:
 
     /// @brief Construct a new stream_input_adapter object.
     /// @param is A reference to the target input stream.
-    explicit stream_input_adapter(std::istream& is, encode_t encode_type)
+    explicit stream_input_adapter(std::istream& is, encode_t encode_type) noexcept
         : m_istream(&is),
           m_encode_type(encode_type)
     {
@@ -642,33 +646,35 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    std::char_traits<char_type>::int_type get_character()
+    typename std::char_traits<char_type>::int_type get_character()
     {
+        typename std::char_traits<char_type>::int_type ret = 0;
         switch (m_encode_type)
         {
         case encode_t::UTF_8_N:
         case encode_t::UTF_8_BOM:
-            return get_character_for_utf8();
+            ret = get_character_for_utf8();
+            break;
         case encode_t::UTF_16BE_N:
         case encode_t::UTF_16BE_BOM:
         case encode_t::UTF_16LE_N:
         case encode_t::UTF_16LE_BOM:
-            return get_character_for_utf16();
+            ret = get_character_for_utf16();
+            break;
         case encode_t::UTF_32BE_N:
         case encode_t::UTF_32BE_BOM:
         case encode_t::UTF_32LE_N:
         case encode_t::UTF_32LE_BOM:
-            return get_character_for_utf32();
-        default: // LCOV_EXCL_LINE
-            // should not come here.
-            return std::char_traits<char_type>::eof(); // LCOV_EXCL_LINE
+            ret = get_character_for_utf32();
+            break;
         }
+        return ret;
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8()
+    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
     {
         return m_istream->get();
     }

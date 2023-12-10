@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -286,10 +286,7 @@ inline void to_node(BasicNodeType& n, T b) noexcept
 /// @param i An integer object.
 template <
     typename BasicNodeType, typename T,
-    enable_if_t<
-        conjunction<
-            is_basic_node<BasicNodeType>, is_compatible_integer_type<typename BasicNodeType::integer_type, T>>::value,
-        int> = 0>
+    enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_non_bool_integral<T>>::value, int> = 0>
 inline void to_node(BasicNodeType& n, T i) noexcept
 {
     external_node_constructor<node_t::INTEGER>::construct(n, i);

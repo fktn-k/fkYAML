@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -82,7 +82,8 @@ private:
             for (auto itr = node.begin(); itr != node.end(); ++itr)
             {
                 insert_indentation(cur_indent, str);
-                serialize_key(itr.key(), str);
+                serialize_node(itr.key(), cur_indent, str);
+                str += ":";
                 bool is_scalar = itr->is_scalar();
                 if (is_scalar)
                 {
@@ -319,23 +320,13 @@ private:
             }
             break;
         }
-        default:                                                     // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported node type found."); // LCOV_EXCL_LINE
         }
-    }
-
-    /// @brief Serialize mapping keys.
-    /// @param key A key string to be serialized.
-    /// @param str A string to hold serialization result.
-    void serialize_key(const std::string& key, std::string& str)
-    {
-        str += key + ":";
     }
 
     /// @brief Insert indentation to the serialization result.
     /// @param cur_indent The current indent width to be inserted.
     /// @param str A string to hold serialization result.
-    void insert_indentation(const uint32_t cur_indent, std::string& str)
+    void insert_indentation(const uint32_t cur_indent, std::string& str) const noexcept
     {
         for (uint32_t i = 0; i < cur_indent; ++i)
         {

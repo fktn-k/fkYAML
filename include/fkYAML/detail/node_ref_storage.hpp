@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -39,14 +39,14 @@ class node_ref_storage
 public:
     /// @brief Construct a new node ref storage object with an rvalue basic_node object.
     /// @param n An rvalue basic_node object.
-    node_ref_storage(node_type&& n)
+    explicit node_ref_storage(node_type&& n) noexcept(std::is_nothrow_move_constructible<node_type>::value)
         : owned_value(std::move(n))
     {
     }
 
     /// @brief Construct a new node ref storage object with an lvalue basic_node object.
     /// @param n An lvalue basic_node object.
-    node_ref_storage(const node_type& n)
+    explicit node_ref_storage(const node_type& n) noexcept
         : value_ref(&n)
     {
     }
@@ -76,14 +76,14 @@ public:
 public:
     /// @brief An arrow operator for node_ref_storage objects.
     /// @return const node_type* A constant pointer to a basic_node object.
-    const node_type* operator->() const
+    const node_type* operator->() const noexcept
     {
         return value_ref ? value_ref : &owned_value;
     }
 
     /// @brief Releases a basic_node object internally held.
     /// @return node_type A basic_node object internally held.
-    node_type release() const
+    node_type release() const noexcept
     {
         return value_ref ? *value_ref : std::move(owned_value);
     }

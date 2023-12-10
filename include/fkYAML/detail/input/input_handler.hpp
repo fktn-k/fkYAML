@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -65,7 +65,7 @@ public:
 
     /// @brief Get the character at the current position.
     /// @return int_type A character or EOF.
-    int_type get_current()
+    int_type get_current() const noexcept
     {
         return m_cache[m_position.cur_pos];
     }

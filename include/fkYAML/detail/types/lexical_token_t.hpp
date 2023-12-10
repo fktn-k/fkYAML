@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -24,6 +24,7 @@ namespace detail
 enum class lexical_token_t
 {
     END_OF_BUFFER,         //!< the end of input buffer.
+    EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
     KEY_SEPARATOR,         //!< the key separater `:`
     VALUE_SEPARATOR,       //!< the value separater `,`
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`

@@ -8,7 +8,7 @@ include(FetchContent)
 FetchContent_Declare(
   fkYAML
   GIT_REPOSITORY https://github.com/fktn-k/fkYAML.git
-  GIT_TAG v0.2.3)
+  GIT_TAG v0.3.0)
 FetchContent_MakeAvailable(fkYAML)
 
 add_executable(CMakeFetchContentTest main.cpp)

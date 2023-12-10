@@ -115,6 +115,9 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 | Clang 14.0.6                             | Ubuntu 22.04.3 LTS |
 | Clang 15.0.7                             | Ubuntu 22.04.3 LTS |
 | Clang 16.0.6                             | Ubuntu 22.04.3 LTS |
+| Clang 17.0.4                             | Ubuntu 22.04.3 LTS |
+| GCC 7.5.0                                | Ubuntu 22.04.3 LTS |
+| GCC 8.5.0                                | Ubuntu 22.04.3 LTS |
 | GCC 9.5.0                                | Ubuntu 22.04.3 LTS |
 | GCC 10.5.0                               | Ubuntu 22.04.3 LTS |
 | GCC 11.4.0                               | Ubuntu 22.04.3 LTS |
@@ -132,7 +135,7 @@ If you encounter a problem regarding compilers, please let us know by creating a
 
 This project is distributed under the [MIT License](https://opensource.org/license/mit/):  
 
-Copyright (c) 2023 fktn  
+Copyright (c) 2023 Kensuke Fukutani  
 
 Permission is hereby granted, free of charge, to any person obtaining a copy  
 of this software and associated documentation files (the "Software"), to deal  

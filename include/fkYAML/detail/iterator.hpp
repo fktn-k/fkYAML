@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -132,7 +132,7 @@ public:
 
     /// @brief Copy constructor of the iterator class.
     /// @param other An iterator object to be copied with.
-    iterator(const iterator& other)
+    iterator(const iterator& other) noexcept
         : m_inner_iterator_type(other.m_inner_iterator_type)
     {
         switch (m_inner_iterator_type)
@@ -143,14 +143,12 @@ public:
         case iterator_t::MAPPING:
             m_iterator_holder.mapping_iterator = other.m_iterator_holder.mapping_iterator;
             break;
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
     }
 
     /// @brief Move constructor of the iterator class.
     /// @param other An iterator object to be moved from.
-    iterator(iterator&& other)
+    iterator(iterator&& other) noexcept
         : m_inner_iterator_type(other.m_inner_iterator_type)
     {
         switch (m_inner_iterator_type)
@@ -161,8 +159,6 @@ public:
         case iterator_t::MAPPING:
             m_iterator_holder.mapping_iterator = std::move(other.m_iterator_holder.mapping_iterator);
             break;
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
     }
 
@@ -173,7 +169,7 @@ public:
     /// @brief A copy assignment operator of the iterator class.
     /// @param rhs An iterator object to be copied with.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator=(const iterator& rhs) // NOLINT(cert-oop54-cpp)
+    iterator& operator=(const iterator& rhs) noexcept
     {
         if (&rhs == this)
         {
@@ -189,8 +185,6 @@ public:
         case iterator_t::MAPPING:
             m_iterator_holder.mapping_iterator = rhs.m_iterator_holder.mapping_iterator;
             break;
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
 
         return *this;
@@ -199,7 +193,7 @@ public:
     /// @brief A move assignment operator of the iterator class.
     /// @param rhs An iterator object to be moved from.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator=(iterator&& rhs)
+    iterator& operator=(iterator&& rhs) noexcept
     {
         if (&rhs == this)
         {
@@ -215,8 +209,6 @@ public:
         case iterator_t::MAPPING:
             m_iterator_holder.mapping_iterator = std::move(rhs.m_iterator_holder.mapping_iterator);
             break;
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
 
         return *this;
@@ -224,38 +216,34 @@ public:
 
     /// @brief An arrow operator of the iterator class.
     /// @return pointer A pointer to the BasicNodeType object internally referenced by the actual iterator object.
-    pointer operator->()
+    pointer operator->() noexcept
     {
-        switch (m_inner_iterator_type)
+        if (m_inner_iterator_type == iterator_t::SEQUENCE)
         {
-        case iterator_t::SEQUENCE:
             return &(*(m_iterator_holder.sequence_iterator));
-        case iterator_t::MAPPING:
-            return &(m_iterator_holder.mapping_iterator->second);
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
+
+        // m_inner_iterator_type == iterator_t::MAPPING:
+        return &(m_iterator_holder.mapping_iterator->second);
     }
 
     /// @brief A dereference operator of the iterator class.
     /// @return reference Reference to the Node object internally referenced by the actual iterator object.
-    reference operator*()
+    reference operator*() noexcept
     {
-        switch (m_inner_iterator_type)
+        if (m_inner_iterator_type == iterator_t::SEQUENCE)
         {
-        case iterator_t::SEQUENCE:
             return *(m_iterator_holder.sequence_iterator);
-        case iterator_t::MAPPING:
-            return m_iterator_holder.mapping_iterator->second;
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
+
+        // m_inner_iterator_type == iterator_t::MAPPING:
+        return m_iterator_holder.mapping_iterator->second;
     }
 
     /// @brief A compound assignment operator by sum of the Iterator class.
     /// @param i The difference from this Iterator object with which it moves forward.
     /// @return Iterator& Reference to this Iterator object.
-    iterator& operator+=(difference_type i)
+    iterator& operator+=(difference_type i) noexcept
     {
         switch (m_inner_iterator_type)
         {
@@ -265,8 +253,6 @@ public:
         case iterator_t::MAPPING:
             std::advance(m_iterator_holder.mapping_iterator, i);
             break;
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
         return *this;
     }
@@ -283,7 +269,7 @@ public:
 
     /// @brief An pre-increment operator of the iterator class.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator++()
+    iterator& operator++() noexcept
     {
         switch (m_inner_iterator_type)
         {
@@ -293,15 +279,13 @@ public:
         case iterator_t::MAPPING:
             std::advance(m_iterator_holder.mapping_iterator, 1);
             break;
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
         return *this;
     }
 
     /// @brief A post-increment opretor of the iterator class.
     /// @return iterator An iterator object which has been incremented.
-    iterator operator++(int) & noexcept // NOLINT(cert-dcl21-cpp)
+    iterator operator++(int) & noexcept
     {
         auto result = *this;
         ++(*this);
@@ -311,7 +295,7 @@ public:
     /// @brief A compound assignment operator by difference of the iterator class.
     /// @param i The difference from this iterator object with which it moves backward.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator-=(difference_type i)
+    iterator& operator-=(difference_type i) noexcept
     {
         return operator+=(-i);
     }
@@ -328,7 +312,7 @@ public:
 
     /// @brief A pre-decrement operator of the iterator class.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator--()
+    iterator& operator--() noexcept
     {
         switch (m_inner_iterator_type)
         {
@@ -338,15 +322,13 @@ public:
         case iterator_t::MAPPING:
             std::advance(m_iterator_holder.mapping_iterator, -1);
             break;
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
         return *this;
     }
 
     /// @brief A post-decrement operator of the iterator class
     /// @return iterator An iterator object which has been decremented.
-    iterator operator--(int) & noexcept // NOLINT(cert-dcl21-cpp)
+    iterator operator--(int) & noexcept
     {
         auto result = *this;
         --(*this);
@@ -364,15 +346,13 @@ public:
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
-        switch (m_inner_iterator_type)
+        if (m_inner_iterator_type == iterator_t::SEQUENCE)
         {
-        case iterator_t::SEQUENCE:
             return (m_iterator_holder.sequence_iterator == rhs.m_iterator_holder.sequence_iterator);
-        case iterator_t::MAPPING:
-            return (m_iterator_holder.mapping_iterator == rhs.m_iterator_holder.mapping_iterator);
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
+
+        // m_inner_iterator_type == iterator_t::MAPPING
+        return (m_iterator_holder.mapping_iterator == rhs.m_iterator_holder.mapping_iterator);
     }
 
     /// @brief An not-equal-to operator of the iterator class.
@@ -395,15 +375,12 @@ public:
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
-        switch (m_inner_iterator_type)
+        if (m_inner_iterator_type == iterator_t::MAPPING)
         {
-        case iterator_t::SEQUENCE:
-            return (m_iterator_holder.sequence_iterator < rhs.m_iterator_holder.sequence_iterator);
-        case iterator_t::MAPPING:
             throw fkyaml::exception("Cannot compare order of iterators of the mapping container type");
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
+
+        return (m_iterator_holder.sequence_iterator < rhs.m_iterator_holder.sequence_iterator);
     }
 
     ///  @brief A less-than-or-equal-to operator of the iterator class.
@@ -443,22 +420,19 @@ public:
 
     /// @brief Get the key string of the YAML mapping node for the current iterator.
     /// @return const std::string& The key string of the YAML mapping node for the current iterator.
-    const std::string& key() const
+    const typename ValueType::mapping_type::key_type& key() const
     {
-        switch (m_inner_iterator_type)
+        if (m_inner_iterator_type == iterator_t::SEQUENCE)
         {
-        case iterator_t::SEQUENCE:
             throw fkyaml::exception("Cannot retrieve key from non-mapping iterators.");
-        case iterator_t::MAPPING:
-            return m_iterator_holder.mapping_iterator->first;
-        default:                                                         // LCOV_EXCL_LINE
-            throw fkyaml::exception("Unsupported inner iterator type."); // LCOV_EXCL_LINE
         }
+
+        return m_iterator_holder.mapping_iterator->first;
     }
 
     /// @brief Get the reference of the YAML node for the current iterator.
     /// @return reference A reference to the YAML node for the current iterator.
-    reference value()
+    reference value() noexcept
     {
         return operator*();
     }

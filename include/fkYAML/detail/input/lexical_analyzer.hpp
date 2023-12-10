@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -100,7 +100,16 @@ public:
         switch (current)
         {
         case end_of_input: // end of input buffer
-            return lexical_token_t::END_OF_BUFFER;
+            return m_last_token_type = lexical_token_t::END_OF_BUFFER;
+        case '?':
+            switch (m_input_handler.get_next())
+            {
+            case ' ':
+                return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
+            default:
+                m_input_handler.unget();
+                return m_last_token_type = scan_string();
+            }
         case ':': // key separater
             switch (m_input_handler.get_next())
             {
@@ -423,7 +432,7 @@ private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
-    char convert_hex_char_to_byte(char_int_type source)
+    char convert_hex_char_to_byte(char_int_type source) const
     {
         if ('0' <= source && source <= '9')
         {

@@ -12,7 +12,7 @@ If the basic_node has already had any anchor name, the new anchor name overwrite
 
 ## **Parameters**
 
-***anchor_name***
+***`anchor_name`*** [in]
 :   An anchor name. This should not be empty.
 
 ???+ Example

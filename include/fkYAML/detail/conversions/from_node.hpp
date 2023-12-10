@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -31,9 +31,6 @@ FK_YAML_NAMESPACE_BEGIN
 /// @brief namespace for internal implementations of fkYAML library.
 namespace detail
 {
-
-// Avoid ambiguity between fkyaml::exception and std::exception
-using fkyaml::exception;
 
 ///////////////////
 //   from_node   //

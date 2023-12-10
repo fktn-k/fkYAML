@@ -28,6 +28,9 @@ Currently, the following compilers are known to work and used in CI workflows:
 | Clang 14.0.6                             | Ubuntu 22.04.3 LTS |
 | Clang 15.0.7                             | Ubuntu 22.04.3 LTS |
 | Clang 16.0.6                             | Ubuntu 22.04.3 LTS |
+| Clang 17.0.4                             | Ubuntu 22.04.3 LTS |
+| GCC 7.5.0                                | Ubuntu 22.04.3 LTS |
+| GCC 8.5.0                                | Ubuntu 22.04.3 LTS |
 | GCC 9.5.0                                | Ubuntu 22.04.3 LTS |
 | GCC 10.5.0                               | Ubuntu 22.04.3 LTS |
 | GCC 11.4.0                               | Ubuntu 22.04.3 LTS |

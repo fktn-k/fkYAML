@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -256,7 +256,7 @@ public:
 
         if (!is_valid)
         {
-            throw fkyaml::invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
+            throw invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
         }
     }
 
@@ -315,7 +315,7 @@ public:
 
         if (!is_valid)
         {
-            throw fkyaml::invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+            throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
         }
     }
 };

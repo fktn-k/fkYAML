@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -100,13 +100,8 @@ struct is_compatible_integer_type_impl : std::false_type
 /// @tparam CompatibleIntegerType A compatible integer type.
 template <typename TargetIntegerType, typename CompatibleIntegerType>
 struct is_compatible_integer_type_impl<
-    TargetIntegerType, CompatibleIntegerType,
-    enable_if_t<conjunction<
-        std::is_integral<TargetIntegerType>, is_non_bool_integral<CompatibleIntegerType>,
-        std::is_constructible<TargetIntegerType, CompatibleIntegerType>,
-        disjunction<
-            is_all_signed<TargetIntegerType, CompatibleIntegerType>,
-            is_all_unsigned<TargetIntegerType, CompatibleIntegerType>>>::value>> : std::true_type
+    TargetIntegerType, CompatibleIntegerType, enable_if_t<is_non_bool_integral<CompatibleIntegerType>::value>>
+    : std::true_type
 {
 };
 

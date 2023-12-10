@@ -213,11 +213,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        compiler: [ "9", "10", "11", "12", "13", latest ]
+        compiler: [ "7", "8", "9", "10", "11", "12", "13", latest ]
         build_type: [ Debug, Release ]
     container: gcc:${{matrix.compiler}}
 
     steps:
+    - name: Install git and unzip
+      run: |
+        apt-get update
+        apt-get install -y git unzip
+        git --version
+
     - uses: actions/checkout@v3
       with:
         submodules: recursive

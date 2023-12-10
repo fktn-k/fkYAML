@@ -5,7 +5,7 @@
 ```cpp
 exception() = default; // (1)
 
-explicit exception(const char* msg); // (2)
+explicit exception(const char* msg) noexcept; // (2)
 ```
 
 Constructs an exception object.   
@@ -47,7 +47,7 @@ Constructs an exception object without an error message.
 ## Overloads (2)
 
 ```cpp
-explicit exception(const char* msg); // (2)
+explicit exception(const char* msg) noexcept; // (2)
 ```
 
 Constructs an exception with a given error message.  

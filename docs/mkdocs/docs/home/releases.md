@@ -1,3 +1,37 @@
+# **fkYAML version 0.3.0**
+
+!!! abstract Release Packages
+
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.0/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.0/fkYAML.zip)
+
+## Summary
+This release contains some breaking changes in the `basic_node`'s mapping node type so that fkYAML supports non-string-scalar nodes, such as mappings or integer scalars, as mapping keys.  
+Furthermore, from this release on, GCC-7 and GCC-8 are in the list of supported compilers and used for testing on GitHub Actions.  
+
+## What's Changed
+
+### :boom: Breaking Changes
+
+- \#240 Support explicit block mappings & non-scalar nodes as mapping keys [\#245](https://github.com/fktn-k/fkYAML/pull/245) ([fktn-k](https://github.com/fktn-k))
+- \#240 Support non-string scalar nodes as mapping keys [\#244](https://github.com/fktn-k/fkYAML/pull/244) ([fktn-k](https://github.com/fktn-k))
+- Feature/238 apply correct noexcept [\#241](https://github.com/fktn-k/fkYAML/pull/241) ([fktn-k](https://github.com/fktn-k))
+
+### :zap: Improvements
+- \#240 Support non-string-scalar node keys in basic\_node ctor with std::initializer\_list [\#247](https://github.com/fktn-k/fkYAML/pull/247) ([fktn-k](https://github.com/fktn-k))
+- \#240 implement node comparison [\#243](https://github.com/fktn-k/fkYAML/pull/243) ([fktn-k](https://github.com/fktn-k))
+
+### :bug: Bug Fixes
+- Fixed missing callings of `fclose()` in the unit tests [\#246](https://github.com/fktn-k/fkYAML/pull/246) ([fktn-k](https://github.com/fktn-k))
+
+### :robot: CI
+- Add GCC compiler versions tested in GA workflows [\#248](https://github.com/fktn-k/fkYAML/pull/248) ([fktn-k](https://github.com/fktn-k))
+
+### :memo: Documentation
+- Update copyright description [\#249](https://github.com/fktn-k/fkYAML/pull/249) ([fktn-k](https://github.com/fktn-k))
+
+Full Changelog: https://github.com/fktn-k/fkYAML/compare/v0.2.3...v0.3.0
+
 # **fkYAML version 0.2.3**
 
 !!! abstract Release Packages

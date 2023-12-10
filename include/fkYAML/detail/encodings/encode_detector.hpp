@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -31,7 +31,7 @@ namespace detail
 /// @param b2 The 3rd byte of an input character sequence.
 /// @param b3 The 4th byte of an input character sequence.
 /// @return A detected encoding type.
-inline encode_t detect_encoding_type(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3)
+inline encode_t detect_encoding_type(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) noexcept
 {
     // Check if a BOM exists.
 
@@ -180,7 +180,7 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
     }
 }
 
-inline encode_t detect_encoding_and_skip_bom(std::FILE* file)
+inline encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept
 {
     uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     for (std::size_t i = 0; i < 4; i++)
@@ -217,7 +217,7 @@ inline encode_t detect_encoding_and_skip_bom(std::FILE* file)
     return encode_type;
 }
 
-inline encode_t detect_encoding_and_skip_bom(std::istream& is)
+inline encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
 {
     uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     for (std::size_t i = 0; i < 4; i++)

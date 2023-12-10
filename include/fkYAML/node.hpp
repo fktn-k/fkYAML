@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -65,7 +65,7 @@ public:
     /// @brief A type for mapping basic_node values.
     /// @note std::unordered_map is not supported since it does not allow incomplete types.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping_type/
-    using mapping_type = MappingType<StringType, basic_node>;
+    using mapping_type = MappingType<basic_node, basic_node>;
 
     /// @brief A type for boolean basic_node values.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/boolean_type/
@@ -144,8 +144,6 @@ private:
             case node_t::STRING:
                 p_string = create_object<string_type>();
                 break;
-            default:                                                     // LCOV_EXCL_LINE
-                throw fkyaml::exception("Unsupported node value type."); // LCOV_EXCL_LINE
             }
         }
 
@@ -317,13 +315,10 @@ public:
             m_node_value.p_string = create_object<string_type>(*(rhs.m_node_value.p_string));
             FK_YAML_ASSERT(m_node_value.p_string != nullptr);
             break;
-        default:                                                       // LCOV_EXCL_LINE
-            throw fkyaml::exception("Not supported node value type."); // LCOV_EXCL_LINE
         }
 
         if (rhs.m_anchor_name)
         {
-            destroy_object<std::string>(m_anchor_name);
             m_anchor_name = create_object<std::string>(*(rhs.m_anchor_name));
             FK_YAML_ASSERT(m_anchor_name != nullptr);
         }
@@ -403,7 +398,7 @@ public:
     template <
         typename NodeRefStorageType,
         detail::enable_if_t<detail::is_node_ref_storage<NodeRefStorageType>::value, int> = 0>
-    basic_node(const NodeRefStorageType& node_ref_storage)
+    basic_node(const NodeRefStorageType& node_ref_storage) noexcept
         : basic_node(node_ref_storage.release())
     {
     }
@@ -415,7 +410,7 @@ public:
     {
         bool is_mapping =
             std::all_of(init.begin(), init.end(), [](const detail::node_ref_storage<basic_node>& node_ref) {
-                return node_ref->is_sequence() && node_ref->size() == 2 && node_ref->operator[](0).is_string();
+                return node_ref->is_sequence() && node_ref->size() == 2;
             });
 
         if (is_mapping)
@@ -427,8 +422,7 @@ public:
             {
                 auto elem = elem_ref.release();
                 m_node_value.p_mapping->emplace(
-                    std::move(*((*(elem.m_node_value.p_sequence))[0].m_node_value.p_string)),
-                    std::move((*(elem.m_node_value.p_sequence))[1]));
+                    std::move((*(elem.m_node_value.p_sequence))[0]), std::move((*(elem.m_node_value.p_sequence))[1]));
             }
         }
         else
@@ -595,78 +589,262 @@ public:
         return *this;
     }
 
-    /// @brief A subscript operator for non-const basic_node objects.
-    /// @param[in] index An index for an element in the YAML sequence node.
-    /// @return Reference to the YAML node at the given index.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
-    basic_node& operator[](std::size_t index) // NOLINT(readability-make-member-function-const)
-    {
-        if (!is_sequence())
-        {
-            throw fkyaml::type_error("The target node is not of a sequence type.", m_node_type);
-        }
-
-        FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
-        FK_YAML_ASSERT(index < m_node_value.p_sequence->size());
-        return m_node_value.p_sequence->operator[](index);
-    }
-
-    /// @brief A subscript operator for const basic_node objects.
-    /// @param[in] index An index for an element in the YAML sequence node.
-    /// @return Constant reference to the YAML node at the given index.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
-    const basic_node& operator[](std::size_t index) const
-    {
-        if (!is_sequence())
-        {
-            throw fkyaml::type_error("The target node is not of a sequence type.", m_node_type);
-        }
-
-        FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
-        FK_YAML_ASSERT(index < m_node_value.p_sequence->size());
-        return m_node_value.p_sequence->operator[](index);
-    }
-
-    /// @brief A subscript operator for non-const basic_node objects.
-    /// @tparam KeyType A type compatible with the key type of mapping node values.
-    /// @param[in] key A key to the target value in the YAML mapping node.
-    /// @return Reference to the YAML node associated with the given key.
+    /// @brief A subscript operator of the basic_node class with a key of a compatible type with basic_node.
+    /// @tparam KeyType A key type compatible with basic_node
+    /// @param key A key to the target value in a sequence/mapping node.
+    /// @return The value associated with the given key, or a default basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<
-                              detail::is_usable_as_key_type<
-                                  typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+                              detail::conjunction<
+                                  detail::negation<detail::is_basic_node<KeyType>>,
+                                  detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
-    basic_node& operator[](KeyType&& key) // NOLINT(readability-make-member-function-const)
+    basic_node& operator[](KeyType&& key)
     {
-        if (!is_mapping())
+        if (is_scalar())
         {
-            throw fkyaml::type_error("The target node is not of a mapping type.", m_node_type);
+            throw fkyaml::type_error("operator[] is unavailable for a scalar node.", m_node_type);
+        }
+
+        basic_node n = std::forward<KeyType>(key);
+
+        if (is_sequence())
+        {
+            if (!n.is_integer())
+            {
+                throw fkyaml::type_error(
+                    "An argument of operator[] for sequence nodes must be an integer.", m_node_type);
+            }
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return m_node_value.p_sequence->operator[](n.get_value<int>());
         }
 
         FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
-        return m_node_value.p_mapping->operator[](std::forward<KeyType>(key));
+        return m_node_value.p_mapping->operator[](std::move(n));
     }
 
-    /// @brief A subscript operator for const basic_node objects.
-    /// @tparam KeyType A type compatible with the key type of mapping node values.
-    /// @param[in] key A key to the target value in the YAML mapping node.
-    /// @return Constant reference to the YAML node associated with the given key.
+    /// @brief A subscript operator of the basic_node class with a key of a compatible type with basic_node.
+    /// @tparam KeyType A key type compatible with basic_node
+    /// @param key A key to the target value in a sequence/mapping node.
+    /// @return The value associated with the given key, or a default basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<
-                              detail::is_usable_as_key_type<
-                                  typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
+                              detail::conjunction<
+                                  detail::negation<detail::is_basic_node<KeyType>>,
+                                  detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
     const basic_node& operator[](KeyType&& key) const
     {
-        if (!is_mapping())
+        if (is_scalar())
         {
-            throw fkyaml::type_error("The target node is not of a mapping type.", m_node_type);
+            throw fkyaml::type_error("operator[] is unavailable for a scalar node.", m_node_type);
+        }
+
+        basic_node node_key = std::forward<KeyType>(key);
+
+        if (is_sequence())
+        {
+            if (!node_key.is_integer())
+            {
+                throw fkyaml::type_error(
+                    "An argument of operator[] for sequence nodes must be an integer.", m_node_type);
+            }
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return m_node_value.p_sequence->operator[](node_key.get_value<int>());
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        return m_node_value.p_mapping->operator[](std::move(node_key));
+    }
+
+    /// @brief A subscript operator of the basic_node class with a basic_node key object.
+    /// @tparam KeyType A key type which is a kind of the basic_node template class.
+    /// @param key A key to the target value in a sequence/mapping node.
+    /// @return The value associated with the given key, or a default basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
+    template <
+        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    basic_node& operator[](KeyType&& key)
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("operator[] is unavailable for a scalar node.", m_node_type);
+        }
+
+        if (is_sequence())
+        {
+            if (!key.is_integer())
+            {
+                throw fkyaml::type_error(
+                    "An argument of operator[] for sequence nodes must be an integer.", m_node_type);
+            }
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return m_node_value.p_sequence->operator[](key.template get_value<int>());
         }
 
         FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
         return m_node_value.p_mapping->operator[](std::forward<KeyType>(key));
+    }
+
+    /// @brief A subscript operator of the basic_node class with a basic_node key object.
+    /// @tparam KeyType A key type which is a kind of the basic_node template class.
+    /// @param key A key to the target value in a sequence/mapping node.
+    /// @return The value associated with the given key, or a default basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
+    template <
+        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    const basic_node& operator[](KeyType&& key) const
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("operator[] is unavailable for a scalar node.", m_node_type);
+        }
+
+        if (is_sequence())
+        {
+            if (!key.is_integer())
+            {
+                throw fkyaml::type_error(
+                    "An argument of operator[] for sequence nodes must be an integer.", m_node_type);
+            }
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            return m_node_value.p_sequence->operator[](key.template get_value<int>());
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        return m_node_value.p_mapping->operator[](std::forward<KeyType>(key));
+    }
+
+    /// @brief An equal-to operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true if both types and values are equal, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_eq/
+    bool operator==(const basic_node& rhs) const noexcept
+    {
+        if (m_node_type != rhs.m_node_type)
+        {
+            return false;
+        }
+
+        bool ret = false;
+        switch (m_node_type)
+        {
+        case node_t::SEQUENCE:
+            ret = (*(m_node_value.p_sequence) == *(rhs.m_node_value.p_sequence));
+            break;
+        case node_t::MAPPING:
+            ret = (*(m_node_value.p_mapping) == *(rhs.m_node_value.p_mapping));
+            break;
+        case node_t::NULL_OBJECT:
+            // Always true for comparisons between null nodes.
+            ret = true;
+            break;
+        case node_t::BOOLEAN:
+            ret = (m_node_value.boolean == rhs.m_node_value.boolean);
+            break;
+        case node_t::INTEGER:
+            ret = (m_node_value.integer == rhs.m_node_value.integer);
+            break;
+        case node_t::FLOAT_NUMBER:
+            ret =
+                (std::abs(m_node_value.float_val - rhs.m_node_value.float_val) <
+                 std::numeric_limits<float_number_type>::epsilon());
+            break;
+        case node_t::STRING:
+            ret = (*(m_node_value.p_string) == *(rhs.m_node_value.p_string));
+            break;
+        }
+
+        return ret;
+    }
+
+    /// @brief A not-equal-to operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true if either types or values are different, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_ne/
+    bool operator!=(const basic_node& rhs) const noexcept
+    {
+        return !operator==(rhs);
+    }
+
+    /// @brief A less-than operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true this basic_node object is less than `rhs`.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_lt/
+    bool operator<(const basic_node& rhs) const noexcept
+    {
+        if (operator==(rhs))
+        {
+            return false;
+        }
+
+        if (uint32_t(m_node_type) < uint32_t(rhs.m_node_type))
+        {
+            return true;
+        }
+
+        if (m_node_type != rhs.m_node_type)
+        {
+            return false;
+        }
+
+        bool ret = false;
+        switch (m_node_type)
+        {
+        case node_t::SEQUENCE:
+            ret = (*(m_node_value.p_sequence) < *(rhs.m_node_value.p_sequence));
+            break;
+        case node_t::MAPPING:
+            ret = (*(m_node_value.p_mapping) < *(rhs.m_node_value.p_mapping));
+            break;
+        case node_t::NULL_OBJECT: // LCOV_EXCL_LINE
+            // Will not come here since null nodes are alyways the same.
+            break; // LCOV_EXCL_LINE
+        case node_t::BOOLEAN:
+            // false < true
+            ret = (!m_node_value.boolean && rhs.m_node_value.boolean);
+            break;
+        case node_t::INTEGER:
+            ret = (m_node_value.integer < rhs.m_node_value.integer);
+            break;
+        case node_t::FLOAT_NUMBER:
+            ret = (m_node_value.float_val < rhs.m_node_value.float_val);
+            break;
+        case node_t::STRING:
+            ret = (*(m_node_value.p_string) < *(rhs.m_node_value.p_string));
+            break;
+        }
+
+        return ret;
+    }
+
+    /// @brief A less-than-or-equal-to operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true this basic_node object is less than or equal to `rhs`.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_le/
+    bool operator<=(const basic_node& rhs) const noexcept
+    {
+        return !rhs.operator<(*this);
+    }
+
+    /// @brief A greater-than operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true this basic_node object is greater than `rhs`.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_gt/
+    bool operator>(const basic_node& rhs) const noexcept
+    {
+        return !operator<=(rhs);
+    }
+
+    /// @brief A greater-than-or-equal-to operator of the basic_node class.
+    /// @param rhs A basic_node object to be compared with this basic_node object.
+    /// @return true this basic_node object is greater than or equal to `rhs`.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_ge/
+    bool operator>=(const basic_node& rhs) const noexcept
+    {
+        return !operator<(rhs);
     }
 
 public:
@@ -784,16 +962,39 @@ public:
         }
     }
 
+    /// @brief Check whether or not this basic_node object has a given key in its inner mapping node value.
+    /// @tparam KeyType A key type compatible with basic_node.
+    /// @param key A key to the target value in the mapping node value.
+    /// @return true if the target node is a mapping and has the given key, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/contains/
+    template <
+        typename KeyType, detail::enable_if_t<
+                              detail::conjunction<
+                                  detail::negation<detail::is_basic_node<detail::remove_cvref_t<KeyType>>>,
+                                  detail::is_node_compatible_type<basic_node, detail::remove_cvref_t<KeyType>>>::value,
+                              int> = 0>
+    bool contains(KeyType&& key) const
+    {
+        switch (m_node_type)
+        {
+        case node_t::MAPPING: {
+            FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+            mapping_type& map = *m_node_value.p_mapping;
+            basic_node node_key = std::forward<KeyType>(key);
+            return map.find(node_key) != map.end();
+        }
+        default:
+            return false;
+        }
+    }
+
     /// @brief Check whether or not this basic_node object has a given key in its inner mapping Node value.
-    /// @tparam KeyType A type compatible with the key type of mapping node values.
+    /// @tparam KeyType A key type which is a kind of basic_node template class.
     /// @param[in] key A key to the target value in the YAML mapping node value.
     /// @return true if the YAML node is a mapping and has the given key, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/contains/
     template <
-        typename KeyType, detail::enable_if_t<
-                              detail::is_usable_as_key_type<
-                                  typename mapping_type::key_compare, typename mapping_type::key_type, KeyType>::value,
-                              int> = 0>
+        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
     bool contains(KeyType&& key) const
     {
         switch (m_node_type)
@@ -1229,6 +1430,7 @@ inline namespace yaml_literals
 /// @param s An input `char` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
+/// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char* s, std::size_t n)
 {
     return fkyaml::node::deserialize((const char*)s, (const char*)s + n);
@@ -1238,6 +1440,7 @@ inline fkyaml::node operator"" _yaml(const char* s, std::size_t n)
 /// @param s An input `char16_t` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
+/// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n)
 {
     return fkyaml::node::deserialize((const char16_t*)s, (const char16_t*)s + n);
@@ -1247,6 +1450,7 @@ inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n)
 /// @param s An input `char32_t` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
+/// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
 {
     return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);

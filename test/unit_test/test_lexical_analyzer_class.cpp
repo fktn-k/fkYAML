@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.2.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -432,6 +432,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string("test"), fkyaml::node::string_type("test")),
         value_pair_t(std::string("nop"), fkyaml::node::string_type("nop")),
         value_pair_t(std::string("none"), fkyaml::node::string_type("none")),
+        value_pair_t(std::string("?test"), fkyaml::node::string_type("?test")),
         value_pair_t(std::string(".NET"), fkyaml::node::string_type(".NET")),
         value_pair_t(std::string(".on"), fkyaml::node::string_type(".on")),
         value_pair_t(std::string(".n"), fkyaml::node::string_type(".n")),
