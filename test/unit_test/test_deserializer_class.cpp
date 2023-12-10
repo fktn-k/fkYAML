@@ -886,15 +886,15 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
                                                            "foo:\n"
                                                            "  ? bar\n"
                                                            "  : baz\n"
-                                                           "? ? foo\n"
-                                                           "  : bar\n"
-                                                           ": - baz\n"
-                                                           "  - qux\n"
                                                            "? - 123\n"
                                                            "  - foo:\n"
                                                            "      ? bar\n"
                                                            "      : baz\n"
-                                                           ": one: true");
+                                                           ": one: true\n"
+                                                           "? ? foo\n"
+                                                           "  : bar\n"
+                                                           ": - baz\n"
+                                                           "  - qux\n");
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(std::move(input_adapter)));
 
@@ -913,16 +913,7 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root["foo"]["bar"].is_string());
         REQUIRE(root["foo"]["bar"].get_value_ref<std::string&>() == "baz");
 
-        fkyaml::node key = {{"foo", "bar"}};
-        REQUIRE(root.contains(key));
-        REQUIRE(root[key].is_sequence());
-        REQUIRE(root[key].size() == 2);
-        REQUIRE(root[key][0].is_string());
-        REQUIRE(root[key][0].get_value_ref<std::string&>() == "baz");
-        REQUIRE(root[key][1].is_string());
-        REQUIRE(root[key][1].get_value_ref<std::string&>() == "qux");
-
-        key = {123, {{"foo", {{"bar", "baz"}}}}};
+        fkyaml::node key = {123, {{"foo", {{"bar", "baz"}}}}};
         REQUIRE(root.contains(key));
         REQUIRE(root[key].is_mapping());
         REQUIRE(root[key].size() == 1);
@@ -930,6 +921,15 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root[key].contains("one"));
         REQUIRE(root[key]["one"].is_boolean());
         REQUIRE(root[key]["one"].get_value<bool>() == true);
+
+        key = {{"foo", "bar"}};
+        REQUIRE(root.contains(key));
+        REQUIRE(root[key].is_sequence());
+        REQUIRE(root[key].size() == 2);
+        REQUIRE(root[key][0].is_string());
+        REQUIRE(root[key][0].get_value_ref<std::string&>() == "baz");
+        REQUIRE(root[key][1].is_string());
+        REQUIRE(root[key][1].get_value_ref<std::string&>() == "qux");
     }
 }
 
