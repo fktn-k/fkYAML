@@ -439,6 +439,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string("foo]"), fkyaml::node::string_type("foo")),
         value_pair_t(std::string("foo:bar"), fkyaml::node::string_type("foo:bar")),
         value_pair_t(std::string("foo bar"), fkyaml::node::string_type("foo bar")),
+        value_pair_t(std::string("foo\"bar"), fkyaml::node::string_type("foo\"bar")),
+        value_pair_t(std::string("\'foo\"bar\'"), fkyaml::node::string_type("foo\"bar")),
         value_pair_t(std::string("foo\'s bar"), fkyaml::node::string_type("foo\'s bar")),
         value_pair_t(std::string("\"foo bar\""), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("\"foo's bar\""), fkyaml::node::string_type("foo's bar")),
@@ -643,7 +645,6 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidStringTokenTest", "[LexicalAnalyz
     SECTION("parse_error expected")
     {
         auto buffer = GENERATE(
-            std::string("foo\"bar"),
             std::string("foo\\tbar"),
             std::string("-.a"),
             std::string("\"test"),

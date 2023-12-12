@@ -852,12 +852,7 @@ private:
                     return lexical_token_t::STRING_VALUE;
                 }
 
-                if (!needs_last_single_quote)
-                {
-                    emit_error("Invalid double quotation mark found in a string token.");
-                }
-
-                // if the target is a single-quoted string token.
+                // if the target is a plain/single-quoted string token.
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 continue;
             }
