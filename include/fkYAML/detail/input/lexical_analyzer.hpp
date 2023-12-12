@@ -176,29 +176,50 @@ public:
         case '%': // directive prefix
             return m_last_token_type = scan_directive();
         case '-': {
-            bool is_next_space = m_input_handler.test_next_char(' ');
-            if (!is_next_space)
+            char_int_type next = m_input_handler.get_next();
+            if (next == ' ')
             {
-                char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
-                if (ret != end_of_input)
-                {
-                    if (m_value_buffer == "---")
-                    {
-                        m_input_handler.get_next();
-                        return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
-                    }
+                // Move a cursor to the beginning of the next token.
+                m_input_handler.get_next();
+                return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+            }
 
-                    // revert change in the position to the one before comparison above.
-                    m_input_handler.unget_range(2);
-                }
+            m_input_handler.unget();
+            if (std::isdigit(next))
+            {
                 return m_last_token_type = scan_number();
             }
 
-            // Move a cursor to the beginning of the next token.
-            m_input_handler.get_next();
-            m_input_handler.get_next();
+            char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
+            if (ret != end_of_input)
+            {
+                if (m_value_buffer == "---")
+                {
+                    m_input_handler.get_next();
+                    return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
+                }
 
-            return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                m_input_handler.unget_range(2);
+                ret = m_input_handler.get_range(5, m_value_buffer);
+                if (ret != end_of_input)
+                {
+                    try
+                    {
+                        // try convert to the negative infinite value.
+                        m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
+                        m_input_handler.get_next();
+                        return m_last_token_type = lexical_token_t::FLOAT_NUMBER_VALUE;
+                    }
+                    catch (const fkyaml::exception& /*unused*/)
+                    {
+                        m_input_handler.unget_range(4);
+                    }
+                }
+            }
+
+            m_input_handler.get_next();
+            m_value_buffer = "-";
+            return m_last_token_type = scan_string(false);
         }
         case '[': // sequence flow begin
             m_input_handler.get_next();
@@ -614,31 +635,11 @@ private:
     lexical_token_t scan_negative_number()
     {
         char_int_type next = m_input_handler.get_next();
-        FK_YAML_ASSERT(std::isdigit(next) || next == '.');
 
-        if (std::isdigit(next))
-        {
-            m_value_buffer.push_back(char_traits_type::to_char_type(next));
-            return scan_decimal_number();
-        }
-
-        char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
-        if (ret != end_of_input)
-        {
-            try
-            {
-                // check if convertible to an infinite value.
-                from_string(m_value_buffer, type_tag<float_number_type> {});
-                m_input_handler.get_next();
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-            catch (const fkyaml::exception& /*unused*/)
-            {
-                // handle this error below.
-            }
-        }
-
-        emit_error("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
+        // The value of `next` must be guranteed to be a digit in the get_next_token() function.
+        FK_YAML_ASSERT(std::isdigit(next));
+        m_value_buffer.push_back(char_traits_type::to_char_type(next));
+        return scan_decimal_number();
     }
 
     /// @brief Scan a next character after '0' at the beginning of a token.
