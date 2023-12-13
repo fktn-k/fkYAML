@@ -37,7 +37,7 @@ init:
   - msbuild /version
 
 before_build:
-  - cmake -S . -B build -G "%GENERATOR%" -A %ARCHITECTURE% - -DFK_YAML_BUILD_TEST=ON
+  - cmake -S . -B build -G "%GENERATOR%" -A %ARCHITECTURE% -DFK_YAML_BUILD_TEST=ON
 
 build_script:
   - cmake --build build --config %CONFIGURATION% -j 2
