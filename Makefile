@@ -6,6 +6,8 @@
 
 # list of source files in the include directory.
 SRCS = $(shell find include -type f -name '*.hpp' | sort)
+# The single-header version
+SINGLE_SRC = 'single_include/fkYAML/node.hpp'
 # list of sources in the test directory.
 TEST_SRCS = $(shell find test -type f \( -name '*.hpp' -o -name '*.cpp' \) | sort)
 # list of source files in the tool directory.
@@ -28,6 +30,7 @@ JOBS = $(($(shell grep cpu.cores /proc/cpuinfo | sort -u | sed 's/[^0-9]//g') + 
 ###############################################
 
 all:
+	@echo "amalgamate - amalgamate sources of the fkYAML library and generate its single header version."
 	@echo "clang-format - check whether source files are well formatted."
 	@echo "clang-sanitizers - check whether no runtime issue is detected while running the unit test app."
 	@echo "clang-tidy - check whether source files detect no issues during static code analysis."
@@ -72,6 +75,19 @@ valgrind:
 	cmake -B build_valgrind -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
 	cmake --build build_valgrind --config Debug -j $(JOBS)
 	ctest -C Debug -T memcheck --test-dir build_valgrind -j $(JOBS)
+
+###########################
+#   Source Amalgamation   #
+###########################
+
+amalgamate:
+	python3 ./tool/amalgamation/amalgamate.py -c ./tool/amalgamation/fkYAML.json -s . --verbose=yes
+
+check-amalgamate:
+	$(shell cp $(SINGLE_SRC) $(SINGLE_SRC)~)
+	$(MAKE) amalgamate
+	$(shell diff $(SINGLE_SRC) $(SINGLE_SRC)~ || (echo Amalgamation required. Please follow the guideline in the CONTRIBUTING.md file. ; false))
+	$(shell mv $(SINGLE_SRC)~ $(SINGLE_SRC))
 
 ##########################################
 #   Natvis Debugger Visualization File   #
