@@ -124,16 +124,16 @@ TEST_CASE("FromNodeTest_UserDefinedTypeMapTest", "[FromNodeTest]")
     fkyaml::node node = fkyaml::node::deserialize(input);
 
     auto colors = node["colors"].get_value<std::map<test::color, test::rgb>>();
-    REQUIRE(colors.find(test::color{0xFFFFFF}) != colors.end());
-    REQUIRE(colors.at(test::color{0xFFFFFF}).r == 0xFF);
-    REQUIRE(colors.at(test::color{0xFFFFFF}).g == 0xFF);
-    REQUIRE(colors.at(test::color{0xFFFFFF}).b == 0xFF);
-    REQUIRE(colors.find(test::color{0x808080}) != colors.end());
-    REQUIRE(colors.at(test::color{0x808080}).r == 0x80);
-    REQUIRE(colors.at(test::color{0x808080}).g == 0x80);
-    REQUIRE(colors.at(test::color{0x808080}).b == 0x80);
-    REQUIRE(colors.find(test::color{0x586776}) != colors.end());
-    REQUIRE(colors.at(test::color{0x586776}).r == 0x58);
-    REQUIRE(colors.at(test::color{0x586776}).g == 0x67);
-    REQUIRE(colors.at(test::color{0x586776}).b == 0x76);
+    REQUIRE(colors.find(test::color {0xFFFFFF}) != colors.end());
+    REQUIRE(colors.at(test::color {0xFFFFFF}).r == 0xFF);
+    REQUIRE(colors.at(test::color {0xFFFFFF}).g == 0xFF);
+    REQUIRE(colors.at(test::color {0xFFFFFF}).b == 0xFF);
+    REQUIRE(colors.find(test::color {0x808080}) != colors.end());
+    REQUIRE(colors.at(test::color {0x808080}).r == 0x80);
+    REQUIRE(colors.at(test::color {0x808080}).g == 0x80);
+    REQUIRE(colors.at(test::color {0x808080}).b == 0x80);
+    REQUIRE(colors.find(test::color {0x586776}) != colors.end());
+    REQUIRE(colors.at(test::color {0x586776}).r == 0x58);
+    REQUIRE(colors.at(test::color {0x586776}).g == 0x67);
+    REQUIRE(colors.at(test::color {0x586776}).b == 0x76);
 }
