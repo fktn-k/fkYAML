@@ -13,11 +13,20 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        single_header: ["ON", "OFF"]
         include:
           - os: ubuntu-latest
             artifact_name: fkYAML.tgz
+            single_header: "ON"
+          - os: ubuntu-latest
+            artifact_name: fkYAML_single_header.tgz
+            single_header: "OFF"
           - os: windows-latest
             artifact_name: fkYAML.zip
+            single_header: "ON"
+          - os: windows-latest
+            artifact_name: fkYAML_single_header.zip
+            single_header: "OFF"
 
     steps:
     - uses: actions/checkout@v3
@@ -25,7 +34,7 @@ jobs:
         submodules: recursive
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{github.workspace}}/build/package"
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{github.workspace}}/build/package" -DFK_YAML_USE_SINGLE_HEADER=${{matrix.single_header}}
 
     - name: Install
       run: |

@@ -13,6 +13,7 @@ The followings are possible ways of preparing for the use of fkYAML:
 
 ### :file_folder: Download a release package
 You can [download the latest package (fkYAML.tgz for UNIX or fkYAML.zip for Windows) from here](https://github.com/fktn-k/fkYAML/releases/latest).  
+The single-header version of the fkYAML package can also be downloaded since v0.3.1 with the name of fkYAML_single_header.{tgz|zip}.  
 After the download gets completed, unzip and put the package in some directory on your machine.  
 The destination path can be whatever you want, and you're all set!
 
@@ -22,7 +23,7 @@ Make sure the CMake executable is registered to the PATH environment variable.
 
 ```bash
 $ cd /path/to/fkYAML
-$ cmake -B build -S . [-DCMAKE_INSTALL_PREFIX=<path-to-install>]
+$ cmake -B build -S . [-DCMAKE_INSTALL_PREFIX=<path-to-install>] [-DFK_YAML_USE_SINGLE_HEADER=ON]
 $ cmake --build build --target install
 ```
 
@@ -33,6 +34,8 @@ The default installation path would be the followings:
 | ------- | ------------------------- |
 | UNIX    | /usr/local                |
 | Windows | C:\\Program Files\\fkYAML |
+
+Furthermore, you can install the single-header version of fkYAML by adding the `-DFK_YAML_USE_SINGLE_HEADER=ON` parameter on configuring CMake.  
 
 And you're all set! You can now `find_package()` the fkYAML package.
 
