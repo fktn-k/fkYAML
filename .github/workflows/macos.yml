@@ -5,8 +5,21 @@ on:
     branches:
       - develop
       - main
-      - release/*
+    paths:
+      - .github/workflows/macos.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - test/**
+      - CMakeLists.txt
   pull_request:
+    paths:
+      - .github/workflows/macos.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - test/**
+      - CMakeLists.txt
   workflow_dispatch:
 
 concurrency:
