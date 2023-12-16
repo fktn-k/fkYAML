@@ -8,7 +8,9 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/iterator.hpp>
+#ifndef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/detail/iterator.hpp>
+#endif
 #include <fkYAML/node.hpp>
 
 TEST_CASE("IteratorClassTest_SequenceCtorTest", "[IteratorClassTest]")

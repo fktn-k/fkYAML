@@ -12,7 +12,11 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/input/input_adapter.hpp>
+#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/node.hpp>
+#else
+    #include <fkYAML/detail/input/input_adapter.hpp>
+#endif
 
 // generated in test/unit_test/CMakeLists.txt
 #include <test_data.hpp>

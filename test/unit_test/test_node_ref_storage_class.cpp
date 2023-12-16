@@ -10,7 +10,9 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/node_ref_storage.hpp>
+#ifndef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/detail/node_ref_storage.hpp>
+#endif
 #include <fkYAML/node.hpp>
 
 TEST_CASE("NodeRefStorageTest_CtorWithLvalueNodeTest", "[NodeRefStorageTest]")

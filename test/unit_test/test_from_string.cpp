@@ -12,7 +12,11 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/conversions/from_string.hpp>
+#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/node.hpp>
+#else
+    #include <fkYAML/detail/conversions/from_string.hpp>
+#endif
 
 TEST_CASE("FromStringTest_NullptrTest", "[FromStringTest]")
 {

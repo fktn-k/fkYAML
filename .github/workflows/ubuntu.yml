@@ -23,6 +23,7 @@ jobs:
     strategy:
       matrix:
         build_type: [ Debug, Release ]
+        use_single_header: ["ON", "OFF"]
 
     steps:
     - uses: actions/checkout@v3
@@ -30,7 +31,7 @@ jobs:
         submodules: recursive
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
+      run: cmake -B ${{github.workspace}}/build_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_USE_SINGLE_HEADER=${{matrix.use_single_header}}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build_${{matrix.build_type}} --config ${{matrix.build_type}} -j ${{env.JOBS}}

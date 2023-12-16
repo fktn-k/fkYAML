@@ -12,7 +12,11 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/encodings/utf8_encoding.hpp>
+#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/node.hpp>
+#else
+    #include <fkYAML/detail/encodings/utf8_encoding.hpp>
+#endif
 
 TEST_CASE("UTF8EncodingClassTest_ValidateTest", "[UTFEncodingClassTest]")
 {

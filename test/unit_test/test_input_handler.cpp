@@ -10,8 +10,12 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/input/input_adapter.hpp>
-#include <fkYAML/detail/input/input_handler.hpp>
+#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/node.hpp>
+#else
+    #include <fkYAML/detail/input/input_adapter.hpp>
+    #include <fkYAML/detail/input/input_handler.hpp>
+#endif
 
 using pchar_input_handler = fkyaml::detail::input_handler<fkyaml::detail::iterator_input_adapter<char*>>;
 

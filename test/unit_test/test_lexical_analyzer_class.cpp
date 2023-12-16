@@ -8,8 +8,10 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/input/input_adapter.hpp>
-#include <fkYAML/detail/input/lexical_analyzer.hpp>
+#ifndef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/detail/input/input_adapter.hpp>
+    #include <fkYAML/detail/input/lexical_analyzer.hpp>
+#endif
 #include <fkYAML/node.hpp>
 
 using pchar_lexer_t =
