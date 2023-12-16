@@ -84,10 +84,11 @@ amalgamate:
 	python3 ./tool/amalgamation/amalgamate.py -c ./tool/amalgamation/fkYAML.json -s . --verbose=yes
 
 check-amalgamate:
-	$(shell cp $(SINGLE_SRC) $(SINGLE_SRC)~)
-	$(MAKE) amalgamate
-	$(shell diff $(SINGLE_SRC) $(SINGLE_SRC)~ || (echo Amalgamation required. Please follow the guideline in the CONTRIBUTING.md file. ; false))
-	$(shell mv $(SINGLE_SRC)~ $(SINGLE_SRC))
+	@cp $(SINGLE_SRC) $(SINGLE_SRC)~
+	@$(MAKE) amalgamate
+	@diff $(SINGLE_SRC) $(SINGLE_SRC)~ || (echo Amalgamation required. Please follow the guideline in the CONTRIBUTING.md file. ; mv $(SINGLE_SRC)~ $(SINGLE_SRC) ; false)
+	@mv $(SINGLE_SRC)~ $(SINGLE_SRC)
+	@echo Amalgamation check passed successfully.
 
 ##########################################
 #   Natvis Debugger Visualization File   #
