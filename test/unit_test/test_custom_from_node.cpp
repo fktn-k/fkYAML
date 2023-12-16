@@ -137,3 +137,26 @@ TEST_CASE("FromNodeTest_UserDefinedTypeMapTest", "[FromNodeTest]")
     REQUIRE(colors.at(test::color {0x586776}).g == 0x67);
     REQUIRE(colors.at(test::color {0x586776}).b == 0x76);
 }
+
+TEST_CASE("FromNodeTest_UserDefinedTypeMapErrorTest", "[FromNodeTest]")
+{
+    std::string input = "colors:\n"
+                        "  ? color: 0xFFFFFF\n"
+                        "  : r: 0xFF\n"
+                        "    g: 0xFF\n"
+                        "    b: 0xFF\n"
+                        "  ? color: 0x808080\n"
+                        "  : r: 0x80\n"
+                        "    g: 0x80\n"
+                        "    b: 0x80\n"
+                        "  ? color: 0x586776\n"
+                        "  : r: 0x58\n"
+                        "    g: 0x67\n"
+                        "    b: 0x76\n";
+    fkyaml::node node = fkyaml::node::deserialize(input);
+    using compat_map_t = std::map<test::color, test::rgb>;
+    REQUIRE_THROWS_AS(node.get_value<compat_map_t>(), fkyaml::exception);
+
+    fkyaml::node int_node = 123;
+    REQUIRE_THROWS_AS(int_node.get_value<compat_map_t>(), fkyaml::exception);
+}
