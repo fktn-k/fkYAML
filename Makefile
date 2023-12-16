@@ -98,7 +98,7 @@ update-params-for-natvis:
 	echo { \"version\": \"$(TARGET_VERSION_FULL)\" } > ./tool/natvis_generator/params.json
 
 fkYAML.natvis: update-params-for-natvis
-	make -C ./tool/natvis_generator generate
+	@$(MAKE) -C ./tool/natvis_generator generate
 
 ###############
 #   Version   #
@@ -119,10 +119,6 @@ update-version-macros:
 update-project-version:
 	$(shell sed -i 's/VERSION [0-9]\+\.[0-9]\+\.[0-9]\+/VERSION $(TARGET_VERSION_FULL)/' CMakeLists.txt)
 
-update-git-tag-ref:
-	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' docs/mkdocs/docs/tutorials/cmake_integration.md)
-	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' test/cmake_fetch_content_test/project/CMakeLists.txt)
-
 # pre-requisites: pipx, reuse
 reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
@@ -136,6 +132,13 @@ reuse: update-reuse-templates
 		--license MIT --year 2023 --style c
 	pipx run reuse lint
 
+update-sources: reuse update-version-macros
+	@$(MAKE) amalgamate
+
+update-git-tag-ref:
+	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' docs/mkdocs/docs/tutorials/cmake_integration.md)
+	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' test/cmake_fetch_content_test/project/CMakeLists.txt)
+
 CHANGELOG.md:
 	github_changelog_generator --user fktn-k --project fkYAML \
 		--no-issues \
@@ -144,7 +147,7 @@ CHANGELOG.md:
 		--release-url https://github.com/fktn-k/fkYAML/releases/tag/%s \
 		--future-release v$(TARGET_VERSION_FULL)
 
-update-version: fkYAML.natvis update-version-macros update-project-version reuse update-git-tag-ref CHANGELOG.md 
+update-version: fkYAML.natvis update-project-version update-sources update-git-tag-ref CHANGELOG.md
 	@echo "updated version to $(TARGET_VERSION_FULL)"
 
 ################
