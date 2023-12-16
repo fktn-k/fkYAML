@@ -12,6 +12,7 @@
 #define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
 
 #include <limits>
+#include <map>
 #include <utility>
 #include <vector>
 
@@ -93,6 +94,29 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_ty
     for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>())
     {
         m.emplace(pair.first, pair.second);
+    }
+}
+
+template <
+    typename BasicNodeType, typename CompatibleKeyType, typename CompatibleValueType, typename Compare,
+    typename Allocator,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>, negation<is_basic_node<CompatibleKeyType>>,
+            negation<is_basic_node<CompatibleValueType>>, has_from_node<BasicNodeType, CompatibleKeyType>,
+            has_from_node<BasicNodeType, CompatibleValueType>>::value,
+        int> = 0>
+inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, CompatibleValueType, Compare, Allocator>& m)
+{
+    if (!n.is_mapping())
+    {
+        throw type_error("The target node value type is not mapping type.", n.type());
+    }
+
+    for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>())
+    {
+        m.emplace(
+            pair.first.template get_value<CompatibleKeyType>(), pair.second.template get_value<CompatibleValueType>());
     }
 }
 
