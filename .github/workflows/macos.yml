@@ -111,6 +111,7 @@ jobs:
       matrix:
         xcode: [ '14.1', '14.2', '14.3.1', '15.0.1' ]
         build_type: [ Debug, Release ]
+        cxx_standard: [ '11', '14', '17', '20', '23' ]
     env:
       DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
 
@@ -120,7 +121,7 @@ jobs:
         submodules: recursive
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
