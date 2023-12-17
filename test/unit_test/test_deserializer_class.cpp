@@ -8,8 +8,10 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/input/deserializer.hpp>
-#include <fkYAML/detail/input/input_adapter.hpp>
+#ifndef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/detail/input/deserializer.hpp>
+    #include <fkYAML/detail/input/input_adapter.hpp>
+#endif
 #include <fkYAML/node.hpp>
 
 TEST_CASE("DeserializerClassTest_DeserializeEmptyInput", "[DeserializerClassTest]")

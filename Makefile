@@ -6,6 +6,8 @@
 
 # list of source files in the include directory.
 SRCS = $(shell find include -type f -name '*.hpp' | sort)
+# The single-header version
+SINGLE_SRC = 'single_include/fkYAML/node.hpp'
 # list of sources in the test directory.
 TEST_SRCS = $(shell find test -type f \( -name '*.hpp' -o -name '*.cpp' \) | sort)
 # list of source files in the tool directory.
@@ -28,6 +30,7 @@ JOBS = $(($(shell grep cpu.cores /proc/cpuinfo | sort -u | sed 's/[^0-9]//g') + 
 ###############################################
 
 all:
+	@echo "amalgamate - amalgamate sources of the fkYAML library and generate its single header version."
 	@echo "clang-format - check whether source files are well formatted."
 	@echo "clang-sanitizers - check whether no runtime issue is detected while running the unit test app."
 	@echo "clang-tidy - check whether source files detect no issues during static code analysis."
@@ -73,6 +76,20 @@ valgrind:
 	cmake --build build_valgrind --config Debug -j $(JOBS)
 	ctest -C Debug -T memcheck --test-dir build_valgrind -j $(JOBS)
 
+###########################
+#   Source Amalgamation   #
+###########################
+
+amalgamate:
+	python3 ./tool/amalgamation/amalgamate.py -c ./tool/amalgamation/fkYAML.json -s . --verbose=yes
+
+check-amalgamate:
+	@cp $(SINGLE_SRC) $(SINGLE_SRC)~
+	@$(MAKE) amalgamate
+	@diff $(SINGLE_SRC) $(SINGLE_SRC)~ || (echo Amalgamation required. Please follow the guideline in the CONTRIBUTING.md file. ; mv $(SINGLE_SRC)~ $(SINGLE_SRC) ; false)
+	@mv $(SINGLE_SRC)~ $(SINGLE_SRC)
+	@echo Amalgamation check passed successfully.
+
 ##########################################
 #   Natvis Debugger Visualization File   #
 ##########################################
@@ -81,7 +98,7 @@ update-params-for-natvis:
 	echo { \"version\": \"$(TARGET_VERSION_FULL)\" } > ./tool/natvis_generator/params.json
 
 fkYAML.natvis: update-params-for-natvis
-	make -C ./tool/natvis_generator generate
+	@$(MAKE) -C ./tool/natvis_generator generate
 
 ###############
 #   Version   #
@@ -102,10 +119,6 @@ update-version-macros:
 update-project-version:
 	$(shell sed -i 's/VERSION [0-9]\+\.[0-9]\+\.[0-9]\+/VERSION $(TARGET_VERSION_FULL)/' CMakeLists.txt)
 
-update-git-tag-ref:
-	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' docs/mkdocs/docs/tutorials/cmake_integration.md)
-	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' test/cmake_fetch_content_test/project/CMakeLists.txt)
-
 # pre-requisites: pipx, reuse
 reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
@@ -119,6 +132,13 @@ reuse: update-reuse-templates
 		--license MIT --year 2023 --style c
 	pipx run reuse lint
 
+update-sources: reuse update-version-macros
+	@$(MAKE) amalgamate
+
+update-git-tag-ref:
+	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' docs/mkdocs/docs/tutorials/cmake_integration.md)
+	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' test/cmake_fetch_content_test/project/CMakeLists.txt)
+
 CHANGELOG.md:
 	github_changelog_generator --user fktn-k --project fkYAML \
 		--no-issues \
@@ -127,7 +147,7 @@ CHANGELOG.md:
 		--release-url https://github.com/fktn-k/fkYAML/releases/tag/%s \
 		--future-release v$(TARGET_VERSION_FULL)
 
-update-version: fkYAML.natvis update-version-macros update-project-version reuse update-git-tag-ref CHANGELOG.md 
+update-version: fkYAML.natvis update-project-version update-sources update-git-tag-ref CHANGELOG.md
 	@echo "updated version to $(TARGET_VERSION_FULL)"
 
 ################

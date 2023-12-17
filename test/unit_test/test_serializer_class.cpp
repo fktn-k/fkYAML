@@ -10,7 +10,9 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/output/serializer.hpp>
+#ifndef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/detail/output/serializer.hpp>
+#endif
 #include <fkYAML/node.hpp>
 
 TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")

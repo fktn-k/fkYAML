@@ -70,7 +70,10 @@ target_include_directories(unit_test_config INTERFACE ${CMAKE_CURRENT_BINARY_DIR
 target_link_libraries(unit_test_config INTERFACE Catch2::Catch2 ${FK_YAML_TARGET_NAME})
 target_compile_features(unit_test_config INTERFACE cxx_std_${FK_YAML_TEST_TARGET_CXX_STANDARD})
 set_target_properties(unit_test_config PROPERTIES CXX_EXTENTIONS OFF)
-target_compile_definitions(unit_test_config INTERFACE $<$<CONFIG:Release>:NDEBUG>)
+target_compile_definitions(unit_test_config INTERFACE
+  $<$<CONFIG:Release>:NDEBUG>
+  $<$<BOOL:${FK_YAML_USE_SINGLE_HEADER}>:FK_YAML_TEST_USE_SINGLE_HEADER>
+)
 
 # Configure compile options in common
 target_compile_options(unit_test_config INTERFACE

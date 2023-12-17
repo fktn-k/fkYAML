@@ -10,7 +10,11 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/ordered_map.hpp>
+#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/node.hpp>
+#else
+    #include <fkYAML/ordered_map.hpp>
+#endif
 
 TEST_CASE("OrderedMapClassTest_DefaultCtorTest", "[OrderedMapClassTest]")
 {
