@@ -5,8 +5,27 @@ on:
     branches:
       - develop
       - main
-      - release/*
+    paths:
+      - .github/workflows/ubuntu.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - test/**
+      - tool/**
+      - .clang-tidy
+      - CMakeLists.txt
+      - Makefile
   pull_request:
+    paths:
+      - .github/workflows/ubuntu.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - test/**
+      - tool/**
+      - .clang-tidy
+      - CMakeLists.txt
+      - Makefile
   workflow_dispatch:
 
 env:

@@ -5,8 +5,21 @@ on:
     branches:
       - develop
       - main
-      - release/*
+    paths:
+      - .github/workflows/coverage.yml
+      - cmake/**
+      - include/**
+      - test/**
+      - CMakeLists.txt
+      - Makefile
   pull_request:
+    paths:
+      - .github/workflows/coverage.yml
+      - cmake/**
+      - include/**
+      - test/**
+      - CMakeLists.txt
+      - Makefile
   workflow_dispatch:
 
 jobs:

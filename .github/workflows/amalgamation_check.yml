@@ -5,11 +5,15 @@ on:
     branches:
       - develop
       - main
-      - release/*
     paths:
+      - .github/workflows/amalgamation_check.yml
       - include/fkYAML/**
       - single_include/fkYAML/**
   pull_request:
+    paths:
+      - .github/workflows/amalgamation_check.yml
+      - include/fkYAML/**
+      - single_include/fkYAML/**
   workflow_dispatch:
 
 concurrency:
