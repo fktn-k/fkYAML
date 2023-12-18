@@ -6,6 +6,8 @@ on:
     branches:
       - develop
     paths:
+      - .github/workflows/publish_docs.yml
+      - docs/examples/**
       - docs/mkdocs/**
   workflow_dispatch:
 
