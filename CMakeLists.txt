@@ -98,6 +98,14 @@ if(MSVC)
                                      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${FK_YAML_NATVIS_FILE}>)
 endif()
 
+###########################
+#   Build example codes   #
+###########################
+
+if(FK_YAML_BUILD_EXAMPLES)
+  add_subdirectory(docs/examples)
+endif()
+
 ############################
 #   Integrate with tools   #
 ############################

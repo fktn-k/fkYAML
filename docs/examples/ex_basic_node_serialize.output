@@ -1,0 +1,9 @@
+bar:
+  - 1
+  - 2
+  - 3
+baz:
+  corge: null
+  qux: 3.14
+foo: true
+

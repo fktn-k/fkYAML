@@ -18,29 +18,12 @@ If the basic_node has already had any anchor name, the new anchor name overwrite
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // create a YAML node.
-        fkyaml::node n = 123;
-
-        // add an anchor name to the node.
-        n.add_anchor_name("anchor");
-        std::cout << n.get_anchor_name() << std::endl;
-
-        // overwrite it with a new one.
-        n.add_anchor_name("anchor2");
-        std::cout << n.get_anchor_name() << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_add_anchor_name.cpp"
     ```
 
+    output:
     ```bash
-    anchor
-    anchor2
+    --8<-- "examples/ex_basic_node_add_anchor_name.output"
     ```
 
 ## **See Also**

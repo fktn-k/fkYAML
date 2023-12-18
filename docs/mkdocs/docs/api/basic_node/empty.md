@@ -16,50 +16,12 @@ Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not h
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // create YAML nodes.
-        std::vector<fkyaml::node> nodes =
-        {
-            {1, 2, 3},
-            {{"foo", true}, {"bar", false}},
-            fkyaml::node(),
-            true,
-            256,
-            3.14,
-            "Hello, world!"
-        };
-
-        for (const auto& n : nodes)
-        {
-            try
-            {
-                // call empty()
-                std::cout << std::boolalpha << n.empty() << std::endl;
-            }
-            catch (const fkyaml::exception& e)
-            {
-                std::cout << "The node does not have a container nor string value." << std::endl;
-            }
-        }
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_empty.cpp"
     ```
 
     output:
-    ```yaml
-    true
-    true
-    The node does not have a container nor string value.
-    The node does not have a container nor string value.
-    The node does not have a container nor string value.
-    The node does not have a container nor string value.
-    true
+    ```bash
+    --8<-- "examples/ex_basic_node_empty.output"
     ```
 
 ### **See Also**

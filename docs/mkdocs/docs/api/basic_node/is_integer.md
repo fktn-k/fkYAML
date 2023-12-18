@@ -15,21 +15,12 @@ Tests whether the node value type is [`node_t::INTEGER`](node_t.md).
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n = 123;
-        std::cout << std::boolalpha << n.is_integer() << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_is_integer.cpp"
     ```
 
     output:
     ```bash
-    true
+    --8<-- "examples/ex_basic_node_is_integer.output"
     ```
 
 ### **See Also**

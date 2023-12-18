@@ -20,16 +20,12 @@ The version of the YAML format applied to the basic_node object.
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
+    --8<-- "examples/ex_basic_node_get_yaml_version.cpp"
+    ```
 
-    int main()
-    {
-
-
-        return 0;
-    }
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_get_yaml_version.output"
     ```
 
 ## **See Also**

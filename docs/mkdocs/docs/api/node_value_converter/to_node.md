@@ -37,47 +37,12 @@ This function is usually called by the constructors of the [`basic_node`](../bas
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    namespace ns
-    {
-
-    struct book
-    {
-        std::string title;
-        std::string author;
-        int year;
-    };
-
-    void to_node(fkyaml::node& n, const book& b)
-    {
-        n = fkyaml::node {
-            { "title", b.title },
-            { "author", b.author },
-            { "year", b.year }
-        };
-    }
-
-    } // namespace ns
-
-    int main()
-    {
-        ns::book b = { "Noman's Journey", "John Doe", 2023 };
-
-        fkyaml::node n = b;
-
-        std::cout << n << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_node_value_converter_to_node.cpp"
     ```
 
     output:
-    ```yaml
-    title: Noman's Journey
-    author: John Doe
-    year: 2023
+    ```bash
+    --8<-- "examples/ex_node_value_converter_to_node.output"
     ```
 
 ## **See Also**

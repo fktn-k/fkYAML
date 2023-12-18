@@ -25,34 +25,17 @@ Reference to the input stream object `is`.
 
 ???+ Example
 
-    ```yaml title="input.yaml"
-    foo: true
-    bar: 123
-    baz: 3.14
+    ```yaml
+    --8<-- "examples/input.yaml"
     ```
 
     ```cpp
-    #include <fstream>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        std::ifstream ifs("input.yaml");
-        fkyaml::node n;
-        ifs >> n;
-
-        // print the deserialization result.
-        std::cout << n << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_extraction_operator.cpp"
     ```
 
-    ```yaml
-    foo: true
-    bar: 123
-    baz: 3.14
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_extraction_operator.output"
     ```
 
 ### **See Also**

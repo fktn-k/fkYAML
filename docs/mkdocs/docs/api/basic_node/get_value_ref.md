@@ -38,41 +38,12 @@ A [`fkyaml::exception`](../exception/index.md) would be thrown otherwise.
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // create a YAML node.
-        fkyaml::node n = 123;
-
-        // get references to the value.
-        auto ref = n.get_value_ref<fkyaml::node::integer_type&>();
-        auto cref = n.get_value_ref<const fkyaml::node::integer_type&>();
-
-        // print the referenced values
-        std::cout << ref << std::endl;
-        std::cout << cref << std::endl;
-
-        // specifying incompatible reference type throws an exception
-        try
-        {
-            auto iref = value.get_value_ref<fkyaml::node::mapping_type&>();
-        }
-        catch (const fkyaml::exception& e)
-        {
-            std::cout << e.what() << std::endl;
-        }
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_get_value_ref.cpp"
     ```
 
     output:
     ```bash
-    123
-    123
-    The node value is not a mapping.
+    --8<-- "examples/ex_basic_node_get_value_ref.output"
     ```
 
 ## **See Also**

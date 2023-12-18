@@ -15,21 +15,12 @@ Tests whether the node value type is [`node_t::BOOLEAN`](node_t.md).
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n = true;
-        std::cout << std::boolalpha << n.is_boolean() << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_is_boolean.cpp"
     ```
 
     output:
     ```bash
-    true
+    --8<-- "examples/ex_basic_node_is_boolean.output"
     ```
 
 ### **See Also**

@@ -38,48 +38,12 @@ Note that the `TargetType` must be default-constructible.
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    namespace ns
-    {
-
-    struct book
-    {
-        std::string title;
-        std::string author;
-        int year;
-    };
-
-    void from_node(const fkyaml::node& n, book& b)
-    {
-        b.title  = n["title"].get_value_ref<const fkyaml::node::string_type&>();
-        b.author = n["author"].get_value_ref<const fkyaml::node::string_type&>();
-        b.year   = n["year"].get_value<int>();
-    }
-
-    } // namespace ns
-
-    int main()
-    {
-        fkyaml::node n = {
-            { "title", "Noman's Journey" },
-            { "author", "John Doe" },
-            { "year", 2023 },
-        };
-
-        auto b = n.get_value<ns::book>();
-
-        std::cout << "\"" << b.title << "\" was written by " << b.author
-                  << " in " << b.year << "." << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_node_value_converter_from_node.cpp"
     ```
 
     output:
     ```bash
-    "Noman's Journey" was written by John Doe in 2023.
+    --8<-- "examples/ex_node_value_converter_from_node.output"
     ```
 
 ## **See Also**
