@@ -17,22 +17,12 @@ These macros are available for client applications as the metadata of this libra
 ??? Example annotate "Example: print the library version"
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        std::cout << "fkYAML version "
-                  << FK_YAML_MAJOR_VERSION << "."
-                  << FK_YAML_MINOR_VERSION << "."
-                  << FK_YAML_PATCH_VERSION << std::endl
-        return 0;
-    }
+    --8<-- "examples/ex_macros_versions.cpp"
     ```
 
     output:
     ```bash
-    fkYAML version 0.1.3
+    --8<-- "examples/ex_macros_versions.output"
     ```
 
 ## Library Namespaces
@@ -58,7 +48,7 @@ You can also override the implementation by defining the following preprocessor 
     #define NDEBUG
     #include <fkYAML/node.hpp>
 
-    ...
+    // your code from here
     ```
 
 ??? Example annotate "Example: override the implementation of runtime assertions"
@@ -70,7 +60,7 @@ You can also override the implementation by defining the following preprocessor 
         if(!(x)){std::fprintf(stderr, "assertion failed in %s", __FUNC__);std::abort();}
     #include <fkYAML/node.hpp>
 
-    ...
+    // your code from here
     ```
 
 ## Language Supports
@@ -78,7 +68,7 @@ You can also override the implementation by defining the following preprocessor 
 The fkYAML library targets C++11, but also supports some features introduced in later C++ standards.  
 For those new features, the library implements some preprocessor checks to determine the C++ standard based on preprocessor macros such as `__cplusplus`, `_HAS_CXX14` or `_MSVC_LANG`.  
 By defining any of the following symbols, the internal check is overridden and the provided C++ standard is unconditionally assumed.  
-This can be helpful for compilers that only implement parts of the standard and would be detected incorrectly.  
+This can be helpful for compilers that only implement parts of the standard and the standard would be detected incorrectly.  
 
 | Name               | Description                               |
 | ------------------ | ----------------------------------------- |
@@ -90,9 +80,9 @@ This can be helpful for compilers that only implement parts of the standard and 
 ??? Example annotate "Example: force the fkYAML library to use a specific C++ standard"
 
     ```cpp
-    // force the library to use the C++14 standard.
+    // force fkYAML to use the C++14 standard.
     #define FK_YAML_HAS_CXX_14 1
     #include <fkYAML/node.hpp>
 
-    ...
+    // your code from here
     ```

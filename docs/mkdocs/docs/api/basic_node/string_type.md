@@ -15,24 +15,12 @@ Note that string objects are stored as pointers to the decided type in a [`basic
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <string>
-    #include <type_traits>
-    #include <fkYAML/node.h>
-
-    int main()
-    {
-        std::cout << std::boolalpha
-                  << std::is_same<std::string, fkyaml::node::string_type>::value
-                  << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_string_type.cpp"
     ```
 
     output:
     ```bash
-    true
+    --8<-- "examples/ex_basic_node_string_type.output"
     ```
 
 ### **See Also**

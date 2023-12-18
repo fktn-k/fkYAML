@@ -1,0 +1,68 @@
+#include <fstream>
+#include <iostream>
+#include <utility>
+#include <fkYAML/node.hpp>
+
+// creating a namespace is not mandatory.
+namespace ns
+{
+
+struct novel
+{
+    std::string title;
+    std::string author;
+    int year;
+};
+
+struct recommend
+{
+    std::string title;
+    std::string author;
+};
+
+// overloads must be defined in the same namespace as user-defined types.
+void from_node(const fkyaml::node& node, novel& novel)
+{
+    novel.title = node["title"].get_value_ref<const std::string&>();
+    novel.author = node["author"].get_value_ref<const std::string&>();
+    novel.year = node["year"].get_value<int>();
+}
+
+void to_node(fkyaml::node& node, const recommend& recommend)
+{
+    node = fkyaml::node {
+        { "title", recommend.title },
+        { "author", recommend.author }
+    };
+}
+
+} // namespace ns
+
+int main()
+{
+    // open a YAML file. Other streams or strings are also usable as an input.
+    std::ifstream ifs("example.yaml");
+
+    // deserialize the loaded file contents.
+    fkyaml::node root = fkyaml::node::deserialize(ifs);
+
+    // create an empty YAML sequence node.
+    fkyaml::node response = {{ "recommends", fkyaml::node::sequence() }};
+    auto& recommends = response["recommends"].get_value_ref<fkyaml::node::sequence_type&>();
+
+    // get novels directly from the node.
+    auto novels = root["novels"].get_value<std::vector<ns::novel>>();
+
+    // generate recommendations by extracting "title" & "author" values.
+    for (auto& novel : novels)
+    {
+        // create a recommendation node directly with a recommend object.
+        ns::recommend recommend = { std::move(novel.title), std::move(novel.author) };
+        recommends.emplace_back(recommend);
+    }
+
+    // print the response YAML nodes.
+    std::cout << response << std::endl;
+
+    return 0;
+}

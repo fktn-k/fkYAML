@@ -1,0 +1,3 @@
+123
+foo
+type_error: The target node value type is not float number type. type=string

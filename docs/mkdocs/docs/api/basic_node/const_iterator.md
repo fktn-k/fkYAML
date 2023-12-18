@@ -12,24 +12,12 @@ This iterator type is commonly used for sequence and mapping container values.
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // create YAML nodes.
-        const fkyaml::node sequence_node = {1, 2, 3};
-        // get an iterator to the first sequence element.
-        fkyaml::node::const_iterator it = sequence_node.begin();
-        std::cout << *it << std::endl;
-        return 0;
-    };
+    --8<-- "examples/ex_basic_node_const_iterator.cpp"
     ```
 
     output:
     ```bash
-    1
+    --8<-- "examples/ex_basic_node_const_iterator.output"
     ```
 
 ### **See Also**

@@ -1,0 +1,17 @@
+recommends:
+  -
+    author: Daniel Defoe
+    title: Robinson Crusoe
+  -
+    author: Jane Austen
+    title: Frankenstein
+  -
+    author: Herman Melville
+    title: Moby-Dick
+  -
+    author: Aldous Huxley
+    title: Brave New World
+  -
+    author: Kazuo Ishiguro
+    title: Never Let Me Go
+

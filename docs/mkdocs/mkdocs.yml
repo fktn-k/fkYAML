@@ -63,6 +63,9 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tilde
+  - pymdownx.snippets:
+      base_path: docs
+      check_paths: true
   - toc:
       permalink: true
 

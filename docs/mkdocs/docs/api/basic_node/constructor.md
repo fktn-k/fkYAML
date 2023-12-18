@@ -43,20 +43,12 @@ The resulting basic_node has the [`node_t::NULL_OBJECT`](node_t.md) type.
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n;
-        std::cout << n << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_constructor_1.cpp"
     ```
-    output:
 
-    ```yaml
-    null
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_constructor_1.output"
     ```
 
 ## Overload (2)
@@ -75,20 +67,12 @@ The resulting basic_node has a default value for the given type.
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n(fkyaml::node::node_t::INTEGER);
-        std::cout << n << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_constructor_2.cpp"
     ```
-    output:
 
-    ```yaml
-    0
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_constructor_2.output"
     ```
 
 ## Overload (3)
@@ -107,21 +91,12 @@ The resulting basic_node has the same type and value as `rhs`.
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n(fkyaml::node::node_t::BOOLEAN);
-        fkyaml::node n2(n);
-        std::cout << n << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_constructor_3.cpp"
     ```
-    output:
 
-    ```yaml
-    false
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_constructor_3.output"
     ```
 
 ## Overload (4)
@@ -141,21 +116,12 @@ The value of the argument `rhs` after calling this move constructor, will be the
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n(fkyaml::node::node_t::BOOLEAN);
-        fkyaml::node n2(n);
-        std::cout << n << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_constructor_4.cpp"
     ```
-    output:
 
-    ```yaml
-    false
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_constructor_4.output"
     ```
 
 ## Overload (5)
@@ -190,21 +156,12 @@ The resulting basic_node has the value of `val` and the type which is associated
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        double pi = 3.141592;
-        fkyaml::node n = pi;
-        std::cout << n << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_constructor_5.cpp"
     ```
-    output:
 
-    ```yaml
-    3.141592
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_constructor_5.output"
     ```
 
 ## Overload (6)
@@ -237,21 +194,12 @@ The resulting basic_node has the value of the referenced basic_node by `node_ref
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n({true, false});
-        std::cout << n << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_constructor_6.cpp"
     ```
-    output:
 
-    ```yaml
-    - true
-    - false
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_constructor_6.output"
     ```
 
 ## Overload (7)
@@ -272,27 +220,12 @@ If `init` contains a sequence of basic_node objects in which the number of basic
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n = {true, false};
-        std::cout << n << std::endl;
-
-        fkyaml::node n2 = {"foo", 1024};
-        std::cout << n2 << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_constructor_7.cpp"
     ```
+
     output:
-
-    ```yaml
-    - true
-    - false
-    ```
-    ```yaml
-    foo: 1024
+    ```bash
+    --8<-- "examples/ex_basic_node_constructor_7.output"
     ```
 ---
 

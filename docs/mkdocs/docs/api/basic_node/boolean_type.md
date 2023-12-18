@@ -19,21 +19,12 @@ With the decided type, boolean objects are stored directly inside a [`basic_node
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <type_traits>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        std::cout << std::boolalpha << std::is_same<bool, fkyaml::node::boolean_type>::value << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_boolean_type.cpp"
     ```
 
     output:
     ```bash
-    true
+    --8<-- "examples/ex_basic_node_boolean_type.output"
     ```
 
 ### **See Also**

@@ -15,22 +15,12 @@ The resulting basic_node has the [`node_t::SEQUENCE`](node_t.md) type.
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node::sequence_type s = {fkyaml::node(true), fkyaml::node(false)};
-        fkyaml::node n = fkyaml::node::sequence(s);
-        std::cout << n << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_sequence.cpp"
     ```
-    output:
 
-    ```yaml
-    - true
-    - false
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_sequence.output"
     ```
 
 

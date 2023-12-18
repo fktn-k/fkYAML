@@ -15,25 +15,12 @@ The resulting basic_node has the [`node_t::MAPPING`](node_t.md) type.
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node::mapping_type m = {
-            {"foo", false},
-            {"bar", 3.14}
-        };
-        fkyaml::node n = fkyaml::node::mapping(m);
-        std::cout << n << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_mapping.cpp"
     ```
-    output:
 
-    ```yaml
-    foo: false
-    bar: 3.14
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_mapping.output"
     ```
 
 

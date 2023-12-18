@@ -1,0 +1,22 @@
+novels:
+  -
+    author: Daniel Defoe
+    title: Robinson Crusoe
+    year: 1678
+  -
+    author: Jane Austen
+    title: Frankenstein
+    year: 1818
+  -
+    author: Herman Melville
+    title: Moby-Dick
+    year: 1851
+  -
+    author: Aldous Huxley
+    title: Brave New World
+    year: 1932
+  -
+    author: Kazuo Ishiguro
+    title: Never Let Me Go
+    year: 2005
+

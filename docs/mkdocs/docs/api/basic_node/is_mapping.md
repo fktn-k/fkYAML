@@ -15,21 +15,12 @@ Tests whether the node value type is [`node_t::MAPPING`](node_t.md).
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n = {{"foo", true}};
-        std::cout << std::boolalpha << n.is_mapping() << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_is_mapping.cpp"
     ```
 
     output:
     ```bash
-    true
+    --8<-- "examples/ex_basic_node_is_mapping.output"
     ```
 
 ### **See Also**

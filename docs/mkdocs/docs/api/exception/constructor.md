@@ -22,26 +22,12 @@ Constructs an exception object without an error message.
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/exception.hpp>
-
-    int main()
-    {
-        try
-        {
-            throw fkyaml::exception();
-        }
-        catch (const fkyaml::exception& e)
-        {
-            std::cout << e.what() << std::endl;
-        }
-        return 0;
-    }
+    --8<-- "examples/ex_exception_constructor_noarg.cpp"
     ```
 
     output:
     ```bash
-
+    --8<-- "examples/ex_exception_constructor_noarg.output"
     ```
 
 ## Overloads (2)
@@ -61,26 +47,12 @@ The given error message can be retrieved by calling [`exception::what()`](what.m
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/exception.hpp>
-
-    int main()
-    {
-        try
-        {
-            throw fkyaml::exception("An error message.");
-        }
-        catch (const fkyaml::exception& e)
-        {
-            std::cout << e.what() << std::endl;
-        }
-        return 0;
-    }
+    --8<-- "examples/ex_exception_constructor_msg.cpp"
     ```
 
     output:
     ```bash
-    An error message.
+    --8<-- "examples/ex_exception_constructor_msg.output"
     ```
 
 ## **See Also**

@@ -34,39 +34,12 @@ Reference, or constant reference, to a `mapped_type` object associated with the 
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-    #include <fkYAML/ordered_map.hpp>
-
-    int main()
-    {
-        fkyaml::ordered_map<std::string, fkyaml::node> om = {
-            { "foo", 123 },
-            { "bar", "baz" }
-        };
-
-        std::cout << om.at("foo") << std::endl;
-        std::cout << om.at("bar") << std::endl;
-
-        // accesses with a unknown key will throw an exception.
-        try
-        {
-
-        }
-        catch (const fkyaml::exception& e)
-        {
-            std::cout << e.what() << std::endl;
-        }
-
-        return 0;
-    }
+    --8<-- "examples/ex_ordered_map_at.cpp"
     ```
 
     output:
     ```bash
-    123
-    baz
-    key not found.
+    --8<-- "examples/ex_ordered_map_at.output"
     ```
 
 ## **See Also**

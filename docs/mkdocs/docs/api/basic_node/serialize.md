@@ -22,38 +22,12 @@ The resulting string object from the serialization of the `node` object.
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // create a basic_node object.
-        fkyaml::node n = {
-            {"foo", true},
-            {"bar", {1, 2, 3}},
-            {"baz", {
-                {"qux", 3.14},
-                {"corge", nullptr}
-            }}
-        };
-
-        // serialize the basic_node object.
-        std::cout << fkyaml::node::serialize(n) << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_serialize.cpp"
     ```
 
     output:
-    ```yaml
-    foo: true
-    bar:
-      - 1
-      - 2
-      - 3
-    baz:
-      qux: 3.14
-      corge: null
+    ```bash
+    --8<-- "examples/ex_basic_node_serialize.output"
     ```
 
 ### **See Also**

@@ -29,44 +29,12 @@ A pair consisting of an iterator to the inserted element, or the already-existin
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-    #include <fkYAML/ordered_map.hpp>
-
-    int main()
-    {
-        fkyaml::ordered_map<std::string, fkyaml::node> om = {
-            { "foo", 123 },
-            { "bar", "baz" }
-        };
-
-        // insert a value with a new key.
-        auto ret = om.emplace("qux", 3.14);
-        if (ret.second)
-        {
-            std::cout << "insertion took place." << std::endl;
-        }
-        std::cout << ret.first->second << std::endl;
-
-        // insert a value with an existing key.
-        auto ret2 = om.emplace("foo", true);
-        if (!ret2.second)
-        {
-            std::cout << "insertion did not take place." << std::endl;
-        }
-        std::cout << ret2.first->second << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_ordered_map_constructor_initializer_list.cpp"
     ```
 
     output:
     ```bash
-    insertion took place.
-    3.14
-    insertion did not take place.
-    123
+    --8<-- "examples/ex_ordered_map_constructor_initializer_list.output"
     ```
 
 ## **See Also**
