@@ -76,7 +76,7 @@ Also, make sure the example.yaml file is encoded in either the UTF-8, UTF-16BE/L
 === "tutorial.cpp"
 
     ```cpp
-    --8<-- "examples/tutorial_1.yaml"
+    --8<-- "examples/tutorial_1.cpp"
     ```
 === "CMakeLists.txt"
 
