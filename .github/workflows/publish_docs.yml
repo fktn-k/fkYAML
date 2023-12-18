@@ -29,8 +29,13 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Build examples
+        run: |
+          cmake -B ${{github.workspace}}/build -S ${{github.workspace}} -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_EXAMPLES=ON
+          cmake --build ${{github.workspace}}/build --config Debug
+
       - name: Build documentation
-        run: make build -C docs/mkdocs
+        run: make -C docs/mkdocs build
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
