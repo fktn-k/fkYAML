@@ -1425,7 +1425,7 @@ public:
         }
         else if (utf16[0] <= char16_t(0x7FFu))
         {
-            uint16_t utf8_encoded = 0b1100000010000000;
+            uint16_t utf8_encoded = 0xC080u;
             utf8_encoded |= static_cast<uint16_t>((utf16[0] & 0x07C0u) << 2);
             utf8_encoded |= static_cast<uint16_t>(utf16[0] & 0x003Fu);
             utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF00u) >> 8);
@@ -1436,7 +1436,7 @@ public:
         }
         else if (utf16[0] < char16_t(0xD800u) || char16_t(0xE000u) <= utf16[0])
         {
-            uint32_t utf8_encoded = 0b111000001000000010000000;
+            uint32_t utf8_encoded = 0xE08080u;
             utf8_encoded |= static_cast<uint32_t>((utf16[0] & 0xF000u) << 4);
             utf8_encoded |= static_cast<uint32_t>((utf16[0] & 0x0FC0u) << 2);
             utf8_encoded |= static_cast<uint32_t>(utf16[0] & 0x003Fu);
@@ -1451,7 +1451,7 @@ public:
         {
             // for surrogate pairs
             uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
-            uint32_t utf8_encoded = 0b11110000100000001000000010000000;
+            uint32_t utf8_encoded = 0xF0808080u;
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x1C0000u) << 6);
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x03F000u) << 4);
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x000FC0u) << 2);
@@ -1489,7 +1489,7 @@ public:
         }
         else if (utf32 <= char32_t(0x7FFu))
         {
-            uint16_t utf8_encoded = 0b1100000010000000;
+            uint16_t utf8_encoded = 0xC080u;
             utf8_encoded |= static_cast<uint16_t>((utf32 & 0x07C0u) << 2);
             utf8_encoded |= static_cast<uint16_t>(utf32 & 0x003Fu);
             utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF00u) >> 8);
@@ -1499,7 +1499,7 @@ public:
         }
         else if (utf32 <= char32_t(0xFFFFu))
         {
-            uint32_t utf8_encoded = 0b111000001000000010000000;
+            uint32_t utf8_encoded = 0xE08080u;
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0xF000u) << 4);
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0x0FC0u) << 2);
             utf8_encoded |= static_cast<uint32_t>(utf32 & 0x003F);
@@ -1511,7 +1511,7 @@ public:
         }
         else if (utf32 <= char32_t(0x10FFFFu))
         {
-            uint32_t utf8_encoded = 0b11110000100000001000000010000000;
+            uint32_t utf8_encoded = 0xF0808080u;
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0x1C0000u) << 6);
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0x03F000u) << 4);
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0x000FC0u) << 2);
@@ -8570,7 +8570,7 @@ private:
     /// @brief Returns constant reference to the sequence node value.
     /// @throw fkyaml::exception The node value is not a sequence.
     /// @return Constant reference to the sequence node value.
-    constexpr const sequence_type& get_value_ref_impl(const sequence_type* /*unused*/) const
+    const sequence_type& get_value_ref_impl(const sequence_type* /*unused*/) const
     {
         if (!is_sequence())
         {
@@ -8594,7 +8594,7 @@ private:
     /// @brief Returns constant reference to the mapping node value.
     /// @throw fkyaml::exception The node value is not a mapping.
     /// @return Constant reference to the mapping node value.
-    constexpr const mapping_type& get_value_ref_impl(const mapping_type* /*unused*/) const
+    const mapping_type& get_value_ref_impl(const mapping_type* /*unused*/) const
     {
         if (!is_mapping())
         {
@@ -8617,8 +8617,8 @@ private:
 
     /// @brief Returns reference to the boolean node value.
     /// @throw fkyaml::exception The node value is not a boolean.
-    /// @return Reference to the boolean node value.
-    constexpr const boolean_type& get_value_ref_impl(const boolean_type* /*unused*/) const
+    /// @return Constant reference to the boolean node value.
+    const boolean_type& get_value_ref_impl(const boolean_type* /*unused*/) const
     {
         if (!is_boolean())
         {
@@ -8641,8 +8641,8 @@ private:
 
     /// @brief Returns reference to the integer node value.
     /// @throw fkyaml::exception The node value is not an integer.
-    /// @return Reference to the integer node value.
-    constexpr const integer_type& get_value_ref_impl(const integer_type* /*unused*/) const
+    /// @return Constant reference to the integer node value.
+    const integer_type& get_value_ref_impl(const integer_type* /*unused*/) const
     {
         if (!is_integer())
         {
@@ -8665,8 +8665,8 @@ private:
 
     /// @brief Returns reference to the floating point number node value.
     /// @throw fkyaml::exception The node value is not a floating point number.
-    /// @return Reference to the floating point number node value.
-    constexpr const float_number_type& get_value_ref_impl(const float_number_type* /*unused*/) const
+    /// @return Constant reference to the floating point number node value.
+    const float_number_type& get_value_ref_impl(const float_number_type* /*unused*/) const
     {
         if (!is_float_number())
         {
@@ -8689,8 +8689,8 @@ private:
 
     /// @brief Returns reference to the string node value.
     /// @throw fkyaml::exception The node value is not a string.
-    /// @return Reference to the string node value.
-    constexpr const string_type& get_value_ref_impl(const string_type* /*unused*/) const
+    /// @return Constant reference to the string node value.
+    const string_type& get_value_ref_impl(const string_type* /*unused*/) const
     {
         if (!is_string())
         {
