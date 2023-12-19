@@ -1222,7 +1222,7 @@ private:
     /// @brief Returns constant reference to the sequence node value.
     /// @throw fkyaml::exception The node value is not a sequence.
     /// @return Constant reference to the sequence node value.
-    constexpr const sequence_type& get_value_ref_impl(const sequence_type* /*unused*/) const
+    const sequence_type& get_value_ref_impl(const sequence_type* /*unused*/) const
     {
         if (!is_sequence())
         {
@@ -1246,7 +1246,7 @@ private:
     /// @brief Returns constant reference to the mapping node value.
     /// @throw fkyaml::exception The node value is not a mapping.
     /// @return Constant reference to the mapping node value.
-    constexpr const mapping_type& get_value_ref_impl(const mapping_type* /*unused*/) const
+    const mapping_type& get_value_ref_impl(const mapping_type* /*unused*/) const
     {
         if (!is_mapping())
         {
@@ -1269,8 +1269,8 @@ private:
 
     /// @brief Returns reference to the boolean node value.
     /// @throw fkyaml::exception The node value is not a boolean.
-    /// @return Reference to the boolean node value.
-    constexpr const boolean_type& get_value_ref_impl(const boolean_type* /*unused*/) const
+    /// @return Constant reference to the boolean node value.
+    const boolean_type& get_value_ref_impl(const boolean_type* /*unused*/) const
     {
         if (!is_boolean())
         {
@@ -1293,8 +1293,8 @@ private:
 
     /// @brief Returns reference to the integer node value.
     /// @throw fkyaml::exception The node value is not an integer.
-    /// @return Reference to the integer node value.
-    constexpr const integer_type& get_value_ref_impl(const integer_type* /*unused*/) const
+    /// @return Constant reference to the integer node value.
+    const integer_type& get_value_ref_impl(const integer_type* /*unused*/) const
     {
         if (!is_integer())
         {
@@ -1317,8 +1317,8 @@ private:
 
     /// @brief Returns reference to the floating point number node value.
     /// @throw fkyaml::exception The node value is not a floating point number.
-    /// @return Reference to the floating point number node value.
-    constexpr const float_number_type& get_value_ref_impl(const float_number_type* /*unused*/) const
+    /// @return Constant reference to the floating point number node value.
+    const float_number_type& get_value_ref_impl(const float_number_type* /*unused*/) const
     {
         if (!is_float_number())
         {
@@ -1341,8 +1341,8 @@ private:
 
     /// @brief Returns reference to the string node value.
     /// @throw fkyaml::exception The node value is not a string.
-    /// @return Reference to the string node value.
-    constexpr const string_type& get_value_ref_impl(const string_type* /*unused*/) const
+    /// @return Constant reference to the string node value.
+    const string_type& get_value_ref_impl(const string_type* /*unused*/) const
     {
         if (!is_string())
         {

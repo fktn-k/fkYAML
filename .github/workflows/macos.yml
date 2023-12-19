@@ -50,7 +50,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
 
     - name: Test
-      working-directory: ${{github.workspace}}
+      working-directory: ${{github.workspace}}/build
       run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
 
   xcode_for_macos11:
