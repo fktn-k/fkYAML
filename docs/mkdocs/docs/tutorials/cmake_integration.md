@@ -23,7 +23,7 @@ The package configuration file, `fkYAMLConfig.cmake`, can be used either from an
     find_package(fkYAML 0.1.3 REQUIRED)
 
     add_executable(example example.cpp)
-    target_link_library(example PRIVATE fkYAML::fkYAML)
+    target_link_libraries(example PRIVATE fkYAML::fkYAML)
     ```
 
 ### With `add_subdirectory()`
@@ -62,5 +62,5 @@ Since CMake v3.11, [`FetchContent`](https://cmake.org/cmake/help/latest/module/F
     FetchContent_MakeAvailable(fkYAML)
 
     add_executable(example example.cpp)
-    target_link_library(example PRIVATE fkYAML::fkYAML)
+    target_link_libraries(example PRIVATE fkYAML::fkYAML)
     ```

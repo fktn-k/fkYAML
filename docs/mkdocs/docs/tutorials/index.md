@@ -90,7 +90,7 @@ Also, make sure the example.yaml file is encoded in either the UTF-8, UTF-16BE/L
     add_executable(tutorial tutorial.cpp)
 
     # This exported CMake target sets the necessary configurations for the project.
-    target_link_library(tutorial PUBLIC fkYAML::fkYAML)
+    target_link_libraries(tutorial PUBLIC fkYAML::fkYAML)
     ```
 
 After creating a tutorial project with the above files, execute the following commands to build the project with CMake.  
