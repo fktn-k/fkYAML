@@ -1,3 +1,48 @@
+# **fkYAML version 0.3.1**
+
+!!! abstract Release Packages
+
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.1/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.1/fkYAML.zip)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.1/node.hpp)
+
+## Summary
+
+From this release on, fkYAML provides the amalgamated version to improve portability as a header-only library.  
+Also, this release contains bug-fixes in the deserialization process.  
+Furthermore, the documentation now uses outputs from the sources in `docs/examples` directory to keep the examples in the documentation up to date with the latest library sources.  
+
+## What's Changed
+
+### :sparkles: New Features
+
+- \#255 serve single header file [\#261](https://github.com/fktn-k/fkYAML/pull/261) ([fktn-k](https://github.com/fktn-k)) suggested by [@reFX-Mike](https://github.com/reFX-Mike)
+
+### :zap: Improvements
+
+- \#256 Added specialization of from\_node\(\) for std::map with compatible key/value types [\#260](https://github.com/fktn-k/fkYAML/pull/260) ([fktn-k](https://github.com/fktn-k))
+
+### :bug: Bug Fixes
+
+- Avoid using unintended C++14 features [\#266](https://github.com/fktn-k/fkYAML/pull/266) ([fktn-k](https://github.com/fktn-k)) reported by [@burgreen](https://github.com/burgreen)
+- Allow a dash\(-\) at the first character of a plain scalar [\#254](https://github.com/fktn-k/fkYAML/pull/254) ([fktn-k](https://github.com/fktn-k))
+- Allow double quotation marks in plain scalars [\#253](https://github.com/fktn-k/fkYAML/pull/253) ([fktn-k](https://github.com/fktn-k))
+- \#242 Fix error in parsing string consisting only of numbers and multiple dots [\#251](https://github.com/fktn-k/fkYAML/pull/251) ([fktn-k](https://github.com/fktn-k))
+
+### :robot: CI
+
+- Added paths filter to regulate workflow executions [\#263](https://github.com/fktn-k/fkYAML/pull/263) ([fktn-k](https://github.com/fktn-k))
+
+### :memo: Documentation
+
+- fixed typos which needs to be target\_link\_libraries\(\) in tutorials [\#267](https://github.com/fktn-k/fkYAML/pull/267) ([fktn-k](https://github.com/fktn-k)) reported by [@burgreen](https://github.com/burgreen)
+- \#229 Fix the documentation build errors [\#265](https://github.com/fktn-k/fkYAML/pull/265) ([fktn-k](https://github.com/fktn-k))
+- \#229 build example code and use output [\#264](https://github.com/fktn-k/fkYAML/pull/264) ([fktn-k](https://github.com/fktn-k))
+
+Full Changelog: https://github.com/fktn-k/fkYAML/compare/v0.3.0...v0.3.1
+
+---
+
 # **fkYAML version 0.3.0**
 
 !!! abstract Release Packages
@@ -31,6 +76,8 @@ Furthermore, from this release on, GCC-7 and GCC-8 are in the list of supported 
 - Update copyright description [\#249](https://github.com/fktn-k/fkYAML/pull/249) ([fktn-k](https://github.com/fktn-k))
 
 Full Changelog: https://github.com/fktn-k/fkYAML/compare/v0.2.3...v0.3.0
+
+---
 
 # **fkYAML version 0.2.3**
 
