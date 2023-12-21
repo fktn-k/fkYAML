@@ -15,21 +15,12 @@ Tests whether the node value type is [`node_t::SEQUENCE`](node_t.md).
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n = {1, 2, 3};
-        std::cout << std::boolalpha << n.is_sequence() << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_is_sequence.cpp"
     ```
 
     output:
     ```bash
-    true
+    --8<-- "examples/ex_basic_node_is_sequence.output"
     ```
 
 ### **See Also**

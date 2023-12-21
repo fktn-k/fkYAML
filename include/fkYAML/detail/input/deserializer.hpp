@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -97,17 +97,6 @@ public:
                     }
                 }
 
-                type = lexer.get_next_token();
-                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
-                {
-                    m_node_stack.push_back(m_current_node);
-                    m_indent_stack.emplace_back(cur_indent, true);
-                    m_indent_stack.emplace_back(lexer.get_last_token_begin_pos(), false);
-                    m_current_node = new BasicNodeType(node_t::SEQUENCE);
-                    set_yaml_version(*m_current_node);
-                    break;
-                }
-
                 if (m_current_node->is_null())
                 {
                     *m_current_node = BasicNodeType::mapping();
@@ -115,6 +104,16 @@ public:
 
                 m_node_stack.push_back(m_current_node);
                 m_indent_stack.emplace_back(cur_indent, true);
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
+                {
+                    m_indent_stack.emplace_back(lexer.get_last_token_begin_pos(), false);
+                    m_current_node = new BasicNodeType(node_t::SEQUENCE);
+                    set_yaml_version(*m_current_node);
+                    break;
+                }
+
                 m_current_node = new BasicNodeType();
                 set_yaml_version(*m_current_node);
                 cur_indent = lexer.get_last_token_begin_pos();
@@ -141,6 +140,23 @@ public:
                     m_node_stack.pop_back();
                     m_indent_stack.pop_back();
                 }
+
+                if (m_node_stack.back()->is_sequence())
+                {
+                    m_current_node = m_node_stack.back();
+                    m_node_stack.pop_back();
+                }
+                if (m_node_stack.back() == m_current_node)
+                {
+                    // This path is for nested explicit mapping keys like:
+                    // ```yaml
+                    // ? ? foo
+                    //   : bar
+                    // : baz
+                    // ```
+                    m_node_stack.pop_back();
+                }
+
                 BasicNodeType* key_node = m_current_node;
                 m_node_stack.back()->template get_value_ref<mapping_type&>().emplace(*key_node, BasicNodeType());
                 m_current_node = &(m_node_stack.back()->operator[](*key_node));
@@ -446,6 +462,10 @@ private:
                 {
                     // This path is for explicit mapping key separator(:)
                     assign_node_value(std::move(node));
+                    if (!m_indent_stack.back().second)
+                    {
+                        m_indent_stack.pop_back();
+                    }
                     indent = lexer.get_last_token_begin_pos();
                     line = lexer.get_lines_processed();
                     return true;

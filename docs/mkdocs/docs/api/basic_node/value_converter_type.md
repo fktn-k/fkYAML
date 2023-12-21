@@ -24,30 +24,15 @@ If you want to convert some type from/to `basic_node`, however, it is recommende
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        std::cout << std::boolalpha
-                  << std::is_same<
-                         fkyaml::node_value_converter<double>,
-                         fkyaml::node::value_converter_type<double>>::value
-                  << std::endl;
-
-        fkyaml::node n = 3.14;
-        double d = 0.0;
-        // This leads to the same result as `d = n.get_value<double>()`.
-        fkyaml::value_converter_type<double, void>::from_node(n, d);
-        std::cout << std::setprecision(3) << d << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_value_converter_type.cpp"
     ```
 
     output:
     ```bash
-    true
-    3.14
+    --8<-- "examples/ex_basic_node_value_converter_type.output"
     ```
+
+## **See Also**
+
+* [basic_node](index.md)
+* [node_value_converter](../node_value_converter/index.md)

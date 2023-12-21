@@ -81,141 +81,49 @@ The resulting `basic_node` object deserialized from the pair of iterators.
 ???+ Example "Example (a character array)"
 
     ```cpp
-    #include <cstdint>
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // deserialize a YAML string.
-        char input[] = R"(
-        foo: true
-        bar: 123
-        baz: 3.14
-        )";
-        fkyaml::node n = fkyaml::node::deserialize(input);
-
-        // check the deserialization result.
-        std::cout << n["foo"].get_value<bool>() << std::endl;
-        std::cout << n["bar"].get_value<std::int64_t>() << std::endl;
-        std::cout << std::setprecision(3) << n["baz"].get_value<double>() << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_deserialize_char_array.cpp"
     ```
 
+    output:
     ```bash
-    true
-    123
-    3.14
+    --8<-- "examples/ex_basic_node_deserialize_char_array.output"
     ```
 
 ???+ Example "Example (a std::string object)"
 
     ```cpp
-    #include <cstdint>
-    #include <iomanip>
-    #include <iostream>
-    #include <string>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // deserialize a YAML string.
-        std::string s = R"(
-        foo: true
-        bar: 123
-        baz: 3.14
-        )";
-        fkyaml::node n = fkyaml::node::deserialize(s);
-
-        // check the deserialization result.
-        std::cout << n["foo"].get_value<bool>() << std::endl;
-        std::cout << n["bar"].get_value<std::int64_t>() << std::endl;
-        std::cout << std::setprecision(3) << n["baz"].get_value<double>() << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_deserialize_string.cpp"
     ```
 
+    output:
     ```bash
-    true
-    123
-    3.14
+    --8<-- "examples/ex_basic_node_deserialize_string.output"
     ```
 
 ???+ Example "Example (a FILE pointer)"
 
     ```yaml title="input.yaml"
-    foo: true
-    bar: 123
-    baz: 3.14
+    --8<-- "examples/input.yaml"
     ```
 
     ```cpp
-    #include <cstdint>
-    #include <iomanip>
-    #include <iostream>
-    #include <string>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // deserialize a YAML string.
-        FILE* p_file = std::fopen("input.yaml", "r");
-        if (!p_file)
-        {
-            // You must not pass a null FILE pointer.
-            return -1;
-        }
-        fkyaml::node n = fkyaml::node::deserialize(p_file);
-
-        // check the deserialization result.
-        std::cout << n["foo"].get_value<bool>() << std::endl;
-        std::cout << n["bar"].get_value<std::int64_t>() << std::endl;
-        std::cout << std::setprecision(3) << n["baz"].get_value<double>() << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_deserialize_file_pointer.cpp"
     ```
 
+    output:
     ```bash
-    true
-    123
-    3.14
+    --8<-- "examples/ex_basic_node_deserialize_file_pointer.output"
     ```
 
 ???+ Example "Example (a pair of iterators)"
 
     ```cpp
-    #include <cstdint>
-    #include <iomanip>
-    #include <iostream>
-    #include <string>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // deserialize a YAML string.
-        std::array<char> input = {
-            'f', 'o', 'o', ':', ' ', 't', 'r', 'u', 'e', 'd', 'u', 'm', 'm', 'y'
-        };
-        fkyaml::node n = fkyaml::node::deserialize(input.begin(), input.begin() + 9);
-
-        // check the deserialization result.
-        std::cout << n["foo"].get_value<bool>() << std::endl;
-        std::cout << n["bar"].get_value<std::int64_t>() << std::endl;
-        std::cout << std::setprecision(3) << n["baz"].get_value<double>() << std::endl;
-
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_deserialize_iterators.cpp"
     ```
 
+    output:
     ```bash
-    true
-    123
-    3.14
+    --8<-- "examples/ex_basic_node_deserialize_iterators.output"
     ```
 
 ### **See Also**

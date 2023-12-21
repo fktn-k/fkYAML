@@ -11,3 +11,7 @@ Files: thirdparty/imapdl/*
 Copyright: 2017 Georg Sauthoff <mail@gms.tf>
            2022, Alexander Stohr, ZF Friedrichshafen AG
 License: GPL-3.0-only
+
+Files: tool/amalgamation/*
+Copyright: 2012 Erik Edlund <erik.edlund@32767.se>
+License: BSD-3-Clause

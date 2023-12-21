@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8,7 +8,9 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/iterator.hpp>
+#ifndef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/detail/iterator.hpp>
+#endif
 #include <fkYAML/node.hpp>
 
 TEST_CASE("IteratorClassTest_SequenceCtorTest", "[IteratorClassTest]")

@@ -23,22 +23,12 @@ The content of a newly constructed ordered_map is an empty list of key-value pai
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-    #include <fkYAML/ordered_map.hpp>
-
-    int main()
-    {
-        fkyaml::ordered_map<std::string, fkyaml::node> om;
-        std::cout << std::boolalpha << om.empty() << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_ordered_map_constructor_noarg.cpp"
     ```
 
     output:
     ```bash
-    true
+    --8<-- "examples/ex_ordered_map_constructor_noarg.output"
     ```
 
 ## Overload (2)
@@ -58,29 +48,12 @@ The resulting ordered_map object has the same list of key-value pairs as the giv
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-    #include <fkYAML/ordered_map.hpp>
-
-    int main()
-    {
-        fkyaml::ordered_map<std::string, fkyaml::node> om = {
-            { "foo", 123 },
-            { "bar", "baz" }
-        };
-
-        for (auto& pair : om)
-        {
-            std::cout << pair.first << ": " << pair.second << std::endl;
-        }
-        return 0;
-    }
+    --8<-- "examples/ex_ordered_map_constructor_initializer_list.cpp"
     ```
 
     output:
-    ```yaml
-    foo: 123
-    bar: baz
+    ```bash
+    --8<-- "examples/ex_ordered_map_constructor_initializer_list.output"
     ```
 
 ## **See Also**

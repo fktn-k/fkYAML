@@ -33,40 +33,12 @@ An iterator to the target value if found, the result of end() otherwise.
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-    #include <fkYAML/ordered_map.hpp>
-
-    int main()
-    {
-        fkyaml::ordered_map<std::string, fkyaml::node> om = {
-            { "foo", 123 },
-            { "bar", "baz" }
-        };
-
-        // search for a value with an existing key.
-        auto itr = om.find("foo");
-        if (itr != om.end())
-        {
-            std::cout << *itr << std::endl;
-        }
-
-        // search for a value with a key which does not exist.
-        auto itr2 = om.emplace("qux");
-        if (itr2 == om.end())
-        {
-            std::cout << "key does not exist." << std::endl;
-        }
-
-        return 0;
-    }
+    --8<-- "examples/ex_ordered_map_emplace.cpp"
     ```
 
     output:
     ```bash
-    123
-    key does not exist.
+    --8<-- "examples/ex_ordered_map_emplace.output"
     ```
 
 ## **See Also**

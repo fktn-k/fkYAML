@@ -15,24 +15,12 @@ Note that sequence objects are stored as pointers to the decided type in a [`bas
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <type_traits>
-    #include <vector>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        std::cout << std::boolalpha
-                  << std::is_same<std::vector<fkyaml::node>, fkyaml::node::sequence_type>::value
-                  << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_sequence_type.cpp"
     ```
 
     output:
     ```bash
-    true
+    --8<-- "examples/ex_basic_node_sequence_type.output"
     ```
 
 ### **See Also**

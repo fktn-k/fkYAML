@@ -16,7 +16,7 @@ T get_value() const noexcept(
 Explicit type conversion between the internally stored YAML node value and a compatible value which is [copy-constructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible) and [default-constructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible).  
 The conversion relies on the [`node_value_converter`](../node_value_converter/index.md)::[`from_node`](../node_value_converter/from_node.md).  
 This API makes a copy of the value.  
-If the copying costs a lot, or if you need an address of the original value, then it might be more suitable to call [`get_value_ref`](get_value_ref.md) instead.  
+If the copying costs a lot, or if you need an address of the original value, then it is more suitable to call [`get_value_ref`](get_value_ref.md) instead.  
 
 ## **Template Parameters**
 
@@ -30,3 +30,20 @@ If the copying costs a lot, or if you need an address of the original value, the
 ## **Return Value**
 
 A compatible native data value converted from the basic_node object.
+
+???+ Example
+
+    ```cpp
+    --8<-- "examples/ex_basic_node_get_value.cpp"
+    ```
+
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_get_value.output"
+    ```
+
+## **See Also**
+
+* [basic_node](index.md)
+* [get_value_ref](get_value_ref.md)
+* [node_value_converter::from_node](../node_value_converter/from_node.md)

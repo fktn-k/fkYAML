@@ -11,27 +11,12 @@ Returns an error message for an exception. If nothing, a non-null, empty string 
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/exception.hpp>
-
-    int main()
-    {
-        try
-        {
-            throw fkyaml::exception("An error message.");
-        }
-        catch (const fkyaml::exception& e)
-        {
-            std::cout << e.what() << std::endl;
-        }
-
-        return 0;
-    }
+    --8<-- "examples/ex_exception_what.cpp"
     ```
 
     output:
     ```bash
-    An error message.
+    --8<-- "examples/ex_exception_what.output"
     ```
 
 ### **See Also**

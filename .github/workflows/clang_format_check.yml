@@ -5,8 +5,17 @@ on:
     branches:
       - develop
       - main
-      - release/*
+    paths:
+      - .github/workflows/clang_format_check.yml
+      - include/**
+      - test/unit_test/**
+      - .clang-format
   pull_request:
+    paths:
+      - .github/workflows/clang_format_check.yml
+      - include/**
+      - test/unit_test/**
+      - .clang-format
   workflow_dispatch:
 
 concurrency:

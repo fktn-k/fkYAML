@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -107,8 +107,8 @@ public:
             case ' ':
                 return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
-                m_input_handler.unget();
-                return m_last_token_type = scan_string();
+                m_value_buffer = "?";
+                return m_last_token_type = scan_string(false);
             }
         case ':': // key separater
             switch (m_input_handler.get_next())
@@ -176,29 +176,50 @@ public:
         case '%': // directive prefix
             return m_last_token_type = scan_directive();
         case '-': {
-            bool is_next_space = m_input_handler.test_next_char(' ');
-            if (!is_next_space)
+            char_int_type next = m_input_handler.get_next();
+            if (next == ' ')
             {
-                char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
-                if (ret != end_of_input)
-                {
-                    if (m_value_buffer == "---")
-                    {
-                        m_input_handler.get_next();
-                        return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
-                    }
+                // Move a cursor to the beginning of the next token.
+                m_input_handler.get_next();
+                return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+            }
 
-                    // revert change in the position to the one before comparison above.
-                    m_input_handler.unget_range(2);
-                }
+            m_input_handler.unget();
+            if (std::isdigit(next))
+            {
                 return m_last_token_type = scan_number();
             }
 
-            // Move a cursor to the beginning of the next token.
-            m_input_handler.get_next();
-            m_input_handler.get_next();
+            char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
+            if (ret != end_of_input)
+            {
+                if (m_value_buffer == "---")
+                {
+                    m_input_handler.get_next();
+                    return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
+                }
 
-            return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                m_input_handler.unget_range(2);
+                ret = m_input_handler.get_range(5, m_value_buffer);
+                if (ret != end_of_input)
+                {
+                    try
+                    {
+                        // try convert to the negative infinite value.
+                        m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
+                        m_input_handler.get_next();
+                        return m_last_token_type = lexical_token_t::FLOAT_NUMBER_VALUE;
+                    }
+                    catch (const fkyaml::exception& /*unused*/)
+                    {
+                        m_input_handler.unget_range(4);
+                    }
+                }
+            }
+
+            m_input_handler.get_next();
+            m_value_buffer = "-";
+            return m_last_token_type = scan_string(false);
         }
         case '[': // sequence flow begin
             m_input_handler.get_next();
@@ -614,31 +635,11 @@ private:
     lexical_token_t scan_negative_number()
     {
         char_int_type next = m_input_handler.get_next();
-        FK_YAML_ASSERT(std::isdigit(next) || next == '.');
 
-        if (std::isdigit(next))
-        {
-            m_value_buffer.push_back(char_traits_type::to_char_type(next));
-            return scan_decimal_number();
-        }
-
-        char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
-        if (ret != end_of_input)
-        {
-            try
-            {
-                // check if convertible to an infinite value.
-                from_string(m_value_buffer, type_tag<float_number_type> {});
-                m_input_handler.get_next();
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-            catch (const fkyaml::exception& /*unused*/)
-            {
-                // handle this error below.
-            }
-        }
-
-        emit_error("Invalid character found in a negative number token."); // LCOV_EXCL_LINE
+        // The value of `next` must be guranteed to be a digit in the get_next_token() function.
+        FK_YAML_ASSERT(std::isdigit(next));
+        m_value_buffer.push_back(char_traits_type::to_char_type(next));
+        return scan_decimal_number();
     }
 
     /// @brief Scan a next character after '0' at the beginning of a token.
@@ -673,8 +674,8 @@ private:
         if (std::isdigit(next))
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
-            scan_decimal_number();
-            return lexical_token_t::FLOAT_NUMBER_VALUE;
+            lexical_token_t token = scan_decimal_number();
+            return token == lexical_token_t::STRING_VALUE ? token : lexical_token_t::FLOAT_NUMBER_VALUE;
         }
 
         emit_error("Invalid character found after a decimal point."); // LCOV_EXCL_LINE
@@ -732,10 +733,10 @@ private:
         if (next == '.')
         {
             // NOLINTNEXTLINE(abseil-string-find-str-contains)
-            if (m_value_buffer.find(char_traits_type::to_char_type(next)) != string_type::npos)
+            if (m_value_buffer.find('.') != string_type::npos)
             {
-                // TODO: support this use case (e.g. version info like 1.0.0)
-                emit_error("Multiple decimal points found in a token.");
+                // This path is for strings like 1.2.3
+                return scan_string(false);
             }
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number_after_decimal_point();
@@ -779,14 +780,23 @@ private:
     /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
     /// @note Multibyte characters(including escaped ones) are currently unsupported.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_string()
+    lexical_token_t scan_string(bool needs_clear = true)
     {
-        m_value_buffer.clear();
+        char_int_type current = m_input_handler.get_current();
+        bool needs_last_double_quote = false;
+        bool needs_last_single_quote = false;
 
-        const bool needs_last_double_quote = (m_input_handler.get_current() == '\"');
-        const bool needs_last_single_quote = (m_input_handler.get_current() == '\'');
-        char_int_type current = (needs_last_double_quote || needs_last_single_quote) ? m_input_handler.get_next()
-                                                                                     : m_input_handler.get_current();
+        if (needs_clear)
+        {
+            m_value_buffer.clear();
+
+            needs_last_double_quote = (m_input_handler.get_current() == '\"');
+            needs_last_single_quote = (m_input_handler.get_current() == '\'');
+            if (needs_last_double_quote || needs_last_single_quote)
+            {
+                current = m_input_handler.get_next();
+            }
+        }
 
         for (;; current = m_input_handler.get_next())
         {
@@ -843,12 +853,7 @@ private:
                     return lexical_token_t::STRING_VALUE;
                 }
 
-                if (!needs_last_single_quote)
-                {
-                    emit_error("Invalid double quotation mark found in a string token.");
-                }
-
-                // if the target is a single-quoted string token.
+                // if the target is a plain/single-quoted string token.
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 continue;
             }

@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.3.1](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.1) (2023-12-21)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.0...v0.3.1)
+
+- \#229 build example code and use output [\#264](https://github.com/fktn-k/fkYAML/pull/264) ([fktn-k](https://github.com/fktn-k))
+- Added paths filter to regulate workflow executions [\#263](https://github.com/fktn-k/fkYAML/pull/263) ([fktn-k](https://github.com/fktn-k))
+- \#255 serve single header file [\#261](https://github.com/fktn-k/fkYAML/pull/261) ([fktn-k](https://github.com/fktn-k))
+- \#256 Added specialization of from\_node\(\) for std::map with compatible key/value types [\#260](https://github.com/fktn-k/fkYAML/pull/260) ([fktn-k](https://github.com/fktn-k))
+- Allow double quotation marks in plain scalars [\#253](https://github.com/fktn-k/fkYAML/pull/253) ([fktn-k](https://github.com/fktn-k))
+
+- Avoid using unintended C++14 features [\#266](https://github.com/fktn-k/fkYAML/pull/266) ([fktn-k](https://github.com/fktn-k))
+- Allow a dash\(-\) at the first character of a plain scalar [\#254](https://github.com/fktn-k/fkYAML/pull/254) ([fktn-k](https://github.com/fktn-k))
+- \#242 Fix error in parsing string consisting only of numbers and multiple dots [\#251](https://github.com/fktn-k/fkYAML/pull/251) ([fktn-k](https://github.com/fktn-k))
+
+- fixed typos which needs to be target\_link\_libraries\(\) in tutorials [\#267](https://github.com/fktn-k/fkYAML/pull/267) ([fktn-k](https://github.com/fktn-k))
+- \#229 Fix the documentation build errors [\#265](https://github.com/fktn-k/fkYAML/pull/265) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.0](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.0) (2023-12-10)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.2.3...v0.3.0)

@@ -19,25 +19,12 @@ An iterator to the past-the-last element of a container node value (either seque
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // create a sequence node.
-        fkyaml::node n = {"foo", "bar"};
-        // get an iterator to the past-the-last element.
-        fkyaml::node::iterator it = n.end();
-        // decrement the iterator to point to the last element.
-        --it;
-        std::cout << *it << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_end.cpp"
     ```
 
     output:
-    ```yaml
-    bar
+    ```bash
+    --8<-- "examples/ex_basic_node_end.output"
     ```
 
 ### **See Also**

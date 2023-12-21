@@ -20,10 +20,10 @@ The package configuration file, `fkYAMLConfig.cmake`, can be used either from an
     cmake_minimum_required(VERSION 3.8)
     project(ExampleProject LANGUAGES CXX)
 
-    find_package(fkYAML 0.1.3 REQUIRED)
+    find_package(fkYAML 0.3.1 REQUIRED)
 
     add_executable(example example.cpp)
-    target_link_library(example PRIVATE fkYAML::fkYAML)
+    target_link_libraries(example PRIVATE fkYAML::fkYAML)
     ```
 
 ### With `add_subdirectory()`
@@ -57,10 +57,10 @@ Since CMake v3.11, [`FetchContent`](https://cmake.org/cmake/help/latest/module/F
     FetchContent_Declare(
         fkYAML
         GIT_REPOSITORY https://github.com/fktn-k/fkYAML.git
-        GIT_TAG v0.3.0
+        GIT_TAG v0.3.1
     )
     FetchContent_MakeAvailable(fkYAML)
 
     add_executable(example example.cpp)
-    target_link_library(example PRIVATE fkYAML::fkYAML)
+    target_link_libraries(example PRIVATE fkYAML::fkYAML)
     ```

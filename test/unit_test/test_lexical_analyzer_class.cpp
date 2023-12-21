@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8,8 +8,10 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/input/input_adapter.hpp>
-#include <fkYAML/detail/input/lexical_analyzer.hpp>
+#ifndef FK_YAML_TEST_USE_SINGLE_HEADER
+    #include <fkYAML/detail/input/input_adapter.hpp>
+    #include <fkYAML/detail/input/lexical_analyzer.hpp>
+#endif
 #include <fkYAML/node.hpp>
 
 using pchar_lexer_t =
@@ -390,7 +392,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanInfinityTokenTest", "[LexicalAnalyzerCla
         REQUIRE_NOTHROW(lexer.get_next_token());
     }
 
-    SECTION("Test result of positive infinity literal tokens.")
+    SECTION("Test result of infinity literal tokens.")
     {
         REQUIRE(lexer.get_next_token() == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
         REQUIRE_NOTHROW(lexer.get_float_number());
@@ -416,12 +418,11 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanNaNTokenTest", "[LexicalAnalyzerClassTes
     }
 }
 
-TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidNumberTokenTest", "[LexicalAnalyzerClassTest]")
-{
-    auto buffer = GENERATE(std::string("-.test"), std::string("1.0.0"));
-    str_lexer_t lexer(fkyaml::detail::input_adapter(buffer));
-    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
-}
+// TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidNumberTokenTest", "[LexicalAnalyzerClassTest]")
+// {
+//     pchar_lexer_t lexer(fkyaml::detail::input_adapter("-.test"));
+//     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+// }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClassTest]")
 {
@@ -436,9 +437,15 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string(".NET"), fkyaml::node::string_type(".NET")),
         value_pair_t(std::string(".on"), fkyaml::node::string_type(".on")),
         value_pair_t(std::string(".n"), fkyaml::node::string_type(".n")),
+        value_pair_t(std::string("-t"), fkyaml::node::string_type("-t")),
+        value_pair_t(std::string("-foo"), fkyaml::node::string_type("-foo")),
+        value_pair_t(std::string("-.test"), fkyaml::node::string_type("-.test")),
+        value_pair_t(std::string("1.2.3"), fkyaml::node::string_type("1.2.3")),
         value_pair_t(std::string("foo]"), fkyaml::node::string_type("foo")),
         value_pair_t(std::string("foo:bar"), fkyaml::node::string_type("foo:bar")),
         value_pair_t(std::string("foo bar"), fkyaml::node::string_type("foo bar")),
+        value_pair_t(std::string("foo\"bar"), fkyaml::node::string_type("foo\"bar")),
+        value_pair_t(std::string("\'foo\"bar\'"), fkyaml::node::string_type("foo\"bar")),
         value_pair_t(std::string("foo\'s bar"), fkyaml::node::string_type("foo\'s bar")),
         value_pair_t(std::string("\"foo bar\""), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("\"foo's bar\""), fkyaml::node::string_type("foo's bar")),
@@ -643,9 +650,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidStringTokenTest", "[LexicalAnalyz
     SECTION("parse_error expected")
     {
         auto buffer = GENERATE(
-            std::string("foo\"bar"),
             std::string("foo\\tbar"),
-            std::string("-.a"),
             std::string("\"test"),
             std::string("\'test"),
             std::string("\'test\n\'"),

@@ -28,15 +28,20 @@ For questions, feature or support requests, please [open a discussion](https://g
 Basically, follow [the contribution guideline](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) on the GitHub Docs.  
 To make changes to the fkYAML project, you need to edit the following files:
 
-1. [`include/fkYAML/**.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/include/fkYAML) - These files are the sources of the fkYAML library.
+### 1. [`include/fkYAML/**.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/include/fkYAML)
 
-2. [`test/unit_test/*.cpp`](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test) - These files contain the [Catch2](https://github.com/catchorg/Catch2) unit tests from which current coverage data is generated. (Click [here](https://coveralls.io/github/fktn-k/fkYAML) to see the current coverage of the library's code.)
+These files are the sources of the fkYAML library. After making changes in those files, please run `make amalgamate` to regenerate [`single_include/fkYAML/node.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/single_include/fkYAML/node.hpp) at least before making a PR. If the `make` command is unavailable on your local environment, the following commands will do the same:  
 
-3. [`docs/mkdocs/docs/**.md`](https://github.com/fktn-k/fkYAML/tree/develop/docs/mkdocs/docs) - These files are the sources of the documentation from which [MkDocs](https://www.mkdocs.org/) generates the documentation.  
+```bash
+$ cd path/to/fkYAML
+$ python3 ./tool/amalgamation/amalgamate.py -c ./tool/amalgamation/fkYAML.json -s . --verbose=yes
+```
 
-If you have added or changed a feature, please also add a unit test to the associated file(s) to keep covering 100% of the lines/branches in the fkYAML library, and add/modify sufficient descriptions to keep the documentation to be up-to-date as well.  
+Note that the amalgamation tool assumes that your current directory is at the root of the fkYAML project.  
 
-The unit tests can be compiled and executed with:
+### 2. [`test/unit_test/*.cpp`](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test)
+
+These files contain the [Catch2](https://github.com/catchorg/Catch2) unit tests from which current coverage data is generated. (Click [here](https://coveralls.io/github/fktn-k/fkYAML) to see the current coverage of the library's code.) If you have added or changed a feature, please also modify a unit test to the associated file(s) to keep covering 100% of the lines/branches in the fkYAML library. The unit tests can be compiled and executed with:  
 
 ```bash
 $ cd path/to/fkYAML
@@ -45,8 +50,11 @@ $ cmake --build build --config Debug
 $ ctest -C Debug --test-dir build --output-on-failure
 ```
 
-The test cases are also executed with various combinations of compilers and operating systems on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
-As the policy of this project, all the workflow checks must be passed before merging.  
+Furthermore, you can test the single-header version of fkYAML by passing `-DFK_YAML_USE_SINGLE_HEADER=ON` when you configure CMake.  
+
+### 3. [`docs/mkdocs/docs/**.md`](https://github.com/fktn-k/fkYAML/tree/develop/docs/mkdocs/docs)
+
+These files are the sources of the documentation from which [MkDocs](https://www.mkdocs.org/) generates the documentation. If you have added or changed a feature, please also add sufficient descriptions so that the documentation is kept up-to-date.  
 
 Also, you can build & check the updated documentation on your local environment by executing the following commands:
 
@@ -70,8 +78,9 @@ Those Clang tools, however, do not seem to gurantee backward compatibility and t
 
 ## Note
 
-If you open a pull request, the code will be automatically tested with [Valgrind](https://valgrind.org/) and [Clang Sanitizers](https://clang.llvm.org/docs/index.html) to detect runtime issues (e.g., memory leaks).  
-This can result in failing unit tests which run successfully without those tools.  
+When you open a pull request, fkYAML will automatically be built/tested with (1) various combinations of compilers and operating systems and (2) [Valgrind](https://valgrind.org/) and [Clang Sanitizers](https://clang.llvm.org/docs/index.html) to detect runtime issues (e.g., memory leaks), on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
+These can result in failing builds and/or unit tests which run successfully on your local environment.  
+As a policy of this project, however, all the workflow checks must be passed before merging.  
 
 ## Please don't
 

@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.0
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -214,7 +214,7 @@ public:
         }
         else if (utf16[0] <= char16_t(0x7FFu))
         {
-            uint16_t utf8_encoded = 0b1100000010000000;
+            uint16_t utf8_encoded = 0xC080u;
             utf8_encoded |= static_cast<uint16_t>((utf16[0] & 0x07C0u) << 2);
             utf8_encoded |= static_cast<uint16_t>(utf16[0] & 0x003Fu);
             utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF00u) >> 8);
@@ -225,7 +225,7 @@ public:
         }
         else if (utf16[0] < char16_t(0xD800u) || char16_t(0xE000u) <= utf16[0])
         {
-            uint32_t utf8_encoded = 0b111000001000000010000000;
+            uint32_t utf8_encoded = 0xE08080u;
             utf8_encoded |= static_cast<uint32_t>((utf16[0] & 0xF000u) << 4);
             utf8_encoded |= static_cast<uint32_t>((utf16[0] & 0x0FC0u) << 2);
             utf8_encoded |= static_cast<uint32_t>(utf16[0] & 0x003Fu);
@@ -240,7 +240,7 @@ public:
         {
             // for surrogate pairs
             uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
-            uint32_t utf8_encoded = 0b11110000100000001000000010000000;
+            uint32_t utf8_encoded = 0xF0808080u;
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x1C0000u) << 6);
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x03F000u) << 4);
             utf8_encoded |= static_cast<uint32_t>((code_point & 0x000FC0u) << 2);
@@ -278,7 +278,7 @@ public:
         }
         else if (utf32 <= char32_t(0x7FFu))
         {
-            uint16_t utf8_encoded = 0b1100000010000000;
+            uint16_t utf8_encoded = 0xC080u;
             utf8_encoded |= static_cast<uint16_t>((utf32 & 0x07C0u) << 2);
             utf8_encoded |= static_cast<uint16_t>(utf32 & 0x003Fu);
             utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF00u) >> 8);
@@ -288,7 +288,7 @@ public:
         }
         else if (utf32 <= char32_t(0xFFFFu))
         {
-            uint32_t utf8_encoded = 0b111000001000000010000000;
+            uint32_t utf8_encoded = 0xE08080u;
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0xF000u) << 4);
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0x0FC0u) << 2);
             utf8_encoded |= static_cast<uint32_t>(utf32 & 0x003F);
@@ -300,7 +300,7 @@ public:
         }
         else if (utf32 <= char32_t(0x10FFFFu))
         {
-            uint32_t utf8_encoded = 0b11110000100000001000000010000000;
+            uint32_t utf8_encoded = 0xF0808080u;
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0x1C0000u) << 6);
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0x03F000u) << 4);
             utf8_encoded |= static_cast<uint32_t>((utf32 & 0x000FC0u) << 2);

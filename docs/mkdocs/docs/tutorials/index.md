@@ -13,6 +13,7 @@ The followings are possible ways of preparing for the use of fkYAML:
 
 ### :file_folder: Download a release package
 You can [download the latest package (fkYAML.tgz for UNIX or fkYAML.zip for Windows) from here](https://github.com/fktn-k/fkYAML/releases/latest).  
+The single-header version of the fkYAML package can also be downloaded since v0.3.1 with the name of fkYAML_single_header.{tgz|zip}.  
 After the download gets completed, unzip and put the package in some directory on your machine.  
 The destination path can be whatever you want, and you're all set!
 
@@ -22,7 +23,7 @@ Make sure the CMake executable is registered to the PATH environment variable.
 
 ```bash
 $ cd /path/to/fkYAML
-$ cmake -B build -S . [-DCMAKE_INSTALL_PREFIX=<path-to-install>]
+$ cmake -B build -S . [-DCMAKE_INSTALL_PREFIX=<path-to-install>] [-DFK_YAML_USE_SINGLE_HEADER=ON]
 $ cmake --build build --target install
 ```
 
@@ -33,6 +34,8 @@ The default installation path would be the followings:
 | ------- | ------------------------- |
 | UNIX    | /usr/local                |
 | Windows | C:\\Program Files\\fkYAML |
+
+Furthermore, you can install the single-header version of fkYAML by adding the `-DFK_YAML_USE_SINGLE_HEADER=ON` parameter on configuring CMake.  
 
 And you're all set! You can now `find_package()` the fkYAML package.
 
@@ -68,42 +71,12 @@ Also, make sure the example.yaml file is encoded in either the UTF-8, UTF-16BE/L
 === "example.yaml"
 
     ```yaml
-    novels:
-      - title: Robinson Crusoe
-        author: Daniel Defoe
-        year: 1678
-      - title: Frankenstein
-        author: Jane Austen
-        year: 1818
-      - title: Moby-Dick
-        author: Herman Melville
-        year: 1851
-      - title: Brave New World
-        author: Aldous Huxley
-        year: 1932
-      - title: Never Let Me Go
-        author: Kazuo Ishiguro
-        year: 2005
+    --8<-- "examples/example.yaml"
     ```
 === "tutorial.cpp"
 
     ```cpp
-    #include <fstream>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // open a YAML file. Other streams or strings are also usable as an input.
-        std::ifstream ifs("example.yaml");
-
-        // deserialize the loaded file contents.
-        fkyaml::node root = fkyaml::node::deserialize(ifs);
-
-        // print the deserialized YAML nodes by serializing them back.
-        std::cout << root << std::endl;
-        return 0;
-    }
+    --8<-- "examples/tutorial_1.cpp"
     ```
 === "CMakeLists.txt"
 
@@ -117,7 +90,7 @@ Also, make sure the example.yaml file is encoded in either the UTF-8, UTF-16BE/L
     add_executable(tutorial tutorial.cpp)
 
     # This exported CMake target sets the necessary configurations for the project.
-    target_link_library(tutorial PUBLIC fkYAML::fkYAML)
+    target_link_libraries(tutorial PUBLIC fkYAML::fkYAML)
     ```
 
 After creating a tutorial project with the above files, execute the following commands to build the project with CMake.  
@@ -132,27 +105,7 @@ Congratulation! You've got an application which loads a YAML file and then outpu
 If you run the tutorial executable file, you will see the output like:  
 
 ```bash
-novels:
-  -
-    title: Robinson Crusoe
-    author: Daniel Defoe
-    year: 1678
-  -
-    title: Frankenstein
-    author: Mary Shelly
-    year: 1818
-  -
-    title: Moby-Dick
-    author: Herman Melville
-    year: 1851
-  -
-    title: Brave New World
-    author: Aldous Huxley
-    year: 1932
-  -
-    title: Never Let Me Go
-    author: Kazuo Ishiguro
-    year: 2005
+--8<-- "examples/tutorial_1.output"
 ```
 
 ### :mag: Access individual YAML nodes
@@ -161,37 +114,13 @@ Say you just want to care about values associated with the `title` key and ignor
 You can do it by modifying the tutorial.cpp file as follows:  
 
 ```cpp title="tutorial.cpp" hl_lines="13-18"
-#include <fstream>
-#include <iostream>
-#include <fkYAML/node.hpp>
-
-int main()
-{
-    // open a YAML file. Other streams or strings are also usable as an input.
-    std::ifstream ifs("example.yaml");
-
-    // deserialize the loaded file contents.
-    fkyaml::node root = fkyaml::node::deserialize(ifs);
-
-    // print only values associated with "title" key.
-    for (auto& novel_node : root["novels"])
-    {
-        // get reference to the "title" value with `get_value_ref` function.
-        std::cout << novel_node["title"].get_value_ref<std::string&>() << std::endl;
-    }
-
-    return 0;
-}
+--8<-- "examples/tutorial_2.cpp"
 ```
 
 Rebuild and run the application, and you'll see the output like:  
 
 ```bash
-Robinson Crusoe
-Frankenstein
-Moby-Dick
-Brave New World
-Never Let Me Go
+--8<-- "examples/tutorial_2.output"
 ```
 
 ### :hammer: Generate YAML nodes from code
@@ -202,60 +131,13 @@ The fkYAML library also provides a feature to realize such a need.
 You can achieve that by changing the highlighted part of the code snippet:  
 
 ```cpp title="tutorial.cpp" hl_lines="14-16 18 21-26 29-30"
-#include <fstream>
-#include <iostream>
-#include <utility>
-#include <fkYAML/node.hpp>
-
-int main()
-{
-    // open a YAML file. Other streams or strings are also usable as an input.
-    std::ifstream ifs("example.yaml");
-
-    // deserialize the loaded file contents.
-    fkyaml::node root = fkyaml::node::deserialize(ifs);
-
-    // create an empty YAML sequence node.
-    fkyaml::node response = { "recommends", fkyaml::node::sequence() };
-    auto& recommends = response["recommends"].get_value_ref<fkyaml::node::sequence_type&>();
-
-    // generate recommendations by extracting "title" & "author" values.
-    for (auto& novel_node : root["novels"])
-    {
-        // create a recommendation node with an initializer list.
-        fkyaml::node recommend = {
-            { "title", novel_node["title"] },
-            { "author", novel_node["author"] }
-        };
-        recommends.emplace_back(std::move(recommends));
-    }
-
-    // print the response YAML nodes.
-    std::cout << response << std::endl;
-
-    return 0;
-}
+--8<-- "examples/tutorial_3.cpp"
 ```
 
 Rebuild and run the application, and you'll see the output like:  
 
 ```bash
-recommends:
-  -
-    title: Robinson Crusoe
-    author: Daniel Defoe
-  -
-    title: Frankenstein
-    author: Mary Shelly
-  -
-    title: Moby-Dick
-    author: Herman Melville
-  -
-    title: Brave New World
-    author: Aldous Huxley
-  -
-    title: Never Let Me Go
-    author: Kazuo Ishiguro
+--8<-- "examples/tutorial_3.output"
 ```
 
 ### :pill: Integrate with user-defined types
@@ -266,74 +148,13 @@ Note that you don't need to implement specializations for STL types (such as std
 The updated code snippet down below shows how the specializations for user-defined types can reduce boilerplate code.  
 
 ```cpp title="tutorial.cpp" hl_lines="6-39 53-54 56-57 59-61"
-#include <fstream>
-#include <iostream>
-#include <utility>
-#include <fkYAML/node.hpp>
+--8<-- "examples/tutorial_4.cpp"
+```
 
-// creating a namespace is not mandatory.
-namespace ns
-{
+Rebuild and run the application, and you'll see the same output as before:  
 
-struct novel
-{
-    std::string title;
-    std::string author;
-    int year;
-};
-
-struct recommend
-{
-    std::string title;
-    std::string author;
-};
-
-// overloads must be defined in the same namespace as user-defined types.
-void from_node(const fkyaml::node& node, novel& novel)
-{
-    novel.title = node["title"].get_value_ref<const std::string&>();
-    novel.author = node["author"].get_value_ref<const std::string&>();
-    novel.year = node["year"].get_value<int>();
-}
-
-void to_node(fkyaml::node& node, const recommend& recommend)
-{
-    node = fkyaml::node {
-        { "title", recommend.title },
-        { "author", recommend.author }
-    };
-}
-
-} // namespace ns
-
-int main()
-{
-    // open a YAML file. Other streams or strings are also usable as an input.
-    std::ifstream ifs("example.yaml");
-
-    // deserialize the loaded file contents.
-    fkyaml::node root = fkyaml::node::deserialize(ifs);
-
-    // create an empty YAML sequence node.
-    fkyaml::node response = { "recommends", fkyaml::node::sequence() };
-    auto& recommends = response["recommends"].get_value_ref<fkyaml::node::sequence_type&>();
-
-    // get novels directly from the node.
-    auto novels = root["novels"].get_value<std::vector<ns::novel>>();
-
-    // generate recommendations by extracting "title" & "author" values.
-    for (auto& novel : novels)
-    {
-        // create a recommendation node directly with a recommend object.
-        ns::recommend recommend = { std::move(novel.title), std::move(novel.author) };
-        recommends.emplace_back(recommend);
-    }
-
-    // print the response YAML nodes.
-    std::cout << response << std::endl;
-
-    return 0;
-}
+```bash
+--8<-- "examples/tutorial_4.output"
 ```
 
 The specializations highlighted above do not change the output, but they allow us to focus more on what the code is to achive.  

@@ -11,42 +11,12 @@ This type is the default specialization of the [basic_node](index.md) class whic
 ???+ Example
 
     ```cpp
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        // create a YAML node.
-        fkyaml::node n =
-        {
-            {"foo", 3.14},
-            {"bar", true},
-            {"baz", nullptr},
-            {"qux", {
-                {"corge", {1, 2, 3}}
-            }}
-        };
-
-        // add a new value.
-        n["qux"]["key"] = {"another", "value"};
-
-        // output a YAML formatted string.
-        std::cout << n << std::endl;
-    };
+    --8<-- "examples/ex_basic_node_node.cpp"
     ```
 
     output:
-    ```yaml
-    bar: true
-    baz: null
-    foo: 3.14
-    qux:
-      corge:
-        - 1
-        - 2
-        - 3
-      key:
-        another: value
+    ```bash
+    --8<-- "examples/ex_basic_node_node.output"
     ```
 
 ### **See Also**

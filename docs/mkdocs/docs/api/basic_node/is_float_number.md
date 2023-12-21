@@ -15,21 +15,12 @@ Tests whether the node value type is [`node_t::FLOAT_NUMBER`](node_t.md).
 ???+ Example
 
     ```cpp
-    #include <iomanip>
-    #include <iostream>
-    #include <fkYAML/node.hpp>
-
-    int main()
-    {
-        fkyaml::node n = 3.14;
-        std::cout << std::boolalpha << n.is_float_number() << std::endl;
-        return 0;
-    }
+    --8<-- "examples/ex_basic_node_is_float_number.cpp"
     ```
 
     output:
     ```bash
-    true
+    --8<-- "examples/ex_basic_node_is_float_number.output"
     ```
 
 ### **See Also**
