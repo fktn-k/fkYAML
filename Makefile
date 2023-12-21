@@ -18,7 +18,7 @@ CMAKE_SCRIPTS = $(shell find . -type f \( -name 'CMakeLists.txt' -o -name '*.cma
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 0
+TARGET_PATCH_VERSION := 1
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -143,7 +143,7 @@ CHANGELOG.md:
 	github_changelog_generator --user fktn-k --project fkYAML \
 		--no-issues \
 		--simple-list \
-		--exclude-labels release \
+		--exclude-labels release,ignored \
 		--release-url https://github.com/fktn-k/fkYAML/releases/tag/%s \
 		--future-release v$(TARGET_VERSION_FULL)
 
