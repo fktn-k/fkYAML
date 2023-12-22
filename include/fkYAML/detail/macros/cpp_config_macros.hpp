@@ -40,4 +40,20 @@
     #define FK_YAML_INLINE_VAR
 #endif
 
+#ifdef __has_include
+    #if __has_include(<version>)
+        // <version> is available since C++20
+        #include <version>
+    #endif
+#endif
+
+// switch usage of char8_t. char8_t has been introduced since C++20
+#if !defined(FK_YAML_HAS_CHAR8_T)
+    #if defined(FK_YAML_HAS_CXX_20)
+        #if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
+            #define FK_YAML_HAS_CHAR8_T
+        #endif
+    #endif
+#endif
+
 #endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */

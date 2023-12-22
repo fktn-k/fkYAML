@@ -433,8 +433,40 @@ TEST_CASE("NodeClassTest_ExtractionOperatorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_UserDefinedLiteralYamlTest", "[NodeClassTest]")
 {
+    SECTION("char sequences literals with using fkyaml::literals")
+    {
+        using namespace fkyaml::literals;
+        fkyaml::node node = "en: hello\njp: konnichiwa"_yaml;
 
-    SECTION("char sequences with using fkyaml::literals")
+        REQUIRE(node.is_mapping());
+        REQUIRE(node.size() == 2);
+        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
+        REQUIRE(node["jp"].get_value_ref<std::string&>() == "konnichiwa");
+    }
+
+    SECTION("char sequences literals with using fkyaml::yaml_literals")
+    {
+        using namespace fkyaml::yaml_literals;
+        fkyaml::node node = "en: hello\njp: konnichiwa"_yaml;
+
+        REQUIRE(node.is_mapping());
+        REQUIRE(node.size() == 2);
+        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
+        REQUIRE(node["jp"].get_value_ref<std::string&>() == "konnichiwa");
+    }
+
+    SECTION("char sequences literals with using fkyaml::literals::yaml_literals")
+    {
+        using namespace fkyaml::literals::yaml_literals;
+        fkyaml::node node = "en: hello\njp: konnichiwa"_yaml;
+
+        REQUIRE(node.is_mapping());
+        REQUIRE(node.size() == 2);
+        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
+        REQUIRE(node["jp"].get_value_ref<std::string&>() == "konnichiwa");
+    }
+
+    SECTION("char sequences of u8\"\" literals with using fkyaml::literals")
     {
         using namespace fkyaml::literals;
         fkyaml::node node = u8"en: hello\njp: こんにちは"_yaml;
@@ -445,7 +477,7 @@ TEST_CASE("NodeClassTest_UserDefinedLiteralYamlTest", "[NodeClassTest]")
         REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
-    SECTION("char sequences with using fkyaml::yaml_literals")
+    SECTION("char sequences of u8\"\" literals with using fkyaml::yaml_literals")
     {
         using namespace fkyaml::yaml_literals;
         fkyaml::node node = u8"en: hello\njp: こんにちは"_yaml;
@@ -456,7 +488,7 @@ TEST_CASE("NodeClassTest_UserDefinedLiteralYamlTest", "[NodeClassTest]")
         REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
-    SECTION("char sequences with using fkyaml::literals::yaml_literals")
+    SECTION("char sequences of u8\"\" literals with using fkyaml::literals::yaml_literals")
     {
         using namespace fkyaml::literals::yaml_literals;
         fkyaml::node node = u8"en: hello\njp: こんにちは"_yaml;
