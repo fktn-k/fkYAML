@@ -109,6 +109,22 @@
     #define FK_YAML_INLINE_VAR
 #endif
 
+#ifdef __has_include
+    #if __has_include(<version>)
+        // <version> is available since C++20
+        #include <version>
+    #endif
+#endif
+
+// switch usage of char8_t. char8_t has been introduced since C++20
+#if !defined(FK_YAML_HAS_CHAR8_T)
+    #if defined(FK_YAML_HAS_CXX_20)
+        #if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
+            #define FK_YAML_HAS_CHAR8_T
+        #endif
+    #endif
+#endif
+
 #endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */
 
 #endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)
@@ -4349,7 +4365,7 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
     uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     switch (ElemSize)
     {
-    case sizeof(char): {
+    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 features.
         for (std::size_t i = 0; i < 4 && begin + i != end; i++)
         {
             bytes[i] = uint8_t(begin[i]);
@@ -4538,7 +4554,6 @@ template <typename IterType, typename = void>
 class iterator_input_adapter;
 
 /// @brief An input adapter for iterators of type char.
-/// @note This adapter requires at least bidirectional iterator tag.
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
@@ -4736,8 +4751,85 @@ private:
     std::size_t m_utf8_buf_size {0};
 };
 
+#ifdef FK_YAML_HAS_CHAR8_T
+
+/// @brief An input adapter for iterators of type char8_t.
+/// @tparam IterType An iterator type.
+template <typename IterType>
+class iterator_input_adapter<
+    IterType,
+    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>>
+{
+public:
+    /// A type for characters used in this input adapter.
+    using char_type = char;
+
+    /// @brief Construct a new iterator_input_adapter object.
+    iterator_input_adapter() = default;
+
+    /// @brief Construct a new iterator_input_adapter object.
+    /// @param begin The beginning of iteraters.
+    /// @param end The end of iterators.
+    /// @param encode_type The encoding type for this input adapter.
+    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
+        : m_current(begin),
+          m_end(end),
+          m_encode_type(encode_type)
+    {
+    }
+
+    // allow only move construct/assignment like other input adapters.
+    iterator_input_adapter(const iterator_input_adapter&) = delete;
+    iterator_input_adapter(iterator_input_adapter&& rhs) = default;
+    iterator_input_adapter& operator=(const iterator_input_adapter&) = delete;
+    iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
+    ~iterator_input_adapter() = default;
+
+    /// @brief Get a character at the current position and move forward.
+    /// @return std::char_traits<char_type>::int_type A character or EOF.
+    typename std::char_traits<char_type>::int_type get_character()
+    {
+        typename std::char_traits<char_type>::int_type ret = 0;
+        switch (m_encode_type)
+        {
+        case encode_t::UTF_8_N:
+        case encode_t::UTF_8_BOM:
+            ret = get_character_for_utf8();
+            break;
+        default: // LCOV_EXCL_LINE
+            // char8_t characters must be encoded in the UTF-8 format.
+            // See https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0482r6.html.
+            break; // LCOV_EXCL_LINE
+        }
+        return ret;
+    }
+
+private:
+    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
+    /// @return A UTF-8 encoded byte at the current position, or EOF.
+    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
+    {
+        if (m_current != m_end)
+        {
+            auto ret = std::char_traits<char_type>::to_int_type(*m_current);
+            ++m_current;
+            return ret;
+        }
+        return std::char_traits<char_type>::eof();
+    }
+
+private:
+    /// The iterator at the current position.
+    IterType m_current {};
+    /// The iterator at the end of input.
+    IterType m_end {};
+    /// The encoding type for this input adapter.
+    encode_t m_encode_type {encode_t::UTF_8_N};
+};
+
+#endif // defined(FK_YAML_HAS_CHAR8_T)
+
 /// @brief An input adapter for iterators of type char16_t.
-/// @note This adapter requires at least bidirectional iterator tag.
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
@@ -4844,7 +4936,6 @@ private:
 };
 
 /// @brief An input adapter for iterators of type char32_t.
-/// @note This adapter requires at least bidirectional iterator tag.
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
@@ -8804,15 +8895,14 @@ inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
     return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);
 }
 
-#if defined(__cpp_char8_t)
+#ifdef FK_YAML_HAS_CHAR8_T
 /// @brief The user-defined string literal which deserializes a `char8_t` array into a `node` object.
 /// @param s An input `char8_t` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
 inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n)
 {
-    // TODO: This is a workaround. `char8_t` string literals should be supported in `input_adapter`
-    return fkyaml::node::deserialize((const char*)s, (const char*)s + n);
+    return fkyaml::node::deserialize((const char8_t*)s, (const char8_t*)s + n);
 }
 #endif
 
