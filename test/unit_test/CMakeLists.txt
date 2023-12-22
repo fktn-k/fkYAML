@@ -87,7 +87,6 @@ target_compile_options(unit_test_config INTERFACE
   # GNU
   $<$<CXX_COMPILER_ID:GNU>:
     -Wall -Wextra -pedantic -Wpedantic --all-warnings --extra-warnings
-    -Wc++0x-compat
     -Wno-self-move # necessary to build iterator class test.
   >
 
