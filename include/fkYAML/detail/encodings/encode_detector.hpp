@@ -97,7 +97,7 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
     uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     switch (ElemSize)
     {
-    case sizeof(char): {
+    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 features.
         for (std::size_t i = 0; i < 4 && begin + i != end; i++)
         {
             bytes[i] = uint8_t(begin[i]);
