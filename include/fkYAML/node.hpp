@@ -29,6 +29,7 @@
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
+#include <fkYAML/detail/node_property.hpp>
 #include <fkYAML/detail/node_ref_storage.hpp>
 #include <fkYAML/detail/output/serializer.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
@@ -287,7 +288,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type)
+          m_yaml_version_type(rhs.m_yaml_version_type),
+          m_prop(rhs.m_prop)
     {
         switch (m_node_type)
         {
@@ -316,12 +318,6 @@ public:
             FK_YAML_ASSERT(m_node_value.p_string != nullptr);
             break;
         }
-
-        if (rhs.m_anchor_name)
-        {
-            m_anchor_name = create_object<std::string>(*(rhs.m_anchor_name));
-            FK_YAML_ASSERT(m_anchor_name != nullptr);
-        }
     }
 
     /// @brief Move constructor of the basic_node class.
@@ -330,7 +326,7 @@ public:
     basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
           m_yaml_version_type(rhs.m_yaml_version_type),
-          m_anchor_name(rhs.m_anchor_name)
+          m_prop(std::move(rhs.m_prop))
     {
         switch (m_node_type)
         {
@@ -370,7 +366,7 @@ public:
         rhs.m_node_type = node_t::NULL_OBJECT;
         rhs.m_yaml_version_type = yaml_version_t::VER_1_2;
         rhs.m_node_value.p_mapping = nullptr;
-        rhs.m_anchor_name = nullptr;
+        rhs.m_prop.anchor_status = detail::anchor_status_t::NONE;
     }
 
     /// @brief Construct a new basic_node object from a value of compatible types.
@@ -436,8 +432,6 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/destructor/
     ~basic_node() noexcept // NOLINT(bugprone-exception-escape)
     {
-        destroy_object<std::string>(m_anchor_name);
-        m_anchor_name = nullptr;
         m_node_value.destroy(m_node_type);
         m_node_type = node_t::NULL_OBJECT;
     }
@@ -559,12 +553,14 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/alias_of/
     static basic_node alias_of(const basic_node& anchor_node)
     {
-        if (!anchor_node.m_anchor_name || anchor_node.m_anchor_name->empty())
+        if (!anchor_node.has_anchor_name() || anchor_node.m_prop.anchor_status != detail::anchor_status_t::ANCHOR)
         {
             throw fkyaml::exception("Cannot create an alias without anchor name.");
         }
 
         basic_node node = anchor_node;
+        node.m_prop.anchor_status = detail::anchor_status_t::ALIAS;
+        node.m_prop.anchor = anchor_node.m_prop.anchor;
         return node;
     }
 
@@ -1030,7 +1026,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
     bool has_anchor_name() const noexcept
     {
-        return m_anchor_name != nullptr;
+        return m_prop.anchor_status != detail::anchor_status_t::NONE && !m_prop.anchor.empty();
     }
 
     /// @brief Get the anchor name associated to this basic_node object.
@@ -1040,11 +1036,11 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const
     {
-        if (!m_anchor_name)
+        if (!has_anchor_name())
         {
             throw fkyaml::exception("No anchor name has been set.");
         }
-        return *m_anchor_name;
+        return m_prop.anchor;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -1052,9 +1048,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name)
     {
-        destroy_object<std::string>(m_anchor_name);
-        m_anchor_name = create_object<std::string>(anchor_name);
-        FK_YAML_ASSERT(m_anchor_name != nullptr);
+        m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor = anchor_name;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -1063,9 +1058,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name)
     {
-        destroy_object<std::string>(m_anchor_name);
-        m_anchor_name = create_object<std::string>(std::move(anchor_name));
-        FK_YAML_ASSERT(m_anchor_name != nullptr);
+        m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor = std::move(anchor_name);
     }
 
     /// @brief Get the node value object converted into a given type.
@@ -1127,7 +1121,9 @@ public:
         std::memcpy(&m_node_value, &rhs.m_node_value, sizeof(node_value));
         std::memcpy(&rhs.m_node_value, &tmp, sizeof(node_value));
 
-        swap(m_anchor_name, rhs.m_anchor_name);
+        swap(m_prop.tag, rhs.m_prop.tag);
+        swap(m_prop.anchor_status, rhs.m_prop.anchor_status);
+        swap(m_prop.anchor, rhs.m_prop.anchor);
     }
 
     /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const
@@ -1357,8 +1353,8 @@ private:
     yaml_version_t m_yaml_version_type {yaml_version_t::VER_1_2};
     /// The current node value.
     node_value m_node_value {};
-    /// The anchor name for this node.
-    std::string* m_anchor_name {nullptr};
+    /// The property set of this node.
+    detail::node_property m_prop {};
 };
 
 /// @brief Swap function for basic_node objects.
