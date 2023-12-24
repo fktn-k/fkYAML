@@ -99,19 +99,19 @@ private:
             }
             break;
         case node_t::NULL_OBJECT:
-            to_string(m_tmp_str_buff, nullptr);
+            to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::boolean_type>());
+            to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::integer_type>());
+            to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::FLOAT_NUMBER:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::float_number_type>());
+            to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::STRING: {
