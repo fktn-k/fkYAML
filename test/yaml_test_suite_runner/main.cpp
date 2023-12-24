@@ -19,6 +19,68 @@ static const int TEST_RESULT_NG = 1;
 static const int TEST_DIR_PREFIX_INDEX = 1;
 
 
+fkyaml::node parse_events(std::istream& is)
+{
+    constexpr int _eof = std::istream::traits_type::eof();
+    std::string input = std::string(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>());
+    std::size_t counts = 0;
+
+    fkyaml::node root = fkyaml::node::mapping();
+
+    while (true)
+    {
+        if (std::strncmp(&input[counts], "+STR", 4) == 0)
+        {
+            counts += 4;
+            continue;
+        }
+        if (std::strncmp(&input[counts], "-STR", 4) == 0)
+        {
+            counts += 4;
+            continue;
+        }
+        if (std::strncmp(&input[counts], "+DOC", 4) == 0)
+        {
+            counts += 4;
+            continue;
+        }
+        if (std::strncmp(&input[counts], "-DOC", 4) == 0)
+        {
+            counts += 4;
+            continue;
+        }
+        if (std::strncmp(&input[counts], "+MAP", 4) == 0)
+        {
+            counts += 4;
+            continue;
+        }
+        if (std::strncmp(&input[counts], "-MAP", 4) == 0)
+        {
+            counts += 4;
+            continue;
+        }
+        if (std::strncmp(&input[counts], "+SEQ", 4) == 0)
+        {
+            counts += 4;
+            continue;
+        }
+        if (std::strncmp(&input[counts], "-SEQ", 4) == 0)
+        {
+            counts += 4;
+            continue;
+        }
+        if (std::strncmp(&input[counts], "=VAL", 4) == 0)
+        {
+            counts += 4;
+
+            // TODO: implement this.
+
+            continue;
+        }
+    }
+}
+
+
 int main(int argc, char* argv[])
 {
     if (argc != 2)
