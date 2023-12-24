@@ -114,6 +114,8 @@ This class provides features to handle YAML nodes.
 ### Aliasing Nodes
 | Name                                  | Description                                              |
 | ------------------------------------- | -------------------------------------------------------- |
+| [is_alias](is_alias.md)               | checks if a basic_node is an alias node.                 |
+| [is_anchor](is_anchor.md)             | checks if a basic_node is an anchor node.                |
 | [add_anchor_name](add_anchor_name.md) | registers an anchor name to a basic_node object.         |
 | [get_anchor_name](get_anchor_name.md) | gets an anchor name associated with a basic_node object. |
 | [has_anchor_name](has_anchor_name.md) | checks if a basic_node has any anchor name.              |

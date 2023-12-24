@@ -701,15 +701,22 @@ TEST_CASE("NodeClassTest_AliasNodeFactoryTest", "[NodeClassTest]")
 {
     fkyaml::node anchor = "alias_test";
 
-    SECTION("Make sure BasicNode::alias_of() throws an exception without anchor name.")
+    SECTION("Make sure alias_of() throws an exception without anchor name.")
     {
         REQUIRE_THROWS_AS(fkyaml::node::alias_of(anchor), fkyaml::exception);
     }
 
-    SECTION("Make sure BasicNode::alias_of() throws an exception with an empty anchor name.")
+    SECTION("Make sure alias_of() throws an exception with an empty anchor name.")
     {
         anchor.add_anchor_name("");
         REQUIRE_THROWS_AS(fkyaml::node::alias_of(anchor), fkyaml::exception);
+    }
+
+    SECTION("Make sure alias_of() throws an exception with an alias node.")
+    {
+        anchor.add_anchor_name("anchor");
+        fkyaml::node alias = fkyaml::node::alias_of(anchor);
+        REQUIRE_THROWS_AS(fkyaml::node::alias_of(alias), fkyaml::exception);
     }
 
     SECTION("Check if BasicNode::alias_of() does not throw any exception.")
@@ -1796,24 +1803,6 @@ TEST_CASE("NodeClassTest_IsScalarTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
-{
-    auto node = GENERATE(
-        fkyaml::node::sequence(),
-        fkyaml::node::mapping(),
-        fkyaml::node(),
-        fkyaml::node(false),
-        fkyaml::node(0),
-        fkyaml::node(0.0),
-        fkyaml::node(""));
-
-    SECTION("Test alias node types.")
-    {
-        node.add_anchor_name("anchor_name");
-        fkyaml::node alias = fkyaml::node::alias_of(node);
-    }
-}
-
 //
 // test cases for emptiness checker
 //
@@ -2038,8 +2027,56 @@ TEST_CASE("NodeClassTest_GetVersionTest", "[NodeClassTest]")
 }
 
 //
-// test cases for anchor name property checker/getter/setter
+// test cases for anchor related APIs
 //
+
+TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
+{
+    fkyaml::node node;
+
+    SECTION("Test a node without anchor name.")
+    {
+        REQUIRE_FALSE(node.is_alias());
+    }
+
+    SECTION("Test an anchor node.")
+    {
+        node.add_anchor_name("anchor");
+        REQUIRE_FALSE(node.is_alias());
+    }
+
+    SECTION("Test an alias node.")
+    {
+        fkyaml::node anchor;
+        anchor.add_anchor_name("anchor");
+        node = fkyaml::node::alias_of(anchor);
+        REQUIRE(node.is_alias());
+    }
+}
+
+TEST_CASE("NodeClassTest_IsAnchorTest", "[NodeClassTest]")
+{
+    fkyaml::node node;
+
+    SECTION("Test a node without anchor name.")
+    {
+        REQUIRE_FALSE(node.is_anchor());
+    }
+
+    SECTION("Test an anchor node.")
+    {
+        node.add_anchor_name("anchor");
+        REQUIRE(node.is_anchor());
+    }
+
+    SECTION("Test an alias node.")
+    {
+        fkyaml::node anchor;
+        anchor.add_anchor_name("anchor");
+        node = fkyaml::node::alias_of(anchor);
+        REQUIRE_FALSE(node.is_anchor());
+    }
+}
 
 TEST_CASE("NodeClassTest_HasAnchorNameTest", "[NodeClassTest]")
 {
@@ -2074,7 +2111,7 @@ TEST_CASE("NodeClassTest_GetAnchorNameTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_add_anchor_nameTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_AddAnchorNameTest", "[NodeClassTest]")
 {
     fkyaml::node node;
     std::string anchor_name = "anchor_name";

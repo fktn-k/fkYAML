@@ -254,16 +254,13 @@ private:
     }
 
     /// @brief Destroys and deallocates an object with specified type.
+    /// @warning Make sure the `obj` parameter is not nullptr before calling this function.
     /// @tparam ObjType The target object type.
     /// @param[in] obj A pointer to the target object to be destroyed.
     template <typename ObjType>
     static void destroy_object(ObjType* obj)
     {
-        if (!obj)
-        {
-            return;
-        }
-
+        FK_YAML_ASSERT(obj != nullptr);
         std::allocator<ObjType> alloc;
         std::allocator_traits<decltype(alloc)>::destroy(alloc, obj);
         std::allocator_traits<decltype(alloc)>::deallocate(alloc, obj, 1);
@@ -562,7 +559,7 @@ public:
         node.m_prop.anchor_status = detail::anchor_status_t::ALIAS;
         node.m_prop.anchor = anchor_node.m_prop.anchor;
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
 public:
     /// @brief A copy assignment operator of the basic_node class.
@@ -914,6 +911,22 @@ public:
     bool is_scalar() const noexcept
     {
         return !is_sequence() && !is_mapping();
+    }
+
+    /// @brief Tests whether the current basic_node is an anchor node.
+    /// @return true if the current basic_node is an anchor node, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_anchor/
+    bool is_anchor() const noexcept
+    {
+        return m_prop.anchor_status == detail::anchor_status_t::ANCHOR;
+    }
+
+    /// @brief Tests whether the current basic_node is an alias node.
+    /// @return true if the current basic_node is an alias node, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_alias/
+    bool is_alias() const noexcept
+    {
+        return m_prop.anchor_status == detail::anchor_status_t::ALIAS;
     }
 
     /// @brief Tests whether the current basic_node value (sequence, mapping, string) is empty.
