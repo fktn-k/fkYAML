@@ -157,10 +157,7 @@ TEST_CASE("SerializerClassTest_SerializeStringNode", "[SerializerClassTest]")
 
 TEST_CASE("SerializerClassTest_SerializeAnchorNode", "[SerializerClassTest]")
 {
-    fkyaml::node node = {
-        { "foo", 123 },
-        { nullptr, { true, "bar", 3.14 } }
-    };
+    fkyaml::node node = {{"foo", 123}, {nullptr, {true, "bar", 3.14}}};
     node[nullptr].add_anchor_name("A");
     node[nullptr][2].add_anchor_name("B");
     fkyaml::node key = "baz";
@@ -180,13 +177,11 @@ TEST_CASE("SerializerClassTest_SerializeAnchorNode", "[SerializerClassTest]")
 
 TEST_CASE("SerializerClassTest_SerializeAliasNode", "[SerializerClassTest]")
 {
-    fkyaml::node node = {
-        { "foo", 123 }
-    };
+    fkyaml::node node = {{"foo", 123}};
     node["foo"].add_anchor_name("A");
     node.get_value_ref<fkyaml::node::mapping_type&>().emplace(true, fkyaml::node::alias_of(node["foo"]));
     node.get_value_ref<fkyaml::node::mapping_type&>().emplace(fkyaml::node::alias_of(node["foo"]), 3.14);
-    node[nullptr] = { "bar", fkyaml::node::alias_of(node["foo"]) };
+    node[nullptr] = {"bar", fkyaml::node::alias_of(node["foo"])};
 
     // FIXME: Semantic equality between the input & the output is not guranteed
     //        when anchors/aliases are contained in a YAML document.

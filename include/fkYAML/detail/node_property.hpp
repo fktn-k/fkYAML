@@ -36,7 +36,6 @@ struct node_property
     std::string anchor {};
 };
 
-
 } // namespace detail
 
 FK_YAML_NAMESPACE_END
