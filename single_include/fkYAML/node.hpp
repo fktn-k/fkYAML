@@ -5959,6 +5959,51 @@ FK_YAML_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/type_traits.hpp>
 
+// #include <fkYAML/detail/node_property.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_NODE_PROPERTY_HPP_
+#define FK_YAML_DETAIL_NODE_PROPERTY_HPP_
+
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+/// @brief namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @brief namespace for internal implementations of fkYAML library.
+namespace detail
+{
+
+enum class anchor_status_t
+{
+    NONE,
+    ANCHOR,
+    ALIAS,
+};
+
+struct node_property
+{
+    std::string tag {};
+    anchor_status_t anchor_status {anchor_status_t::NONE};
+    std::string anchor {};
+};
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP_ */
 // #include <fkYAML/detail/node_ref_storage.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -6125,13 +6170,13 @@ namespace detail
 /// @param s A resulting output string.
 /// @param v A source value.
 template <typename ValueType, typename CharType>
-inline void to_string(std::basic_string<CharType>& s, ValueType v) noexcept;
+inline void to_string(ValueType v, std::basic_string<CharType>& s) noexcept;
 
 /// @brief Specialization of to_string() for null values.
 /// @param s A resulting string YAML token.
 /// @param (unused) nullptr
 template <>
-inline void to_string(std::string& s, std::nullptr_t /*unused*/) noexcept
+inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept
 {
     s = "null";
 }
@@ -6140,7 +6185,7 @@ inline void to_string(std::string& s, std::nullptr_t /*unused*/) noexcept
 /// @param s A resulting string YAML token.
 /// @param b A boolean source value.
 template <>
-inline void to_string(std::string& s, bool b) noexcept
+inline void to_string(bool b, std::string& s) noexcept
 {
     s = b ? "true" : "false";
 }
@@ -6150,7 +6195,7 @@ inline void to_string(std::string& s, bool b) noexcept
 /// @param s A resulting string YAML token.
 /// @param i An integer source value.
 template <typename IntegerType>
-inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(std::string& s, IntegerType i) noexcept
+inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept
 {
     s = std::to_string(i);
 }
@@ -6160,7 +6205,7 @@ inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(std::stri
 /// @param s A resulting string YAML token.
 /// @param f A floating point number source value.
 template <typename FloatType>
-inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(std::string& s, FloatType f) noexcept
+inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept
 {
     if (std::isnan(f))
     {
@@ -6242,8 +6287,21 @@ private:
         case node_t::SEQUENCE:
             for (const auto& seq_item : node)
             {
-                insert_indentation(cur_indent, str);
+                if (cur_indent > 0)
+                {
+                    insert_indentation(cur_indent, str);
+                }
                 str += "-";
+
+                bool is_appended = try_append_alias(seq_item, true, str);
+                if (is_appended)
+                {
+                    str += "\n";
+                    continue;
+                }
+
+                try_append_anchor(seq_item, true, str);
+
                 bool is_scalar = seq_item.is_scalar();
                 if (is_scalar)
                 {
@@ -6261,9 +6319,33 @@ private:
         case node_t::MAPPING:
             for (auto itr = node.begin(); itr != node.end(); ++itr)
             {
-                insert_indentation(cur_indent, str);
-                serialize_node(itr.key(), cur_indent, str);
+                if (cur_indent > 0)
+                {
+                    insert_indentation(cur_indent, str);
+                }
+
+                bool is_appended = try_append_alias(itr.key(), false, str);
+                if (!is_appended)
+                {
+                    is_appended = try_append_anchor(itr.key(), false, str);
+                    if (is_appended)
+                    {
+                        str += " ";
+                    }
+                    serialize_node(itr.key(), cur_indent, str);
+                }
+
                 str += ":";
+
+                is_appended = try_append_alias(*itr, true, str);
+                if (is_appended)
+                {
+                    str += "\n";
+                    continue;
+                }
+
+                try_append_anchor(*itr, true, str);
+
                 bool is_scalar = itr->is_scalar();
                 if (is_scalar)
                 {
@@ -6279,19 +6361,19 @@ private:
             }
             break;
         case node_t::NULL_OBJECT:
-            to_string(m_tmp_str_buff, nullptr);
+            to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::boolean_type>());
+            to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::integer_type>());
+            to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::FLOAT_NUMBER:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::float_number_type>());
+            to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::STRING: {
@@ -6508,10 +6590,45 @@ private:
     /// @param str A string to hold serialization result.
     void insert_indentation(const uint32_t cur_indent, std::string& str) const noexcept
     {
-        for (uint32_t i = 0; i < cur_indent; ++i)
+        str.append(cur_indent, ' ');
+    }
+
+    /// @brief Append an anchor property if it's available. Do nothing otherwise.
+    /// @param node The target node which is possibly an anchor node.
+    /// @param prepends_space Whether or not to prepend a space before an anchor property.
+    /// @param str A string to hold serialization result.
+    /// @return true if an anchor property has been appended, false otherwise.
+    bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const
+    {
+        if (node.is_anchor())
         {
-            str += " ";
+            if (prepends_space)
+            {
+                str += " ";
+            }
+            str += "&" + node.get_anchor_name();
+            return true;
         }
+        return false;
+    }
+
+    /// @brief Append an alias property if it's available. Do nothing otherwise.
+    /// @param node The target node which is possibly an alias node.
+    /// @param prepends_space Whether or not to prepend a space before an alias property.
+    /// @param str A string to hold serialization result.
+    /// @return true if an alias property has been appended, false otherwise.
+    bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const
+    {
+        if (node.is_alias())
+        {
+            if (prepends_space)
+            {
+                str += " ";
+            }
+            str += "*" + node.get_anchor_name();
+            return true;
+        }
+        return false;
     }
 
 private:
@@ -7692,16 +7809,13 @@ private:
     }
 
     /// @brief Destroys and deallocates an object with specified type.
+    /// @warning Make sure the `obj` parameter is not nullptr before calling this function.
     /// @tparam ObjType The target object type.
     /// @param[in] obj A pointer to the target object to be destroyed.
     template <typename ObjType>
     static void destroy_object(ObjType* obj)
     {
-        if (!obj)
-        {
-            return;
-        }
-
+        FK_YAML_ASSERT(obj != nullptr);
         std::allocator<ObjType> alloc;
         std::allocator_traits<decltype(alloc)>::destroy(alloc, obj);
         std::allocator_traits<decltype(alloc)>::deallocate(alloc, obj, 1);
@@ -7726,7 +7840,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type)
+          m_yaml_version_type(rhs.m_yaml_version_type),
+          m_prop(rhs.m_prop)
     {
         switch (m_node_type)
         {
@@ -7755,12 +7870,6 @@ public:
             FK_YAML_ASSERT(m_node_value.p_string != nullptr);
             break;
         }
-
-        if (rhs.m_anchor_name)
-        {
-            m_anchor_name = create_object<std::string>(*(rhs.m_anchor_name));
-            FK_YAML_ASSERT(m_anchor_name != nullptr);
-        }
     }
 
     /// @brief Move constructor of the basic_node class.
@@ -7769,7 +7878,7 @@ public:
     basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
           m_yaml_version_type(rhs.m_yaml_version_type),
-          m_anchor_name(rhs.m_anchor_name)
+          m_prop(std::move(rhs.m_prop))
     {
         switch (m_node_type)
         {
@@ -7809,7 +7918,7 @@ public:
         rhs.m_node_type = node_t::NULL_OBJECT;
         rhs.m_yaml_version_type = yaml_version_t::VER_1_2;
         rhs.m_node_value.p_mapping = nullptr;
-        rhs.m_anchor_name = nullptr;
+        rhs.m_prop.anchor_status = detail::anchor_status_t::NONE;
     }
 
     /// @brief Construct a new basic_node object from a value of compatible types.
@@ -7875,8 +7984,6 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/destructor/
     ~basic_node() noexcept // NOLINT(bugprone-exception-escape)
     {
-        destroy_object<std::string>(m_anchor_name);
-        m_anchor_name = nullptr;
         m_node_value.destroy(m_node_type);
         m_node_type = node_t::NULL_OBJECT;
     }
@@ -7998,14 +8105,16 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/alias_of/
     static basic_node alias_of(const basic_node& anchor_node)
     {
-        if (!anchor_node.m_anchor_name || anchor_node.m_anchor_name->empty())
+        if (!anchor_node.has_anchor_name() || anchor_node.m_prop.anchor_status != detail::anchor_status_t::ANCHOR)
         {
             throw fkyaml::exception("Cannot create an alias without anchor name.");
         }
 
         basic_node node = anchor_node;
+        node.m_prop.anchor_status = detail::anchor_status_t::ALIAS;
+        node.m_prop.anchor = anchor_node.m_prop.anchor;
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
 public:
     /// @brief A copy assignment operator of the basic_node class.
@@ -8359,6 +8468,22 @@ public:
         return !is_sequence() && !is_mapping();
     }
 
+    /// @brief Tests whether the current basic_node is an anchor node.
+    /// @return true if the current basic_node is an anchor node, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_anchor/
+    bool is_anchor() const noexcept
+    {
+        return m_prop.anchor_status == detail::anchor_status_t::ANCHOR;
+    }
+
+    /// @brief Tests whether the current basic_node is an alias node.
+    /// @return true if the current basic_node is an alias node, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_alias/
+    bool is_alias() const noexcept
+    {
+        return m_prop.anchor_status == detail::anchor_status_t::ALIAS;
+    }
+
     /// @brief Tests whether the current basic_node value (sequence, mapping, string) is empty.
     /// @return true if the node value is empty, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/empty/
@@ -8469,7 +8594,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
     bool has_anchor_name() const noexcept
     {
-        return m_anchor_name != nullptr;
+        return m_prop.anchor_status != detail::anchor_status_t::NONE && !m_prop.anchor.empty();
     }
 
     /// @brief Get the anchor name associated to this basic_node object.
@@ -8479,11 +8604,11 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const
     {
-        if (!m_anchor_name)
+        if (!has_anchor_name())
         {
             throw fkyaml::exception("No anchor name has been set.");
         }
-        return *m_anchor_name;
+        return m_prop.anchor;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -8491,9 +8616,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name)
     {
-        destroy_object<std::string>(m_anchor_name);
-        m_anchor_name = create_object<std::string>(anchor_name);
-        FK_YAML_ASSERT(m_anchor_name != nullptr);
+        m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor = anchor_name;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -8502,9 +8626,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name)
     {
-        destroy_object<std::string>(m_anchor_name);
-        m_anchor_name = create_object<std::string>(std::move(anchor_name));
-        FK_YAML_ASSERT(m_anchor_name != nullptr);
+        m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor = std::move(anchor_name);
     }
 
     /// @brief Get the node value object converted into a given type.
@@ -8566,7 +8689,9 @@ public:
         std::memcpy(&m_node_value, &rhs.m_node_value, sizeof(node_value));
         std::memcpy(&rhs.m_node_value, &tmp, sizeof(node_value));
 
-        swap(m_anchor_name, rhs.m_anchor_name);
+        swap(m_prop.tag, rhs.m_prop.tag);
+        swap(m_prop.anchor_status, rhs.m_prop.anchor_status);
+        swap(m_prop.anchor, rhs.m_prop.anchor);
     }
 
     /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const
@@ -8796,8 +8921,8 @@ private:
     yaml_version_t m_yaml_version_type {yaml_version_t::VER_1_2};
     /// The current node value.
     node_value m_node_value {};
-    /// The anchor name for this node.
-    std::string* m_anchor_name {nullptr};
+    /// The property set of this node.
+    detail::node_property m_prop {};
 };
 
 /// @brief Swap function for basic_node objects.
