@@ -123,13 +123,13 @@ update-project-version:
 reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year 2023 --style c
+		--license MIT --year "2023-2024" --style c
 	pipx run reuse annotate $(TEST_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year 2023 --style c
+		--license MIT --year "2023-2024" --style c
 	pipx run reuse annotate $(TOOL_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year 2023 --style c
+		--license MIT --year "2023-2024" --style c
 	pipx run reuse lint
 
 update-sources: reuse update-version-macros
