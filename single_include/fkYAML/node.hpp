@@ -3928,6 +3928,10 @@ public:
                 break;
             case lexical_token_t::MAPPING_BLOCK_PREFIX:
                 type = lexer.get_next_token();
+                if (type == lexical_token_t::COMMENT_PREFIX)
+                {
+                    type = lexer.get_next_token();
+                }
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     *m_current_node = BasicNodeType::sequence();
