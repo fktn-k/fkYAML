@@ -447,6 +447,26 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
         REQUIRE_NOTHROW(test_1_node.get_value_ref<fkyaml::node::string_type&>());
         REQUIRE(test_1_node.get_value_ref<fkyaml::node::string_type&>().compare("foo") == 0);
     }
+
+    SECTION("Input source No.8.")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  # comment\n  - item: 123")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
+
+        REQUIRE(root["test"].is_sequence());
+        REQUIRE(root["test"].size() == 1);
+
+        REQUIRE(root["test"][0].is_mapping());
+        REQUIRE(root["test"][0].size() == 1);
+        REQUIRE(root["test"][0].contains("item"));
+
+        REQUIRE(root["test"][0]["item"].is_integer());
+        REQUIRE(root["test"][0]["item"].get_value<int>() == 123);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerClassTest]")
