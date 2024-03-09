@@ -27,7 +27,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  JOBS: 4
+  JOBS: 3
 
 jobs:
   macos-latest:
@@ -76,7 +76,7 @@ jobs:
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{matrix.build_type}} --output-on-failure -j${{env.JOBS}}
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
 
   xcode_for_macos12:
     timeout-minutes: 10
@@ -101,4 +101,29 @@ jobs:
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{matrix.build_type}} --output-on-failure -j${{env.JOBS}}
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  xcode_for_macos13:
+    timeout-minutes: 10
+    runs-on: macos-13
+    strategy:
+      matrix:
+        xcode: [ '14.1', '14.2', '14.3.1', '15.0.1', '15.1', '15.2' ]
+        build_type: [ Debug, Release ]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
