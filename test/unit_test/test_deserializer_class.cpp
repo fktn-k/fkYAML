@@ -953,6 +953,21 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root[key][1].is_string());
         REQUIRE(root[key][1].get_value_ref<std::string&>() == "qux");
     }
+
+    SECTION("Input source No.16.")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo,Bar: true\nBaz[123]: 3.14")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains("Foo,Bar"));
+        REQUIRE(root["Foo,Bar"].get_value<bool>() == true);
+
+        REQUIRE(root.contains("Baz[123]"));
+        REQUIRE(root["Baz[123]"].get_value<double>() == 3.14);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerClassTest]")
@@ -985,6 +1000,11 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerCla
         REQUIRE(test_1_node.is_string());
         REQUIRE_NOTHROW(test_1_node.get_value_ref<fkyaml::node::string_type&>());
         REQUIRE(test_1_node.get_value_ref<fkyaml::node::string_type&>().compare("bar") == 0);
+    }
+
+    SECTION("Input source No.2. (invalid)")
+    {
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: ]")), fkyaml::parse_error);
     }
 }
 

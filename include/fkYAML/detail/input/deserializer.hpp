@@ -279,10 +279,6 @@ public:
                 set_yaml_version(*m_current_node);
                 break;
             case lexical_token_t::MAPPING_FLOW_END:
-                if (!m_current_node->is_mapping())
-                {
-                    throw parse_error("Invalid mapping flow ending found.", cur_line, cur_indent);
-                }
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 break;
