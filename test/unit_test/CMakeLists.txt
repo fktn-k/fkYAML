@@ -102,7 +102,7 @@ target_compile_options(unit_test_config INTERFACE
 if(FK_YAML_RUN_CLANG_SANITIZERS)
   target_compile_options(
     unit_test_config
-    INTERFACE -O1
+    INTERFACE -O0
               -g
               -fno-omit-frame-pointer
               -fsanitize=address,undefined,bounds,integer,nullability
