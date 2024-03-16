@@ -6,7 +6,7 @@ This target popultes the appropriate usage requirements for [`INTERFACE_INCLUDE_
 
 ## Possible solutions
 
-The following sub-sections show some possible ways in which you can integrate an existing CMake projct with fkYAML.  
+The following sub-sections show some possible ways in which you can fkYAML from an existing CMake project.  
 
 ### With `find_package()`
 
