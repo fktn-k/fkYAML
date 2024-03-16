@@ -2337,15 +2337,27 @@ public:
             return m_last_token_type = scan_string(false);
         }
         case '[': // sequence flow begin
+            m_flow_context_depth++;
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
+            if (m_flow_context_depth == 0)
+            {
+                emit_error("An invalid flow sequence ending.");
+            }
+            m_flow_context_depth--;
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_END;
         case '{': // mapping flow begin
+            m_flow_context_depth++;
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
+            if (m_flow_context_depth == 0)
+            {
+                emit_error("An invalid flow mapping ending.");
+            }
+            m_flow_context_depth--;
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::MAPPING_FLOW_END;
         case '@':
@@ -3014,43 +3026,43 @@ private:
                 return lexical_token_t::STRING_VALUE;
             }
 
-            // Handle commas.
-            if (current == ',')
+            // Handle flow indicators.
             {
-                // Just regard a comma as a character if surrounded by quotation marks.
-                if (needs_last_double_quote || needs_last_single_quote)
+                bool flow_indicator_appended = false;
+                switch (current)
                 {
-                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                    continue;
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                case ',':
+                    // just regard the flow indicators as a normal character:
+                    // - if single or double quotated,
+                    // - or if not inside flow context.
+
+                    if (needs_last_single_quote || needs_last_double_quote)
+                    {
+                        m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                    }
+                    else if (m_flow_context_depth == 0)
+                    {
+                        m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                    }
+                    else
+                    {
+                        return lexical_token_t::STRING_VALUE;
+                    }
+
+                    flow_indicator_appended = true;
+                    break;
+                default:
+                    break;
                 }
 
-                return lexical_token_t::STRING_VALUE;
-            }
-
-            // Handle right square brackets.
-            if (current == ']')
-            {
-                // just regard a right square bracket as a character if surrounded by quotation marks.
-                if (needs_last_double_quote || needs_last_single_quote)
+                if (flow_indicator_appended)
                 {
-                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
                     continue;
                 }
-
-                return lexical_token_t::STRING_VALUE;
-            }
-
-            // Handle right curly braces.
-            if (current == '}')
-            {
-                // just regard a right curly brace as a character if surrounded by quotation marks.
-                if (needs_last_double_quote || needs_last_single_quote)
-                {
-                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                    continue;
-                }
-
-                return lexical_token_t::STRING_VALUE;
             }
 
             // Handle newline codes.
@@ -3630,6 +3642,8 @@ private:
     std::array<char, 4> m_encode_buffer {};
     std::size_t m_encoded_size {0};
     std::size_t m_last_token_begin_pos {0};
+    /// The current depth of flow context.
+    uint32_t m_flow_context_depth {0};
     /// The last found token type.
     lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
     /// A temporal bool holder.
@@ -3951,10 +3965,6 @@ public:
                 set_yaml_version(*m_current_node);
                 break;
             case lexical_token_t::MAPPING_FLOW_END:
-                if (!m_current_node->is_mapping())
-                {
-                    throw parse_error("Invalid mapping flow ending found.", cur_line, cur_indent);
-                }
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 break;

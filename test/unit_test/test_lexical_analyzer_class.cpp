@@ -418,12 +418,6 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanNaNTokenTest", "[LexicalAnalyzerClassTes
     }
 }
 
-// TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidNumberTokenTest", "[LexicalAnalyzerClassTest]")
-// {
-//     pchar_lexer_t lexer(fkyaml::detail::input_adapter("-.test"));
-//     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
-// }
-
 TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClassTest]")
 {
     using value_pair_t = std::pair<std::string, fkyaml::node::string_type>;
@@ -441,7 +435,11 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string("-foo"), fkyaml::node::string_type("-foo")),
         value_pair_t(std::string("-.test"), fkyaml::node::string_type("-.test")),
         value_pair_t(std::string("1.2.3"), fkyaml::node::string_type("1.2.3")),
-        value_pair_t(std::string("foo]"), fkyaml::node::string_type("foo")),
+        value_pair_t(std::string("foo,bar"), fkyaml::node::string_type("foo,bar")),
+        value_pair_t(std::string("foo[bar"), fkyaml::node::string_type("foo[bar")),
+        value_pair_t(std::string("foo]bar"), fkyaml::node::string_type("foo]bar")),
+        value_pair_t(std::string("foo{bar"), fkyaml::node::string_type("foo{bar")),
+        value_pair_t(std::string("foo}bar"), fkyaml::node::string_type("foo}bar")),
         value_pair_t(std::string("foo:bar"), fkyaml::node::string_type("foo:bar")),
         value_pair_t(std::string("foo bar"), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("foo\"bar"), fkyaml::node::string_type("foo\"bar")),
