@@ -33,6 +33,7 @@ endif()
 
 if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
   set(CATCH2_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2")
+
   if(NOT EXISTS ${CATCH2_ROOT_DIR}/CMakeLists.txt)
     find_package(Git REQUIRED)
     message(STATUS "Fetching git submodule: Catch2")
@@ -44,7 +45,8 @@ if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
       message(FATAL_ERROR "Failed to fetch Catch2 as a git submodule.")
     endif()
   endif()
-  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CATCH2_ROOT_DIR}/contrib")
+
+  list(APPEND CMAKE_MODULE_PATH "${CATCH2_ROOT_DIR}/contrib")
 endif()
 
 ###########################################
@@ -53,29 +55,24 @@ endif()
 
 include(GNUInstallDirs)
 
-set(FK_YAML_TARGET_NAME ${PROJECT_NAME})
-set(FK_YAML_VERSION_STRING
-    "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-set(FK_YAML_CONFIG_INSTALL_DIR
-    "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}"
-    CACHE INTERNAL "Install directory path for config files.")
+set(FK_YAML_TARGET_NAME        ${PROJECT_NAME})
+set(FK_YAML_CONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE INTERNAL "Install directory path for config files.")
 
 if(FK_YAML_USE_SINGLE_HEADER)
   set(FK_YAML_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/single_include/")
 else()
   set(FK_YAML_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 endif()
-
 set(FK_YAML_INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}")
 
-set(FK_YAML_TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets")
-set(FK_YAML_CMAKE_CONFIG_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.cmake.in")
-set(FK_YAML_CMAKE_CONFIG_DIR "${CMAKE_CURRENT_BINARY_DIR}")
-set(FK_YAML_CMAKE_VERSION_CONFIG_FILE
-    "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
-set(FK_YAML_CMAKE_PROJECT_CONFIG_FILE "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Config.cmake")
-set(FK_YAML_CMAKE_PROJECT_TARGETS_FILE "${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Targets.cmake")
-set(FK_YAML_PKGCONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/pkgconfig")
+set(FK_YAML_TARGETS_EXPORT_NAME           "${PROJECT_NAME}Targets")
+set(FK_YAML_CMAKE_CONFIG_TEMPLATE         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.cmake.in")
+set(FK_YAML_CMAKE_VERSION_CONFIG_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake.in")
+set(FK_YAML_CMAKE_CONFIG_DIR              "${CMAKE_CURRENT_BINARY_DIR}")
+set(FK_YAML_CMAKE_VERSION_CONFIG_FILE     ${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}ConfigVersion.cmake)
+set(FK_YAML_CMAKE_PROJECT_CONFIG_FILE     ${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Config.cmake)
+set(FK_YAML_CMAKE_PROJECT_TARGETS_FILE    ${FK_YAML_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Targets.cmake)
+set(FK_YAML_PKGCONFIG_INSTALL_DIR         "${CMAKE_INSTALL_DATADIR}/pkgconfig")
 
 ##########################################
 #   Create target and add include path   #
@@ -83,19 +80,29 @@ set(FK_YAML_PKGCONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/pkgconfig")
 
 add_library(${FK_YAML_TARGET_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${FK_YAML_TARGET_NAME} ALIAS ${FK_YAML_TARGET_NAME})
-target_compile_features(${FK_YAML_TARGET_NAME} INTERFACE cxx_std_11)
+target_compile_features(
+  ${FK_YAML_TARGET_NAME}
+  INTERFACE
+    cxx_std_11
+)
 
 target_include_directories(
-  ${FK_YAML_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${FK_YAML_INCLUDE_BUILD_DIR}>
-                                   $<INSTALL_INTERFACE:${FK_YAML_INCLUDE_INSTALL_DIR}>)
+  ${FK_YAML_TARGET_NAME}
+  INTERFACE
+    $<BUILD_INTERFACE:${FK_YAML_INCLUDE_BUILD_DIR}>
+    $<INSTALL_INTERFACE:${FK_YAML_INCLUDE_INSTALL_DIR}>
+)
 
 # add .natvis file to apply custom debug view for MSVC
 if(MSVC)
   set(FK_YAML_INSTALL_NATVIS ON)
-  set(FK_YAML_NATVIS_FILE "fkYAML.natvis")
+  set(FK_YAML_NATVIS_FILE ${FK_YAML_TARGET_NAME}.natvis)
   target_sources(
-    ${FK_YAML_TARGET_NAME} INTERFACE $<INSTALL_INTERFACE:${FK_YAML_NATVIS_FILE}>
-                                     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${FK_YAML_NATVIS_FILE}>)
+    ${FK_YAML_TARGET_NAME}
+    INTERFACE
+      $<BUILD_INTERFACE:"${CMAKE_CURRENT_SOURCE_DIR}/${FK_YAML_NATVIS_FILE}">
+      $<INSTALL_INTERFACE:${FK_YAML_NATVIS_FILE}>
+)
 endif()
 
 ###########################
@@ -124,9 +131,6 @@ endif()
 #   Install a pkg-config file   #
 #################################
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
-               "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc")
-
 ###########################
 #   Build the test apps   #
 ###########################
@@ -144,28 +148,60 @@ endif()
 
 include(CMakePackageConfigHelpers)
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/fkYAMLConfigVersion.cmake.in"
-               "${FK_YAML_CMAKE_VERSION_CONFIG_FILE}" @ONLY)
+configure_file(
+  ${FK_YAML_CMAKE_CONFIG_TEMPLATE}
+  ${FK_YAML_CMAKE_PROJECT_CONFIG_FILE}
+  @ONLY
+)
 
-configure_file("${FK_YAML_CMAKE_CONFIG_TEMPLATE}" "${FK_YAML_CMAKE_PROJECT_CONFIG_FILE}" @ONLY)
+configure_file(
+  ${FK_YAML_CMAKE_VERSION_CONFIG_TEMPLATE}
+  ${FK_YAML_CMAKE_VERSION_CONFIG_FILE}
+  @ONLY
+)
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+)
 
 if(FK_YAML_INSTALL)
-  install(DIRECTORY "${FK_YAML_INCLUDE_BUILD_DIR}" DESTINATION include)
-  install(FILES "${FK_YAML_CMAKE_PROJECT_CONFIG_FILE}" "${FK_YAML_CMAKE_VERSION_CONFIG_FILE}"
-          DESTINATION "${FK_YAML_CONFIG_INSTALL_DIR}")
+  install(
+    DIRECTORY ${FK_YAML_INCLUDE_BUILD_DIR}
+    DESTINATION ${FK_YAML_INCLUDE_INSTALL_DIR}
+  )
+
+  install(
+    FILES ${FK_YAML_CMAKE_PROJECT_CONFIG_FILE} ${FK_YAML_CMAKE_VERSION_CONFIG_FILE}
+    DESTINATION ${FK_YAML_CONFIG_INSTALL_DIR}
+  )
+
   if(FK_YAML_INSTALL_NATVIS)
-    install(FILES ${FK_YAML_NATVIS_FILE}
-            DESTINATION .)
+    install(
+      FILES ${FK_YAML_NATVIS_FILE}
+      DESTINATION .
+    )
   endif()
+
   export(
     TARGETS ${FK_YAML_TARGET_NAME}
     NAMESPACE ${PROJECT_NAME}::
-    FILE "${FK_YAML_CMAKE_PROJECT_TARGETS_FILE}")
-  install(TARGETS ${FK_YAML_TARGET_NAME} EXPORT ${FK_YAML_TARGETS_EXPORT_NAME})
+    FILE ${FK_YAML_CMAKE_PROJECT_TARGETS_FILE}
+  )
+
+  install(
+    TARGETS ${FK_YAML_TARGET_NAME}
+    EXPORT ${FK_YAML_TARGETS_EXPORT_NAME}
+  )
+
   install(
     EXPORT ${FK_YAML_TARGETS_EXPORT_NAME}
     NAMESPACE ${PROJECT_NAME}::
-    DESTINATION "${FK_YAML_CONFIG_INSTALL_DIR}")
-  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
-          DESTINATION "${FK_YAML_PKGCONFIG_INSTALL_DIR}")
+    DESTINATION ${FK_YAML_CONFIG_INSTALL_DIR}
+  )
+
+  install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+    DESTINATION ${FK_YAML_PKGCONFIG_INSTALL_DIR}
+  )
 endif()

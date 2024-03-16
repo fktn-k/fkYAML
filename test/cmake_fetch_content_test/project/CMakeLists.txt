@@ -1,5 +1,3 @@
-# This minimum version is newer than fkYAML library's. But building this directory occurs only
-# during CI. So, it should be fine.
 cmake_minimum_required(VERSION 3.11.0)
 
 project("CMakeFetchContentTestProject")
@@ -11,5 +9,12 @@ FetchContent_Declare(
   GIT_TAG v0.3.1)
 FetchContent_MakeAvailable(fkYAML)
 
-add_executable(CMakeFetchContentTest main.cpp)
-target_link_libraries(CMakeFetchContentTest PUBLIC fkYAML::fkYAML)
+add_executable(
+  CMakeFetchContentTest
+  main.cpp
+)
+target_link_libraries(
+  CMakeFetchContentTest
+  PUBLIC
+    fkYAML::fkYAML
+)
