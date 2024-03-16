@@ -15,31 +15,31 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 | AppleClang 14.0.3.14030022 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
 | AppleClang 15.0.0.15000040 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
 | AppleClang 15.0.0.15000100 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
-| Clang 3.5.2                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 3.6.2                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 3.7.1                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 3.8.1                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 3.9.1                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 4.0.1                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 5.0.2                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 6.0.1                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 7.1.0                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 9.0.1                | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 10.0.1               | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 11.1.0               | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 12.0.1               | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 13.0.1               | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 14.0.6               | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 15.0.7               | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 16.0.6               | Ubuntu 22.04.3 LTS                                                                                             |
-| Clang 17.0.6               | Ubuntu 22.04.3 LTS                                                                                             |
-| GCC 7.5.0                  | Ubuntu 22.04.3 LTS                                                                                             |
-| GCC 8.5.0                  | Ubuntu 22.04.3 LTS                                                                                             |
-| GCC 9.5.0                  | Ubuntu 22.04.3 LTS                                                                                             |
-| GCC 10.5.0                 | Ubuntu 22.04.3 LTS                                                                                             |
-| GCC 11.4.0                 | Ubuntu 22.04.3 LTS                                                                                             |
-| GCC 12.3.0                 | Ubuntu 22.04.3 LTS                                                                                             |
-| GCC 13.2.0                 | Ubuntu 22.04.3 LTS                                                                                             |
+| Clang 3.5.2                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 3.6.2                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 3.7.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 3.8.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 3.9.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 4.0.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 5.0.2                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 6.0.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 7.1.0                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 9.0.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 10.0.1               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 11.1.0               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 12.0.1               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 13.0.1               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 14.0.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 15.0.7               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 16.0.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 17.0.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 7.5.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 8.5.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 9.5.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 10.5.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 11.4.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 12.3.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 13.2.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | MinGW-64 8.1.0             | [Windows Server 2019](https://github.com/actions/runner-images/blob/main/images/windows/Windows2019-Readme.md) |
 | MinGW-64 12.2.0            | [Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md) |
 | Visual Studio 16 2019      | [Windows Server 2019](https://github.com/actions/runner-images/blob/main/images/windows/Windows2019-Readme.md) |
