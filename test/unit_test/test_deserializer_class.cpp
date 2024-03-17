@@ -1048,9 +1048,10 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
     }
     SECTION("Correct traversal after deserializing flow mapping value")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(  "test: { foo: bar }\n"
-                                                                                        "sibling: a_string_val")));
-		REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test: { foo: bar }\n"
+                                                                          "sibling: a_string_val")));
+        REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 2);
 
