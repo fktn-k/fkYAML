@@ -1046,7 +1046,32 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
         REQUIRE_NOTHROW(test_pi_node.get_value<fkyaml::node::float_number_type>());
         REQUIRE(test_pi_node.get_value<fkyaml::node::float_number_type>() == 3.14);
     }
+    SECTION("Correct traversal after deserializing flow mapping value")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(  "test: { foo: bar }\n"
+                                                                                        "sibling: a_string_val")));
+		REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 2);
 
+        REQUIRE_NOTHROW(root["test"]);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_mapping());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 1);
+
+        REQUIRE_NOTHROW(test_node["foo"]);
+        fkyaml::node& test_foo_node = test_node["foo"];
+        REQUIRE(test_foo_node.is_string());
+        REQUIRE_NOTHROW(test_foo_node.get_value_ref<fkyaml::node::string_type&>());
+        REQUIRE(test_foo_node.get_value_ref<fkyaml::node::string_type&>().compare("bar") == 0);
+
+        REQUIRE_NOTHROW(root["sibling"]);
+        fkyaml::node& sibling_node = root["sibling"];
+        REQUIRE(sibling_node.is_string());
+        REQUIRE_NOTHROW(sibling_node.get_value_ref<fkyaml::node::string_type&>());
+        REQUIRE(sibling_node.get_value_ref<fkyaml::node::string_type&>().compare("a_string_val") == 0);
+    }
     SECTION("Input source No.2. (invalid)")
     {
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: }")), fkyaml::parse_error);
