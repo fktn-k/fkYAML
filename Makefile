@@ -10,13 +10,11 @@ SRCS = $(shell find include -type f -name '*.hpp' | sort)
 SINGLE_SRC = 'single_include/fkYAML/node.hpp'
 # list of sources in the test directory.
 TEST_SRCS = $(shell find test -type f \( -name '*.hpp' -o -name '*.cpp' \) | sort)
-# list of source files in the tool directory.
-TOOL_SRCS = $(shell find tool -type f \( -name '*.cpp' \) | sort)
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 1
+TARGET_PATCH_VERSION := 2
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -123,9 +121,6 @@ reuse: update-reuse-templates
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
 		--license MIT --year "2023-2024" --style c
 	pipx run reuse annotate $(TEST_SRCS) --template fkYAML_support \
-		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year "2023-2024" --style c
-	pipx run reuse annotate $(TOOL_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
 		--license MIT --year "2023-2024" --style c
 	pipx run reuse lint
