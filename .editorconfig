@@ -1,0 +1,70 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[CMakeLists.txt]
+indent_size = 2
+
+[cmake/**]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[{.clang-format,.clang-tidy}]
+indent_size = 2
+
+# Test data must not be auto-changed.
+[test/unit_test/test_data/**]
+indent_style = unset
+indent_size = unset
+tab_width = unset
+charset = unset
+end_of_line = unset
+trim_trailing_whitespace = false
+insert_final_newline = false
+
+# Leave the endings of the file header template files untouched
+[.reuse/templates/*.jinja2]
+insert_final_newline = false
+
+# Leave the endings of the example output files untouched
+[docs/examples/*.output]
+trim_trailing_whitespace = false
+insert_final_newline = false
+
+# Unset all the settings for build directories
+[build*/**]
+indent_style = unset
+indent_size = unset
+tab_width = unset
+end_of_line = unset
+charset = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
+
+# Unset all the settings for third party files
+[thirdparty/**]
+indent_style = unset
+indent_size = unset
+tab_width = unset
+end_of_line = unset
+charset = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
