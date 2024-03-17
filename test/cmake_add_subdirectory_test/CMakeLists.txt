@@ -6,7 +6,7 @@ add_test(
       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
       -S${CMAKE_CURRENT_SOURCE_DIR}/project
       -B${CMAKE_CURRENT_BINARY_DIR}/build
-      -DfkYAML_source_dir=${PROJECT_SOURCE_DIR} 
+      -DfkYAML_source_dir=${PROJECT_SOURCE_DIR}
 )
 
 add_test(

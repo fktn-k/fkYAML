@@ -127,6 +127,7 @@
 
 #endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */
 
+
 #endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)
 
 // #include <fkYAML/detail/assert.hpp>
@@ -433,6 +434,7 @@ using std::remove_cvref_t;
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_ */
+
 // #include <fkYAML/detail/meta/type_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -1222,6 +1224,7 @@ inline double from_string(const std::string& s, type_tag<double> /*unused*/)
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_ */
+
 // #include <fkYAML/detail/encodings/utf8_encoding.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -1552,6 +1555,7 @@ public:
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODING_HPP_ */
+
 // #include <fkYAML/detail/input/input_handler.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -1678,6 +1682,7 @@ struct is_input_adapter<
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */
+
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 
@@ -1890,6 +1895,7 @@ private:
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_INPUT_HANDLER_HPP_ */
+
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
@@ -2083,6 +2089,7 @@ struct is_node_compatible_type : is_node_compatible_type_impl<BasicNodeType, Com
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP_ */
+
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
@@ -2142,6 +2149,7 @@ enum class lexical_token_t
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
+
 // #include <fkYAML/exception.hpp>
 
 
@@ -4283,6 +4291,7 @@ enum class encode_t
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_ENCODE_T_HPP_ */
+
 // #include <fkYAML/exception.hpp>
 
 
@@ -4531,6 +4540,7 @@ inline encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_ENCODE_DETECTOR_HPP_ */
+
 // #include <fkYAML/detail/encodings/encode_t.hpp>
 
 // #include <fkYAML/detail/encodings/utf8_encoding.hpp>
@@ -5498,6 +5508,7 @@ inline stream_input_adapter input_adapter(std::istream& stream) noexcept
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_ */
+
 // #include <fkYAML/detail/iterator.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -6005,6 +6016,7 @@ struct node_property
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP_ */
+
 // #include <fkYAML/detail/node_ref_storage.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -6111,6 +6123,7 @@ private:
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_ */
+
 // #include <fkYAML/detail/output/serializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -6971,6 +6984,7 @@ FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_ */
+
 // #include <fkYAML/detail/conversions/to_node.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -7349,6 +7363,7 @@ FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_ */
+
 
 FK_YAML_NAMESPACE_BEGIN
 
