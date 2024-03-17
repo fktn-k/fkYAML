@@ -2202,7 +2202,7 @@ public:
     /// @return lexical_token_t The next lexical token type.
     lexical_token_t get_next_token()
     {
-        skip_white_spaces();
+        skip_white_spaces_and_newline_codes();
 
         char_int_type current = m_input_handler.get_current();
         m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
@@ -2228,8 +2228,20 @@ public:
         case ':': // key separater
             switch (m_input_handler.get_next())
             {
-            case ' ':
-                break;
+            case ' ': {
+                size_t prev_pos = m_input_handler.get_lines_read();
+                skip_white_spaces_and_comments();
+                size_t cur_pos = m_input_handler.get_lines_read();
+                if (prev_pos == cur_pos)
+                {
+                    current = m_input_handler.get_current();
+                    if (current != '\r' && current != '\n')
+                    {
+                        return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
+                    }
+                }
+                return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
+            }
             case '\r': {
                 char_int_type next = m_input_handler.get_next();
                 if (next == '\n')
@@ -2244,8 +2256,6 @@ public:
             default:
                 emit_error("Half-width spaces or newline codes are required after a key separater(:).");
             }
-            m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
         case ',': // value separater
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
@@ -3529,34 +3539,66 @@ private:
         skip_until_line_end();
     }
 
-    /// @brief Skip white spaces, tabs and newline codes until any other kind of character is found.
+    /// @brief Skip white spaces (half-width spaces and tabs) from the current position.
     void skip_white_spaces()
     {
-        while (true)
+        do
         {
             switch (m_input_handler.get_current())
             {
             case ' ':
             case '\t':
+                break;
+            default:
+                return;
+            }
+        } while (m_input_handler.get_next() != end_of_input);
+    }
+
+    /// @brief Skip white spaces and newline codes (CR/LF) from the current position.
+    void skip_white_spaces_and_newline_codes()
+    {
+        do
+        {
+            skip_white_spaces();
+
+            switch (m_input_handler.get_current())
+            {
             case '\n':
             case '\r':
                 break;
             default:
                 return;
             }
-            m_input_handler.get_next();
-        }
+        } while (m_input_handler.get_next() != end_of_input);
     }
 
-    /// @brief Skip reading in the current line.
+    /// @brief Skip white spaces and comments from the current position.
+    void skip_white_spaces_and_comments()
+    {
+        do
+        {
+            skip_white_spaces();
+
+            switch (m_input_handler.get_current())
+            {
+            case '#': {
+                scan_comment();
+                break;
+            }
+            default:
+                return;
+            }
+        } while (m_input_handler.get_next() != end_of_input);
+    }
+
+    /// @brief Skip the rest in the current line.
     void skip_until_line_end()
     {
-        while (true)
+        do
         {
             switch (m_input_handler.get_current())
             {
-            case end_of_input:
-                return;
             case '\r':
                 if (m_input_handler.get_next() == '\n')
                 {
@@ -3569,8 +3611,7 @@ private:
             default:
                 break;
             }
-            m_input_handler.get_next();
-        }
+        } while (m_input_handler.get_next() != end_of_input);
     }
 
     [[noreturn]] void emit_error(const char* msg) const

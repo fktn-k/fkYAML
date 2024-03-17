@@ -201,6 +201,48 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanColonTest", "[LexicalAnalyzerClassTest]"
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(":test"));
         REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
     }
+
+    SECTION("Test colon with a comment and a CRLF newline code.")
+    {
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(": # comment\r\n"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+    }
+
+    SECTION("Test colon with a comment and a LF newline code.")
+    {
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(": # comment\n"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+    }
+
+    SECTION("Test colon with a comment and no newline code")
+    {
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(": # comment"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+    }
+
+    SECTION("Test colon with many spaces and a CRLF newline code.")
+    {
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(":                         \r\n"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+    }
+
+    SECTION("Test colon with many spaces and a LF newline code.")
+    {
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(":                         \n"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+    }
+
+    SECTION("Test colon with many spaces and no newline code.")
+    {
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(":                         "));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+    }
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanNullTokenTest", "[LexicalAnalyzerClassTest]")
