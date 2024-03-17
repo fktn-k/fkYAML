@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.3.2](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.2) (2024-03-17)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.1...v0.3.2)
+
+- Clean up CMakeLists files [\#280](https://github.com/fktn-k/fkYAML/pull/280) ([fktn-k](https://github.com/fktn-k))
+- Add workflow jobs with the macos-13 runner image [\#274](https://github.com/fktn-k/fkYAML/pull/274) ([fktn-k](https://github.com/fktn-k))
+- Modify handling node properties [\#270](https://github.com/fktn-k/fkYAML/pull/270) ([fktn-k](https://github.com/fktn-k))
+- \#237 Support char8\_t in deserialization [\#269](https://github.com/fktn-k/fkYAML/pull/269) ([fktn-k](https://github.com/fktn-k))
+
+- \#281 Fixed the parser crash due to comments right after a sequence block key [\#284](https://github.com/fktn-k/fkYAML/pull/284) ([fktn-k](https://github.com/fktn-k))
+- \#282 Don't traverse up to the parent node immediately after parsing a flow-mapping value [\#283](https://github.com/fktn-k/fkYAML/pull/283) ([stephenwhittle](https://github.com/stephenwhittle))
+- \#277 Fixed incorrect parse result from plain scalars starting with special values [\#278](https://github.com/fktn-k/fkYAML/pull/278) ([fktn-k](https://github.com/fktn-k))
+- \#275 Fixed parse error on plain scalars containing flow indicators [\#276](https://github.com/fktn-k/fkYAML/pull/276) ([fktn-k](https://github.com/fktn-k))
+- \#272 Fix parse error on a block sequence containing a comment within [\#273](https://github.com/fktn-k/fkYAML/pull/273) ([fktn-k](https://github.com/fktn-k))
+
+- Updated documents [\#279](https://github.com/fktn-k/fkYAML/pull/279) ([fktn-k](https://github.com/fktn-k))
+- Updated copyright year [\#271](https://github.com/fktn-k/fkYAML/pull/271) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.1](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.1) (2023-12-21)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.0...v0.3.1)
