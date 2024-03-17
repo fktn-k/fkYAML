@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <limits>
@@ -153,4 +153,49 @@ TEST_CASE("SerializerClassTest_SerializeStringNode", "[SerializerClassTest]")
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+}
+
+TEST_CASE("SerializerClassTest_SerializeAnchorNode", "[SerializerClassTest]")
+{
+    fkyaml::node node = {{"foo", 123}, {nullptr, {true, "bar", 3.14}}};
+    node[nullptr].add_anchor_name("A");
+    node[nullptr][2].add_anchor_name("B");
+    fkyaml::node key = "baz";
+    key.add_anchor_name("C");
+    node.get_value_ref<fkyaml::node::mapping_type&>().emplace(key, "qux");
+
+    std::string expected = "null: &A\n"
+                           "  - true\n"
+                           "  - bar\n"
+                           "  - &B 3.14\n"
+                           "&C baz: qux\n"
+                           "foo: 123\n";
+
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(serializer.serialize(node) == expected);
+}
+
+TEST_CASE("SerializerClassTest_SerializeAliasNode", "[SerializerClassTest]")
+{
+    fkyaml::node node = {{"foo", 123}};
+    node["foo"].add_anchor_name("A");
+    node.get_value_ref<fkyaml::node::mapping_type&>().emplace(true, fkyaml::node::alias_of(node["foo"]));
+    node.get_value_ref<fkyaml::node::mapping_type&>().emplace(fkyaml::node::alias_of(node["foo"]), 3.14);
+    node[nullptr] = {"bar", fkyaml::node::alias_of(node["foo"])};
+
+    // FIXME: Semantic equality between the input & the output is not guranteed
+    //        when anchors/aliases are contained in a YAML document.
+    //        This is because mappings have no information to correctly revoke
+    //        the original relations between anchors & aliases.
+    //        Using fkyaml::ordered_map as the type of mappings should solve the
+    //        issue.
+    std::string expected = "null:\n"
+                           "  - bar\n"
+                           "  - *A\n"
+                           "true: *A\n"
+                           "*A: 3.14\n"
+                           "foo: &A 123\n";
+
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(serializer.serialize(node) == expected);
 }

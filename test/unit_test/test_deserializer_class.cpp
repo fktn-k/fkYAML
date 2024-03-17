@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <catch2/catch.hpp>
@@ -446,6 +446,41 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockSequenceTest", "[DeserializerCl
         REQUIRE(test_1_node.size() == 3);
         REQUIRE_NOTHROW(test_1_node.get_value_ref<fkyaml::node::string_type&>());
         REQUIRE(test_1_node.get_value_ref<fkyaml::node::string_type&>().compare("foo") == 0);
+    }
+
+    SECTION("Input source No.8.")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  # comment\n  - item: 123")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
+
+        REQUIRE(root["test"].is_sequence());
+        REQUIRE(root["test"].size() == 1);
+
+        REQUIRE(root["test"][0].is_mapping());
+        REQUIRE(root["test"][0].size() == 1);
+        REQUIRE(root["test"][0].contains("item"));
+
+        REQUIRE(root["test"][0]["item"].is_integer());
+        REQUIRE(root["test"][0]["item"].get_value<int>() == 123);
+    }
+
+    SECTION("Input source No.9.")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: # comment\n  - bar\n")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        REQUIRE(root["foo"].is_sequence());
+        REQUIRE(root["foo"].size() == 1);
+
+        REQUIRE(root["foo"][0].is_string());
+        REQUIRE(root["foo"][0].get_value_ref<std::string&>() == "bar");
     }
 }
 
@@ -933,6 +968,38 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root[key][1].is_string());
         REQUIRE(root[key][1].get_value_ref<std::string&>() == "qux");
     }
+
+    SECTION("Input source No.16.")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo,Bar: true\nBaz[123]: 3.14")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains("Foo,Bar"));
+        REQUIRE(root["Foo,Bar"].get_value<bool>() == true);
+
+        REQUIRE(root.contains("Baz[123]"));
+        REQUIRE(root["Baz[123]"].get_value<double>() == 3.14);
+    }
+
+    SECTION("a comment right after a block mapping key.")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("baz: # comment2\n  qux: 123\n")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("baz"));
+
+        REQUIRE(root["baz"].is_mapping());
+        REQUIRE(root["baz"].size() == 1);
+        REQUIRE(root["baz"].contains("qux"));
+
+        REQUIRE(root["baz"]["qux"].is_integer());
+        REQUIRE(root["baz"]["qux"].get_value<int>() == 123);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerClassTest]")
@@ -965,6 +1032,11 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerCla
         REQUIRE(test_1_node.is_string());
         REQUIRE_NOTHROW(test_1_node.get_value_ref<fkyaml::node::string_type&>());
         REQUIRE(test_1_node.get_value_ref<fkyaml::node::string_type&>().compare("bar") == 0);
+    }
+
+    SECTION("Input source No.2. (invalid)")
+    {
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: ]")), fkyaml::parse_error);
     }
 }
 
@@ -1005,6 +1077,34 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
         REQUIRE(test_pi_node.is_float_number());
         REQUIRE_NOTHROW(test_pi_node.get_value<fkyaml::node::float_number_type>());
         REQUIRE(test_pi_node.get_value<fkyaml::node::float_number_type>() == 3.14);
+    }
+
+    SECTION("Correct traversal after deserializing flow mapping value")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("test: { foo: bar }\n"
+                                                                          "sibling: a_string_val")));
+        REQUIRE(root.is_mapping());
+        REQUIRE_NOTHROW(root.size());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE_NOTHROW(root["test"]);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_mapping());
+        REQUIRE_NOTHROW(test_node.size());
+        REQUIRE(test_node.size() == 1);
+
+        REQUIRE_NOTHROW(test_node["foo"]);
+        fkyaml::node& test_foo_node = test_node["foo"];
+        REQUIRE(test_foo_node.is_string());
+        REQUIRE_NOTHROW(test_foo_node.get_value_ref<fkyaml::node::string_type&>());
+        REQUIRE(test_foo_node.get_value_ref<fkyaml::node::string_type&>().compare("bar") == 0);
+
+        REQUIRE_NOTHROW(root["sibling"]);
+        fkyaml::node& sibling_node = root["sibling"];
+        REQUIRE(sibling_node.is_string());
+        REQUIRE_NOTHROW(sibling_node.get_value_ref<fkyaml::node::string_type&>());
+        REQUIRE(sibling_node.get_value_ref<fkyaml::node::string_type&>().compare("a_string_val") == 0);
     }
 
     SECTION("Input source No.2. (invalid)")

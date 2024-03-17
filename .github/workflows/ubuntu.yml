@@ -108,21 +108,25 @@ jobs:
 
   ci_test_clang_sanitizers:
     runs-on: ubuntu-latest
+    container: silkeh/clang:latest
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
+      - name: Install git and unzip
+        run: |
+          apt-get update
+          apt-get install -y git unzip
+          git --version
 
-    - name: Install Clang
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y clang
-        clang++ --version
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
-    - name: Run Clang Sanitizers
-      run: make clang-sanitizers
+      - name: Get latest CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Run Clang Sanitizers
+        run: make clang-sanitizers
 
   ci_test_clang_cxx_standards:
     runs-on: ubuntu-latest
@@ -138,7 +142,7 @@ jobs:
         apt-get update
         apt-get install -y git unzip
         git --version
-      
+
     - uses: actions/checkout@v3
       with:
         submodules: recursive

@@ -1,9 +1,9 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -24,17 +24,17 @@
 // #include <fkYAML/detail/macros/version_macros.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
 
 // Check version definitions if already defined.
 #if defined(FK_YAML_MAJOR_VERSION) && defined(FK_YAML_MINOR_VERSION) && defined(FK_YAML_PATCH_VERSION)
-    #if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 3 || FK_YAML_PATCH_VERSION != 1
+    #if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 3 || FK_YAML_PATCH_VERSION != 2
         #warning Already included a different version of the fkYAML library!
     #else
         // define macros to skip defining macros down below.
@@ -46,7 +46,7 @@
 
     #define FK_YAML_MAJOR_VERSION 0
     #define FK_YAML_MINOR_VERSION 3
-    #define FK_YAML_PATCH_VERSION 1
+    #define FK_YAML_PATCH_VERSION 2
 
     #define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
 
@@ -69,10 +69,10 @@
     // #include <fkYAML/detail/macros/cpp_config_macros.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -109,6 +109,22 @@
     #define FK_YAML_INLINE_VAR
 #endif
 
+#ifdef __has_include
+    #if __has_include(<version>)
+        // <version> is available since C++20
+        #include <version>
+    #endif
+#endif
+
+// switch usage of char8_t. char8_t has been introduced since C++20
+#if !defined(FK_YAML_HAS_CHAR8_T)
+    #if defined(FK_YAML_HAS_CXX_20)
+        #if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
+            #define FK_YAML_HAS_CHAR8_T
+        #endif
+    #endif
+#endif
+
 #endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */
 
 #endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)
@@ -116,10 +132,10 @@
 // #include <fkYAML/detail/assert.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -142,10 +158,10 @@
 // #include <fkYAML/detail/input/deserializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -162,10 +178,10 @@
 // #include <fkYAML/detail/input/lexical_analyzer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -188,10 +204,10 @@
 // #include <fkYAML/detail/conversions/from_string.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -210,10 +226,10 @@
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -420,10 +436,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/type_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -439,10 +455,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/detect.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -705,10 +721,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -726,10 +742,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/types/node_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -1209,10 +1225,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf8_encoding.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -1539,10 +1555,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/input/input_handler.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -1559,10 +1575,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -1879,10 +1895,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/node_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -2072,10 +2088,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -2186,7 +2202,7 @@ public:
     /// @return lexical_token_t The next lexical token type.
     lexical_token_t get_next_token()
     {
-        skip_white_spaces();
+        skip_white_spaces_and_newline_codes();
 
         char_int_type current = m_input_handler.get_current();
         m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
@@ -2212,8 +2228,20 @@ public:
         case ':': // key separater
             switch (m_input_handler.get_next())
             {
-            case ' ':
-                break;
+            case ' ': {
+                size_t prev_pos = m_input_handler.get_lines_read();
+                skip_white_spaces_and_comments();
+                size_t cur_pos = m_input_handler.get_lines_read();
+                if (prev_pos == cur_pos)
+                {
+                    current = m_input_handler.get_current();
+                    if (current != '\r' && current != '\n')
+                    {
+                        return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
+                    }
+                }
+                return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
+            }
             case '\r': {
                 char_int_type next = m_input_handler.get_next();
                 if (next == '\n')
@@ -2228,8 +2256,6 @@ public:
             default:
                 emit_error("Half-width spaces or newline codes are required after a key separater(:).");
             }
-            m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
         case ',': // value separater
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
@@ -2299,37 +2325,32 @@ public:
                 }
 
                 m_input_handler.unget_range(2);
-                ret = m_input_handler.get_range(5, m_value_buffer);
-                if (ret != end_of_input)
-                {
-                    try
-                    {
-                        // try convert to the negative infinite value.
-                        m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                        m_input_handler.get_next();
-                        return m_last_token_type = lexical_token_t::FLOAT_NUMBER_VALUE;
-                    }
-                    catch (const fkyaml::exception& /*unused*/)
-                    {
-                        m_input_handler.unget_range(4);
-                    }
-                }
             }
 
-            m_input_handler.get_next();
-            m_value_buffer = "-";
-            return m_last_token_type = scan_string(false);
+            return m_last_token_type = scan_string();
         }
         case '[': // sequence flow begin
+            m_flow_context_depth++;
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
+            if (m_flow_context_depth == 0)
+            {
+                emit_error("An invalid flow sequence ending.");
+            }
+            m_flow_context_depth--;
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_END;
         case '{': // mapping flow begin
+            m_flow_context_depth++;
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
+            if (m_flow_context_depth == 0)
+            {
+                emit_error("An invalid flow mapping ending.");
+            }
+            m_flow_context_depth--;
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::MAPPING_FLOW_END;
         case '@':
@@ -2339,31 +2360,10 @@ public:
         case '\"':
         case '\'':
             return m_last_token_type = scan_string();
-        case '~':
-            m_value_buffer = char_traits_type::to_char_type(current);
-            return m_last_token_type = lexical_token_t::NULL_VALUE;
         case '+':
             return m_last_token_type = scan_number();
         case '.': {
-            char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
-            if (ret != end_of_input)
-            {
-                try
-                {
-                    // try convert to an infinite/nan value.
-                    m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                    m_input_handler.get_next();
-                    return m_last_token_type = lexical_token_t::FLOAT_NUMBER_VALUE;
-                }
-                catch (const fkyaml::exception& /*unused*/)
-                {
-                    // revert change in the position to the one before comparison above.
-                    m_input_handler.unget_range(3);
-                    return m_last_token_type = scan_string();
-                }
-            }
-
-            ret = m_input_handler.get_range(3, m_value_buffer);
+            char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
             if (ret != end_of_input)
             {
                 if (m_value_buffer == "...")
@@ -2391,79 +2391,6 @@ public:
             get_block_style_metadata(chomp_type, indent);
             return m_last_token_type =
                        scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
-        }
-        case 'F':
-        case 'f': {
-            // YAML specifies that only these words represent the boolean value `false`.
-            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            char_int_type ret = m_input_handler.get_range(5, m_value_buffer);
-            if (ret == end_of_input)
-            {
-                return m_last_token_type = scan_string();
-            }
-
-            try
-            {
-                // try convert to a boolean false value.
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                m_input_handler.get_next();
-                return m_last_token_type = lexical_token_t::BOOLEAN_VALUE;
-            }
-            catch (const fkyaml::exception& /*unused*/)
-            {
-                // revert change in the position to the one before comparison above.
-                m_input_handler.unget_range(4);
-                return m_last_token_type = scan_string();
-            }
-        }
-        case 'N':
-        case 'n': {
-            // YAML specifies that these words and a tilde represent a null value.
-            // Tildes are already checked above, so no check is needed here.
-            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
-            if (ret == end_of_input)
-            {
-                return m_last_token_type = scan_string();
-            }
-
-            try
-            {
-                // try convert to a null value.
-                from_string(m_value_buffer, type_tag<std::nullptr_t> {});
-                m_input_handler.get_next();
-                return m_last_token_type = lexical_token_t::NULL_VALUE;
-            }
-            catch (const fkyaml::exception& /*unused*/)
-            {
-                // revert change in the position to the one before comparison above.
-                m_input_handler.unget_range(3);
-                return m_last_token_type = scan_string();
-            }
-        }
-        case 'T':
-        case 't': {
-            // YAML specifies that only these words represent the boolean value `true`.
-            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
-            char_int_type ret = m_input_handler.get_range(4, m_value_buffer);
-            if (ret == end_of_input)
-            {
-                return m_last_token_type = scan_string();
-            }
-
-            try
-            {
-                // try convert to a boolean true value.
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                m_input_handler.get_next();
-                return m_last_token_type = lexical_token_t::BOOLEAN_VALUE;
-            }
-            catch (const fkyaml::exception& /*unused*/)
-            {
-                // revert change in the position to the one before comparison above.
-                m_input_handler.unget_range(3);
-                return m_last_token_type = scan_string();
-            }
         }
         default:
             return m_last_token_type = scan_string();
@@ -2877,25 +2804,83 @@ private:
     }
 
     /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
-    /// @note Multibyte characters(including escaped ones) are currently unsupported.
     /// @return lexical_token_t The lexical token type for strings.
     lexical_token_t scan_string(bool needs_clear = true)
     {
-        char_int_type current = m_input_handler.get_current();
-        bool needs_last_double_quote = false;
         bool needs_last_single_quote = false;
+        bool needs_last_double_quote = false;
 
         if (needs_clear)
         {
             m_value_buffer.clear();
 
-            needs_last_double_quote = (m_input_handler.get_current() == '\"');
             needs_last_single_quote = (m_input_handler.get_current() == '\'');
+            needs_last_double_quote = (m_input_handler.get_current() == '\"');
             if (needs_last_double_quote || needs_last_single_quote)
             {
-                current = m_input_handler.get_next();
+                m_input_handler.get_next();
             }
         }
+
+        lexical_token_t type = extract_string_token(needs_last_single_quote, needs_last_double_quote);
+        FK_YAML_ASSERT(type == lexical_token_t::STRING_VALUE);
+
+        if (needs_last_single_quote || needs_last_double_quote)
+        {
+            // just returned the extracted string value if quoted.
+            return type;
+        }
+
+        if (m_value_buffer == "~")
+        {
+            return lexical_token_t::NULL_VALUE;
+        }
+
+        size_t val_size = m_value_buffer.size();
+        if (val_size == 4)
+        {
+            if (m_value_buffer == "null" || m_value_buffer == "Null" || m_value_buffer == "NULL")
+            {
+                from_string(m_value_buffer, type_tag<std::nullptr_t> {});
+                return lexical_token_t::NULL_VALUE;
+            }
+
+            if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
+            {
+                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+
+            if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF" ||
+                m_value_buffer == ".nan" || m_value_buffer == ".NaN" || m_value_buffer == ".NAN")
+            {
+                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            }
+        }
+        else if (val_size == 5)
+        {
+            if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
+            {
+                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+
+            if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
+            {
+                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            }
+        }
+
+        return type;
+    }
+
+    /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
+    /// @return lexical_token_t The lexical token type for strings.
+    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote)
+    {
+        char_int_type current = m_input_handler.get_current();
 
         for (;; current = m_input_handler.get_next())
         {
@@ -2998,43 +2983,43 @@ private:
                 return lexical_token_t::STRING_VALUE;
             }
 
-            // Handle commas.
-            if (current == ',')
+            // Handle flow indicators.
             {
-                // Just regard a comma as a character if surrounded by quotation marks.
-                if (needs_last_double_quote || needs_last_single_quote)
+                bool flow_indicator_appended = false;
+                switch (current)
                 {
-                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                    continue;
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                case ',':
+                    // just regard the flow indicators as a normal character:
+                    // - if single or double quotated,
+                    // - or if not inside flow context.
+
+                    if (needs_last_single_quote || needs_last_double_quote)
+                    {
+                        m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                    }
+                    else if (m_flow_context_depth == 0)
+                    {
+                        m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                    }
+                    else
+                    {
+                        return lexical_token_t::STRING_VALUE;
+                    }
+
+                    flow_indicator_appended = true;
+                    break;
+                default:
+                    break;
                 }
 
-                return lexical_token_t::STRING_VALUE;
-            }
-
-            // Handle right square brackets.
-            if (current == ']')
-            {
-                // just regard a right square bracket as a character if surrounded by quotation marks.
-                if (needs_last_double_quote || needs_last_single_quote)
+                if (flow_indicator_appended)
                 {
-                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
                     continue;
                 }
-
-                return lexical_token_t::STRING_VALUE;
-            }
-
-            // Handle right curly braces.
-            if (current == '}')
-            {
-                // just regard a right curly brace as a character if surrounded by quotation marks.
-                if (needs_last_double_quote || needs_last_single_quote)
-                {
-                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
-                    continue;
-                }
-
-                return lexical_token_t::STRING_VALUE;
             }
 
             // Handle newline codes.
@@ -3554,34 +3539,66 @@ private:
         skip_until_line_end();
     }
 
-    /// @brief Skip white spaces, tabs and newline codes until any other kind of character is found.
+    /// @brief Skip white spaces (half-width spaces and tabs) from the current position.
     void skip_white_spaces()
     {
-        while (true)
+        do
         {
             switch (m_input_handler.get_current())
             {
             case ' ':
             case '\t':
+                break;
+            default:
+                return;
+            }
+        } while (m_input_handler.get_next() != end_of_input);
+    }
+
+    /// @brief Skip white spaces and newline codes (CR/LF) from the current position.
+    void skip_white_spaces_and_newline_codes()
+    {
+        do
+        {
+            skip_white_spaces();
+
+            switch (m_input_handler.get_current())
+            {
             case '\n':
             case '\r':
                 break;
             default:
                 return;
             }
-            m_input_handler.get_next();
-        }
+        } while (m_input_handler.get_next() != end_of_input);
     }
 
-    /// @brief Skip reading in the current line.
+    /// @brief Skip white spaces and comments from the current position.
+    void skip_white_spaces_and_comments()
+    {
+        do
+        {
+            skip_white_spaces();
+
+            switch (m_input_handler.get_current())
+            {
+            case '#': {
+                scan_comment();
+                break;
+            }
+            default:
+                return;
+            }
+        } while (m_input_handler.get_next() != end_of_input);
+    }
+
+    /// @brief Skip the rest in the current line.
     void skip_until_line_end()
     {
-        while (true)
+        do
         {
             switch (m_input_handler.get_current())
             {
-            case end_of_input:
-                return;
             case '\r':
                 if (m_input_handler.get_next() == '\n')
                 {
@@ -3594,8 +3611,7 @@ private:
             default:
                 break;
             }
-            m_input_handler.get_next();
-        }
+        } while (m_input_handler.get_next() != end_of_input);
     }
 
     [[noreturn]] void emit_error(const char* msg) const
@@ -3614,6 +3630,8 @@ private:
     std::array<char, 4> m_encode_buffer {};
     std::size_t m_encoded_size {0};
     std::size_t m_last_token_begin_pos {0};
+    /// The current depth of flow context.
+    uint32_t m_flow_context_depth {0};
     /// The last found token type.
     lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
     /// A temporal bool holder.
@@ -3641,10 +3659,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/types/yaml_version_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -3912,6 +3930,10 @@ public:
                 break;
             case lexical_token_t::MAPPING_BLOCK_PREFIX:
                 type = lexer.get_next_token();
+                if (type == lexical_token_t::COMMENT_PREFIX)
+                {
+                    type = lexer.get_next_token();
+                }
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     *m_current_node = BasicNodeType::sequence();
@@ -3931,12 +3953,7 @@ public:
                 set_yaml_version(*m_current_node);
                 break;
             case lexical_token_t::MAPPING_FLOW_END:
-                if (!m_current_node->is_mapping())
-                {
-                    throw parse_error("Invalid mapping flow ending found.", cur_line, cur_indent);
-                }
                 m_current_node = m_node_stack.back();
-                m_node_stack.pop_back();
                 break;
             case lexical_token_t::NULL_VALUE: {
                 bool do_continue =
@@ -4184,10 +4201,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/input/input_adapter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -4206,10 +4223,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/encodings/encode_detector.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -4224,10 +4241,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/encodings/encode_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -4349,7 +4366,7 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
     uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     switch (ElemSize)
     {
-    case sizeof(char): {
+    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 features.
         for (std::size_t i = 0; i < 4 && begin + i != end; i++)
         {
             bytes[i] = uint8_t(begin[i]);
@@ -4538,7 +4555,6 @@ template <typename IterType, typename = void>
 class iterator_input_adapter;
 
 /// @brief An input adapter for iterators of type char.
-/// @note This adapter requires at least bidirectional iterator tag.
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
@@ -4736,8 +4752,85 @@ private:
     std::size_t m_utf8_buf_size {0};
 };
 
+#ifdef FK_YAML_HAS_CHAR8_T
+
+/// @brief An input adapter for iterators of type char8_t.
+/// @tparam IterType An iterator type.
+template <typename IterType>
+class iterator_input_adapter<
+    IterType,
+    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>>
+{
+public:
+    /// A type for characters used in this input adapter.
+    using char_type = char;
+
+    /// @brief Construct a new iterator_input_adapter object.
+    iterator_input_adapter() = default;
+
+    /// @brief Construct a new iterator_input_adapter object.
+    /// @param begin The beginning of iteraters.
+    /// @param end The end of iterators.
+    /// @param encode_type The encoding type for this input adapter.
+    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
+        : m_current(begin),
+          m_end(end),
+          m_encode_type(encode_type)
+    {
+    }
+
+    // allow only move construct/assignment like other input adapters.
+    iterator_input_adapter(const iterator_input_adapter&) = delete;
+    iterator_input_adapter(iterator_input_adapter&& rhs) = default;
+    iterator_input_adapter& operator=(const iterator_input_adapter&) = delete;
+    iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
+    ~iterator_input_adapter() = default;
+
+    /// @brief Get a character at the current position and move forward.
+    /// @return std::char_traits<char_type>::int_type A character or EOF.
+    typename std::char_traits<char_type>::int_type get_character()
+    {
+        typename std::char_traits<char_type>::int_type ret = 0;
+        switch (m_encode_type)
+        {
+        case encode_t::UTF_8_N:
+        case encode_t::UTF_8_BOM:
+            ret = get_character_for_utf8();
+            break;
+        default: // LCOV_EXCL_LINE
+            // char8_t characters must be encoded in the UTF-8 format.
+            // See https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0482r6.html.
+            break; // LCOV_EXCL_LINE
+        }
+        return ret;
+    }
+
+private:
+    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
+    /// @return A UTF-8 encoded byte at the current position, or EOF.
+    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
+    {
+        if (m_current != m_end)
+        {
+            auto ret = std::char_traits<char_type>::to_int_type(*m_current);
+            ++m_current;
+            return ret;
+        }
+        return std::char_traits<char_type>::eof();
+    }
+
+private:
+    /// The iterator at the current position.
+    IterType m_current {};
+    /// The iterator at the end of input.
+    IterType m_end {};
+    /// The encoding type for this input adapter.
+    encode_t m_encode_type {encode_t::UTF_8_N};
+};
+
+#endif // defined(FK_YAML_HAS_CHAR8_T)
+
 /// @brief An input adapter for iterators of type char16_t.
-/// @note This adapter requires at least bidirectional iterator tag.
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
@@ -4844,7 +4937,6 @@ private:
 };
 
 /// @brief An input adapter for iterators of type char32_t.
-/// @note This adapter requires at least bidirectional iterator tag.
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
@@ -5409,10 +5501,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/iterator.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -5868,13 +5960,58 @@ FK_YAML_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/type_traits.hpp>
 
+// #include <fkYAML/detail/node_property.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_NODE_PROPERTY_HPP_
+#define FK_YAML_DETAIL_NODE_PROPERTY_HPP_
+
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+/// @brief namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @brief namespace for internal implementations of fkYAML library.
+namespace detail
+{
+
+enum class anchor_status_t
+{
+    NONE,
+    ANCHOR,
+    ALIAS,
+};
+
+struct node_property
+{
+    std::string tag {};
+    anchor_status_t anchor_status {anchor_status_t::NONE};
+    std::string anchor {};
+};
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP_ */
 // #include <fkYAML/detail/node_ref_storage.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -5977,10 +6114,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/output/serializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -5997,10 +6134,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_string.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -6034,13 +6171,13 @@ namespace detail
 /// @param s A resulting output string.
 /// @param v A source value.
 template <typename ValueType, typename CharType>
-inline void to_string(std::basic_string<CharType>& s, ValueType v) noexcept;
+inline void to_string(ValueType v, std::basic_string<CharType>& s) noexcept;
 
 /// @brief Specialization of to_string() for null values.
 /// @param s A resulting string YAML token.
 /// @param (unused) nullptr
 template <>
-inline void to_string(std::string& s, std::nullptr_t /*unused*/) noexcept
+inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept
 {
     s = "null";
 }
@@ -6049,7 +6186,7 @@ inline void to_string(std::string& s, std::nullptr_t /*unused*/) noexcept
 /// @param s A resulting string YAML token.
 /// @param b A boolean source value.
 template <>
-inline void to_string(std::string& s, bool b) noexcept
+inline void to_string(bool b, std::string& s) noexcept
 {
     s = b ? "true" : "false";
 }
@@ -6059,7 +6196,7 @@ inline void to_string(std::string& s, bool b) noexcept
 /// @param s A resulting string YAML token.
 /// @param i An integer source value.
 template <typename IntegerType>
-inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(std::string& s, IntegerType i) noexcept
+inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept
 {
     s = std::to_string(i);
 }
@@ -6069,7 +6206,7 @@ inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(std::stri
 /// @param s A resulting string YAML token.
 /// @param f A floating point number source value.
 template <typename FloatType>
-inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(std::string& s, FloatType f) noexcept
+inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept
 {
     if (std::isnan(f))
     {
@@ -6151,8 +6288,21 @@ private:
         case node_t::SEQUENCE:
             for (const auto& seq_item : node)
             {
-                insert_indentation(cur_indent, str);
+                if (cur_indent > 0)
+                {
+                    insert_indentation(cur_indent, str);
+                }
                 str += "-";
+
+                bool is_appended = try_append_alias(seq_item, true, str);
+                if (is_appended)
+                {
+                    str += "\n";
+                    continue;
+                }
+
+                try_append_anchor(seq_item, true, str);
+
                 bool is_scalar = seq_item.is_scalar();
                 if (is_scalar)
                 {
@@ -6170,9 +6320,33 @@ private:
         case node_t::MAPPING:
             for (auto itr = node.begin(); itr != node.end(); ++itr)
             {
-                insert_indentation(cur_indent, str);
-                serialize_node(itr.key(), cur_indent, str);
+                if (cur_indent > 0)
+                {
+                    insert_indentation(cur_indent, str);
+                }
+
+                bool is_appended = try_append_alias(itr.key(), false, str);
+                if (!is_appended)
+                {
+                    is_appended = try_append_anchor(itr.key(), false, str);
+                    if (is_appended)
+                    {
+                        str += " ";
+                    }
+                    serialize_node(itr.key(), cur_indent, str);
+                }
+
                 str += ":";
+
+                is_appended = try_append_alias(*itr, true, str);
+                if (is_appended)
+                {
+                    str += "\n";
+                    continue;
+                }
+
+                try_append_anchor(*itr, true, str);
+
                 bool is_scalar = itr->is_scalar();
                 if (is_scalar)
                 {
@@ -6188,19 +6362,19 @@ private:
             }
             break;
         case node_t::NULL_OBJECT:
-            to_string(m_tmp_str_buff, nullptr);
+            to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::boolean_type>());
+            to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::integer_type>());
+            to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::FLOAT_NUMBER:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::float_number_type>());
+            to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::STRING: {
@@ -6417,10 +6591,45 @@ private:
     /// @param str A string to hold serialization result.
     void insert_indentation(const uint32_t cur_indent, std::string& str) const noexcept
     {
-        for (uint32_t i = 0; i < cur_indent; ++i)
+        str.append(cur_indent, ' ');
+    }
+
+    /// @brief Append an anchor property if it's available. Do nothing otherwise.
+    /// @param node The target node which is possibly an anchor node.
+    /// @param prepends_space Whether or not to prepend a space before an anchor property.
+    /// @param str A string to hold serialization result.
+    /// @return true if an anchor property has been appended, false otherwise.
+    bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const
+    {
+        if (node.is_anchor())
         {
-            str += " ";
+            if (prepends_space)
+            {
+                str += " ";
+            }
+            str += "&" + node.get_anchor_name();
+            return true;
         }
+        return false;
+    }
+
+    /// @brief Append an alias property if it's available. Do nothing otherwise.
+    /// @param node The target node which is possibly an alias node.
+    /// @param prepends_space Whether or not to prepend a space before an alias property.
+    /// @param str A string to hold serialization result.
+    /// @return true if an alias property has been appended, false otherwise.
+    bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const
+    {
+        if (node.is_alias())
+        {
+            if (prepends_space)
+            {
+                str += " ";
+            }
+            str += "*" + node.get_anchor_name();
+            return true;
+        }
+        return false;
     }
 
 private:
@@ -6443,10 +6652,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/node_value_converter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -6461,10 +6670,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/from_node.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -6765,10 +6974,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_node.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -7186,10 +7395,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/ordered_map.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -7601,16 +7810,13 @@ private:
     }
 
     /// @brief Destroys and deallocates an object with specified type.
+    /// @warning Make sure the `obj` parameter is not nullptr before calling this function.
     /// @tparam ObjType The target object type.
     /// @param[in] obj A pointer to the target object to be destroyed.
     template <typename ObjType>
     static void destroy_object(ObjType* obj)
     {
-        if (!obj)
-        {
-            return;
-        }
-
+        FK_YAML_ASSERT(obj != nullptr);
         std::allocator<ObjType> alloc;
         std::allocator_traits<decltype(alloc)>::destroy(alloc, obj);
         std::allocator_traits<decltype(alloc)>::deallocate(alloc, obj, 1);
@@ -7635,7 +7841,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type)
+          m_yaml_version_type(rhs.m_yaml_version_type),
+          m_prop(rhs.m_prop)
     {
         switch (m_node_type)
         {
@@ -7664,12 +7871,6 @@ public:
             FK_YAML_ASSERT(m_node_value.p_string != nullptr);
             break;
         }
-
-        if (rhs.m_anchor_name)
-        {
-            m_anchor_name = create_object<std::string>(*(rhs.m_anchor_name));
-            FK_YAML_ASSERT(m_anchor_name != nullptr);
-        }
     }
 
     /// @brief Move constructor of the basic_node class.
@@ -7678,7 +7879,7 @@ public:
     basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
           m_yaml_version_type(rhs.m_yaml_version_type),
-          m_anchor_name(rhs.m_anchor_name)
+          m_prop(std::move(rhs.m_prop))
     {
         switch (m_node_type)
         {
@@ -7718,7 +7919,7 @@ public:
         rhs.m_node_type = node_t::NULL_OBJECT;
         rhs.m_yaml_version_type = yaml_version_t::VER_1_2;
         rhs.m_node_value.p_mapping = nullptr;
-        rhs.m_anchor_name = nullptr;
+        rhs.m_prop.anchor_status = detail::anchor_status_t::NONE;
     }
 
     /// @brief Construct a new basic_node object from a value of compatible types.
@@ -7784,8 +7985,6 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/destructor/
     ~basic_node() noexcept // NOLINT(bugprone-exception-escape)
     {
-        destroy_object<std::string>(m_anchor_name);
-        m_anchor_name = nullptr;
         m_node_value.destroy(m_node_type);
         m_node_type = node_t::NULL_OBJECT;
     }
@@ -7907,14 +8106,16 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/alias_of/
     static basic_node alias_of(const basic_node& anchor_node)
     {
-        if (!anchor_node.m_anchor_name || anchor_node.m_anchor_name->empty())
+        if (!anchor_node.has_anchor_name() || anchor_node.m_prop.anchor_status != detail::anchor_status_t::ANCHOR)
         {
             throw fkyaml::exception("Cannot create an alias without anchor name.");
         }
 
         basic_node node = anchor_node;
+        node.m_prop.anchor_status = detail::anchor_status_t::ALIAS;
+        node.m_prop.anchor = anchor_node.m_prop.anchor;
         return node;
-    }
+    } // LCOV_EXCL_LINE
 
 public:
     /// @brief A copy assignment operator of the basic_node class.
@@ -8268,6 +8469,22 @@ public:
         return !is_sequence() && !is_mapping();
     }
 
+    /// @brief Tests whether the current basic_node is an anchor node.
+    /// @return true if the current basic_node is an anchor node, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_anchor/
+    bool is_anchor() const noexcept
+    {
+        return m_prop.anchor_status == detail::anchor_status_t::ANCHOR;
+    }
+
+    /// @brief Tests whether the current basic_node is an alias node.
+    /// @return true if the current basic_node is an alias node, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_alias/
+    bool is_alias() const noexcept
+    {
+        return m_prop.anchor_status == detail::anchor_status_t::ALIAS;
+    }
+
     /// @brief Tests whether the current basic_node value (sequence, mapping, string) is empty.
     /// @return true if the node value is empty, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/empty/
@@ -8378,7 +8595,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
     bool has_anchor_name() const noexcept
     {
-        return m_anchor_name != nullptr;
+        return m_prop.anchor_status != detail::anchor_status_t::NONE && !m_prop.anchor.empty();
     }
 
     /// @brief Get the anchor name associated to this basic_node object.
@@ -8388,11 +8605,11 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const
     {
-        if (!m_anchor_name)
+        if (!has_anchor_name())
         {
             throw fkyaml::exception("No anchor name has been set.");
         }
-        return *m_anchor_name;
+        return m_prop.anchor;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -8400,9 +8617,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name)
     {
-        destroy_object<std::string>(m_anchor_name);
-        m_anchor_name = create_object<std::string>(anchor_name);
-        FK_YAML_ASSERT(m_anchor_name != nullptr);
+        m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor = anchor_name;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -8411,9 +8627,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name)
     {
-        destroy_object<std::string>(m_anchor_name);
-        m_anchor_name = create_object<std::string>(std::move(anchor_name));
-        FK_YAML_ASSERT(m_anchor_name != nullptr);
+        m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor = std::move(anchor_name);
     }
 
     /// @brief Get the node value object converted into a given type.
@@ -8475,7 +8690,9 @@ public:
         std::memcpy(&m_node_value, &rhs.m_node_value, sizeof(node_value));
         std::memcpy(&rhs.m_node_value, &tmp, sizeof(node_value));
 
-        swap(m_anchor_name, rhs.m_anchor_name);
+        swap(m_prop.tag, rhs.m_prop.tag);
+        swap(m_prop.anchor_status, rhs.m_prop.anchor_status);
+        swap(m_prop.anchor, rhs.m_prop.anchor);
     }
 
     /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const
@@ -8705,8 +8922,8 @@ private:
     yaml_version_t m_yaml_version_type {yaml_version_t::VER_1_2};
     /// The current node value.
     node_value m_node_value {};
-    /// The anchor name for this node.
-    std::string* m_anchor_name {nullptr};
+    /// The property set of this node.
+    detail::node_property m_prop {};
 };
 
 /// @brief Swap function for basic_node objects.
@@ -8804,15 +9021,14 @@ inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
     return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);
 }
 
-#if defined(__cpp_char8_t)
+#ifdef FK_YAML_HAS_CHAR8_T
 /// @brief The user-defined string literal which deserializes a `char8_t` array into a `node` object.
 /// @param s An input `char8_t` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
 inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n)
 {
-    // TODO: This is a workaround. `char8_t` string literals should be supported in `input_adapter`
-    return fkyaml::node::deserialize((const char*)s, (const char*)s + n);
+    return fkyaml::node::deserialize((const char8_t*)s, (const char8_t*)s + n);
 }
 #endif
 

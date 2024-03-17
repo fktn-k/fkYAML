@@ -8,10 +8,10 @@
 ///
 /// @file
 
-#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
-#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
+#ifndef FK_YAML_DETAIL_NODE_PROPERTY_HPP_
+#define FK_YAML_DETAIL_NODE_PROPERTY_HPP_
 
-#include <cstdint>
+#include <string>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -22,15 +22,22 @@ FK_YAML_NAMESPACE_BEGIN
 namespace detail
 {
 
-/// @brief Definition of YAML version types.
-enum class yaml_version_t : std::uint32_t
+enum class anchor_status_t
 {
-    VER_1_1, //!< YAML version 1.1
-    VER_1_2, //!< YAML version 1.2
+    NONE,
+    ANCHOR,
+    ALIAS,
+};
+
+struct node_property
+{
+    std::string tag {};
+    anchor_status_t anchor_status {anchor_status_t::NONE};
+    std::string anchor {};
 };
 
 } // namespace detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_ */
+#endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP_ */

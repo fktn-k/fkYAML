@@ -10,15 +10,11 @@ SRCS = $(shell find include -type f -name '*.hpp' | sort)
 SINGLE_SRC = 'single_include/fkYAML/node.hpp'
 # list of sources in the test directory.
 TEST_SRCS = $(shell find test -type f \( -name '*.hpp' -o -name '*.cpp' \) | sort)
-# list of source files in the tool directory.
-TOOL_SRCS = $(shell find tool -type f \( -name '*.cpp' -o -name '*.cpp.in' \) | sort)
-# list of CMake scripts in the project.
-CMAKE_SCRIPTS = $(shell find . -type f \( -name 'CMakeLists.txt' -o -name '*.cmake' \) -not -path './thirdparty/*' | sort)
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 1
+TARGET_PATCH_VERSION := 2
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -123,13 +119,10 @@ update-project-version:
 reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year 2023 --style c
+		--license MIT --year "2023-2024" --style c
 	pipx run reuse annotate $(TEST_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year 2023 --style c
-	pipx run reuse annotate $(TOOL_SRCS) --template fkYAML_support \
-		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year 2023 --style c
+		--license MIT --year "2023-2024" --style c
 	pipx run reuse lint
 
 update-sources: reuse update-version-macros
@@ -162,8 +155,8 @@ lcov-coverage:
 # pre-requisites: genhtml lcov
 html-coverage: lcov-coverage
 	genhtml build_coverage/coverage/fkYAML.info --output-directory build_coverage/html \
-	    --title "fkYAML: A C++ header-only YAML library" \
-	    --legend --demangle-cpp --show-details --branch-coverage
+		--title "fkYAML: A C++ header-only YAML library" \
+		--legend --demangle-cpp --show-details --branch-coverage
 
 ###################
 #   Maintenance   #

@@ -1,9 +1,9 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -62,8 +62,21 @@ private:
         case node_t::SEQUENCE:
             for (const auto& seq_item : node)
             {
-                insert_indentation(cur_indent, str);
+                if (cur_indent > 0)
+                {
+                    insert_indentation(cur_indent, str);
+                }
                 str += "-";
+
+                bool is_appended = try_append_alias(seq_item, true, str);
+                if (is_appended)
+                {
+                    str += "\n";
+                    continue;
+                }
+
+                try_append_anchor(seq_item, true, str);
+
                 bool is_scalar = seq_item.is_scalar();
                 if (is_scalar)
                 {
@@ -81,9 +94,33 @@ private:
         case node_t::MAPPING:
             for (auto itr = node.begin(); itr != node.end(); ++itr)
             {
-                insert_indentation(cur_indent, str);
-                serialize_node(itr.key(), cur_indent, str);
+                if (cur_indent > 0)
+                {
+                    insert_indentation(cur_indent, str);
+                }
+
+                bool is_appended = try_append_alias(itr.key(), false, str);
+                if (!is_appended)
+                {
+                    is_appended = try_append_anchor(itr.key(), false, str);
+                    if (is_appended)
+                    {
+                        str += " ";
+                    }
+                    serialize_node(itr.key(), cur_indent, str);
+                }
+
                 str += ":";
+
+                is_appended = try_append_alias(*itr, true, str);
+                if (is_appended)
+                {
+                    str += "\n";
+                    continue;
+                }
+
+                try_append_anchor(*itr, true, str);
+
                 bool is_scalar = itr->is_scalar();
                 if (is_scalar)
                 {
@@ -99,19 +136,19 @@ private:
             }
             break;
         case node_t::NULL_OBJECT:
-            to_string(m_tmp_str_buff, nullptr);
+            to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::boolean_type>());
+            to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::integer_type>());
+            to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::FLOAT_NUMBER:
-            to_string(m_tmp_str_buff, node.template get_value<typename BasicNodeType::float_number_type>());
+            to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::STRING: {
@@ -328,10 +365,45 @@ private:
     /// @param str A string to hold serialization result.
     void insert_indentation(const uint32_t cur_indent, std::string& str) const noexcept
     {
-        for (uint32_t i = 0; i < cur_indent; ++i)
+        str.append(cur_indent, ' ');
+    }
+
+    /// @brief Append an anchor property if it's available. Do nothing otherwise.
+    /// @param node The target node which is possibly an anchor node.
+    /// @param prepends_space Whether or not to prepend a space before an anchor property.
+    /// @param str A string to hold serialization result.
+    /// @return true if an anchor property has been appended, false otherwise.
+    bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const
+    {
+        if (node.is_anchor())
         {
-            str += " ";
+            if (prepends_space)
+            {
+                str += " ";
+            }
+            str += "&" + node.get_anchor_name();
+            return true;
         }
+        return false;
+    }
+
+    /// @brief Append an alias property if it's available. Do nothing otherwise.
+    /// @param node The target node which is possibly an alias node.
+    /// @param prepends_space Whether or not to prepend a space before an alias property.
+    /// @param str A string to hold serialization result.
+    /// @return true if an alias property has been appended, false otherwise.
+    bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const
+    {
+        if (node.is_alias())
+        {
+            if (prepends_space)
+            {
+                str += " ";
+            }
+            str += "*" + node.get_anchor_name();
+            return true;
+        }
+        return false;
     }
 
 private:

@@ -1,9 +1,9 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -256,6 +256,10 @@ public:
                 break;
             case lexical_token_t::MAPPING_BLOCK_PREFIX:
                 type = lexer.get_next_token();
+                if (type == lexical_token_t::COMMENT_PREFIX)
+                {
+                    type = lexer.get_next_token();
+                }
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     *m_current_node = BasicNodeType::sequence();
@@ -275,12 +279,7 @@ public:
                 set_yaml_version(*m_current_node);
                 break;
             case lexical_token_t::MAPPING_FLOW_END:
-                if (!m_current_node->is_mapping())
-                {
-                    throw parse_error("Invalid mapping flow ending found.", cur_line, cur_indent);
-                }
                 m_current_node = m_node_stack.back();
-                m_node_stack.pop_back();
                 break;
             case lexical_token_t::NULL_VALUE: {
                 bool do_continue =

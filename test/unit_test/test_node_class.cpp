@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <cmath>
@@ -433,8 +433,40 @@ TEST_CASE("NodeClassTest_ExtractionOperatorTest", "[NodeClassTest]")
 
 TEST_CASE("NodeClassTest_UserDefinedLiteralYamlTest", "[NodeClassTest]")
 {
+    SECTION("char sequences literals with using fkyaml::literals")
+    {
+        using namespace fkyaml::literals;
+        fkyaml::node node = "en: hello\njp: konnichiwa"_yaml;
 
-    SECTION("char sequences with using fkyaml::literals")
+        REQUIRE(node.is_mapping());
+        REQUIRE(node.size() == 2);
+        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
+        REQUIRE(node["jp"].get_value_ref<std::string&>() == "konnichiwa");
+    }
+
+    SECTION("char sequences literals with using fkyaml::yaml_literals")
+    {
+        using namespace fkyaml::yaml_literals;
+        fkyaml::node node = "en: hello\njp: konnichiwa"_yaml;
+
+        REQUIRE(node.is_mapping());
+        REQUIRE(node.size() == 2);
+        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
+        REQUIRE(node["jp"].get_value_ref<std::string&>() == "konnichiwa");
+    }
+
+    SECTION("char sequences literals with using fkyaml::literals::yaml_literals")
+    {
+        using namespace fkyaml::literals::yaml_literals;
+        fkyaml::node node = "en: hello\njp: konnichiwa"_yaml;
+
+        REQUIRE(node.is_mapping());
+        REQUIRE(node.size() == 2);
+        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
+        REQUIRE(node["jp"].get_value_ref<std::string&>() == "konnichiwa");
+    }
+
+    SECTION("char sequences of u8\"\" literals with using fkyaml::literals")
     {
         using namespace fkyaml::literals;
         fkyaml::node node = u8"en: hello\njp: こんにちは"_yaml;
@@ -445,7 +477,7 @@ TEST_CASE("NodeClassTest_UserDefinedLiteralYamlTest", "[NodeClassTest]")
         REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
-    SECTION("char sequences with using fkyaml::yaml_literals")
+    SECTION("char sequences of u8\"\" literals with using fkyaml::yaml_literals")
     {
         using namespace fkyaml::yaml_literals;
         fkyaml::node node = u8"en: hello\njp: こんにちは"_yaml;
@@ -456,7 +488,7 @@ TEST_CASE("NodeClassTest_UserDefinedLiteralYamlTest", "[NodeClassTest]")
         REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
-    SECTION("char sequences with using fkyaml::literals::yaml_literals")
+    SECTION("char sequences of u8\"\" literals with using fkyaml::literals::yaml_literals")
     {
         using namespace fkyaml::literals::yaml_literals;
         fkyaml::node node = u8"en: hello\njp: こんにちは"_yaml;
@@ -669,15 +701,22 @@ TEST_CASE("NodeClassTest_AliasNodeFactoryTest", "[NodeClassTest]")
 {
     fkyaml::node anchor = "alias_test";
 
-    SECTION("Make sure BasicNode::alias_of() throws an exception without anchor name.")
+    SECTION("Make sure alias_of() throws an exception without anchor name.")
     {
         REQUIRE_THROWS_AS(fkyaml::node::alias_of(anchor), fkyaml::exception);
     }
 
-    SECTION("Make sure BasicNode::alias_of() throws an exception with an empty anchor name.")
+    SECTION("Make sure alias_of() throws an exception with an empty anchor name.")
     {
         anchor.add_anchor_name("");
         REQUIRE_THROWS_AS(fkyaml::node::alias_of(anchor), fkyaml::exception);
+    }
+
+    SECTION("Make sure alias_of() throws an exception with an alias node.")
+    {
+        anchor.add_anchor_name("anchor");
+        fkyaml::node alias = fkyaml::node::alias_of(anchor);
+        REQUIRE_THROWS_AS(fkyaml::node::alias_of(alias), fkyaml::exception);
     }
 
     SECTION("Check if BasicNode::alias_of() does not throw any exception.")
@@ -1764,24 +1803,6 @@ TEST_CASE("NodeClassTest_IsScalarTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
-{
-    auto node = GENERATE(
-        fkyaml::node::sequence(),
-        fkyaml::node::mapping(),
-        fkyaml::node(),
-        fkyaml::node(false),
-        fkyaml::node(0),
-        fkyaml::node(0.0),
-        fkyaml::node(""));
-
-    SECTION("Test alias node types.")
-    {
-        node.add_anchor_name("anchor_name");
-        fkyaml::node alias = fkyaml::node::alias_of(node);
-    }
-}
-
 //
 // test cases for emptiness checker
 //
@@ -2006,8 +2027,56 @@ TEST_CASE("NodeClassTest_GetVersionTest", "[NodeClassTest]")
 }
 
 //
-// test cases for anchor name property checker/getter/setter
+// test cases for anchor related APIs
 //
+
+TEST_CASE("NodeClassTest_IsAliasTest", "[NodeClassTest]")
+{
+    fkyaml::node node;
+
+    SECTION("Test a node without anchor name.")
+    {
+        REQUIRE_FALSE(node.is_alias());
+    }
+
+    SECTION("Test an anchor node.")
+    {
+        node.add_anchor_name("anchor");
+        REQUIRE_FALSE(node.is_alias());
+    }
+
+    SECTION("Test an alias node.")
+    {
+        fkyaml::node anchor;
+        anchor.add_anchor_name("anchor");
+        node = fkyaml::node::alias_of(anchor);
+        REQUIRE(node.is_alias());
+    }
+}
+
+TEST_CASE("NodeClassTest_IsAnchorTest", "[NodeClassTest]")
+{
+    fkyaml::node node;
+
+    SECTION("Test a node without anchor name.")
+    {
+        REQUIRE_FALSE(node.is_anchor());
+    }
+
+    SECTION("Test an anchor node.")
+    {
+        node.add_anchor_name("anchor");
+        REQUIRE(node.is_anchor());
+    }
+
+    SECTION("Test an alias node.")
+    {
+        fkyaml::node anchor;
+        anchor.add_anchor_name("anchor");
+        node = fkyaml::node::alias_of(anchor);
+        REQUIRE_FALSE(node.is_anchor());
+    }
+}
 
 TEST_CASE("NodeClassTest_HasAnchorNameTest", "[NodeClassTest]")
 {
@@ -2042,7 +2111,7 @@ TEST_CASE("NodeClassTest_GetAnchorNameTest", "[NodeClassTest]")
     }
 }
 
-TEST_CASE("NodeClassTest_add_anchor_nameTest", "[NodeClassTest]")
+TEST_CASE("NodeClassTest_AddAnchorNameTest", "[NodeClassTest]")
 {
     fkyaml::node node;
     std::string anchor_name = "anchor_name";

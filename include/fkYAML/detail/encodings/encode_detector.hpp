@@ -1,9 +1,9 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -97,7 +97,7 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
     uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
     switch (ElemSize)
     {
-    case sizeof(char): {
+    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 features.
         for (std::size_t i = 0; i < 4 && begin + i != end; i++)
         {
             bytes[i] = uint8_t(begin[i]);

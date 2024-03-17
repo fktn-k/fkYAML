@@ -5,7 +5,7 @@ site_url: https://fktn-k.github.io/fkYAML/
 repo_name: fktn-k/fkYAML
 repo_url: https://github.com/fktn-k/fkYAML
 
-copyright: Copyright &copy; 2023 Kensuke Fukutani
+copyright: Copyright &copy; 2023-2024 Kensuke Fukutani
 
 theme:
   name: material
@@ -121,6 +121,8 @@ nav:
           - get_yaml_version: api/basic_node/get_yaml_version.md
           - has_anchor_name: api/basic_node/has_anchor_name.md
           - integer_type: api/basic_node/integer_type.md
+          - is_alias: api/basic_node/is_alias.md
+          - is_anchor: api/basic_node/is_anchor.md
           - is_boolean: api/basic_node/is_boolean.md
           - is_float_number: api/basic_node/is_float_number.md
           - is_integer: api/basic_node/is_integer.md

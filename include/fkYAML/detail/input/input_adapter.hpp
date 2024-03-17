@@ -1,9 +1,9 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.1
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
-/// SPDX-FileCopyrightText: 2023 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 /// SPDX-License-Identifier: MIT
 ///
 /// @file
@@ -39,7 +39,6 @@ template <typename IterType, typename = void>
 class iterator_input_adapter;
 
 /// @brief An input adapter for iterators of type char.
-/// @note This adapter requires at least bidirectional iterator tag.
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
@@ -237,8 +236,85 @@ private:
     std::size_t m_utf8_buf_size {0};
 };
 
+#ifdef FK_YAML_HAS_CHAR8_T
+
+/// @brief An input adapter for iterators of type char8_t.
+/// @tparam IterType An iterator type.
+template <typename IterType>
+class iterator_input_adapter<
+    IterType,
+    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>>
+{
+public:
+    /// A type for characters used in this input adapter.
+    using char_type = char;
+
+    /// @brief Construct a new iterator_input_adapter object.
+    iterator_input_adapter() = default;
+
+    /// @brief Construct a new iterator_input_adapter object.
+    /// @param begin The beginning of iteraters.
+    /// @param end The end of iterators.
+    /// @param encode_type The encoding type for this input adapter.
+    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
+        : m_current(begin),
+          m_end(end),
+          m_encode_type(encode_type)
+    {
+    }
+
+    // allow only move construct/assignment like other input adapters.
+    iterator_input_adapter(const iterator_input_adapter&) = delete;
+    iterator_input_adapter(iterator_input_adapter&& rhs) = default;
+    iterator_input_adapter& operator=(const iterator_input_adapter&) = delete;
+    iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
+    ~iterator_input_adapter() = default;
+
+    /// @brief Get a character at the current position and move forward.
+    /// @return std::char_traits<char_type>::int_type A character or EOF.
+    typename std::char_traits<char_type>::int_type get_character()
+    {
+        typename std::char_traits<char_type>::int_type ret = 0;
+        switch (m_encode_type)
+        {
+        case encode_t::UTF_8_N:
+        case encode_t::UTF_8_BOM:
+            ret = get_character_for_utf8();
+            break;
+        default: // LCOV_EXCL_LINE
+            // char8_t characters must be encoded in the UTF-8 format.
+            // See https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0482r6.html.
+            break; // LCOV_EXCL_LINE
+        }
+        return ret;
+    }
+
+private:
+    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
+    /// @return A UTF-8 encoded byte at the current position, or EOF.
+    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
+    {
+        if (m_current != m_end)
+        {
+            auto ret = std::char_traits<char_type>::to_int_type(*m_current);
+            ++m_current;
+            return ret;
+        }
+        return std::char_traits<char_type>::eof();
+    }
+
+private:
+    /// The iterator at the current position.
+    IterType m_current {};
+    /// The iterator at the end of input.
+    IterType m_end {};
+    /// The encoding type for this input adapter.
+    encode_t m_encode_type {encode_t::UTF_8_N};
+};
+
+#endif // defined(FK_YAML_HAS_CHAR8_T)
+
 /// @brief An input adapter for iterators of type char16_t.
-/// @note This adapter requires at least bidirectional iterator tag.
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
@@ -345,7 +421,6 @@ private:
 };
 
 /// @brief An input adapter for iterators of type char32_t.
-/// @note This adapter requires at least bidirectional iterator tag.
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
