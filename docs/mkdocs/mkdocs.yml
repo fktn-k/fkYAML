@@ -96,7 +96,7 @@ nav:
       - Releases: home/releases.md
       - Supported Compilers: home/supported_compilers.md
       - Community Support: home/community_support.md
-  - Tutorials: 
+  - Tutorials:
       - The First Steps: tutorials/index.md
       - CMake Integration: tutorials/cmake_integration.md
   - API References:

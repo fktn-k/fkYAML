@@ -2,7 +2,7 @@ name: ReleasePackage
 
 on:
   push:
-    branches: 
+    branches:
       - main
   workflow_dispatch:
 
