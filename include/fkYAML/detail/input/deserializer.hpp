@@ -280,7 +280,6 @@ public:
                 break;
             case lexical_token_t::MAPPING_FLOW_END:
                 m_current_node = m_node_stack.back();
-                m_node_stack.pop_back();
                 break;
             case lexical_token_t::NULL_VALUE: {
                 bool do_continue =
