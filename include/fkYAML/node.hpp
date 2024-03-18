@@ -1214,10 +1214,10 @@ public:
         return m_prop.anchor_status != detail::anchor_status_t::NONE && !m_prop.anchor.empty();
     }
 
-    /// @brief Get the anchor name associated to this basic_node object.
-    /// @note Some anchor name must be set before calling this method. Call basic_node::HasAnchorName() to see if this
-    /// basic_node object has any anchor name.
-    /// @return The anchor name associated to the node.
+    /// @brief Get the anchor name associated with this basic_node object.
+    /// @note Some anchor name must be set before calling this method. Call has_anchor_name() to see if this basic_node
+    /// object has any anchor name.
+    /// @return The anchor name associated with the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const
     {
@@ -1230,6 +1230,7 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name)
     {
@@ -1239,12 +1240,52 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
-    /// @param[in] anchor_name An anchor name.This should not be empty.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name)
     {
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
         m_prop.anchor = std::move(anchor_name);
+    }
+
+    /// @brief Check whether or not this basic_node object has already had any tag name.
+    /// @return true if ths basic_node has a tag name, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
+    bool has_tag_name() const noexcept
+    {
+        return !m_prop.tag.empty();
+    }
+
+    /// @brief Get the tag name associated with this basic_node object.
+    /// @note Some tag name must be set before calling this method. Call has_tag_name() to see if this basic_node
+    /// object has any tag name.
+    /// @return The tag name associated with the node. It may be empty.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_tag_name/
+    const std::string& get_tag_name() const
+    {
+        if (!has_tag_name())
+        {
+            throw fkyaml::exception("No tag name has been set.");
+        }
+        return m_prop.tag;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(const std::string& tag_name)
+    {
+        m_prop.tag = tag_name;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(std::string&& tag_name)
+    {
+        m_prop.tag = std::move(tag_name);
     }
 
     /// @brief Get the node value object converted into a given type.
