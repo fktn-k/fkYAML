@@ -6,19 +6,19 @@ int main()
     // create a YAML node.
     fkyaml::node n = 123;
 
-    // try to get an anchor name before any anchor name has been set.
+    // try to get a tag name before any tag name has been set.
     try
     {
-        std::cout << n.get_anchor_name() << std::endl;
+        std::cout << n.get_tag_name() << std::endl;
     }
     catch (const fkyaml::exception& e)
     {
         std::cout << e.what() << std::endl;
     }
 
-    // set an anchor name to the node.
-    n.add_anchor_name("anchor");
-    std::cout << n.get_anchor_name() << std::endl;
+    // set a tag name to the node.
+    n.add_tag_name("!!int");
+    std::cout << n.get_tag_name() << std::endl;
 
     return 0;
 }

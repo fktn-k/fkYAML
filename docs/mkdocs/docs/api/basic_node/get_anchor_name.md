@@ -6,7 +6,7 @@
 const std::string& get_anchor_name() const;
 ```
 
-Gets the anchor name associated to the YAML node.  
+Gets the anchor name associated with the YAML node.  
 Some anchor name must be set before calling this API.  
 Calling [`has_anchor_name`](has_anchor_name.md) to see if the node has any anchor name beforehand.
 
@@ -29,4 +29,4 @@ If no anchor name has been set, an [`fkyaml::exception`](../exception/index.md) 
 ## **See Also**
 
 * [basic_node](index.md)
-* [set_anchor_name](get_anchor_name.md)
+* [has_anchor_name](has_anchor_name.md)
