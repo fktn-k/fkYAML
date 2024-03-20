@@ -129,6 +129,7 @@ public:
                 if (m_flow_context_depth > 0)
                 {
                     // the above characters are not "safe" to be followed in a flow context.
+                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
                 }
                 m_value_buffer = ":";
@@ -594,9 +595,9 @@ private:
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number_after_decimal_point();
         case 'o':
-            // Do not store 'o' since std::strtoull does not support "0o" but "0" as the prefix for octal numbers.
+            // Do not store 'o' since std::stoXXX does not support "0o" but "0" as the prefix for octal numbers.
             // YAML specifies octal values start with the prefix "0o".
-            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
             return scan_octal_number();
         case 'x':
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -820,7 +821,7 @@ private:
                 if (!needs_last_double_quote && !needs_last_single_quote)
                 {
                     // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
-                    // See "7.3.3 Plain Style" section in https://yaml.org/spec/1.2.2/
+                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     current = m_input_handler.get_next();
                     switch (current)
                     {
@@ -950,7 +951,7 @@ private:
             }
 
             // Handle escaped characters.
-            // See "5.7 Escaped Characters" section in https://yaml.org/spec/1.2.2/
+            // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
             if (current == '\\')
             {
                 if (!needs_last_double_quote)
