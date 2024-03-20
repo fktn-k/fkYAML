@@ -2251,6 +2251,7 @@ public:
                 if (m_flow_context_depth > 0)
                 {
                     // the above characters are not "safe" to be followed in a flow context.
+                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
                 }
                 m_value_buffer = ":";
@@ -2716,9 +2717,9 @@ private:
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number_after_decimal_point();
         case 'o':
-            // Do not store 'o' since std::strtoull does not support "0o" but "0" as the prefix for octal numbers.
+            // Do not store 'o' since std::stoXXX does not support "0o" but "0" as the prefix for octal numbers.
             // YAML specifies octal values start with the prefix "0o".
-            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
             return scan_octal_number();
         case 'x':
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -2942,7 +2943,7 @@ private:
                 if (!needs_last_double_quote && !needs_last_single_quote)
                 {
                     // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
-                    // See "7.3.3 Plain Style" section in https://yaml.org/spec/1.2.2/
+                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     current = m_input_handler.get_next();
                     switch (current)
                     {
@@ -3072,7 +3073,7 @@ private:
             }
 
             // Handle escaped characters.
-            // See "5.7 Escaped Characters" section in https://yaml.org/spec/1.2.2/
+            // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
             if (current == '\\')
             {
                 if (!needs_last_double_quote)
@@ -3858,30 +3859,60 @@ public:
                 cur_indent = lexer.get_last_token_begin_pos();
                 cur_line = lexer.get_lines_processed();
 
-                bool is_implicit =
+                bool is_implicit_same_line =
                     (cur_line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().first);
-                if (is_implicit)
+                if (is_implicit_same_line)
                 {
-                    // a key separator for an implicit key.
+                    // a key separator for an implicit key with its value on the same line.
                     continue;
                 }
 
                 if (cur_line > old_line)
                 {
-                    if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
+                    bool should_continue = false;
+                    switch (type)
                     {
-                        // a key separator for a block sequence key.
+                    case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
+                        // a key separator preceeding block sequence entries
                         *m_current_node = BasicNodeType::sequence();
-                    }
-                    else
-                    {
-                        // a key separator for a block mapping key.
+                        set_yaml_version(*m_current_node);
+                        should_continue = true;
+                        break;
+                    case lexical_token_t::EXPLICIT_KEY_PREFIX:
+                        // a key separator for a explicit block mapping key.
                         *m_current_node = BasicNodeType::mapping();
+                        set_yaml_version(*m_current_node);
+                        should_continue = true;
+                        break;
+                    case lexical_token_t::NULL_VALUE:
+                    case lexical_token_t::BOOLEAN_VALUE:
+                    case lexical_token_t::INTEGER_VALUE:
+                    case lexical_token_t::FLOAT_NUMBER_VALUE:
+                    case lexical_token_t::STRING_VALUE:
+                        // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
+                        // call.
+                        should_continue = true;
+                        break;
+                    case lexical_token_t::MAPPING_FLOW_BEGIN:
+                    case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+                        // defer handling these tokens in the next loop.
+                        should_continue = true;
+                        break;
+                    case lexical_token_t::KEY_SEPARATOR:
+                        // handle explicit maping key separators down below.
+                        break;
+                    default:
+                        break;
                     }
 
-                    set_yaml_version(*m_current_node);
-                    continue;
+                    if (should_continue)
+                    {
+                        set_yaml_version(*m_current_node);
+                        continue;
+                    }
                 }
+
+                // handle explicit mapping key separators.
 
                 while (!m_indent_stack.back().second)
                 {
@@ -4198,6 +4229,7 @@ private:
                     return true;
                 }
                 *m_current_node = BasicNodeType::mapping();
+                set_yaml_version(*m_current_node);
             }
             add_new_key(node, indent, line);
         }

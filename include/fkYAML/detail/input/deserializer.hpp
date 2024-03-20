@@ -142,30 +142,60 @@ public:
                 cur_indent = lexer.get_last_token_begin_pos();
                 cur_line = lexer.get_lines_processed();
 
-                bool is_implicit =
+                bool is_implicit_same_line =
                     (cur_line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().first);
-                if (is_implicit)
+                if (is_implicit_same_line)
                 {
-                    // a key separator for an implicit key.
+                    // a key separator for an implicit key with its value on the same line.
                     continue;
                 }
 
                 if (cur_line > old_line)
                 {
-                    if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
+                    bool should_continue = false;
+                    switch (type)
                     {
-                        // a key separator for a block sequence key.
+                    case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
+                        // a key separator preceeding block sequence entries
                         *m_current_node = BasicNodeType::sequence();
-                    }
-                    else
-                    {
-                        // a key separator for a block mapping key.
+                        set_yaml_version(*m_current_node);
+                        should_continue = true;
+                        break;
+                    case lexical_token_t::EXPLICIT_KEY_PREFIX:
+                        // a key separator for a explicit block mapping key.
                         *m_current_node = BasicNodeType::mapping();
+                        set_yaml_version(*m_current_node);
+                        should_continue = true;
+                        break;
+                    case lexical_token_t::NULL_VALUE:
+                    case lexical_token_t::BOOLEAN_VALUE:
+                    case lexical_token_t::INTEGER_VALUE:
+                    case lexical_token_t::FLOAT_NUMBER_VALUE:
+                    case lexical_token_t::STRING_VALUE:
+                        // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
+                        // call.
+                        should_continue = true;
+                        break;
+                    case lexical_token_t::MAPPING_FLOW_BEGIN:
+                    case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+                        // defer handling these tokens in the next loop.
+                        should_continue = true;
+                        break;
+                    case lexical_token_t::KEY_SEPARATOR:
+                        // handle explicit maping key separators down below.
+                        break;
+                    default:
+                        break;
                     }
 
-                    set_yaml_version(*m_current_node);
-                    continue;
+                    if (should_continue)
+                    {
+                        set_yaml_version(*m_current_node);
+                        continue;
+                    }
                 }
+
+                // handle explicit mapping key separators.
 
                 while (!m_indent_stack.back().second)
                 {
@@ -482,6 +512,7 @@ private:
                     return true;
                 }
                 *m_current_node = BasicNodeType::mapping();
+                set_yaml_version(*m_current_node);
             }
             add_new_key(node, indent, line);
         }
