@@ -36,7 +36,6 @@ enum class lexical_token_t
     SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
     SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
     SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
-    MAPPING_BLOCK_PREFIX,  //!< the character for mapping block prefix `:`
     MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
     MAPPING_FLOW_END,      //!< the character for mapping end `}`
     NULL_VALUE,            //!< a null value found. use get_null() to get a value.

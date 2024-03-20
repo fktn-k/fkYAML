@@ -2132,7 +2132,6 @@ enum class lexical_token_t
     SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
     SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
     SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
-    MAPPING_BLOCK_PREFIX,  //!< the character for mapping block prefix `:`
     MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
     MAPPING_FLOW_END,      //!< the character for mapping end `}`
     NULL_VALUE,            //!< a null value found. use get_null() to get a value.
@@ -2214,6 +2213,7 @@ public:
 
         char_int_type current = m_input_handler.get_current();
         m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
+        m_last_token_begin_line = m_input_handler.get_lines_read();
 
         if (0x00 <= current && current <= 0x7F && isdigit(current))
         {
@@ -2222,7 +2222,7 @@ public:
 
         switch (current)
         {
-        case end_of_input: // end of input buffer
+        case s_end_of_input: // end of input buffer
             return m_last_token_type = lexical_token_t::END_OF_BUFFER;
         case '?':
             switch (m_input_handler.get_next())
@@ -2233,37 +2233,67 @@ public:
                 m_value_buffer = "?";
                 return m_last_token_type = scan_string(false);
             }
-        case ':': // key separater
-            switch (m_input_handler.get_next())
+        case ':': { // key separater
+            current = m_input_handler.get_next();
+            switch (current)
             {
-            case ' ': {
-                size_t prev_pos = m_input_handler.get_lines_read();
-                skip_white_spaces_and_comments();
-                size_t cur_pos = m_input_handler.get_lines_read();
-                if (prev_pos == cur_pos)
-                {
-                    current = m_input_handler.get_current();
-                    if (current != '\r' && current != '\n')
-                    {
-                        return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
-                    }
-                }
-                return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            }
-            case '\r': {
-                char_int_type next = m_input_handler.get_next();
-                if (next == '\n')
-                {
-                    m_input_handler.get_next();
-                }
-                return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            }
+            case ' ':
+            case '\t':
+            case '\r':
             case '\n':
-                m_input_handler.get_next();
-                return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
+            case s_end_of_input:
+                break;
+            case ',':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+                if (m_flow_context_depth > 0)
+                {
+                    // the above characters are not "safe" to be followed in a flow context.
+                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                    break;
+                }
+                m_value_buffer = ":";
+                return scan_string(false);
             default:
-                emit_error("Half-width spaces or newline codes are required after a key separater(:).");
+                m_value_buffer = ":";
+                return scan_string(false);
             }
+
+            return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
+        }
+            // switch (m_input_handler.get_next())
+            // {
+            // case ' ': {
+            //     size_t prev_pos = m_input_handler.get_lines_read();
+            //     skip_white_spaces_and_comments();
+            //     size_t cur_pos = m_input_handler.get_lines_read();
+            //     if (prev_pos == cur_pos)
+            //     {
+            //         current = m_input_handler.get_current();
+            //         if (current != '\r' && current != '\n')
+            //         {
+            //             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
+            //         }
+            //     }
+            //     return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
+            // }
+            // case '\r': {
+            //     char_int_type next = m_input_handler.get_next();
+            //     if (next == '\n')
+            //     {
+            //         m_input_handler.get_next();
+            //     }
+            //     return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
+            // }
+            // case '\n':
+            //     m_input_handler.get_next();
+            //     return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
+            // default:
+            //     emit_error("Half-width spaces or newline codes are required after a key separater(:).");
+            // }
+
         case ',': // value separater
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
@@ -2272,7 +2302,7 @@ public:
             while (true)
             {
                 char_int_type next = m_input_handler.get_next();
-                if (next == end_of_input || next == '\r' || next == '\n')
+                if (next == s_end_of_input || next == '\r' || next == '\n')
                 {
                     emit_error("An anchor label must be followed by some value.");
                 }
@@ -2290,7 +2320,7 @@ public:
             while (true)
             {
                 char_int_type next = m_input_handler.get_next();
-                if (next == ' ' || next == '\r' || next == '\n' || next == end_of_input)
+                if (next == ' ' || next == '\r' || next == '\n' || next == s_end_of_input)
                 {
                     if (m_value_buffer.empty())
                     {
@@ -2324,7 +2354,7 @@ public:
             }
 
             char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
-            if (ret != end_of_input)
+            if (ret != s_end_of_input)
             {
                 if (m_value_buffer == "---")
                 {
@@ -2372,7 +2402,7 @@ public:
             return m_last_token_type = scan_number();
         case '.': {
             char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
-            if (ret != end_of_input)
+            if (ret != s_end_of_input)
             {
                 if (m_value_buffer == "...")
                 {
@@ -2416,7 +2446,7 @@ public:
     /// @return std::size_t The number of lines already processed.
     std::size_t get_lines_processed() const noexcept
     {
-        return m_input_handler.get_lines_read();
+        return m_last_token_begin_line;
     }
 
     /// @brief Convert from string to null and get the converted value.
@@ -2529,7 +2559,7 @@ private:
 
         switch (m_input_handler.get_next())
         {
-        case end_of_input:
+        case s_end_of_input:
             emit_error("invalid eof in a directive.");
         case 'T': {
             if (m_input_handler.get_next() != 'A' || m_input_handler.get_next() != 'G')
@@ -2687,9 +2717,9 @@ private:
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number_after_decimal_point();
         case 'o':
-            // Do not store 'o' since std::strtoull does not support "0o" but "0" as the prefix for octal numbers.
+            // Do not store 'o' since std::stoXXX does not support "0o" but "0" as the prefix for octal numbers.
             // YAML specifies octal values start with the prefix "0o".
-            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
             return scan_octal_number();
         case 'x':
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -2893,7 +2923,7 @@ private:
         for (;; current = m_input_handler.get_next())
         {
             // Handle the end of input buffer.
-            if (current == end_of_input)
+            if (current == s_end_of_input)
             {
                 if (needs_last_double_quote)
                 {
@@ -2913,7 +2943,7 @@ private:
                 if (!needs_last_double_quote && !needs_last_single_quote)
                 {
                     // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
-                    // See "7.3.3 Plain Style" section in https://yaml.org/spec/1.2.2/
+                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     current = m_input_handler.get_next();
                     switch (current)
                     {
@@ -3043,7 +3073,7 @@ private:
             }
 
             // Handle escaped characters.
-            // See "5.7 Escaped Characters" section in https://yaml.org/spec/1.2.2/
+            // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
             if (current == '\\')
             {
                 if (!needs_last_double_quote)
@@ -3217,7 +3247,7 @@ private:
                 continue;
             }
 
-            if (current == end_of_input)
+            if (current == s_end_of_input)
             {
                 if (chomp != chomping_indicator_t::KEEP)
                 {
@@ -3259,7 +3289,7 @@ private:
             }
         }
 
-        for (; current != end_of_input; current = m_input_handler.get_next())
+        for (; current != s_end_of_input; current = m_input_handler.get_next())
         {
             if (current == '\r')
             {
@@ -3560,7 +3590,7 @@ private:
             default:
                 return;
             }
-        } while (m_input_handler.get_next() != end_of_input);
+        } while (m_input_handler.get_next() != s_end_of_input);
     }
 
     /// @brief Skip white spaces and newline codes (CR/LF) from the current position.
@@ -3578,7 +3608,7 @@ private:
             default:
                 return;
             }
-        } while (m_input_handler.get_next() != end_of_input);
+        } while (m_input_handler.get_next() != s_end_of_input);
     }
 
     /// @brief Skip white spaces and comments from the current position.
@@ -3597,7 +3627,7 @@ private:
             default:
                 return;
             }
-        } while (m_input_handler.get_next() != end_of_input);
+        } while (m_input_handler.get_next() != s_end_of_input);
     }
 
     /// @brief Skip the rest in the current line.
@@ -3619,7 +3649,7 @@ private:
             default:
                 break;
             }
-        } while (m_input_handler.get_next() != end_of_input);
+        } while (m_input_handler.get_next() != s_end_of_input);
     }
 
     [[noreturn]] void emit_error(const char* msg) const
@@ -3629,15 +3659,20 @@ private:
 
 private:
     /// The value of EOF for the target characters.
-    static constexpr char_int_type end_of_input = char_traits_type::eof();
+    static constexpr char_int_type s_end_of_input = char_traits_type::eof();
 
     /// An input buffer adapter to be analyzed.
     input_handler_type m_input_handler;
     /// A temporal buffer to store a string to be parsed to an actual datum.
     input_string_type m_value_buffer {};
+    /// A temporal buffer to store a UTF-8 encoded char sequence.
     std::array<char, 4> m_encode_buffer {};
+    /// The actual size of a UTF-8 encoded char sequence.
     std::size_t m_encoded_size {0};
+    /// The beginning position of the last lexical token. (zero origin)
     std::size_t m_last_token_begin_pos {0};
+    /// The beginning line of the last lexical token. (zero origin)
+    std::size_t m_last_token_begin_line {0};
     /// The current depth of flow context.
     uint32_t m_flow_context_depth {0};
     /// The last found token type.
@@ -3810,11 +3845,61 @@ public:
                     throw parse_error("A key separator found without key.", cur_line, cur_indent);
                 }
 
-                bool is_implicit = m_indent_stack.empty() || cur_indent > m_indent_stack.back().first;
-                if (is_implicit)
+                // hold the line count of the key separator for later use.
+                std::size_t old_indent = cur_indent;
+                std::size_t old_line = cur_line;
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::COMMENT_PREFIX)
                 {
-                    break;
+                    // just skip the comment and get the next token.
+                    type = lexer.get_next_token();
                 }
+
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+
+                bool is_implicit_same_line =
+                    (cur_line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().first);
+                if (is_implicit_same_line)
+                {
+                    // a key separator for an implicit key with its value on the same line.
+                    continue;
+                }
+
+                if (cur_line > old_line)
+                {
+                    switch (type)
+                    {
+                    case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
+                        // a key separator preceeding block sequence entries
+                        *m_current_node = BasicNodeType::sequence();
+                        set_yaml_version(*m_current_node);
+                        break;
+                    case lexical_token_t::EXPLICIT_KEY_PREFIX:
+                        // a key separator for a explicit block mapping key.
+                        *m_current_node = BasicNodeType::mapping();
+                        set_yaml_version(*m_current_node);
+                        break;
+                    // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
+                    // call.
+                    case lexical_token_t::NULL_VALUE:
+                    case lexical_token_t::BOOLEAN_VALUE:
+                    case lexical_token_t::INTEGER_VALUE:
+                    case lexical_token_t::FLOAT_NUMBER_VALUE:
+                    case lexical_token_t::STRING_VALUE:
+                    // defer handling these tokens until the next loop.
+                    case lexical_token_t::MAPPING_FLOW_BEGIN:
+                    case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+                        break;
+                    default:   // LCOV_EXCL_LINE
+                        break; // LCOV_EXCL_LINE
+                    }
+
+                    continue;
+                }
+
+                // handle explicit mapping key separators.
 
                 while (!m_indent_stack.back().second)
                 {
@@ -3847,7 +3932,6 @@ public:
                 m_node_stack.push_back(m_node_stack.back());
                 m_indent_stack.back().second = false;
 
-                type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     *m_current_node = BasicNodeType::sequence();
@@ -3936,26 +4020,6 @@ public:
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 break;
-            case lexical_token_t::MAPPING_BLOCK_PREFIX:
-                type = lexer.get_next_token();
-                if (type == lexical_token_t::COMMENT_PREFIX)
-                {
-                    type = lexer.get_next_token();
-                }
-                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
-                {
-                    *m_current_node = BasicNodeType::sequence();
-                    set_yaml_version(*m_current_node);
-                    cur_indent = lexer.get_last_token_begin_pos();
-                    cur_line = lexer.get_lines_processed();
-                    continue;
-                }
-
-                *m_current_node = BasicNodeType::mapping();
-                set_yaml_version(*m_current_node);
-                cur_indent = lexer.get_last_token_begin_pos();
-                cur_line = lexer.get_lines_processed();
-                continue;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::mapping();
                 set_yaml_version(*m_current_node);
@@ -4135,7 +4199,7 @@ private:
         }
 
         type = lexer.get_next_token();
-        if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
+        if (type == lexical_token_t::KEY_SEPARATOR)
         {
             if (m_current_node->is_scalar())
             {
@@ -4152,6 +4216,7 @@ private:
                     return true;
                 }
                 *m_current_node = BasicNodeType::mapping();
+                set_yaml_version(*m_current_node);
             }
             add_new_key(node, indent, line);
         }

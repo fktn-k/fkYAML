@@ -128,11 +128,61 @@ public:
                     throw parse_error("A key separator found without key.", cur_line, cur_indent);
                 }
 
-                bool is_implicit = m_indent_stack.empty() || cur_indent > m_indent_stack.back().first;
-                if (is_implicit)
+                // hold the line count of the key separator for later use.
+                std::size_t old_indent = cur_indent;
+                std::size_t old_line = cur_line;
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::COMMENT_PREFIX)
                 {
-                    break;
+                    // just skip the comment and get the next token.
+                    type = lexer.get_next_token();
                 }
+
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+
+                bool is_implicit_same_line =
+                    (cur_line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().first);
+                if (is_implicit_same_line)
+                {
+                    // a key separator for an implicit key with its value on the same line.
+                    continue;
+                }
+
+                if (cur_line > old_line)
+                {
+                    switch (type)
+                    {
+                    case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
+                        // a key separator preceeding block sequence entries
+                        *m_current_node = BasicNodeType::sequence();
+                        set_yaml_version(*m_current_node);
+                        break;
+                    case lexical_token_t::EXPLICIT_KEY_PREFIX:
+                        // a key separator for a explicit block mapping key.
+                        *m_current_node = BasicNodeType::mapping();
+                        set_yaml_version(*m_current_node);
+                        break;
+                    // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
+                    // call.
+                    case lexical_token_t::NULL_VALUE:
+                    case lexical_token_t::BOOLEAN_VALUE:
+                    case lexical_token_t::INTEGER_VALUE:
+                    case lexical_token_t::FLOAT_NUMBER_VALUE:
+                    case lexical_token_t::STRING_VALUE:
+                    // defer handling these tokens until the next loop.
+                    case lexical_token_t::MAPPING_FLOW_BEGIN:
+                    case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+                        break;
+                    default:   // LCOV_EXCL_LINE
+                        break; // LCOV_EXCL_LINE
+                    }
+
+                    continue;
+                }
+
+                // handle explicit mapping key separators.
 
                 while (!m_indent_stack.back().second)
                 {
@@ -165,7 +215,6 @@ public:
                 m_node_stack.push_back(m_node_stack.back());
                 m_indent_stack.back().second = false;
 
-                type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     *m_current_node = BasicNodeType::sequence();
@@ -254,26 +303,6 @@ public:
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 break;
-            case lexical_token_t::MAPPING_BLOCK_PREFIX:
-                type = lexer.get_next_token();
-                if (type == lexical_token_t::COMMENT_PREFIX)
-                {
-                    type = lexer.get_next_token();
-                }
-                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
-                {
-                    *m_current_node = BasicNodeType::sequence();
-                    set_yaml_version(*m_current_node);
-                    cur_indent = lexer.get_last_token_begin_pos();
-                    cur_line = lexer.get_lines_processed();
-                    continue;
-                }
-
-                *m_current_node = BasicNodeType::mapping();
-                set_yaml_version(*m_current_node);
-                cur_indent = lexer.get_last_token_begin_pos();
-                cur_line = lexer.get_lines_processed();
-                continue;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::mapping();
                 set_yaml_version(*m_current_node);
@@ -453,7 +482,7 @@ private:
         }
 
         type = lexer.get_next_token();
-        if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
+        if (type == lexical_token_t::KEY_SEPARATOR)
         {
             if (m_current_node->is_scalar())
             {
@@ -470,6 +499,7 @@ private:
                     return true;
                 }
                 *m_current_node = BasicNodeType::mapping();
+                set_yaml_version(*m_current_node);
             }
             add_new_key(node, indent, line);
         }
