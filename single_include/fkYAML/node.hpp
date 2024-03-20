@@ -3869,47 +3869,34 @@ public:
 
                 if (cur_line > old_line)
                 {
-                    bool should_continue = false;
                     switch (type)
                     {
                     case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                         // a key separator preceeding block sequence entries
                         *m_current_node = BasicNodeType::sequence();
                         set_yaml_version(*m_current_node);
-                        should_continue = true;
                         break;
                     case lexical_token_t::EXPLICIT_KEY_PREFIX:
                         // a key separator for a explicit block mapping key.
                         *m_current_node = BasicNodeType::mapping();
                         set_yaml_version(*m_current_node);
-                        should_continue = true;
                         break;
+                    // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
+                    // call.
                     case lexical_token_t::NULL_VALUE:
                     case lexical_token_t::BOOLEAN_VALUE:
                     case lexical_token_t::INTEGER_VALUE:
                     case lexical_token_t::FLOAT_NUMBER_VALUE:
                     case lexical_token_t::STRING_VALUE:
-                        // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
-                        // call.
-                        should_continue = true;
-                        break;
+                    // defer handling these tokens until the next loop.
                     case lexical_token_t::MAPPING_FLOW_BEGIN:
                     case lexical_token_t::SEQUENCE_FLOW_BEGIN:
-                        // defer handling these tokens in the next loop.
-                        should_continue = true;
                         break;
-                    case lexical_token_t::KEY_SEPARATOR:
-                        // handle explicit maping key separators down below.
-                        break;
-                    default:
-                        break;
+                    default:   // LCOV_EXCL_LINE
+                        break; // LCOV_EXCL_LINE
                     }
 
-                    if (should_continue)
-                    {
-                        set_yaml_version(*m_current_node);
-                        continue;
-                    }
+                    continue;
                 }
 
                 // handle explicit mapping key separators.

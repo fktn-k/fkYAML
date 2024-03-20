@@ -164,7 +164,8 @@ public:
                         *m_current_node = BasicNodeType::mapping();
                         set_yaml_version(*m_current_node);
                         break;
-                    // defer checking the existence of a key separator after the scalar until a deserialize_scalar() call.
+                    // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
+                    // call.
                     case lexical_token_t::NULL_VALUE:
                     case lexical_token_t::BOOLEAN_VALUE:
                     case lexical_token_t::INTEGER_VALUE:
