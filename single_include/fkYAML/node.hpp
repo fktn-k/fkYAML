@@ -997,6 +997,21 @@ private:
     }
 };
 
+class invalid_tag : public exception
+{
+public:
+    explicit invalid_tag(const char* msg, const char* tag)
+        : exception(generate_error_message(msg, tag).c_str())
+    {
+    }
+
+private:
+    std::string generate_error_message(const char* msg, const char* tag)
+    {
+        return detail::format("invalid_tag: %s tag=%s", msg, tag);
+    }
+};
+
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_EXCEPTION_HPP_ */
@@ -2198,12 +2213,27 @@ class lexical_analyzer
 private:
     using char_traits_type = typename std::char_traits<char>;
 
+    /// @brief Definition of expected lexical token types for the next token.
+    enum class expected_token_t
+    {
+        ANY_TOKEN,          //!< no expectation for the next token.
+        SEQUENCE_BEGIN,     //!< the beginning of a sequnce (block or flow) is expected.
+        MAPPING_BEGIN,      //!< the beginning of a mapping (block or flow) is expected.
+        NULL_VALUE,         //!< null value is expected.
+        BOOLEAN_VALUE,      //!< boolean value is expected.
+        INTEGER_VALUE,      //!< integer value is expected.
+        FLOAT_NUMBER_VALUE, //!< floating point value is expected.
+        STRING_VALUE,       //!< string value is expected.
+    };
+
+    /// @brief Definition of block style indicator types.
     enum class block_style_indicator_t
     {
         LITERAL, //!< keeps newlines inside the block as they are indicated by a pipe `|`.
         FOLDED,  //!< replaces newlines inside the block with spaces indicated by a right angle bracket `>`.
     };
 
+    /// @brief Definition of chomping indicator types.
     enum class chomping_indicator_t
     {
         STRIP, //!< excludes final line breaks and traiing empty lines indicated by `-`.
@@ -2230,7 +2260,147 @@ public:
     /// @return lexical_token_t The next lexical token type.
     lexical_token_t get_next_token()
     {
+        return m_last_token_type = get_next_token_internal(expected_token_t::ANY_TOKEN);
+    }
+
+    /// @brief Get the beginning position of a last token.
+    /// @return std::size_t The beginning position of a last token.
+    std::size_t get_last_token_begin_pos() const noexcept
+    {
+        return m_last_token_begin_pos;
+    }
+
+    /// @brief Get the number of lines already processed.
+    /// @return std::size_t The number of lines already processed.
+    std::size_t get_lines_processed() const noexcept
+    {
+        return m_last_token_begin_line;
+    }
+
+    /// @brief Get a null value.
+    /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
+    std::nullptr_t get_null() const
+    {
+        if (m_last_token_type == lexical_token_t::NULL_VALUE)
+        {
+            return nullptr;
+        }
+        emit_error("Invalid request for a null value.");
+    }
+
+    /// @brief Get a boolean value.
+    /// @return true  A string token is one of the followings: "true", "True", "TRUE".
+    /// @return false A string token is one of the followings: "false", "False", "FALSE".
+    boolean_type get_boolean() const
+    {
+        if (m_last_token_type == lexical_token_t::BOOLEAN_VALUE)
+        {
+            return m_boolean_val;
+        }
+        emit_error("Invalid request for a boolean value.");
+    }
+
+    /// @brief Get an integer value.
+    /// @return integer_type An integer value converted from the source string.
+    integer_type get_integer() const
+    {
+        if (m_last_token_type == lexical_token_t::INTEGER_VALUE)
+        {
+            return m_integer_val;
+        }
+        emit_error("Invalid request for an integer value.");
+    }
+
+    /// @brief Get a float number value.
+    /// @return float_number_type A float number value converted from the source string.
+    float_number_type get_float_number() const
+    {
+        if (m_last_token_type == lexical_token_t::FLOAT_NUMBER_VALUE)
+        {
+            return m_float_val;
+        }
+        emit_error("Invalid request for a float number value.");
+    }
+
+    /// @brief Get a scanned string value.
+    /// @return const string_type& Constant reference to a scanned string.
+    const string_type& get_string() const noexcept
+    {
+        // TODO: Provide support for different string types between nodes & inputs.
+        static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
+        return m_value_buffer;
+    }
+
+    /// @brief Get the YAML version specification.
+    /// @return const string_type& A YAML version specification.
+    const string_type& get_yaml_version() const
+    {
+        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
+        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
+
+        return m_value_buffer;
+    }
+
+    /// @brief Get a tag name.
+    /// @return const std::string& A tag name.
+    const std::string& get_tag() const noexcept
+    {
+        return m_tag;
+    }
+
+private:
+    /// @brief Get the next lexical token type by scanning the rest of the input buffer.
+    /// @param[in] expected_type An expected token type deduced from the last call of this method.
+    /// @return lexical_token_t The next lexical token type.
+    lexical_token_t get_next_token_internal(expected_token_t expected_type)
+    {
         skip_white_spaces_and_newline_codes();
+
+        switch (expected_type)
+        {
+        case expected_token_t::NULL_VALUE: {
+            lexical_token_t ret = scan_string();
+            if (ret != lexical_token_t::NULL_VALUE)
+            {
+                emit_error("null value is expected from the tag.");
+            }
+            return ret;
+        }
+        case expected_token_t::BOOLEAN_VALUE: {
+            lexical_token_t ret = scan_string();
+            if (ret != lexical_token_t::BOOLEAN_VALUE)
+            {
+                emit_error("null value is expected from the tag.");
+            }
+            return ret;
+        }
+        case expected_token_t::INTEGER_VALUE: {
+            lexical_token_t ret = scan_number();
+            if (ret != lexical_token_t::INTEGER_VALUE)
+            {
+                emit_error("integer value is expected from the tag.");
+            }
+            return ret;
+        }
+        case expected_token_t::FLOAT_NUMBER_VALUE: {
+            lexical_token_t ret = scan_number();
+            if (ret != lexical_token_t::FLOAT_NUMBER_VALUE)
+            {
+                emit_error("floating point value is expected from the tag.");
+            }
+            return ret;
+        }
+        case expected_token_t::STRING_VALUE: {
+            lexical_token_t ret = scan_string(true, true);
+            if (ret != lexical_token_t::STRING_VALUE)
+            {
+                emit_error("string value is expected from the tag.");
+            }
+            return ret;
+        }
+        default:
+            break;
+        }
 
         int current = m_input_handler.get_current();
         m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
@@ -2238,21 +2408,21 @@ public:
 
         if (0x00 <= current && current <= 0x7F && isdigit(current))
         {
-            return m_last_token_type = scan_number();
+            return scan_number();
         }
 
         switch (current)
         {
         case s_end_of_input: // end of input buffer
-            return m_last_token_type = lexical_token_t::END_OF_BUFFER;
+            return lexical_token_t::END_OF_BUFFER;
         case '?':
             switch (m_input_handler.get_next())
             {
             case ' ':
-                return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
+                return lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
                 m_value_buffer = "?";
-                return m_last_token_type = scan_string(false);
+                return scan_string(false);
             }
         case ':': { // key separater
             current = m_input_handler.get_next();
@@ -2286,7 +2456,74 @@ public:
         }
         case ',': // value separater
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
+            return lexical_token_t::VALUE_SEPARATOR;
+        case '!': {
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            bool ends_loop = false;
+
+            do
+            {
+                current = m_input_handler.get_next();
+                switch (current)
+                {
+                case ' ':
+                case '\t':
+                case '\r':
+                case '\n':
+                case s_end_of_input:
+                    ends_loop = true;
+                    break;
+                default:
+                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                    break;
+                }
+            } while (!ends_loop);
+
+            size_t size = m_value_buffer.size();
+            if (size < 5 || 7 < size)
+            {
+                return scan_string(false);
+            }
+            if (m_value_buffer[0] != '!' || m_value_buffer[1] == '!')
+            {
+                return scan_string(false);
+            }
+
+            m_tag.clear();
+
+            if (m_value_buffer == "!!seq")
+            {
+                expected_type = expected_token_t::SEQUENCE_BEGIN;
+            }
+            else if (m_value_buffer == "!!map")
+            {
+                expected_type = expected_token_t::MAPPING_BEGIN;
+            }
+            else if (m_value_buffer == "!!null")
+            {
+                expected_type = expected_token_t::NULL_VALUE;
+            }
+            else if (m_value_buffer == "!!bool")
+            {
+                expected_type = expected_token_t::BOOLEAN_VALUE;
+            }
+            else if (m_value_buffer == "!!int")
+            {
+                expected_type = expected_token_t::INTEGER_VALUE;
+            }
+            else if (m_value_buffer == "!!float")
+            {
+                expected_type = expected_token_t::FLOAT_NUMBER_VALUE;
+            }
+            else if (m_value_buffer == "!!str")
+            {
+                expected_type = expected_token_t::STRING_VALUE;
+            }
+
+            using std::swap;
+            swap(m_tag, m_value_buffer);
+            return get_next_token_internal(expected_type);
+        }
         case '&': { // anchor prefix
             m_value_buffer.clear();
             while (true)
@@ -2303,7 +2540,7 @@ public:
                 }
                 m_value_buffer.push_back(char_traits_type::to_char_type(next));
             }
-            return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
+            return lexical_token_t::ANCHOR_PREFIX;
         }
         case '*': { // alias prefix
             m_value_buffer.clear();
@@ -2321,26 +2558,26 @@ public:
                 }
                 m_value_buffer.push_back(char_traits_type::to_char_type(next));
             }
-            return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
+            return lexical_token_t::ALIAS_PREFIX;
         }
         case '#': // comment prefix
             scan_comment();
-            return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
+            return lexical_token_t::COMMENT_PREFIX;
         case '%': // directive prefix
-            return m_last_token_type = scan_directive();
+            return scan_directive();
         case '-': {
             int next = m_input_handler.get_next();
             if (next == ' ')
             {
                 // Move a cursor to the beginning of the next token.
                 m_input_handler.get_next();
-                return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
             }
 
             m_input_handler.unget();
             if (std::isdigit(next))
             {
-                return m_last_token_type = scan_number();
+                return scan_number();
             }
 
             int ret = m_input_handler.get_range(3, m_value_buffer);
@@ -2349,18 +2586,18 @@ public:
                 if (m_value_buffer == "---")
                 {
                     m_input_handler.get_next();
-                    return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
+                    return lexical_token_t::END_OF_DIRECTIVES;
                 }
 
                 m_input_handler.unget_range(2);
             }
 
-            return m_last_token_type = scan_string();
+            return scan_string();
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
+            return lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
             if (m_flow_context_depth == 0)
             {
@@ -2368,11 +2605,11 @@ public:
             }
             m_flow_context_depth--;
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_END;
+            return lexical_token_t::SEQUENCE_FLOW_END;
         case '{': // mapping flow begin
             m_flow_context_depth++;
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::MAPPING_FLOW_BEGIN;
+            return lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
             if (m_flow_context_depth == 0)
             {
@@ -2380,16 +2617,16 @@ public:
             }
             m_flow_context_depth--;
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::MAPPING_FLOW_END;
+            return lexical_token_t::MAPPING_FLOW_END;
         case '@':
             emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
         case '`':
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
         case '\'':
-            return m_last_token_type = scan_string();
+            return scan_string();
         case '+':
-            return m_last_token_type = scan_number();
+            return scan_number();
         case '.': {
             int ret = m_input_handler.get_range(3, m_value_buffer);
             if (ret != s_end_of_input)
@@ -2397,113 +2634,32 @@ public:
                 if (m_value_buffer == "...")
                 {
                     m_input_handler.get_next();
-                    return m_last_token_type = lexical_token_t::END_OF_DOCUMENT;
+                    return lexical_token_t::END_OF_DOCUMENT;
                 }
 
                 // revert change in the position to the one before comparison above.
                 m_input_handler.unget_range(2);
             }
 
-            return m_last_token_type = scan_string();
+            return scan_string();
         }
         case '|': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             std::size_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type =
-                       scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            return scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
         }
         case '>': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             std::size_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type =
-                       scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            return scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
         default:
-            return m_last_token_type = scan_string();
+            return scan_string();
         }
     }
 
-    /// @brief Get the beginning position of a last token.
-    /// @return std::size_t The beginning position of a last token.
-    std::size_t get_last_token_begin_pos() const noexcept
-    {
-        return m_last_token_begin_pos;
-    }
-
-    /// @brief Get the number of lines already processed.
-    /// @return std::size_t The number of lines already processed.
-    std::size_t get_lines_processed() const noexcept
-    {
-        return m_last_token_begin_line;
-    }
-
-    /// @brief Convert from string to null and get the converted value.
-    /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
-    std::nullptr_t get_null() const
-    {
-        if (m_last_token_type == lexical_token_t::NULL_VALUE)
-        {
-            return nullptr;
-        }
-        emit_error("Invalid request for a null value.");
-    }
-
-    /// @brief Convert from string to boolean and get the converted value.
-    /// @return true  A string token is one of the followings: "true", "True", "TRUE".
-    /// @return false A string token is one of the followings: "false", "False", "FALSE".
-    boolean_type get_boolean() const
-    {
-        if (m_last_token_type == lexical_token_t::BOOLEAN_VALUE)
-        {
-            return m_boolean_val;
-        }
-        emit_error("Invalid request for a boolean value.");
-    }
-
-    /// @brief Convert from string to integer and get the converted value.
-    /// @return integer_type An integer value converted from the source string.
-    integer_type get_integer() const
-    {
-        if (m_last_token_type == lexical_token_t::INTEGER_VALUE)
-        {
-            return m_integer_val;
-        }
-        emit_error("Invalid request for an integer value.");
-    }
-
-    /// @brief Convert from string to float number and get the converted value.
-    /// @return float_number_type A float number value converted from the source string.
-    float_number_type get_float_number() const
-    {
-        if (m_last_token_type == lexical_token_t::FLOAT_NUMBER_VALUE)
-        {
-            return m_float_val;
-        }
-        emit_error("Invalid request for a float number value.");
-    }
-
-    /// @brief Get a scanned string value.
-    /// @return const string_type& Constant reference to a scanned string.
-    const string_type& get_string() const noexcept
-    {
-        // TODO: Provide support for different string types between nodes & inputs.
-        static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
-        return m_value_buffer;
-    }
-
-    /// @brief Get the YAML version specification.
-    /// @return const string_type& A YAML version specification.
-    const string_type& get_yaml_version() const
-    {
-        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
-        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
-
-        return m_value_buffer;
-    }
-
-private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
@@ -2831,9 +2987,58 @@ private:
         return lexical_token_t::INTEGER_VALUE;
     }
 
+    lexical_token_t convert_from_extracted_string_token(const std::string& token)
+    {
+        if (token == "~")
+        {
+            return lexical_token_t::NULL_VALUE;
+        }
+
+        size_t val_size = token.size();
+        if (val_size == 4)
+        {
+            if (token == "null" || token == "Null" || token == "NULL")
+            {
+                from_string(token, type_tag<std::nullptr_t> {});
+                return lexical_token_t::NULL_VALUE;
+            }
+
+            if (token == "true" || token == "True" || token == "TRUE")
+            {
+                m_boolean_val = from_string(token, type_tag<boolean_type> {});
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+
+            if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
+                token == ".NAN")
+            {
+                m_float_val = from_string(token, type_tag<float_number_type> {});
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            }
+        }
+        else if (val_size == 5)
+        {
+            if (token == "false" || token == "False" || token == "FALSE")
+            {
+                m_boolean_val = from_string(token, type_tag<boolean_type> {});
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+
+            if (token == "-.inf" || token == "-.Inf" || token == "-.INF")
+            {
+                m_float_val = from_string(token, type_tag<float_number_type> {});
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            }
+        }
+
+        return lexical_token_t::STRING_VALUE;
+    }
+
     /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
+    /// @param[in] needs_clear Whether or not to clear `m_value_buffer` first. `true` by default.
+    /// @param[in] expected_type Whether or not to skip conversion from the extracted token. `false` by default.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_string(bool needs_clear = true)
+    lexical_token_t scan_string(bool needs_clear = true, bool skips_conversion = false)
     {
         bool needs_last_single_quote = false;
         bool needs_last_double_quote = false;
@@ -2859,49 +3064,12 @@ private:
             return type;
         }
 
-        if (m_value_buffer == "~")
+        if (skips_conversion)
         {
-            return lexical_token_t::NULL_VALUE;
+            return type;
         }
 
-        size_t val_size = m_value_buffer.size();
-        if (val_size == 4)
-        {
-            if (m_value_buffer == "null" || m_value_buffer == "Null" || m_value_buffer == "NULL")
-            {
-                from_string(m_value_buffer, type_tag<std::nullptr_t> {});
-                return lexical_token_t::NULL_VALUE;
-            }
-
-            if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
-            {
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-
-            if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF" ||
-                m_value_buffer == ".nan" || m_value_buffer == ".NaN" || m_value_buffer == ".NAN")
-            {
-                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-        }
-        else if (val_size == 5)
-        {
-            if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
-            {
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-
-            if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
-            {
-                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-        }
-
-        return type;
+        return convert_from_extracted_string_token(m_value_buffer);
     }
 
     /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
@@ -3687,6 +3855,8 @@ private:
     uint32_t m_flow_context_depth {0};
     /// The last found token type.
     lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
+    /// A temporal buffer of the last tag name.
+    std::string m_tag {};
     /// A temporal bool holder.
     boolean_type m_boolean_val {false};
     /// A temporal integer holder.
@@ -4202,6 +4372,8 @@ private:
     bool deserialize_scalar(
         LexerType& lexer, BasicNodeType&& node, std::size_t& indent, std::size_t& line, lexical_token_t& type)
     {
+        node.add_tag_name(lexer.get_tag());
+
         if (m_current_node->is_mapping())
         {
             add_new_key(node, indent, line);
@@ -6400,210 +6572,57 @@ private:
             }
             break;
         case node_t::NULL_OBJECT:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::FLOAT_NUMBER:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::STRING: {
-            using string_type = typename BasicNodeType::string_type;
-
-            // Check if the string value contains a character needed to be escaped on output.
-            const string_type& s = node.template get_value_ref<const string_type&>();
-            string_type escaped;
-            bool has_escape = false;
-            size_t size = s.size();
-            for (size_t i = 0; i < size; i++)
+            if (try_append_tag(node, str))
             {
-                switch (s[i])
-                {
-                case 0x01:
-                    escaped += "\\u0001";
-                    has_escape = true;
-                    break;
-                case 0x02:
-                    escaped += "\\u0002";
-                    has_escape = true;
-                    break;
-                case 0x03:
-                    escaped += "\\u0003";
-                    has_escape = true;
-                    break;
-                case 0x04:
-                    escaped += "\\u0004";
-                    has_escape = true;
-                    break;
-                case 0x05:
-                    escaped += "\\u0005";
-                    has_escape = true;
-                    break;
-                case 0x06:
-                    escaped += "\\u0006";
-                    has_escape = true;
-                    break;
-                case '\a':
-                    escaped += "\\a";
-                    has_escape = true;
-                    break;
-                case '\b':
-                    escaped += "\\b";
-                    has_escape = true;
-                    break;
-                case '\t':
-                    escaped += "\\t";
-                    has_escape = true;
-                    break;
-                case '\n':
-                    escaped += "\\n";
-                    has_escape = true;
-                    break;
-                case '\v':
-                    escaped += "\\v";
-                    has_escape = true;
-                    break;
-                case '\f':
-                    escaped += "\\f";
-                    has_escape = true;
-                    break;
-                case '\r':
-                    escaped += "\\r";
-                    has_escape = true;
-                    break;
-                case 0x0E:
-                    escaped += "\\u000E";
-                    has_escape = true;
-                    break;
-                case 0x0F:
-                    escaped += "\\u000F";
-                    has_escape = true;
-                    break;
-                case 0x10:
-                    escaped += "\\u0010";
-                    has_escape = true;
-                    break;
-                case 0x11:
-                    escaped += "\\u0011";
-                    has_escape = true;
-                    break;
-                case 0x12:
-                    escaped += "\\u0012";
-                    has_escape = true;
-                    break;
-                case 0x13:
-                    escaped += "\\u0013";
-                    has_escape = true;
-                    break;
-                case 0x14:
-                    escaped += "\\u0014";
-                    has_escape = true;
-                    break;
-                case 0x15:
-                    escaped += "\\u0015";
-                    has_escape = true;
-                    break;
-                case 0x16:
-                    escaped += "\\u0016";
-                    has_escape = true;
-                    break;
-                case 0x17:
-                    escaped += "\\u0017";
-                    has_escape = true;
-                    break;
-                case 0x18:
-                    escaped += "\\u0018";
-                    has_escape = true;
-                    break;
-                case 0x19:
-                    escaped += "\\u0019";
-                    has_escape = true;
-                    break;
-                case 0x1A:
-                    escaped += "\\u001A";
-                    has_escape = true;
-                    break;
-                case 0x1B:
-                    escaped += "\\e";
-                    has_escape = true;
-                    break;
-                case 0x1C:
-                    escaped += "\\u001C";
-                    has_escape = true;
-                    break;
-                case 0x1D:
-                    escaped += "\\u001D";
-                    has_escape = true;
-                    break;
-                case 0x1E:
-                    escaped += "\\u001E";
-                    has_escape = true;
-                    break;
-                case 0x1F:
-                    escaped += "\\u001F";
-                    has_escape = true;
-                    break;
-                case '\"':
-                    escaped += "\\\"";
-                    has_escape = true;
-                    break;
-                case '\\':
-                    escaped += "\\\\";
-                    has_escape = true;
-                    break;
-                default:
-                    if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u))
-                    {
-                        escaped += "\\N";
-                        i++;
-                        has_escape = true;
-                        break;
-                    }
-                    if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u))
-                    {
-                        escaped += "\\_";
-                        i++;
-                        has_escape = true;
-                        break;
-                    }
-                    if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u))
-                    {
-                        escaped += "\\L";
-                        i += 2;
-                        has_escape = true;
-                        break;
-                    }
-                    if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u))
-                    {
-                        escaped += "\\P";
-                        i += 2;
-                        has_escape = true;
-                        break;
-                    }
-                    escaped += s[i];
-                    break;
-                }
+                str += " ";
             }
 
-            if (has_escape)
+            bool is_escaped = false;
+            typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
+
+            if (is_escaped)
             {
                 // There's no other token type with escapes than strings.
                 // Also, escapes must be in double-quoted strings.
                 str += '\"';
-                str += escaped;
+                str += str_val;
                 str += '\"';
                 break;
             }
 
-            auto adapter = input_adapter(s);
+            auto adapter = input_adapter(str_val);
             lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
             lexical_token_t token_type = lexer.get_next_token();
 
@@ -6612,12 +6631,12 @@ private:
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
-                str += s;
+                str += str_val;
                 str += '\"';
             }
             else
             {
-                str += s;
+                str += str_val;
             }
             break;
         }
@@ -6668,6 +6687,209 @@ private:
             return true;
         }
         return false;
+    }
+
+    /// @brief Append a tag name if it's available. Do nothing otherwise.
+    /// @param[in] node The target node which possibly has a tag name.
+    /// @param[out] str A string to hold serialization result.
+    /// @return true if a tag name has been appended, false otherwise.
+    bool try_append_tag(const BasicNodeType& node, std::string& str) const
+    {
+        if (node.has_tag_name())
+        {
+            str += node.get_tag_name();
+            return true;
+        }
+        return false;
+    }
+
+    /// @brief Get a string value from the given node and, if necessary, escape its contents.
+    /// @param[in] node The target string YAML node.
+    /// @param[out] is_escaped Whether or not the contents of an ouput string has been escaped.
+    /// @return The (escaped) string node value.
+    typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped)
+    {
+        FK_YAML_ASSERT(node.is_string());
+
+        using string_type = typename BasicNodeType::string_type;
+
+        // Check if the string value contains a character needed to be escaped on output.
+        const string_type& s = node.template get_value_ref<const string_type&>();
+        size_t size = s.size();
+        string_type escaped {};
+        escaped.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+        {
+            switch (s[i])
+            {
+            case 0x01:
+                escaped += "\\u0001";
+                is_escaped = true;
+                break;
+            case 0x02:
+                escaped += "\\u0002";
+                is_escaped = true;
+                break;
+            case 0x03:
+                escaped += "\\u0003";
+                is_escaped = true;
+                break;
+            case 0x04:
+                escaped += "\\u0004";
+                is_escaped = true;
+                break;
+            case 0x05:
+                escaped += "\\u0005";
+                is_escaped = true;
+                break;
+            case 0x06:
+                escaped += "\\u0006";
+                is_escaped = true;
+                break;
+            case '\a':
+                escaped += "\\a";
+                is_escaped = true;
+                break;
+            case '\b':
+                escaped += "\\b";
+                is_escaped = true;
+                break;
+            case '\t':
+                escaped += "\\t";
+                is_escaped = true;
+                break;
+            case '\n':
+                escaped += "\\n";
+                is_escaped = true;
+                break;
+            case '\v':
+                escaped += "\\v";
+                is_escaped = true;
+                break;
+            case '\f':
+                escaped += "\\f";
+                is_escaped = true;
+                break;
+            case '\r':
+                escaped += "\\r";
+                is_escaped = true;
+                break;
+            case 0x0E:
+                escaped += "\\u000E";
+                is_escaped = true;
+                break;
+            case 0x0F:
+                escaped += "\\u000F";
+                is_escaped = true;
+                break;
+            case 0x10:
+                escaped += "\\u0010";
+                is_escaped = true;
+                break;
+            case 0x11:
+                escaped += "\\u0011";
+                is_escaped = true;
+                break;
+            case 0x12:
+                escaped += "\\u0012";
+                is_escaped = true;
+                break;
+            case 0x13:
+                escaped += "\\u0013";
+                is_escaped = true;
+                break;
+            case 0x14:
+                escaped += "\\u0014";
+                is_escaped = true;
+                break;
+            case 0x15:
+                escaped += "\\u0015";
+                is_escaped = true;
+                break;
+            case 0x16:
+                escaped += "\\u0016";
+                is_escaped = true;
+                break;
+            case 0x17:
+                escaped += "\\u0017";
+                is_escaped = true;
+                break;
+            case 0x18:
+                escaped += "\\u0018";
+                is_escaped = true;
+                break;
+            case 0x19:
+                escaped += "\\u0019";
+                is_escaped = true;
+                break;
+            case 0x1A:
+                escaped += "\\u001A";
+                is_escaped = true;
+                break;
+            case 0x1B:
+                escaped += "\\e";
+                is_escaped = true;
+                break;
+            case 0x1C:
+                escaped += "\\u001C";
+                is_escaped = true;
+                break;
+            case 0x1D:
+                escaped += "\\u001D";
+                is_escaped = true;
+                break;
+            case 0x1E:
+                escaped += "\\u001E";
+                is_escaped = true;
+                break;
+            case 0x1F:
+                escaped += "\\u001F";
+                is_escaped = true;
+                break;
+            case '\"':
+                escaped += "\\\"";
+                is_escaped = true;
+                break;
+            case '\\':
+                escaped += "\\\\";
+                is_escaped = true;
+                break;
+            default:
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u))
+                {
+                    escaped += "\\N";
+                    i++;
+                    is_escaped = true;
+                    break;
+                }
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u))
+                {
+                    escaped += "\\_";
+                    i++;
+                    is_escaped = true;
+                    break;
+                }
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u))
+                {
+                    escaped += "\\L";
+                    i += 2;
+                    is_escaped = true;
+                    break;
+                }
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u))
+                {
+                    escaped += "\\P";
+                    i += 2;
+                    is_escaped = true;
+                    break;
+                }
+                escaped += s[i];
+                break;
+            }
+        }
+
+        return escaped;
     }
 
 private:
@@ -8638,10 +8860,10 @@ public:
         return m_prop.anchor_status != detail::anchor_status_t::NONE && !m_prop.anchor.empty();
     }
 
-    /// @brief Get the anchor name associated to this basic_node object.
-    /// @note Some anchor name must be set before calling this method. Call basic_node::HasAnchorName() to see if this
-    /// basic_node object has any anchor name.
-    /// @return The anchor name associated to the node.
+    /// @brief Get the anchor name associated with this basic_node object.
+    /// @note Some anchor name must be set before calling this method. Call has_anchor_name() to see if this basic_node
+    /// object has any anchor name.
+    /// @return The anchor name associated with the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const
     {
@@ -8654,6 +8876,7 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name)
     {
@@ -8663,12 +8886,52 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
-    /// @param[in] anchor_name An anchor name.This should not be empty.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name)
     {
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
         m_prop.anchor = std::move(anchor_name);
+    }
+
+    /// @brief Check whether or not this basic_node object has already had any tag name.
+    /// @return true if ths basic_node has a tag name, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
+    bool has_tag_name() const noexcept
+    {
+        return !m_prop.tag.empty();
+    }
+
+    /// @brief Get the tag name associated with this basic_node object.
+    /// @note Some tag name must be set before calling this method. Call has_tag_name() to see if this basic_node
+    /// object has any tag name.
+    /// @return The tag name associated with the node. It may be empty.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_tag_name/
+    const std::string& get_tag_name() const
+    {
+        if (!has_tag_name())
+        {
+            throw fkyaml::exception("No tag name has been set.");
+        }
+        return m_prop.tag;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(const std::string& tag_name)
+    {
+        m_prop.tag = tag_name;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(std::string&& tag_name)
+    {
+        m_prop.tag = std::move(tag_name);
     }
 
     /// @brief Get the node value object converted into a given type.

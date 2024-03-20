@@ -51,12 +51,27 @@ class lexical_analyzer
 private:
     using char_traits_type = typename std::char_traits<char>;
 
+    /// @brief Definition of expected lexical token types for the next token.
+    enum class expected_token_t
+    {
+        ANY_TOKEN,          //!< no expectation for the next token.
+        SEQUENCE_BEGIN,     //!< the beginning of a sequnce (block or flow) is expected.
+        MAPPING_BEGIN,      //!< the beginning of a mapping (block or flow) is expected.
+        NULL_VALUE,         //!< null value is expected.
+        BOOLEAN_VALUE,      //!< boolean value is expected.
+        INTEGER_VALUE,      //!< integer value is expected.
+        FLOAT_NUMBER_VALUE, //!< floating point value is expected.
+        STRING_VALUE,       //!< string value is expected.
+    };
+
+    /// @brief Definition of block style indicator types.
     enum class block_style_indicator_t
     {
         LITERAL, //!< keeps newlines inside the block as they are indicated by a pipe `|`.
         FOLDED,  //!< replaces newlines inside the block with spaces indicated by a right angle bracket `>`.
     };
 
+    /// @brief Definition of chomping indicator types.
     enum class chomping_indicator_t
     {
         STRIP, //!< excludes final line breaks and traiing empty lines indicated by `-`.
@@ -83,7 +98,147 @@ public:
     /// @return lexical_token_t The next lexical token type.
     lexical_token_t get_next_token()
     {
+        return m_last_token_type = get_next_token_internal(expected_token_t::ANY_TOKEN);
+    }
+
+    /// @brief Get the beginning position of a last token.
+    /// @return std::size_t The beginning position of a last token.
+    std::size_t get_last_token_begin_pos() const noexcept
+    {
+        return m_last_token_begin_pos;
+    }
+
+    /// @brief Get the number of lines already processed.
+    /// @return std::size_t The number of lines already processed.
+    std::size_t get_lines_processed() const noexcept
+    {
+        return m_last_token_begin_line;
+    }
+
+    /// @brief Get a null value.
+    /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
+    std::nullptr_t get_null() const
+    {
+        if (m_last_token_type == lexical_token_t::NULL_VALUE)
+        {
+            return nullptr;
+        }
+        emit_error("Invalid request for a null value.");
+    }
+
+    /// @brief Get a boolean value.
+    /// @return true  A string token is one of the followings: "true", "True", "TRUE".
+    /// @return false A string token is one of the followings: "false", "False", "FALSE".
+    boolean_type get_boolean() const
+    {
+        if (m_last_token_type == lexical_token_t::BOOLEAN_VALUE)
+        {
+            return m_boolean_val;
+        }
+        emit_error("Invalid request for a boolean value.");
+    }
+
+    /// @brief Get an integer value.
+    /// @return integer_type An integer value converted from the source string.
+    integer_type get_integer() const
+    {
+        if (m_last_token_type == lexical_token_t::INTEGER_VALUE)
+        {
+            return m_integer_val;
+        }
+        emit_error("Invalid request for an integer value.");
+    }
+
+    /// @brief Get a float number value.
+    /// @return float_number_type A float number value converted from the source string.
+    float_number_type get_float_number() const
+    {
+        if (m_last_token_type == lexical_token_t::FLOAT_NUMBER_VALUE)
+        {
+            return m_float_val;
+        }
+        emit_error("Invalid request for a float number value.");
+    }
+
+    /// @brief Get a scanned string value.
+    /// @return const string_type& Constant reference to a scanned string.
+    const string_type& get_string() const noexcept
+    {
+        // TODO: Provide support for different string types between nodes & inputs.
+        static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
+        return m_value_buffer;
+    }
+
+    /// @brief Get the YAML version specification.
+    /// @return const string_type& A YAML version specification.
+    const string_type& get_yaml_version() const
+    {
+        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
+        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
+
+        return m_value_buffer;
+    }
+
+    /// @brief Get a tag name.
+    /// @return const std::string& A tag name.
+    const std::string& get_tag() const noexcept
+    {
+        return m_tag;
+    }
+
+private:
+    /// @brief Get the next lexical token type by scanning the rest of the input buffer.
+    /// @param[in] expected_type An expected token type deduced from the last call of this method.
+    /// @return lexical_token_t The next lexical token type.
+    lexical_token_t get_next_token_internal(expected_token_t expected_type)
+    {
         skip_white_spaces_and_newline_codes();
+
+        switch (expected_type)
+        {
+        case expected_token_t::NULL_VALUE: {
+            lexical_token_t ret = scan_string();
+            if (ret != lexical_token_t::NULL_VALUE)
+            {
+                emit_error("null value is expected from the tag.");
+            }
+            return ret;
+        }
+        case expected_token_t::BOOLEAN_VALUE: {
+            lexical_token_t ret = scan_string();
+            if (ret != lexical_token_t::BOOLEAN_VALUE)
+            {
+                emit_error("null value is expected from the tag.");
+            }
+            return ret;
+        }
+        case expected_token_t::INTEGER_VALUE: {
+            lexical_token_t ret = scan_number();
+            if (ret != lexical_token_t::INTEGER_VALUE)
+            {
+                emit_error("integer value is expected from the tag.");
+            }
+            return ret;
+        }
+        case expected_token_t::FLOAT_NUMBER_VALUE: {
+            lexical_token_t ret = scan_number();
+            if (ret != lexical_token_t::FLOAT_NUMBER_VALUE)
+            {
+                emit_error("floating point value is expected from the tag.");
+            }
+            return ret;
+        }
+        case expected_token_t::STRING_VALUE: {
+            lexical_token_t ret = scan_string(true, true);
+            if (ret != lexical_token_t::STRING_VALUE)
+            {
+                emit_error("string value is expected from the tag.");
+            }
+            return ret;
+        }
+        default:
+            break;
+        }
 
         int current = m_input_handler.get_current();
         m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
@@ -91,21 +246,21 @@ public:
 
         if (0x00 <= current && current <= 0x7F && isdigit(current))
         {
-            return m_last_token_type = scan_number();
+            return scan_number();
         }
 
         switch (current)
         {
         case s_end_of_input: // end of input buffer
-            return m_last_token_type = lexical_token_t::END_OF_BUFFER;
+            return lexical_token_t::END_OF_BUFFER;
         case '?':
             switch (m_input_handler.get_next())
             {
             case ' ':
-                return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
+                return lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
                 m_value_buffer = "?";
-                return m_last_token_type = scan_string(false);
+                return scan_string(false);
             }
         case ':': { // key separater
             current = m_input_handler.get_next();
@@ -139,7 +294,74 @@ public:
         }
         case ',': // value separater
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
+            return lexical_token_t::VALUE_SEPARATOR;
+        case '!': {
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            bool ends_loop = false;
+
+            do
+            {
+                current = m_input_handler.get_next();
+                switch (current)
+                {
+                case ' ':
+                case '\t':
+                case '\r':
+                case '\n':
+                case s_end_of_input:
+                    ends_loop = true;
+                    break;
+                default:
+                    m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                    break;
+                }
+            } while (!ends_loop);
+
+            size_t size = m_value_buffer.size();
+            if (size < 5 || 7 < size)
+            {
+                return scan_string(false);
+            }
+            if (m_value_buffer[0] != '!' || m_value_buffer[1] == '!')
+            {
+                return scan_string(false);
+            }
+
+            m_tag.clear();
+
+            if (m_value_buffer == "!!seq")
+            {
+                expected_type = expected_token_t::SEQUENCE_BEGIN;
+            }
+            else if (m_value_buffer == "!!map")
+            {
+                expected_type = expected_token_t::MAPPING_BEGIN;
+            }
+            else if (m_value_buffer == "!!null")
+            {
+                expected_type = expected_token_t::NULL_VALUE;
+            }
+            else if (m_value_buffer == "!!bool")
+            {
+                expected_type = expected_token_t::BOOLEAN_VALUE;
+            }
+            else if (m_value_buffer == "!!int")
+            {
+                expected_type = expected_token_t::INTEGER_VALUE;
+            }
+            else if (m_value_buffer == "!!float")
+            {
+                expected_type = expected_token_t::FLOAT_NUMBER_VALUE;
+            }
+            else if (m_value_buffer == "!!str")
+            {
+                expected_type = expected_token_t::STRING_VALUE;
+            }
+
+            using std::swap;
+            swap(m_tag, m_value_buffer);
+            return get_next_token_internal(expected_type);
+        }
         case '&': { // anchor prefix
             m_value_buffer.clear();
             while (true)
@@ -156,7 +378,7 @@ public:
                 }
                 m_value_buffer.push_back(char_traits_type::to_char_type(next));
             }
-            return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
+            return lexical_token_t::ANCHOR_PREFIX;
         }
         case '*': { // alias prefix
             m_value_buffer.clear();
@@ -174,26 +396,26 @@ public:
                 }
                 m_value_buffer.push_back(char_traits_type::to_char_type(next));
             }
-            return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
+            return lexical_token_t::ALIAS_PREFIX;
         }
         case '#': // comment prefix
             scan_comment();
-            return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
+            return lexical_token_t::COMMENT_PREFIX;
         case '%': // directive prefix
-            return m_last_token_type = scan_directive();
+            return scan_directive();
         case '-': {
             int next = m_input_handler.get_next();
             if (next == ' ')
             {
                 // Move a cursor to the beginning of the next token.
                 m_input_handler.get_next();
-                return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
             }
 
             m_input_handler.unget();
             if (std::isdigit(next))
             {
-                return m_last_token_type = scan_number();
+                return scan_number();
             }
 
             int ret = m_input_handler.get_range(3, m_value_buffer);
@@ -202,18 +424,18 @@ public:
                 if (m_value_buffer == "---")
                 {
                     m_input_handler.get_next();
-                    return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
+                    return lexical_token_t::END_OF_DIRECTIVES;
                 }
 
                 m_input_handler.unget_range(2);
             }
 
-            return m_last_token_type = scan_string();
+            return scan_string();
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
+            return lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
             if (m_flow_context_depth == 0)
             {
@@ -221,11 +443,11 @@ public:
             }
             m_flow_context_depth--;
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_END;
+            return lexical_token_t::SEQUENCE_FLOW_END;
         case '{': // mapping flow begin
             m_flow_context_depth++;
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::MAPPING_FLOW_BEGIN;
+            return lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
             if (m_flow_context_depth == 0)
             {
@@ -233,16 +455,16 @@ public:
             }
             m_flow_context_depth--;
             m_input_handler.get_next();
-            return m_last_token_type = lexical_token_t::MAPPING_FLOW_END;
+            return lexical_token_t::MAPPING_FLOW_END;
         case '@':
             emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
         case '`':
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
         case '\'':
-            return m_last_token_type = scan_string();
+            return scan_string();
         case '+':
-            return m_last_token_type = scan_number();
+            return scan_number();
         case '.': {
             int ret = m_input_handler.get_range(3, m_value_buffer);
             if (ret != s_end_of_input)
@@ -250,113 +472,32 @@ public:
                 if (m_value_buffer == "...")
                 {
                     m_input_handler.get_next();
-                    return m_last_token_type = lexical_token_t::END_OF_DOCUMENT;
+                    return lexical_token_t::END_OF_DOCUMENT;
                 }
 
                 // revert change in the position to the one before comparison above.
                 m_input_handler.unget_range(2);
             }
 
-            return m_last_token_type = scan_string();
+            return scan_string();
         }
         case '|': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             std::size_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type =
-                       scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            return scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
         }
         case '>': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             std::size_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type =
-                       scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            return scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
         default:
-            return m_last_token_type = scan_string();
+            return scan_string();
         }
     }
 
-    /// @brief Get the beginning position of a last token.
-    /// @return std::size_t The beginning position of a last token.
-    std::size_t get_last_token_begin_pos() const noexcept
-    {
-        return m_last_token_begin_pos;
-    }
-
-    /// @brief Get the number of lines already processed.
-    /// @return std::size_t The number of lines already processed.
-    std::size_t get_lines_processed() const noexcept
-    {
-        return m_last_token_begin_line;
-    }
-
-    /// @brief Convert from string to null and get the converted value.
-    /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
-    std::nullptr_t get_null() const
-    {
-        if (m_last_token_type == lexical_token_t::NULL_VALUE)
-        {
-            return nullptr;
-        }
-        emit_error("Invalid request for a null value.");
-    }
-
-    /// @brief Convert from string to boolean and get the converted value.
-    /// @return true  A string token is one of the followings: "true", "True", "TRUE".
-    /// @return false A string token is one of the followings: "false", "False", "FALSE".
-    boolean_type get_boolean() const
-    {
-        if (m_last_token_type == lexical_token_t::BOOLEAN_VALUE)
-        {
-            return m_boolean_val;
-        }
-        emit_error("Invalid request for a boolean value.");
-    }
-
-    /// @brief Convert from string to integer and get the converted value.
-    /// @return integer_type An integer value converted from the source string.
-    integer_type get_integer() const
-    {
-        if (m_last_token_type == lexical_token_t::INTEGER_VALUE)
-        {
-            return m_integer_val;
-        }
-        emit_error("Invalid request for an integer value.");
-    }
-
-    /// @brief Convert from string to float number and get the converted value.
-    /// @return float_number_type A float number value converted from the source string.
-    float_number_type get_float_number() const
-    {
-        if (m_last_token_type == lexical_token_t::FLOAT_NUMBER_VALUE)
-        {
-            return m_float_val;
-        }
-        emit_error("Invalid request for a float number value.");
-    }
-
-    /// @brief Get a scanned string value.
-    /// @return const string_type& Constant reference to a scanned string.
-    const string_type& get_string() const noexcept
-    {
-        // TODO: Provide support for different string types between nodes & inputs.
-        static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
-        return m_value_buffer;
-    }
-
-    /// @brief Get the YAML version specification.
-    /// @return const string_type& A YAML version specification.
-    const string_type& get_yaml_version() const
-    {
-        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
-        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
-
-        return m_value_buffer;
-    }
-
-private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
@@ -684,9 +825,58 @@ private:
         return lexical_token_t::INTEGER_VALUE;
     }
 
+    lexical_token_t convert_from_extracted_string_token(const std::string& token)
+    {
+        if (token == "~")
+        {
+            return lexical_token_t::NULL_VALUE;
+        }
+
+        size_t val_size = token.size();
+        if (val_size == 4)
+        {
+            if (token == "null" || token == "Null" || token == "NULL")
+            {
+                from_string(token, type_tag<std::nullptr_t> {});
+                return lexical_token_t::NULL_VALUE;
+            }
+
+            if (token == "true" || token == "True" || token == "TRUE")
+            {
+                m_boolean_val = from_string(token, type_tag<boolean_type> {});
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+
+            if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
+                token == ".NAN")
+            {
+                m_float_val = from_string(token, type_tag<float_number_type> {});
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            }
+        }
+        else if (val_size == 5)
+        {
+            if (token == "false" || token == "False" || token == "FALSE")
+            {
+                m_boolean_val = from_string(token, type_tag<boolean_type> {});
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+
+            if (token == "-.inf" || token == "-.Inf" || token == "-.INF")
+            {
+                m_float_val = from_string(token, type_tag<float_number_type> {});
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            }
+        }
+
+        return lexical_token_t::STRING_VALUE;
+    }
+
     /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
+    /// @param[in] needs_clear Whether or not to clear `m_value_buffer` first. `true` by default.
+    /// @param[in] expected_type Whether or not to skip conversion from the extracted token. `false` by default.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_string(bool needs_clear = true)
+    lexical_token_t scan_string(bool needs_clear = true, bool skips_conversion = false)
     {
         bool needs_last_single_quote = false;
         bool needs_last_double_quote = false;
@@ -712,49 +902,12 @@ private:
             return type;
         }
 
-        if (m_value_buffer == "~")
+        if (skips_conversion)
         {
-            return lexical_token_t::NULL_VALUE;
+            return type;
         }
 
-        size_t val_size = m_value_buffer.size();
-        if (val_size == 4)
-        {
-            if (m_value_buffer == "null" || m_value_buffer == "Null" || m_value_buffer == "NULL")
-            {
-                from_string(m_value_buffer, type_tag<std::nullptr_t> {});
-                return lexical_token_t::NULL_VALUE;
-            }
-
-            if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
-            {
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-
-            if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF" ||
-                m_value_buffer == ".nan" || m_value_buffer == ".NaN" || m_value_buffer == ".NAN")
-            {
-                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-        }
-        else if (val_size == 5)
-        {
-            if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
-            {
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-
-            if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
-            {
-                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-        }
-
-        return type;
+        return convert_from_extracted_string_token(m_value_buffer);
     }
 
     /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
@@ -1540,6 +1693,8 @@ private:
     uint32_t m_flow_context_depth {0};
     /// The last found token type.
     lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
+    /// A temporal buffer of the last tag name.
+    std::string m_tag {};
     /// A temporal bool holder.
     boolean_type m_boolean_val {false};
     /// A temporal integer holder.

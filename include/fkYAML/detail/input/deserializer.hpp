@@ -475,6 +475,8 @@ private:
     bool deserialize_scalar(
         LexerType& lexer, BasicNodeType&& node, std::size_t& indent, std::size_t& line, lexical_token_t& type)
     {
+        node.add_tag_name(lexer.get_tag());
+
         if (m_current_node->is_mapping())
         {
             add_new_key(node, indent, line);
