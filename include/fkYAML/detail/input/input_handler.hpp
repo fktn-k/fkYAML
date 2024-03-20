@@ -57,44 +57,40 @@ public:
     /// @brief Construct a new input_handler object.
     /// @param input_adapter An input adapter object
     explicit input_handler(InputAdapterType&& input_adapter)
-        : m_input_adapter(std::move(input_adapter))
     {
-        get_next();
-        m_position.cur_pos = m_position.cur_pos_in_line = m_position.lines_read = 0;
+        int_type ch = s_end_of_input;
+        while ((ch = input_adapter.get_character()) != s_end_of_input)
+        {
+            m_buffer.push_back(char_traits_type::to_char_type(ch));
+            m_buffer_size++;
+        }
     }
 
     /// @brief Get the character at the current position.
     /// @return int_type A character or EOF.
     int_type get_current() const noexcept
     {
-        return m_cache[m_position.cur_pos];
+        if (m_position.cur_pos >= m_buffer_size)
+        {
+            return s_end_of_input;
+        }
+        return char_traits_type::to_int_type(m_buffer[m_position.cur_pos]);
     }
 
     /// @brief Get the character at next position.
     /// @return int_type A character or EOF.
     int_type get_next()
     {
-        int_type ret = end_of_input;
-
-        // if already cached, return the cached value.
-        if (m_position.cur_pos + 1 < m_cache.size())
+        // if all the input has already been consumed, return the EOF.
+        if (m_position.cur_pos >= m_buffer_size)
         {
-            ret = m_cache[++m_position.cur_pos];
-            ++m_position.cur_pos_in_line;
-        }
-        else
-        {
-            ret = m_input_adapter.get_character();
-            if (ret != end_of_input || m_cache[m_position.cur_pos] != end_of_input)
-            {
-                // cache the return value for possible later use.
-                m_cache.push_back(ret);
-                ++m_position.cur_pos;
-                ++m_position.cur_pos_in_line;
-            }
+            return s_end_of_input;
         }
 
-        if (m_cache[m_position.cur_pos - 1] == '\n')
+        int_type ret = char_traits_type::to_int_type(m_buffer[m_position.cur_pos++]);
+        m_position.cur_pos_in_line++;
+
+        if (m_buffer[m_position.cur_pos - 1] == '\n')
         {
             m_position.cur_pos_in_line = 0;
             ++m_position.lines_read;
@@ -111,26 +107,27 @@ public:
     {
         str.clear();
 
-        if (get_current() == end_of_input)
+        int_type ch = get_current();
+        if (ch == s_end_of_input)
         {
-            return end_of_input;
+            return s_end_of_input;
         }
 
-        str += char_traits_type::to_char_type(get_current());
+        str += char_traits_type::to_char_type(ch);
 
         for (std::size_t i = 1; i < length; i++)
         {
-            if (get_next() == end_of_input)
+            ch = get_next();
+            if (ch == s_end_of_input)
             {
-                // m_cur_pos -= i;
                 for (std::size_t j = i; j > 0; j--)
                 {
                     unget();
                 }
                 str.clear();
-                return end_of_input;
+                return ch;
             }
-            str += char_traits_type::to_char_type(get_current());
+            str += char_traits_type::to_char_type(ch);
         }
 
         return 0;
@@ -144,13 +141,13 @@ public:
             // just move back the cursor. (no action for adapter)
             --m_position.cur_pos;
             --m_position.cur_pos_in_line;
-            if (m_cache[m_position.cur_pos] == '\n')
+            if (m_buffer[m_position.cur_pos] == '\n')
             {
                 --m_position.lines_read;
                 m_position.cur_pos_in_line = 0;
                 if (m_position.cur_pos > 0)
                 {
-                    for (std::size_t i = m_position.cur_pos - 1; m_cache[i] != '\n'; i--)
+                    for (std::size_t i = m_position.cur_pos - 1; m_buffer[i] != '\n'; i--)
                     {
                         if (i == 0)
                         {
@@ -180,21 +177,18 @@ public:
     /// @return false The next character is not the expected one.
     bool test_next_char(char_type expected)
     {
-        if (get_current() == end_of_input)
+        // already at the end of the input.
+        if (get_current() == s_end_of_input)
         {
             return false;
         }
 
-        int_type next = get_next();
-        if (next == end_of_input)
+        if (m_position.cur_pos == m_buffer_size - 1)
         {
-            unget();
             return false;
         }
 
-        bool ret = char_traits_type::eq(char_traits_type::to_char_type(next), expected);
-        unget();
-        return ret;
+        return char_traits_type::eq(char_traits_type::to_char_type(m_buffer[m_position.cur_pos + 1]), expected);
     }
 
     /// @brief Get the current position in the current line.
@@ -213,12 +207,12 @@ public:
 
 private:
     /// The value of EOF for the target character type.
-    static constexpr int_type end_of_input = char_traits_type::eof();
+    static constexpr int_type s_end_of_input = char_traits_type::eof();
 
-    /// An input adapter object.
-    InputAdapterType m_input_adapter {};
     /// Cached characters retrieved from an input adapter object.
-    std::vector<int_type> m_cache {};
+    std::string m_buffer {};
+    /// The size of the buffer.
+    std::size_t m_buffer_size {0};
     /// The current position in an input buffer.
     position m_position {};
 };
