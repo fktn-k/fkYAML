@@ -179,41 +179,35 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanColonTest", "[LexicalAnalyzerClassTest]"
     {
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(":\r"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
     SECTION("Test colon with CRLF newline code.")
     {
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(":\r\n"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
     SECTION("Test colon with LF newline code.")
     {
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(":\n"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
-    }
-
-    SECTION("Test colon with non-newline-code character.")
-    {
-        pchar_lexer_t lexer(fkyaml::detail::input_adapter(":test"));
-        REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
     SECTION("Test colon with a comment and a CRLF newline code.")
     {
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(": # comment\r\n"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
     SECTION("Test colon with a comment and a LF newline code.")
     {
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(": # comment\n"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
     SECTION("Test colon with a comment and no newline code")
@@ -227,19 +221,48 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanColonTest", "[LexicalAnalyzerClassTest]"
     {
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(":                         \r\n"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
     SECTION("Test colon with many spaces and a LF newline code.")
     {
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(":                         \n"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
     SECTION("Test colon with many spaces and no newline code.")
     {
         pchar_lexer_t lexer(fkyaml::detail::input_adapter(":                         "));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+    }
+
+    SECTION("Test colon with an always-safe character.")
+    {
+        pchar_lexer_t lexer(fkyaml::detail::input_adapter(":test"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == ":test");
+    }
+
+    SECTION("Test colon with a flow indicator in a non-flow context.")
+    {
+        auto input =
+            GENERATE(std::string(":,"), std::string(":{"), std::string(":}"), std::string(":["), std::string(":]"));
+        str_lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == input);
+    }
+
+    SECTION("Test colon with a flow indicator in a flow context.")
+    {
+        auto input = GENERATE(
+            std::string("{:,"), std::string("{:{"), std::string("{:}"), std::string("{:["), std::string("{:]"));
+        str_lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
@@ -1690,7 +1713,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE(lexer.get_string().compare("test") == 0);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
@@ -1726,7 +1749,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE(lexer.get_string().compare("test") == 0);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
@@ -1805,7 +1828,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockMappingTokenTest", "[LexicalAnalyze
         REQUIRE(lexer.get_string().compare("test") == 0);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_BLOCK_PREFIX);
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
