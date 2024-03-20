@@ -14,9 +14,9 @@
 #include <array>
 #include <stdexcept>
 #include <string>
-#include <sstream>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/string_formatter.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
 
 /// @brief namespace for fkYAML library.
@@ -88,14 +88,13 @@ private:
     template <std::size_t N>
     std::string generate_error_message(const char* msg, std::array<int, N> u8) const noexcept
     {
-        std::stringstream ss;
-        ss << "invalid_encoding: " << msg << " in=[ 0x" << std::hex << u8[0];
+        std::string formatted = detail::format("invalid_encoding: %s in=[ 0x%02x", msg, u8[0]);
         for (std::size_t i = 1; i < N; i++)
         {
-            ss << ", 0x" << std::hex << u8[i];
+            formatted += detail::format(", 0x%02x", u8[i]);
         }
-        ss << " ]";
-        return ss.str();
+        formatted += " ]";
+        return formatted;
     }
 
     /// @brief Generate an error message from the given parameters for the UTF-16 encoding.
@@ -105,11 +104,8 @@ private:
     /// @return A generated error message.
     std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16) const noexcept
     {
-        std::stringstream ss;
-        ss << "invalid_encoding: " << msg;
         // uint16_t is large enough for UTF-16 encoded elements.
-        ss << " in=[ 0x" << std::hex << uint16_t(u16[0]) << ", 0x" << std::hex << uint16_t(u16[1]) << " ]";
-        return ss.str();
+        return detail::format("invalid_encoding: %s in=[ 0x%04x, 0x%04x ]", msg, uint16_t(u16[0]), uint16_t(u16[1]));
     }
 
     /// @brief Generate an error message from the given parameters for the UTF-32 encoding.
@@ -118,10 +114,8 @@ private:
     /// @return A genereated error message.
     std::string generate_error_message(const char* msg, char32_t u32) const noexcept
     {
-        std::stringstream ss;
         // uint32_t is large enough for UTF-32 encoded elements.
-        ss << "invalid_encoding: " << msg << " in=0x" << std::hex << uint32_t(u32);
-        return ss.str();
+        return detail::format("invalid_encoding: %s in=0x%08x", msg, uint32_t(u32));
     }
 };
 
@@ -137,9 +131,7 @@ public:
 private:
     std::string generate_error_message(const char* msg, std::size_t lines, std::size_t cols_in_line) const noexcept
     {
-        std::stringstream ss;
-        ss << "parse_error: " << msg << " (at line " << lines << ", column " << cols_in_line << ")";
-        return ss.str();
+        return detail::format("parse_error: %s (at line %zu, column %zu)", msg, lines, cols_in_line);
     }
 };
 
@@ -163,9 +155,7 @@ private:
     /// @return A generated error message.
     std::string generate_error_message(const char* msg, detail::node_t type) const noexcept
     {
-        std::stringstream ss;
-        ss << "type_error: " << msg << " type=" << detail::to_string(type);
-        return ss.str();
+        return detail::format("type_error: %s type=%s", msg, detail::to_string(type));
     }
 };
 
