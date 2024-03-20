@@ -12,6 +12,7 @@
 #define FK_YAML_DETAIL_ENCODINGS_ENCODE_DETECTOR_HPP_
 
 #include <cstdint>
+#include <istream>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/encodings/encode_t.hpp>
