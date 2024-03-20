@@ -28,7 +28,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Check if the amalgamated header file is up-to-date.
       run: make check-amalgamate

@@ -39,7 +39,7 @@ jobs:
         single_header: ["ON", "OFF"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -64,7 +64,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -89,7 +89,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -114,7 +114,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 

@@ -17,19 +17,19 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: fkYAML.tgz
-            single_header: "ON"
+            single_header: "OFF"
           - os: ubuntu-latest
             artifact_name: fkYAML_single_header.tgz
-            single_header: "OFF"
-          - os: windows-latest
-            artifact_name: fkYAML.zip
             single_header: "ON"
           - os: windows-latest
-            artifact_name: fkYAML_single_header.zip
+            artifact_name: fkYAML.zip
             single_header: "OFF"
+          - os: windows-latest
+            artifact_name: fkYAML_single_header.zip
+            single_header: "ON"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -54,7 +54,7 @@ jobs:
         ls
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{matrix.artifact_name}}
         path: ${{matrix.artifact_name}}
