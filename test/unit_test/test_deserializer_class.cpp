@@ -984,6 +984,16 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root["Baz[123]"].get_value<double>() == 3.14);
     }
 
+    SECTION("Flow indicators inside unquoted plain scalar values")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar {[123] 3.14}")));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("Foo"));
+        REQUIRE(root["Foo"].is_string());
+        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar {[123] 3.14}");
+    }
+
     SECTION("a comment right after a block mapping key.")
     {
         REQUIRE_NOTHROW(

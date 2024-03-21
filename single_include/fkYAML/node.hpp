@@ -2982,17 +2982,33 @@ private:
                     // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     current = m_input_handler.get_next();
+
+                    // These characters are permitted when not inside a flow collection, and not inside an implicit key.
+                    // TODO: Support detection of implicit key context for this check.
+                    if (m_flow_context_depth > 0)
+                    {
+                        switch (current)
+                        {
+                        case '{':
+                        case '}':
+                        case '[':
+                        case ']':
+                        case ',':
+                            return lexical_token_t::STRING_VALUE;
+                        }
+                    }
+
                     switch (current)
                     {
                     case ' ':
                     case '\r':
                     case '\n':
-                    case '{':
-                    case '}':
-                    case '[':
-                    case ']':
-                    case ',':
                     case ':':
+                        // " :" is permitted in a plain style string token, but not when followed by a space.
+                        if (!m_input_handler.test_next_char(' '))
+                        {
+                            break;
+                        }
                     case '#':
                     case '\\':
                         return lexical_token_t::STRING_VALUE;
