@@ -841,15 +841,15 @@ private:
 
                     switch (current)
                     {
-                    case ' ':
-                    case '\r':
-                    case '\n':
                     case ':':
                         // " :" is permitted in a plain style string token, but not when followed by a space.
                         if (!m_input_handler.test_next_char(' '))
                         {
                             break;
                         }
+                    case ' ':
+                    case '\r':
+                    case '\n':
                     case '#':
                     case '\\':
                         return lexical_token_t::STRING_VALUE;
