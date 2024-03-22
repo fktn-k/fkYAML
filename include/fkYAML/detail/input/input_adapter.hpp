@@ -268,7 +268,7 @@ public:
     {
         if (m_current != m_end)
         {
-            auto ret = std::char_traits<char_type>::to_int_type(*m_current);
+            auto ret = std::char_traits<char_type>::to_int_type(char(*m_current));
             ++m_current;
             return ret;
         }

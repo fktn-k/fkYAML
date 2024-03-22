@@ -1731,21 +1731,12 @@ namespace detail
 {
 
 /// @brief An input buffer handler.
-/// @tparam InputAdapterType The type of the input adapter.
-template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
 class input_handler
 {
-public:
-    /// The type of character traits of the input buffer.
-    using char_traits_type = std::char_traits<typename InputAdapterType::char_type>;
-    /// The type of characters of the input buffer.
-    using char_type = typename char_traits_type::char_type;
-    /// The type of integers for the input buffer.
-    using int_type = typename char_traits_type::int_type;
-    /// The type of strings of the input buffer.
-    using string_type = std::basic_string<char_type>;
-
 private:
+    /// The type of character traits of the input buffer.
+    using char_traits_type = std::char_traits<char>;
+
     /// @brief A set of information on the current position in an input buffer.
     struct position
     {
@@ -1759,10 +1750,15 @@ private:
 
 public:
     /// @brief Construct a new input_handler object.
+    /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object
+    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     explicit input_handler(InputAdapterType&& input_adapter)
+        : m_buffer_size(0)
     {
-        int_type ch = s_end_of_input;
+        m_buffer.clear();
+
+        int ch = s_end_of_input;
         while ((ch = input_adapter.get_character()) != s_end_of_input)
         {
             m_buffer.push_back(char_traits_type::to_char_type(ch));
@@ -1771,10 +1767,10 @@ public:
     }
 
     /// @brief Get the character at the current position.
-    /// @return int_type A character or EOF.
-    int_type get_current() const noexcept
+    /// @return int A character or EOF.
+    int get_current() const noexcept
     {
-        if (m_position.cur_pos >= m_buffer_size)
+        if (m_position.cur_pos == m_buffer_size)
         {
             return s_end_of_input;
         }
@@ -1782,56 +1778,59 @@ public:
     }
 
     /// @brief Get the character at next position.
-    /// @return int_type A character or EOF.
-    int_type get_next()
+    /// @return int A character or EOF.
+    int get_next()
     {
         // if all the input has already been consumed, return the EOF.
-        if (m_position.cur_pos >= m_buffer_size)
+        if (m_position.cur_pos == m_buffer_size - 1)
+        {
+            m_position.cur_pos++;
+            m_position.cur_pos_in_line++;
+            return s_end_of_input;
+        }
+
+        if (m_position.cur_pos == m_buffer_size)
         {
             return s_end_of_input;
         }
 
-        int_type ret = char_traits_type::to_int_type(m_buffer[m_position.cur_pos++]);
-        m_position.cur_pos_in_line++;
-
-        if (m_buffer[m_position.cur_pos - 1] == '\n')
+        if (m_buffer[m_position.cur_pos] == '\n')
         {
             m_position.cur_pos_in_line = 0;
             ++m_position.lines_read;
         }
+        else
+        {
+            m_position.cur_pos_in_line++;
+        }
 
-        return ret;
+        return char_traits_type::to_int_type(m_buffer[++m_position.cur_pos]);
     }
 
     /// @brief Get the characters in the given range.
     /// @param length The length of characters retrieved from the current position.
     /// @param str A string which will contain the resulting characters.
-    /// @return int_type 0 (for success) or EOF (for error).
-    int_type get_range(std::size_t length, string_type& str)
+    /// @return int 0 (for success) or EOF (for error).
+    int get_range(std::size_t length, std::string& str)
     {
         str.clear();
 
-        int_type ch = get_current();
-        if (ch == s_end_of_input)
+        if (length == 0)
+        {
+            // regard this case as successful in getting zero characters.
+            return 0;
+        }
+
+        if (m_position.cur_pos + length - 1 >= m_buffer_size)
         {
             return s_end_of_input;
         }
 
-        str += char_traits_type::to_char_type(ch);
+        str += m_buffer[m_position.cur_pos];
 
         for (std::size_t i = 1; i < length; i++)
         {
-            ch = get_next();
-            if (ch == s_end_of_input)
-            {
-                for (std::size_t j = i; j > 0; j--)
-                {
-                    unget();
-                }
-                str.clear();
-                return ch;
-            }
-            str += char_traits_type::to_char_type(ch);
+            str += char_traits_type::to_char_type(get_next());
         }
 
         return 0;
@@ -1842,7 +1841,6 @@ public:
     {
         if (m_position.cur_pos > 0)
         {
-            // just move back the cursor. (no action for adapter)
             --m_position.cur_pos;
             --m_position.cur_pos_in_line;
             if (m_buffer[m_position.cur_pos] == '\n')
@@ -1869,7 +1867,8 @@ public:
     /// @param length The length of moving backward.
     void unget_range(std::size_t length)
     {
-        for (std::size_t i = 0; i < length; i++)
+        size_t unget_num = (m_position.cur_pos < length) ? m_position.cur_pos : length;
+        for (std::size_t i = 0; i < unget_num; i++)
         {
             unget();
         }
@@ -1879,20 +1878,15 @@ public:
     /// @param expected An expected next character.
     /// @return true The next character is the expected one.
     /// @return false The next character is not the expected one.
-    bool test_next_char(char_type expected)
+    bool test_next_char(char expected)
     {
-        // already at the end of the input.
-        if (get_current() == s_end_of_input)
-        {
-            return false;
-        }
-
         if (m_position.cur_pos == m_buffer_size - 1)
         {
+            // already at the end of the input.
             return false;
         }
 
-        return char_traits_type::eq(char_traits_type::to_char_type(m_buffer[m_position.cur_pos + 1]), expected);
+        return char_traits_type::eq(m_buffer[m_position.cur_pos + 1], expected);
     }
 
     /// @brief Get the current position in the current line.
@@ -1911,9 +1905,9 @@ public:
 
 private:
     /// The value of EOF for the target character type.
-    static constexpr int_type s_end_of_input = char_traits_type::eof();
+    static constexpr int s_end_of_input = char_traits_type::eof();
 
-    /// Cached characters retrieved from an input adapter object.
+    /// The input buffer retrieved from an input adapter object.
     std::string m_buffer {};
     /// The size of the buffer.
     std::size_t m_buffer_size {0};
@@ -2198,17 +2192,11 @@ namespace detail
 
 /// @brief A class which lexically analizes YAML formatted inputs.
 /// @tparam BasicNodeType A type of the container for YAML values.
-template <
-    typename BasicNodeType, typename InputAdapterType,
-    enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_input_adapter<InputAdapterType>>::value, int> = 0>
+template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 class lexical_analyzer
 {
 private:
-    using input_handler_type = input_handler<InputAdapterType>;
-    using char_traits_type = typename input_handler_type::char_traits_type;
-    using char_type = typename char_traits_type::char_type;
-    using char_int_type = typename char_traits_type::int_type;
-    using input_string_type = typename input_handler_type::string_type;
+    using char_traits_type = typename std::char_traits<char>;
 
     enum class block_style_indicator_t
     {
@@ -2230,7 +2218,9 @@ public:
     using string_type = typename BasicNodeType::string_type;
 
     /// @brief Construct a new lexical_analyzer object.
+    /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object.
+    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     explicit lexical_analyzer(InputAdapterType&& input_adapter)
         : m_input_handler(std::move(input_adapter))
     {
@@ -2242,7 +2232,7 @@ public:
     {
         skip_white_spaces_and_newline_codes();
 
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
         m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
         m_last_token_begin_line = m_input_handler.get_lines_read();
 
@@ -2294,37 +2284,6 @@ public:
 
             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
         }
-            // switch (m_input_handler.get_next())
-            // {
-            // case ' ': {
-            //     size_t prev_pos = m_input_handler.get_lines_read();
-            //     skip_white_spaces_and_comments();
-            //     size_t cur_pos = m_input_handler.get_lines_read();
-            //     if (prev_pos == cur_pos)
-            //     {
-            //         current = m_input_handler.get_current();
-            //         if (current != '\r' && current != '\n')
-            //         {
-            //             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
-            //         }
-            //     }
-            //     return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            // }
-            // case '\r': {
-            //     char_int_type next = m_input_handler.get_next();
-            //     if (next == '\n')
-            //     {
-            //         m_input_handler.get_next();
-            //     }
-            //     return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            // }
-            // case '\n':
-            //     m_input_handler.get_next();
-            //     return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            // default:
-            //     emit_error("Half-width spaces or newline codes are required after a key separater(:).");
-            // }
-
         case ',': // value separater
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
@@ -2332,7 +2291,7 @@ public:
             m_value_buffer.clear();
             while (true)
             {
-                char_int_type next = m_input_handler.get_next();
+                int next = m_input_handler.get_next();
                 if (next == s_end_of_input || next == '\r' || next == '\n')
                 {
                     emit_error("An anchor label must be followed by some value.");
@@ -2350,7 +2309,7 @@ public:
             m_value_buffer.clear();
             while (true)
             {
-                char_int_type next = m_input_handler.get_next();
+                int next = m_input_handler.get_next();
                 if (next == ' ' || next == '\r' || next == '\n' || next == s_end_of_input)
                 {
                     if (m_value_buffer.empty())
@@ -2370,7 +2329,7 @@ public:
         case '%': // directive prefix
             return m_last_token_type = scan_directive();
         case '-': {
-            char_int_type next = m_input_handler.get_next();
+            int next = m_input_handler.get_next();
             if (next == ' ')
             {
                 // Move a cursor to the beginning of the next token.
@@ -2384,7 +2343,7 @@ public:
                 return m_last_token_type = scan_number();
             }
 
-            char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
+            int ret = m_input_handler.get_range(3, m_value_buffer);
             if (ret != s_end_of_input)
             {
                 if (m_value_buffer == "---")
@@ -2432,7 +2391,7 @@ public:
         case '+':
             return m_last_token_type = scan_number();
         case '.': {
-            char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
+            int ret = m_input_handler.get_range(3, m_value_buffer);
             if (ret != s_end_of_input)
             {
                 if (m_value_buffer == "...")
@@ -2530,7 +2489,7 @@ public:
     const string_type& get_string() const noexcept
     {
         // TODO: Provide support for different string types between nodes & inputs.
-        static_assert(std::is_same<string_type, input_string_type>::value, "Unsupported, different string types.");
+        static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
         return m_value_buffer;
     }
 
@@ -2548,7 +2507,7 @@ private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
-    char convert_hex_char_to_byte(char_int_type source) const
+    char convert_hex_char_to_byte(int source) const
     {
         if ('0' <= source && source <= '9')
         {
@@ -2677,7 +2636,7 @@ private:
     {
         m_value_buffer.clear();
 
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
         FK_YAML_ASSERT(std::isdigit(current) || current == '-' || current == '+');
 
         lexical_token_t ret = lexical_token_t::END_OF_BUFFER;
@@ -2729,7 +2688,7 @@ private:
     /// @return lexical_token_t The lexical token type for either integer or float numbers.
     lexical_token_t scan_negative_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         // The value of `next` must be guranteed to be a digit in the get_next_token() function.
         FK_YAML_ASSERT(std::isdigit(next));
@@ -2741,7 +2700,7 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float).
     lexical_token_t scan_number_after_zero_at_first()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         switch (next)
         {
         case '.':
@@ -2764,7 +2723,7 @@ private:
     /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_decimal_point()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         if (std::isdigit(next))
         {
@@ -2780,7 +2739,7 @@ private:
     /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_exponent()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         if (next == '+' || next == '-')
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -2802,7 +2761,7 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number_after_sign()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         if (std::isdigit(next))
         {
@@ -2817,7 +2776,7 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         if (std::isdigit(next))
         {
@@ -2850,7 +2809,7 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_octal_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         if ('0' <= next && next <= '7')
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -2863,7 +2822,7 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_hexadecimal_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         if (std::isxdigit(next))
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -2949,7 +2908,7 @@ private:
     /// @return lexical_token_t The lexical token type for strings.
     lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote)
     {
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
 
         for (;; current = m_input_handler.get_next())
         {
@@ -3060,7 +3019,7 @@ private:
                     continue;
                 }
 
-                char_int_type next = m_input_handler.get_next();
+                int next = m_input_handler.get_next();
                 m_input_handler.unget();
 
                 // A colon as a key separator must be followed by a space or a newline code.
@@ -3158,7 +3117,7 @@ private:
                     m_value_buffer.push_back('\r');
                     break;
                 case 'e':
-                    m_value_buffer.push_back(char_type(0x1B));
+                    m_value_buffer.push_back(char(0x1B));
                     break;
                 case ' ':
                     m_value_buffer.push_back(' ');
@@ -3232,7 +3191,7 @@ private:
             // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
             if (current <= 0xDF)
             {
-                std::array<char_int_type, 2> byte_array = {{current, m_input_handler.get_next()}};
+                std::array<int, 2> byte_array = {{current, m_input_handler.get_next()}};
                 if (!utf8_encoding::validate(byte_array))
                 {
                     throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
@@ -3246,8 +3205,7 @@ private:
             // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
             if (current <= 0xEF)
             {
-                std::array<char_int_type, 3> byte_array = {
-                    {current, m_input_handler.get_next(), m_input_handler.get_next()}};
+                std::array<int, 3> byte_array = {{current, m_input_handler.get_next(), m_input_handler.get_next()}};
                 if (!utf8_encoding::validate(byte_array))
                 {
                     throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
@@ -3261,7 +3219,7 @@ private:
             }
 
             // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            std::array<char_int_type, 4> byte_array = {
+            std::array<int, 4> byte_array = {
                 {current, m_input_handler.get_next(), m_input_handler.get_next(), m_input_handler.get_next()}};
             if (!utf8_encoding::validate(byte_array))
             {
@@ -3281,7 +3239,7 @@ private:
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
         for (;; current = m_input_handler.get_next())
         {
             if (current == ' ')
@@ -3507,7 +3465,7 @@ private:
 
     /// @brief Handle unescaped control characters.
     /// @param c A target character.
-    void handle_unescaped_control_char(char_int_type c)
+    void handle_unescaped_control_char(int c)
     {
         FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
 
@@ -3599,7 +3557,7 @@ private:
 
     void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
     {
-        char_int_type ch = m_input_handler.get_next();
+        int ch = m_input_handler.get_next();
 
         chomp_type = chomping_indicator_t::CLIP;
         if (ch == '-')
@@ -3711,12 +3669,12 @@ private:
 
 private:
     /// The value of EOF for the target characters.
-    static constexpr char_int_type s_end_of_input = char_traits_type::eof();
+    static constexpr int s_end_of_input = char_traits_type::eof();
 
     /// An input buffer adapter to be analyzed.
-    input_handler_type m_input_handler;
+    input_handler m_input_handler;
     /// A temporal buffer to store a string to be parsed to an actual datum.
-    input_string_type m_value_buffer {};
+    std::string m_value_buffer {};
     /// A temporal buffer to store a UTF-8 encoded char sequence.
     std::array<char, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.
@@ -3831,7 +3789,7 @@ public:
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     BasicNodeType deserialize(InputAdapterType&& input_adapter)
     {
-        lexical_analyzer<BasicNodeType, InputAdapterType> lexer(std::forward<InputAdapterType>(input_adapter));
+        lexical_analyzer<BasicNodeType> lexer(std::forward<InputAdapterType>(input_adapter));
 
         BasicNodeType root = BasicNodeType::mapping();
         m_current_node = &root;
@@ -4927,7 +4885,7 @@ public:
     {
         if (m_current != m_end)
         {
-            auto ret = std::char_traits<char_type>::to_int_type(*m_current);
+            auto ret = std::char_traits<char_type>::to_int_type(char(*m_current));
             ++m_current;
             return ret;
         }
@@ -6646,7 +6604,7 @@ private:
             }
 
             auto adapter = input_adapter(s);
-            lexical_analyzer<BasicNodeType, decltype(adapter)> lexer(std::move(adapter));
+            lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
             lexical_token_t token_type = lexer.get_next_token();
 
             if (token_type != lexical_token_t::STRING_VALUE)

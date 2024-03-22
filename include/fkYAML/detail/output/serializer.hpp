@@ -340,7 +340,7 @@ private:
             }
 
             auto adapter = input_adapter(s);
-            lexical_analyzer<BasicNodeType, decltype(adapter)> lexer(std::move(adapter));
+            lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
             lexical_token_t token_type = lexer.get_next_token();
 
             if (token_type != lexical_token_t::STRING_VALUE)

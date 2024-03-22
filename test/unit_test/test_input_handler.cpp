@@ -17,12 +17,10 @@
     #include <fkYAML/detail/input/input_handler.hpp>
 #endif
 
-using pchar_input_handler = fkyaml::detail::input_handler<fkyaml::detail::iterator_input_adapter<char*>>;
-
 TEST_CASE("InputHandlerTest_InitialStateTest", "[InputHandlerTest]")
 {
     char input[] = "test";
-    pchar_input_handler handler(fkyaml::detail::input_adapter(input));
+    fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
 
     REQUIRE(handler.get_current() == 't');
     REQUIRE(handler.get_cur_pos_in_line() == 0);
@@ -32,7 +30,7 @@ TEST_CASE("InputHandlerTest_InitialStateTest", "[InputHandlerTest]")
 TEST_CASE("InputHandlerTest_GetCurrentTest", "[InputHandlerTest]")
 {
     char input[] = "test";
-    pchar_input_handler handler(fkyaml::detail::input_adapter(input));
+    fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
 
     REQUIRE(handler.get_current() == 't');
     REQUIRE(handler.get_cur_pos_in_line() == 0);
@@ -53,13 +51,13 @@ TEST_CASE("InputHandlerTest_GetCurrentTest", "[InputHandlerTest]")
     REQUIRE(handler.get_cur_pos_in_line() == 3);
     REQUIRE(handler.get_lines_read() == 0);
 
-    REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
-    REQUIRE(handler.get_current() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
+    REQUIRE(handler.get_current() == std::char_traits<char>::eof());
     REQUIRE(handler.get_cur_pos_in_line() == 4);
     REQUIRE(handler.get_lines_read() == 0);
 
-    REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
-    REQUIRE(handler.get_current() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
+    REQUIRE(handler.get_current() == std::char_traits<char>::eof());
     REQUIRE(handler.get_cur_pos_in_line() == 4);
     REQUIRE(handler.get_lines_read() == 0);
 }
@@ -67,7 +65,7 @@ TEST_CASE("InputHandlerTest_GetCurrentTest", "[InputHandlerTest]")
 TEST_CASE("InputHandlerTest_GetNextTest", "[InputHandlerTest]")
 {
     char input[] = "test";
-    pchar_input_handler handler(fkyaml::detail::input_adapter(input));
+    fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
 
     REQUIRE(handler.get_next() == 'e');
     REQUIRE(handler.get_cur_pos_in_line() == 1);
@@ -81,11 +79,11 @@ TEST_CASE("InputHandlerTest_GetNextTest", "[InputHandlerTest]")
     REQUIRE(handler.get_cur_pos_in_line() == 3);
     REQUIRE(handler.get_lines_read() == 0);
 
-    REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
     REQUIRE(handler.get_cur_pos_in_line() == 4);
     REQUIRE(handler.get_lines_read() == 0);
 
-    REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
     REQUIRE(handler.get_cur_pos_in_line() == 4);
     REQUIRE(handler.get_lines_read() == 0);
 }
@@ -93,8 +91,8 @@ TEST_CASE("InputHandlerTest_GetNextTest", "[InputHandlerTest]")
 TEST_CASE("InputHandlerTest_GetRangeTest", "[InputHandlerTest]")
 {
     char input[] = "test";
-    pchar_input_handler::string_type str;
-    pchar_input_handler handler(fkyaml::detail::input_adapter(input));
+    std::string str;
+    fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
 
     REQUIRE(handler.get_range(4, str) == 0);
     REQUIRE(str == "test");
@@ -102,17 +100,17 @@ TEST_CASE("InputHandlerTest_GetRangeTest", "[InputHandlerTest]")
     REQUIRE(handler.get_cur_pos_in_line() == 3);
     REQUIRE(handler.get_lines_read() == 0);
 
-    REQUIRE(handler.get_range(2, str) == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_range(2, str) == std::char_traits<char>::eof());
     REQUIRE(handler.get_current() == 't');
     REQUIRE(handler.get_cur_pos_in_line() == 3);
     REQUIRE(handler.get_lines_read() == 0);
 
-    REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
     REQUIRE(handler.get_cur_pos_in_line() == 4);
     REQUIRE(handler.get_lines_read() == 0);
 
-    REQUIRE(handler.get_range(0, str) == pchar_input_handler::char_traits_type::eof());
-    REQUIRE(handler.get_current() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_range(0, str) == 0);
+    REQUIRE(handler.get_current() == std::char_traits<char>::eof());
     REQUIRE(handler.get_cur_pos_in_line() == 4);
     REQUIRE(handler.get_lines_read() == 0);
 }
@@ -120,7 +118,7 @@ TEST_CASE("InputHandlerTest_GetRangeTest", "[InputHandlerTest]")
 TEST_CASE("InputHandlerTest_UngetTest", "[InputHandlerTest]")
 {
     char input[] = "test";
-    pchar_input_handler handler(fkyaml::detail::input_adapter(input));
+    fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
 
     REQUIRE(handler.get_current() == 't');
     REQUIRE(handler.get_cur_pos_in_line() == 0);
@@ -140,7 +138,7 @@ TEST_CASE("InputHandlerTest_UngetTest", "[InputHandlerTest]")
     REQUIRE(handler.get_next() == 'e');
     REQUIRE(handler.get_next() == 's');
     REQUIRE(handler.get_next() == 't');
-    REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
     handler.unget();
     REQUIRE(handler.get_current() == 't');
     REQUIRE(handler.get_cur_pos_in_line() == 3);
@@ -150,7 +148,7 @@ TEST_CASE("InputHandlerTest_UngetTest", "[InputHandlerTest]")
 TEST_CASE("InputHandlerTest_UngetRangeTest", "[InputHandlerTest]")
 {
     char input[] = "test";
-    pchar_input_handler handler(fkyaml::detail::input_adapter(input));
+    fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
 
     REQUIRE(handler.get_current() == 't');
     handler.unget_range(4);
@@ -172,7 +170,7 @@ TEST_CASE("InputHandlerTest_UngetRangeTest", "[InputHandlerTest]")
 
     REQUIRE(handler.get_next() == 's');
     REQUIRE(handler.get_next() == 't');
-    REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
     handler.unget_range(2);
     REQUIRE(handler.get_current() == 's');
     REQUIRE(handler.get_cur_pos_in_line() == 2);
@@ -182,7 +180,7 @@ TEST_CASE("InputHandlerTest_UngetRangeTest", "[InputHandlerTest]")
 TEST_CASE("InputHandlerTest_TestNextCharTest", "[InputHandlerTest]")
 {
     char input[] = "test";
-    pchar_input_handler handler(fkyaml::detail::input_adapter(input));
+    fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
 
     REQUIRE(handler.test_next_char('e') == true);
     REQUIRE(handler.get_cur_pos_in_line() == 0);
@@ -198,15 +196,14 @@ TEST_CASE("InputHandlerTest_TestNextCharTest", "[InputHandlerTest]")
     REQUIRE(handler.get_next() == 't');
     REQUIRE(handler.test_next_char('t') == false);
 
-    REQUIRE(handler.get_next() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
     REQUIRE(handler.test_next_char('t') == false);
     REQUIRE(handler.get_cur_pos_in_line() == 4);
     REQUIRE(handler.get_lines_read() == 0);
 
-    pchar_input_handler::char_type char_eof =
-        pchar_input_handler::char_traits_type::to_char_type(pchar_input_handler::char_traits_type::eof());
+    char char_eof = std::char_traits<char>::to_char_type(std::char_traits<char>::eof());
     REQUIRE(handler.test_next_char(char_eof) == false);
-    REQUIRE(handler.get_current() == pchar_input_handler::char_traits_type::eof());
+    REQUIRE(handler.get_current() == std::char_traits<char>::eof());
 }
 
 TEST_CASE("InputHandlerTest_TestMultipleLinesTest", "[InputHandlerTest]")
@@ -214,8 +211,8 @@ TEST_CASE("InputHandlerTest_TestMultipleLinesTest", "[InputHandlerTest]")
     SECTION("first character is not a newline code.")
     {
         char input[] = "test\nfoo";
-        pchar_input_handler::string_type str;
-        pchar_input_handler handler(fkyaml::detail::input_adapter(input));
+        std::string str;
+        fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
 
         REQUIRE(handler.get_range(4, str) == 0);
         REQUIRE(handler.get_cur_pos_in_line() == 3);
@@ -237,8 +234,8 @@ TEST_CASE("InputHandlerTest_TestMultipleLinesTest", "[InputHandlerTest]")
     SECTION("first character is a newline code.")
     {
         char input[] = "\ntest\nfoo";
-        pchar_input_handler::string_type str;
-        pchar_input_handler handler(fkyaml::detail::input_adapter(input));
+        std::string str;
+        fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
 
         REQUIRE(handler.get_next() == 't');
         REQUIRE(handler.get_cur_pos_in_line() == 0);
