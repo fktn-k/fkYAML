@@ -4869,7 +4869,7 @@ public:
     {
         // char8_t characters must be encoded in the UTF-8 format.
         // See https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0482r6.html.
-        FK_YAML_ASSERT(m_encode_type == m_encode_type == utf_encode_t::UTF_8);
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
     }
 
     // allow only move construct/assignment like other input adapters.
@@ -4898,7 +4898,7 @@ private:
     /// The iterator at the end of input.
     IterType m_end {};
     /// The encoding type for this input adapter.
-    utf_encode_t m_encode_type {utf_encode_t::UTF_8_N};
+    utf_encode_t m_encode_type {utf_encode_t::UTF_8};
 };
 
 #endif // defined(FK_YAML_HAS_CHAR8_T)
