@@ -176,9 +176,9 @@ public:
     /// @return false The next character is not the expected one.
     bool test_next_char(char expected)
     {
-        if (m_position.cur_pos == m_buffer_size - 1)
+        if (m_position.cur_pos >= m_buffer_size - 1)
         {
-            // already at the end of the input.
+            // there is no input character left.
             return false;
         }
 
