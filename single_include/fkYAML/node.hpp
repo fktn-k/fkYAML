@@ -2998,14 +2998,19 @@ private:
                         }
                     }
 
+                    // " :" is permitted in a plain style string token, but not when followed by a space.
+                    if (current == ':')
+                    {
+                        char_int_type next = m_input_handler.get_next();
+                        m_input_handler.unget();
+                        if (next == ' ')
+                        {
+                            return lexical_token_t::STRING_VALUE;
+                        }
+                    }
+
                     switch (current)
                     {
-                    case ':':
-                        // " :" is permitted in a plain style string token, but not when followed by a space.
-                        if (!m_input_handler.test_next_char(' '))
-                        {
-                            break;
-                        }
                     case ' ':
                     case '\r':
                     case '\n':
