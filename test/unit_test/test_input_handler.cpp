@@ -115,6 +115,34 @@ TEST_CASE("InputHandlerTest_GetRangeTest", "[InputHandlerTest]")
     REQUIRE(handler.get_lines_read() == 0);
 }
 
+TEST_CASE("InputHandlerTest_PeekNextTest", "[InputHandlerTest]")
+{
+    char input[] = "test";
+    fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
+
+    REQUIRE(handler.peek_next() == 'e');
+    REQUIRE(handler.get_cur_pos_in_line() == 0);
+    REQUIRE(handler.get_lines_read() == 0);
+
+    REQUIRE(handler.get_next() == 'e');
+    REQUIRE(handler.peek_next() == 's');
+    REQUIRE_FALSE(handler.peek_next() == 't');
+    REQUIRE(handler.get_cur_pos_in_line() == 1);
+    REQUIRE(handler.get_lines_read() == 0);
+
+    REQUIRE(handler.get_next() == 's');
+    REQUIRE(handler.get_next() == 't');
+    REQUIRE_FALSE(handler.peek_next() == 't');
+
+    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
+    REQUIRE_FALSE(handler.peek_next() == 't');
+    REQUIRE(handler.get_cur_pos_in_line() == 4);
+    REQUIRE(handler.get_lines_read() == 0);
+
+    REQUIRE(handler.peek_next() == std::char_traits<char>::eof());
+    REQUIRE(handler.get_current() == std::char_traits<char>::eof());
+}
+
 TEST_CASE("InputHandlerTest_UngetTest", "[InputHandlerTest]")
 {
     char input[] = "test";
@@ -175,35 +203,6 @@ TEST_CASE("InputHandlerTest_UngetRangeTest", "[InputHandlerTest]")
     REQUIRE(handler.get_current() == 's');
     REQUIRE(handler.get_cur_pos_in_line() == 2);
     REQUIRE(handler.get_lines_read() == 0);
-}
-
-TEST_CASE("InputHandlerTest_TestNextCharTest", "[InputHandlerTest]")
-{
-    char input[] = "test";
-    fkyaml::detail::input_handler handler(fkyaml::detail::input_adapter(input));
-
-    REQUIRE(handler.test_next_char('e') == true);
-    REQUIRE(handler.get_cur_pos_in_line() == 0);
-    REQUIRE(handler.get_lines_read() == 0);
-
-    REQUIRE(handler.get_next() == 'e');
-    REQUIRE(handler.test_next_char('s') == true);
-    REQUIRE(handler.test_next_char('t') == false);
-    REQUIRE(handler.get_cur_pos_in_line() == 1);
-    REQUIRE(handler.get_lines_read() == 0);
-
-    REQUIRE(handler.get_next() == 's');
-    REQUIRE(handler.get_next() == 't');
-    REQUIRE(handler.test_next_char('t') == false);
-
-    REQUIRE(handler.get_next() == std::char_traits<char>::eof());
-    REQUIRE(handler.test_next_char('t') == false);
-    REQUIRE(handler.get_cur_pos_in_line() == 4);
-    REQUIRE(handler.get_lines_read() == 0);
-
-    char char_eof = std::char_traits<char>::to_char_type(std::char_traits<char>::eof());
-    REQUIRE(handler.test_next_char(char_eof) == false);
-    REQUIRE(handler.get_current() == std::char_traits<char>::eof());
 }
 
 TEST_CASE("InputHandlerTest_TestMultipleLinesTest", "[InputHandlerTest]")

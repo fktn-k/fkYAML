@@ -132,6 +132,19 @@ public:
         return 0;
     }
 
+    /// @brief Get the next character without changing the current position.
+    /// @return int A character if not already at the end of the input buffer, an EOF otherwise.
+    int peek_next()
+    {
+        if (m_position.cur_pos >= m_buffer_size - 1)
+        {
+            // there is no input character left.
+            return s_end_of_input;
+        }
+
+        return char_traits_type::to_int_type(m_buffer[m_position.cur_pos + 1]);
+    }
+
     /// @brief Move backward the current position.
     void unget()
     {
@@ -168,21 +181,6 @@ public:
         {
             unget();
         }
-    }
-
-    /// @brief Check if the next character is the expected one.
-    /// @param expected An expected next character.
-    /// @return true The next character is the expected one.
-    /// @return false The next character is not the expected one.
-    bool test_next_char(char expected)
-    {
-        if (m_position.cur_pos >= m_buffer_size - 1)
-        {
-            // there is no input character left.
-            return false;
-        }
-
-        return char_traits_type::eq(m_buffer[m_position.cur_pos + 1], expected);
     }
 
     /// @brief Get the current position in the current line.
