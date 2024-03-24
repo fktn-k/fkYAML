@@ -2954,7 +2954,7 @@ private:
                     // " :" is permitted in a plain style string token, but not when followed by a space.
                     if (current == ':')
                     {
-                        char_int_type next = m_input_handler.get_next();
+                        int next = m_input_handler.get_next();
                         m_input_handler.unget();
                         if (next == ' ')
                         {
