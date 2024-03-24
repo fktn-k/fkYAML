@@ -26,6 +26,8 @@ jobs:
   coverage:
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
 
     steps:
     - uses: actions/checkout@v4
@@ -39,7 +41,7 @@ jobs:
         lcov -v
 
     - name: Generate coverage
-      run: make lcov-coverage
+      run: make html-coverage
 
     - name: Upload coverage to Coveralls
       uses: coverallsapp/github-action@v2
@@ -47,3 +49,38 @@ jobs:
         github-token: ${{secrets.GITHUB_TOKEN}}
         file: ${{github.workspace}}/build_coverage/coverage/fkYAML.info
         format: lcov
+
+    - name: Decide the artifact name
+      id: create_zip
+      if: github.event_name == 'pull_request'
+      env:
+        PR_NUMBER: ${{github.event.number}}
+      run: |
+        echo "artifact name: fkYAML_coverage.pr${{env.PR_NUMBER}}"
+        echo "artifact_name=fkYAML_coverage.pr${{env.PR_NUMBER}}" >> $GITHUB_OUTPUT
+
+    - name: Upload coverage as an artifact
+      id: upload_artifact_step
+      if: steps.create_zip.conclusion == 'success'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{steps.create_zip.outputs.artifact_name}}
+        path: |
+          ${{github.workspace}}/build_coverage/coverage/*
+          ${{github.workspace}}/build_coverage/html/**
+        overwrite: true
+
+    - name: Notify the artifact URL
+      if: steps.upload_artifact_step.conclusion == 'success'
+      uses: thollander/actions-comment-pull-request@v2
+      with:
+        message: |
+          ## :octocat: Upload Coverage Event Notification
+          Coverage data has been uploaded for the commit [${{github.event.pull_request.head.sha}}](https://github.com/${{github.repository}}/commit/${{github.event.pull_request.head.sha}}).
+          You can download the artifact which contains the same file uploaded to the Coveralls and its HTML version.
+
+          | Name | ${{steps.create_zip.outputs.artifact_name}}.zip      |
+          |:-----|:-----------------------------------------------------|
+          | ID   | ${{steps.upload_artifact_step.outputs.artifact-id}}  |
+          | URL  | ${{steps.upload_artifact_step.outputs.artifact-url}} |
+        comment_tag: notification
