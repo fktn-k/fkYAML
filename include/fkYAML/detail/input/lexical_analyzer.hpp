@@ -45,17 +45,11 @@ namespace detail
 
 /// @brief A class which lexically analizes YAML formatted inputs.
 /// @tparam BasicNodeType A type of the container for YAML values.
-template <
-    typename BasicNodeType, typename InputAdapterType,
-    enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_input_adapter<InputAdapterType>>::value, int> = 0>
+template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 class lexical_analyzer
 {
 private:
-    using input_handler_type = input_handler<InputAdapterType>;
-    using char_traits_type = typename input_handler_type::char_traits_type;
-    using char_type = typename char_traits_type::char_type;
-    using char_int_type = typename char_traits_type::int_type;
-    using input_string_type = typename input_handler_type::string_type;
+    using char_traits_type = typename std::char_traits<char>;
 
     enum class block_style_indicator_t
     {
@@ -77,7 +71,9 @@ public:
     using string_type = typename BasicNodeType::string_type;
 
     /// @brief Construct a new lexical_analyzer object.
+    /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object.
+    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     explicit lexical_analyzer(InputAdapterType&& input_adapter)
         : m_input_handler(std::move(input_adapter))
     {
@@ -89,7 +85,7 @@ public:
     {
         skip_white_spaces_and_newline_codes();
 
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
         m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
         m_last_token_begin_line = m_input_handler.get_lines_read();
 
@@ -141,37 +137,6 @@ public:
 
             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
         }
-            // switch (m_input_handler.get_next())
-            // {
-            // case ' ': {
-            //     size_t prev_pos = m_input_handler.get_lines_read();
-            //     skip_white_spaces_and_comments();
-            //     size_t cur_pos = m_input_handler.get_lines_read();
-            //     if (prev_pos == cur_pos)
-            //     {
-            //         current = m_input_handler.get_current();
-            //         if (current != '\r' && current != '\n')
-            //         {
-            //             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
-            //         }
-            //     }
-            //     return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            // }
-            // case '\r': {
-            //     char_int_type next = m_input_handler.get_next();
-            //     if (next == '\n')
-            //     {
-            //         m_input_handler.get_next();
-            //     }
-            //     return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            // }
-            // case '\n':
-            //     m_input_handler.get_next();
-            //     return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            // default:
-            //     emit_error("Half-width spaces or newline codes are required after a key separater(:).");
-            // }
-
         case ',': // value separater
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
@@ -179,7 +144,7 @@ public:
             m_value_buffer.clear();
             while (true)
             {
-                char_int_type next = m_input_handler.get_next();
+                int next = m_input_handler.get_next();
                 if (next == s_end_of_input || next == '\r' || next == '\n')
                 {
                     emit_error("An anchor label must be followed by some value.");
@@ -197,7 +162,7 @@ public:
             m_value_buffer.clear();
             while (true)
             {
-                char_int_type next = m_input_handler.get_next();
+                int next = m_input_handler.get_next();
                 if (next == ' ' || next == '\r' || next == '\n' || next == s_end_of_input)
                 {
                     if (m_value_buffer.empty())
@@ -217,7 +182,7 @@ public:
         case '%': // directive prefix
             return m_last_token_type = scan_directive();
         case '-': {
-            char_int_type next = m_input_handler.get_next();
+            int next = m_input_handler.get_next();
             if (next == ' ')
             {
                 // Move a cursor to the beginning of the next token.
@@ -231,7 +196,7 @@ public:
                 return m_last_token_type = scan_number();
             }
 
-            char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
+            int ret = m_input_handler.get_range(3, m_value_buffer);
             if (ret != s_end_of_input)
             {
                 if (m_value_buffer == "---")
@@ -279,7 +244,7 @@ public:
         case '+':
             return m_last_token_type = scan_number();
         case '.': {
-            char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
+            int ret = m_input_handler.get_range(3, m_value_buffer);
             if (ret != s_end_of_input)
             {
                 if (m_value_buffer == "...")
@@ -377,7 +342,7 @@ public:
     const string_type& get_string() const noexcept
     {
         // TODO: Provide support for different string types between nodes & inputs.
-        static_assert(std::is_same<string_type, input_string_type>::value, "Unsupported, different string types.");
+        static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
         return m_value_buffer;
     }
 
@@ -395,7 +360,7 @@ private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
-    char convert_hex_char_to_byte(char_int_type source) const
+    char convert_hex_char_to_byte(int source) const
     {
         if ('0' <= source && source <= '9')
         {
@@ -524,7 +489,7 @@ private:
     {
         m_value_buffer.clear();
 
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
         FK_YAML_ASSERT(std::isdigit(current) || current == '-' || current == '+');
 
         lexical_token_t ret = lexical_token_t::END_OF_BUFFER;
@@ -576,7 +541,7 @@ private:
     /// @return lexical_token_t The lexical token type for either integer or float numbers.
     lexical_token_t scan_negative_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         // The value of `next` must be guranteed to be a digit in the get_next_token() function.
         FK_YAML_ASSERT(std::isdigit(next));
@@ -588,7 +553,7 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float).
     lexical_token_t scan_number_after_zero_at_first()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         switch (next)
         {
         case '.':
@@ -611,7 +576,7 @@ private:
     /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_decimal_point()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         if (std::isdigit(next))
         {
@@ -627,7 +592,7 @@ private:
     /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_exponent()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         if (next == '+' || next == '-')
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -649,7 +614,7 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number_after_sign()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         if (std::isdigit(next))
         {
@@ -664,7 +629,7 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         if (std::isdigit(next))
         {
@@ -697,7 +662,7 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_octal_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         if ('0' <= next && next <= '7')
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -710,7 +675,7 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_hexadecimal_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         if (std::isxdigit(next))
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -796,7 +761,7 @@ private:
     /// @return lexical_token_t The lexical token type for strings.
     lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote)
     {
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
 
         for (;; current = m_input_handler.get_next())
         {
@@ -842,7 +807,7 @@ private:
                     // " :" is permitted in a plain style string token, but not when followed by a space.
                     if (current == ':')
                     {
-                        char_int_type next = m_input_handler.get_next();
+                        int next = m_input_handler.get_next();
                         m_input_handler.unget();
                         if (next == ' ')
                         {
@@ -907,7 +872,7 @@ private:
                     continue;
                 }
 
-                char_int_type next = m_input_handler.get_next();
+                int next = m_input_handler.get_next();
                 m_input_handler.unget();
 
                 // A colon as a key separator must be followed by a space or a newline code.
@@ -1005,7 +970,7 @@ private:
                     m_value_buffer.push_back('\r');
                     break;
                 case 'e':
-                    m_value_buffer.push_back(char_type(0x1B));
+                    m_value_buffer.push_back(char(0x1B));
                     break;
                 case ' ':
                     m_value_buffer.push_back(' ');
@@ -1079,7 +1044,7 @@ private:
             // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
             if (current <= 0xDF)
             {
-                std::array<char_int_type, 2> byte_array = {{current, m_input_handler.get_next()}};
+                std::array<int, 2> byte_array = {{current, m_input_handler.get_next()}};
                 if (!utf8_encoding::validate(byte_array))
                 {
                     throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
@@ -1093,8 +1058,7 @@ private:
             // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
             if (current <= 0xEF)
             {
-                std::array<char_int_type, 3> byte_array = {
-                    {current, m_input_handler.get_next(), m_input_handler.get_next()}};
+                std::array<int, 3> byte_array = {{current, m_input_handler.get_next(), m_input_handler.get_next()}};
                 if (!utf8_encoding::validate(byte_array))
                 {
                     throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
@@ -1108,7 +1072,7 @@ private:
             }
 
             // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            std::array<char_int_type, 4> byte_array = {
+            std::array<int, 4> byte_array = {
                 {current, m_input_handler.get_next(), m_input_handler.get_next(), m_input_handler.get_next()}};
             if (!utf8_encoding::validate(byte_array))
             {
@@ -1128,7 +1092,7 @@ private:
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
         for (;; current = m_input_handler.get_next())
         {
             if (current == ' ')
@@ -1354,7 +1318,7 @@ private:
 
     /// @brief Handle unescaped control characters.
     /// @param c A target character.
-    void handle_unescaped_control_char(char_int_type c)
+    void handle_unescaped_control_char(int c)
     {
         FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
 
@@ -1446,7 +1410,7 @@ private:
 
     void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
     {
-        char_int_type ch = m_input_handler.get_next();
+        int ch = m_input_handler.get_next();
 
         chomp_type = chomping_indicator_t::CLIP;
         if (ch == '-')
@@ -1558,12 +1522,12 @@ private:
 
 private:
     /// The value of EOF for the target characters.
-    static constexpr char_int_type s_end_of_input = char_traits_type::eof();
+    static constexpr int s_end_of_input = char_traits_type::eof();
 
     /// An input buffer adapter to be analyzed.
-    input_handler_type m_input_handler;
+    input_handler m_input_handler;
     /// A temporal buffer to store a string to be parsed to an actual datum.
-    input_string_type m_value_buffer {};
+    std::string m_value_buffer {};
     /// A temporal buffer to store a UTF-8 encoded char sequence.
     std::array<char, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.

@@ -62,7 +62,7 @@ public:
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     BasicNodeType deserialize(InputAdapterType&& input_adapter)
     {
-        lexical_analyzer<BasicNodeType, InputAdapterType> lexer(std::forward<InputAdapterType>(input_adapter));
+        lexical_analyzer<BasicNodeType> lexer(std::forward<InputAdapterType>(input_adapter));
 
         BasicNodeType root = BasicNodeType::mapping();
         m_current_node = &root;

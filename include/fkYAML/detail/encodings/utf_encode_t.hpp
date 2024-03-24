@@ -8,8 +8,8 @@
 ///
 /// @file
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_ENCODE_T_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_ENCODE_T_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -22,22 +22,17 @@ namespace detail
 
 /// @brief Definition of Unicode encoding types
 /// @note Since fkYAML doesn't treat UTF-16/UTF-32 encoded characters per byte, endians do not matter.
-enum class encode_t
+enum class utf_encode_t
 {
-    UTF_8_N,      //!< UTF-8 without BOM
-    UTF_8_BOM,    //!< UTF-8 with BOM
-    UTF_16BE_N,   //!< UTF-16BE without BOM
-    UTF_16BE_BOM, //!< UTF-16BE with BOM
-    UTF_16LE_N,   //!< UTF-16LE without BOM
-    UTF_16LE_BOM, //!< UTF-16LE with BOM
-    UTF_32BE_N,   //!< UTF-32BE without BOM
-    UTF_32BE_BOM, //!< UTF-32BE with BOM
-    UTF_32LE_N,   //!< UTF-32LE without BOM
-    UTF_32LE_BOM, //!< UTF-32LE with BOM
+    UTF_8,    //!< UTF-8
+    UTF_16BE, //!< UTF-16 Big Endian
+    UTF_16LE, //!< UTF-16 Little Endian
+    UTF_32BE, //!< UTF-32 Big Endian
+    UTF_32LE, //!< UTF-32 Little Endian
 };
 
 } // namespace detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_ENCODE_T_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_ */
