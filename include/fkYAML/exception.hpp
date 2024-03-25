@@ -144,18 +144,39 @@ public:
     /// @param[in] msg An error message.
     /// @param[in] type The type of a source node value.
     explicit type_error(const char* msg, detail::node_t type) noexcept
-        : exception(generate_error_message(msg, type).c_str())
+        : exception(generate_error_message(msg, detail::to_string(type)).c_str())
+    {
+    }
+
+    /// @brief Construct a new type_error object with an error message and a type name.
+    /// @param[in] msg An error message.
+    /// @param[in] type_name The name of the target type.
+    explicit type_error(const char* msg, const char* type_name) noexcept
+        : exception(generate_error_message(msg, type_name).c_str())
+    {
+    }
+
+    /// @brief Construct a new type_error object with an error message and a type index.
+    /// @param[in] msg An error message.
+    /// @param[in] index The index for the target type.
+    explicit type_error(const char* msg, std::size_t index) noexcept
+        : exception(generate_error_message(msg, index).c_str())
     {
     }
 
 private:
     /// @brief Generate an error message from given parameters.
     /// @param msg An error message.
-    /// @param type The type of a source node value.
+    /// @param type The type of a source value.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, detail::node_t type) const noexcept
+    std::string generate_error_message(const char* msg, const char* type_name) const noexcept
     {
-        return detail::format("type_error: %s type=%s", msg, detail::to_string(type));
+        return detail::format("type_error: %s type=%s", msg, type_name);
+    }
+
+    std::string generate_error_message(const char* msg, std::size_t index) const noexcept
+    {
+        return detail::format("type_error: %s index=%zu", msg, index);
     }
 };
 

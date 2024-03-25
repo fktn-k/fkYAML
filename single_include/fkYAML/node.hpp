@@ -272,6 +272,21 @@ namespace detail
 template <typename T>
 using add_pointer_t = typename std::add_pointer<T>::type;
 
+/// @brief An alias template for std::alias_storage::type with C++11.
+/// @note std::aligned_storage_t is available since C++14.
+/// @sa https://en.cppreference.com/w/cpp/types/aligned_storage
+/// @tparam Len The size of a buffer (T * count, must not be zero)
+/// @tparam Align The alignment of a factor.
+template <std::size_t Len, std::size_t Align>
+using aligned_storage_t = typename std::aligned_storage<Len, Align>::type;
+
+/// @brief An alias template for std::decay::type with C++11.
+/// @note std::decay_t is available since C++14.
+/// @sa https://en.cppreference.com/w/cpp/types/decay
+/// @tparam T A type to be applied the decay type conversion.
+template <typename T>
+using decay_t = typename std::decay<T>::type;
+
 /// @brief An alias template for std::enable_if::type with C++11.
 /// @note std::enable_if_t is available since C++14.
 /// @sa https://en.cppreference.com/w/cpp/types/enable_if
@@ -310,9 +325,11 @@ using remove_pointer_t = typename std::remove_pointer<T>::type;
 template <typename T>
 using remove_reference_t = typename std::remove_reference<T>::type;
 
-#else
+#else // !defined(FK_YAML_HAS_CXX_14)
 
 using std::add_pointer_t;
+using std::aligned_storage_t;
+using std::decay_t;
 using std::enable_if_t;
 using std::is_null_pointer;
 using std::remove_cv_t;
@@ -404,7 +421,7 @@ struct make_void
 template <typename... Types>
 using void_t = typename make_void<Types...>::type;
 
-#else
+#else // !defined(FK_YAML_HAS_CXX_17)
 
 using std::bool_constant;
 using std::conjunction;
@@ -982,18 +999,39 @@ public:
     /// @param[in] msg An error message.
     /// @param[in] type The type of a source node value.
     explicit type_error(const char* msg, detail::node_t type) noexcept
-        : exception(generate_error_message(msg, type).c_str())
+        : exception(generate_error_message(msg, detail::to_string(type)).c_str())
+    {
+    }
+
+    /// @brief Construct a new type_error object with an error message and a type name.
+    /// @param[in] msg An error message.
+    /// @param[in] type_name The name of the target type.
+    explicit type_error(const char* msg, const char* type_name) noexcept
+        : exception(generate_error_message(msg, type_name).c_str())
+    {
+    }
+
+    /// @brief Construct a new type_error object with an error message and a type index.
+    /// @param[in] msg An error message.
+    /// @param[in] index The index for the target type.
+    explicit type_error(const char* msg, std::size_t index) noexcept
+        : exception(generate_error_message(msg, index).c_str())
     {
     }
 
 private:
     /// @brief Generate an error message from given parameters.
     /// @param msg An error message.
-    /// @param type The type of a source node value.
+    /// @param type The type of a source value.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, detail::node_t type) const noexcept
+    std::string generate_error_message(const char* msg, const char* type_name) const noexcept
     {
-        return detail::format("type_error: %s type=%s", msg, detail::to_string(type));
+        return detail::format("type_error: %s type=%s", msg, type_name);
+    }
+
+    std::string generate_error_message(const char* msg, std::size_t index) const noexcept
+    {
+        return detail::format("type_error: %s index=%zu", msg, index);
     }
 };
 

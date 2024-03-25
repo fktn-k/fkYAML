@@ -44,6 +44,21 @@ namespace detail
 template <typename T>
 using add_pointer_t = typename std::add_pointer<T>::type;
 
+/// @brief An alias template for std::alias_storage::type with C++11.
+/// @note std::aligned_storage_t is available since C++14.
+/// @sa https://en.cppreference.com/w/cpp/types/aligned_storage
+/// @tparam Len The size of a buffer (T * count, must not be zero)
+/// @tparam Align The alignment of a factor.
+template <std::size_t Len, std::size_t Align>
+using aligned_storage_t = typename std::aligned_storage<Len, Align>::type;
+
+/// @brief An alias template for std::decay::type with C++11.
+/// @note std::decay_t is available since C++14.
+/// @sa https://en.cppreference.com/w/cpp/types/decay
+/// @tparam T A type to be applied the decay type conversion.
+template <typename T>
+using decay_t = typename std::decay<T>::type;
+
 /// @brief An alias template for std::enable_if::type with C++11.
 /// @note std::enable_if_t is available since C++14.
 /// @sa https://en.cppreference.com/w/cpp/types/enable_if
@@ -82,9 +97,11 @@ using remove_pointer_t = typename std::remove_pointer<T>::type;
 template <typename T>
 using remove_reference_t = typename std::remove_reference<T>::type;
 
-#else
+#else // !defined(FK_YAML_HAS_CXX_14)
 
 using std::add_pointer_t;
+using std::aligned_storage_t;
+using std::decay_t;
 using std::enable_if_t;
 using std::is_null_pointer;
 using std::remove_cv_t;
@@ -176,7 +193,7 @@ struct make_void
 template <typename... Types>
 using void_t = typename make_void<Types...>::type;
 
-#else
+#else // !defined(FK_YAML_HAS_CXX_17)
 
 using std::bool_constant;
 using std::conjunction;
