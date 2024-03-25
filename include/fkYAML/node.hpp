@@ -1018,6 +1018,178 @@ public:
         }
     }
 
+    /// @brief Get a basic_node object with a key of a compatible type.
+    /// @tparam KeyType A key type compatible with basic_node
+    /// @param key A key to the target basic_node object in a sequence/mapping node.
+    /// @return Reference to the basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
+    template <
+        typename KeyType, detail::enable_if_t<
+                              detail::conjunction<
+                                  detail::negation<detail::is_basic_node<KeyType>>,
+                                  detail::is_node_compatible_type<basic_node, KeyType>>::value,
+                              int> = 0>
+    basic_node& at(KeyType&& key)
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
+        }
+
+        basic_node node_key = std::forward<KeyType>(key);
+
+        if (is_sequence())
+        {
+            if (!node_key.is_integer())
+            {
+                throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
+            }
+
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            int index = node_key.template get_value<int>();
+            int size = static_cast<int>(m_node_value.p_sequence->size());
+            if (index >= size)
+            {
+                throw fkyaml::out_of_range(index);
+            }
+            return m_node_value.p_sequence->at(index);
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        bool is_found = m_node_value.p_mapping->find(node_key) != m_node_value.p_mapping->end();
+        if (!is_found)
+        {
+            throw fkyaml::out_of_range(serialize(node_key).c_str());
+        }
+        return m_node_value.p_mapping->at(node_key);
+    }
+
+    /// @brief Get a basic_node object with a key of a compatible type.
+    /// @tparam KeyType A key type compatible with basic_node
+    /// @param key A key to the target basic_node object in a sequence/mapping node.
+    /// @return Constant reference to the basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
+    template <
+        typename KeyType, detail::enable_if_t<
+                              detail::conjunction<
+                                  detail::negation<detail::is_basic_node<KeyType>>,
+                                  detail::is_node_compatible_type<basic_node, KeyType>>::value,
+                              int> = 0>
+    const basic_node& at(KeyType&& key) const
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
+        }
+
+        basic_node node_key = std::forward<KeyType>(key);
+
+        if (is_sequence())
+        {
+            if (!node_key.is_integer())
+            {
+                throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
+            }
+
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            int index = node_key.template get_value<int>();
+            int size = static_cast<int>(m_node_value.p_sequence->size());
+            if (index >= size)
+            {
+                throw fkyaml::out_of_range(index);
+            }
+            return m_node_value.p_sequence->at(index);
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        bool is_found = m_node_value.p_mapping->find(node_key) != m_node_value.p_mapping->end();
+        if (!is_found)
+        {
+            throw fkyaml::out_of_range(serialize(node_key).c_str());
+        }
+        return m_node_value.p_mapping->at(node_key);
+    }
+
+    /// @brief Get a basic_node object with a basic_node key object.
+    /// @tparam KeyType A key type which is a kind of the basic_node template class.
+    /// @param key A key to the target basic_node object in a sequence/mapping node.
+    /// @return Reference to the basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
+    template <
+        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    basic_node& at(KeyType&& key)
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
+        }
+
+        if (is_sequence())
+        {
+            if (!key.is_integer())
+            {
+                throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
+            }
+
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            int index = std::forward<KeyType>(key).template get_value<int>();
+            int size = static_cast<int>(m_node_value.p_sequence->size());
+            if (index >= size)
+            {
+                throw fkyaml::out_of_range(index);
+            }
+            return m_node_value.p_sequence->at(index);
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        bool is_found = m_node_value.p_mapping->find(key) != m_node_value.p_mapping->end();
+        if (!is_found)
+        {
+            throw fkyaml::out_of_range(serialize(key).c_str());
+        }
+        return m_node_value.p_mapping->at(key);
+    }
+
+    /// @brief Get a basic_node object with a basic_node key object.
+    /// @tparam KeyType A key type which is a kind of the basic_node template class.
+    /// @param key A key to the target basic_node object in a sequence/mapping node.
+    /// @return Constant reference to the basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
+    template <
+        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    const basic_node& at(KeyType&& key) const
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
+        }
+
+        if (is_sequence())
+        {
+            if (!key.is_integer())
+            {
+                throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
+            }
+
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            int index = std::forward<KeyType>(key).template get_value<int>();
+            int size = static_cast<int>(m_node_value.p_sequence->size());
+            if (index >= size)
+            {
+                throw fkyaml::out_of_range(index);
+            }
+            return m_node_value.p_sequence->at(index);
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        bool is_found = m_node_value.p_mapping->find(key) != m_node_value.p_mapping->end();
+        if (!is_found)
+        {
+            throw fkyaml::out_of_range(serialize(key).c_str());
+        }
+        return m_node_value.p_mapping->at(key);
+    }
+
     /// @brief Get the YAML version specification for this basic_node object.
     /// @return The version of the YAML format applied to the basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
