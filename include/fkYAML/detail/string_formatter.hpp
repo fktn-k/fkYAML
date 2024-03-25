@@ -38,7 +38,7 @@ inline std::string format(const char* fmt, ...)
     return std::string(buffer.get(), size);
 }
 
-}; // namespace detail
+} // namespace detail
 
 FK_YAML_NAMESPACE_END
 
