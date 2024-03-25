@@ -159,6 +159,31 @@ private:
     }
 };
 
+class out_of_range : public exception
+{
+public:
+    explicit out_of_range(int index) noexcept
+        : exception(generate_error_message(index).c_str())
+    {
+    }
+
+    explicit out_of_range(const char* key) noexcept
+        : exception(generate_error_message(key).c_str())
+    {
+    }
+
+private:
+    std::string generate_error_message(int index)
+    {
+        return detail::format("out_of_range: index %d is out of range", index);
+    }
+
+    std::string generate_error_message(const char* key)
+    {
+        return detail::format("out_of_range: key \'%s\' is not found.", key);
+    }
+};
+
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_EXCEPTION_HPP_ */

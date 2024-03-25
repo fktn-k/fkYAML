@@ -16,9 +16,16 @@ int main()
     std::cout << n1[index_two]   << std::endl;
     std::cout << n1[index_three] << std::endl;
 
-    // this will cause an undefined behavior!
-    // fkyaml::node index_four = 4;
-    // std::cout << n1[index_four] << std::endl;
+    // try to print a YAML node with an index which exceeds the size.
+    try
+    {
+        fkyaml::node index_four = 4;
+        std::cout << n1.at(index_four) << std::endl;
+    }
+    catch (const fkyaml::out_of_range& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
 
     // create a YAML node.
     fkyaml::node n2 = {{"foo", true}, {"bar", 123}};
@@ -29,9 +36,16 @@ int main()
     std::cout << std::boolalpha << n2[foo_key] << std::endl;
     std::cout << n2[bar_key] << std::endl;
 
-    // try to access a YAML node with a key which does not exist.
-    fkyaml::node true_key = true;
-    std::cout << n2[true_key] << std::endl;
+    // try to print a YAML node with a key which does not exist.
+    try
+    {
+        fkyaml::node true_key = true;
+        std::cout << n2.at(true_key) << std::endl;
+    }
+    catch (const fkyaml::out_of_range& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
 
     return 0;
 }

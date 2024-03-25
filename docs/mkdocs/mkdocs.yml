@@ -107,6 +107,7 @@ nav:
           - operator=: api/basic_node/operator=.md
           - add_anchor_name: api/basic_node/add_anchor_name.md
           - alias_of: api/basic_node/alias_of.md
+          - at: api/basic_node/at.md
           - begin: api/basic_node/begin.md
           - boolean_type: api/basic_node/boolean_type.md
           - const_iterator: api/basic_node/const_iterator.md
@@ -159,6 +160,7 @@ nav:
           - (destructor): api/exception/destructor.md
           - what: api/exception/what.md
           - invalid_encoding: api/exception/invalid_encoding.md
+          - out_of_range: api/exception/out_of_range.md
           - parse_error: api/exception/parse_error.md
           - type_error: api/exception/type_error.md
       - macros: api/macros.md

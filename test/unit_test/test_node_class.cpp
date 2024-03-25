@@ -860,18 +860,25 @@ TEST_CASE("NodeClassTest_SubscriptOperatorTest", "[NodeClassTest]")
             REQUIRE_THROWS_AS(const_node[""], fkyaml::type_error);
         }
 
-        fkyaml::node node_key =
-            GENERATE(fkyaml::node::mapping(), fkyaml::node(), fkyaml::node(false), fkyaml::node(0.0), fkyaml::node(""));
-
         SECTION("Test non-const node with a non-integer node.")
         {
-            REQUIRE_THROWS_AS(node[node_key], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[fkyaml::node::sequence()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[fkyaml::node::mapping()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[fkyaml::node()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[fkyaml::node(false)], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[fkyaml::node(0.0)], fkyaml::type_error);
+            REQUIRE_THROWS_AS(node[fkyaml::node("")], fkyaml::type_error);
         }
 
         SECTION("Test const node with a non-integer node.")
         {
             const fkyaml::node const_node = node;
-            REQUIRE_THROWS_AS(const_node[node_key], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[fkyaml::node::sequence()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[fkyaml::node::mapping()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[fkyaml::node()], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[fkyaml::node(false)], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[fkyaml::node(0.0)], fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node[fkyaml::node("")], fkyaml::type_error);
         }
     }
 
@@ -1999,6 +2006,246 @@ TEST_CASE("NodeClassTest_SizeGetterTest", "[NodeClassTest]")
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
             REQUIRE_THROWS_AS(alias.size(), fkyaml::type_error);
+        }
+    }
+}
+
+//
+// test cases for container element accessor with bounds checks
+//
+
+TEST_CASE("NodeClassTest_AtTest", "[NodeClassTest]")
+{
+    SECTION("Test nothrow expected at() calls for mapping nodes.")
+    {
+        fkyaml::node::mapping_type map {{"test", fkyaml::node()}};
+
+        SECTION("Test the non-const string at() calls.")
+        {
+            fkyaml::node node = fkyaml::node::mapping(map);
+
+            SECTION("Test the non-const lvalue string subscript operator.")
+            {
+                std::string key = "test";
+                REQUIRE_NOTHROW(node.at(key));
+                REQUIRE(node[key].is_null());
+            }
+
+            SECTION("Test the non-const rvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node.at("test"));
+                REQUIRE(node.at("test").is_null());
+            }
+        }
+
+        SECTION("Test the const string at() calls.")
+        {
+            const fkyaml::node node = fkyaml::node::mapping(map);
+            std::string key = "test";
+
+            SECTION("Test the const lvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node.at(key));
+            }
+
+            SECTION("Test the const rvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node.at("test"));
+            }
+        }
+
+        SECTION("Test the non-const string node at() calls.")
+        {
+            fkyaml::node node = fkyaml::node::mapping(map);
+            fkyaml::node node_key = "test";
+
+            SECTION("Test the non-const lvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node.at(node_key));
+            }
+
+            SECTION("Test the non-const rvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node.at(std::move(node_key)));
+            }
+        }
+
+        SECTION("Test the const string node at() calls.")
+        {
+            const fkyaml::node node = fkyaml::node::mapping(map);
+            fkyaml::node node_key = "test";
+
+            SECTION("Test the non-const lvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node.at(node_key));
+            }
+
+            SECTION("Test the non-const rvalue string subscript operator.")
+            {
+                REQUIRE_NOTHROW(node.at(std::move(node_key)));
+            }
+        }
+    }
+
+    SECTION("Test throwing expected at() calls for mapping nodes.")
+    {
+        fkyaml::node node = {{"foo", 123}};
+
+        SECTION("Test at() calls with compatible type objects")
+        {
+            REQUIRE_THROWS_AS(node.at(fkyaml::node::sequence_type()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node::mapping_type()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(nullptr), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(true), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(123), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(3.14), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at("bar"), fkyaml::out_of_range);
+        }
+
+        SECTION("Test const at() calls with compatible type objects")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node::sequence_type()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node::mapping_type()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(nullptr), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(true), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(123), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(3.14), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at("bar"), fkyaml::out_of_range);
+        }
+
+        SECTION("Test at() calls with basic_node objects")
+        {
+            REQUIRE_THROWS_AS(node.at(fkyaml::node::sequence()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node::mapping()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node(true)), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node(123)), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node(3.14)), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node("bar")), fkyaml::out_of_range);
+        }
+
+        SECTION("Test const at() calls with basic_node objects")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node::sequence()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node::mapping()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node()), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node(true)), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node(123)), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node(3.14)), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node("bar")), fkyaml::out_of_range);
+        }
+    }
+
+    SECTION("Test nothrow expected at() calls for sequence nodes.")
+    {
+        fkyaml::node node = fkyaml::node::sequence();
+        node.get_value_ref<fkyaml::node::sequence_type&>().emplace_back();
+
+        SECTION("Test non-const integer at() calls")
+        {
+            REQUIRE_NOTHROW(node.at(0));
+        }
+
+        SECTION("Test const integer at() calls")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.at(0));
+        }
+
+        SECTION("Test non-const integer at() calls")
+        {
+            REQUIRE_NOTHROW(node.at(fkyaml::node(0)));
+        }
+
+        SECTION("Test const integer at() calls")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.at(fkyaml::node(0)));
+        }
+    }
+
+    SECTION("Test throwing expected at() call for sequence nodes.")
+    {
+        fkyaml::node node = fkyaml::node::sequence();
+        node.get_value_ref<fkyaml::node::sequence_type&>().emplace_back();
+
+        SECTION("Test non-const node with a non-integer value.")
+        {
+            REQUIRE_THROWS_AS(node.at(fkyaml::node::sequence_type()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node::mapping_type()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.at(nullptr), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.at(false), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.at(0.0), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.at(""), fkyaml::type_error);
+        }
+
+        SECTION("Test const node with a non-integer value.")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node::sequence_type()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node::mapping_type()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.at(nullptr), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.at(false), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.at(0.0), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.at(""), fkyaml::type_error);
+        }
+
+        SECTION("Test non-const node with a non-integer node.")
+        {
+            REQUIRE_THROWS_AS(node.at(fkyaml::node::mapping()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node::sequence()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node(false)), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node("")), fkyaml::type_error);
+        }
+
+        SECTION("Test const node with a non-integer node.")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node::mapping()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node::sequence()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node()), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node(false)), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node("")), fkyaml::type_error);
+        }
+
+        SECTION("Test at() calls with an out-of-range integer value.")
+        {
+            REQUIRE_THROWS_AS(node.at(1), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(node.at(fkyaml::node(1)), fkyaml::out_of_range);
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.at(1), fkyaml::out_of_range);
+            REQUIRE_THROWS_AS(const_node.at(fkyaml::node(1)), fkyaml::out_of_range);
+        }
+    }
+
+    SECTION("Test throwing expected at() call for scalar nodes.")
+    {
+        auto node = GENERATE(fkyaml::node(), fkyaml::node(false), fkyaml::node(0), fkyaml::node(0.0), fkyaml::node(""));
+        fkyaml::node node_key = 0;
+
+        SECTION("Test non-const node with an integer.")
+        {
+            REQUIRE_THROWS_AS(node.at(0), fkyaml::type_error);
+        }
+
+        SECTION("Test const node with an integer.")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.at(0), fkyaml::type_error);
+        }
+
+        SECTION("Test non-const node with an integer node.")
+        {
+            REQUIRE_THROWS_AS(node.at(node_key), fkyaml::type_error);
+        }
+
+        SECTION("Test const node with an integer node.")
+        {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.at(node_key), fkyaml::type_error);
         }
     }
 }
