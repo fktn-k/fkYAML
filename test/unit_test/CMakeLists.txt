@@ -182,7 +182,7 @@ if(FK_YAML_CODE_COVERAGE)
       unit_test_config
         INTERFACE
           --coverage
-      )
+    )
   endif()
 endif()
 
