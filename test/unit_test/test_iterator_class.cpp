@@ -82,14 +82,14 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
 
         SECTION("Test lvalue iterator.")
         {
-            iterator = iterator;
+            iterator = *&iterator;
             REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
             REQUIRE(iterator->is_null());
         }
 
         SECTION("Test rvalue iterator.")
         {
-            iterator = std::move(iterator);
+            iterator = std::move(*&iterator);
             REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
             REQUIRE(iterator->is_null());
         }

@@ -110,20 +110,19 @@ target_compile_options(
     # MSVC
     $<$<CXX_COMPILER_ID:MSVC>:
       /W4 /WX /EHsc /utf-8 /permissive-
+      /wd4709 # comma operator within array index expression
       $<$<CONFIG:Debug>:/Z7>
       $<$<CONFIG:Release>:/Od>
     >
     # GNU
     $<$<CXX_COMPILER_ID:GNU>:
       -Wall -Wextra -Werror -pedantic -Wpedantic --all-warnings --extra-warnings
-      $<$<VERSION_GREATER_EQUAL:CXX_COMPILER_VERSION,11.0.0>:-Wno-self-move> # necessary to build iterator class test.
+      -Wno-self-move # necessary to build the detail::iterator class test
     >
     # Clang
     $<$<CXX_COMPILER_ID:Clang>:
       -Wall -Wextra -Werror -pedantic
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
-      $<$<VERSION_GREATER_EQUAL:CXX_COMPILER_VERSION,7.0.0>: -Wno-self-assign-overloaded>
-      -Wno-self-move # necessary to build iterator class test.
     >
 )
 
