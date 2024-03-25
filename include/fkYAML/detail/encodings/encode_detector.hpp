@@ -100,7 +100,7 @@ inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bo
 template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
 inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
 {
-    std::array<uint8_t, 4> bytes = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
+    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
     switch (ElemSize)
     {
     case sizeof(char): { // this case covers char8_t as well when compiled with C++20 features.
@@ -194,7 +194,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
 
 inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept
 {
-    std::array<uint8_t, 4> bytes = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
+    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
     for (std::size_t i = 0; i < 4; i++)
     {
         char byte = 0;
@@ -235,7 +235,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept
 
 inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
 {
-    std::array<uint8_t, 4> bytes = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
+    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
     for (std::size_t i = 0; i < 4; i++)
     {
         char ch = 0;

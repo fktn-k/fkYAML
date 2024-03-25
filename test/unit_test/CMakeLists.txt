@@ -109,21 +109,21 @@ target_compile_options(
   INTERFACE
     # MSVC
     $<$<CXX_COMPILER_ID:MSVC>:
-      /W4 /EHsc /utf-8 /permissive-
+      /W4 /WX /EHsc /utf-8 /permissive-
       $<$<CONFIG:Debug>:/Z7>
       $<$<CONFIG:Release>:/Od>
     >
     # GNU
     $<$<CXX_COMPILER_ID:GNU>:
-      -Wall -Wextra -pedantic -Wpedantic --all-warnings --extra-warnings
-      -Wc++0x-compat
-      -Wno-self-move # necessary to build iterator class test.
+      -Wall -Wextra -Werror -pedantic -Wpedantic --all-warnings --extra-warnings
+      $<$<VERSION_GREATER_EQUAL:CXX_COMPILER_VERSION,11.0.0>:-Wno-self-move> # necessary to build iterator class test.
     >
     # Clang
     $<$<CXX_COMPILER_ID:Clang>:
-      -Wall -pedantic
+      -Wall -Wextra -Werror -pedantic
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
-      -Wno-self-assign-overloaded -Wno-self-move # necessary to build iterator class test.
+      $<$<VERSION_GREATER_EQUAL:CXX_COMPILER_VERSION,7.0.0>: -Wno-self-assign-overloaded>
+      -Wno-self-move # necessary to build iterator class test.
     >
 )
 
