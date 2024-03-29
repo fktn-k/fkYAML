@@ -175,7 +175,7 @@ Thanks a lot!
 - [**Catch2**](https://github.com/catchorg/Catch2) as a unit-test framework.
 - [**github-changelog-generator**](https://github.com/github-changelog-generator/github-changelog-generator) to generate the [CHANGELOG.md](https://github.com/fktn-k/fkYAML/tree/develop/CHANGELOG.md) file.
 - [**include-what-you-use**](https://github.com/include-what-you-use/include-what-you-use) to check the fkYAML library source files are each self-contained.
-- [**lcov**](https://ltp.sourceforge.net/coverage/lcov.php) to process coverage information and generate an HTML view.
+- [**lcov**](https://github.com/linux-test-project/lcov) to process coverage information and generate an HTML view.
 - [**Material for MkDocs**](https://squidfunk.github.io/mkdocs-material/) for the style of the documentation site.
 - [**MkDocs**](https://www.mkdocs.org/) as the documentation site generator.
 - [**reuse-tool**](https://github.com/fsfe/reuse-tool) to generate license/copyright headers in source files to meet [REUSE software](https://reuse.software/) recommendations.
