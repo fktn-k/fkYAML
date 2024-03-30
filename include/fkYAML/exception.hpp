@@ -184,6 +184,21 @@ private:
     }
 };
 
+class invalid_tag : public exception
+{
+public:
+    explicit invalid_tag(const char* msg, const char* tag)
+        : exception(generate_error_message(msg, tag).c_str())
+    {
+    }
+
+private:
+    std::string generate_error_message(const char* msg, const char* tag)
+    {
+        return detail::format("invalid_tag: %s tag=%s", msg, tag);
+    }
+};
+
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_EXCEPTION_HPP_ */

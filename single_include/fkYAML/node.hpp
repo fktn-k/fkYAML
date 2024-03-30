@@ -1032,6 +1032,21 @@ private:
     }
 };
 
+class invalid_tag : public exception
+{
+public:
+    explicit invalid_tag(const char* msg, const char* tag)
+        : exception(generate_error_message(msg, tag).c_str())
+    {
+    }
+
+private:
+    std::string generate_error_message(const char* msg, const char* tag)
+    {
+        return detail::format("invalid_tag: %s tag=%s", msg, tag);
+    }
+};
+
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_EXCEPTION_HPP_ */
@@ -6466,210 +6481,57 @@ private:
             }
             break;
         case node_t::NULL_OBJECT:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::FLOAT_NUMBER:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::STRING: {
-            using string_type = typename BasicNodeType::string_type;
-
-            // Check if the string value contains a character needed to be escaped on output.
-            const string_type& s = node.template get_value_ref<const string_type&>();
-            string_type escaped;
-            bool has_escape = false;
-            size_t size = s.size();
-            for (size_t i = 0; i < size; i++)
+            if (try_append_tag(node, str))
             {
-                switch (s[i])
-                {
-                case 0x01:
-                    escaped += "\\u0001";
-                    has_escape = true;
-                    break;
-                case 0x02:
-                    escaped += "\\u0002";
-                    has_escape = true;
-                    break;
-                case 0x03:
-                    escaped += "\\u0003";
-                    has_escape = true;
-                    break;
-                case 0x04:
-                    escaped += "\\u0004";
-                    has_escape = true;
-                    break;
-                case 0x05:
-                    escaped += "\\u0005";
-                    has_escape = true;
-                    break;
-                case 0x06:
-                    escaped += "\\u0006";
-                    has_escape = true;
-                    break;
-                case '\a':
-                    escaped += "\\a";
-                    has_escape = true;
-                    break;
-                case '\b':
-                    escaped += "\\b";
-                    has_escape = true;
-                    break;
-                case '\t':
-                    escaped += "\\t";
-                    has_escape = true;
-                    break;
-                case '\n':
-                    escaped += "\\n";
-                    has_escape = true;
-                    break;
-                case '\v':
-                    escaped += "\\v";
-                    has_escape = true;
-                    break;
-                case '\f':
-                    escaped += "\\f";
-                    has_escape = true;
-                    break;
-                case '\r':
-                    escaped += "\\r";
-                    has_escape = true;
-                    break;
-                case 0x0E:
-                    escaped += "\\u000E";
-                    has_escape = true;
-                    break;
-                case 0x0F:
-                    escaped += "\\u000F";
-                    has_escape = true;
-                    break;
-                case 0x10:
-                    escaped += "\\u0010";
-                    has_escape = true;
-                    break;
-                case 0x11:
-                    escaped += "\\u0011";
-                    has_escape = true;
-                    break;
-                case 0x12:
-                    escaped += "\\u0012";
-                    has_escape = true;
-                    break;
-                case 0x13:
-                    escaped += "\\u0013";
-                    has_escape = true;
-                    break;
-                case 0x14:
-                    escaped += "\\u0014";
-                    has_escape = true;
-                    break;
-                case 0x15:
-                    escaped += "\\u0015";
-                    has_escape = true;
-                    break;
-                case 0x16:
-                    escaped += "\\u0016";
-                    has_escape = true;
-                    break;
-                case 0x17:
-                    escaped += "\\u0017";
-                    has_escape = true;
-                    break;
-                case 0x18:
-                    escaped += "\\u0018";
-                    has_escape = true;
-                    break;
-                case 0x19:
-                    escaped += "\\u0019";
-                    has_escape = true;
-                    break;
-                case 0x1A:
-                    escaped += "\\u001A";
-                    has_escape = true;
-                    break;
-                case 0x1B:
-                    escaped += "\\e";
-                    has_escape = true;
-                    break;
-                case 0x1C:
-                    escaped += "\\u001C";
-                    has_escape = true;
-                    break;
-                case 0x1D:
-                    escaped += "\\u001D";
-                    has_escape = true;
-                    break;
-                case 0x1E:
-                    escaped += "\\u001E";
-                    has_escape = true;
-                    break;
-                case 0x1F:
-                    escaped += "\\u001F";
-                    has_escape = true;
-                    break;
-                case '\"':
-                    escaped += "\\\"";
-                    has_escape = true;
-                    break;
-                case '\\':
-                    escaped += "\\\\";
-                    has_escape = true;
-                    break;
-                default:
-                    if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u))
-                    {
-                        escaped += "\\N";
-                        i++;
-                        has_escape = true;
-                        break;
-                    }
-                    if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u))
-                    {
-                        escaped += "\\_";
-                        i++;
-                        has_escape = true;
-                        break;
-                    }
-                    if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u))
-                    {
-                        escaped += "\\L";
-                        i += 2;
-                        has_escape = true;
-                        break;
-                    }
-                    if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u))
-                    {
-                        escaped += "\\P";
-                        i += 2;
-                        has_escape = true;
-                        break;
-                    }
-                    escaped += s[i];
-                    break;
-                }
+                str += " ";
             }
 
-            if (has_escape)
+            bool is_escaped = false;
+            typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
+
+            if (is_escaped)
             {
                 // There's no other token type with escapes than strings.
                 // Also, escapes must be in double-quoted strings.
                 str += '\"';
-                str += escaped;
+                str += str_val;
                 str += '\"';
                 break;
             }
 
-            auto adapter = input_adapter(s);
+            auto adapter = input_adapter(str_val);
             lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
             lexical_token_t token_type = lexer.get_next_token();
 
@@ -6678,12 +6540,12 @@ private:
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
-                str += s;
+                str += str_val;
                 str += '\"';
             }
             else
             {
-                str += s;
+                str += str_val;
             }
             break;
         }
@@ -6734,6 +6596,209 @@ private:
             return true;
         }
         return false;
+    }
+
+    /// @brief Append a tag name if it's available. Do nothing otherwise.
+    /// @param[in] node The target node which possibly has a tag name.
+    /// @param[out] str A string to hold serialization result.
+    /// @return true if a tag name has been appended, false otherwise.
+    bool try_append_tag(const BasicNodeType& node, std::string& str) const
+    {
+        if (node.has_tag_name())
+        {
+            str += node.get_tag_name();
+            return true;
+        }
+        return false;
+    }
+
+    /// @brief Get a string value from the given node and, if necessary, escape its contents.
+    /// @param[in] node The target string YAML node.
+    /// @param[out] is_escaped Whether or not the contents of an ouput string has been escaped.
+    /// @return The (escaped) string node value.
+    typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped)
+    {
+        FK_YAML_ASSERT(node.is_string());
+
+        using string_type = typename BasicNodeType::string_type;
+
+        // Check if the string value contains a character needed to be escaped on output.
+        const string_type& s = node.template get_value_ref<const string_type&>();
+        size_t size = s.size();
+        string_type escaped {};
+        escaped.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+        {
+            switch (s[i])
+            {
+            case 0x01:
+                escaped += "\\u0001";
+                is_escaped = true;
+                break;
+            case 0x02:
+                escaped += "\\u0002";
+                is_escaped = true;
+                break;
+            case 0x03:
+                escaped += "\\u0003";
+                is_escaped = true;
+                break;
+            case 0x04:
+                escaped += "\\u0004";
+                is_escaped = true;
+                break;
+            case 0x05:
+                escaped += "\\u0005";
+                is_escaped = true;
+                break;
+            case 0x06:
+                escaped += "\\u0006";
+                is_escaped = true;
+                break;
+            case '\a':
+                escaped += "\\a";
+                is_escaped = true;
+                break;
+            case '\b':
+                escaped += "\\b";
+                is_escaped = true;
+                break;
+            case '\t':
+                escaped += "\\t";
+                is_escaped = true;
+                break;
+            case '\n':
+                escaped += "\\n";
+                is_escaped = true;
+                break;
+            case '\v':
+                escaped += "\\v";
+                is_escaped = true;
+                break;
+            case '\f':
+                escaped += "\\f";
+                is_escaped = true;
+                break;
+            case '\r':
+                escaped += "\\r";
+                is_escaped = true;
+                break;
+            case 0x0E:
+                escaped += "\\u000E";
+                is_escaped = true;
+                break;
+            case 0x0F:
+                escaped += "\\u000F";
+                is_escaped = true;
+                break;
+            case 0x10:
+                escaped += "\\u0010";
+                is_escaped = true;
+                break;
+            case 0x11:
+                escaped += "\\u0011";
+                is_escaped = true;
+                break;
+            case 0x12:
+                escaped += "\\u0012";
+                is_escaped = true;
+                break;
+            case 0x13:
+                escaped += "\\u0013";
+                is_escaped = true;
+                break;
+            case 0x14:
+                escaped += "\\u0014";
+                is_escaped = true;
+                break;
+            case 0x15:
+                escaped += "\\u0015";
+                is_escaped = true;
+                break;
+            case 0x16:
+                escaped += "\\u0016";
+                is_escaped = true;
+                break;
+            case 0x17:
+                escaped += "\\u0017";
+                is_escaped = true;
+                break;
+            case 0x18:
+                escaped += "\\u0018";
+                is_escaped = true;
+                break;
+            case 0x19:
+                escaped += "\\u0019";
+                is_escaped = true;
+                break;
+            case 0x1A:
+                escaped += "\\u001A";
+                is_escaped = true;
+                break;
+            case 0x1B:
+                escaped += "\\e";
+                is_escaped = true;
+                break;
+            case 0x1C:
+                escaped += "\\u001C";
+                is_escaped = true;
+                break;
+            case 0x1D:
+                escaped += "\\u001D";
+                is_escaped = true;
+                break;
+            case 0x1E:
+                escaped += "\\u001E";
+                is_escaped = true;
+                break;
+            case 0x1F:
+                escaped += "\\u001F";
+                is_escaped = true;
+                break;
+            case '\"':
+                escaped += "\\\"";
+                is_escaped = true;
+                break;
+            case '\\':
+                escaped += "\\\\";
+                is_escaped = true;
+                break;
+            default:
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u))
+                {
+                    escaped += "\\N";
+                    i++;
+                    is_escaped = true;
+                    break;
+                }
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u))
+                {
+                    escaped += "\\_";
+                    i++;
+                    is_escaped = true;
+                    break;
+                }
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u))
+                {
+                    escaped += "\\L";
+                    i += 2;
+                    is_escaped = true;
+                    break;
+                }
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u))
+                {
+                    escaped += "\\P";
+                    i += 2;
+                    is_escaped = true;
+                    break;
+                }
+                escaped += s[i];
+                break;
+            }
+        }
+
+        return escaped;
     }
 
 private:
@@ -8876,10 +8941,10 @@ public:
         return m_prop.anchor_status != detail::anchor_status_t::NONE && !m_prop.anchor.empty();
     }
 
-    /// @brief Get the anchor name associated to this basic_node object.
-    /// @note Some anchor name must be set before calling this method. Call basic_node::HasAnchorName() to see if this
-    /// basic_node object has any anchor name.
-    /// @return The anchor name associated to the node.
+    /// @brief Get the anchor name associated with this basic_node object.
+    /// @note Some anchor name must be set before calling this method. Call has_anchor_name() to see if this basic_node
+    /// object has any anchor name.
+    /// @return The anchor name associated with the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const
     {
@@ -8892,6 +8957,7 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name)
     {
@@ -8901,12 +8967,52 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
-    /// @param[in] anchor_name An anchor name.This should not be empty.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name)
     {
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
         m_prop.anchor = std::move(anchor_name);
+    }
+
+    /// @brief Check whether or not this basic_node object has already had any tag name.
+    /// @return true if ths basic_node has a tag name, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
+    bool has_tag_name() const noexcept
+    {
+        return !m_prop.tag.empty();
+    }
+
+    /// @brief Get the tag name associated with this basic_node object.
+    /// @note Some tag name must be set before calling this method. Call has_tag_name() to see if this basic_node
+    /// object has any tag name.
+    /// @return The tag name associated with the node. It may be empty.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_tag_name/
+    const std::string& get_tag_name() const
+    {
+        if (!has_tag_name())
+        {
+            throw fkyaml::exception("No tag name has been set.");
+        }
+        return m_prop.tag;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(const std::string& tag_name)
+    {
+        m_prop.tag = tag_name;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(std::string&& tag_name)
+    {
+        m_prop.tag = std::move(tag_name);
     }
 
     /// @brief Get the node value object converted into a given type.
