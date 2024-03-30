@@ -101,9 +101,7 @@ private:
 
         if (m_current != m_end)
         {
-            auto ret = std::char_traits<char_type>::to_int_type(*m_current);
-            ++m_current;
-            return ret;
+            return std::char_traits<char_type>::to_int_type(*m_current++);
         }
         return std::char_traits<char_type>::eof();
     }
@@ -128,19 +126,14 @@ private:
             {
                 if (m_encode_type == utf_encode_t::UTF_16BE)
                 {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(*m_current) << 8);
-                    ++m_current;
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(*m_current);
+                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(*m_current++) << 8);
+                    m_encoded_buffer[m_encoded_buf_size++] |= char16_t(*m_current++);
                 }
                 else // m_encode_type == utf_encode_t::UTF_16LE
                 {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(*m_current);
-                    ++m_current;
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(*m_current) << 8);
+                    m_encoded_buffer[m_encoded_buf_size] = char16_t(*m_current++);
+                    m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(*m_current++) << 8);
                 }
-
-                ++m_current;
-                ++m_encoded_buf_size;
             }
 
             std::size_t consumed_size = 0;
@@ -156,9 +149,7 @@ private:
             m_utf8_buf_index = 0;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        return std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index++]);
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
@@ -177,27 +168,20 @@ private:
             char32_t utf32 = 0;
             if (m_encode_type == utf_encode_t::UTF_32BE)
             {
-                utf32 = char32_t(*m_current << 24);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 16);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 8);
-                ++m_current;
-                utf32 |= char32_t(*m_current);
+                utf32 = char32_t(*m_current++ << 24);
+                utf32 |= char32_t(*m_current++ << 16);
+                utf32 |= char32_t(*m_current++ << 8);
+                utf32 |= char32_t(*m_current++);
             }
             else // m_encode_type == utf_encode_t::UTF_32LE
             {
-                utf32 = char32_t(*m_current);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 8);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 16);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 24);
+                utf32 = char32_t(*m_current++);
+                utf32 |= char32_t(*m_current++ << 8);
+                utf32 |= char32_t(*m_current++ << 16);
+                utf32 |= char32_t(*m_current++ << 24);
             }
 
             utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            ++m_current;
             m_utf8_buf_index = 0;
         }
 
@@ -268,9 +252,7 @@ public:
     {
         if (m_current != m_end)
         {
-            auto ret = std::char_traits<char_type>::to_int_type(char(*m_current));
-            ++m_current;
-            return ret;
+            return std::char_traits<char_type>::to_int_type(char(*m_current++));
         }
         return std::char_traits<char_type>::eof();
     }
@@ -337,17 +319,14 @@ public:
             {
                 if (m_encode_type == utf_encode_t::UTF_16BE)
                 {
-                    m_encoded_buffer[m_encoded_buf_size] = *m_current;
+                    m_encoded_buffer[m_encoded_buf_size++] = *m_current++;
                 }
                 else // utf_encode_t::UTF_16LE
                 {
-                    char16_t tmp = *m_current;
+                    char16_t tmp = *m_current++;
                     m_encoded_buffer[m_encoded_buf_size] = char16_t((tmp & 0x00FFu) << 8);
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t((tmp & 0xFF00u) >> 8);
+                    m_encoded_buffer[m_encoded_buf_size++] |= char16_t((tmp & 0xFF00u) >> 8);
                 }
-
-                ++m_current;
-                ++m_encoded_buf_size;
             }
 
             std::size_t consumed_size = 0;
@@ -363,9 +342,7 @@ public:
             m_utf8_buf_index = 0;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        return std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index++]);
     }
 
 private:
@@ -434,25 +411,22 @@ public:
             char32_t utf32 = 0;
             if (m_encode_type == utf_encode_t::UTF_32BE)
             {
-                utf32 = *m_current;
+                utf32 = *m_current++;
             }
             else // m_encode_type == utf_encode_t::UTF_32LE
             {
-                char32_t tmp = *m_current;
-                utf32 |= char32_t((tmp & 0xFF000000u) >> 24);
+                char32_t tmp = *m_current++;
+                utf32 = char32_t((tmp & 0xFF000000u) >> 24);
                 utf32 |= char32_t((tmp & 0x00FF0000u) >> 8);
                 utf32 |= char32_t((tmp & 0x0000FF00u) << 8);
                 utf32 |= char32_t((tmp & 0x000000FFu) << 24);
             }
 
             utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            ++m_current;
             m_utf8_buf_index = 0;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        return std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index++]);
     }
 
 private:
@@ -551,15 +525,13 @@ private:
                 if (m_encode_type == utf_encode_t::UTF_16BE)
                 {
                     m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << 8);
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]));
+                    m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(chars[1]));
                 }
                 else // m_encode_type == utf_encode_t::UTF_16LE
                 {
                     m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]));
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]) << 8);
+                    m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << 8);
                 }
-
-                ++m_encoded_buf_size;
             }
 
             if (m_encoded_buf_size == 0)
@@ -580,9 +552,7 @@ private:
             m_utf8_buf_index = 0;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        return std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index++]);
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
@@ -620,9 +590,7 @@ private:
             m_utf8_buf_index = 0;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        return std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index++]);
     }
 
 private:
@@ -723,15 +691,13 @@ private:
                 if (m_encode_type == utf_encode_t::UTF_16BE)
                 {
                     m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << 8);
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]));
+                    m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(chars[1]));
                 }
                 else // m_encode_type == utf_encode_t::UTF_16LE
                 {
                     m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]));
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]) << 8);
+                    m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << 8);
                 }
-
-                ++m_encoded_buf_size;
             };
 
             std::size_t consumed_size = 0;
@@ -747,9 +713,7 @@ private:
             m_utf8_buf_index = 0;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        return std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index++]);
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
@@ -760,10 +724,10 @@ private:
 
         if (m_utf8_buf_index == m_utf8_buf_size)
         {
-            char ch = 0;
-            m_istream->read(&ch, 1);
+            char chars[4] = {0, 0};
+            m_istream->read(&chars[0], 4);
             std::streamsize size = m_istream->gcount();
-            if (size != 1)
+            if (size != 4)
             {
                 return std::char_traits<char_type>::eof();
             }
@@ -771,32 +735,24 @@ private:
             char32_t utf32 = 0;
             if (m_encode_type == utf_encode_t::UTF_32BE)
             {
-                utf32 = char32_t(ch << 24);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 16);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 8);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch);
+                utf32 = char32_t(uint8_t(chars[0]) << 24);
+                utf32 |= char32_t(uint8_t(chars[1]) << 16);
+                utf32 |= char32_t(uint8_t(chars[2]) << 8);
+                utf32 |= char32_t(uint8_t(chars[3]));
             }
             else // m_encode_type == utf_encode_t::UTF_32LE
             {
-                utf32 = char32_t(ch);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 8);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 16);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 24);
+                utf32 = char32_t(uint8_t(chars[0]));
+                utf32 |= char32_t(uint8_t(chars[1]) << 8);
+                utf32 |= char32_t(uint8_t(chars[2]) << 16);
+                utf32 |= char32_t(uint8_t(chars[3]) << 24);
             }
 
             utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
             m_utf8_buf_index = 0;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        return std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index++]);
     }
 
 private:
@@ -843,7 +799,7 @@ inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array 
 }
 
 /// @brief A namespace to implement container_input_adapter_factory for internal use.
-namespace container_input_adapter_factory_impl
+namespace input_adapter_factory
 {
 
 using std::begin;
@@ -868,25 +824,25 @@ struct container_input_adapter_factory<
         decltype(input_adapter(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>())));
 
     /// @brief A factory method of input adapter objects for the target container objects.
-    /// @param container
-    /// @return adapter_type
+    /// @param container A container-like input object.
+    /// @return adapter_type An iterator_input_adapter object.
     static adapter_type create(const ContainerType& container)
     {
         return input_adapter(begin(container), end(container));
     }
 };
 
-} // namespace container_input_adapter_factory_impl
+} // namespace input_adapter_factory
 
 /// @brief A factory method for iterator_input_adapter objects with containers.
 /// @tparam ContainerType A container type.
 /// @param container A container object.
-/// @return container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::adapter_type
+/// @return input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type
 template <typename ContainerType>
-inline typename container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::adapter_type
+inline typename input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type
 input_adapter(ContainerType&& container)
 {
-    return container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::create(container);
+    return input_adapter_factory::container_input_adapter_factory<ContainerType>::create(container);
 }
 
 /// @brief A factory method for file_input_adapter objects with C-style file handles.
@@ -902,9 +858,9 @@ inline file_input_adapter input_adapter(std::FILE* file)
     return file_input_adapter(file, encode_type);
 }
 
-/// @brief
-/// @param stream
-/// @return stream_input_adapter
+/// @brief A factory method for stream_input_adapter objects with std::istream objects.
+/// @param stream An input stream.
+/// @return stream_input_adapter A stream_input_adapter object.
 inline stream_input_adapter input_adapter(std::istream& stream) noexcept
 {
     utf_encode_t encode_type = detect_encoding_and_skip_bom(stream);

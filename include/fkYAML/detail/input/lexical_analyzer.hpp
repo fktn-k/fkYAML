@@ -983,31 +983,19 @@ private:
                     break;
                 case 'N': // next line
                     utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case '_': // non-breaking space
                     utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'L': // line separator
                     utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'P': // paragraph separator
                     utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'x':
                     handle_escaped_unicode(1);
@@ -1399,10 +1387,7 @@ private:
 
         // Treats the code point as a UTF-32 encoded character.
         utf8_encoding::from_utf32(code_point, m_encode_buffer, m_encoded_size);
-        for (size_t i = 0; i < m_encoded_size; i++)
-        {
-            m_value_buffer.push_back(m_encode_buffer[i]);
-        }
+        m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
     }
 
     void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
@@ -1410,15 +1395,18 @@ private:
         int ch = m_input_handler.get_next();
 
         chomp_type = chomping_indicator_t::CLIP;
-        if (ch == '-')
+        switch (ch)
         {
+        case '-':
             chomp_type = chomping_indicator_t::STRIP;
             ch = m_input_handler.get_next();
-        }
-        else if (ch == '+')
-        {
+            break;
+        case '+':
             chomp_type = chomping_indicator_t::KEEP;
             ch = m_input_handler.get_next();
+            break;
+        default:
+            break;
         }
 
         if (ch == '0')
