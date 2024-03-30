@@ -106,7 +106,8 @@ private:
             if ((first & 0xC0) == 0x80)
             {
                 // The first byte must not start with 0b10XX'XXXX
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {{0x80}});
+                std::array<int, 1> bytes {{first}};
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
             }
             // The first byte starts with 0b110X'XXXX -> 2-byte character
             else if ((first & 0xE0) == 0xC0)
@@ -280,7 +281,8 @@ public:
             if ((first & 0xC0) == 0x80)
             {
                 // The first byte must not start with 0b10XX'XXXX
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {{0x80}});
+                std::array<int, 1> bytes {{first}};
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
             }
             // The first byte starts with 0b110X'XXXX -> 2-byte character
             else if ((first & 0xE0) == 0xC0)
@@ -546,7 +548,8 @@ private:
             if ((first & 0xC0) == 0x80)
             {
                 // The first byte must not start with 0b10XX'XXXX
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {{0x80}});
+                std::array<int, 1> bytes {{first}};
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
             }
             // The first byte starts with 0b110X'XXXX -> 2-byte character
             else if ((first & 0xE0) == 0xC0)
@@ -745,7 +748,8 @@ private:
             if ((first & 0xC0) == 0x80)
             {
                 // The first byte must not start with 0b10XX'XXXX
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {{0x80}});
+                std::array<int, 1> bytes {{first}};
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
             }
             // The first byte starts with 0b110X'XXXX -> 2-byte character
             else if ((first & 0xE0) == 0xC0)
