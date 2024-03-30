@@ -1312,6 +1312,159 @@ FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_ */
 
+// #include <fkYAML/detail/encodings/uri_encoding.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
+
+#include <cctype>
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+/// @namespace fkyaml
+/// @brief namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @namespace detail
+/// @brief namespace for internal implementaions of fkYAML library.
+namespace detail
+{
+
+/// @brief A class which handles URI encodings.
+class uri_encoding
+{
+public:
+    /// @brief Validates the encoding of the given character sequence.
+    /// @param begin An iterator to the first element of the character sequence.
+    /// @param end An iterator to the past-the-end element of the character sequence.
+    /// @return true if all the characters are valid, false otherwise.
+    static bool validate(std::string::const_iterator begin, std::string::const_iterator end) noexcept
+    {
+        if (begin == end)
+        {
+            return true;
+        }
+
+        std::string::const_iterator current = begin;
+
+        for (; current != end; ++current)
+        {
+            if (*current == '%')
+            {
+                bool are_valid_octets = validate_octets(++current, end);
+                if (!are_valid_octets)
+                {
+                    return false;
+                }
+
+                continue;
+            }
+
+            bool is_allowed_character = validate_character(*current);
+            if (!is_allowed_character)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+private:
+    /// @brief Validates the given octets.
+    /// @param begin An iterator to the first octet.
+    /// @param end An iterator to the past-the-end element of the whole character sequence.
+    /// @return true if the octets are valid, false otherwise.
+    static bool validate_octets(std::string::const_iterator& begin, std::string::const_iterator& end)
+    {
+        for (int i = 0; i < 2; i++, ++begin)
+        {
+            if (begin == end)
+            {
+                return false;
+            }
+
+            // Normalize a character for a-f/A-F comparison
+            int octet = std::tolower(*begin);
+
+            if ('0' <= octet && octet <= '9')
+            {
+                continue;
+            }
+
+            if ('a' <= octet && octet <= 'f')
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /// @brief Verify if the given character is allowed as a URI character.
+    /// @param c The target character.
+    /// @return true if the given character is allowed as a URI character, false otherwise.
+    static bool validate_character(char c)
+    {
+        // Check if the current character is one of reserved/unreserved characters which are allowed for
+        // use. See the following links for details:
+        // * reserved characters:   https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
+        // * unreserved characters: https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
+
+        switch (c)
+        {
+        // reserved characters (gen-delims)
+        case ':':
+        case '/':
+        case '?':
+        case '#':
+        case '[':
+        case ']':
+        case '@':
+        // reserved characters (sub-delims)
+        case '!':
+        case '$':
+        case '&':
+        case '\'':
+        case '(':
+        case ')':
+        case '*':
+        case '+':
+        case ',':
+        case ';':
+        case '=':
+        // unreserved characters
+        case '-':
+        case '.':
+        case '_':
+        case '~':
+            return true;
+        default:
+            // alphabets and numbers are also allowed.
+            return std::isalnum(c);
+        }
+    }
+};
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_ */
+
 // #include <fkYAML/detail/encodings/utf8_encoding.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -1348,6 +1501,7 @@ class utf_encoding;
 //   UTF-8 Encoding   ///
 /////////////////////////
 
+/// @brief A class which handles UTF-8 encodings.
 class utf8_encoding
 {
     using int_type = std::char_traits<char>::int_type;
@@ -2169,6 +2323,7 @@ enum class lexical_token_t
     COMMENT_PREFIX,        //!< the character for comment prefix `#`
     YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
     TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
+    TAG_PREFIX,            //!< the character for tag prefix `!`
     INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
     SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
     SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
@@ -2322,6 +2477,10 @@ public:
 
             return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
         }
+        case '!':
+            m_value_buffer.clear();
+            extract_tag_name();
+            return m_last_token_type = lexical_token_t::TAG_PREFIX;
         case '#': // comment prefix
             scan_comment();
             return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
@@ -2666,6 +2825,120 @@ private:
             default:
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 break;
+            }
+        }
+    }
+
+    /// @brief Extracts a tag name from the input and assigns the result to `m_value_buffer`.
+    void extract_tag_name()
+    {
+        int current = m_input_handler.get_current();
+        FK_YAML_ASSERT(current == '!');
+
+        m_value_buffer = "!";
+
+        bool is_verbatim = false;
+        bool allows_another_tag_prefix = false;
+
+        current = m_input_handler.get_next();
+        switch (current)
+        {
+        case ' ':
+        case '\r':
+        case '\n':
+        case s_end_of_input:
+            // Just "!" is a non-specific tag.
+            return;
+        case '!':
+            // Secondary tag handles (!!suffix)
+            m_value_buffer += "!";
+            break;
+        case '<':
+            // Verbatim tags (!<TAG>)
+            is_verbatim = true;
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            current = m_input_handler.get_next();
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            break;
+        default:
+            // Either local tags (!suffix) or named handles (!tag!suffix)
+            allows_another_tag_prefix = true;
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            break;
+        }
+
+        bool is_named_handle = false;
+        bool ends_loop = false;
+        do
+        {
+            current = m_input_handler.get_next();
+            switch (current)
+            {
+            case s_end_of_input:
+            // Tag names must not contain spaces or newline codes.
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+                ends_loop = true;
+                break;
+            case '!':
+                if (!allows_another_tag_prefix)
+                {
+                    emit_error("invalid tag prefix (!) is found.");
+                }
+
+                is_named_handle = true;
+                m_value_buffer.push_back('!');
+                // tag prefix must not appear three times.
+                allows_another_tag_prefix = false;
+                break;
+            default:
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+        } while (!ends_loop);
+
+        if (is_verbatim)
+        {
+            char last = m_value_buffer.back();
+            if (last != '>')
+            {
+                emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
+            }
+
+            auto tag_begin = m_value_buffer.begin() + 2;
+            auto tag_end = m_value_buffer.end() - 1;
+            if (tag_begin == tag_end)
+            {
+                emit_error("verbatim tag(!<TAG>) must not be empty.");
+            }
+
+            bool is_valid_uri = uri_encoding::validate(tag_begin, tag_end);
+            if (!is_valid_uri)
+            {
+                emit_error("invalid URI character is found in a verbatim tag.");
+            }
+
+            return;
+        }
+
+        if (is_named_handle)
+        {
+            char last = m_value_buffer.back();
+            if (last == '!')
+            {
+                // Tag shorthand must be followed by a non-empty suffix.
+                // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
+                emit_error("named handle has no suffix.");
+            }
+
+            std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
+            bool is_valid_uri =
+                uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
+            if (!is_valid_uri)
+            {
+                emit_error("Invalid URI character is found in a named tag handle.");
             }
         }
     }
@@ -3986,6 +4259,12 @@ public:
             }
             case lexical_token_t::TAG_DIRECTIVE:
                 // TODO: implement tag directive deserialization.
+                break;
+            case lexical_token_t::TAG_PREFIX:
+                // TODO: implement tag name handling.
+                m_tag_name = lexer.get_string();
+                m_needs_tag_impl = true;
+                break;
             case lexical_token_t::INVALID_DIRECTIVE:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
@@ -4204,6 +4483,13 @@ private:
             m_anchor_name.clear();
         }
 
+        if (m_needs_tag_impl)
+        {
+            node.add_tag_name(m_tag_name);
+            m_needs_tag_impl = false;
+            m_tag_name.clear();
+        }
+
         return node;
     }
 
@@ -4284,10 +4570,14 @@ private:
     yaml_version_t m_yaml_version {yaml_version_t::VER_1_2};
     /// A flag to determine the need for YAML anchor node implementation.
     bool m_needs_anchor_impl {false};
+    /// A flag to determine the need for a corresponding node with the last YAML tag.
+    bool m_needs_tag_impl {false};
     /// The last YAML anchor name.
     string_type m_anchor_name {};
     /// The table of YAML anchor nodes.
     std::unordered_map<std::string, BasicNodeType> m_anchor_table {};
+    /// The last tag name.
+    string_type m_tag_name {};
 };
 
 } // namespace detail

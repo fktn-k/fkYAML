@@ -207,6 +207,8 @@ add_executable(
   test_ordered_map_class.cpp
   test_serializer_class.cpp
   test_string_formatter.cpp
+  test_tag_resolver_class.cpp
+  test_uri_encoding_class.cpp
   test_utf8_encoding_class.cpp
   main.cpp
 )

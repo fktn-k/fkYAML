@@ -22,6 +22,7 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/from_string.hpp>
+#include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf8_encoding.hpp>
 #include <fkYAML/detail/input/input_handler.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
@@ -159,6 +160,10 @@ public:
 
             return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
         }
+        case '!':
+            m_value_buffer.clear();
+            extract_tag_name();
+            return m_last_token_type = lexical_token_t::TAG_PREFIX;
         case '#': // comment prefix
             scan_comment();
             return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
@@ -503,6 +508,120 @@ private:
             default:
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 break;
+            }
+        }
+    }
+
+    /// @brief Extracts a tag name from the input and assigns the result to `m_value_buffer`.
+    void extract_tag_name()
+    {
+        int current = m_input_handler.get_current();
+        FK_YAML_ASSERT(current == '!');
+
+        m_value_buffer = "!";
+
+        bool is_verbatim = false;
+        bool allows_another_tag_prefix = false;
+
+        current = m_input_handler.get_next();
+        switch (current)
+        {
+        case ' ':
+        case '\r':
+        case '\n':
+        case s_end_of_input:
+            // Just "!" is a non-specific tag.
+            return;
+        case '!':
+            // Secondary tag handles (!!suffix)
+            m_value_buffer += "!";
+            break;
+        case '<':
+            // Verbatim tags (!<TAG>)
+            is_verbatim = true;
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            current = m_input_handler.get_next();
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            break;
+        default:
+            // Either local tags (!suffix) or named handles (!tag!suffix)
+            allows_another_tag_prefix = true;
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            break;
+        }
+
+        bool is_named_handle = false;
+        bool ends_loop = false;
+        do
+        {
+            current = m_input_handler.get_next();
+            switch (current)
+            {
+            case s_end_of_input:
+            // Tag names must not contain spaces or newline codes.
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+                ends_loop = true;
+                break;
+            case '!':
+                if (!allows_another_tag_prefix)
+                {
+                    emit_error("invalid tag prefix (!) is found.");
+                }
+
+                is_named_handle = true;
+                m_value_buffer.push_back('!');
+                // tag prefix must not appear three times.
+                allows_another_tag_prefix = false;
+                break;
+            default:
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+        } while (!ends_loop);
+
+        if (is_verbatim)
+        {
+            char last = m_value_buffer.back();
+            if (last != '>')
+            {
+                emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
+            }
+
+            auto tag_begin = m_value_buffer.begin() + 2;
+            auto tag_end = m_value_buffer.end() - 1;
+            if (tag_begin == tag_end)
+            {
+                emit_error("verbatim tag(!<TAG>) must not be empty.");
+            }
+
+            bool is_valid_uri = uri_encoding::validate(tag_begin, tag_end);
+            if (!is_valid_uri)
+            {
+                emit_error("invalid URI character is found in a verbatim tag.");
+            }
+
+            return;
+        }
+
+        if (is_named_handle)
+        {
+            char last = m_value_buffer.back();
+            if (last == '!')
+            {
+                // Tag shorthand must be followed by a non-empty suffix.
+                // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
+                emit_error("named handle has no suffix.");
+            }
+
+            std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
+            bool is_valid_uri =
+                uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
+            if (!is_valid_uri)
+            {
+                emit_error("Invalid URI character is found in a named tag handle.");
             }
         }
     }

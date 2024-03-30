@@ -250,6 +250,12 @@ public:
             }
             case lexical_token_t::TAG_DIRECTIVE:
                 // TODO: implement tag directive deserialization.
+                break;
+            case lexical_token_t::TAG_PREFIX:
+                // TODO: implement tag name handling.
+                m_tag_name = lexer.get_string();
+                m_needs_tag_impl = true;
+                break;
             case lexical_token_t::INVALID_DIRECTIVE:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
@@ -468,6 +474,13 @@ private:
             m_anchor_name.clear();
         }
 
+        if (m_needs_tag_impl)
+        {
+            node.add_tag_name(m_tag_name);
+            m_needs_tag_impl = false;
+            m_tag_name.clear();
+        }
+
         return node;
     }
 
@@ -548,10 +561,14 @@ private:
     yaml_version_t m_yaml_version {yaml_version_t::VER_1_2};
     /// A flag to determine the need for YAML anchor node implementation.
     bool m_needs_anchor_impl {false};
+    /// A flag to determine the need for a corresponding node with the last YAML tag.
+    bool m_needs_tag_impl {false};
     /// The last YAML anchor name.
     string_type m_anchor_name {};
     /// The table of YAML anchor nodes.
     std::unordered_map<std::string, BasicNodeType> m_anchor_table {};
+    /// The last tag name.
+    string_type m_tag_name {};
 };
 
 } // namespace detail

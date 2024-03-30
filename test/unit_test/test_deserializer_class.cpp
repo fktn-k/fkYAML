@@ -1286,6 +1286,40 @@ TEST_CASE("DeserializerClassTest_TagDirectiveTest", "[DeserializerClassTest]")
     REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%TAG foo bar")));
 }
 
+TEST_CASE("DeserializerClassTest_InvalidDirectiveTest", "[DeserializerClassTest]")
+{
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%INVALID foo bar")));
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.empty());
+}
+
+TEST_CASE("DeserializerClassTest_DeserializeTagTest", "[DeserializerClassTest]")
+{
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    std::string input = "!local foo: !!str true";
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+    REQUIRE(root.is_mapping());
+    REQUIRE(root.size() == 1);
+    REQUIRE(root.contains("foo"));
+
+    fkyaml::node key = root.begin().key();
+    REQUIRE(key.is_string());
+    REQUIRE(key.get_value_ref<std::string&>() == "foo");
+    REQUIRE(key.has_tag_name());
+    REQUIRE(key.get_tag_name() == "!local");
+
+    REQUIRE(root["foo"].has_tag_name());
+    REQUIRE(root["foo"].get_tag_name() == "!!str");
+    REQUIRE(root["foo"].is_boolean());              // FIXME
+    REQUIRE(root["foo"].get_value<bool>() == true); // FIXME
+}
+
 TEST_CASE("DeserializerClassTest_DeserializeNoMachingAnchorTest", "[DeserializerClassTest]")
 {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
