@@ -100,7 +100,7 @@ TEST_CASE("InputAdapterTest_StreamInputAdapterProviderTest", "[InputAdapterTest]
     REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 }
 
-TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
+TEST_CASE("InputAdapterTest_FillBufferTest", "[InputAdapterTest]")
 {
     ///////////////
     //   UTF-8   //
@@ -1384,5 +1384,274 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         REQUIRE(buffer[5] == char(0xA0u));
         REQUIRE(buffer[6] == char(0x80u));
         REQUIRE(buffer[7] == char(0x8Bu));
+    }
+}
+
+TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTest]")
+{
+    /////////////////////////////////
+    //   UTF-8 1-Byte Characters   //
+    /////////////////////////////////
+
+    SECTION("file_input_adapter with valid 1-byte UTF-8 encodings")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_1byte_char.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
+
+        REQUIRE(buffer.size() == 3);
+        REQUIRE(buffer[0] == char(0x5Au));
+        REQUIRE(buffer[1] == char(0x30u));
+        REQUIRE(buffer[2] == char(0x61u));
+
+        std::fclose(p_file);
+    }
+
+    SECTION("file_input_adapter with invalid 1-byte UTF-8 encodings")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_1byte_char.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        std::string buffer {};
+        REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+    }
+
+    SECTION("stream_input_adapter with valid 1-byte UTF-8 encodings")
+    {
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_1byte_char.txt");
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
+
+        REQUIRE(buffer.size() == 3);
+        REQUIRE(buffer[0] == char(0x5Au));
+        REQUIRE(buffer[1] == char(0x30u));
+        REQUIRE(buffer[2] == char(0x61u));
+    }
+
+    SECTION("stream_input_adapter with invalid 1-byte UTF-8 encodings")
+    {
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_1byte_char.txt");
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        std::string buffer {};
+        REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+    }
+
+    /////////////////////////////////
+    //   UTF-8 2-Byte Characters   //
+    /////////////////////////////////
+
+    SECTION("file_input_adapter with valid 2-byte UTF-8 encodings")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_2byte_char.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
+
+        REQUIRE(buffer.size() == 4);
+        REQUIRE(buffer[0] == char(0xC2u));
+        REQUIRE(buffer[1] == char(0x80u));
+        REQUIRE(buffer[2] == char(0xDFu));
+        REQUIRE(buffer[3] == char(0xBFu));
+
+        std::fclose(p_file);
+    }
+
+    SECTION("file_input_adapter with invalid 2-byte UTF-8 encodings")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_2byte_char.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        std::string buffer {};
+        REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+    }
+
+    SECTION("stream_input_adapter with valid 2-byte UTF-8 encodings")
+    {
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_2byte_char.txt");
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
+
+        REQUIRE(buffer.size() == 4);
+        REQUIRE(buffer[0] == char(0xC2u));
+        REQUIRE(buffer[1] == char(0x80u));
+        REQUIRE(buffer[2] == char(0xDFu));
+        REQUIRE(buffer[3] == char(0xBFu));
+    }
+
+    SECTION("stream_input_adapter with invalid 2-byte UTF-8 encodings")
+    {
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_2byte_char.txt");
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        std::string buffer {};
+        REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+    }
+
+    /////////////////////////////////
+    //   UTF-8 3-Byte Characters   //
+    /////////////////////////////////
+
+    SECTION("file_input_adapter with valid 3-byte UTF-8 encodings")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_3byte_char.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
+
+        REQUIRE(buffer.size() == 6);
+        REQUIRE(buffer[0] == char(0xE0u));
+        REQUIRE(buffer[1] == char(0x80u));
+        REQUIRE(buffer[2] == char(0x80u));
+        REQUIRE(buffer[3] == char(0xECu));
+        REQUIRE(buffer[4] == char(0xBFu));
+        REQUIRE(buffer[5] == char(0xBFu));
+
+        std::fclose(p_file);
+    }
+
+    SECTION("file_input_adapter with invalid 3-byte UTF-8 encodings")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_3byte_char.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        std::string buffer {};
+        REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+    }
+
+    SECTION("stream_input_adapter with valid 3-byte UTF-8 encodings")
+    {
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_3byte_char.txt");
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
+
+        REQUIRE(buffer.size() == 6);
+        REQUIRE(buffer[0] == char(0xE0u));
+        REQUIRE(buffer[1] == char(0x80u));
+        REQUIRE(buffer[2] == char(0x80u));
+        REQUIRE(buffer[3] == char(0xECu));
+        REQUIRE(buffer[4] == char(0xBFu));
+        REQUIRE(buffer[5] == char(0xBFu));
+    }
+
+    SECTION("stream_input_adapter with invalid 3-byte UTF-8 encodings")
+    {
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_3byte_char.txt");
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        std::string buffer {};
+        REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+    }
+
+    /////////////////////////////////
+    //   UTF-8 4-Byte Characters   //
+    /////////////////////////////////
+
+    SECTION("file_input_adapter with valid 4-byte UTF-8 encodings")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_4byte_char.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
+
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == char(0xF0u));
+        REQUIRE(buffer[1] == char(0x90u));
+        REQUIRE(buffer[2] == char(0x80u));
+        REQUIRE(buffer[3] == char(0x80u));
+        REQUIRE(buffer[4] == char(0xF2u));
+        REQUIRE(buffer[5] == char(0xBFu));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x80u));
+
+        std::fclose(p_file);
+    }
+
+    SECTION("file_input_adapter with invalid 4-byte UTF-8 encodings")
+    {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_4byte_char.txt", "r");
+        ENABLE_C4996
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        std::string buffer {};
+        REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+    }
+
+    SECTION("stream_input_adapter with valid 4-byte UTF-8 encodings")
+    {
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_4byte_char.txt");
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
+
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == char(0xF0u));
+        REQUIRE(buffer[1] == char(0x90u));
+        REQUIRE(buffer[2] == char(0x80u));
+        REQUIRE(buffer[3] == char(0x80u));
+        REQUIRE(buffer[4] == char(0xF2u));
+        REQUIRE(buffer[5] == char(0xBFu));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x80u));
+    }
+
+    SECTION("stream_input_adapter with invalid 4-byte UTF-8 encodings")
+    {
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_4byte_char.txt");
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        std::string buffer {};
+        REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
     }
 }

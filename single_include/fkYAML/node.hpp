@@ -4736,30 +4736,30 @@ private:
             shift_bits[1] = 8;
         }
 
-        while (m_current != m_end || m_encoded_buf_size != 0)
-        {
-            while (m_current != m_end && m_encoded_buf_size < 2)
-            {
-                m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(*m_current++) << shift_bits[0]);
-                m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(*m_current++) << shift_bits[1]);
-            }
+        std::array<char16_t, 2> encoded_buffer {{0, 0}};
+        std::size_t encoded_buf_size {0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
 
-            if (m_encoded_buf_size == 0)
+        while (m_current != m_end || encoded_buf_size != 0)
+        {
+            while (m_current != m_end && encoded_buf_size < 2)
             {
-                return;
+                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(*m_current++) << shift_bits[0]);
+                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(*m_current++) << shift_bits[1]);
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
+            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
-                m_encoded_buffer[0] = m_encoded_buffer[1];
-                m_encoded_buffer[1] = 0;
+                encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
             }
-            m_encoded_buf_size -= consumed_size;
+            encoded_buf_size -= consumed_size;
 
-            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
     }
 
@@ -4784,6 +4784,9 @@ private:
         }
 
         char32_t utf32 = 0;
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
         while (m_current != m_end)
         {
             utf32 = char32_t(*m_current++ << shift_bits[0]);
@@ -4791,9 +4794,9 @@ private:
             utf32 |= char32_t(*m_current++ << shift_bits[2]);
             utf32 |= char32_t(*m_current++ << shift_bits[3]);
 
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
+            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
     }
 
@@ -4804,14 +4807,6 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
-    /// The buffer for decoding characters read from the input.
-    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements in `m_encoded_buffer`.
-    std::size_t m_encoded_buf_size {0};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
 };
 
 #ifdef FK_YAML_HAS_CHAR8_T
@@ -4949,33 +4944,32 @@ public:
     {
         int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
+        std::array<char16_t, 2> encoded_buffer {{0, 0}};
+        std::size_t encoded_buf_size {0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
         char16_t tmp = 0;
-        while (m_current != m_end || m_encoded_buf_size != 0)
+        while (m_current != m_end || encoded_buf_size != 0)
         {
-            while (m_current != m_end && m_encoded_buf_size < 2)
+            while (m_current != m_end && encoded_buf_size < 2)
             {
                 tmp = *m_current++;
-                m_encoded_buffer[m_encoded_buf_size] = char16_t((tmp & 0x00FFu) << shift_bits);
-                m_encoded_buffer[m_encoded_buf_size++] |= char16_t((tmp & 0xFF00u) >> shift_bits);
-            }
-
-            if (m_encoded_buf_size == 0)
-            {
-                // No inputs left.
-                return;
+                encoded_buffer[encoded_buf_size] = char16_t((tmp & 0x00FFu) << shift_bits);
+                encoded_buffer[encoded_buf_size++] |= char16_t((tmp & 0xFF00u) >> shift_bits);
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
+            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
-                m_encoded_buffer[0] = m_encoded_buffer[1];
-                m_encoded_buffer[1] = 0;
+                encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
             }
-            m_encoded_buf_size -= consumed_size;
+            encoded_buf_size -= consumed_size;
 
-            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
     }
 
@@ -4986,14 +4980,6 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_16BE};
-    /// The buffer for decoding characters read from the input.
-    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements in `m_encoded_buffer`.
-    std::size_t m_encoded_buf_size {0};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
 };
 
 /// @brief An input adapter for iterators of type char32_t.
@@ -5040,6 +5026,9 @@ public:
         }
 
         char32_t utf32 = 0;
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
         while (m_current != m_end)
         {
             char32_t tmp = *m_current++;
@@ -5048,9 +5037,9 @@ public:
             utf32 |= char32_t((tmp & 0x0000FF00u) << shift_bits[2]);
             utf32 |= char32_t((tmp & 0x000000FFu) << shift_bits[3]);
 
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
+            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
     }
 
@@ -5061,10 +5050,6 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
 };
 
 /// @brief An input adapter for C-style file handles.
@@ -5190,30 +5175,30 @@ private:
         }
 
         char chars[2] = {0, 0};
+        std::array<char16_t, 2> encoded_buffer {{0, 0}};
+        std::size_t encoded_buf_size {0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
         while (std::feof(m_file) == 0)
         {
-            while (m_encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2)
+            while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2)
             {
-                m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
-                m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
-            }
-
-            if (m_encoded_buf_size == 0)
-            {
-                return;
+                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
+                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
+            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
-                m_encoded_buffer[0] = m_encoded_buffer[1];
-                m_encoded_buffer[1] = 0;
+                encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
             }
-            m_encoded_buf_size -= consumed_size;
+            encoded_buf_size -= consumed_size;
 
-            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
     }
 
@@ -5239,6 +5224,9 @@ private:
 
         char chars[4] = {0, 0, 0, 0};
         char32_t utf32 = 0;
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
         while (std::feof(m_file) == 0)
         {
             std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
@@ -5252,9 +5240,9 @@ private:
             utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
             utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
 
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
+            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
     }
 
@@ -5263,14 +5251,6 @@ private:
     std::FILE* m_file {nullptr};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
-    /// The buffer for decoding characters read from the input.
-    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements in `m_encoded_buffer`.
-    std::size_t m_encoded_buf_size {0};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
 };
 
 /// @brief An input adapter for streams
@@ -5328,10 +5308,7 @@ private:
         {
             m_istream->read(&tmp_buf[0], 256);
             read_size = m_istream->gcount();
-            if (read_size > 0)
-            {
-                buffer.append(tmp_buf, read_size);
-            }
+            buffer.append(tmp_buf, read_size);
         } while (!m_istream->eof());
 
         auto current = buffer.begin();
@@ -5397,36 +5374,37 @@ private:
         }
 
         char chars[2] = {0, 0};
+        std::array<char16_t, 2> encoded_buffer {{0, 0}};
+        std::size_t encoded_buf_size {0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
         do
         {
-            while (m_encoded_buf_size < 2)
+            while (encoded_buf_size < 2)
             {
                 m_istream->read(&chars[0], 2);
                 std::streamsize size = m_istream->gcount();
                 if (size != 2)
                 {
-                    if (m_encoded_buf_size == 0)
-                    {
-                        return;
-                    }
                     break;
                 }
 
-                m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
-                m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
+                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
+                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
             };
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
+            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
-                m_encoded_buffer[0] = m_encoded_buffer[1];
-                m_encoded_buffer[1] = 0;
+                encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
             }
-            m_encoded_buf_size -= consumed_size;
+            encoded_buf_size -= consumed_size;
 
-            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
@@ -5452,6 +5430,9 @@ private:
 
         char chars[4] = {0, 0, 0, 0};
         char32_t utf32 = 0;
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
         do
         {
             m_istream->read(&chars[0], 4);
@@ -5466,9 +5447,9 @@ private:
             utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
             utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
 
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
+            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
@@ -5477,14 +5458,6 @@ private:
     std::istream* m_istream {nullptr};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
-    /// The buffer for decoding characters read from the input.
-    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements in `m_encoded_buffer`.
-    std::size_t m_encoded_buf_size {0};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
 };
 
 /////////////////////////////////
