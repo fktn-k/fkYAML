@@ -4784,13 +4784,12 @@ private:
             shift_bits[3] = 24;
         }
 
-        char32_t utf32 = 0;
         std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         while (m_current != m_end)
         {
-            utf32 = char32_t(*m_current++ << shift_bits[0]);
+            char32_t utf32 = char32_t(*m_current++ << shift_bits[0]);
             utf32 |= char32_t(*m_current++ << shift_bits[1]);
             utf32 |= char32_t(*m_current++ << shift_bits[2]);
             utf32 |= char32_t(*m_current++ << shift_bits[3]);
@@ -4951,12 +4950,11 @@ public:
         std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
-        char16_t tmp = 0;
         while (m_current != m_end || encoded_buf_size != 0)
         {
             while (m_current != m_end && encoded_buf_size < 2)
             {
-                tmp = *m_current++;
+                char16_t tmp = *m_current++;
                 encoded_buffer[encoded_buf_size] = char16_t((tmp & 0x00FFu) << shift_bits);
                 encoded_buffer[encoded_buf_size++] |= char16_t((tmp & 0xFF00u) >> shift_bits);
             }
@@ -5027,14 +5025,13 @@ public:
             shift_bits[3] = 24;
         }
 
-        char32_t utf32 = 0;
         std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         while (m_current != m_end)
         {
             char32_t tmp = *m_current++;
-            utf32 = char32_t((tmp & 0xFF000000u) >> shift_bits[0]);
+            char32_t utf32 = char32_t((tmp & 0xFF000000u) >> shift_bits[0]);
             utf32 |= char32_t((tmp & 0x00FF0000u) >> shift_bits[1]);
             utf32 |= char32_t((tmp & 0x0000FF00u) << shift_bits[2]);
             utf32 |= char32_t((tmp & 0x000000FFu) << shift_bits[3]);
@@ -5226,7 +5223,6 @@ private:
         }
 
         char chars[4] = {0, 0, 0, 0};
-        char32_t utf32 = 0;
         std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
@@ -5238,7 +5234,7 @@ private:
                 return;
             }
 
-            utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
+            char32_t utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
             utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
             utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
             utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
@@ -5306,11 +5302,10 @@ private:
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
-        std::size_t read_size = 0;
         do
         {
             m_istream->read(&tmp_buf[0], 256);
-            read_size = m_istream->gcount();
+            std::size_t read_size = m_istream->gcount();
             buffer.append(tmp_buf, read_size);
         } while (!m_istream->eof());
 
@@ -5433,7 +5428,6 @@ private:
         }
 
         char chars[4] = {0, 0, 0, 0};
-        char32_t utf32 = 0;
         std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
@@ -5446,7 +5440,7 @@ private:
                 return;
             }
 
-            utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
+            char32_t utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
             utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
             utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
             utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
