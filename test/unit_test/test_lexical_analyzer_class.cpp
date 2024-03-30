@@ -885,8 +885,9 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidMultiByteCharStringTokenTest", "[
             char_traits_t::to_char_type(0x80),
             char_traits_t::to_char_type(0x80)});
 
-    lexer_t lexer(fkyaml::detail::input_adapter(mb_char));
-    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::invalid_encoding);
+    auto input_adapter = fkyaml::detail::input_adapter(mb_char);
+    REQUIRE_THROWS_AS(lexer_t(std::move(input_adapter)), fkyaml::invalid_encoding);
+    // REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::invalid_encoding);
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanUnescapedControlCharacter", "[LexicalAnalyzerClassTest]")

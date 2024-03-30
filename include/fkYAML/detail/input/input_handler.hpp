@@ -52,14 +52,8 @@ public:
     explicit input_handler(InputAdapterType&& input_adapter)
         : m_buffer_size(0)
     {
-        m_buffer.clear();
-
-        int ch = s_end_of_input;
-        while ((ch = input_adapter.get_character()) != s_end_of_input)
-        {
-            m_buffer.push_back(char_traits_type::to_char_type(ch));
-            m_buffer_size++;
-        }
+        input_adapter.fill_buffer(m_buffer);
+        m_buffer_size = m_buffer.size();
     }
 
     /// @brief Get the character at the current position.

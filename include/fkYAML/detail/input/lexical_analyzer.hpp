@@ -1019,6 +1019,8 @@ private:
                 continue;
             }
 
+            // The other characters are already checked while creating an input handler.
+
             // Handle ASCII characters except control characters.
             if (current <= 0x7E)
             {
@@ -1029,45 +1031,26 @@ private:
             // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
             if (current <= 0xDF)
             {
-                std::array<int, 2> byte_array = {{current, m_input_handler.get_next()}};
-                if (!utf8_encoding::validate(byte_array))
-                {
-                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-                }
-
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
                 continue;
             }
 
             // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
             if (current <= 0xEF)
             {
-                std::array<int, 3> byte_array = {{current, m_input_handler.get_next(), m_input_handler.get_next()}};
-                if (!utf8_encoding::validate(byte_array))
-                {
-                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-                }
-
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
 
                 continue;
             }
 
             // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            std::array<int, 4> byte_array = {
-                {current, m_input_handler.get_next(), m_input_handler.get_next(), m_input_handler.get_next()}};
-            if (!utf8_encoding::validate(byte_array))
-            {
-                throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-            }
-
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[3]));
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
         }
     }
 

@@ -1652,6 +1652,7 @@ FK_YAML_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
 #define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
 
+#include <string>
 #include <type_traits>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
@@ -1668,51 +1669,27 @@ FK_YAML_NAMESPACE_BEGIN
 namespace detail
 {
 
-/////////////////////////////////
-//   API representative types
-/////////////////////////////////
-
-/// @brief A type which represents T::char_type;
-/// @tparam T A target type to check if it has char_type;
-template <typename T>
-using detect_char_type_helper_t = typename T::char_type;
-
-/// @brief A type which represents get_character function.
-/// @tparam T A target type.
-template <typename T>
-using get_character_fn_t = decltype(std::declval<T>().get_character());
-
-/// @brief Type traits to check if T has char_type as its member.
-/// @tparam T A target type.
-/// @tparam typename N/A
-template <typename T, typename = void>
-struct has_char_type : std::false_type
-{
-};
-
 ///////////////////////////////////////////
 //   Input Adapter API detection traits
 ///////////////////////////////////////////
 
-/// @brief A partial specialization of has_char_type if T has char_type as its member.
+/// @brief A type which represents get_character function.
 /// @tparam T A target type.
 template <typename T>
-struct has_char_type<T, enable_if_t<is_detected<detect_char_type_helper_t, T>::value>> : std::true_type
-{
-};
+using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer(std::declval<std::string&>()));
 
 /// @brief Type traits to check if InputAdapterType has get_character member function.
 /// @tparam InputAdapterType An input adapter type to check if it has get_character function.
 /// @tparam typename N/A
 template <typename InputAdapterType, typename = void>
-struct has_get_character : std::false_type
+struct has_fill_buffer : std::false_type
 {
 };
 
-/// @brief A partial specialization of has_get_character if InputAdapterType has get_character member function.
+/// @brief A partial specialization of has_fill_buffer if InputAdapterType has get_character member function.
 /// @tparam InputAdapterType A type of a target input adapter.
 template <typename InputAdapterType>
-struct has_get_character<InputAdapterType, enable_if_t<is_detected<get_character_fn_t, InputAdapterType>::value>>
+struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_t, InputAdapterType>::value>>
     : std::true_type
 {
 };
@@ -1732,10 +1709,7 @@ struct is_input_adapter : std::false_type
 /// @brief A partial specialization of is_input_adapter if T is an input adapter type.
 /// @tparam InputAdapterType
 template <typename InputAdapterType>
-struct is_input_adapter<
-    InputAdapterType,
-    enable_if_t<conjunction<has_char_type<InputAdapterType>, has_get_character<InputAdapterType>>::value>>
-    : std::true_type
+struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type
 {
 };
 
@@ -1781,14 +1755,8 @@ public:
     explicit input_handler(InputAdapterType&& input_adapter)
         : m_buffer_size(0)
     {
-        m_buffer.clear();
-
-        int ch = s_end_of_input;
-        while ((ch = input_adapter.get_character()) != s_end_of_input)
-        {
-            m_buffer.push_back(char_traits_type::to_char_type(ch));
-            m_buffer_size++;
-        }
+        input_adapter.fill_buffer(m_buffer);
+        m_buffer_size = m_buffer.size();
     }
 
     /// @brief Get the character at the current position.
@@ -1861,6 +1829,19 @@ public:
         return 0;
     }
 
+    /// @brief Get the next character without changing the current position.
+    /// @return int A character if not already at the end of the input buffer, an EOF otherwise.
+    int peek_next()
+    {
+        if (m_position.cur_pos >= m_buffer_size - 1)
+        {
+            // there is no input character left.
+            return s_end_of_input;
+        }
+
+        return char_traits_type::to_int_type(m_buffer[m_position.cur_pos + 1]);
+    }
+
     /// @brief Move backward the current position.
     void unget()
     {
@@ -1897,21 +1878,6 @@ public:
         {
             unget();
         }
-    }
-
-    /// @brief Check if the next character is the expected one.
-    /// @param expected An expected next character.
-    /// @return true The next character is the expected one.
-    /// @return false The next character is not the expected one.
-    bool test_next_char(char expected)
-    {
-        if (m_position.cur_pos >= m_buffer_size - 1)
-        {
-            // there is no input character left.
-            return false;
-        }
-
-        return char_traits_type::eq(m_buffer[m_position.cur_pos + 1], expected);
     }
 
     /// @brief Get the current position in the current line.
@@ -2377,10 +2343,10 @@ public:
                     return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
                 }
 
-                m_input_handler.unget_range(2);
+                m_input_handler.get_next();
             }
 
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_string(ret == s_end_of_input);
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
@@ -2959,13 +2925,13 @@ private:
                 {
                     // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                    current = m_input_handler.get_next();
+                    int next = m_input_handler.get_next();
 
                     // These characters are permitted when not inside a flow collection, and not inside an implicit key.
                     // TODO: Support detection of implicit key context for this check.
                     if (m_flow_context_depth > 0)
                     {
-                        switch (current)
+                        switch (next)
                         {
                         case '{':
                         case '}':
@@ -2977,17 +2943,16 @@ private:
                     }
 
                     // " :" is permitted in a plain style string token, but not when followed by a space.
-                    if (current == ':')
+                    if (next == ':')
                     {
-                        int next = m_input_handler.get_next();
-                        m_input_handler.unget();
-                        if (next == ' ')
+                        int peeked = m_input_handler.peek_next();
+                        if (peeked == ' ')
                         {
                             return lexical_token_t::STRING_VALUE;
                         }
                     }
 
-                    switch (current)
+                    switch (next)
                     {
                     case ' ':
                     case '\r':
@@ -2997,7 +2962,6 @@ private:
                         return lexical_token_t::STRING_VALUE;
                     }
                     m_input_handler.unget();
-                    current = m_input_handler.get_current();
                 }
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 continue;
@@ -3044,8 +3008,7 @@ private:
                     continue;
                 }
 
-                int next = m_input_handler.get_next();
-                m_input_handler.unget();
+                int next = m_input_handler.peek_next();
 
                 // A colon as a key separator must be followed by a space or a newline code.
                 if (next != ' ' && next != '\r' && next != '\n')
@@ -3158,31 +3121,19 @@ private:
                     break;
                 case 'N': // next line
                     utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case '_': // non-breaking space
                     utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'L': // line separator
                     utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'P': // paragraph separator
                     utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'x':
                     handle_escaped_unicode(1);
@@ -3206,6 +3157,8 @@ private:
                 continue;
             }
 
+            // The other characters are already checked while creating an input handler.
+
             // Handle ASCII characters except control characters.
             if (current <= 0x7E)
             {
@@ -3216,45 +3169,26 @@ private:
             // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
             if (current <= 0xDF)
             {
-                std::array<int, 2> byte_array = {{current, m_input_handler.get_next()}};
-                if (!utf8_encoding::validate(byte_array))
-                {
-                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-                }
-
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
                 continue;
             }
 
             // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
             if (current <= 0xEF)
             {
-                std::array<int, 3> byte_array = {{current, m_input_handler.get_next(), m_input_handler.get_next()}};
-                if (!utf8_encoding::validate(byte_array))
-                {
-                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-                }
-
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
 
                 continue;
             }
 
             // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            std::array<int, 4> byte_array = {
-                {current, m_input_handler.get_next(), m_input_handler.get_next(), m_input_handler.get_next()}};
-            if (!utf8_encoding::validate(byte_array))
-            {
-                throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-            }
-
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[3]));
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
         }
     }
 
@@ -3394,24 +3328,24 @@ private:
                     }
                     else
                     {
-                        switch (m_input_handler.get_next())
+                        switch (int next = m_input_handler.peek_next())
                         {
                         case '\r': {
                             m_input_handler.get_next();
-                            FK_YAML_ASSERT(m_input_handler.get_current() == '\n');
-                            m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                            next = m_input_handler.get_next();
+                            FK_YAML_ASSERT(next == '\n');
+                            m_value_buffer.push_back(char_traits_type::to_char_type(next));
                             break;
                         }
                         case '\n':
-                            m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                            m_input_handler.get_next();
+                            m_value_buffer.push_back(char_traits_type::to_char_type(next));
                             break;
                         case ' ':
                             // The next line is more indented, so a newline will be appended in the next loop.
-                            m_input_handler.unget();
                             break;
                         default:
                             m_value_buffer.push_back(char_traits_type::to_char_type(' '));
-                            m_input_handler.unget();
                             break;
                         }
                     }
@@ -3574,10 +3508,7 @@ private:
 
         // Treats the code point as a UTF-32 encoded character.
         utf8_encoding::from_utf32(code_point, m_encode_buffer, m_encoded_size);
-        for (size_t i = 0; i < m_encoded_size; i++)
-        {
-            m_value_buffer.push_back(m_encode_buffer[i]);
-        }
+        m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
     }
 
     void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
@@ -3585,15 +3516,18 @@ private:
         int ch = m_input_handler.get_next();
 
         chomp_type = chomping_indicator_t::CLIP;
-        if (ch == '-')
+        switch (ch)
         {
+        case '-':
             chomp_type = chomping_indicator_t::STRIP;
             ch = m_input_handler.get_next();
-        }
-        else if (ch == '+')
-        {
+            break;
+        case '+':
             chomp_type = chomping_indicator_t::KEEP;
             ch = m_input_handler.get_next();
+            break;
+        default:
+            break;
         }
 
         if (ch == '0')
@@ -4320,6 +4254,7 @@ FK_YAML_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
 #define FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
 
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <istream>
@@ -4688,9 +4623,6 @@ class iterator_input_adapter<
     IterType, enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char>::value>>
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
 
@@ -4714,75 +4646,107 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        typename std::char_traits<char_type>::int_type ret = 0;
+        buffer.clear();
+
         switch (m_encode_type)
         {
         case utf_encode_t::UTF_8:
-            ret = get_character_for_utf8();
+            fill_buffer_utf8(buffer);
             break;
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            ret = get_character_for_utf16();
+            fill_buffer_utf16(buffer);
             break;
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            ret = get_character_for_utf32();
+            fill_buffer_utf32(buffer);
             break;
         }
-        return ret;
     }
 
 private:
-    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
+    /// @brief The concrete implementation of fill_buffer() for UTF-8 encoded inputs.
+    /// @param buffer A buffer to be filled with the input.
+    void fill_buffer_utf8(std::string& buffer)
     {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
-        if (m_current != m_end)
+        IterType current = m_current;
+        while (current != m_end)
         {
-            auto ret = std::char_traits<char_type>::to_int_type(*m_current);
-            ++m_current;
-            return ret;
+            char first = *current++;
+
+            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+            if ((first & 0xC0) == 0x80)
+            {
+                // The first byte must not start with 0b10XX'XXXX
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {{0x80}});
+            }
+            // The first byte starts with 0b110X'XXXX -> 2-byte character
+            else if ((first & 0xE0) == 0xC0)
+            {
+                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0b1110'XXXX -> 3-byte character
+            else if ((first & 0xF0) == 0xE0)
+            {
+                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0x1111'0XXX -> 4-byte character
+            else if ((first & 0xF8) == 0xF0)
+            {
+                std::array<int, 4> bytes {
+                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
         }
-        return std::char_traits<char_type>::eof();
+
+        buffer.assign(m_current, m_end);
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf16()
+    /// @param buffer A buffer to be filled with the input.
+    void fill_buffer_utf16(std::string& buffer)
     {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        int shift_bits[2] {0, 0};
+        if (m_encode_type == utf_encode_t::UTF_16BE)
         {
-            if (m_current == m_end)
-            {
-                if (m_encoded_buf_size == 0)
-                {
-                    return std::char_traits<char_type>::eof();
-                }
-            }
+            shift_bits[0] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_16LE
+        {
+            shift_bits[1] = 8;
+        }
 
+        while (m_current != m_end || m_encoded_buf_size != 0)
+        {
             while (m_current != m_end && m_encoded_buf_size < 2)
             {
-                if (m_encode_type == utf_encode_t::UTF_16BE)
-                {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(*m_current) << 8);
-                    ++m_current;
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(*m_current);
-                }
-                else // m_encode_type == utf_encode_t::UTF_16LE
-                {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(*m_current);
-                    ++m_current;
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(*m_current) << 8);
-                }
+                m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(*m_current++) << shift_bits[0]);
+                m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(*m_current++) << shift_bits[1]);
+            }
 
-                ++m_current;
-                ++m_encoded_buf_size;
+            if (m_encoded_buf_size == 0)
+            {
+                return;
             }
 
             std::size_t consumed_size = 0;
@@ -4795,57 +4759,42 @@ private:
             }
             m_encoded_buf_size -= consumed_size;
 
-            m_utf8_buf_index = 0;
+            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
         }
-
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf32()
+    void fill_buffer_utf32(std::string& buffer)
     {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        int shift_bits[4] {0, 0, 0, 0};
+        if (m_encode_type == utf_encode_t::UTF_32BE)
         {
-            if (m_current == m_end)
-            {
-                return std::char_traits<char_type>::eof();
-            }
-
-            char32_t utf32 = 0;
-            if (m_encode_type == utf_encode_t::UTF_32BE)
-            {
-                utf32 = char32_t(*m_current << 24);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 16);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 8);
-                ++m_current;
-                utf32 |= char32_t(*m_current);
-            }
-            else // m_encode_type == utf_encode_t::UTF_32LE
-            {
-                utf32 = char32_t(*m_current);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 8);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 16);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 24);
-            }
-
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            ++m_current;
-            m_utf8_buf_index = 0;
+            shift_bits[0] = 24;
+            shift_bits[1] = 16;
+            shift_bits[2] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_32LE
+        {
+            shift_bits[1] = 8;
+            shift_bits[2] = 16;
+            shift_bits[3] = 24;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        char32_t utf32 = 0;
+        while (m_current != m_end)
+        {
+            utf32 = char32_t(*m_current++ << shift_bits[0]);
+            utf32 |= char32_t(*m_current++ << shift_bits[1]);
+            utf32 |= char32_t(*m_current++ << shift_bits[2]);
+            utf32 |= char32_t(*m_current++ << shift_bits[3]);
+
+            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
+
+            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+        }
     }
 
 private:
@@ -4861,8 +4810,6 @@ private:
     std::size_t m_encoded_buf_size {0};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
     /// The number of bytes in `m_utf8_buffer`.
     std::size_t m_utf8_buf_size {0};
 };
@@ -4877,9 +4824,6 @@ class iterator_input_adapter<
     enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>>
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
 
@@ -4906,15 +4850,56 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        if (m_current != m_end)
+        IterType current = m_current;
+        while (current != m_end)
         {
-            auto ret = std::char_traits<char_type>::to_int_type(char(*m_current));
-            ++m_current;
-            return ret;
+            char first = *current++;
+
+            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+            if ((first & 0xC0) == 0x80)
+            {
+                // The first byte must not start with 0b10XX'XXXX
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {{0x80}});
+            }
+            // The first byte starts with 0b110X'XXXX -> 2-byte character
+            else if ((first & 0xE0) == 0xC0)
+            {
+                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0b1110'XXXX -> 3-byte character
+            else if ((first & 0xF0) == 0xE0)
+            {
+                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0x1111'0XXX -> 4-byte character
+            else if ((first & 0xF8) == 0xF0)
+            {
+                std::array<int, 4> bytes {
+                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
         }
-        return std::char_traits<char_type>::eof();
+
+        while (m_current != m_end)
+        {
+            buffer.push_back(char(*m_current++));
+        }
     }
 
 private:
@@ -4936,9 +4921,6 @@ class iterator_input_adapter<
     enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char16_t>::value>>
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
 
@@ -4963,33 +4945,24 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
-        {
-            if (m_current == m_end)
-            {
-                if (m_encoded_buf_size == 0)
-                {
-                    return std::char_traits<char_type>::eof();
-                }
-            }
+        int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
+        char16_t tmp = 0;
+        while (m_current != m_end || m_encoded_buf_size != 0)
+        {
             while (m_current != m_end && m_encoded_buf_size < 2)
             {
-                if (m_encode_type == utf_encode_t::UTF_16BE)
-                {
-                    m_encoded_buffer[m_encoded_buf_size] = *m_current;
-                }
-                else // utf_encode_t::UTF_16LE
-                {
-                    char16_t tmp = *m_current;
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t((tmp & 0x00FFu) << 8);
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t((tmp & 0xFF00u) >> 8);
-                }
+                tmp = *m_current++;
+                m_encoded_buffer[m_encoded_buf_size] = char16_t((tmp & 0x00FFu) << shift_bits);
+                m_encoded_buffer[m_encoded_buf_size++] |= char16_t((tmp & 0xFF00u) >> shift_bits);
+            }
 
-                ++m_current;
-                ++m_encoded_buf_size;
+            if (m_encoded_buf_size == 0)
+            {
+                // No inputs left.
+                return;
             }
 
             std::size_t consumed_size = 0;
@@ -5002,12 +4975,8 @@ public:
             }
             m_encoded_buf_size -= consumed_size;
 
-            m_utf8_buf_index = 0;
+            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
         }
-
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
     }
 
 private:
@@ -5023,8 +4992,6 @@ private:
     std::size_t m_encoded_buf_size {0};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
     /// The number of bytes in `m_utf8_buffer`.
     std::size_t m_utf8_buf_size {0};
 };
@@ -5037,9 +5004,6 @@ class iterator_input_adapter<
     enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char32_t>::value>>
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
 
@@ -5064,37 +5028,30 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        int shift_bits[4] {0, 0, 0, 0};
+        if (m_encode_type == utf_encode_t::UTF_32LE)
         {
-            if (m_current == m_end)
-            {
-                return std::char_traits<char_type>::eof();
-            }
-
-            char32_t utf32 = 0;
-            if (m_encode_type == utf_encode_t::UTF_32BE)
-            {
-                utf32 = *m_current;
-            }
-            else // m_encode_type == utf_encode_t::UTF_32LE
-            {
-                char32_t tmp = *m_current;
-                utf32 |= char32_t((tmp & 0xFF000000u) >> 24);
-                utf32 |= char32_t((tmp & 0x00FF0000u) >> 8);
-                utf32 |= char32_t((tmp & 0x0000FF00u) << 8);
-                utf32 |= char32_t((tmp & 0x000000FFu) << 24);
-            }
-
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            ++m_current;
-            m_utf8_buf_index = 0;
+            shift_bits[0] = 24;
+            shift_bits[1] = 8;
+            shift_bits[2] = 8;
+            shift_bits[3] = 24;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        char32_t utf32 = 0;
+        while (m_current != m_end)
+        {
+            char32_t tmp = *m_current++;
+            utf32 = char32_t((tmp & 0xFF000000u) >> shift_bits[0]);
+            utf32 |= char32_t((tmp & 0x00FF0000u) >> shift_bits[1]);
+            utf32 |= char32_t((tmp & 0x0000FF00u) << shift_bits[2]);
+            utf32 |= char32_t((tmp & 0x000000FFu) << shift_bits[3]);
+
+            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
+
+            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+        }
     }
 
 private:
@@ -5106,8 +5063,6 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
     /// The number of bytes in `m_utf8_buffer`.
     std::size_t m_utf8_buf_size {0};
 };
@@ -5116,9 +5071,6 @@ private:
 class file_input_adapter
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new file_input_adapter object.
     file_input_adapter() = default;
 
@@ -5143,70 +5095,112 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        typename std::char_traits<char_type>::int_type ret = 0;
         switch (m_encode_type)
         {
         case utf_encode_t::UTF_8:
-            ret = get_character_for_utf8();
+            fill_buffer_utf8(buffer);
             break;
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            ret = get_character_for_utf16();
+            fill_buffer_utf16(buffer);
             break;
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            ret = get_character_for_utf32();
+            fill_buffer_utf32(buffer);
             break;
         }
-        return ret;
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
+    void fill_buffer_utf8(std::string& buffer)
     {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
-        char ch = 0;
-        size_t size = std::fread(&ch, sizeof(char), 1, m_file);
-        if (size == 1)
+        char tmp_buf[256] {};
+        std::size_t read_size = 0;
+        while ((read_size = std::fread(&tmp_buf[0], sizeof(char), sizeof(tmp_buf) / sizeof(tmp_buf[0]), m_file)) > 0)
         {
-            return std::char_traits<char_type>::to_int_type(ch);
+            buffer.append(tmp_buf, read_size);
         }
-        return std::char_traits<char_type>::eof();
+
+        auto current = buffer.begin();
+        auto end = buffer.end();
+        while (current != end)
+        {
+            char first = *current++;
+
+            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+            if ((first & 0xC0) == 0x80)
+            {
+                // The first byte must not start with 0b10XX'XXXX
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {{0x80}});
+            }
+            // The first byte starts with 0b110X'XXXX -> 2-byte character
+            else if ((first & 0xE0) == 0xC0)
+            {
+                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0b1110'XXXX -> 3-byte character
+            else if ((first & 0xF0) == 0xE0)
+            {
+                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0x1111'0XXX -> 4-byte character
+            else if ((first & 0xF8) == 0xF0)
+            {
+                std::array<int, 4> bytes {
+                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+        }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf16()
+    void fill_buffer_utf16(std::string& buffer)
     {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        int shift_bits[2] {0, 0};
+        if (m_encode_type == utf_encode_t::UTF_16BE)
         {
-            char chars[2] = {0, 0};
+            shift_bits[0] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_16LE
+        {
+            shift_bits[1] = 8;
+        }
+
+        char chars[2] = {0, 0};
+        while (std::feof(m_file) == 0)
+        {
             while (m_encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2)
             {
-                if (m_encode_type == utf_encode_t::UTF_16BE)
-                {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << 8);
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]));
-                }
-                else // m_encode_type == utf_encode_t::UTF_16LE
-                {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]));
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]) << 8);
-                }
-
-                ++m_encoded_buf_size;
+                m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
+                m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
             }
 
             if (m_encoded_buf_size == 0)
             {
-                return std::char_traits<char_type>::eof();
+                return;
             }
 
             std::size_t consumed_size = 0;
@@ -5219,52 +5213,49 @@ private:
             }
             m_encoded_buf_size -= consumed_size;
 
-            m_utf8_buf_index = 0;
+            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
         }
-
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf32()
+    void fill_buffer_utf32(std::string& buffer)
     {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        int shift_bits[4] {0, 0, 0, 0};
+        if (m_encode_type == utf_encode_t::UTF_32BE)
         {
-            char chars[4] = {0, 0, 0, 0};
+            shift_bits[0] = 24;
+            shift_bits[1] = 16;
+            shift_bits[2] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_32LE
+        {
+            shift_bits[1] = 8;
+            shift_bits[2] = 16;
+            shift_bits[3] = 24;
+        }
+
+        char chars[4] = {0, 0, 0, 0};
+        char32_t utf32 = 0;
+        while (std::feof(m_file) == 0)
+        {
             std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
             if (size != 4)
             {
-                return std::char_traits<char_type>::eof();
+                return;
             }
 
-            char32_t utf32 = 0;
-            if (m_encode_type == utf_encode_t::UTF_32BE)
-            {
-                utf32 = char32_t(uint8_t(chars[0]) << 24);
-                utf32 |= char32_t(uint8_t(chars[1]) << 16);
-                utf32 |= char32_t(uint8_t(chars[2]) << 8);
-                utf32 |= char32_t(uint8_t(chars[3]));
-            }
-            else // m_encode_type == utf_encode_t::UTF_32LE
-            {
-                utf32 = char32_t(uint8_t(chars[0]));
-                utf32 |= char32_t(uint8_t(chars[1]) << 8);
-                utf32 |= char32_t(uint8_t(chars[2]) << 16);
-                utf32 |= char32_t(uint8_t(chars[3]) << 24);
-            }
+            utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
+            utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
+            utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
+            utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
 
             utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            m_utf8_buf_index = 0;
-        }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+        }
     }
 
 private:
@@ -5278,8 +5269,6 @@ private:
     std::size_t m_encoded_buf_size {0};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
     /// The number of bytes in `m_utf8_buffer`.
     std::size_t m_utf8_buf_size {0};
 };
@@ -5288,9 +5277,6 @@ private:
 class stream_input_adapter
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new stream_input_adapter object.
     stream_input_adapter() = default;
 
@@ -5311,69 +5297,123 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        typename std::char_traits<char_type>::int_type ret = 0;
         switch (m_encode_type)
         {
         case utf_encode_t::UTF_8:
-            ret = get_character_for_utf8();
+            fill_buffer_utf8(buffer);
             break;
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            ret = get_character_for_utf16();
+            fill_buffer_utf16(buffer);
             break;
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            ret = get_character_for_utf32();
+            fill_buffer_utf32(buffer);
             break;
         }
-        return ret;
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
+    void fill_buffer_utf8(std::string& buffer)
     {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
-        return m_istream->get();
+
+        char tmp_buf[256] {};
+        std::size_t read_size = 0;
+        do
+        {
+            m_istream->read(&tmp_buf[0], 256);
+            read_size = m_istream->gcount();
+            if (read_size > 0)
+            {
+                buffer.append(tmp_buf, read_size);
+            }
+        } while (!m_istream->eof());
+
+        auto current = buffer.begin();
+        auto end = buffer.end();
+        while (current != end)
+        {
+            char first = *current++;
+
+            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+            if ((first & 0xC0) == 0x80)
+            {
+                // The first byte must not start with 0b10XX'XXXX
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {{0x80}});
+            }
+            // The first byte starts with 0b110X'XXXX -> 2-byte character
+            else if ((first & 0xE0) == 0xC0)
+            {
+                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0b1110'XXXX -> 3-byte character
+            else if ((first & 0xF0) == 0xE0)
+            {
+                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0x1111'0XXX -> 4-byte character
+            else if ((first & 0xF8) == 0xF0)
+            {
+                std::array<int, 4> bytes {
+                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+        }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf16()
+    void fill_buffer_utf16(std::string& buffer)
     {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        int shift_bits[2] {0, 0};
+        if (m_encode_type == utf_encode_t::UTF_16BE)
+        {
+            shift_bits[0] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_16LE
+        {
+            shift_bits[1] = 8;
+        }
+
+        char chars[2] = {0, 0};
+        do
         {
             while (m_encoded_buf_size < 2)
             {
-                char chars[2] = {0, 0};
                 m_istream->read(&chars[0], 2);
                 std::streamsize size = m_istream->gcount();
                 if (size != 2)
                 {
                     if (m_encoded_buf_size == 0)
                     {
-                        return std::char_traits<char_type>::eof();
+                        return;
                     }
                     break;
                 }
 
-                if (m_encode_type == utf_encode_t::UTF_16BE)
-                {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << 8);
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]));
-                }
-                else // m_encode_type == utf_encode_t::UTF_16LE
-                {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]));
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]) << 8);
-                }
-
-                ++m_encoded_buf_size;
+                m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
+                m_encoded_buffer[m_encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
             };
 
             std::size_t consumed_size = 0;
@@ -5386,59 +5426,50 @@ private:
             }
             m_encoded_buf_size -= consumed_size;
 
-            m_utf8_buf_index = 0;
-        }
-
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+        } while (!m_istream->eof());
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf32()
+    void fill_buffer_utf32(std::string& buffer)
     {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        int shift_bits[4] {0, 0, 0, 0};
+        if (m_encode_type == utf_encode_t::UTF_32BE)
         {
-            char ch = 0;
-            m_istream->read(&ch, 1);
-            std::streamsize size = m_istream->gcount();
-            if (size != 1)
-            {
-                return std::char_traits<char_type>::eof();
-            }
-
-            char32_t utf32 = 0;
-            if (m_encode_type == utf_encode_t::UTF_32BE)
-            {
-                utf32 = char32_t(ch << 24);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 16);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 8);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch);
-            }
-            else // m_encode_type == utf_encode_t::UTF_32LE
-            {
-                utf32 = char32_t(ch);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 8);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 16);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 24);
-            }
-
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            m_utf8_buf_index = 0;
+            shift_bits[0] = 24;
+            shift_bits[1] = 16;
+            shift_bits[2] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_32LE
+        {
+            shift_bits[1] = 8;
+            shift_bits[2] = 16;
+            shift_bits[3] = 24;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        char chars[4] = {0, 0, 0, 0};
+        char32_t utf32 = 0;
+        do
+        {
+            m_istream->read(&chars[0], 4);
+            std::streamsize size = m_istream->gcount();
+            if (size != 4)
+            {
+                return;
+            }
+
+            utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
+            utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
+            utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
+            utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
+
+            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
+
+            buffer.append(m_utf8_buffer.data(), m_utf8_buf_size);
+        } while (!m_istream->eof());
     }
 
 private:
@@ -5452,8 +5483,6 @@ private:
     std::size_t m_encoded_buf_size {0};
     /// The buffer for UTF-8 encoded characters.
     std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
     /// The number of bytes in `m_utf8_buffer`.
     std::size_t m_utf8_buf_size {0};
 };
@@ -5485,7 +5514,7 @@ inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array 
 }
 
 /// @brief A namespace to implement container_input_adapter_factory for internal use.
-namespace container_input_adapter_factory_impl
+namespace input_adapter_factory
 {
 
 using std::begin;
@@ -5510,25 +5539,25 @@ struct container_input_adapter_factory<
         decltype(input_adapter(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>())));
 
     /// @brief A factory method of input adapter objects for the target container objects.
-    /// @param container
-    /// @return adapter_type
+    /// @param container A container-like input object.
+    /// @return adapter_type An iterator_input_adapter object.
     static adapter_type create(const ContainerType& container)
     {
         return input_adapter(begin(container), end(container));
     }
 };
 
-} // namespace container_input_adapter_factory_impl
+} // namespace input_adapter_factory
 
 /// @brief A factory method for iterator_input_adapter objects with containers.
 /// @tparam ContainerType A container type.
 /// @param container A container object.
-/// @return container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::adapter_type
+/// @return input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type
 template <typename ContainerType>
-inline typename container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::adapter_type
-input_adapter(ContainerType&& container)
+inline typename input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type input_adapter(
+    ContainerType&& container)
 {
-    return container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::create(container);
+    return input_adapter_factory::container_input_adapter_factory<ContainerType>::create(container);
 }
 
 /// @brief A factory method for file_input_adapter objects with C-style file handles.
@@ -5544,9 +5573,9 @@ inline file_input_adapter input_adapter(std::FILE* file)
     return file_input_adapter(file, encode_type);
 }
 
-/// @brief
-/// @param stream
-/// @return stream_input_adapter
+/// @brief A factory method for stream_input_adapter objects with std::istream objects.
+/// @param stream An input stream.
+/// @return stream_input_adapter A stream_input_adapter object.
 inline stream_input_adapter input_adapter(std::istream& stream) noexcept
 {
     utf_encode_t encode_type = detect_encoding_and_skip_bom(stream);

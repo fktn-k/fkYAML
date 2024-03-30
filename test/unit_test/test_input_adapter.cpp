@@ -112,21 +112,22 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == ' ');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 'o');
-        REQUIRE(input_adapter.get_character() == 'u');
-        REQUIRE(input_adapter.get_character() == 'r');
-        REQUIRE(input_adapter.get_character() == 'c');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == '.');
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 12);
+        REQUIRE(buffer[0] == 't');
+        REQUIRE(buffer[1] == 'e');
+        REQUIRE(buffer[2] == 's');
+        REQUIRE(buffer[3] == 't');
+        REQUIRE(buffer[4] == ' ');
+        REQUIRE(buffer[5] == 's');
+        REQUIRE(buffer[6] == 'o');
+        REQUIRE(buffer[7] == 'u');
+        REQUIRE(buffer[8] == 'r');
+        REQUIRE(buffer[9] == 'c');
+        REQUIRE(buffer[10] == 'e');
+        REQUIRE(buffer[11] == '.');
     }
 
     SECTION("iterator_input_adapter for UTF-8 with std::string")
@@ -136,21 +137,22 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == ' ');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 'o');
-        REQUIRE(input_adapter.get_character() == 'u');
-        REQUIRE(input_adapter.get_character() == 'r');
-        REQUIRE(input_adapter.get_character() == 'c');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == '.');
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 12);
+        REQUIRE(buffer[0] == 't');
+        REQUIRE(buffer[1] == 'e');
+        REQUIRE(buffer[2] == 's');
+        REQUIRE(buffer[3] == 't');
+        REQUIRE(buffer[4] == ' ');
+        REQUIRE(buffer[5] == 's');
+        REQUIRE(buffer[6] == 'o');
+        REQUIRE(buffer[7] == 'u');
+        REQUIRE(buffer[8] == 'r');
+        REQUIRE(buffer[9] == 'c');
+        REQUIRE(buffer[10] == 'e');
+        REQUIRE(buffer[11] == '.');
     }
 
     SECTION("file_input_adapter for UTF-8")
@@ -162,18 +164,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
 
         std::fclose(p_file);
     }
@@ -184,18 +186,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     ////////////////////
@@ -209,21 +211,22 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == ' ');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 'o');
-        REQUIRE(input_adapter.get_character() == 'u');
-        REQUIRE(input_adapter.get_character() == 'r');
-        REQUIRE(input_adapter.get_character() == 'c');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == '.');
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 12);
+        REQUIRE(buffer[0] == 't');
+        REQUIRE(buffer[1] == 'e');
+        REQUIRE(buffer[2] == 's');
+        REQUIRE(buffer[3] == 't');
+        REQUIRE(buffer[4] == ' ');
+        REQUIRE(buffer[5] == 's');
+        REQUIRE(buffer[6] == 'o');
+        REQUIRE(buffer[7] == 'u');
+        REQUIRE(buffer[8] == 'r');
+        REQUIRE(buffer[9] == 'c');
+        REQUIRE(buffer[10] == 'e');
+        REQUIRE(buffer[11] == '.');
     }
 
     SECTION("iterator_input_adapter for UTF-8(BOM) with std::string")
@@ -235,21 +238,22 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 't');
-        REQUIRE(input_adapter.get_character() == ' ');
-        REQUIRE(input_adapter.get_character() == 's');
-        REQUIRE(input_adapter.get_character() == 'o');
-        REQUIRE(input_adapter.get_character() == 'u');
-        REQUIRE(input_adapter.get_character() == 'r');
-        REQUIRE(input_adapter.get_character() == 'c');
-        REQUIRE(input_adapter.get_character() == 'e');
-        REQUIRE(input_adapter.get_character() == '.');
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 12);
+        REQUIRE(buffer[0] == 't');
+        REQUIRE(buffer[1] == 'e');
+        REQUIRE(buffer[2] == 's');
+        REQUIRE(buffer[3] == 't');
+        REQUIRE(buffer[4] == ' ');
+        REQUIRE(buffer[5] == 's');
+        REQUIRE(buffer[6] == 'o');
+        REQUIRE(buffer[7] == 'u');
+        REQUIRE(buffer[8] == 'r');
+        REQUIRE(buffer[9] == 'c');
+        REQUIRE(buffer[10] == 'e');
+        REQUIRE(buffer[11] == '.');
     }
 
     SECTION("file_input_adapter for UTF-8(BOM)")
@@ -261,18 +265,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
 
         std::fclose(p_file);
     }
@@ -283,18 +287,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     //////////////////
@@ -307,19 +311,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16BE with std::string")
@@ -329,20 +333,20 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == int_type(0x5Au));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 10);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
+        REQUIRE(buffer[9] == char(0x5Au));
     }
 
     SECTION("iterator_input_adapter for UTF-16BE with a char16_t array")
@@ -351,19 +355,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16BE with std::u16string")
@@ -374,20 +378,20 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::u16string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == int_type(0x5Au));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 10);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
+        REQUIRE(buffer[9] == char(0x5Au));
     }
 
     SECTION("file_input_adapter for UTF-16BE")
@@ -399,19 +403,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
 
         std::fclose(p_file);
     }
@@ -422,19 +426,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     ///////////////////////
@@ -448,19 +452,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16BE(BOM) with std::string")
@@ -471,19 +475,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16BE(BOM) with a char16_t array")
@@ -492,19 +496,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16BE(BOM) with std::u16string")
@@ -515,19 +519,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::u16string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("file_input_adapter for UTF-16BE(BOM)")
@@ -539,19 +543,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
 
         std::fclose(p_file);
     }
@@ -562,19 +566,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     //////////////////
@@ -587,19 +590,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16LE with std::string")
@@ -609,19 +612,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16LE with a char16_t array")
@@ -630,19 +633,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16LE with std::u16string")
@@ -653,19 +656,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::u16string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("file_input_adapter for UTF-16LE")
@@ -677,19 +680,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
 
         std::fclose(p_file);
     }
@@ -700,19 +703,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     ///////////////////////
@@ -726,19 +729,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16LE(BOM) with std::string")
@@ -749,19 +752,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16LE(BOM) with a char16_t array")
@@ -770,19 +773,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("iterator_input_adapter for UTF-16LE(BOM) with std::u16string")
@@ -793,19 +796,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::u16string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     SECTION("file_input_adapter for UTF-16LE(BOM)")
@@ -817,19 +820,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
 
         std::fclose(p_file);
     }
@@ -840,19 +843,19 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == int_type(0x52u));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 9);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
+        REQUIRE(buffer[8] == char(0x52u));
     }
 
     //////////////////
@@ -865,18 +868,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32BE with std::string")
@@ -886,18 +889,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32BE with a char32_t array")
@@ -906,18 +909,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32BE with std::u32string")
@@ -928,18 +931,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::u32string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("file_input_adapter for UTF-32BE")
@@ -951,18 +954,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
 
         std::fclose(p_file);
     }
@@ -973,18 +976,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     ///////////////////////
@@ -997,18 +1000,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32BE(BOM) with std::string")
@@ -1018,18 +1021,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32BE(BOM) with a char32_t array")
@@ -1038,18 +1041,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32BE(BOM) with std::u32string")
@@ -1060,18 +1063,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::u32string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("file_input_adapter for UTF-32BE(BOM)")
@@ -1083,18 +1086,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
 
         std::fclose(p_file);
     }
@@ -1105,18 +1108,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     //////////////////
@@ -1129,18 +1132,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32LE with std::string")
@@ -1150,18 +1153,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32LE with a char32_t array")
@@ -1170,18 +1173,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32LE with std::u32string")
@@ -1192,18 +1195,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::u32string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("file_input_adapter for UTF-32LE")
@@ -1215,18 +1218,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
 
         std::fclose(p_file);
     }
@@ -1237,18 +1240,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     ///////////////////////
@@ -1261,18 +1264,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32LE(BOM) with std::string")
@@ -1282,18 +1285,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32LE(BOM) with a char32_t array")
@@ -1302,18 +1305,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("iterator_input_adapter for UTF-32LE(BOM) with std::u32string")
@@ -1324,18 +1327,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         using itr_type = typename std::u32string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 
     SECTION("file_input_adapter for UTF-32LE(BOM)")
@@ -1347,18 +1350,18 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
 
         std::fclose(p_file);
     }
@@ -1369,17 +1372,17 @@ TEST_CASE("InputAdapterTest_GetCharacterTest", "[InputAdapterTest]")
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        using char_traits_type = std::char_traits<typename decltype(input_adapter)::char_type>;
-        using int_type = typename char_traits_type::int_type;
+        std::string buffer {};
+        input_adapter.fill_buffer(buffer);
 
-        REQUIRE(input_adapter.get_character() == 'a');
-        REQUIRE(input_adapter.get_character() == int_type(0xE3u));
-        REQUIRE(input_adapter.get_character() == int_type(0x81u));
-        REQUIRE(input_adapter.get_character() == int_type(0x82u));
-        REQUIRE(input_adapter.get_character() == int_type(0xF0u));
-        REQUIRE(input_adapter.get_character() == int_type(0xA0u));
-        REQUIRE(input_adapter.get_character() == int_type(0x80u));
-        REQUIRE(input_adapter.get_character() == int_type(0x8Bu));
-        REQUIRE(input_adapter.get_character() == char_traits_type::eof());
+        REQUIRE(buffer.size() == 8);
+        REQUIRE(buffer[0] == 'a');
+        REQUIRE(buffer[1] == char(0xE3u));
+        REQUIRE(buffer[2] == char(0x81u));
+        REQUIRE(buffer[3] == char(0x82u));
+        REQUIRE(buffer[4] == char(0xF0u));
+        REQUIRE(buffer[5] == char(0xA0u));
+        REQUIRE(buffer[6] == char(0x80u));
+        REQUIRE(buffer[7] == char(0x8Bu));
     }
 }
