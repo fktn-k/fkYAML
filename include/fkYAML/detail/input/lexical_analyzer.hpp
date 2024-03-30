@@ -205,10 +205,10 @@ public:
                     return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
                 }
 
-                m_input_handler.unget_range(2);
+                m_input_handler.get_next();
             }
 
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_string(ret == s_end_of_input);
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
@@ -787,13 +787,13 @@ private:
                 {
                     // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                    current = m_input_handler.get_next();
+                    int next = m_input_handler.get_next();
 
                     // These characters are permitted when not inside a flow collection, and not inside an implicit key.
                     // TODO: Support detection of implicit key context for this check.
                     if (m_flow_context_depth > 0)
                     {
-                        switch (current)
+                        switch (next)
                         {
                         case '{':
                         case '}':
@@ -805,17 +805,16 @@ private:
                     }
 
                     // " :" is permitted in a plain style string token, but not when followed by a space.
-                    if (current == ':')
+                    if (next == ':')
                     {
-                        int next = m_input_handler.get_next();
-                        m_input_handler.unget();
-                        if (next == ' ')
+                        int peeked = m_input_handler.peek_next();
+                        if (peeked == ' ')
                         {
                             return lexical_token_t::STRING_VALUE;
                         }
                     }
 
-                    switch (current)
+                    switch (next)
                     {
                     case ' ':
                     case '\r':
@@ -825,7 +824,6 @@ private:
                         return lexical_token_t::STRING_VALUE;
                     }
                     m_input_handler.unget();
-                    current = m_input_handler.get_current();
                 }
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 continue;
@@ -872,8 +870,7 @@ private:
                     continue;
                 }
 
-                int next = m_input_handler.get_next();
-                m_input_handler.unget();
+                int next = m_input_handler.peek_next();
 
                 // A colon as a key separator must be followed by a space or a newline code.
                 if (next != ' ' && next != '\r' && next != '\n')
@@ -986,31 +983,19 @@ private:
                     break;
                 case 'N': // next line
                     utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case '_': // non-breaking space
                     utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'L': // line separator
                     utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'P': // paragraph separator
                     utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'x':
                     handle_escaped_unicode(1);
@@ -1034,6 +1019,8 @@ private:
                 continue;
             }
 
+            // The other characters are already checked while creating an input handler.
+
             // Handle ASCII characters except control characters.
             if (current <= 0x7E)
             {
@@ -1044,45 +1031,26 @@ private:
             // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
             if (current <= 0xDF)
             {
-                std::array<int, 2> byte_array = {{current, m_input_handler.get_next()}};
-                if (!utf8_encoding::validate(byte_array))
-                {
-                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-                }
-
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
                 continue;
             }
 
             // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
             if (current <= 0xEF)
             {
-                std::array<int, 3> byte_array = {{current, m_input_handler.get_next(), m_input_handler.get_next()}};
-                if (!utf8_encoding::validate(byte_array))
-                {
-                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-                }
-
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
 
                 continue;
             }
 
             // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            std::array<int, 4> byte_array = {
-                {current, m_input_handler.get_next(), m_input_handler.get_next(), m_input_handler.get_next()}};
-            if (!utf8_encoding::validate(byte_array))
-            {
-                throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-            }
-
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[3]));
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
         }
     }
 
@@ -1222,24 +1190,24 @@ private:
                     }
                     else
                     {
-                        switch (m_input_handler.get_next())
+                        switch (int next = m_input_handler.peek_next())
                         {
                         case '\r': {
                             m_input_handler.get_next();
-                            FK_YAML_ASSERT(m_input_handler.get_current() == '\n');
-                            m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                            next = m_input_handler.get_next();
+                            FK_YAML_ASSERT(next == '\n');
+                            m_value_buffer.push_back(char_traits_type::to_char_type(next));
                             break;
                         }
                         case '\n':
-                            m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                            m_input_handler.get_next();
+                            m_value_buffer.push_back(char_traits_type::to_char_type(next));
                             break;
                         case ' ':
                             // The next line is more indented, so a newline will be appended in the next loop.
-                            m_input_handler.unget();
                             break;
                         default:
                             m_value_buffer.push_back(char_traits_type::to_char_type(' '));
-                            m_input_handler.unget();
                             break;
                         }
                     }
@@ -1402,10 +1370,7 @@ private:
 
         // Treats the code point as a UTF-32 encoded character.
         utf8_encoding::from_utf32(code_point, m_encode_buffer, m_encoded_size);
-        for (size_t i = 0; i < m_encoded_size; i++)
-        {
-            m_value_buffer.push_back(m_encode_buffer[i]);
-        }
+        m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
     }
 
     void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
@@ -1413,15 +1378,18 @@ private:
         int ch = m_input_handler.get_next();
 
         chomp_type = chomping_indicator_t::CLIP;
-        if (ch == '-')
+        switch (ch)
         {
+        case '-':
             chomp_type = chomping_indicator_t::STRIP;
             ch = m_input_handler.get_next();
-        }
-        else if (ch == '+')
-        {
+            break;
+        case '+':
             chomp_type = chomping_indicator_t::KEEP;
             ch = m_input_handler.get_next();
+            break;
+        default:
+            break;
         }
 
         if (ch == '0')
