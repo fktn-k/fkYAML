@@ -2279,39 +2279,22 @@ public:
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
         case '&': { // anchor prefix
-            m_value_buffer.clear();
-            while (true)
+            extract_anchor_name();
+            bool is_empty = m_value_buffer.empty();
+            if (is_empty)
             {
-                int next = m_input_handler.get_next();
-                if (next == s_end_of_input || next == '\r' || next == '\n')
-                {
-                    emit_error("An anchor label must be followed by some value.");
-                }
-                if (next == ' ')
-                {
-                    m_input_handler.get_next();
-                    break;
-                }
-                m_value_buffer.push_back(char_traits_type::to_char_type(next));
+                emit_error("anchor name must not be empty.");
             }
             return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
         }
         case '*': { // alias prefix
-            m_value_buffer.clear();
-            while (true)
+            extract_anchor_name();
+            bool is_empty = m_value_buffer.empty();
+            if (is_empty)
             {
-                int next = m_input_handler.get_next();
-                if (next == ' ' || next == '\r' || next == '\n' || next == s_end_of_input)
-                {
-                    if (m_value_buffer.empty())
-                    {
-                        emit_error("An alias prefix must be followed by some anchor name.");
-                    }
-                    m_input_handler.get_next();
-                    break;
-                }
-                m_value_buffer.push_back(char_traits_type::to_char_type(next));
+                emit_error("anchor name must not be empty.");
             }
+
             return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
         }
         case '#': // comment prefix
@@ -2618,6 +2601,48 @@ private:
         }
 
         return lexical_token_t::YAML_VER_DIRECTIVE;
+    }
+
+    /// @brief Extracts an anchor name from the input and assigns the result to `m_value_buffer`.
+    void extract_anchor_name()
+    {
+        int current = m_input_handler.get_current();
+        FK_YAML_ASSERT(current == '&' || current == '*');
+
+        m_value_buffer.clear();
+
+        while ((current = m_input_handler.get_next()) != s_end_of_input)
+        {
+            switch (current)
+            {
+            case s_end_of_input:
+            // anchor name must not contain white spaces, newline codes and flow indicators.
+            // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+                return;
+            case ':': {
+                int peeked = m_input_handler.peek_next();
+                if (peeked == ' ')
+                {
+                    // Stop the extraction at the key separator.
+                    return;
+                }
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+            default:
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+        }
     }
 
     /// @brief Scan and determine a number type(integer/float). This method is the entrypoint for all number
@@ -3915,18 +3940,16 @@ public:
             case lexical_token_t::ANCHOR_PREFIX: {
                 m_anchor_name = lexer.get_string();
                 m_needs_anchor_impl = true;
-                break;
-            }
-            case lexical_token_t::ALIAS_PREFIX: {
-                const string_type& alias_name = lexer.get_string();
-                auto itr = m_anchor_table.find(alias_name);
-                if (itr == m_anchor_table.end())
-                {
-                    throw parse_error(
-                        "The given anchor name must appear prior to the alias node.", cur_line, cur_indent);
-                }
-                assign_node_value(BasicNodeType::alias_of(m_anchor_table.at(alias_name)));
-                break;
+
+                // Skip updating the current indent to avoid stacking a wrong indentation.
+                //
+                //   &foo bar: baz
+                //   ^
+                //   the correct indent width for the "bar" node key.
+
+                type = lexer.get_next_token();
+                cur_line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::COMMENT_PREFIX:
                 break;
@@ -3996,45 +4019,13 @@ public:
             case lexical_token_t::MAPPING_FLOW_END:
                 m_current_node = m_node_stack.back();
                 break;
-            case lexical_token_t::NULL_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_null()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
-            case lexical_token_t::BOOLEAN_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_boolean()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
-            case lexical_token_t::INTEGER_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_integer()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
-            case lexical_token_t::FLOAT_NUMBER_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_float_number()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
+            case lexical_token_t::ALIAS_PREFIX:
+            case lexical_token_t::NULL_VALUE:
+            case lexical_token_t::BOOLEAN_VALUE:
+            case lexical_token_t::INTEGER_VALUE:
+            case lexical_token_t::FLOAT_NUMBER_VALUE:
             case lexical_token_t::STRING_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_string()), cur_indent, cur_line, type);
+                bool do_continue = deserialize_scalar(lexer, cur_indent, cur_line, type);
                 if (do_continue)
                 {
                     continue;
@@ -4048,8 +4039,10 @@ public:
                 break;
             }
 
+            lexical_token_t prev_type = type;
             type = lexer.get_next_token();
-            cur_indent = lexer.get_last_token_begin_pos();
+            //
+            cur_indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? cur_indent : lexer.get_last_token_begin_pos();
             cur_line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
 
@@ -4065,7 +4058,7 @@ public:
 private:
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
-    void add_new_key(const BasicNodeType& key, const std::size_t indent, const std::size_t line)
+    void add_new_key(BasicNodeType&& key, const std::size_t indent, const std::size_t line)
     {
         if (!m_indent_stack.empty() && indent < m_indent_stack.back().first)
         {
@@ -4124,32 +4117,69 @@ private:
         if (m_current_node->is_sequence())
         {
             m_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
-            set_yaml_version(m_current_node->template get_value_ref<sequence_type&>().back());
-            if (m_needs_anchor_impl)
-            {
-                m_current_node->template get_value_ref<sequence_type&>().back().add_anchor_name(m_anchor_name);
-                m_anchor_table[m_anchor_name] = m_current_node->template get_value_ref<sequence_type&>().back();
-                m_needs_anchor_impl = false;
-                m_anchor_name.clear();
-            }
             return;
         }
 
         // a scalar node
         *m_current_node = std::move(node_value);
-        set_yaml_version(*m_current_node);
-        if (m_needs_anchor_impl)
-        {
-            m_current_node->add_anchor_name(m_anchor_name);
-            m_anchor_table[m_anchor_name] = *m_current_node;
-            m_needs_anchor_impl = false;
-            m_anchor_name.clear();
-        }
         if (!m_indent_stack.back().second)
         {
             m_current_node = m_node_stack.back();
             m_node_stack.pop_back();
         }
+    }
+
+    template <typename LexerType>
+    BasicNodeType create_scalar_node(LexerType& lexer, lexical_token_t type, std::size_t indent, std::size_t line)
+    {
+        FK_YAML_ASSERT(
+            type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
+            type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
+            type == lexical_token_t::STRING_VALUE || type == lexical_token_t::ALIAS_PREFIX);
+
+        BasicNodeType node {};
+        switch (type)
+        {
+        case lexical_token_t::NULL_VALUE:
+            node = BasicNodeType(lexer.get_null());
+            break;
+        case lexical_token_t::BOOLEAN_VALUE:
+            node = BasicNodeType(lexer.get_boolean());
+            break;
+        case lexical_token_t::INTEGER_VALUE:
+            node = BasicNodeType(lexer.get_integer());
+            break;
+        case lexical_token_t::FLOAT_NUMBER_VALUE:
+            node = BasicNodeType(lexer.get_float_number());
+            break;
+        case lexical_token_t::STRING_VALUE:
+            node = BasicNodeType(lexer.get_string());
+            break;
+        case lexical_token_t::ALIAS_PREFIX: {
+            const string_type& alias_name = lexer.get_string();
+            auto itr = m_anchor_table.find(alias_name);
+            if (itr == m_anchor_table.end())
+            {
+                throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
+            }
+            node = BasicNodeType::alias_of(m_anchor_table[alias_name]);
+            break;
+        }
+        default:   // LCOV_EXCL_LINE
+            break; // LCOV_EXCL_LINE
+        }
+
+        set_yaml_version(node);
+
+        if (m_needs_anchor_impl)
+        {
+            node.add_anchor_name(m_anchor_name);
+            m_anchor_table[m_anchor_name] = node;
+            m_needs_anchor_impl = false;
+            m_anchor_name.clear();
+        }
+
+        return node;
     }
 
     /// @brief Deserialize a detected scalar node.
@@ -4158,12 +4188,13 @@ private:
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
     template <typename LexerType>
-    bool deserialize_scalar(
-        LexerType& lexer, BasicNodeType&& node, std::size_t& indent, std::size_t& line, lexical_token_t& type)
+    bool deserialize_scalar(LexerType& lexer, std::size_t& indent, std::size_t& line, lexical_token_t& type)
     {
+        BasicNodeType node = create_scalar_node(lexer, type, indent, line);
+
         if (m_current_node->is_mapping())
         {
-            add_new_key(node, indent, line);
+            add_new_key(std::move(node), indent, line);
             return false;
         }
 
@@ -4187,7 +4218,7 @@ private:
                 *m_current_node = BasicNodeType::mapping();
                 set_yaml_version(*m_current_node);
             }
-            add_new_key(node, indent, line);
+            add_new_key(std::move(node), indent, line);
         }
         else
         {

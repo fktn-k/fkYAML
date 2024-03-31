@@ -1082,6 +1082,20 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root["qux"][2].is_string());
         REQUIRE(root["qux"][2].get_value_ref<std::string&>() == "b");
     }
+
+    SECTION("parse alias mapping key")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("&anchor foo:\n  *anchor: 123")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_mapping());
+        REQUIRE(root["foo"].size() == 1);
+        REQUIRE(root["foo"].contains("foo"));
+        REQUIRE(root["foo"]["foo"].is_integer());
+        REQUIRE(root["foo"]["foo"].get_value<int>() == 123);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeFlowSequenceTest", "[DeserializerClassTest]")

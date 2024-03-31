@@ -141,39 +141,22 @@ public:
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
         case '&': { // anchor prefix
-            m_value_buffer.clear();
-            while (true)
+            extract_anchor_name();
+            bool is_empty = m_value_buffer.empty();
+            if (is_empty)
             {
-                int next = m_input_handler.get_next();
-                if (next == s_end_of_input || next == '\r' || next == '\n')
-                {
-                    emit_error("An anchor label must be followed by some value.");
-                }
-                if (next == ' ')
-                {
-                    m_input_handler.get_next();
-                    break;
-                }
-                m_value_buffer.push_back(char_traits_type::to_char_type(next));
+                emit_error("anchor name must not be empty.");
             }
             return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
         }
         case '*': { // alias prefix
-            m_value_buffer.clear();
-            while (true)
+            extract_anchor_name();
+            bool is_empty = m_value_buffer.empty();
+            if (is_empty)
             {
-                int next = m_input_handler.get_next();
-                if (next == ' ' || next == '\r' || next == '\n' || next == s_end_of_input)
-                {
-                    if (m_value_buffer.empty())
-                    {
-                        emit_error("An alias prefix must be followed by some anchor name.");
-                    }
-                    m_input_handler.get_next();
-                    break;
-                }
-                m_value_buffer.push_back(char_traits_type::to_char_type(next));
+                emit_error("anchor name must not be empty.");
             }
+
             return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
         }
         case '#': // comment prefix
@@ -480,6 +463,48 @@ private:
         }
 
         return lexical_token_t::YAML_VER_DIRECTIVE;
+    }
+
+    /// @brief Extracts an anchor name from the input and assigns the result to `m_value_buffer`.
+    void extract_anchor_name()
+    {
+        int current = m_input_handler.get_current();
+        FK_YAML_ASSERT(current == '&' || current == '*');
+
+        m_value_buffer.clear();
+
+        while ((current = m_input_handler.get_next()) != s_end_of_input)
+        {
+            switch (current)
+            {
+            case s_end_of_input:
+            // anchor name must not contain white spaces, newline codes and flow indicators.
+            // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+                return;
+            case ':': {
+                int peeked = m_input_handler.peek_next();
+                if (peeked == ' ')
+                {
+                    // Stop the extraction at the key separator.
+                    return;
+                }
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+            default:
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+        }
     }
 
     /// @brief Scan and determine a number type(integer/float). This method is the entrypoint for all number

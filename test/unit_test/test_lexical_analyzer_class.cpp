@@ -1256,47 +1256,45 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanAnchorTokenTest", "[LexicalAnalyzerClass
 {
     fkyaml::detail::lexical_token_t token;
 
-    SECTION("Test nothorw expected tokens with an anchor.")
+    SECTION("valid anchor name")
     {
-        lexer_t lexer(fkyaml::detail::input_adapter("test: &anchor foo"));
+        auto input = GENERATE(
+            std::string("&:anchor"),
+            std::string("&:anchor "),
+            std::string("&:anchor\t"),
+            std::string("&:anchor\r"),
+            std::string("&:anchor\n"),
+            std::string("&:anchor{"),
+            std::string("&:anchor}"),
+            std::string("&:anchor["),
+            std::string("&:anchor]"),
+            std::string("&:anchor,"),
+            std::string("&:anchor: "));
 
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
-        REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("test") == 0);
-
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::ANCHOR_PREFIX);
-        REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("anchor") == 0);
-
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
-        REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("foo") == 0);
-
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+        REQUIRE_NOTHROW(lexer.get_string() == ":anchor");
     }
 
-    SECTION("Test nothrow unexpected tokens with an anchor.")
+    SECTION("invalid anchor name")
     {
-        auto buffer =
-            GENERATE(std::string("test: &anchor"), std::string("test: &anchor\r\n"), std::string("test: &anchor\n"));
-        lexer_t lexer(fkyaml::detail::input_adapter(buffer));
+        auto input = GENERATE(
+            std::string("&"),
+            std::string("& "),
+            std::string("&\t"),
+            std::string("&\r"),
+            std::string("&\n"),
+            std::string("&{"),
+            std::string("&}"),
+            std::string("&["),
+            std::string("&]"),
+            std::string("&,"),
+            std::string("&: "));
 
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
-        REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("test") == 0);
-
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
-
-        REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 }
 
@@ -1304,42 +1302,45 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanAliasTokenTest", "[LexicalAnalyzerClassT
 {
     fkyaml::detail::lexical_token_t token;
 
-    SECTION("Test nothrow expected tokens with an alias.")
+    SECTION("valid anchor name")
     {
-        lexer_t lexer(fkyaml::detail::input_adapter("test: *anchor"));
+        auto input = GENERATE(
+            std::string("*:anchor"),
+            std::string("*:anchor "),
+            std::string("*:anchor\t"),
+            std::string("*:anchor\r"),
+            std::string("*:anchor\n"),
+            std::string("*:anchor{"),
+            std::string("*:anchor}"),
+            std::string("*:anchor["),
+            std::string("*:anchor]"),
+            std::string("*:anchor,"),
+            std::string("*:anchor: "));
 
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
-        REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("test") == 0);
-
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::ALIAS_PREFIX);
-        REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("anchor") == 0);
-
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+        REQUIRE_NOTHROW(lexer.get_string() == ":anchor");
     }
 
-    SECTION("Test nothrow unexpected tokens with an anchor.")
+    SECTION("invalid anchor name")
     {
-        auto buffer = GENERATE(
-            std::string("test: *"), std::string("test: *\r\n"), std::string("test: *\n"), std::string("test: * "));
-        lexer_t lexer(fkyaml::detail::input_adapter(buffer));
+        auto input = GENERATE(
+            std::string("*"),
+            std::string("* "),
+            std::string("*\t"),
+            std::string("*\r"),
+            std::string("*\n"),
+            std::string("*{"),
+            std::string("*}"),
+            std::string("*["),
+            std::string("*]"),
+            std::string("*,"),
+            std::string("*: "));
 
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
-        REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("test") == 0);
-
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
-
-        REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 }
 
