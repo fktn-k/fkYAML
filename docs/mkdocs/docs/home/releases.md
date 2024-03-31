@@ -1,11 +1,61 @@
 # Releases
 
+## **fkYAML version 0.3.3**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.3/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.3/fkYAML.zip)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.3/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.3/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.3/node.hpp) (single header)
+
+### Summary
+
+This release adds a new basic_node API, at(), which validates before either (1) that the specified key exists in the mapping or (2) that the specified index is less than the current size of the sequence before accessing the target node.  
+Several bugs bugs in the deserialization feature have also been fixed.  
+In addition, refactoring of the deserializer has improved the handling of input characters.  
+
+### What's Changed
+
+#### :sparkles: New Features
+
+- \#298 Add at\(\) API to the basic\_node class by [fktn-k](https://github.com/fktn-k) in [\#299](https://github.com/fktn-k/fkYAML/pull/299)
+
+#### :zap: Improvements
+
+- Further improvements of input handlings by [fktn-k](https://github.com/fktn-k) in [\#301](https://github.com/fktn-k/fkYAML/pull/301)
+- Fixed warnings and made future warnings as errors by [fktn-k](https://github.com/fktn-k) in [\#300](https://github.com/fktn-k/fkYAML/pull/300)
+- Improve handling UTF encoded inputs by [fktn-k](https://github.com/fktn-k) in [\#296](https://github.com/fktn-k/fkYAML/pull/296)
+- modied the way of formatting error messages for exception objects by [fktn-k](https://github.com/fktn-k) in [\#291](https://github.com/fktn-k/fkYAML/pull/291)
+
+#### :bug: Bug Fixes
+
+- \#302 Fixed parse error on alias mapping keys [\#303](https://github.com/fktn-k/fkYAML/pull/303) [fktn-k](https://github.com/fktn-k)
+- \#292 Better handling for flow indicators in permitted scalar contexts by [stephenwhittle](https://github.com/stephenwhittle) in [\#293](https://github.com/fktn-k/fkYAML/pull/293)
+- \#288 Fixed incorrect parse results from mapping entries split across newlines by [fktn-k](https://github.com/fktn-k) in [\#289](https://github.com/fktn-k/fkYAML/pull/289) (reported by [stephenwhittle](https://github.com/stephenwhittle))
+
+#### :robot: CI
+
+- Resolve warnings against using Node.js 16 by [fktn-k](https://github.com/fktn-k) in [\#290](https://github.com/fktn-k/fkYAML/pull/290)
+
+#### :people_holding_hands: Community
+
+- \#297 Add a note for checking the coverage & upload the same as an artifact by [fktn-k](https://github.com/fktn-k) in [\#295](https://github.com/fktn-k/fkYAML/pull/295) (suggested by [stephenwhittle](https://github.com/stephenwhittle))
+- Add .editorconfig file by [fktn-k](https://github.com/fktn-k) in [\#287](https://github.com/fktn-k/fkYAML/pull/287)
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.2...v0.3.3
+
+---
+
 ## **fkYAML version 0.3.2**
 
 !!! abstract "Release Packages"
 
     * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.2/fkYAML.tgz)
     * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.2/fkYAML.zip)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.2/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.2/fkYAML_single_header.tgz)
     * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.2/node.hpp) (single header)
 
 ### Summary
@@ -51,6 +101,8 @@ Furthermore, the list of the supported compilers are expanded since the GitHub A
 
     * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.1/fkYAML.tgz)
     * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.1/fkYAML.zip)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.3/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.3/fkYAML_single_header.tgz)
     * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.1/node.hpp) (single header)
 
 ### Summary
