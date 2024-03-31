@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -340,7 +340,7 @@ private:
             }
 
             auto adapter = input_adapter(s);
-            lexical_analyzer<BasicNodeType, decltype(adapter)> lexer(std::move(adapter));
+            lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
             lexical_token_t token_type = lexer.get_next_token();
 
             if (token_type != lexical_token_t::STRING_VALUE)

@@ -7,17 +7,31 @@ int main()
     fkyaml::node n1 = {123, 234, 345, 456};
 
     // print YAML nodes at the following indexes.
-    std::cout << n1[0] << std::endl;
-    std::cout << n1[1] << std::endl;
-    std::cout << n1[2] << std::endl;
-    std::cout << n1[3] << std::endl;
+    fkyaml::node index_zero  = 0;
+    fkyaml::node index_one   = 1;
+    fkyaml::node index_two   = 2;
+    fkyaml::node index_three = 3;
+    std::cout << n1[index_zero]  << std::endl;
+    std::cout << n1[index_one]   << std::endl;
+    std::cout << n1[index_two]   << std::endl;
+    std::cout << n1[index_three] << std::endl;
+
+    // this will cause an undefined behavior!
+    // fkyaml::node index_four = 4;
+    // std::cout << n1[index_four] << std::endl;
 
     // create a YAML node.
     fkyaml::node n2 = {{"foo", true}, {"bar", 123}};
 
     // print YAML nodes associated with the following keys.
-    std::cout << std::boolalpha << n2[fkyaml::node("foo")] << std::endl;
-    std::cout << n2[fkyaml::node("bar")] << std::endl;
+    fkyaml::node foo_key = "foo";
+    fkyaml::node bar_key = "bar";
+    std::cout << std::boolalpha << n2[foo_key] << std::endl;
+    std::cout << n2[bar_key] << std::endl;
+
+    // try to access a YAML node with a key which does not exist.
+    fkyaml::node true_key = true;
+    std::cout << n2[true_key] << std::endl;
 
     return 0;
 }

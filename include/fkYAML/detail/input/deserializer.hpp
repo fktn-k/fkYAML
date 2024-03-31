@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -62,7 +62,7 @@ public:
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     BasicNodeType deserialize(InputAdapterType&& input_adapter)
     {
-        lexical_analyzer<BasicNodeType, InputAdapterType> lexer(std::forward<InputAdapterType>(input_adapter));
+        lexical_analyzer<BasicNodeType> lexer(std::forward<InputAdapterType>(input_adapter));
 
         BasicNodeType root = BasicNodeType::mapping();
         m_current_node = &root;
@@ -128,11 +128,61 @@ public:
                     throw parse_error("A key separator found without key.", cur_line, cur_indent);
                 }
 
-                bool is_implicit = m_indent_stack.empty() || cur_indent > m_indent_stack.back().first;
-                if (is_implicit)
+                // hold the line count of the key separator for later use.
+                std::size_t old_indent = cur_indent;
+                std::size_t old_line = cur_line;
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::COMMENT_PREFIX)
                 {
-                    break;
+                    // just skip the comment and get the next token.
+                    type = lexer.get_next_token();
                 }
+
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+
+                bool is_implicit_same_line =
+                    (cur_line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().first);
+                if (is_implicit_same_line)
+                {
+                    // a key separator for an implicit key with its value on the same line.
+                    continue;
+                }
+
+                if (cur_line > old_line)
+                {
+                    switch (type)
+                    {
+                    case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
+                        // a key separator preceeding block sequence entries
+                        *m_current_node = BasicNodeType::sequence();
+                        set_yaml_version(*m_current_node);
+                        break;
+                    case lexical_token_t::EXPLICIT_KEY_PREFIX:
+                        // a key separator for a explicit block mapping key.
+                        *m_current_node = BasicNodeType::mapping();
+                        set_yaml_version(*m_current_node);
+                        break;
+                    // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
+                    // call.
+                    case lexical_token_t::NULL_VALUE:
+                    case lexical_token_t::BOOLEAN_VALUE:
+                    case lexical_token_t::INTEGER_VALUE:
+                    case lexical_token_t::FLOAT_NUMBER_VALUE:
+                    case lexical_token_t::STRING_VALUE:
+                    // defer handling these tokens until the next loop.
+                    case lexical_token_t::MAPPING_FLOW_BEGIN:
+                    case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+                        break;
+                    default:   // LCOV_EXCL_LINE
+                        break; // LCOV_EXCL_LINE
+                    }
+
+                    continue;
+                }
+
+                // handle explicit mapping key separators.
 
                 while (!m_indent_stack.back().second)
                 {
@@ -165,7 +215,6 @@ public:
                 m_node_stack.push_back(m_node_stack.back());
                 m_indent_stack.back().second = false;
 
-                type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     *m_current_node = BasicNodeType::sequence();
@@ -180,18 +229,16 @@ public:
             case lexical_token_t::ANCHOR_PREFIX: {
                 m_anchor_name = lexer.get_string();
                 m_needs_anchor_impl = true;
-                break;
-            }
-            case lexical_token_t::ALIAS_PREFIX: {
-                const string_type& alias_name = lexer.get_string();
-                auto itr = m_anchor_table.find(alias_name);
-                if (itr == m_anchor_table.end())
-                {
-                    throw parse_error(
-                        "The given anchor name must appear prior to the alias node.", cur_line, cur_indent);
-                }
-                assign_node_value(BasicNodeType::alias_of(m_anchor_table.at(alias_name)));
-                break;
+
+                // Skip updating the current indent to avoid stacking a wrong indentation.
+                //
+                //   &foo bar: baz
+                //   ^
+                //   the correct indent width for the "bar" node key.
+
+                type = lexer.get_next_token();
+                cur_line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::COMMENT_PREFIX:
                 break;
@@ -254,26 +301,6 @@ public:
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 break;
-            case lexical_token_t::MAPPING_BLOCK_PREFIX:
-                type = lexer.get_next_token();
-                if (type == lexical_token_t::COMMENT_PREFIX)
-                {
-                    type = lexer.get_next_token();
-                }
-                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
-                {
-                    *m_current_node = BasicNodeType::sequence();
-                    set_yaml_version(*m_current_node);
-                    cur_indent = lexer.get_last_token_begin_pos();
-                    cur_line = lexer.get_lines_processed();
-                    continue;
-                }
-
-                *m_current_node = BasicNodeType::mapping();
-                set_yaml_version(*m_current_node);
-                cur_indent = lexer.get_last_token_begin_pos();
-                cur_line = lexer.get_lines_processed();
-                continue;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::mapping();
                 set_yaml_version(*m_current_node);
@@ -281,45 +308,13 @@ public:
             case lexical_token_t::MAPPING_FLOW_END:
                 m_current_node = m_node_stack.back();
                 break;
-            case lexical_token_t::NULL_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_null()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
-            case lexical_token_t::BOOLEAN_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_boolean()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
-            case lexical_token_t::INTEGER_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_integer()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
-            case lexical_token_t::FLOAT_NUMBER_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_float_number()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
+            case lexical_token_t::ALIAS_PREFIX:
+            case lexical_token_t::NULL_VALUE:
+            case lexical_token_t::BOOLEAN_VALUE:
+            case lexical_token_t::INTEGER_VALUE:
+            case lexical_token_t::FLOAT_NUMBER_VALUE:
             case lexical_token_t::STRING_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_string()), cur_indent, cur_line, type);
+                bool do_continue = deserialize_scalar(lexer, cur_indent, cur_line, type);
                 if (do_continue)
                 {
                     continue;
@@ -333,8 +328,10 @@ public:
                 break;
             }
 
+            lexical_token_t prev_type = type;
             type = lexer.get_next_token();
-            cur_indent = lexer.get_last_token_begin_pos();
+            //
+            cur_indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? cur_indent : lexer.get_last_token_begin_pos();
             cur_line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
 
@@ -350,7 +347,7 @@ public:
 private:
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
-    void add_new_key(const BasicNodeType& key, const std::size_t indent, const std::size_t line)
+    void add_new_key(BasicNodeType&& key, const std::size_t indent, const std::size_t line)
     {
         if (!m_indent_stack.empty() && indent < m_indent_stack.back().first)
         {
@@ -409,32 +406,69 @@ private:
         if (m_current_node->is_sequence())
         {
             m_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
-            set_yaml_version(m_current_node->template get_value_ref<sequence_type&>().back());
-            if (m_needs_anchor_impl)
-            {
-                m_current_node->template get_value_ref<sequence_type&>().back().add_anchor_name(m_anchor_name);
-                m_anchor_table[m_anchor_name] = m_current_node->template get_value_ref<sequence_type&>().back();
-                m_needs_anchor_impl = false;
-                m_anchor_name.clear();
-            }
             return;
         }
 
         // a scalar node
         *m_current_node = std::move(node_value);
-        set_yaml_version(*m_current_node);
-        if (m_needs_anchor_impl)
-        {
-            m_current_node->add_anchor_name(m_anchor_name);
-            m_anchor_table[m_anchor_name] = *m_current_node;
-            m_needs_anchor_impl = false;
-            m_anchor_name.clear();
-        }
         if (!m_indent_stack.back().second)
         {
             m_current_node = m_node_stack.back();
             m_node_stack.pop_back();
         }
+    }
+
+    template <typename LexerType>
+    BasicNodeType create_scalar_node(LexerType& lexer, lexical_token_t type, std::size_t indent, std::size_t line)
+    {
+        FK_YAML_ASSERT(
+            type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
+            type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
+            type == lexical_token_t::STRING_VALUE || type == lexical_token_t::ALIAS_PREFIX);
+
+        BasicNodeType node {};
+        switch (type)
+        {
+        case lexical_token_t::NULL_VALUE:
+            node = BasicNodeType(lexer.get_null());
+            break;
+        case lexical_token_t::BOOLEAN_VALUE:
+            node = BasicNodeType(lexer.get_boolean());
+            break;
+        case lexical_token_t::INTEGER_VALUE:
+            node = BasicNodeType(lexer.get_integer());
+            break;
+        case lexical_token_t::FLOAT_NUMBER_VALUE:
+            node = BasicNodeType(lexer.get_float_number());
+            break;
+        case lexical_token_t::STRING_VALUE:
+            node = BasicNodeType(lexer.get_string());
+            break;
+        case lexical_token_t::ALIAS_PREFIX: {
+            const string_type& alias_name = lexer.get_string();
+            auto itr = m_anchor_table.find(alias_name);
+            if (itr == m_anchor_table.end())
+            {
+                throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
+            }
+            node = BasicNodeType::alias_of(m_anchor_table[alias_name]);
+            break;
+        }
+        default:   // LCOV_EXCL_LINE
+            break; // LCOV_EXCL_LINE
+        }
+
+        set_yaml_version(node);
+
+        if (m_needs_anchor_impl)
+        {
+            node.add_anchor_name(m_anchor_name);
+            m_anchor_table[m_anchor_name] = node;
+            m_needs_anchor_impl = false;
+            m_anchor_name.clear();
+        }
+
+        return node;
     }
 
     /// @brief Deserialize a detected scalar node.
@@ -443,17 +477,18 @@ private:
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
     template <typename LexerType>
-    bool deserialize_scalar(
-        LexerType& lexer, BasicNodeType&& node, std::size_t& indent, std::size_t& line, lexical_token_t& type)
+    bool deserialize_scalar(LexerType& lexer, std::size_t& indent, std::size_t& line, lexical_token_t& type)
     {
+        BasicNodeType node = create_scalar_node(lexer, type, indent, line);
+
         if (m_current_node->is_mapping())
         {
-            add_new_key(node, indent, line);
+            add_new_key(std::move(node), indent, line);
             return false;
         }
 
         type = lexer.get_next_token();
-        if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
+        if (type == lexical_token_t::KEY_SEPARATOR)
         {
             if (m_current_node->is_scalar())
             {
@@ -470,8 +505,9 @@ private:
                     return true;
                 }
                 *m_current_node = BasicNodeType::mapping();
+                set_yaml_version(*m_current_node);
             }
-            add_new_key(node, indent, line);
+            add_new_key(std::move(node), indent, line);
         }
         else
         {

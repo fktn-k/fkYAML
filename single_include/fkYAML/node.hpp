@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -24,7 +24,7 @@
 // #include <fkYAML/detail/macros/version_macros.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -34,7 +34,7 @@
 
 // Check version definitions if already defined.
 #if defined(FK_YAML_MAJOR_VERSION) && defined(FK_YAML_MINOR_VERSION) && defined(FK_YAML_PATCH_VERSION)
-    #if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 3 || FK_YAML_PATCH_VERSION != 2
+    #if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 3 || FK_YAML_PATCH_VERSION != 3
         #warning Already included a different version of the fkYAML library!
     #else
         // define macros to skip defining macros down below.
@@ -46,7 +46,7 @@
 
     #define FK_YAML_MAJOR_VERSION 0
     #define FK_YAML_MINOR_VERSION 3
-    #define FK_YAML_PATCH_VERSION 2
+    #define FK_YAML_PATCH_VERSION 3
 
     #define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
 
@@ -69,7 +69,7 @@
     // #include <fkYAML/detail/macros/cpp_config_macros.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -127,12 +127,13 @@
 
 #endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */
 
+
 #endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)
 
 // #include <fkYAML/detail/assert.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -158,7 +159,7 @@
 // #include <fkYAML/detail/input/deserializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -178,7 +179,7 @@
 // #include <fkYAML/detail/input/lexical_analyzer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -204,7 +205,7 @@
 // #include <fkYAML/detail/conversions/from_string.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -226,7 +227,7 @@
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -433,10 +434,11 @@ using std::remove_cvref_t;
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_ */
+
 // #include <fkYAML/detail/meta/type_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -455,7 +457,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/detect.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -721,7 +723,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -735,14 +737,71 @@ FK_YAML_NAMESPACE_END
 #include <array>
 #include <stdexcept>
 #include <string>
-#include <sstream>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/string_formatter.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_STRING_FORMATTER_HPP_
+#define FK_YAML_DETAIL_STRING_FORMATTER_HPP_
+
+#include <cstdarg>
+#include <cstdio>
+#include <memory>
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+/// @namespace namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @namespace namespace for internal implementation of fkYAML library.
+namespace detail
+{
+
+inline std::string format(const char* fmt, ...)
+{
+    va_list vl;
+    va_start(vl, fmt);
+    int size = std::vsnprintf(nullptr, 0, fmt, vl);
+    va_end(vl);
+
+    // LCOV_EXCL_START
+    if (size < 0)
+    {
+        return "";
+    }
+    // LCOV_EXCL_STOP
+
+    std::unique_ptr<char[]> buffer {new char[size + 1] {}};
+
+    va_start(vl, fmt);
+    size = std::vsnprintf(buffer.get(), size + 1, fmt, vl);
+    va_end(vl);
+
+    return std::string(buffer.get(), size);
+}
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_STRING_FORMATTER_HPP_ */
 
 // #include <fkYAML/detail/types/node_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -778,7 +837,7 @@ enum class node_t : std::uint32_t
     STRING,       //!< string value type
 };
 
-inline std::string to_string(node_t t) noexcept
+inline const char* to_string(node_t t) noexcept
 {
     switch (t)
     {
@@ -877,14 +936,13 @@ private:
     template <std::size_t N>
     std::string generate_error_message(const char* msg, std::array<int, N> u8) const noexcept
     {
-        std::stringstream ss;
-        ss << "invalid_encoding: " << msg << " in=[ 0x" << std::hex << u8[0];
+        std::string formatted = detail::format("invalid_encoding: %s in=[ 0x%02x", msg, u8[0]);
         for (std::size_t i = 1; i < N; i++)
         {
-            ss << ", 0x" << std::hex << u8[i];
+            formatted += detail::format(", 0x%02x", u8[i]);
         }
-        ss << " ]";
-        return ss.str();
+        formatted += " ]";
+        return formatted;
     }
 
     /// @brief Generate an error message from the given parameters for the UTF-16 encoding.
@@ -894,11 +952,8 @@ private:
     /// @return A generated error message.
     std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16) const noexcept
     {
-        std::stringstream ss;
-        ss << "invalid_encoding: " << msg;
         // uint16_t is large enough for UTF-16 encoded elements.
-        ss << " in=[ 0x" << std::hex << uint16_t(u16[0]) << ", 0x" << std::hex << uint16_t(u16[1]) << " ]";
-        return ss.str();
+        return detail::format("invalid_encoding: %s in=[ 0x%04x, 0x%04x ]", msg, uint16_t(u16[0]), uint16_t(u16[1]));
     }
 
     /// @brief Generate an error message from the given parameters for the UTF-32 encoding.
@@ -907,10 +962,8 @@ private:
     /// @return A genereated error message.
     std::string generate_error_message(const char* msg, char32_t u32) const noexcept
     {
-        std::stringstream ss;
         // uint32_t is large enough for UTF-32 encoded elements.
-        ss << "invalid_encoding: " << msg << " in=0x" << std::hex << uint32_t(u32);
-        return ss.str();
+        return detail::format("invalid_encoding: %s in=0x%08x", msg, uint32_t(u32));
     }
 };
 
@@ -926,9 +979,7 @@ public:
 private:
     std::string generate_error_message(const char* msg, std::size_t lines, std::size_t cols_in_line) const noexcept
     {
-        std::stringstream ss;
-        ss << "parse_error: " << msg << " (at line " << lines << ", column " << cols_in_line << ")";
-        return ss.str();
+        return detail::format("parse_error: %s (at line %zu, column %zu)", msg, lines, cols_in_line);
     }
 };
 
@@ -952,9 +1003,32 @@ private:
     /// @return A generated error message.
     std::string generate_error_message(const char* msg, detail::node_t type) const noexcept
     {
-        std::stringstream ss;
-        ss << "type_error: " << msg << " type=" << detail::to_string(type);
-        return ss.str();
+        return detail::format("type_error: %s type=%s", msg, detail::to_string(type));
+    }
+};
+
+class out_of_range : public exception
+{
+public:
+    explicit out_of_range(int index) noexcept
+        : exception(generate_error_message(index).c_str())
+    {
+    }
+
+    explicit out_of_range(const char* key) noexcept
+        : exception(generate_error_message(key).c_str())
+    {
+    }
+
+private:
+    std::string generate_error_message(int index)
+    {
+        return detail::format("out_of_range: index %d is out of range", index);
+    }
+
+    std::string generate_error_message(const char* key)
+    {
+        return detail::format("out_of_range: key \'%s\' is not found.", key);
     }
 };
 
@@ -1222,10 +1296,11 @@ inline double from_string(const std::string& s, type_tag<double> /*unused*/)
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_ */
+
 // #include <fkYAML/detail/encodings/utf8_encoding.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1552,10 +1627,11 @@ public:
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODING_HPP_ */
+
 // #include <fkYAML/detail/input/input_handler.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1575,7 +1651,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1586,6 +1662,7 @@ FK_YAML_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
 #define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
 
+#include <string>
 #include <type_traits>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
@@ -1602,51 +1679,27 @@ FK_YAML_NAMESPACE_BEGIN
 namespace detail
 {
 
-/////////////////////////////////
-//   API representative types
-/////////////////////////////////
-
-/// @brief A type which represents T::char_type;
-/// @tparam T A target type to check if it has char_type;
-template <typename T>
-using detect_char_type_helper_t = typename T::char_type;
-
-/// @brief A type which represents get_character function.
-/// @tparam T A target type.
-template <typename T>
-using get_character_fn_t = decltype(std::declval<T>().get_character());
-
-/// @brief Type traits to check if T has char_type as its member.
-/// @tparam T A target type.
-/// @tparam typename N/A
-template <typename T, typename = void>
-struct has_char_type : std::false_type
-{
-};
-
 ///////////////////////////////////////////
 //   Input Adapter API detection traits
 ///////////////////////////////////////////
 
-/// @brief A partial specialization of has_char_type if T has char_type as its member.
+/// @brief A type which represents get_character function.
 /// @tparam T A target type.
 template <typename T>
-struct has_char_type<T, enable_if_t<is_detected<detect_char_type_helper_t, T>::value>> : std::true_type
-{
-};
+using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer(std::declval<std::string&>()));
 
 /// @brief Type traits to check if InputAdapterType has get_character member function.
 /// @tparam InputAdapterType An input adapter type to check if it has get_character function.
 /// @tparam typename N/A
 template <typename InputAdapterType, typename = void>
-struct has_get_character : std::false_type
+struct has_fill_buffer : std::false_type
 {
 };
 
-/// @brief A partial specialization of has_get_character if InputAdapterType has get_character member function.
+/// @brief A partial specialization of has_fill_buffer if InputAdapterType has get_character member function.
 /// @tparam InputAdapterType A type of a target input adapter.
 template <typename InputAdapterType>
-struct has_get_character<InputAdapterType, enable_if_t<is_detected<get_character_fn_t, InputAdapterType>::value>>
+struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_t, InputAdapterType>::value>>
     : std::true_type
 {
 };
@@ -1666,10 +1719,7 @@ struct is_input_adapter : std::false_type
 /// @brief A partial specialization of is_input_adapter if T is an input adapter type.
 /// @tparam InputAdapterType
 template <typename InputAdapterType>
-struct is_input_adapter<
-    InputAdapterType,
-    enable_if_t<conjunction<has_char_type<InputAdapterType>, has_get_character<InputAdapterType>>::value>>
-    : std::true_type
+struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type
 {
 };
 
@@ -1678,6 +1728,7 @@ struct is_input_adapter<
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */
+
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 
@@ -1689,21 +1740,12 @@ namespace detail
 {
 
 /// @brief An input buffer handler.
-/// @tparam InputAdapterType The type of the input adapter.
-template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
 class input_handler
 {
-public:
-    /// The type of character traits of the input buffer.
-    using char_traits_type = std::char_traits<typename InputAdapterType::char_type>;
-    /// The type of characters of the input buffer.
-    using char_type = typename char_traits_type::char_type;
-    /// The type of integers for the input buffer.
-    using int_type = typename char_traits_type::int_type;
-    /// The type of strings of the input buffer.
-    using string_type = std::basic_string<char_type>;
-
 private:
+    /// The type of character traits of the input buffer.
+    using char_traits_type = std::char_traits<char>;
+
     /// @brief A set of information on the current position in an input buffer.
     struct position
     {
@@ -1717,85 +1759,97 @@ private:
 
 public:
     /// @brief Construct a new input_handler object.
+    /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object
+    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     explicit input_handler(InputAdapterType&& input_adapter)
-        : m_input_adapter(std::move(input_adapter))
+        : m_buffer_size(0)
     {
-        get_next();
-        m_position.cur_pos = m_position.cur_pos_in_line = m_position.lines_read = 0;
+        input_adapter.fill_buffer(m_buffer);
+        m_buffer_size = m_buffer.size();
     }
 
     /// @brief Get the character at the current position.
-    /// @return int_type A character or EOF.
-    int_type get_current() const noexcept
+    /// @return int A character or EOF.
+    int get_current() const noexcept
     {
-        return m_cache[m_position.cur_pos];
+        if (m_position.cur_pos == m_buffer_size)
+        {
+            return s_end_of_input;
+        }
+        return char_traits_type::to_int_type(m_buffer[m_position.cur_pos]);
     }
 
     /// @brief Get the character at next position.
-    /// @return int_type A character or EOF.
-    int_type get_next()
+    /// @return int A character or EOF.
+    int get_next()
     {
-        int_type ret = end_of_input;
-
-        // if already cached, return the cached value.
-        if (m_position.cur_pos + 1 < m_cache.size())
+        // if all the input has already been consumed, return the EOF.
+        if (m_position.cur_pos == m_buffer_size - 1)
         {
-            ret = m_cache[++m_position.cur_pos];
-            ++m_position.cur_pos_in_line;
-        }
-        else
-        {
-            ret = m_input_adapter.get_character();
-            if (ret != end_of_input || m_cache[m_position.cur_pos] != end_of_input)
-            {
-                // cache the return value for possible later use.
-                m_cache.push_back(ret);
-                ++m_position.cur_pos;
-                ++m_position.cur_pos_in_line;
-            }
+            m_position.cur_pos++;
+            m_position.cur_pos_in_line++;
+            return s_end_of_input;
         }
 
-        if (m_cache[m_position.cur_pos - 1] == '\n')
+        if (m_position.cur_pos == m_buffer_size)
+        {
+            return s_end_of_input;
+        }
+
+        if (m_buffer[m_position.cur_pos] == '\n')
         {
             m_position.cur_pos_in_line = 0;
             ++m_position.lines_read;
         }
+        else
+        {
+            m_position.cur_pos_in_line++;
+        }
 
-        return ret;
+        return char_traits_type::to_int_type(m_buffer[++m_position.cur_pos]);
     }
 
     /// @brief Get the characters in the given range.
     /// @param length The length of characters retrieved from the current position.
     /// @param str A string which will contain the resulting characters.
-    /// @return int_type 0 (for success) or EOF (for error).
-    int_type get_range(std::size_t length, string_type& str)
+    /// @return int 0 (for success) or EOF (for error).
+    int get_range(std::size_t length, std::string& str)
     {
         str.clear();
 
-        if (get_current() == end_of_input)
+        if (length == 0)
         {
-            return end_of_input;
+            // regard this case as successful in getting zero characters.
+            return 0;
         }
 
-        str += char_traits_type::to_char_type(get_current());
+        if (m_position.cur_pos + length - 1 >= m_buffer_size)
+        {
+            return s_end_of_input;
+        }
+
+        str += m_buffer[m_position.cur_pos];
 
         for (std::size_t i = 1; i < length; i++)
         {
-            if (get_next() == end_of_input)
-            {
-                // m_cur_pos -= i;
-                for (std::size_t j = i; j > 0; j--)
-                {
-                    unget();
-                }
-                str.clear();
-                return end_of_input;
-            }
-            str += char_traits_type::to_char_type(get_current());
+            str += char_traits_type::to_char_type(get_next());
         }
 
         return 0;
+    }
+
+    /// @brief Get the next character without changing the current position.
+    /// @return int A character if not already at the end of the input buffer, an EOF otherwise.
+    int peek_next()
+    {
+        if (m_position.cur_pos >= m_buffer_size - 1)
+        {
+            // there is no input character left.
+            return s_end_of_input;
+        }
+
+        return char_traits_type::to_int_type(m_buffer[m_position.cur_pos + 1]);
     }
 
     /// @brief Move backward the current position.
@@ -1803,16 +1857,15 @@ public:
     {
         if (m_position.cur_pos > 0)
         {
-            // just move back the cursor. (no action for adapter)
             --m_position.cur_pos;
             --m_position.cur_pos_in_line;
-            if (m_cache[m_position.cur_pos] == '\n')
+            if (m_buffer[m_position.cur_pos] == '\n')
             {
                 --m_position.lines_read;
                 m_position.cur_pos_in_line = 0;
                 if (m_position.cur_pos > 0)
                 {
-                    for (std::size_t i = m_position.cur_pos - 1; m_cache[i] != '\n'; i--)
+                    for (std::size_t i = m_position.cur_pos - 1; m_buffer[i] != '\n'; i--)
                     {
                         if (i == 0)
                         {
@@ -1830,33 +1883,11 @@ public:
     /// @param length The length of moving backward.
     void unget_range(std::size_t length)
     {
-        for (std::size_t i = 0; i < length; i++)
+        size_t unget_num = (m_position.cur_pos < length) ? m_position.cur_pos : length;
+        for (std::size_t i = 0; i < unget_num; i++)
         {
             unget();
         }
-    }
-
-    /// @brief Check if the next character is the expected one.
-    /// @param expected An expected next character.
-    /// @return true The next character is the expected one.
-    /// @return false The next character is not the expected one.
-    bool test_next_char(char_type expected)
-    {
-        if (get_current() == end_of_input)
-        {
-            return false;
-        }
-
-        int_type next = get_next();
-        if (next == end_of_input)
-        {
-            unget();
-            return false;
-        }
-
-        bool ret = char_traits_type::eq(char_traits_type::to_char_type(next), expected);
-        unget();
-        return ret;
     }
 
     /// @brief Get the current position in the current line.
@@ -1875,12 +1906,12 @@ public:
 
 private:
     /// The value of EOF for the target character type.
-    static constexpr int_type end_of_input = char_traits_type::eof();
+    static constexpr int s_end_of_input = char_traits_type::eof();
 
-    /// An input adapter object.
-    InputAdapterType m_input_adapter {};
-    /// Cached characters retrieved from an input adapter object.
-    std::vector<int_type> m_cache {};
+    /// The input buffer retrieved from an input adapter object.
+    std::string m_buffer {};
+    /// The size of the buffer.
+    std::size_t m_buffer_size {0};
     /// The current position in an input buffer.
     position m_position {};
 };
@@ -1890,12 +1921,13 @@ private:
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_INPUT_HANDLER_HPP_ */
+
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2083,12 +2115,13 @@ struct is_node_compatible_type : is_node_compatible_type_impl<BasicNodeType, Com
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP_ */
+
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2125,7 +2158,6 @@ enum class lexical_token_t
     SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
     SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
     SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
-    MAPPING_BLOCK_PREFIX,  //!< the character for mapping block prefix `:`
     MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
     MAPPING_FLOW_END,      //!< the character for mapping end `}`
     NULL_VALUE,            //!< a null value found. use get_null() to get a value.
@@ -2142,6 +2174,7 @@ enum class lexical_token_t
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
+
 // #include <fkYAML/exception.hpp>
 
 
@@ -2160,17 +2193,11 @@ namespace detail
 
 /// @brief A class which lexically analizes YAML formatted inputs.
 /// @tparam BasicNodeType A type of the container for YAML values.
-template <
-    typename BasicNodeType, typename InputAdapterType,
-    enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_input_adapter<InputAdapterType>>::value, int> = 0>
+template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 class lexical_analyzer
 {
 private:
-    using input_handler_type = input_handler<InputAdapterType>;
-    using char_traits_type = typename input_handler_type::char_traits_type;
-    using char_type = typename char_traits_type::char_type;
-    using char_int_type = typename char_traits_type::int_type;
-    using input_string_type = typename input_handler_type::string_type;
+    using char_traits_type = typename std::char_traits<char>;
 
     enum class block_style_indicator_t
     {
@@ -2192,7 +2219,9 @@ public:
     using string_type = typename BasicNodeType::string_type;
 
     /// @brief Construct a new lexical_analyzer object.
+    /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object.
+    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     explicit lexical_analyzer(InputAdapterType&& input_adapter)
         : m_input_handler(std::move(input_adapter))
     {
@@ -2204,8 +2233,9 @@ public:
     {
         skip_white_spaces_and_newline_codes();
 
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
         m_last_token_begin_pos = m_input_handler.get_cur_pos_in_line();
+        m_last_token_begin_line = m_input_handler.get_lines_read();
 
         if (0x00 <= current && current <= 0x7F && isdigit(current))
         {
@@ -2214,7 +2244,7 @@ public:
 
         switch (current)
         {
-        case end_of_input: // end of input buffer
+        case s_end_of_input: // end of input buffer
             return m_last_token_type = lexical_token_t::END_OF_BUFFER;
         case '?':
             switch (m_input_handler.get_next())
@@ -2225,74 +2255,56 @@ public:
                 m_value_buffer = "?";
                 return m_last_token_type = scan_string(false);
             }
-        case ':': // key separater
-            switch (m_input_handler.get_next())
+        case ':': { // key separater
+            current = m_input_handler.get_next();
+            switch (current)
             {
-            case ' ': {
-                size_t prev_pos = m_input_handler.get_lines_read();
-                skip_white_spaces_and_comments();
-                size_t cur_pos = m_input_handler.get_lines_read();
-                if (prev_pos == cur_pos)
-                {
-                    current = m_input_handler.get_current();
-                    if (current != '\r' && current != '\n')
-                    {
-                        return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
-                    }
-                }
-                return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            }
-            case '\r': {
-                char_int_type next = m_input_handler.get_next();
-                if (next == '\n')
-                {
-                    m_input_handler.get_next();
-                }
-                return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
-            }
+            case ' ':
+            case '\t':
+            case '\r':
             case '\n':
-                m_input_handler.get_next();
-                return m_last_token_type = lexical_token_t::MAPPING_BLOCK_PREFIX;
+            case s_end_of_input:
+                break;
+            case ',':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+                if (m_flow_context_depth > 0)
+                {
+                    // the above characters are not "safe" to be followed in a flow context.
+                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                    break;
+                }
+                m_value_buffer = ":";
+                return scan_string(false);
             default:
-                emit_error("Half-width spaces or newline codes are required after a key separater(:).");
+                m_value_buffer = ":";
+                return scan_string(false);
             }
+
+            return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
+        }
         case ',': // value separater
             m_input_handler.get_next();
             return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
         case '&': { // anchor prefix
-            m_value_buffer.clear();
-            while (true)
+            extract_anchor_name();
+            bool is_empty = m_value_buffer.empty();
+            if (is_empty)
             {
-                char_int_type next = m_input_handler.get_next();
-                if (next == end_of_input || next == '\r' || next == '\n')
-                {
-                    emit_error("An anchor label must be followed by some value.");
-                }
-                if (next == ' ')
-                {
-                    m_input_handler.get_next();
-                    break;
-                }
-                m_value_buffer.push_back(char_traits_type::to_char_type(next));
+                emit_error("anchor name must not be empty.");
             }
             return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
         }
         case '*': { // alias prefix
-            m_value_buffer.clear();
-            while (true)
+            extract_anchor_name();
+            bool is_empty = m_value_buffer.empty();
+            if (is_empty)
             {
-                char_int_type next = m_input_handler.get_next();
-                if (next == ' ' || next == '\r' || next == '\n' || next == end_of_input)
-                {
-                    if (m_value_buffer.empty())
-                    {
-                        emit_error("An alias prefix must be followed by some anchor name.");
-                    }
-                    m_input_handler.get_next();
-                    break;
-                }
-                m_value_buffer.push_back(char_traits_type::to_char_type(next));
+                emit_error("anchor name must not be empty.");
             }
+
             return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
         }
         case '#': // comment prefix
@@ -2301,7 +2313,7 @@ public:
         case '%': // directive prefix
             return m_last_token_type = scan_directive();
         case '-': {
-            char_int_type next = m_input_handler.get_next();
+            int next = m_input_handler.get_next();
             if (next == ' ')
             {
                 // Move a cursor to the beginning of the next token.
@@ -2315,8 +2327,8 @@ public:
                 return m_last_token_type = scan_number();
             }
 
-            char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
-            if (ret != end_of_input)
+            int ret = m_input_handler.get_range(3, m_value_buffer);
+            if (ret != s_end_of_input)
             {
                 if (m_value_buffer == "---")
                 {
@@ -2324,10 +2336,10 @@ public:
                     return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
                 }
 
-                m_input_handler.unget_range(2);
+                m_input_handler.get_next();
             }
 
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_string(ret == s_end_of_input);
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
@@ -2363,8 +2375,8 @@ public:
         case '+':
             return m_last_token_type = scan_number();
         case '.': {
-            char_int_type ret = m_input_handler.get_range(3, m_value_buffer);
-            if (ret != end_of_input)
+            int ret = m_input_handler.get_range(3, m_value_buffer);
+            if (ret != s_end_of_input)
             {
                 if (m_value_buffer == "...")
                 {
@@ -2408,7 +2420,7 @@ public:
     /// @return std::size_t The number of lines already processed.
     std::size_t get_lines_processed() const noexcept
     {
-        return m_input_handler.get_lines_read();
+        return m_last_token_begin_line;
     }
 
     /// @brief Convert from string to null and get the converted value.
@@ -2461,7 +2473,7 @@ public:
     const string_type& get_string() const noexcept
     {
         // TODO: Provide support for different string types between nodes & inputs.
-        static_assert(std::is_same<string_type, input_string_type>::value, "Unsupported, different string types.");
+        static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
         return m_value_buffer;
     }
 
@@ -2479,7 +2491,7 @@ private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
-    char convert_hex_char_to_byte(char_int_type source) const
+    char convert_hex_char_to_byte(int source) const
     {
         if ('0' <= source && source <= '9')
         {
@@ -2521,7 +2533,7 @@ private:
 
         switch (m_input_handler.get_next())
         {
-        case end_of_input:
+        case s_end_of_input:
             emit_error("invalid eof in a directive.");
         case 'T': {
             if (m_input_handler.get_next() != 'A' || m_input_handler.get_next() != 'G')
@@ -2601,6 +2613,48 @@ private:
         return lexical_token_t::YAML_VER_DIRECTIVE;
     }
 
+    /// @brief Extracts an anchor name from the input and assigns the result to `m_value_buffer`.
+    void extract_anchor_name()
+    {
+        int current = m_input_handler.get_current();
+        FK_YAML_ASSERT(current == '&' || current == '*');
+
+        m_value_buffer.clear();
+
+        while ((current = m_input_handler.get_next()) != s_end_of_input)
+        {
+            switch (current)
+            {
+            case s_end_of_input:
+            // anchor name must not contain white spaces, newline codes and flow indicators.
+            // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+                return;
+            case ':': {
+                int peeked = m_input_handler.peek_next();
+                if (peeked == ' ')
+                {
+                    // Stop the extraction at the key separator.
+                    return;
+                }
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+            default:
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+        }
+    }
+
     /// @brief Scan and determine a number type(integer/float). This method is the entrypoint for all number
     /// tokens.
     /// @return lexical_token_t A lexical token type for a determined number type.
@@ -2608,7 +2662,7 @@ private:
     {
         m_value_buffer.clear();
 
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
         FK_YAML_ASSERT(std::isdigit(current) || current == '-' || current == '+');
 
         lexical_token_t ret = lexical_token_t::END_OF_BUFFER;
@@ -2660,7 +2714,7 @@ private:
     /// @return lexical_token_t The lexical token type for either integer or float numbers.
     lexical_token_t scan_negative_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         // The value of `next` must be guranteed to be a digit in the get_next_token() function.
         FK_YAML_ASSERT(std::isdigit(next));
@@ -2672,16 +2726,16 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float).
     lexical_token_t scan_number_after_zero_at_first()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         switch (next)
         {
         case '.':
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
             return scan_decimal_number_after_decimal_point();
         case 'o':
-            // Do not store 'o' since std::strtoull does not support "0o" but "0" as the prefix for octal numbers.
+            // Do not store 'o' since std::stoXXX does not support "0o" but "0" as the prefix for octal numbers.
             // YAML specifies octal values start with the prefix "0o".
-            // See "10.3.2 Tag Resolution" section in https://yaml.org/spec/1.2.2/
+            // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
             return scan_octal_number();
         case 'x':
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -2695,7 +2749,7 @@ private:
     /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_decimal_point()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         if (std::isdigit(next))
         {
@@ -2711,7 +2765,7 @@ private:
     /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_exponent()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         if (next == '+' || next == '-')
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -2733,7 +2787,7 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number_after_sign()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         if (std::isdigit(next))
         {
@@ -2748,7 +2802,7 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
 
         if (std::isdigit(next))
         {
@@ -2781,7 +2835,7 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_octal_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         if ('0' <= next && next <= '7')
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -2794,7 +2848,7 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_hexadecimal_number()
     {
-        char_int_type next = m_input_handler.get_next();
+        int next = m_input_handler.get_next();
         if (std::isxdigit(next))
         {
             m_value_buffer.push_back(char_traits_type::to_char_type(next));
@@ -2880,12 +2934,12 @@ private:
     /// @return lexical_token_t The lexical token type for strings.
     lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote)
     {
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
 
         for (;; current = m_input_handler.get_next())
         {
             // Handle the end of input buffer.
-            if (current == end_of_input)
+            if (current == s_end_of_input)
             {
                 if (needs_last_double_quote)
                 {
@@ -2905,25 +2959,44 @@ private:
                 if (!needs_last_double_quote && !needs_last_single_quote)
                 {
                     // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
-                    // See "7.3.3 Plain Style" section in https://yaml.org/spec/1.2.2/
-                    current = m_input_handler.get_next();
-                    switch (current)
+                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                    int next = m_input_handler.get_next();
+
+                    // These characters are permitted when not inside a flow collection, and not inside an implicit key.
+                    // TODO: Support detection of implicit key context for this check.
+                    if (m_flow_context_depth > 0)
+                    {
+                        switch (next)
+                        {
+                        case '{':
+                        case '}':
+                        case '[':
+                        case ']':
+                        case ',':
+                            return lexical_token_t::STRING_VALUE;
+                        }
+                    }
+
+                    // " :" is permitted in a plain style string token, but not when followed by a space.
+                    if (next == ':')
+                    {
+                        int peeked = m_input_handler.peek_next();
+                        if (peeked == ' ')
+                        {
+                            return lexical_token_t::STRING_VALUE;
+                        }
+                    }
+
+                    switch (next)
                     {
                     case ' ':
                     case '\r':
                     case '\n':
-                    case '{':
-                    case '}':
-                    case '[':
-                    case ']':
-                    case ',':
-                    case ':':
                     case '#':
                     case '\\':
                         return lexical_token_t::STRING_VALUE;
                     }
                     m_input_handler.unget();
-                    current = m_input_handler.get_current();
                 }
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 continue;
@@ -2970,8 +3043,7 @@ private:
                     continue;
                 }
 
-                char_int_type next = m_input_handler.get_next();
-                m_input_handler.unget();
+                int next = m_input_handler.peek_next();
 
                 // A colon as a key separator must be followed by a space or a newline code.
                 if (next != ' ' && next != '\r' && next != '\n')
@@ -3035,7 +3107,7 @@ private:
             }
 
             // Handle escaped characters.
-            // See "5.7 Escaped Characters" section in https://yaml.org/spec/1.2.2/
+            // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
             if (current == '\\')
             {
                 if (!needs_last_double_quote)
@@ -3068,7 +3140,7 @@ private:
                     m_value_buffer.push_back('\r');
                     break;
                 case 'e':
-                    m_value_buffer.push_back(char_type(0x1B));
+                    m_value_buffer.push_back(char(0x1B));
                     break;
                 case ' ':
                     m_value_buffer.push_back(' ');
@@ -3084,31 +3156,19 @@ private:
                     break;
                 case 'N': // next line
                     utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case '_': // non-breaking space
                     utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'L': // line separator
                     utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'P': // paragraph separator
                     utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                    for (size_t i = 0; i < m_encoded_size; i++)
-                    {
-                        m_value_buffer.push_back(m_encode_buffer[i]);
-                    }
+                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
                     break;
                 case 'x':
                     handle_escaped_unicode(1);
@@ -3132,6 +3192,8 @@ private:
                 continue;
             }
 
+            // The other characters are already checked while creating an input handler.
+
             // Handle ASCII characters except control characters.
             if (current <= 0x7E)
             {
@@ -3142,46 +3204,26 @@ private:
             // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
             if (current <= 0xDF)
             {
-                std::array<char_int_type, 2> byte_array = {{current, m_input_handler.get_next()}};
-                if (!utf8_encoding::validate(byte_array))
-                {
-                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-                }
-
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
                 continue;
             }
 
             // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
             if (current <= 0xEF)
             {
-                std::array<char_int_type, 3> byte_array = {
-                    {current, m_input_handler.get_next(), m_input_handler.get_next()}};
-                if (!utf8_encoding::validate(byte_array))
-                {
-                    throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-                }
-
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
-                m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+                m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
 
                 continue;
             }
 
             // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            std::array<char_int_type, 4> byte_array = {
-                {current, m_input_handler.get_next(), m_input_handler.get_next(), m_input_handler.get_next()}};
-            if (!utf8_encoding::validate(byte_array))
-            {
-                throw fkyaml::invalid_encoding("ill-formed UTF-8 encoded character found", byte_array);
-            }
-
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[0]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[1]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[2]));
-            m_value_buffer.push_back(char_traits_type::to_char_type(byte_array[3]));
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
+            m_value_buffer.push_back(char_traits_type::to_char_type(m_input_handler.get_next()));
         }
     }
 
@@ -3191,7 +3233,7 @@ private:
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
-        char_int_type current = m_input_handler.get_current();
+        int current = m_input_handler.get_current();
         for (;; current = m_input_handler.get_next())
         {
             if (current == ' ')
@@ -3209,7 +3251,7 @@ private:
                 continue;
             }
 
-            if (current == end_of_input)
+            if (current == s_end_of_input)
             {
                 if (chomp != chomping_indicator_t::KEEP)
                 {
@@ -3251,7 +3293,7 @@ private:
             }
         }
 
-        for (; current != end_of_input; current = m_input_handler.get_next())
+        for (; current != s_end_of_input; current = m_input_handler.get_next())
         {
             if (current == '\r')
             {
@@ -3321,24 +3363,24 @@ private:
                     }
                     else
                     {
-                        switch (m_input_handler.get_next())
+                        switch (int next = m_input_handler.peek_next())
                         {
                         case '\r': {
                             m_input_handler.get_next();
-                            FK_YAML_ASSERT(m_input_handler.get_current() == '\n');
-                            m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                            next = m_input_handler.get_next();
+                            FK_YAML_ASSERT(next == '\n');
+                            m_value_buffer.push_back(char_traits_type::to_char_type(next));
                             break;
                         }
                         case '\n':
-                            m_value_buffer.push_back(char_traits_type::to_char_type('\n'));
+                            m_input_handler.get_next();
+                            m_value_buffer.push_back(char_traits_type::to_char_type(next));
                             break;
                         case ' ':
                             // The next line is more indented, so a newline will be appended in the next loop.
-                            m_input_handler.unget();
                             break;
                         default:
                             m_value_buffer.push_back(char_traits_type::to_char_type(' '));
-                            m_input_handler.unget();
                             break;
                         }
                     }
@@ -3417,7 +3459,7 @@ private:
 
     /// @brief Handle unescaped control characters.
     /// @param c A target character.
-    void handle_unescaped_control_char(char_int_type c)
+    void handle_unescaped_control_char(int c)
     {
         FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
 
@@ -3501,26 +3543,26 @@ private:
 
         // Treats the code point as a UTF-32 encoded character.
         utf8_encoding::from_utf32(code_point, m_encode_buffer, m_encoded_size);
-        for (size_t i = 0; i < m_encoded_size; i++)
-        {
-            m_value_buffer.push_back(m_encode_buffer[i]);
-        }
+        m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
     }
 
     void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
     {
-        char_int_type ch = m_input_handler.get_next();
+        int ch = m_input_handler.get_next();
 
         chomp_type = chomping_indicator_t::CLIP;
-        if (ch == '-')
+        switch (ch)
         {
+        case '-':
             chomp_type = chomping_indicator_t::STRIP;
             ch = m_input_handler.get_next();
-        }
-        else if (ch == '+')
-        {
+            break;
+        case '+':
             chomp_type = chomping_indicator_t::KEEP;
             ch = m_input_handler.get_next();
+            break;
+        default:
+            break;
         }
 
         if (ch == '0')
@@ -3552,7 +3594,7 @@ private:
             default:
                 return;
             }
-        } while (m_input_handler.get_next() != end_of_input);
+        } while (m_input_handler.get_next() != s_end_of_input);
     }
 
     /// @brief Skip white spaces and newline codes (CR/LF) from the current position.
@@ -3570,7 +3612,7 @@ private:
             default:
                 return;
             }
-        } while (m_input_handler.get_next() != end_of_input);
+        } while (m_input_handler.get_next() != s_end_of_input);
     }
 
     /// @brief Skip white spaces and comments from the current position.
@@ -3589,7 +3631,7 @@ private:
             default:
                 return;
             }
-        } while (m_input_handler.get_next() != end_of_input);
+        } while (m_input_handler.get_next() != s_end_of_input);
     }
 
     /// @brief Skip the rest in the current line.
@@ -3611,7 +3653,7 @@ private:
             default:
                 break;
             }
-        } while (m_input_handler.get_next() != end_of_input);
+        } while (m_input_handler.get_next() != s_end_of_input);
     }
 
     [[noreturn]] void emit_error(const char* msg) const
@@ -3621,15 +3663,20 @@ private:
 
 private:
     /// The value of EOF for the target characters.
-    static constexpr char_int_type end_of_input = char_traits_type::eof();
+    static constexpr int s_end_of_input = char_traits_type::eof();
 
     /// An input buffer adapter to be analyzed.
-    input_handler_type m_input_handler;
+    input_handler m_input_handler;
     /// A temporal buffer to store a string to be parsed to an actual datum.
-    input_string_type m_value_buffer {};
+    std::string m_value_buffer {};
+    /// A temporal buffer to store a UTF-8 encoded char sequence.
     std::array<char, 4> m_encode_buffer {};
+    /// The actual size of a UTF-8 encoded char sequence.
     std::size_t m_encoded_size {0};
+    /// The beginning position of the last lexical token. (zero origin)
     std::size_t m_last_token_begin_pos {0};
+    /// The beginning line of the last lexical token. (zero origin)
+    std::size_t m_last_token_begin_line {0};
     /// The current depth of flow context.
     uint32_t m_flow_context_depth {0};
     /// The last found token type.
@@ -3659,7 +3706,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/types/yaml_version_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -3736,7 +3783,7 @@ public:
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     BasicNodeType deserialize(InputAdapterType&& input_adapter)
     {
-        lexical_analyzer<BasicNodeType, InputAdapterType> lexer(std::forward<InputAdapterType>(input_adapter));
+        lexical_analyzer<BasicNodeType> lexer(std::forward<InputAdapterType>(input_adapter));
 
         BasicNodeType root = BasicNodeType::mapping();
         m_current_node = &root;
@@ -3802,11 +3849,61 @@ public:
                     throw parse_error("A key separator found without key.", cur_line, cur_indent);
                 }
 
-                bool is_implicit = m_indent_stack.empty() || cur_indent > m_indent_stack.back().first;
-                if (is_implicit)
+                // hold the line count of the key separator for later use.
+                std::size_t old_indent = cur_indent;
+                std::size_t old_line = cur_line;
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::COMMENT_PREFIX)
                 {
-                    break;
+                    // just skip the comment and get the next token.
+                    type = lexer.get_next_token();
                 }
+
+                cur_indent = lexer.get_last_token_begin_pos();
+                cur_line = lexer.get_lines_processed();
+
+                bool is_implicit_same_line =
+                    (cur_line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().first);
+                if (is_implicit_same_line)
+                {
+                    // a key separator for an implicit key with its value on the same line.
+                    continue;
+                }
+
+                if (cur_line > old_line)
+                {
+                    switch (type)
+                    {
+                    case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
+                        // a key separator preceeding block sequence entries
+                        *m_current_node = BasicNodeType::sequence();
+                        set_yaml_version(*m_current_node);
+                        break;
+                    case lexical_token_t::EXPLICIT_KEY_PREFIX:
+                        // a key separator for a explicit block mapping key.
+                        *m_current_node = BasicNodeType::mapping();
+                        set_yaml_version(*m_current_node);
+                        break;
+                    // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
+                    // call.
+                    case lexical_token_t::NULL_VALUE:
+                    case lexical_token_t::BOOLEAN_VALUE:
+                    case lexical_token_t::INTEGER_VALUE:
+                    case lexical_token_t::FLOAT_NUMBER_VALUE:
+                    case lexical_token_t::STRING_VALUE:
+                    // defer handling these tokens until the next loop.
+                    case lexical_token_t::MAPPING_FLOW_BEGIN:
+                    case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+                        break;
+                    default:   // LCOV_EXCL_LINE
+                        break; // LCOV_EXCL_LINE
+                    }
+
+                    continue;
+                }
+
+                // handle explicit mapping key separators.
 
                 while (!m_indent_stack.back().second)
                 {
@@ -3839,7 +3936,6 @@ public:
                 m_node_stack.push_back(m_node_stack.back());
                 m_indent_stack.back().second = false;
 
-                type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     *m_current_node = BasicNodeType::sequence();
@@ -3854,18 +3950,16 @@ public:
             case lexical_token_t::ANCHOR_PREFIX: {
                 m_anchor_name = lexer.get_string();
                 m_needs_anchor_impl = true;
-                break;
-            }
-            case lexical_token_t::ALIAS_PREFIX: {
-                const string_type& alias_name = lexer.get_string();
-                auto itr = m_anchor_table.find(alias_name);
-                if (itr == m_anchor_table.end())
-                {
-                    throw parse_error(
-                        "The given anchor name must appear prior to the alias node.", cur_line, cur_indent);
-                }
-                assign_node_value(BasicNodeType::alias_of(m_anchor_table.at(alias_name)));
-                break;
+
+                // Skip updating the current indent to avoid stacking a wrong indentation.
+                //
+                //   &foo bar: baz
+                //   ^
+                //   the correct indent width for the "bar" node key.
+
+                type = lexer.get_next_token();
+                cur_line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::COMMENT_PREFIX:
                 break;
@@ -3928,26 +4022,6 @@ public:
                 m_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 break;
-            case lexical_token_t::MAPPING_BLOCK_PREFIX:
-                type = lexer.get_next_token();
-                if (type == lexical_token_t::COMMENT_PREFIX)
-                {
-                    type = lexer.get_next_token();
-                }
-                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
-                {
-                    *m_current_node = BasicNodeType::sequence();
-                    set_yaml_version(*m_current_node);
-                    cur_indent = lexer.get_last_token_begin_pos();
-                    cur_line = lexer.get_lines_processed();
-                    continue;
-                }
-
-                *m_current_node = BasicNodeType::mapping();
-                set_yaml_version(*m_current_node);
-                cur_indent = lexer.get_last_token_begin_pos();
-                cur_line = lexer.get_lines_processed();
-                continue;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::mapping();
                 set_yaml_version(*m_current_node);
@@ -3955,45 +4029,13 @@ public:
             case lexical_token_t::MAPPING_FLOW_END:
                 m_current_node = m_node_stack.back();
                 break;
-            case lexical_token_t::NULL_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_null()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
-            case lexical_token_t::BOOLEAN_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_boolean()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
-            case lexical_token_t::INTEGER_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_integer()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
-            case lexical_token_t::FLOAT_NUMBER_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_float_number()), cur_indent, cur_line, type);
-                if (do_continue)
-                {
-                    continue;
-                }
-                break;
-            }
+            case lexical_token_t::ALIAS_PREFIX:
+            case lexical_token_t::NULL_VALUE:
+            case lexical_token_t::BOOLEAN_VALUE:
+            case lexical_token_t::INTEGER_VALUE:
+            case lexical_token_t::FLOAT_NUMBER_VALUE:
             case lexical_token_t::STRING_VALUE: {
-                bool do_continue =
-                    deserialize_scalar(lexer, BasicNodeType(lexer.get_string()), cur_indent, cur_line, type);
+                bool do_continue = deserialize_scalar(lexer, cur_indent, cur_line, type);
                 if (do_continue)
                 {
                     continue;
@@ -4007,8 +4049,10 @@ public:
                 break;
             }
 
+            lexical_token_t prev_type = type;
             type = lexer.get_next_token();
-            cur_indent = lexer.get_last_token_begin_pos();
+            //
+            cur_indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? cur_indent : lexer.get_last_token_begin_pos();
             cur_line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
 
@@ -4024,7 +4068,7 @@ public:
 private:
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
-    void add_new_key(const BasicNodeType& key, const std::size_t indent, const std::size_t line)
+    void add_new_key(BasicNodeType&& key, const std::size_t indent, const std::size_t line)
     {
         if (!m_indent_stack.empty() && indent < m_indent_stack.back().first)
         {
@@ -4083,32 +4127,69 @@ private:
         if (m_current_node->is_sequence())
         {
             m_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
-            set_yaml_version(m_current_node->template get_value_ref<sequence_type&>().back());
-            if (m_needs_anchor_impl)
-            {
-                m_current_node->template get_value_ref<sequence_type&>().back().add_anchor_name(m_anchor_name);
-                m_anchor_table[m_anchor_name] = m_current_node->template get_value_ref<sequence_type&>().back();
-                m_needs_anchor_impl = false;
-                m_anchor_name.clear();
-            }
             return;
         }
 
         // a scalar node
         *m_current_node = std::move(node_value);
-        set_yaml_version(*m_current_node);
-        if (m_needs_anchor_impl)
-        {
-            m_current_node->add_anchor_name(m_anchor_name);
-            m_anchor_table[m_anchor_name] = *m_current_node;
-            m_needs_anchor_impl = false;
-            m_anchor_name.clear();
-        }
         if (!m_indent_stack.back().second)
         {
             m_current_node = m_node_stack.back();
             m_node_stack.pop_back();
         }
+    }
+
+    template <typename LexerType>
+    BasicNodeType create_scalar_node(LexerType& lexer, lexical_token_t type, std::size_t indent, std::size_t line)
+    {
+        FK_YAML_ASSERT(
+            type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
+            type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
+            type == lexical_token_t::STRING_VALUE || type == lexical_token_t::ALIAS_PREFIX);
+
+        BasicNodeType node {};
+        switch (type)
+        {
+        case lexical_token_t::NULL_VALUE:
+            node = BasicNodeType(lexer.get_null());
+            break;
+        case lexical_token_t::BOOLEAN_VALUE:
+            node = BasicNodeType(lexer.get_boolean());
+            break;
+        case lexical_token_t::INTEGER_VALUE:
+            node = BasicNodeType(lexer.get_integer());
+            break;
+        case lexical_token_t::FLOAT_NUMBER_VALUE:
+            node = BasicNodeType(lexer.get_float_number());
+            break;
+        case lexical_token_t::STRING_VALUE:
+            node = BasicNodeType(lexer.get_string());
+            break;
+        case lexical_token_t::ALIAS_PREFIX: {
+            const string_type& alias_name = lexer.get_string();
+            auto itr = m_anchor_table.find(alias_name);
+            if (itr == m_anchor_table.end())
+            {
+                throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
+            }
+            node = BasicNodeType::alias_of(m_anchor_table[alias_name]);
+            break;
+        }
+        default:   // LCOV_EXCL_LINE
+            break; // LCOV_EXCL_LINE
+        }
+
+        set_yaml_version(node);
+
+        if (m_needs_anchor_impl)
+        {
+            node.add_anchor_name(m_anchor_name);
+            m_anchor_table[m_anchor_name] = node;
+            m_needs_anchor_impl = false;
+            m_anchor_name.clear();
+        }
+
+        return node;
     }
 
     /// @brief Deserialize a detected scalar node.
@@ -4117,17 +4198,18 @@ private:
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
     template <typename LexerType>
-    bool deserialize_scalar(
-        LexerType& lexer, BasicNodeType&& node, std::size_t& indent, std::size_t& line, lexical_token_t& type)
+    bool deserialize_scalar(LexerType& lexer, std::size_t& indent, std::size_t& line, lexical_token_t& type)
     {
+        BasicNodeType node = create_scalar_node(lexer, type, indent, line);
+
         if (m_current_node->is_mapping())
         {
-            add_new_key(node, indent, line);
+            add_new_key(std::move(node), indent, line);
             return false;
         }
 
         type = lexer.get_next_token();
-        if (type == lexical_token_t::KEY_SEPARATOR || type == lexical_token_t::MAPPING_BLOCK_PREFIX)
+        if (type == lexical_token_t::KEY_SEPARATOR)
         {
             if (m_current_node->is_scalar())
             {
@@ -4144,8 +4226,9 @@ private:
                     return true;
                 }
                 *m_current_node = BasicNodeType::mapping();
+                set_yaml_version(*m_current_node);
             }
-            add_new_key(node, indent, line);
+            add_new_key(std::move(node), indent, line);
         }
         else
         {
@@ -4201,7 +4284,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/input/input_adapter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -4212,6 +4295,7 @@ FK_YAML_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
 #define FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
 
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <istream>
@@ -4220,10 +4304,12 @@ FK_YAML_NAMESPACE_END
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
+// #include <fkYAML/detail/assert.hpp>
+
 // #include <fkYAML/detail/encodings/encode_detector.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -4235,13 +4321,14 @@ FK_YAML_NAMESPACE_END
 #define FK_YAML_DETAIL_ENCODINGS_ENCODE_DETECTOR_HPP_
 
 #include <cstdint>
+#include <istream>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
-// #include <fkYAML/detail/encodings/encode_t.hpp>
+// #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -4249,8 +4336,8 @@ FK_YAML_NAMESPACE_END
 ///
 /// @file
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_ENCODE_T_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_ENCODE_T_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -4264,25 +4351,21 @@ namespace detail
 
 /// @brief Definition of Unicode encoding types
 /// @note Since fkYAML doesn't treat UTF-16/UTF-32 encoded characters per byte, endians do not matter.
-enum class encode_t
+enum class utf_encode_t
 {
-    UTF_8_N,      //!< UTF-8 without BOM
-    UTF_8_BOM,    //!< UTF-8 with BOM
-    UTF_16BE_N,   //!< UTF-16BE without BOM
-    UTF_16BE_BOM, //!< UTF-16BE with BOM
-    UTF_16LE_N,   //!< UTF-16LE without BOM
-    UTF_16LE_BOM, //!< UTF-16LE with BOM
-    UTF_32BE_N,   //!< UTF-32BE without BOM
-    UTF_32BE_BOM, //!< UTF-32BE with BOM
-    UTF_32LE_N,   //!< UTF-32LE without BOM
-    UTF_32LE_BOM, //!< UTF-32LE with BOM
+    UTF_8,    //!< UTF-8
+    UTF_16BE, //!< UTF-16 Big Endian
+    UTF_16LE, //!< UTF-16 Little Endian
+    UTF_32BE, //!< UTF-32 Big Endian
+    UTF_32LE, //!< UTF-32 Little Endian
 };
 
 } // namespace detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_ENCODE_T_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_ */
+
 // #include <fkYAML/exception.hpp>
 
 
@@ -4295,63 +4378,68 @@ namespace detail
 
 /// @brief Detect an encoding type for UTF-8 expected inputs.
 /// @note This function doesn't support the case where the first character is null.
-/// @param b0 The 1st byte of an input character sequence.
-/// @param b1 The 2nd byte of an input character sequence.
-/// @param b2 The 3rd byte of an input character sequence.
-/// @param b3 The 4th byte of an input character sequence.
+/// @param[in] bytes 4 bytes of an input character sequence.
+/// @param[out] has_bom Whether or not the input contains a BOM.
 /// @return A detected encoding type.
-inline encode_t detect_encoding_type(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) noexcept
+inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept
 {
+    has_bom = false;
+
     // Check if a BOM exists.
 
-    if (b0 == uint8_t(0xEFu) && b1 == uint8_t(0xBBu) && b2 == uint8_t(0xBFu))
+    if (bytes[0] == uint8_t(0xEFu) && bytes[1] == uint8_t(0xBBu) && bytes[2] == uint8_t(0xBFu))
     {
-        return encode_t::UTF_8_BOM;
+        has_bom = true;
+        return utf_encode_t::UTF_8;
     }
 
-    if (b0 == 0 && b1 == 0 && b2 == uint8_t(0xFEu) && b3 == uint8_t(0xFFu))
+    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == uint8_t(0xFEu) && bytes[3] == uint8_t(0xFFu))
     {
-        return encode_t::UTF_32BE_BOM;
+        has_bom = true;
+        return utf_encode_t::UTF_32BE;
     }
 
-    if (b0 == uint8_t(0xFFu) && b1 == uint8_t(0xFEu) && b2 == 0 && b3 == 0)
+    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu) && bytes[2] == 0 && bytes[3] == 0)
     {
-        return encode_t::UTF_32LE_BOM;
+        has_bom = true;
+        return utf_encode_t::UTF_32LE;
     }
 
-    if (b0 == uint8_t(0xFEu) && b1 == uint8_t(0xFFu))
+    if (bytes[0] == uint8_t(0xFEu) && bytes[1] == uint8_t(0xFFu))
     {
-        return encode_t::UTF_16BE_BOM;
+        has_bom = true;
+        return utf_encode_t::UTF_16BE;
     }
 
-    if (b0 == uint8_t(0xFFu) && b1 == uint8_t(0xFEu))
+    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu))
     {
-        return encode_t::UTF_16LE_BOM;
+        has_bom = true;
+        return utf_encode_t::UTF_16LE;
     }
 
     // Test the first character assuming it's an ASCII character.
 
-    if (b0 == 0 && b1 == 0 && b2 == 0 && 0 < b3 && b3 < uint8_t(0x80u))
+    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && 0 < bytes[3] && bytes[3] < uint8_t(0x80u))
     {
-        return encode_t::UTF_32BE_N;
+        return utf_encode_t::UTF_32BE;
     }
 
-    if (0 < b0 && b0 < uint8_t(0x80u) && b1 == 0 && b2 == 0 && b3 == 0)
+    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0)
     {
-        return encode_t::UTF_32LE_N;
+        return utf_encode_t::UTF_32LE;
     }
 
-    if (b0 == 0 && 0 < b1 && b1 < uint8_t(0x80u))
+    if (bytes[0] == 0 && 0 < bytes[1] && bytes[1] < uint8_t(0x80u))
     {
-        return encode_t::UTF_16BE_N;
+        return utf_encode_t::UTF_16BE;
     }
 
-    if (0 < b0 && b0 < uint8_t(0x80u) && b1 == 0)
+    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0)
     {
-        return encode_t::UTF_16LE_N;
+        return utf_encode_t::UTF_16LE;
     }
 
-    return encode_t::UTF_8_N;
+    return utf_encode_t::UTF_8;
 }
 
 /// @brief Detects the encoding type of the input, and consumes a BOM if it exists.
@@ -4361,9 +4449,9 @@ inline encode_t detect_encoding_type(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t
 /// @param end The end of input iterators.
 /// @return A detected encoding type.
 template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
-inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
+inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
 {
-    uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
+    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
     switch (ElemSize)
     {
     case sizeof(char): { // this case covers char8_t as well when compiled with C++20 features.
@@ -4372,30 +4460,34 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
             bytes[i] = uint8_t(begin[i]);
         }
 
-        encode_t encode_type = detect_encoding_type(bytes[0], bytes[1], bytes[2], bytes[3]);
-        switch (encode_type)
+        bool has_bom = false;
+        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+
+        if (has_bom)
         {
-        case encode_t::UTF_8_BOM:
-            std::advance(begin, 3);
-            break;
-        case encode_t::UTF_16BE_BOM:
-        case encode_t::UTF_16LE_BOM:
-            std::advance(begin, 2);
-            break;
-        case encode_t::UTF_32BE_BOM:
-        case encode_t::UTF_32LE_BOM:
-            std::advance(begin, 4);
-            break;
-        default:
-            // Do nothing if a BOM doesn't exist.
-            break;
+            // skip reading the BOM.
+            switch (encode_type)
+            {
+            case utf_encode_t::UTF_8:
+                std::advance(begin, 3);
+                break;
+            case utf_encode_t::UTF_16BE:
+            case utf_encode_t::UTF_16LE:
+                std::advance(begin, 2);
+                break;
+            case utf_encode_t::UTF_32BE:
+            case utf_encode_t::UTF_32LE:
+                std::advance(begin, 4);
+                break;
+            }
         }
+
         return encode_type;
     }
     case sizeof(char16_t): {
         if (begin == end)
         {
-            return encode_t::UTF_16BE_N;
+            return utf_encode_t::UTF_16BE;
         }
         for (int i = 0; i < 2 && begin + i != end; i++)
         {
@@ -4403,45 +4495,47 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
             bytes[i * 2 + 1] = uint8_t(begin[i] & 0xFFu);
         }
 
-        encode_t encode_type = detect_encoding_type(bytes[0], bytes[1], bytes[2], bytes[3]);
-        switch (encode_type)
+        bool has_bom = false;
+        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+
+        if (encode_type != utf_encode_t::UTF_16BE && encode_type != utf_encode_t::UTF_16LE)
         {
-        case encode_t::UTF_16BE_BOM:
-        case encode_t::UTF_16LE_BOM:
-            std::advance(begin, 1);
-            break;
-        case encode_t::UTF_16BE_N:
-        case encode_t::UTF_16LE_N:
-            // Do nothing if a BOM doesn't exist.
-            break;
-        default:
             throw exception("char16_t characters must be encoded in the UTF-16 format.");
         }
+
+        if (has_bom)
+        {
+            // skip reading the BOM.
+            std::advance(begin, 1);
+        }
+
         return encode_type;
     }
     case sizeof(char32_t): {
         if (begin == end)
         {
-            return encode_t::UTF_32BE_N;
+            return utf_encode_t::UTF_32BE;
         }
+
         bytes[0] = uint8_t((*begin & 0xFF000000u) >> 24);
         bytes[1] = uint8_t((*begin & 0x00FF0000u) >> 16);
         bytes[2] = uint8_t((*begin & 0x0000FF00u) >> 8);
         bytes[3] = uint8_t(*begin & 0x000000FFu);
-        encode_t encode_type = detect_encoding_type(bytes[0], bytes[1], bytes[2], bytes[3]);
-        switch (encode_type)
+
+        bool has_bom = false;
+        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+
+        if (encode_type != utf_encode_t::UTF_32BE && encode_type != utf_encode_t::UTF_32LE)
         {
-        case encode_t::UTF_32BE_BOM:
-        case encode_t::UTF_32LE_BOM:
-            std::advance(begin, 1);
-            break;
-        case encode_t::UTF_32BE_N:
-        case encode_t::UTF_32LE_N:
-            // Do nothing if a BOM doesn't exist.
-            break;
-        default:
             throw exception("char32_t characters must be encoded in the UTF-32 format.");
         }
+
+        if (has_bom)
+        {
+            // skip reading the BOM.
+            std::advance(begin, 1);
+        }
+
         return encode_type;
     }
     default:
@@ -4449,9 +4543,9 @@ inline encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
     }
 }
 
-inline encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept
+inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept
 {
-    uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
+    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
     for (std::size_t i = 0; i < 4; i++)
     {
         char byte = 0;
@@ -4463,32 +4557,36 @@ inline encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept
         bytes[i] = uint8_t(byte & 0xFF);
     }
 
-    encode_t encode_type = detect_encoding_type(bytes[0], bytes[1], bytes[2], bytes[3]);
-    switch (encode_type)
+    bool has_bom = false;
+    utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+
+    // move back to the beginning if a BOM doesn't exist.
+    long offset = 0;
+    if (has_bom)
     {
-    case encode_t::UTF_8_BOM:
-        fseek(file, 3, SEEK_SET);
-        break;
-    case encode_t::UTF_16BE_BOM:
-    case encode_t::UTF_16LE_BOM:
-        fseek(file, 2, SEEK_SET);
-        break;
-    case encode_t::UTF_32BE_BOM:
-    case encode_t::UTF_32LE_BOM:
-        fseek(file, 4, SEEK_SET);
-        break;
-    default:
-        // Move back to the beginning of the file contents if a BOM doesn't exist.
-        fseek(file, 0, SEEK_SET);
-        break;
+        switch (encode_type)
+        {
+        case utf_encode_t::UTF_8:
+            offset = 3;
+            break;
+        case utf_encode_t::UTF_16BE:
+        case utf_encode_t::UTF_16LE:
+            offset = 2;
+            break;
+        case utf_encode_t::UTF_32BE:
+        case utf_encode_t::UTF_32LE:
+            offset = 4;
+            break;
+        }
     }
+    fseek(file, offset, SEEK_SET);
 
     return encode_type;
 }
 
-inline encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
+inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
 {
-    uint8_t bytes[4] = {0xFFu, 0xFFu, 0xFFu, 0xFFu};
+    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
     for (std::size_t i = 0; i < 4; i++)
     {
         char ch = 0;
@@ -4503,25 +4601,29 @@ inline encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
         bytes[i] = uint8_t(ch & 0xFF);
     }
 
-    encode_t encode_type = detect_encoding_type(bytes[0], bytes[1], bytes[2], bytes[3]);
-    switch (encode_type)
+    bool has_bom = false;
+    utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+
+    // move back to the beginning if a BOM doesn't exist.
+    std::streamoff offset = 0;
+    if (has_bom)
     {
-    case encode_t::UTF_8_BOM:
-        is.seekg(3, std::ios_base::beg);
-        break;
-    case encode_t::UTF_16BE_BOM:
-    case encode_t::UTF_16LE_BOM:
-        is.seekg(2, std::ios_base::beg);
-        break;
-    case encode_t::UTF_32BE_BOM:
-    case encode_t::UTF_32LE_BOM:
-        is.seekg(4, std::ios_base::beg);
-        break;
-    default:
-        // Move back to the beginning of the file contents if a BOM doesn't exist.
-        is.seekg(0, std::ios_base::beg);
-        break;
+        switch (encode_type)
+        {
+        case utf_encode_t::UTF_8:
+            offset = 3;
+            break;
+        case utf_encode_t::UTF_16BE:
+        case utf_encode_t::UTF_16LE:
+            offset = 2;
+            break;
+        case utf_encode_t::UTF_32BE:
+        case utf_encode_t::UTF_32LE:
+            offset = 4;
+            break;
+        }
     }
+    is.seekg(offset, std::ios_base::beg);
 
     return encode_type;
 }
@@ -4531,7 +4633,8 @@ inline encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_ENCODE_DETECTOR_HPP_ */
-// #include <fkYAML/detail/encodings/encode_t.hpp>
+
+// #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 
 // #include <fkYAML/detail/encodings/utf8_encoding.hpp>
 
@@ -4561,9 +4664,6 @@ class iterator_input_adapter<
     IterType, enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char>::value>>
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
 
@@ -4571,7 +4671,7 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
+    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
           m_encode_type(encode_type)
@@ -4587,150 +4687,158 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        typename std::char_traits<char_type>::int_type ret = 0;
+        buffer.clear();
+
         switch (m_encode_type)
         {
-        case encode_t::UTF_8_N:
-        case encode_t::UTF_8_BOM:
-            ret = get_character_for_utf8();
+        case utf_encode_t::UTF_8:
+            fill_buffer_utf8(buffer);
             break;
-        case encode_t::UTF_16BE_N:
-        case encode_t::UTF_16BE_BOM:
-        case encode_t::UTF_16LE_N:
-        case encode_t::UTF_16LE_BOM:
-            ret = get_character_for_utf16();
+        case utf_encode_t::UTF_16BE:
+        case utf_encode_t::UTF_16LE:
+            fill_buffer_utf16(buffer);
             break;
-        case encode_t::UTF_32BE_N:
-        case encode_t::UTF_32BE_BOM:
-        case encode_t::UTF_32LE_N:
-        case encode_t::UTF_32LE_BOM:
-            ret = get_character_for_utf32();
+        case utf_encode_t::UTF_32BE:
+        case utf_encode_t::UTF_32LE:
+            fill_buffer_utf32(buffer);
             break;
         }
-        return ret;
     }
 
 private:
-    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
+    /// @brief The concrete implementation of fill_buffer() for UTF-8 encoded inputs.
+    /// @param buffer A buffer to be filled with the input.
+    void fill_buffer_utf8(std::string& buffer)
     {
-        if (m_current != m_end)
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
+
+        IterType current = m_current;
+        while (current != m_end)
         {
-            auto ret = std::char_traits<char_type>::to_int_type(*m_current);
-            ++m_current;
-            return ret;
+            char first = *current++;
+
+            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+            if ((first & 0xC0) == 0x80)
+            {
+                // The first byte must not start with 0b10XX'XXXX
+                std::array<int, 1> bytes {{first}};
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+            }
+            // The first byte starts with 0b110X'XXXX -> 2-byte character
+            else if ((first & 0xE0) == 0xC0)
+            {
+                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0b1110'XXXX -> 3-byte character
+            else if ((first & 0xF0) == 0xE0)
+            {
+                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0x1111'0XXX -> 4-byte character
+            else if ((first & 0xF8) == 0xF0)
+            {
+                std::array<int, 4> bytes {
+                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
         }
-        return std::char_traits<char_type>::eof();
+
+        buffer.assign(m_current, m_end);
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf16()
+    /// @param buffer A buffer to be filled with the input.
+    void fill_buffer_utf16(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
-        {
-            if (m_current == m_end)
-            {
-                if (m_encoded_buf_size == 0)
-                {
-                    return std::char_traits<char_type>::eof();
-                }
-            }
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
-            while (m_current != m_end && m_encoded_buf_size < 2)
+        int shift_bits[2] {0, 0};
+        if (m_encode_type == utf_encode_t::UTF_16BE)
+        {
+            shift_bits[0] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_16LE
+        {
+            shift_bits[1] = 8;
+        }
+
+        std::array<char16_t, 2> encoded_buffer {{0, 0}};
+        std::size_t encoded_buf_size {0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
+        while (m_current != m_end || encoded_buf_size != 0)
+        {
+            while (m_current != m_end && encoded_buf_size < 2)
             {
-                switch (m_encode_type)
-                {
-                case encode_t::UTF_16BE_N:
-                case encode_t::UTF_16BE_BOM:
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(*m_current) << 8);
-                    ++m_current;
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(*m_current);
-                    break;
-                case encode_t::UTF_16LE_N:
-                case encode_t::UTF_16LE_BOM: {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(*m_current);
-                    ++m_current;
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(*m_current) << 8);
-                    break;
-                }
-                default: // LCOV_EXCL_LINE
-                    // should not come here.
-                    break; // LCOV_EXCL_LINE
-                }
-                ++m_current;
-                ++m_encoded_buf_size;
+                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(*m_current++) << shift_bits[0]);
+                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(*m_current++) << shift_bits[1]);
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
+            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
-                m_encoded_buffer[0] = m_encoded_buffer[1];
-                m_encoded_buffer[1] = 0;
+                encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
             }
-            m_encoded_buf_size -= consumed_size;
+            encoded_buf_size -= consumed_size;
 
-            m_utf8_buf_index = 0;
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
-
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf32()
+    void fill_buffer_utf32(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
+
+        int shift_bits[4] {0, 0, 0, 0};
+        if (m_encode_type == utf_encode_t::UTF_32BE)
         {
-            if (m_current == m_end)
-            {
-                return std::char_traits<char_type>::eof();
-            }
-
-            char32_t utf32 = 0;
-            switch (m_encode_type)
-            {
-            case encode_t::UTF_32BE_N:
-            case encode_t::UTF_32BE_BOM:
-                utf32 = char32_t(*m_current << 24);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 16);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 8);
-                ++m_current;
-                utf32 |= char32_t(*m_current);
-                break;
-            case encode_t::UTF_32LE_N:
-            case encode_t::UTF_32LE_BOM: {
-                utf32 = char32_t(*m_current);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 8);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 16);
-                ++m_current;
-                utf32 |= char32_t(*m_current << 24);
-                break;
-            }
-            default: // LCOV_EXCL_LINE
-                // should not come here.
-                break; // LCOV_EXCL_LINE
-            }
-
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            ++m_current;
-            m_utf8_buf_index = 0;
+            shift_bits[0] = 24;
+            shift_bits[1] = 16;
+            shift_bits[2] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_32LE
+        {
+            shift_bits[1] = 8;
+            shift_bits[2] = 16;
+            shift_bits[3] = 24;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
+        while (m_current != m_end)
+        {
+            char32_t utf32 = char32_t(*m_current++ << shift_bits[0]);
+            utf32 |= char32_t(*m_current++ << shift_bits[1]);
+            utf32 |= char32_t(*m_current++ << shift_bits[2]);
+            utf32 |= char32_t(*m_current++ << shift_bits[3]);
+
+            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
+        }
     }
 
 private:
@@ -4739,17 +4847,7 @@ private:
     /// The iterator at the end of input.
     IterType m_end {};
     /// The encoding type for this input adapter.
-    encode_t m_encode_type {encode_t::UTF_8_N};
-    /// The buffer for decoding characters read from the input.
-    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements in `m_encoded_buffer`.
-    std::size_t m_encoded_buf_size {0};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
+    utf_encode_t m_encode_type {utf_encode_t::UTF_8};
 };
 
 #ifdef FK_YAML_HAS_CHAR8_T
@@ -4762,9 +4860,6 @@ class iterator_input_adapter<
     enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>>
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
 
@@ -4772,11 +4867,14 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
+    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
           m_encode_type(encode_type)
     {
+        // char8_t characters must be encoded in the UTF-8 format.
+        // See https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0482r6.html.
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
     }
 
     // allow only move construct/assignment like other input adapters.
@@ -4788,35 +4886,57 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        typename std::char_traits<char_type>::int_type ret = 0;
-        switch (m_encode_type)
+        IterType current = m_current;
+        while (current != m_end)
         {
-        case encode_t::UTF_8_N:
-        case encode_t::UTF_8_BOM:
-            ret = get_character_for_utf8();
-            break;
-        default: // LCOV_EXCL_LINE
-            // char8_t characters must be encoded in the UTF-8 format.
-            // See https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0482r6.html.
-            break; // LCOV_EXCL_LINE
-        }
-        return ret;
-    }
+            char first = *current++;
 
-private:
-    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
-    {
-        if (m_current != m_end)
-        {
-            auto ret = std::char_traits<char_type>::to_int_type(*m_current);
-            ++m_current;
-            return ret;
+            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+            if ((first & 0xC0) == 0x80)
+            {
+                // The first byte must not start with 0b10XX'XXXX
+                std::array<int, 1> bytes {{first}};
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+            }
+            // The first byte starts with 0b110X'XXXX -> 2-byte character
+            else if ((first & 0xE0) == 0xC0)
+            {
+                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0b1110'XXXX -> 3-byte character
+            else if ((first & 0xF0) == 0xE0)
+            {
+                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0x1111'0XXX -> 4-byte character
+            else if ((first & 0xF8) == 0xF0)
+            {
+                std::array<int, 4> bytes {
+                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
         }
-        return std::char_traits<char_type>::eof();
+
+        while (m_current != m_end)
+        {
+            buffer.push_back(char(*m_current++));
+        }
     }
 
 private:
@@ -4825,7 +4945,7 @@ private:
     /// The iterator at the end of input.
     IterType m_end {};
     /// The encoding type for this input adapter.
-    encode_t m_encode_type {encode_t::UTF_8_N};
+    utf_encode_t m_encode_type {utf_encode_t::UTF_8};
 };
 
 #endif // defined(FK_YAML_HAS_CHAR8_T)
@@ -4838,9 +4958,6 @@ class iterator_input_adapter<
     enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char16_t>::value>>
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
 
@@ -4848,11 +4965,12 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
+    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
           m_encode_type(encode_type)
     {
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
     }
 
     // allow only move construct/assignment like other input adapters.
@@ -4864,57 +4982,36 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
-        {
-            if (m_current == m_end)
-            {
-                if (m_encoded_buf_size == 0)
-                {
-                    return std::char_traits<char_type>::eof();
-                }
-            }
+        int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
-            while (m_current != m_end && m_encoded_buf_size < 2)
+        std::array<char16_t, 2> encoded_buffer {{0, 0}};
+        std::size_t encoded_buf_size {0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
+        while (m_current != m_end || encoded_buf_size != 0)
+        {
+            while (m_current != m_end && encoded_buf_size < 2)
             {
-                switch (m_encode_type)
-                {
-                case encode_t::UTF_16BE_N:
-                case encode_t::UTF_16BE_BOM:
-                    m_encoded_buffer[m_encoded_buf_size] = *m_current;
-                    break;
-                case encode_t::UTF_16LE_N:
-                case encode_t::UTF_16LE_BOM: {
-                    char16_t tmp = *m_current;
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t((tmp & 0x00FFu) << 8);
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t((tmp & 0xFF00u) >> 8);
-                    break;
-                }
-                default: // LCOV_EXCL_LINE
-                    // should not come here.
-                    break; // LCOV_EXCL_LINE
-                }
-                ++m_current;
-                ++m_encoded_buf_size;
+                char16_t tmp = *m_current++;
+                encoded_buffer[encoded_buf_size] = char16_t((tmp & 0x00FFu) << shift_bits);
+                encoded_buffer[encoded_buf_size++] |= char16_t((tmp & 0xFF00u) >> shift_bits);
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
+            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
-                m_encoded_buffer[0] = m_encoded_buffer[1];
-                m_encoded_buffer[1] = 0;
+                encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
             }
-            m_encoded_buf_size -= consumed_size;
+            encoded_buf_size -= consumed_size;
 
-            m_utf8_buf_index = 0;
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
-
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
     }
 
 private:
@@ -4923,17 +5020,7 @@ private:
     /// The iterator at the end of input.
     IterType m_end {};
     /// The encoding type for this input adapter.
-    encode_t m_encode_type {encode_t::UTF_16BE_N};
-    /// The buffer for decoding characters read from the input.
-    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements in `m_encoded_buffer`.
-    std::size_t m_encoded_buf_size {0};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
+    utf_encode_t m_encode_type {utf_encode_t::UTF_16BE};
 };
 
 /// @brief An input adapter for iterators of type char32_t.
@@ -4944,9 +5031,6 @@ class iterator_input_adapter<
     enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char32_t>::value>>
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
 
@@ -4954,11 +5038,12 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, encode_t encode_type) noexcept
+    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
           m_encode_type(encode_type)
     {
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
     }
 
     // allow only move construct/assignment like other input adapters.
@@ -4970,44 +5055,32 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        int shift_bits[4] {0, 0, 0, 0};
+        if (m_encode_type == utf_encode_t::UTF_32LE)
         {
-            if (m_current == m_end)
-            {
-                return std::char_traits<char_type>::eof();
-            }
-
-            char32_t utf32 = 0;
-            switch (m_encode_type)
-            {
-            case encode_t::UTF_32BE_N:
-            case encode_t::UTF_32BE_BOM:
-                utf32 = *m_current;
-                break;
-            case encode_t::UTF_32LE_N:
-            case encode_t::UTF_32LE_BOM: {
-                char32_t tmp = *m_current;
-                utf32 |= char32_t((tmp & 0xFF000000u) >> 24);
-                utf32 |= char32_t((tmp & 0x00FF0000u) >> 8);
-                utf32 |= char32_t((tmp & 0x0000FF00u) << 8);
-                utf32 |= char32_t((tmp & 0x000000FFu) << 24);
-                break;
-            }
-            default: // LCOV_EXCL_LINE
-                // should not come here.
-                break; // LCOV_EXCL_LINE
-            }
-
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            ++m_current;
-            m_utf8_buf_index = 0;
+            shift_bits[0] = 24;
+            shift_bits[1] = 8;
+            shift_bits[2] = 8;
+            shift_bits[3] = 24;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
+        while (m_current != m_end)
+        {
+            char32_t tmp = *m_current++;
+            char32_t utf32 = char32_t((tmp & 0xFF000000u) >> shift_bits[0]);
+            utf32 |= char32_t((tmp & 0x00FF0000u) >> shift_bits[1]);
+            utf32 |= char32_t((tmp & 0x0000FF00u) << shift_bits[2]);
+            utf32 |= char32_t((tmp & 0x000000FFu) << shift_bits[3]);
+
+            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
+        }
     }
 
 private:
@@ -5016,22 +5089,13 @@ private:
     /// The iterator at the end of input.
     IterType m_end {};
     /// The encoding type for this input adapter.
-    encode_t m_encode_type {encode_t::UTF_32BE_N};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
+    utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
 };
 
 /// @brief An input adapter for C-style file handles.
 class file_input_adapter
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new file_input_adapter object.
     file_input_adapter() = default;
 
@@ -5041,7 +5105,7 @@ public:
     /// It's user's responsibility to call those functions.
     /// @param file A file handle for this adapter. (A non-null pointer is assumed.)
     /// @param encode_type The encoding type for this input adapter.
-    explicit file_input_adapter(std::FILE* file, encode_t encode_type) noexcept
+    explicit file_input_adapter(std::FILE* file, utf_encode_t encode_type) noexcept
         : m_file(file),
           m_encode_type(encode_type)
     {
@@ -5056,173 +5120,189 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        typename std::char_traits<char_type>::int_type ret = 0;
         switch (m_encode_type)
         {
-        case encode_t::UTF_8_N:
-        case encode_t::UTF_8_BOM:
-            ret = get_character_for_utf8();
+        case utf_encode_t::UTF_8:
+            fill_buffer_utf8(buffer);
             break;
-        case encode_t::UTF_16BE_N:
-        case encode_t::UTF_16BE_BOM:
-        case encode_t::UTF_16LE_N:
-        case encode_t::UTF_16LE_BOM:
-            ret = get_character_for_utf16();
+        case utf_encode_t::UTF_16BE:
+        case utf_encode_t::UTF_16LE:
+            fill_buffer_utf16(buffer);
             break;
-        case encode_t::UTF_32BE_N:
-        case encode_t::UTF_32BE_BOM:
-        case encode_t::UTF_32LE_N:
-        case encode_t::UTF_32LE_BOM:
-            ret = get_character_for_utf32();
+        case utf_encode_t::UTF_32BE:
+        case utf_encode_t::UTF_32LE:
+            fill_buffer_utf32(buffer);
             break;
         }
-        return ret;
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
+    void fill_buffer_utf8(std::string& buffer)
     {
-        char ch = 0;
-        size_t size = std::fread(&ch, sizeof(char), 1, m_file);
-        if (size == 1)
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
+
+        char tmp_buf[256] {};
+        std::size_t read_size = 0;
+        while ((read_size = std::fread(&tmp_buf[0], sizeof(char), sizeof(tmp_buf) / sizeof(tmp_buf[0]), m_file)) > 0)
         {
-            return std::char_traits<char_type>::to_int_type(ch);
+            buffer.append(tmp_buf, read_size);
         }
-        return std::char_traits<char_type>::eof();
+
+        auto current = buffer.begin();
+        auto end = buffer.end();
+        while (current != end)
+        {
+            char first = *current++;
+
+            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+            if ((first & 0xC0) == 0x80)
+            {
+                // The first byte must not start with 0b10XX'XXXX
+                std::array<int, 1> bytes {{first}};
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+            }
+            // The first byte starts with 0b110X'XXXX -> 2-byte character
+            else if ((first & 0xE0) == 0xC0)
+            {
+                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0b1110'XXXX -> 3-byte character
+            else if ((first & 0xF0) == 0xE0)
+            {
+                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0x1111'0XXX -> 4-byte character
+            else if ((first & 0xF8) == 0xF0)
+            {
+                std::array<int, 4> bytes {
+                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+        }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf16()
+    void fill_buffer_utf16(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
+
+        int shift_bits[2] {0, 0};
+        if (m_encode_type == utf_encode_t::UTF_16BE)
         {
-            char chars[2] = {0, 0};
-            while (m_encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2)
-            {
-                switch (m_encode_type)
-                {
-                case encode_t::UTF_16BE_N:
-                case encode_t::UTF_16BE_BOM:
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << 8);
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]));
-                    break;
-                case encode_t::UTF_16LE_N:
-                case encode_t::UTF_16LE_BOM: {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]));
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]) << 8);
-                    break;
-                }
-                default: // LCOV_EXCL_LINE
-                    // should not come here.
-                    break; // LCOV_EXCL_LINE
-                }
+            shift_bits[0] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_16LE
+        {
+            shift_bits[1] = 8;
+        }
 
-                ++m_encoded_buf_size;
-            }
+        char chars[2] = {0, 0};
+        std::array<char16_t, 2> encoded_buffer {{0, 0}};
+        std::size_t encoded_buf_size {0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
 
-            if (m_encoded_buf_size == 0)
+        while (std::feof(m_file) == 0)
+        {
+            while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2)
             {
-                return std::char_traits<char_type>::eof();
+                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
+                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
+            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
-                m_encoded_buffer[0] = m_encoded_buffer[1];
-                m_encoded_buffer[1] = 0;
+                encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
             }
-            m_encoded_buf_size -= consumed_size;
+            encoded_buf_size -= consumed_size;
 
-            m_utf8_buf_index = 0;
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
-
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf32()
+    void fill_buffer_utf32(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
+
+        int shift_bits[4] {0, 0, 0, 0};
+        if (m_encode_type == utf_encode_t::UTF_32BE)
         {
-            char chars[4] = {0, 0, 0, 0};
+            shift_bits[0] = 24;
+            shift_bits[1] = 16;
+            shift_bits[2] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_32LE
+        {
+            shift_bits[1] = 8;
+            shift_bits[2] = 16;
+            shift_bits[3] = 24;
+        }
+
+        char chars[4] = {0, 0, 0, 0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
+        while (std::feof(m_file) == 0)
+        {
             std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
             if (size != 4)
             {
-                return std::char_traits<char_type>::eof();
+                return;
             }
 
-            char32_t utf32 = 0;
-            switch (m_encode_type)
-            {
-            case encode_t::UTF_32BE_N:
-            case encode_t::UTF_32BE_BOM:
-                utf32 = char32_t(uint8_t(chars[0]) << 24);
-                utf32 |= char32_t(uint8_t(chars[1]) << 16);
-                utf32 |= char32_t(uint8_t(chars[2]) << 8);
-                utf32 |= char32_t(uint8_t(chars[3]));
-                break;
-            case encode_t::UTF_32LE_N:
-            case encode_t::UTF_32LE_BOM: {
-                utf32 = char32_t(uint8_t(chars[0]));
-                utf32 |= char32_t(uint8_t(chars[1]) << 8);
-                utf32 |= char32_t(uint8_t(chars[2]) << 16);
-                utf32 |= char32_t(uint8_t(chars[3]) << 24);
-                break;
-            }
-            default: // LCOV_EXCL_LINE
-                // should not come here.
-                break; // LCOV_EXCL_LINE
-            }
+            char32_t utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
+            utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
+            utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
+            utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
 
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            m_utf8_buf_index = 0;
+            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
         }
-
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
     }
 
 private:
     /// A pointer to the input file handle.
     std::FILE* m_file {nullptr};
     /// The encoding type for this input adapter.
-    encode_t m_encode_type {encode_t::UTF_8_N};
-    /// The buffer for decoding characters read from the input.
-    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements in `m_encoded_buffer`.
-    std::size_t m_encoded_buf_size {0};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
+    utf_encode_t m_encode_type {utf_encode_t::UTF_8};
 };
 
 /// @brief An input adapter for streams
 class stream_input_adapter
 {
 public:
-    /// A type for characters used in this input adapter.
-    using char_type = char;
-
     /// @brief Construct a new stream_input_adapter object.
     stream_input_adapter() = default;
 
     /// @brief Construct a new stream_input_adapter object.
     /// @param is A reference to the target input stream.
-    explicit stream_input_adapter(std::istream& is, encode_t encode_type) noexcept
+    explicit stream_input_adapter(std::istream& is, utf_encode_t encode_type) noexcept
         : m_istream(&is),
           m_encode_type(encode_type)
     {
@@ -5237,165 +5317,186 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    typename std::char_traits<char_type>::int_type get_character()
+    void fill_buffer(std::string& buffer)
     {
-        typename std::char_traits<char_type>::int_type ret = 0;
         switch (m_encode_type)
         {
-        case encode_t::UTF_8_N:
-        case encode_t::UTF_8_BOM:
-            ret = get_character_for_utf8();
+        case utf_encode_t::UTF_8:
+            fill_buffer_utf8(buffer);
             break;
-        case encode_t::UTF_16BE_N:
-        case encode_t::UTF_16BE_BOM:
-        case encode_t::UTF_16LE_N:
-        case encode_t::UTF_16LE_BOM:
-            ret = get_character_for_utf16();
+        case utf_encode_t::UTF_16BE:
+        case utf_encode_t::UTF_16LE:
+            fill_buffer_utf16(buffer);
             break;
-        case encode_t::UTF_32BE_N:
-        case encode_t::UTF_32BE_BOM:
-        case encode_t::UTF_32LE_N:
-        case encode_t::UTF_32LE_BOM:
-            ret = get_character_for_utf32();
+        case utf_encode_t::UTF_32BE:
+        case utf_encode_t::UTF_32LE:
+            fill_buffer_utf32(buffer);
             break;
         }
-        return ret;
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf8() noexcept
+    void fill_buffer_utf8(std::string& buffer)
     {
-        return m_istream->get();
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
+
+        char tmp_buf[256] {};
+        do
+        {
+            m_istream->read(&tmp_buf[0], 256);
+            std::size_t read_size = m_istream->gcount();
+            buffer.append(tmp_buf, read_size);
+        } while (!m_istream->eof());
+
+        auto current = buffer.begin();
+        auto end = buffer.end();
+        while (current != end)
+        {
+            char first = *current++;
+
+            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+            if ((first & 0xC0) == 0x80)
+            {
+                // The first byte must not start with 0b10XX'XXXX
+                std::array<int, 1> bytes {{first}};
+                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+            }
+            // The first byte starts with 0b110X'XXXX -> 2-byte character
+            else if ((first & 0xE0) == 0xC0)
+            {
+                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0b1110'XXXX -> 3-byte character
+            else if ((first & 0xF0) == 0xE0)
+            {
+                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+            // The first byte starts with 0x1111'0XXX -> 4-byte character
+            else if ((first & 0xF8) == 0xF0)
+            {
+                std::array<int, 4> bytes {
+                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+                bool is_valid = utf8_encoding::validate(bytes);
+                if (!is_valid)
+                {
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                }
+            }
+        }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf16()
+    void fill_buffer_utf16(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
+
+        int shift_bits[2] {0, 0};
+        if (m_encode_type == utf_encode_t::UTF_16BE)
         {
-            while (m_encoded_buf_size < 2)
+            shift_bits[0] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_16LE
+        {
+            shift_bits[1] = 8;
+        }
+
+        char chars[2] = {0, 0};
+        std::array<char16_t, 2> encoded_buffer {{0, 0}};
+        std::size_t encoded_buf_size {0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
+        do
+        {
+            while (encoded_buf_size < 2)
             {
-                char chars[2] = {0, 0};
                 m_istream->read(&chars[0], 2);
                 std::streamsize size = m_istream->gcount();
                 if (size != 2)
                 {
-                    if (m_encoded_buf_size == 0)
-                    {
-                        return std::char_traits<char_type>::eof();
-                    }
                     break;
                 }
 
-                switch (m_encode_type)
-                {
-                case encode_t::UTF_16BE_N:
-                case encode_t::UTF_16BE_BOM:
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]) << 8);
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]));
-                    break;
-                case encode_t::UTF_16LE_N:
-                case encode_t::UTF_16LE_BOM: {
-                    m_encoded_buffer[m_encoded_buf_size] = char16_t(uint8_t(chars[0]));
-                    m_encoded_buffer[m_encoded_buf_size] |= char16_t(uint8_t(chars[1]) << 8);
-                    break;
-                }
-                default: // LCOV_EXCL_LINE
-                    // should not come here.
-                    break; // LCOV_EXCL_LINE
-                }
-
-                ++m_encoded_buf_size;
+                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
+                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
             };
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(m_encoded_buffer, m_utf8_buffer, consumed_size, m_utf8_buf_size);
+            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
-                m_encoded_buffer[0] = m_encoded_buffer[1];
-                m_encoded_buffer[1] = 0;
+                encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
             }
-            m_encoded_buf_size -= consumed_size;
+            encoded_buf_size -= consumed_size;
 
-            m_utf8_buf_index = 0;
-        }
-
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
+        } while (!m_istream->eof());
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    typename std::char_traits<char_type>::int_type get_character_for_utf32()
+    void fill_buffer_utf32(std::string& buffer)
     {
-        if (m_utf8_buf_index == m_utf8_buf_size)
+        FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
+
+        int shift_bits[4] {0, 0, 0, 0};
+        if (m_encode_type == utf_encode_t::UTF_32BE)
         {
-            char ch = 0;
-            m_istream->read(&ch, 1);
-            std::streamsize size = m_istream->gcount();
-            if (size != 1)
-            {
-                return std::char_traits<char_type>::eof();
-            }
-
-            char32_t utf32 = 0;
-            switch (m_encode_type)
-            {
-            case encode_t::UTF_32BE_N:
-            case encode_t::UTF_32BE_BOM:
-                utf32 = char32_t(ch << 24);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 16);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 8);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch);
-                break;
-            case encode_t::UTF_32LE_N:
-            case encode_t::UTF_32LE_BOM: {
-                utf32 = char32_t(ch);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 8);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 16);
-                m_istream->read(&ch, 1);
-                utf32 |= char32_t(ch << 24);
-                break;
-            }
-            default: // LCOV_EXCL_LINE
-                // should not come here.
-                break; // LCOV_EXCL_LINE
-            }
-
-            utf8_encoding::from_utf32(utf32, m_utf8_buffer, m_utf8_buf_size);
-            m_utf8_buf_index = 0;
+            shift_bits[0] = 24;
+            shift_bits[1] = 16;
+            shift_bits[2] = 8;
+        }
+        else // m_encode_type == utf_encode_t::UTF_32LE
+        {
+            shift_bits[1] = 8;
+            shift_bits[2] = 16;
+            shift_bits[3] = 24;
         }
 
-        auto ret = std::char_traits<char_type>::to_int_type(m_utf8_buffer[m_utf8_buf_index]);
-        ++m_utf8_buf_index;
-        return ret;
+        char chars[4] = {0, 0, 0, 0};
+        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::size_t utf8_buf_size {0};
+
+        do
+        {
+            m_istream->read(&chars[0], 4);
+            std::streamsize size = m_istream->gcount();
+            if (size != 4)
+            {
+                return;
+            }
+
+            char32_t utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
+            utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
+            utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
+            utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
+
+            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+
+            buffer.append(utf8_buffer.data(), utf8_buf_size);
+        } while (!m_istream->eof());
     }
 
 private:
     /// A pointer to the input stream object.
     std::istream* m_istream {nullptr};
     /// The encoding type for this input adapter.
-    encode_t m_encode_type {encode_t::UTF_8_N};
-    /// The buffer for decoding characters read from the input.
-    std::array<char16_t, 2> m_encoded_buffer {{0, 0}};
-    /// The number of elements in `m_encoded_buffer`.
-    std::size_t m_encoded_buf_size {0};
-    /// The buffer for UTF-8 encoded characters.
-    std::array<char, 4> m_utf8_buffer {{0, 0, 0, 0}};
-    /// The next index in `m_utf8_buffer` to read.
-    std::size_t m_utf8_buf_index {0};
-    /// The number of bytes in `m_utf8_buffer`.
-    std::size_t m_utf8_buf_size {0};
+    utf_encode_t m_encode_type {utf_encode_t::UTF_8};
 };
 
 /////////////////////////////////
@@ -5410,7 +5511,7 @@ private:
 template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
 inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
 {
-    encode_t encode_type = detect_encoding_and_skip_bom(begin, end);
+    utf_encode_t encode_type = detect_encoding_and_skip_bom(begin, end);
     return iterator_input_adapter<ItrType>(begin, end, encode_type);
 }
 
@@ -5425,7 +5526,7 @@ inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array 
 }
 
 /// @brief A namespace to implement container_input_adapter_factory for internal use.
-namespace container_input_adapter_factory_impl
+namespace input_adapter_factory
 {
 
 using std::begin;
@@ -5450,25 +5551,25 @@ struct container_input_adapter_factory<
         decltype(input_adapter(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>())));
 
     /// @brief A factory method of input adapter objects for the target container objects.
-    /// @param container
-    /// @return adapter_type
+    /// @param container A container-like input object.
+    /// @return adapter_type An iterator_input_adapter object.
     static adapter_type create(const ContainerType& container)
     {
         return input_adapter(begin(container), end(container));
     }
 };
 
-} // namespace container_input_adapter_factory_impl
+} // namespace input_adapter_factory
 
 /// @brief A factory method for iterator_input_adapter objects with containers.
 /// @tparam ContainerType A container type.
 /// @param container A container object.
-/// @return container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::adapter_type
+/// @return input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type
 template <typename ContainerType>
-inline typename container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::adapter_type
-input_adapter(ContainerType&& container)
+inline typename input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type input_adapter(
+    ContainerType&& container)
 {
-    return container_input_adapter_factory_impl::container_input_adapter_factory<ContainerType>::create(container);
+    return input_adapter_factory::container_input_adapter_factory<ContainerType>::create(container);
 }
 
 /// @brief A factory method for file_input_adapter objects with C-style file handles.
@@ -5480,16 +5581,16 @@ inline file_input_adapter input_adapter(std::FILE* file)
     {
         throw fkyaml::exception("Invalid FILE object pointer.");
     }
-    encode_t encode_type = detect_encoding_and_skip_bom(file);
+    utf_encode_t encode_type = detect_encoding_and_skip_bom(file);
     return file_input_adapter(file, encode_type);
 }
 
-/// @brief
-/// @param stream
-/// @return stream_input_adapter
+/// @brief A factory method for stream_input_adapter objects with std::istream objects.
+/// @param stream An input stream.
+/// @return stream_input_adapter A stream_input_adapter object.
 inline stream_input_adapter input_adapter(std::istream& stream) noexcept
 {
-    encode_t encode_type = detect_encoding_and_skip_bom(stream);
+    utf_encode_t encode_type = detect_encoding_and_skip_bom(stream);
     return stream_input_adapter(stream, encode_type);
 }
 
@@ -5498,10 +5599,11 @@ inline stream_input_adapter input_adapter(std::istream& stream) noexcept
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_ */
+
 // #include <fkYAML/detail/iterator.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5963,7 +6065,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/node_property.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6005,10 +6107,11 @@ struct node_property
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP_ */
+
 // #include <fkYAML/detail/node_ref_storage.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6111,10 +6214,11 @@ private:
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_ */
+
 // #include <fkYAML/detail/output/serializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6134,7 +6238,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_string.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6566,7 +6670,7 @@ private:
             }
 
             auto adapter = input_adapter(s);
-            lexical_analyzer<BasicNodeType, decltype(adapter)> lexer(std::move(adapter));
+            lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
             lexical_token_t token_type = lexer.get_next_token();
 
             if (token_type != lexical_token_t::STRING_VALUE)
@@ -6652,7 +6756,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/node_value_converter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6670,7 +6774,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/from_node.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6971,10 +7075,11 @@ FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_ */
+
 // #include <fkYAML/detail/conversions/to_node.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7350,6 +7455,7 @@ FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_ */
 
+
 FK_YAML_NAMESPACE_BEGIN
 
 /// @brief An ADL friendly converter between basic_node objects and native data objects.
@@ -7395,7 +7501,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/ordered_map.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8572,6 +8678,178 @@ public:
         default:
             return false;
         }
+    }
+
+    /// @brief Get a basic_node object with a key of a compatible type.
+    /// @tparam KeyType A key type compatible with basic_node
+    /// @param key A key to the target basic_node object in a sequence/mapping node.
+    /// @return Reference to the basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
+    template <
+        typename KeyType, detail::enable_if_t<
+                              detail::conjunction<
+                                  detail::negation<detail::is_basic_node<KeyType>>,
+                                  detail::is_node_compatible_type<basic_node, KeyType>>::value,
+                              int> = 0>
+    basic_node& at(KeyType&& key)
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
+        }
+
+        basic_node node_key = std::forward<KeyType>(key);
+
+        if (is_sequence())
+        {
+            if (!node_key.is_integer())
+            {
+                throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
+            }
+
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            int index = node_key.template get_value<int>();
+            int size = static_cast<int>(m_node_value.p_sequence->size());
+            if (index >= size)
+            {
+                throw fkyaml::out_of_range(index);
+            }
+            return m_node_value.p_sequence->at(index);
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        bool is_found = m_node_value.p_mapping->find(node_key) != m_node_value.p_mapping->end();
+        if (!is_found)
+        {
+            throw fkyaml::out_of_range(serialize(node_key).c_str());
+        }
+        return m_node_value.p_mapping->at(node_key);
+    }
+
+    /// @brief Get a basic_node object with a key of a compatible type.
+    /// @tparam KeyType A key type compatible with basic_node
+    /// @param key A key to the target basic_node object in a sequence/mapping node.
+    /// @return Constant reference to the basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
+    template <
+        typename KeyType, detail::enable_if_t<
+                              detail::conjunction<
+                                  detail::negation<detail::is_basic_node<KeyType>>,
+                                  detail::is_node_compatible_type<basic_node, KeyType>>::value,
+                              int> = 0>
+    const basic_node& at(KeyType&& key) const
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
+        }
+
+        basic_node node_key = std::forward<KeyType>(key);
+
+        if (is_sequence())
+        {
+            if (!node_key.is_integer())
+            {
+                throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
+            }
+
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            int index = node_key.template get_value<int>();
+            int size = static_cast<int>(m_node_value.p_sequence->size());
+            if (index >= size)
+            {
+                throw fkyaml::out_of_range(index);
+            }
+            return m_node_value.p_sequence->at(index);
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        bool is_found = m_node_value.p_mapping->find(node_key) != m_node_value.p_mapping->end();
+        if (!is_found)
+        {
+            throw fkyaml::out_of_range(serialize(node_key).c_str());
+        }
+        return m_node_value.p_mapping->at(node_key);
+    }
+
+    /// @brief Get a basic_node object with a basic_node key object.
+    /// @tparam KeyType A key type which is a kind of the basic_node template class.
+    /// @param key A key to the target basic_node object in a sequence/mapping node.
+    /// @return Reference to the basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
+    template <
+        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    basic_node& at(KeyType&& key)
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
+        }
+
+        if (is_sequence())
+        {
+            if (!key.is_integer())
+            {
+                throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
+            }
+
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            int index = std::forward<KeyType>(key).template get_value<int>();
+            int size = static_cast<int>(m_node_value.p_sequence->size());
+            if (index >= size)
+            {
+                throw fkyaml::out_of_range(index);
+            }
+            return m_node_value.p_sequence->at(index);
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        bool is_found = m_node_value.p_mapping->find(key) != m_node_value.p_mapping->end();
+        if (!is_found)
+        {
+            throw fkyaml::out_of_range(serialize(key).c_str());
+        }
+        return m_node_value.p_mapping->at(key);
+    }
+
+    /// @brief Get a basic_node object with a basic_node key object.
+    /// @tparam KeyType A key type which is a kind of the basic_node template class.
+    /// @param key A key to the target basic_node object in a sequence/mapping node.
+    /// @return Constant reference to the basic_node object associated with the given key.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
+    template <
+        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    const basic_node& at(KeyType&& key) const
+    {
+        if (is_scalar())
+        {
+            throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
+        }
+
+        if (is_sequence())
+        {
+            if (!key.is_integer())
+            {
+                throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
+            }
+
+            FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
+            int index = std::forward<KeyType>(key).template get_value<int>();
+            int size = static_cast<int>(m_node_value.p_sequence->size());
+            if (index >= size)
+            {
+                throw fkyaml::out_of_range(index);
+            }
+            return m_node_value.p_sequence->at(index);
+        }
+
+        FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
+        bool is_found = m_node_value.p_mapping->find(key) != m_node_value.p_mapping->end();
+        if (!is_found)
+        {
+            throw fkyaml::out_of_range(serialize(key).c_str());
+        }
+        return m_node_value.p_mapping->at(key);
     }
 
     /// @brief Get the YAML version specification for this basic_node object.

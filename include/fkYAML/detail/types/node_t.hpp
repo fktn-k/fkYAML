@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -35,7 +35,7 @@ enum class node_t : std::uint32_t
     STRING,       //!< string value type
 };
 
-inline std::string to_string(node_t t) noexcept
+inline const char* to_string(node_t t) noexcept
 {
     switch (t)
     {

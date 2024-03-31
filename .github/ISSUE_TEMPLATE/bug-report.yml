@@ -10,7 +10,7 @@ body:
         Make sure you give it a short and specific **title** so that the report is
         searchable and uniquely identifiable for developers.
         Note that this form is for bug reports only. Please [open a discussion](https://github.com/fktn-k/fkYAML/discussions/new)
-        for questions, feature requests, or support requests.  
+        for questions, feature requests, or support requests.
   - type: textarea
     id: summary
     attributes:
@@ -26,7 +26,7 @@ body:
     attributes:
       label: Reproduction steps
       description: >
-        How do you trigger the bug?  
+        How do you trigger the bug?
         Let the developers who see this report reproduce your situation as you do.
         Please describe your reproduction steps as specifically as possible.
     validations:
@@ -37,7 +37,7 @@ body:
       label: Expected vs. actual results
       description: >
         Please describe what you expected to happen after the steps above and
-        what actually happened. 
+        what actually happened.
     validations:
       required: true
   - type: textarea
@@ -73,9 +73,9 @@ body:
     attributes:
       label: Library version
       description: >
-        Which version of the library did you use?  
-        If it is a released version, please enter the version number.  
-        Otherwise, please enter the commit hash.  
+        Which version of the library did you use?
+        If it is a released version, please enter the version number.
+        Otherwise, please enter the commit hash.
         If you got the library from another source as the GitHub repository
         (e.g., via a package manager), please also state the source as well.
     validations:

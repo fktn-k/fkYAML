@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -984,6 +984,47 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
         REQUIRE(root["Baz[123]"].get_value<double>() == 3.14);
     }
 
+    SECTION("Flow indicators inside unquoted plain scalar values")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc{abc")));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("Foo"));
+        REQUIRE(root["Foo"].is_string());
+        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, abc{abc");
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc}abc")));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("Foo"));
+        REQUIRE(root["Foo"].is_string());
+        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, abc}abc");
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc[abc")));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("Foo"));
+        REQUIRE(root["Foo"].is_string());
+        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, abc[abc");
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc]abc")));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("Foo"));
+        REQUIRE(root["Foo"].is_string());
+        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, abc]abc");
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] :3.14}")));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("Foo"));
+        REQUIRE(root["Foo"].is_string());
+        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, {[123] :3.14}");
+        REQUIRE_THROWS_AS(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] : 3.14}")),
+            fkyaml::parse_error);
+    }
+
     SECTION("a comment right after a block mapping key.")
     {
         REQUIRE_NOTHROW(
@@ -999,6 +1040,61 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
         REQUIRE(root["baz"]["qux"].is_integer());
         REQUIRE(root["baz"]["qux"].get_value<int>() == 123);
+    }
+
+    SECTION("mapping entries split across newlines")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n"
+                                                                          "  bar\n"
+                                                                          "baz:\n"
+                                                                          "  123\n"
+                                                                          "null:\n"
+                                                                          "  {false: 3.14}\n"
+                                                                          "qux:\n"
+                                                                          "  [r, g, b]")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 4);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("baz"));
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root.contains("qux"));
+
+        REQUIRE(root["foo"].is_string());
+        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
+
+        REQUIRE(root["baz"].is_integer());
+        REQUIRE(root["baz"].get_value<int>() == 123);
+
+        REQUIRE(root[nullptr].is_mapping());
+        REQUIRE(root[nullptr].contains(false));
+        REQUIRE(root[nullptr][false].is_float_number());
+        REQUIRE(root[nullptr][false].get_value<double>() == 3.14);
+
+        REQUIRE(root["qux"].is_sequence());
+        REQUIRE(root["qux"].size() == 3);
+
+        REQUIRE(root["qux"][0].is_string());
+        REQUIRE(root["qux"][0].get_value_ref<std::string&>() == "r");
+        REQUIRE(root["qux"][1].is_string());
+        REQUIRE(root["qux"][1].get_value_ref<std::string&>() == "g");
+        REQUIRE(root["qux"][2].is_string());
+        REQUIRE(root["qux"][2].get_value_ref<std::string&>() == "b");
+    }
+
+    SECTION("parse alias mapping key")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("&anchor foo:\n  *anchor: 123")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_mapping());
+        REQUIRE(root["foo"].size() == 1);
+        REQUIRE(root["foo"].contains("foo"));
+        REQUIRE(root["foo"]["foo"].is_integer());
+        REQUIRE(root["foo"]["foo"].get_value<int>() == 123);
     }
 }
 

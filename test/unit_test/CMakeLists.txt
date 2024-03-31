@@ -109,21 +109,20 @@ target_compile_options(
   INTERFACE
     # MSVC
     $<$<CXX_COMPILER_ID:MSVC>:
-      /W4 /EHsc /utf-8 /permissive-
+      /W4 /WX /EHsc /utf-8 /permissive-
+      /wd4709 # comma operator within array index expression
       $<$<CONFIG:Debug>:/Z7>
       $<$<CONFIG:Release>:/Od>
     >
     # GNU
     $<$<CXX_COMPILER_ID:GNU>:
-      -Wall -Wextra -pedantic -Wpedantic --all-warnings --extra-warnings
-      -Wc++0x-compat
-      -Wno-self-move # necessary to build iterator class test.
+      -Wall -Wextra -Werror -pedantic -Wpedantic --all-warnings --extra-warnings
+      -Wno-self-move # necessary to build the detail::iterator class test
     >
     # Clang
     $<$<CXX_COMPILER_ID:Clang>:
-      -Wall -pedantic
+      -Wall -Wextra -Werror -pedantic
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
-      -Wno-self-assign-overloaded -Wno-self-move # necessary to build iterator class test.
     >
 )
 
@@ -182,7 +181,7 @@ if(FK_YAML_CODE_COVERAGE)
       unit_test_config
         INTERFACE
           --coverage
-      )
+    )
   endif()
 endif()
 
@@ -207,6 +206,7 @@ add_executable(
   test_node_ref_storage_class.cpp
   test_ordered_map_class.cpp
   test_serializer_class.cpp
+  test_string_formatter.cpp
   test_utf8_encoding_class.cpp
   main.cpp
 )

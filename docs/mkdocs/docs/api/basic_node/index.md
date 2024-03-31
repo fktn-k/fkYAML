@@ -36,16 +36,16 @@ This class provides features to handle YAML nodes.
 
 | Name                                            | Description                                                |
 |-------------------------------------------------|------------------------------------------------------------|
-| [boolean_type](boolean_type.md)                 | The type used to store boolean node values.                |
-| [const_iterator](const_iterator.md)             | The type for constant iterators.                           |
-| [float_number_type](float_number_type.md)       | The type used to store float number node values.           |
-| [integer_type](integer_type.md)                 | The type used to store integer node values.                |
-| [iterator](iterator.md)                         | The type for non-constant iterators.                       |
-| [mapping_type](mapping_type.md)                 | The type used to store mapping node value containers.      |
-| [node_t](node_t.md)                             | The type used to store the internal value type.            |
 | [sequence_type](sequence_type.md)               | The type used to store sequence node value containers.     |
+| [mapping_type](mapping_type.md)                 | The type used to store mapping node value containers.      |
+| [boolean_type](boolean_type.md)                 | The type used to store boolean node values.                |
+| [integer_type](integer_type.md)                 | The type used to store integer node values.                |
+| [float_number_type](float_number_type.md)       | The type used to store float number node values.           |
 | [string_type](string_type.md)                   | The type used to store string node values.                 |
 | [value_converter_type](value_converter_type.md) | The type used to convert between node and native data.     |
+| [iterator](iterator.md)                         | The type for non-constant iterators.                       |
+| [const_iterator](const_iterator.md)             | The type for constant iterators.                           |
+| [node_t](node_t.md)                             | The type used to store the internal value type.            |
 | [yaml_version_t](yaml_version_t.md)             | The type used to store the enable version of YAML.         |
 
 ## Member Functions
@@ -96,10 +96,11 @@ This class provides features to handle YAML nodes.
 | [empty](empty.md)       | checks if a basic_node has an empty container.         |
 | [size](size.md)         | returns the size of a container value of a basic_node. |
 
-### Access Elements in Containers
-| Name                        | Description                                 |
-|-----------------------------|---------------------------------------------|
-| [operator[]](operator[].md) | accesses an item specified by the key/index |
+### Accessors for Container Elements
+| Name                        | Description                                                       |
+| --------------------------- | ----------------------------------------------------------------- |
+| [operator[]](operator[].md) | accesses an item specified by the key/index.                      |
+| [at](at.md)                 | accesses an item specified by the key/index with bounds checking. |
 
 ### Lexicographical Comparison Operators
 | Name                         | Description                       |
