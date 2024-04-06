@@ -31,10 +31,12 @@ struct directive_set
 {
     /// The YAML version used for the YAML document.
     yaml_version_t version {yaml_version_t::VER_1_2};
+    /// Whether or not the YAML version has been specified.
+    bool is_version_specified {false};
     /// The prefix of the primary handle.
-    std::string primary_handle_prefix {"!"};
+    std::string primary_handle_prefix {};
     /// The prefix of the secondary handle.
-    std::string secondary_handle_prefix {"tag:yaml.org,2002:"};
+    std::string secondary_handle_prefix {};
     /// The map of handle-prefix pairs.
     std::unordered_map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
 };

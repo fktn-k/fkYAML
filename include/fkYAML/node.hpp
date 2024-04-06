@@ -1197,7 +1197,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
     yaml_version_t get_yaml_version() const noexcept
     {
-        return (mp_directive_set) ? mp_directive_set->version : yaml_version_t::VER_1_2;
+        return (mp_directive_set && mp_directive_set->is_version_specified) ? mp_directive_set->version
+                                                                            : yaml_version_t::VER_1_2;
     }
 
     /// @brief Set the YAML version specification for this basic_node object.
@@ -1211,6 +1212,7 @@ public:
             mp_directive_set = std::shared_ptr<detail::directive_set>(new detail::directive_set());
         }
         mp_directive_set->version = version;
+        mp_directive_set->is_version_specified = true;
     }
 
     /// @brief Check whether or not this basic_node object has already had any anchor name.

@@ -18,6 +18,7 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/directive_set.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
+#include <fkYAML/detail/input/tag_resolver.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
@@ -87,10 +88,17 @@ public:
                     {
                         root.mp_directive_set = mp_directive_set;
                     }
+
+                    if (mp_directive_set->is_version_specified)
+                    {
+                        throw parse_error("YAML version cannot be specified more than once.", cur_line, cur_indent);
+                    }
+
                     mp_directive_set->version = convert_yaml_version(lexer.get_yaml_version());
+                    mp_directive_set->is_version_specified = true;
                     break;
                 }
-                case lexical_token_t::TAG_DIRECTIVE:
+                case lexical_token_t::TAG_DIRECTIVE: {
                     if (!mp_directive_set)
                     {
                         mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
@@ -99,8 +107,43 @@ public:
                     {
                         root.mp_directive_set = mp_directive_set;
                     }
-                    // TODO: implement tag directive deserialization.
+
+                    const std::string& tag_handle = lexer.get_tag_handle();
+                    switch (tag_handle.size())
+                    {
+                    case 1: {
+                        bool is_already_specified = !mp_directive_set->primary_handle_prefix.empty();
+                        if (is_already_specified)
+                        {
+                            throw parse_error(
+                                "Primary handle cannot be specified more than once.", cur_line, cur_indent);
+                        }
+                        mp_directive_set->primary_handle_prefix = lexer.get_tag_prefix();
+                        break;
+                    }
+                    case 2: {
+                        bool is_already_specified = !mp_directive_set->secondary_handle_prefix.empty();
+                        if (is_already_specified)
+                        {
+                            throw parse_error(
+                                "Secondary handle cannot be specified more than once.", cur_line, cur_indent);
+                        }
+                        mp_directive_set->secondary_handle_prefix = lexer.get_tag_prefix();
+                        break;
+                    }
+                    default: {
+                        bool is_already_specified =
+                            !(mp_directive_set->named_handle_map.emplace(tag_handle, lexer.get_tag_prefix()).second);
+                        if (is_already_specified)
+                        {
+                            throw parse_error(
+                                "The same named handle cannot be specified more than once.", cur_line, cur_indent);
+                        }
+                        break;
+                    }
+                    }
                     break;
+                }
                 case lexical_token_t::INVALID_DIRECTIVE:
                     // TODO: should output a warning log. Currently just ignore this case.
                     break;
@@ -474,6 +517,18 @@ private:
             type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
             type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
             type == lexical_token_t::STRING_VALUE || type == lexical_token_t::ALIAS_PREFIX);
+
+        tag_t tag_type = tag_t::STRING;
+        if (m_needs_tag_impl)
+        {
+            tag_type = tag_resolver::resolve_tag(m_tag_name, mp_directive_set);
+            if (tag_type == tag_t::NON_SPECIFIC)
+            {
+                // scalars with the non-specific tag is resolved to a string tag.
+                // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
+                tag_type = tag_t::STRING;
+            }
+        }
 
         BasicNodeType node {};
         switch (type)

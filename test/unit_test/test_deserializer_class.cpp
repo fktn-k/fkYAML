@@ -1293,6 +1293,12 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
         REQUIRE(root[true].is_integer());
         REQUIRE(root[true].get_value<int>() == 123);
     }
+
+    SECTION("YAML directive more than once.")
+    {
+        REQUIRE_THROWS_AS(
+            deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.1\n%YAML 1.2")), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_TagDirectiveTest", "[DeserializerClassTest]")
@@ -1300,8 +1306,91 @@ TEST_CASE("DeserializerClassTest_TagDirectiveTest", "[DeserializerClassTest]")
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
-    // TODO: add actual tests after tag directives get supported supported.
-    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%TAG foo bar")));
+    SECTION("primary tag handle")
+    {
+        std::string input = "%TAG ! tag:test.com,2000:\n"
+                            "---\n"
+                            "foo: !local bar";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_string());
+        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
+        REQUIRE(root["foo"].has_tag_name());
+        REQUIRE(root["foo"].get_tag_name() == "!local");
+    }
+
+    SECTION("primary tag handle more than once")
+    {
+        std::string input = "%TAG ! tag:test.com,2000:\n"
+                            "%TAG ! tag:test.com,2000:\n"
+                            "---\n"
+                            "foo: bar";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("secondary tag handle")
+    {
+        std::string input = "%TAG !! tag:test.com,2000:\n"
+                            "---\n"
+                            "foo: !!local bar";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_string());
+        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
+        REQUIRE(root["foo"].has_tag_name());
+        REQUIRE(root["foo"].get_tag_name() == "!!local");
+    }
+
+    SECTION("secondary tag handle more than once")
+    {
+        std::string input = "%TAG !! tag:test.com,2000:\n"
+                            "%TAG !! tag:test.com,2000:\n"
+                            "---\n"
+                            "foo: bar";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("named tag handles")
+    {
+        std::string input = "%TAG !e! tag:test.com,2000:\n"
+                            "%TAG !f! !foo-\n"
+                            "---\n"
+                            "foo: !e!global bar\n"
+                            "baz: !f!local qux";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_string());
+        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
+        REQUIRE(root["foo"].has_tag_name());
+        REQUIRE(root["foo"].get_tag_name() == "!e!global");
+
+        REQUIRE(root.contains("baz"));
+        REQUIRE(root["baz"].is_string());
+        REQUIRE(root["baz"].get_value_ref<std::string&>() == "qux");
+        REQUIRE(root["baz"].has_tag_name());
+        REQUIRE(root["baz"].get_tag_name() == "!f!local");
+    }
+
+    SECTION("named tag handle more than once")
+    {
+        std::string input = "%TAG !e! tag:test.com,2000:\n"
+                            "%TAG !e! !foo-\n"
+                            "---\n"
+                            "foo: bar";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_InvalidDirectiveTest", "[DeserializerClassTest]")

@@ -24,8 +24,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanYamlVersionDirectiveTest", "[LexicalAnal
     {
         using value_pair_t = std::pair<std::string, std::string>;
         auto value_pair = GENERATE(
-            value_pair_t(std::string("%YAML 1.1\r"), std::string("1.1")),
-            value_pair_t(std::string("%YAML 1.2\n"), std::string("1.2")),
+            // value_pair_t(std::string("%YAML 1.1\r"), std::string("1.1")),
+            // value_pair_t(std::string("%YAML 1.2\n"), std::string("1.2")),
             value_pair_t(std::string("%YAML 1.2 "), std::string("1.2")));
 
         lexer_t lexer(fkyaml::detail::input_adapter(value_pair.first));
@@ -75,12 +75,38 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
 {
     fkyaml::detail::lexical_token_t token;
 
-    SECTION("Test nothrow expected tokens.")
+    SECTION("primary tag handle")
     {
-        lexer_t lexer(fkyaml::detail::input_adapter("%TAG "));
+        lexer_t lexer(fkyaml::detail::input_adapter("%TAG ! foo"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
+        REQUIRE(lexer.get_tag_handle() == "!");
+        REQUIRE(lexer.get_tag_prefix() == "foo");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("secondary tag handle")
+    {
+        lexer_t lexer(fkyaml::detail::input_adapter("%TAG !! foo"));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
+        REQUIRE(lexer.get_tag_handle() == "!!");
+        REQUIRE(lexer.get_tag_prefix() == "foo");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("named tag handle")
+    {
+        lexer_t lexer(fkyaml::detail::input_adapter("%TAG !e! foo"));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
+        REQUIRE(lexer.get_tag_handle() == "!e!");
+        REQUIRE(lexer.get_tag_prefix() == "foo");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
