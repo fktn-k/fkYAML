@@ -165,7 +165,7 @@ private:
         {
             return tag_t::CUSTOM_TAG;
         }
-        if (normalized.find("!<tag:yaml.org,2002:") != 0)
+        if (normalized.rfind("!<tag:yaml.org,2002:", 0) == std::string::npos)
         {
             return tag_t::CUSTOM_TAG;
         }
