@@ -84,10 +84,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
 
     SECTION("primary tag handle")
     {
-        auto input = GENERATE(
-            std::string("%TAG ! foo"),
-            std::string("%TAG\t!\tfoo")
-        );
+        auto input = GENERATE(std::string("%TAG ! foo"), std::string("%TAG\t!\tfoo"));
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -100,10 +97,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
 
     SECTION("secondary tag handle")
     {
-        auto input = GENERATE(
-            std::string("%TAG !! foo"),
-            std::string("%TAG\t!!\tfoo")
-        );
+        auto input = GENERATE(std::string("%TAG !! foo"), std::string("%TAG\t!!\tfoo"));
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -116,10 +110,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
 
     SECTION("named tag handle")
     {
-        auto input = GENERATE(
-            std::string("%TAG !va1id-ta9! foo"),
-            std::string("%TAG\t!va1id-ta9!\tfoo")
-        );
+        auto input = GENERATE(std::string("%TAG !va1id-ta9! foo"), std::string("%TAG\t!va1id-ta9!\tfoo"));
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -156,8 +147,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
             std::string("%TAG !invalid\tbar"),
             std::string("%TAG !inv@lid! bar"),
             std::string("%TAG !invalid!tag bar"),
-            std::string("%TAG !invalid")
-        );
+            std::string("%TAG !invalid"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -171,8 +161,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
             std::string("%TAG !valid! {invalid"),
             std::string("%TAG !valid! }invalid"),
             std::string("%TAG !valid! ,invalid"),
-            std::string("%TAG !valid! %prefix")
-        );
+            std::string("%TAG !valid! %prefix"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);

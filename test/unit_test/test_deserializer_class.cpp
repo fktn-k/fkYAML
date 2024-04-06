@@ -1099,7 +1099,8 @@ TEST_CASE("DeserializerClassTest_DeserializeBlockMappingTest", "[DeserializerCla
 
     SECTION("alias node with tag")
     {
-        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("&anchor foo: !!str *anchor")), fkyaml::parse_error);
+        REQUIRE_THROWS_AS(
+            deserializer.deserialize(fkyaml::detail::input_adapter("&anchor foo: !!str *anchor")), fkyaml::parse_error);
     }
 }
 
