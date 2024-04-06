@@ -203,7 +203,7 @@ private:
     }
 };
 
-}; // namespace detail
+} // namespace detail
 
 FK_YAML_NAMESPACE_END
 
