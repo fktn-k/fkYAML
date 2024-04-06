@@ -22,6 +22,7 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/from_string.hpp>
+#include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf8_encoding.hpp>
 #include <fkYAML/detail/input/input_handler.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
@@ -159,6 +160,10 @@ public:
 
             return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
         }
+        case '!':
+            m_value_buffer.clear();
+            extract_tag_name();
+            return m_last_token_type = lexical_token_t::TAG_PREFIX;
         case '#': // comment prefix
             scan_comment();
             return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
@@ -339,6 +344,18 @@ public:
         return m_value_buffer;
     }
 
+    const std::string& get_tag_handle() const
+    {
+        FK_YAML_ASSERT(!m_tag_handle.empty());
+        return m_tag_handle;
+    }
+
+    const std::string& get_tag_prefix() const
+    {
+        FK_YAML_ASSERT(!m_tag_prefix.empty());
+        return m_tag_prefix;
+    }
+
 private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
@@ -393,29 +410,164 @@ private:
                 skip_until_line_end();
                 return lexical_token_t::INVALID_DIRECTIVE;
             }
-            if (m_input_handler.get_next() != ' ')
+            int current = m_input_handler.get_next();
+            if (current != ' ' && current != '\t')
             {
                 emit_error("There must be a half-width space between \"%TAG\" and tag info.");
             }
+
+            skip_white_spaces();
+
             // TODO: parse tag directives' information
-            return lexical_token_t::TAG_DIRECTIVE;
+            return scan_tag_directive();
         }
-        case 'Y':
+        case 'Y': {
             if (m_input_handler.get_next() != 'A' || m_input_handler.get_next() != 'M' ||
                 m_input_handler.get_next() != 'L')
             {
                 skip_until_line_end();
                 return lexical_token_t::INVALID_DIRECTIVE;
             }
-            if (m_input_handler.get_next() != ' ')
+            int current = m_input_handler.get_next();
+            if (current != ' ' && current != '\t')
             {
-                emit_error("There must be a half-width space between \"%YAML\" and a version number.");
+                emit_error("There must be at least one half-width space between \"%YAML\" and a version number.");
             }
+
+            skip_white_spaces();
+
             return scan_yaml_version_directive();
+        }
         default:
             skip_until_line_end();
             return lexical_token_t::INVALID_DIRECTIVE;
         }
+    }
+
+    lexical_token_t scan_tag_directive()
+    {
+        m_tag_handle.clear();
+        m_tag_prefix.clear();
+
+        //
+        // extract a tag handle
+        //
+
+        int current = m_input_handler.get_current();
+        if (current != '!')
+        {
+            emit_error("Tag handle must start with \'!\'.");
+        }
+
+        m_tag_handle = "!";
+
+        current = m_input_handler.get_next();
+        switch (current)
+        {
+        case ' ':
+        case '\t':
+            // primary handle (!)
+            break;
+        case '!':
+            current = m_input_handler.get_next();
+            if (current != ' ' && current != '\t')
+            {
+                emit_error("invalid tag handle is found.");
+            }
+            m_tag_handle.push_back('!');
+            break;
+        default: {
+            bool ends_loop = false;
+            do
+            {
+                switch (current)
+                {
+                case ' ':
+                case '\t':
+                    emit_error("invalid tag handle is found.");
+                case s_end_of_input:
+                    emit_error("invalid tag directive is found.");
+                case '!':
+                    current = m_input_handler.get_next();
+                    if (current != ' ' && current != '\t')
+                    {
+                        emit_error("invalid tag handle is found.");
+                    }
+                    m_tag_handle.push_back('!');
+                    ends_loop = true;
+                    break;
+                case '-':
+                    m_tag_handle.push_back('-');
+                    break;
+                default:
+                    if (!isalnum(current))
+                    {
+                        // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
+                        emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
+                    }
+                    m_tag_handle.push_back(char_traits_type::to_char_type(current));
+                }
+
+                current = m_input_handler.get_next();
+            } while (!ends_loop);
+            break;
+        }
+        }
+
+        skip_white_spaces();
+
+        //
+        // extract a tag prefix.
+        //
+
+        current = m_input_handler.get_current();
+        switch (current)
+        {
+        case '!':
+            // a local tag prefix
+            m_tag_prefix = "!";
+            current = m_input_handler.get_next();
+            break;
+        // a tag prefix must not start with flow indicators.
+        // See https://yaml.org/spec/1.2.2/#rule-ns-global-tag-prefix for more details.
+        case ',':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+            emit_error("tag prefix must not start with flow indicators (\',\', [], {}).");
+        default:
+            // a global tag prefix
+            break;
+        }
+
+        // extract the rest of a tag prefix.
+        bool ends_loop = false;
+        do
+        {
+            switch (current)
+            {
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+            case s_end_of_input:
+                ends_loop = true;
+                break;
+            default:
+                m_tag_prefix.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+            current = m_input_handler.get_next();
+        } while (!ends_loop);
+
+        bool is_valid = uri_encoding::validate(m_tag_prefix.begin(), m_tag_prefix.end());
+        if (!is_valid)
+        {
+            emit_error("invalid URI character is found in a tag prefix.");
+        }
+
+        return lexical_token_t::TAG_DIRECTIVE;
     }
 
     /// @brief Scan a YAML version directive.
@@ -425,7 +577,7 @@ private:
     {
         m_value_buffer.clear();
 
-        if (m_input_handler.get_next() != '1')
+        if (m_input_handler.get_current() != '1')
         {
             emit_error("Invalid YAML major version found.");
         }
@@ -456,9 +608,16 @@ private:
             emit_error("YAML version must be specified with digits and periods.");
         }
 
-        if (m_input_handler.get_next() != ' ' && m_input_handler.get_current() != '\r' &&
-            m_input_handler.get_current() != '\n')
+        int current = m_input_handler.get_next();
+        switch (current)
         {
+        case ' ':
+        case '\t':
+        case '\r':
+        case '\n':
+        case s_end_of_input:
+            break;
+        default:
             emit_error("Only YAML version 1.1/1.2 are supported.");
         }
 
@@ -503,6 +662,120 @@ private:
             default:
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 break;
+            }
+        }
+    }
+
+    /// @brief Extracts a tag name from the input and assigns the result to `m_value_buffer`.
+    void extract_tag_name()
+    {
+        int current = m_input_handler.get_current();
+        FK_YAML_ASSERT(current == '!');
+
+        m_value_buffer = "!";
+
+        bool is_verbatim = false;
+        bool allows_another_tag_prefix = false;
+
+        current = m_input_handler.get_next();
+        switch (current)
+        {
+        case ' ':
+        case '\r':
+        case '\n':
+        case s_end_of_input:
+            // Just "!" is a non-specific tag.
+            return;
+        case '!':
+            // Secondary tag handles (!!suffix)
+            m_value_buffer += "!";
+            break;
+        case '<':
+            // Verbatim tags (!<TAG>)
+            is_verbatim = true;
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            current = m_input_handler.get_next();
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            break;
+        default:
+            // Either local tags (!suffix) or named handles (!tag!suffix)
+            allows_another_tag_prefix = true;
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            break;
+        }
+
+        bool is_named_handle = false;
+        bool ends_loop = false;
+        do
+        {
+            current = m_input_handler.get_next();
+            switch (current)
+            {
+            case s_end_of_input:
+            // Tag names must not contain spaces or newline codes.
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+                ends_loop = true;
+                break;
+            case '!':
+                if (!allows_another_tag_prefix)
+                {
+                    emit_error("invalid tag prefix (!) is found.");
+                }
+
+                is_named_handle = true;
+                m_value_buffer.push_back('!');
+                // tag prefix must not appear three times.
+                allows_another_tag_prefix = false;
+                break;
+            default:
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+        } while (!ends_loop);
+
+        if (is_verbatim)
+        {
+            char last = m_value_buffer.back();
+            if (last != '>')
+            {
+                emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
+            }
+
+            auto tag_begin = m_value_buffer.begin() + 2;
+            auto tag_end = m_value_buffer.end() - 1;
+            if (tag_begin == tag_end)
+            {
+                emit_error("verbatim tag(!<TAG>) must not be empty.");
+            }
+
+            bool is_valid_uri = uri_encoding::validate(tag_begin, tag_end);
+            if (!is_valid_uri)
+            {
+                emit_error("invalid URI character is found in a verbatim tag.");
+            }
+
+            return;
+        }
+
+        if (is_named_handle)
+        {
+            char last = m_value_buffer.back();
+            if (last == '!')
+            {
+                // Tag shorthand must be followed by a non-empty suffix.
+                // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
+                emit_error("named handle has no suffix.");
+            }
+
+            std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
+            bool is_valid_uri =
+                uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
+            if (!is_valid_uri)
+            {
+                emit_error("Invalid URI character is found in a named tag handle.");
             }
         }
     }
@@ -1519,8 +1792,12 @@ private:
 
     /// An input buffer adapter to be analyzed.
     input_handler m_input_handler;
-    /// A temporal buffer to store a string to be parsed to an actual datum.
+    /// A temporal buffer to store a string to be parsed to an actual token value.
     std::string m_value_buffer {};
+    /// The last tag handle.
+    std::string m_tag_handle {};
+    /// The last tag prefix
+    std::string m_tag_prefix {};
     /// A temporal buffer to store a UTF-8 encoded char sequence.
     std::array<char, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.

@@ -24,9 +24,16 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanYamlVersionDirectiveTest", "[LexicalAnal
     {
         using value_pair_t = std::pair<std::string, std::string>;
         auto value_pair = GENERATE(
+            value_pair_t(std::string("%YAML 1.1 "), std::string("1.1")),
+            value_pair_t(std::string("%YAML\t1.1\t"), std::string("1.1")),
             value_pair_t(std::string("%YAML 1.1\r"), std::string("1.1")),
+            value_pair_t(std::string("%YAML 1.1\n"), std::string("1.1")),
+            value_pair_t(std::string("%YAML 1.1"), std::string("1.1")),
+            value_pair_t(std::string("%YAML 1.2 "), std::string("1.2")),
+            value_pair_t(std::string("%YAML\t1.2\t"), std::string("1.2")),
+            value_pair_t(std::string("%YAML 1.2\r"), std::string("1.2")),
             value_pair_t(std::string("%YAML 1.2\n"), std::string("1.2")),
-            value_pair_t(std::string("%YAML 1.2 "), std::string("1.2")));
+            value_pair_t(std::string("%YAML 1.2"), std::string("1.2")));
 
         lexer_t lexer(fkyaml::detail::input_adapter(value_pair.first));
 
@@ -57,11 +64,11 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanYamlVersionDirectiveTest", "[LexicalAnal
     SECTION("Test nothrow unexpected tokens.")
     {
         auto buffer = GENERATE(
-            std::string("%YAML 1.1"),
-            std::string("%YAML 1.2"),
             std::string("%YAML 1.3\n"),
             std::string("%YAML 2.0\n"),
             std::string("%YAML 12"),
+            std::string("%YAML 1.23"),
+            std::string("%YAML 1.11"),
             std::string("%YAML 1.A"),
             std::string("%YAML1.2 "),
             std::string("%YAML AbC"));
@@ -75,12 +82,41 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
 {
     fkyaml::detail::lexical_token_t token;
 
-    SECTION("Test nothrow expected tokens.")
+    SECTION("primary tag handle")
     {
-        lexer_t lexer(fkyaml::detail::input_adapter("%TAG "));
+        auto input = GENERATE(std::string("%TAG ! foo"), std::string("%TAG\t!\tfoo"));
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
+        REQUIRE(lexer.get_tag_handle() == "!");
+        REQUIRE(lexer.get_tag_prefix() == "foo");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("secondary tag handle")
+    {
+        auto input = GENERATE(std::string("%TAG !! foo"), std::string("%TAG\t!!\tfoo"));
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
+        REQUIRE(lexer.get_tag_handle() == "!!");
+        REQUIRE(lexer.get_tag_prefix() == "foo");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("named tag handle")
+    {
+        auto input = GENERATE(std::string("%TAG !va1id-ta9! foo"), std::string("%TAG\t!va1id-ta9!\tfoo"));
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
+        REQUIRE(lexer.get_tag_handle() == "!va1id-ta9!");
+        REQUIRE(lexer.get_tag_prefix() == "foo");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
@@ -99,6 +135,35 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
     SECTION("Test nothrow expected tokens.")
     {
         lexer_t lexer(fkyaml::detail::input_adapter("%TAGE"));
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("invalid tag handle")
+    {
+        auto input = GENERATE(
+            std::string("%TAG foo bar"),
+            std::string("%TAG !!abc bar"),
+            std::string("%TAG !invalid bar"),
+            std::string("%TAG !invalid\tbar"),
+            std::string("%TAG !inv@lid! bar"),
+            std::string("%TAG !invalid!tag bar"),
+            std::string("%TAG !invalid"));
+
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("invalid tag prefix")
+    {
+        auto input = GENERATE(
+            std::string("%TAG ! [invalid"),
+            std::string("%TAG !! ]invalid"),
+            std::string("%TAG !valid! {invalid"),
+            std::string("%TAG !valid! }invalid"),
+            std::string("%TAG !valid! ,invalid"),
+            std::string("%TAG !valid! %prefix"));
+
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 }
@@ -1341,6 +1406,53 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanAliasTokenTest", "[LexicalAnalyzerClassT
 
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+}
+
+TEST_CASE("LexicalAnalyzerClassTest_ScanTagTokenTest", "[LexicalAnalyzerClassTest]")
+{
+    fkyaml::detail::lexical_token_t token;
+
+    SECTION("valid tag names")
+    {
+        auto input = GENERATE(
+            std::string("! tag"),
+            std::string("!\rtag"),
+            std::string("!\ntag"),
+            std::string("!local tag"),
+            std::string("!local%2A%7C tag"),
+            std::string("!!foo tag"),
+            std::string("!!foo%2A%7C tag"),
+            std::string("!<tag:foo.bar> tag"),
+            std::string("!<tag:foo.%2A%7C.bar> tag"),
+            std::string("!<!foo> tag"),
+            std::string("!<!foo%2A%7C> tag"),
+            std::string("!foo!bar tag"));
+
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::TAG_PREFIX);
+        REQUIRE(lexer.get_string() == input.substr(0, input.size() - 4));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "tag");
+    }
+
+    SECTION("invalid tag names")
+    {
+        auto input = GENERATE(
+            std::string("!!f!oo tag"),
+            std::string("!<!f!oo> tag"),
+            std::string("!<!foo tag"),
+            std::string("!<> tag"),
+            std::string("!<%f:oo> tag"),
+            std::string("!<!%f:oo> tag"),
+            std::string("!foo! tag"),
+            std::string("!foo!%f:oo tag"));
+
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
     }
 }
 

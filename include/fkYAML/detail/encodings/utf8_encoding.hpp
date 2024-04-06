@@ -31,6 +31,7 @@ class utf_encoding;
 //   UTF-8 Encoding   ///
 /////////////////////////
 
+/// @brief A class which handles UTF-8 encodings.
 class utf8_encoding
 {
     using int_type = std::char_traits<char>::int_type;

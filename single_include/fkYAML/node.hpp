@@ -156,6 +156,95 @@
 
 #endif /* FK_YAML_DETAIL_ASSERT_HPP_ */
 
+// #include <fkYAML/detail/directive_set.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_DIRECTIVE_SET_HPP_
+#define FK_YAML_DETAIL_DIRECTIVE_SET_HPP_
+
+#include <string>
+#include <map>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/types/yaml_version_t.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
+#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
+
+#include <cstdint>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+/// @brief namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @brief namespace for internal implementations of fkYAML library.
+namespace detail
+{
+
+/// @brief Definition of YAML version types.
+enum class yaml_version_t : std::uint32_t
+{
+    VER_1_1, //!< YAML version 1.1
+    VER_1_2, //!< YAML version 1.2
+};
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_ */
+
+
+/// @namespace fkyaml
+/// @brief namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @namespace detail
+/// @brief namespace for internal implementaions of fkYAML library.
+namespace detail
+{
+
+/// @brief The set of directives for a YAML document.
+struct directive_set
+{
+    /// The YAML version used for the YAML document.
+    yaml_version_t version {yaml_version_t::VER_1_2};
+    /// Whether or not the YAML version has been specified.
+    bool is_version_specified {false};
+    /// The prefix of the primary handle.
+    std::string primary_handle_prefix {};
+    /// The prefix of the secondary handle.
+    std::string secondary_handle_prefix {};
+    /// The map of handle-prefix pairs.
+    std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
+};
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_DIRECTIVE_SET_HPP_ */
+
 // #include <fkYAML/detail/input/deserializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -175,6 +264,8 @@
 #include <unordered_map>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/directive_set.hpp>
 
 // #include <fkYAML/detail/input/lexical_analyzer.hpp>
 ///  _______   __ __   __  _____   __  __  __
@@ -1032,6 +1123,21 @@ private:
     }
 };
 
+class invalid_tag : public exception
+{
+public:
+    explicit invalid_tag(const char* msg, const char* tag)
+        : exception(generate_error_message(msg, tag).c_str())
+    {
+    }
+
+private:
+    std::string generate_error_message(const char* msg, const char* tag)
+    {
+        return detail::format("invalid_tag: %s tag=%s", msg, tag);
+    }
+};
+
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_EXCEPTION_HPP_ */
@@ -1297,6 +1403,159 @@ FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_ */
 
+// #include <fkYAML/detail/encodings/uri_encoding.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
+
+#include <cctype>
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+/// @namespace fkyaml
+/// @brief namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @namespace detail
+/// @brief namespace for internal implementaions of fkYAML library.
+namespace detail
+{
+
+/// @brief A class which handles URI encodings.
+class uri_encoding
+{
+public:
+    /// @brief Validates the encoding of the given character sequence.
+    /// @param begin An iterator to the first element of the character sequence.
+    /// @param end An iterator to the past-the-end element of the character sequence.
+    /// @return true if all the characters are valid, false otherwise.
+    static bool validate(std::string::const_iterator begin, std::string::const_iterator end) noexcept
+    {
+        if (begin == end)
+        {
+            return true;
+        }
+
+        std::string::const_iterator current = begin;
+
+        for (; current != end; ++current)
+        {
+            if (*current == '%')
+            {
+                bool are_valid_octets = validate_octets(++current, end);
+                if (!are_valid_octets)
+                {
+                    return false;
+                }
+
+                continue;
+            }
+
+            bool is_allowed_character = validate_character(*current);
+            if (!is_allowed_character)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+private:
+    /// @brief Validates the given octets.
+    /// @param begin An iterator to the first octet.
+    /// @param end An iterator to the past-the-end element of the whole character sequence.
+    /// @return true if the octets are valid, false otherwise.
+    static bool validate_octets(std::string::const_iterator& begin, std::string::const_iterator& end)
+    {
+        for (int i = 0; i < 2; i++, ++begin)
+        {
+            if (begin == end)
+            {
+                return false;
+            }
+
+            // Normalize a character for a-f/A-F comparison
+            int octet = std::tolower(*begin);
+
+            if ('0' <= octet && octet <= '9')
+            {
+                continue;
+            }
+
+            if ('a' <= octet && octet <= 'f')
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /// @brief Verify if the given character is allowed as a URI character.
+    /// @param c The target character.
+    /// @return true if the given character is allowed as a URI character, false otherwise.
+    static bool validate_character(char c)
+    {
+        // Check if the current character is one of reserved/unreserved characters which are allowed for
+        // use. See the following links for details:
+        // * reserved characters:   https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
+        // * unreserved characters: https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
+
+        switch (c)
+        {
+        // reserved characters (gen-delims)
+        case ':':
+        case '/':
+        case '?':
+        case '#':
+        case '[':
+        case ']':
+        case '@':
+        // reserved characters (sub-delims)
+        case '!':
+        case '$':
+        case '&':
+        case '\'':
+        case '(':
+        case ')':
+        case '*':
+        case '+':
+        case ',':
+        case ';':
+        case '=':
+        // unreserved characters
+        case '-':
+        case '.':
+        case '_':
+        case '~':
+            return true;
+        default:
+            // alphabets and numbers are also allowed.
+            return std::isalnum(c);
+        }
+    }
+};
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_ */
+
 // #include <fkYAML/detail/encodings/utf8_encoding.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -1333,6 +1592,7 @@ class utf_encoding;
 //   UTF-8 Encoding   ///
 /////////////////////////
 
+/// @brief A class which handles UTF-8 encodings.
 class utf8_encoding
 {
     using int_type = std::char_traits<char>::int_type;
@@ -2154,6 +2414,7 @@ enum class lexical_token_t
     COMMENT_PREFIX,        //!< the character for comment prefix `#`
     YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
     TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
+    TAG_PREFIX,            //!< the character for tag prefix `!`
     INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
     SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
     SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
@@ -2307,6 +2568,10 @@ public:
 
             return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
         }
+        case '!':
+            m_value_buffer.clear();
+            extract_tag_name();
+            return m_last_token_type = lexical_token_t::TAG_PREFIX;
         case '#': // comment prefix
             scan_comment();
             return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
@@ -2487,6 +2752,18 @@ public:
         return m_value_buffer;
     }
 
+    const std::string& get_tag_handle() const
+    {
+        FK_YAML_ASSERT(!m_tag_handle.empty());
+        return m_tag_handle;
+    }
+
+    const std::string& get_tag_prefix() const
+    {
+        FK_YAML_ASSERT(!m_tag_prefix.empty());
+        return m_tag_prefix;
+    }
+
 private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
@@ -2541,29 +2818,164 @@ private:
                 skip_until_line_end();
                 return lexical_token_t::INVALID_DIRECTIVE;
             }
-            if (m_input_handler.get_next() != ' ')
+            int current = m_input_handler.get_next();
+            if (current != ' ' && current != '\t')
             {
                 emit_error("There must be a half-width space between \"%TAG\" and tag info.");
             }
+
+            skip_white_spaces();
+
             // TODO: parse tag directives' information
-            return lexical_token_t::TAG_DIRECTIVE;
+            return scan_tag_directive();
         }
-        case 'Y':
+        case 'Y': {
             if (m_input_handler.get_next() != 'A' || m_input_handler.get_next() != 'M' ||
                 m_input_handler.get_next() != 'L')
             {
                 skip_until_line_end();
                 return lexical_token_t::INVALID_DIRECTIVE;
             }
-            if (m_input_handler.get_next() != ' ')
+            int current = m_input_handler.get_next();
+            if (current != ' ' && current != '\t')
             {
-                emit_error("There must be a half-width space between \"%YAML\" and a version number.");
+                emit_error("There must be at least one half-width space between \"%YAML\" and a version number.");
             }
+
+            skip_white_spaces();
+
             return scan_yaml_version_directive();
+        }
         default:
             skip_until_line_end();
             return lexical_token_t::INVALID_DIRECTIVE;
         }
+    }
+
+    lexical_token_t scan_tag_directive()
+    {
+        m_tag_handle.clear();
+        m_tag_prefix.clear();
+
+        //
+        // extract a tag handle
+        //
+
+        int current = m_input_handler.get_current();
+        if (current != '!')
+        {
+            emit_error("Tag handle must start with \'!\'.");
+        }
+
+        m_tag_handle = "!";
+
+        current = m_input_handler.get_next();
+        switch (current)
+        {
+        case ' ':
+        case '\t':
+            // primary handle (!)
+            break;
+        case '!':
+            current = m_input_handler.get_next();
+            if (current != ' ' && current != '\t')
+            {
+                emit_error("invalid tag handle is found.");
+            }
+            m_tag_handle.push_back('!');
+            break;
+        default: {
+            bool ends_loop = false;
+            do
+            {
+                switch (current)
+                {
+                case ' ':
+                case '\t':
+                    emit_error("invalid tag handle is found.");
+                case s_end_of_input:
+                    emit_error("invalid tag directive is found.");
+                case '!':
+                    current = m_input_handler.get_next();
+                    if (current != ' ' && current != '\t')
+                    {
+                        emit_error("invalid tag handle is found.");
+                    }
+                    m_tag_handle.push_back('!');
+                    ends_loop = true;
+                    break;
+                case '-':
+                    m_tag_handle.push_back('-');
+                    break;
+                default:
+                    if (!isalnum(current))
+                    {
+                        // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
+                        emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
+                    }
+                    m_tag_handle.push_back(char_traits_type::to_char_type(current));
+                }
+
+                current = m_input_handler.get_next();
+            } while (!ends_loop);
+            break;
+        }
+        }
+
+        skip_white_spaces();
+
+        //
+        // extract a tag prefix.
+        //
+
+        current = m_input_handler.get_current();
+        switch (current)
+        {
+        case '!':
+            // a local tag prefix
+            m_tag_prefix = "!";
+            current = m_input_handler.get_next();
+            break;
+        // a tag prefix must not start with flow indicators.
+        // See https://yaml.org/spec/1.2.2/#rule-ns-global-tag-prefix for more details.
+        case ',':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+            emit_error("tag prefix must not start with flow indicators (\',\', [], {}).");
+        default:
+            // a global tag prefix
+            break;
+        }
+
+        // extract the rest of a tag prefix.
+        bool ends_loop = false;
+        do
+        {
+            switch (current)
+            {
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+            case s_end_of_input:
+                ends_loop = true;
+                break;
+            default:
+                m_tag_prefix.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+            current = m_input_handler.get_next();
+        } while (!ends_loop);
+
+        bool is_valid = uri_encoding::validate(m_tag_prefix.begin(), m_tag_prefix.end());
+        if (!is_valid)
+        {
+            emit_error("invalid URI character is found in a tag prefix.");
+        }
+
+        return lexical_token_t::TAG_DIRECTIVE;
     }
 
     /// @brief Scan a YAML version directive.
@@ -2573,7 +2985,7 @@ private:
     {
         m_value_buffer.clear();
 
-        if (m_input_handler.get_next() != '1')
+        if (m_input_handler.get_current() != '1')
         {
             emit_error("Invalid YAML major version found.");
         }
@@ -2604,9 +3016,16 @@ private:
             emit_error("YAML version must be specified with digits and periods.");
         }
 
-        if (m_input_handler.get_next() != ' ' && m_input_handler.get_current() != '\r' &&
-            m_input_handler.get_current() != '\n')
+        int current = m_input_handler.get_next();
+        switch (current)
         {
+        case ' ':
+        case '\t':
+        case '\r':
+        case '\n':
+        case s_end_of_input:
+            break;
+        default:
             emit_error("Only YAML version 1.1/1.2 are supported.");
         }
 
@@ -2651,6 +3070,120 @@ private:
             default:
                 m_value_buffer.push_back(char_traits_type::to_char_type(current));
                 break;
+            }
+        }
+    }
+
+    /// @brief Extracts a tag name from the input and assigns the result to `m_value_buffer`.
+    void extract_tag_name()
+    {
+        int current = m_input_handler.get_current();
+        FK_YAML_ASSERT(current == '!');
+
+        m_value_buffer = "!";
+
+        bool is_verbatim = false;
+        bool allows_another_tag_prefix = false;
+
+        current = m_input_handler.get_next();
+        switch (current)
+        {
+        case ' ':
+        case '\r':
+        case '\n':
+        case s_end_of_input:
+            // Just "!" is a non-specific tag.
+            return;
+        case '!':
+            // Secondary tag handles (!!suffix)
+            m_value_buffer += "!";
+            break;
+        case '<':
+            // Verbatim tags (!<TAG>)
+            is_verbatim = true;
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            current = m_input_handler.get_next();
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            break;
+        default:
+            // Either local tags (!suffix) or named handles (!tag!suffix)
+            allows_another_tag_prefix = true;
+            m_value_buffer.push_back(char_traits_type::to_char_type(current));
+            break;
+        }
+
+        bool is_named_handle = false;
+        bool ends_loop = false;
+        do
+        {
+            current = m_input_handler.get_next();
+            switch (current)
+            {
+            case s_end_of_input:
+            // Tag names must not contain spaces or newline codes.
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+                ends_loop = true;
+                break;
+            case '!':
+                if (!allows_another_tag_prefix)
+                {
+                    emit_error("invalid tag prefix (!) is found.");
+                }
+
+                is_named_handle = true;
+                m_value_buffer.push_back('!');
+                // tag prefix must not appear three times.
+                allows_another_tag_prefix = false;
+                break;
+            default:
+                m_value_buffer.push_back(char_traits_type::to_char_type(current));
+                break;
+            }
+        } while (!ends_loop);
+
+        if (is_verbatim)
+        {
+            char last = m_value_buffer.back();
+            if (last != '>')
+            {
+                emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
+            }
+
+            auto tag_begin = m_value_buffer.begin() + 2;
+            auto tag_end = m_value_buffer.end() - 1;
+            if (tag_begin == tag_end)
+            {
+                emit_error("verbatim tag(!<TAG>) must not be empty.");
+            }
+
+            bool is_valid_uri = uri_encoding::validate(tag_begin, tag_end);
+            if (!is_valid_uri)
+            {
+                emit_error("invalid URI character is found in a verbatim tag.");
+            }
+
+            return;
+        }
+
+        if (is_named_handle)
+        {
+            char last = m_value_buffer.back();
+            if (last == '!')
+            {
+                // Tag shorthand must be followed by a non-empty suffix.
+                // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
+                emit_error("named handle has no suffix.");
+            }
+
+            std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
+            bool is_valid_uri =
+                uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
+            if (!is_valid_uri)
+            {
+                emit_error("Invalid URI character is found in a named tag handle.");
             }
         }
     }
@@ -3667,8 +4200,12 @@ private:
 
     /// An input buffer adapter to be analyzed.
     input_handler m_input_handler;
-    /// A temporal buffer to store a string to be parsed to an actual datum.
+    /// A temporal buffer to store a string to be parsed to an actual token value.
     std::string m_value_buffer {};
+    /// The last tag handle.
+    std::string m_tag_handle {};
+    /// The last tag prefix
+    std::string m_tag_prefix {};
     /// A temporal buffer to store a UTF-8 encoded char sequence.
     std::array<char, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.
@@ -3695,15 +4232,7 @@ FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_ */
 
-// #include <fkYAML/detail/meta/input_adapter_traits.hpp>
-
-// #include <fkYAML/detail/meta/node_traits.hpp>
-
-// #include <fkYAML/detail/meta/stl_supplement.hpp>
-
-// #include <fkYAML/detail/types/lexical_token_t.hpp>
-
-// #include <fkYAML/detail/types/yaml_version_t.hpp>
+// #include <fkYAML/detail/input/tag_resolver.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
 /// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
@@ -3714,33 +4243,263 @@ FK_YAML_NAMESPACE_END
 ///
 /// @file
 
-#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
-#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_
+#define FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_
 
-#include <cstdint>
+#include <memory>
+#include <string>
+#include <unordered_map>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/assert.hpp>
+
+// #include <fkYAML/detail/directive_set.hpp>
+
+// #include <fkYAML/detail/input/tag_t.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP_
+#define FK_YAML_DETAIL_INPUT_TAG_T_HPP_
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
+/// @namespace fkyaml
 /// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
-/// @brief namespace for internal implementations of fkYAML library.
+/// @namespace detail
+/// @brief namespace for internal implementaions of fkYAML library.
 namespace detail
 {
 
-/// @brief Definition of YAML version types.
-enum class yaml_version_t : std::uint32_t
+/// @brief Definition of YAML directive sets.
+enum class tag_t
 {
-    VER_1_1, //!< YAML version 1.1
-    VER_1_2, //!< YAML version 1.2
+    NON_SPECIFIC,    //!< Represents a non-specific tag.
+    CUSTOM_TAG,      //!< Represents a cumstom tag
+    SEQUENCE,        //!< Represents a sequence tag.
+    MAPPING,         //!< Represents a mapping tag.
+    NULL_VALUE,      //!< Represents a null value tag.
+    BOOLEAN,         //!< Represents a boolean tag.
+    INTEGER,         //!< Represents an integer type
+    FLOATING_NUMBER, //!< Represents a floating point number tag.
+    STRING,          //!< Represents a string tag.
 };
 
 } // namespace detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_TAG_T_HPP_ */
+
+// #include <fkYAML/exception.hpp>
+
+
+/// @namespace fkyaml
+/// @brief namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @namespace detail
+/// @brief namespace for internal implementaions of fkYAML library.
+namespace detail
+{
+
+namespace /*default prefixes*/
+{
+
+const std::string default_primary_handle_prefix = "!";
+const std::string default_secondary_handle_prefix = "tag:yaml.org,2002:";
+
+} // namespace
+
+class tag_resolver
+{
+public:
+    /// @brief Resolve the input tag name into an expanded tag name prepended with a registered prefix.
+    /// @param tag The input tag name.
+    /// @return The type of a node deduced from the given tag name.
+    static tag_t resolve_tag(const std::string& tag, const std::shared_ptr<directive_set>& directives)
+    {
+        std::string normalized = normalize_tag_name(tag, directives);
+        return convert_to_tag_type(normalized);
+    }
+
+private:
+    static std::string normalize_tag_name(const std::string& tag, const std::shared_ptr<directive_set>& directives)
+    {
+        if (tag.empty())
+        {
+            throw invalid_tag("tag must not be empty.", "");
+        }
+        if (tag[0] != '!')
+        {
+            throw invalid_tag("tag must start with \'!\'", tag.c_str());
+        }
+
+        if (tag.size() == 1)
+        {
+            // Non-specific tag ("!") will be interpreted as one of the following:
+            //   * tag:yaml.org,2002:seq
+            //   * tag:yaml.org,2002:map
+            //   * tag:yaml.org,2002:str
+            // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
+            // The interpretation cannot take place here because the input lacks the corresponding value.
+            return tag;
+        }
+
+        std::string normalized {"!<"};
+        switch (tag[1])
+        {
+        case '!': {
+            // handle a secondary tag handle (!!suffix -> !<[secondary][suffix]>)
+            bool is_null_or_empty = !directives || directives->secondary_handle_prefix.empty();
+            if (is_null_or_empty)
+            {
+                normalized += default_secondary_handle_prefix + tag.substr(2);
+            }
+            else
+            {
+                normalized += directives->secondary_handle_prefix + tag.substr(2);
+            }
+            break;
+        }
+        case '<':
+            if (tag[2] == '!')
+            {
+                bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
+                if (is_null_or_empty)
+                {
+                    return normalized + default_primary_handle_prefix + tag.substr(3);
+                }
+                return normalized + directives->primary_handle_prefix + tag.substr(3);
+            }
+
+            // verbatim tags must be delivered as-is to the application.
+            // See https://yaml.org/spec/1.2.2/#691-node-tags for more details.
+            return tag;
+        default: {
+            auto tag_end_pos = tag.find_first_of('!', 1);
+
+            // handle a named handle (!tag!suffix -> !<[tag][suffix]>)
+            if (tag_end_pos != std::string::npos)
+            {
+                // there must be a non-empty suffix. (already checked by the lexer.)
+                FK_YAML_ASSERT(tag_end_pos < tag.size() - 1);
+
+                bool is_null_or_empty = !directives || directives->named_handle_map.empty();
+                if (is_null_or_empty)
+                {
+                    throw invalid_tag("named handle has not been registered.", tag.c_str());
+                }
+
+                // find the extracted named handle in the map.
+                auto named_handle_itr = directives->named_handle_map.find(tag.substr(0, tag_end_pos + 1));
+                auto end_itr = directives->named_handle_map.end();
+                if (named_handle_itr == end_itr)
+                {
+                    throw invalid_tag("named handle has not been registered.", tag.c_str());
+                }
+
+                // The YAML spec prohibits expanding the percent-encoded characters (%xx -> a UTF-8 byte).
+                // So no conversion takes place.
+                // See https://yaml.org/spec/1.2.2/#56-miscellaneous-characters for more details.
+
+                normalized += named_handle_itr->second;
+                normalized.append(tag.begin() + (tag_end_pos + 1), tag.end());
+                break;
+            }
+
+            // handle a primary tag handle (!suffix -> !<[primary][suffix]>)
+            bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
+            if (is_null_or_empty)
+            {
+                normalized += default_primary_handle_prefix + tag.substr(1);
+            }
+            else
+            {
+                normalized += directives->primary_handle_prefix + tag.substr(1);
+            }
+
+            break;
+        }
+        }
+
+        normalized += ">";
+        return normalized;
+    }
+
+    static tag_t convert_to_tag_type(const std::string& normalized)
+    {
+        if (normalized == "!")
+        {
+            return tag_t::NON_SPECIFIC;
+        }
+
+        if (normalized.size() < 24 /* size of !<tag:yaml.org,2002:xxx */)
+        {
+            return tag_t::CUSTOM_TAG;
+        }
+        if (normalized.rfind("!<tag:yaml.org,2002:", 0) == std::string::npos)
+        {
+            return tag_t::CUSTOM_TAG;
+        }
+
+        if (normalized == "!<tag:yaml.org,2002:seq>")
+        {
+            return tag_t::SEQUENCE;
+        }
+        if (normalized == "!<tag:yaml.org,2002:map>")
+        {
+            return tag_t::MAPPING;
+        }
+        if (normalized == "!<tag:yaml.org,2002:null>")
+        {
+            return tag_t::NULL_VALUE;
+        }
+        if (normalized == "!<tag:yaml.org,2002:bool>")
+        {
+            return tag_t::BOOLEAN;
+        }
+        if (normalized == "!<tag:yaml.org,2002:int>")
+        {
+            return tag_t::INTEGER;
+        }
+        if (normalized == "!<tag:yaml.org,2002:float>")
+        {
+            return tag_t::FLOATING_NUMBER;
+        }
+        if (normalized == "!<tag:yaml.org,2002:str>")
+        {
+            return tag_t::STRING;
+        }
+
+        return tag_t::CUSTOM_TAG;
+    }
+};
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_ */
+
+// #include <fkYAML/detail/meta/input_adapter_traits.hpp>
+
+// #include <fkYAML/detail/meta/node_traits.hpp>
+
+// #include <fkYAML/detail/meta/stl_supplement.hpp>
+
+// #include <fkYAML/detail/types/lexical_token_t.hpp>
 
 // #include <fkYAML/exception.hpp>
 
@@ -3792,6 +4551,98 @@ public:
         std::size_t cur_indent = lexer.get_last_token_begin_pos();
         std::size_t cur_line = lexer.get_lines_processed();
 
+        // parse directives first.
+        {
+            bool ends_directive_section = false;
+            do
+            {
+                switch (type)
+                {
+                case lexical_token_t::YAML_VER_DIRECTIVE:
+                    if (!mp_directive_set)
+                    {
+                        mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
+                    }
+                    if (!root.mp_directive_set)
+                    {
+                        root.mp_directive_set = mp_directive_set;
+                    }
+
+                    if (mp_directive_set->is_version_specified)
+                    {
+                        throw parse_error("YAML version cannot be specified more than once.", cur_line, cur_indent);
+                    }
+
+                    mp_directive_set->version = convert_yaml_version(lexer.get_yaml_version());
+                    mp_directive_set->is_version_specified = true;
+                    break;
+                case lexical_token_t::TAG_DIRECTIVE: {
+                    if (!mp_directive_set)
+                    {
+                        mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
+                    }
+                    if (!root.mp_directive_set)
+                    {
+                        root.mp_directive_set = mp_directive_set;
+                    }
+
+                    const std::string& tag_handle = lexer.get_tag_handle();
+                    switch (tag_handle.size())
+                    {
+                    case 1: {
+                        bool is_already_specified = !mp_directive_set->primary_handle_prefix.empty();
+                        if (is_already_specified)
+                        {
+                            throw parse_error(
+                                "Primary handle cannot be specified more than once.", cur_line, cur_indent);
+                        }
+                        mp_directive_set->primary_handle_prefix = lexer.get_tag_prefix();
+                        break;
+                    }
+                    case 2: {
+                        bool is_already_specified = !mp_directive_set->secondary_handle_prefix.empty();
+                        if (is_already_specified)
+                        {
+                            throw parse_error(
+                                "Secondary handle cannot be specified more than once.", cur_line, cur_indent);
+                        }
+                        mp_directive_set->secondary_handle_prefix = lexer.get_tag_prefix();
+                        break;
+                    }
+                    default: {
+                        bool is_already_specified =
+                            !(mp_directive_set->named_handle_map.emplace(tag_handle, lexer.get_tag_prefix()).second);
+                        if (is_already_specified)
+                        {
+                            throw parse_error(
+                                "The same named handle cannot be specified more than once.", cur_line, cur_indent);
+                        }
+                        break;
+                    }
+                    }
+                    break;
+                }
+                case lexical_token_t::INVALID_DIRECTIVE:
+                    // TODO: should output a warning log. Currently just ignore this case.
+                    break;
+                case lexical_token_t::END_OF_DIRECTIVES:
+                    ends_directive_section = true;
+                    break;
+                default:
+                    // move to the content parsing if the other tokens are found.
+                    ends_directive_section = true;
+                    break;
+                }
+
+                if (!ends_directive_section)
+                {
+                    type = lexer.get_next_token();
+                    cur_indent = lexer.get_last_token_begin_pos();
+                    cur_line = lexer.get_lines_processed();
+                }
+            } while (!ends_directive_section);
+        }
+
         do
         {
             switch (type)
@@ -3831,12 +4682,12 @@ public:
                 {
                     m_indent_stack.emplace_back(lexer.get_last_token_begin_pos(), false);
                     m_current_node = new BasicNodeType(node_t::SEQUENCE);
-                    set_yaml_version(*m_current_node);
+                    apply_directive_set(*m_current_node);
                     break;
                 }
 
                 m_current_node = new BasicNodeType();
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
                 cur_indent = lexer.get_last_token_begin_pos();
                 cur_line = lexer.get_lines_processed();
 
@@ -3878,12 +4729,12 @@ public:
                     case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                         // a key separator preceeding block sequence entries
                         *m_current_node = BasicNodeType::sequence();
-                        set_yaml_version(*m_current_node);
+                        apply_directive_set(*m_current_node);
                         break;
                     case lexical_token_t::EXPLICIT_KEY_PREFIX:
                         // a key separator for a explicit block mapping key.
                         *m_current_node = BasicNodeType::mapping();
-                        set_yaml_version(*m_current_node);
+                        apply_directive_set(*m_current_node);
                         break;
                     // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
                     // call.
@@ -3939,7 +4790,7 @@ public:
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     *m_current_node = BasicNodeType::sequence();
-                    set_yaml_version(*m_current_node);
+                    apply_directive_set(*m_current_node);
                 }
                 cur_indent = lexer.get_last_token_begin_pos();
                 cur_line = lexer.get_lines_processed();
@@ -3963,16 +4814,15 @@ public:
             }
             case lexical_token_t::COMMENT_PREFIX:
                 break;
-            case lexical_token_t::YAML_VER_DIRECTIVE: {
-                FK_YAML_ASSERT(m_current_node == &root);
-                update_yaml_version_from(lexer.get_yaml_version());
-                set_yaml_version(*m_current_node);
-                break;
-            }
+            // just ignore directives
+            case lexical_token_t::YAML_VER_DIRECTIVE:
             case lexical_token_t::TAG_DIRECTIVE:
-                // TODO: implement tag directive deserialization.
             case lexical_token_t::INVALID_DIRECTIVE:
-                // TODO: should output a warning log. Currently just ignore this case.
+                break;
+            case lexical_token_t::TAG_PREFIX:
+                // TODO: implement tag name handling.
+                m_tag_name = lexer.get_string();
+                m_needs_tag_impl = true;
                 break;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                 if (m_current_node->is_sequence())
@@ -4012,11 +4862,11 @@ public:
                 m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
                 m_node_stack.push_back(m_current_node);
                 m_current_node = &(m_current_node->template get_value_ref<sequence_type&>().back());
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::sequence();
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_END:
                 m_current_node = m_node_stack.back();
@@ -4024,7 +4874,7 @@ public:
                 break;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::mapping();
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
                 break;
             case lexical_token_t::MAPPING_FLOW_END:
                 m_current_node = m_node_stack.back();
@@ -4051,7 +4901,6 @@ public:
 
             lexical_token_t prev_type = type;
             type = lexer.get_next_token();
-            //
             cur_indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? cur_indent : lexer.get_last_token_begin_pos();
             cur_line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
@@ -4147,6 +4996,45 @@ private:
             type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
             type == lexical_token_t::STRING_VALUE || type == lexical_token_t::ALIAS_PREFIX);
 
+        if (m_needs_tag_impl)
+        {
+            if (type == lexical_token_t::ALIAS_PREFIX)
+            {
+                throw parse_error("Tag cannot be specified to alias nodes", line, indent);
+            }
+
+            tag_t tag_type = tag_resolver::resolve_tag(m_tag_name, mp_directive_set);
+
+            FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
+
+            switch (tag_type)
+            {
+            case tag_t::NULL_VALUE:
+                type = lexical_token_t::NULL_VALUE;
+                break;
+            case tag_t::BOOLEAN:
+                type = lexical_token_t::BOOLEAN_VALUE;
+                break;
+            case tag_t::INTEGER:
+                type = lexical_token_t::INTEGER_VALUE;
+                break;
+            case tag_t::FLOATING_NUMBER:
+                type = lexical_token_t::FLOAT_NUMBER_VALUE;
+                break;
+            case tag_t::STRING:
+                type = lexical_token_t::STRING_VALUE;
+                break;
+            case tag_t::NON_SPECIFIC:
+                // scalars with the non-specific tag is resolved to a string tag.
+                // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
+                type = lexical_token_t::STRING_VALUE;
+                break;
+            case tag_t::CUSTOM_TAG:
+            default:
+                break;
+            }
+        }
+
         BasicNodeType node {};
         switch (type)
         {
@@ -4179,7 +5067,7 @@ private:
             break; // LCOV_EXCL_LINE
         }
 
-        set_yaml_version(node);
+        apply_directive_set(node);
 
         if (m_needs_anchor_impl)
         {
@@ -4187,6 +5075,13 @@ private:
             m_anchor_table[m_anchor_name] = node;
             m_needs_anchor_impl = false;
             m_anchor_name.clear();
+        }
+
+        if (m_needs_tag_impl)
+        {
+            node.add_tag_name(m_tag_name);
+            m_needs_tag_impl = false;
+            m_tag_name.clear();
         }
 
         return node;
@@ -4226,7 +5121,7 @@ private:
                     return true;
                 }
                 *m_current_node = BasicNodeType::mapping();
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
             }
             add_new_key(std::move(node), indent, line);
         }
@@ -4241,21 +5136,19 @@ private:
 
     /// @brief Set the yaml_version_t object to the given node.
     /// @param node A BasicNodeType object to be set the yaml_version_t object.
-    void set_yaml_version(BasicNodeType& node) noexcept
+    void apply_directive_set(BasicNodeType& node) noexcept
     {
-        node.set_yaml_version(m_yaml_version);
+        if (mp_directive_set)
+        {
+            node.mp_directive_set = mp_directive_set;
+        }
     }
 
     /// @brief Update the target YAML version with an input string.
     /// @param version_str A YAML version string.
-    void update_yaml_version_from(const string_type& version_str) noexcept
+    yaml_version_t convert_yaml_version(const string_type& version_str) noexcept
     {
-        if (version_str == "1.1")
-        {
-            m_yaml_version = yaml_version_t::VER_1_1;
-            return;
-        }
-        m_yaml_version = yaml_version_t::VER_1_2;
+        return (version_str == "1.1") ? yaml_version_t::VER_1_1 : yaml_version_t::VER_1_2;
     }
 
 private:
@@ -4265,14 +5158,18 @@ private:
     std::vector<BasicNodeType*> m_node_stack {};
     /// The stack of indentation widths.
     std::vector<std::pair<std::size_t /*indent*/, bool /*is_explicit_key*/>> m_indent_stack {};
-    /// The YAML version specification type.
-    yaml_version_t m_yaml_version {yaml_version_t::VER_1_2};
+    /// The set of YAML directives.
+    std::shared_ptr<detail::directive_set> mp_directive_set {};
     /// A flag to determine the need for YAML anchor node implementation.
     bool m_needs_anchor_impl {false};
+    /// A flag to determine the need for a corresponding node with the last YAML tag.
+    bool m_needs_tag_impl {false};
     /// The last YAML anchor name.
     string_type m_anchor_name {};
     /// The table of YAML anchor nodes.
     std::unordered_map<std::string, BasicNodeType> m_anchor_table {};
+    /// The last tag name.
+    string_type m_tag_name {};
 };
 
 } // namespace detail
@@ -6350,6 +7247,8 @@ FK_YAML_NAMESPACE_END
 
 // #include <fkYAML/detail/types/node_t.hpp>
 
+// #include <fkYAML/detail/types/yaml_version_t.hpp>
+
 // #include <fkYAML/exception.hpp>
 
 
@@ -6376,11 +7275,67 @@ public:
     std::string serialize(const BasicNodeType& node)
     {
         std::string str {};
+        serialize_directives(node, str);
         serialize_node(node, 0, str);
         return str;
     } // LCOV_EXCL_LINE
 
 private:
+    /// @brief Serialize the directives if any is applied to the node.
+    /// @param node The targe node.
+    /// @param str A string to hold serialization result.
+    void serialize_directives(const BasicNodeType& node, std::string& str)
+    {
+        if (!node.mp_directive_set)
+        {
+            return;
+        }
+
+        const auto& directives = node.mp_directive_set;
+
+        if (directives->is_version_specified)
+        {
+            str += "%YAML ";
+            switch (directives->version)
+            {
+            case yaml_version_t::VER_1_1:
+                str += "1.1\n";
+                break;
+            case yaml_version_t::VER_1_2:
+                str += "1.2\n";
+                break;
+            }
+        }
+
+        if (!directives->primary_handle_prefix.empty())
+        {
+            str += "%TAG ! ";
+            str += directives->primary_handle_prefix;
+            str += "\n";
+        }
+
+        if (!directives->secondary_handle_prefix.empty())
+        {
+            str += "%TAG !! ";
+            str += directives->secondary_handle_prefix;
+            str += "\n";
+        }
+
+        if (!directives->named_handle_map.empty())
+        {
+            for (const auto& itr : directives->named_handle_map)
+            {
+                str += "%TAG ";
+                str += itr.first;
+                str += " ";
+                str += itr.second;
+                str += "\n";
+            }
+        }
+
+        str += "---\n";
+    }
+
     /// @brief Recursively serialize each Node object.
     /// @param node A Node object to be serialized.
     /// @param cur_indent The current indent width
@@ -6466,210 +7421,58 @@ private:
             }
             break;
         case node_t::NULL_OBJECT:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::FLOAT_NUMBER:
+            if (try_append_tag(node, str))
+            {
+                str += " ";
+            }
             to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::STRING: {
-            using string_type = typename BasicNodeType::string_type;
-
-            // Check if the string value contains a character needed to be escaped on output.
-            const string_type& s = node.template get_value_ref<const string_type&>();
-            string_type escaped;
-            bool has_escape = false;
-            size_t size = s.size();
-            for (size_t i = 0; i < size; i++)
+            bool is_appended = try_append_tag(node, str);
+            if (is_appended)
             {
-                switch (s[i])
-                {
-                case 0x01:
-                    escaped += "\\u0001";
-                    has_escape = true;
-                    break;
-                case 0x02:
-                    escaped += "\\u0002";
-                    has_escape = true;
-                    break;
-                case 0x03:
-                    escaped += "\\u0003";
-                    has_escape = true;
-                    break;
-                case 0x04:
-                    escaped += "\\u0004";
-                    has_escape = true;
-                    break;
-                case 0x05:
-                    escaped += "\\u0005";
-                    has_escape = true;
-                    break;
-                case 0x06:
-                    escaped += "\\u0006";
-                    has_escape = true;
-                    break;
-                case '\a':
-                    escaped += "\\a";
-                    has_escape = true;
-                    break;
-                case '\b':
-                    escaped += "\\b";
-                    has_escape = true;
-                    break;
-                case '\t':
-                    escaped += "\\t";
-                    has_escape = true;
-                    break;
-                case '\n':
-                    escaped += "\\n";
-                    has_escape = true;
-                    break;
-                case '\v':
-                    escaped += "\\v";
-                    has_escape = true;
-                    break;
-                case '\f':
-                    escaped += "\\f";
-                    has_escape = true;
-                    break;
-                case '\r':
-                    escaped += "\\r";
-                    has_escape = true;
-                    break;
-                case 0x0E:
-                    escaped += "\\u000E";
-                    has_escape = true;
-                    break;
-                case 0x0F:
-                    escaped += "\\u000F";
-                    has_escape = true;
-                    break;
-                case 0x10:
-                    escaped += "\\u0010";
-                    has_escape = true;
-                    break;
-                case 0x11:
-                    escaped += "\\u0011";
-                    has_escape = true;
-                    break;
-                case 0x12:
-                    escaped += "\\u0012";
-                    has_escape = true;
-                    break;
-                case 0x13:
-                    escaped += "\\u0013";
-                    has_escape = true;
-                    break;
-                case 0x14:
-                    escaped += "\\u0014";
-                    has_escape = true;
-                    break;
-                case 0x15:
-                    escaped += "\\u0015";
-                    has_escape = true;
-                    break;
-                case 0x16:
-                    escaped += "\\u0016";
-                    has_escape = true;
-                    break;
-                case 0x17:
-                    escaped += "\\u0017";
-                    has_escape = true;
-                    break;
-                case 0x18:
-                    escaped += "\\u0018";
-                    has_escape = true;
-                    break;
-                case 0x19:
-                    escaped += "\\u0019";
-                    has_escape = true;
-                    break;
-                case 0x1A:
-                    escaped += "\\u001A";
-                    has_escape = true;
-                    break;
-                case 0x1B:
-                    escaped += "\\e";
-                    has_escape = true;
-                    break;
-                case 0x1C:
-                    escaped += "\\u001C";
-                    has_escape = true;
-                    break;
-                case 0x1D:
-                    escaped += "\\u001D";
-                    has_escape = true;
-                    break;
-                case 0x1E:
-                    escaped += "\\u001E";
-                    has_escape = true;
-                    break;
-                case 0x1F:
-                    escaped += "\\u001F";
-                    has_escape = true;
-                    break;
-                case '\"':
-                    escaped += "\\\"";
-                    has_escape = true;
-                    break;
-                case '\\':
-                    escaped += "\\\\";
-                    has_escape = true;
-                    break;
-                default:
-                    if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u))
-                    {
-                        escaped += "\\N";
-                        i++;
-                        has_escape = true;
-                        break;
-                    }
-                    if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u))
-                    {
-                        escaped += "\\_";
-                        i++;
-                        has_escape = true;
-                        break;
-                    }
-                    if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u))
-                    {
-                        escaped += "\\L";
-                        i += 2;
-                        has_escape = true;
-                        break;
-                    }
-                    if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u))
-                    {
-                        escaped += "\\P";
-                        i += 2;
-                        has_escape = true;
-                        break;
-                    }
-                    escaped += s[i];
-                    break;
-                }
+                str += " ";
             }
 
-            if (has_escape)
+            bool is_escaped = false;
+            typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
+
+            if (is_escaped)
             {
                 // There's no other token type with escapes than strings.
                 // Also, escapes must be in double-quoted strings.
                 str += '\"';
-                str += escaped;
+                str += str_val;
                 str += '\"';
                 break;
             }
 
-            auto adapter = input_adapter(s);
+            auto adapter = input_adapter(str_val);
             lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
             lexical_token_t token_type = lexer.get_next_token();
 
@@ -6678,12 +7481,12 @@ private:
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
-                str += s;
+                str += str_val;
                 str += '\"';
             }
             else
             {
-                str += s;
+                str += str_val;
             }
             break;
         }
@@ -6736,6 +7539,209 @@ private:
         return false;
     }
 
+    /// @brief Append a tag name if it's available. Do nothing otherwise.
+    /// @param[in] node The target node which possibly has a tag name.
+    /// @param[out] str A string to hold serialization result.
+    /// @return true if a tag name has been appended, false otherwise.
+    bool try_append_tag(const BasicNodeType& node, std::string& str) const
+    {
+        if (node.has_tag_name())
+        {
+            str += node.get_tag_name();
+            return true;
+        }
+        return false;
+    }
+
+    /// @brief Get a string value from the given node and, if necessary, escape its contents.
+    /// @param[in] node The target string YAML node.
+    /// @param[out] is_escaped Whether or not the contents of an ouput string has been escaped.
+    /// @return The (escaped) string node value.
+    typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped)
+    {
+        FK_YAML_ASSERT(node.is_string());
+
+        using string_type = typename BasicNodeType::string_type;
+
+        // Check if the string value contains a character needed to be escaped on output.
+        const string_type& s = node.template get_value_ref<const string_type&>();
+        size_t size = s.size();
+        string_type escaped {};
+        escaped.reserve(size);
+
+        for (size_t i = 0; i < size; i++)
+        {
+            switch (s[i])
+            {
+            case 0x01:
+                escaped += "\\u0001";
+                is_escaped = true;
+                break;
+            case 0x02:
+                escaped += "\\u0002";
+                is_escaped = true;
+                break;
+            case 0x03:
+                escaped += "\\u0003";
+                is_escaped = true;
+                break;
+            case 0x04:
+                escaped += "\\u0004";
+                is_escaped = true;
+                break;
+            case 0x05:
+                escaped += "\\u0005";
+                is_escaped = true;
+                break;
+            case 0x06:
+                escaped += "\\u0006";
+                is_escaped = true;
+                break;
+            case '\a':
+                escaped += "\\a";
+                is_escaped = true;
+                break;
+            case '\b':
+                escaped += "\\b";
+                is_escaped = true;
+                break;
+            case '\t':
+                escaped += "\\t";
+                is_escaped = true;
+                break;
+            case '\n':
+                escaped += "\\n";
+                is_escaped = true;
+                break;
+            case '\v':
+                escaped += "\\v";
+                is_escaped = true;
+                break;
+            case '\f':
+                escaped += "\\f";
+                is_escaped = true;
+                break;
+            case '\r':
+                escaped += "\\r";
+                is_escaped = true;
+                break;
+            case 0x0E:
+                escaped += "\\u000E";
+                is_escaped = true;
+                break;
+            case 0x0F:
+                escaped += "\\u000F";
+                is_escaped = true;
+                break;
+            case 0x10:
+                escaped += "\\u0010";
+                is_escaped = true;
+                break;
+            case 0x11:
+                escaped += "\\u0011";
+                is_escaped = true;
+                break;
+            case 0x12:
+                escaped += "\\u0012";
+                is_escaped = true;
+                break;
+            case 0x13:
+                escaped += "\\u0013";
+                is_escaped = true;
+                break;
+            case 0x14:
+                escaped += "\\u0014";
+                is_escaped = true;
+                break;
+            case 0x15:
+                escaped += "\\u0015";
+                is_escaped = true;
+                break;
+            case 0x16:
+                escaped += "\\u0016";
+                is_escaped = true;
+                break;
+            case 0x17:
+                escaped += "\\u0017";
+                is_escaped = true;
+                break;
+            case 0x18:
+                escaped += "\\u0018";
+                is_escaped = true;
+                break;
+            case 0x19:
+                escaped += "\\u0019";
+                is_escaped = true;
+                break;
+            case 0x1A:
+                escaped += "\\u001A";
+                is_escaped = true;
+                break;
+            case 0x1B:
+                escaped += "\\e";
+                is_escaped = true;
+                break;
+            case 0x1C:
+                escaped += "\\u001C";
+                is_escaped = true;
+                break;
+            case 0x1D:
+                escaped += "\\u001D";
+                is_escaped = true;
+                break;
+            case 0x1E:
+                escaped += "\\u001E";
+                is_escaped = true;
+                break;
+            case 0x1F:
+                escaped += "\\u001F";
+                is_escaped = true;
+                break;
+            case '\"':
+                escaped += "\\\"";
+                is_escaped = true;
+                break;
+            case '\\':
+                escaped += "\\\\";
+                is_escaped = true;
+                break;
+            default:
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u))
+                {
+                    escaped += "\\N";
+                    i++;
+                    is_escaped = true;
+                    break;
+                }
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u))
+                {
+                    escaped += "\\_";
+                    i++;
+                    is_escaped = true;
+                    break;
+                }
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u))
+                {
+                    escaped += "\\L";
+                    i += 2;
+                    is_escaped = true;
+                    break;
+                }
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u))
+                {
+                    escaped += "\\P";
+                    i += 2;
+                    is_escaped = true;
+                    break;
+                }
+                escaped += s[i];
+                break;
+            }
+        }
+
+        return escaped;
+    } // LCOV_EXCL_LINE
+
 private:
     /// A temporal buffer for conversion from a scalar to a string.
     std::string m_tmp_str_buff;
@@ -6748,8 +7754,6 @@ FK_YAML_NAMESPACE_END
 #endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_ */
 
 // #include <fkYAML/detail/types/node_t.hpp>
-
-// #include <fkYAML/detail/types/yaml_version_t.hpp>
 
 // #include <fkYAML/exception.hpp>
 
@@ -7763,6 +8767,12 @@ private:
     template <node_t>
     friend struct fkyaml::detail::external_node_constructor;
 
+    template <typename BasicNodeType>
+    friend class fkyaml::detail::basic_deserializer;
+
+    template <typename BasicNodeType>
+    friend class fkyaml::detail::basic_serializer;
+
     /// @brief A type for YAML docs deserializers.
     using deserializer_type = detail::basic_deserializer<basic_node>;
     /// @brief A type for YAML docs serializers.
@@ -7947,7 +8957,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type),
+          mp_directive_set(rhs.mp_directive_set),
           m_prop(rhs.m_prop)
     {
         switch (m_node_type)
@@ -7984,7 +8994,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type),
+          mp_directive_set(std::move(rhs.mp_directive_set)),
           m_prop(std::move(rhs.m_prop))
     {
         switch (m_node_type)
@@ -8023,7 +9033,6 @@ public:
         }
 
         rhs.m_node_type = node_t::NULL_OBJECT;
-        rhs.m_yaml_version_type = yaml_version_t::VER_1_2;
         rhs.m_node_value.p_mapping = nullptr;
         rhs.m_prop.anchor_status = detail::anchor_status_t::NONE;
     }
@@ -8853,19 +9862,26 @@ public:
     }
 
     /// @brief Get the YAML version specification for this basic_node object.
-    /// @return The version of the YAML format applied to the basic_node object.
+    /// @return The YAML version if any is applied to the basic_node object, `yaml_version_t::VER_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
     yaml_version_t get_yaml_version() const noexcept
     {
-        return m_yaml_version_type;
+        return (mp_directive_set && mp_directive_set->is_version_specified) ? mp_directive_set->version
+                                                                            : yaml_version_t::VER_1_2;
     }
 
     /// @brief Set the YAML version specification for this basic_node object.
+    /// @note If no YAML directive
     /// @param[in] A version of the YAML format.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     void set_yaml_version(const yaml_version_t version) noexcept
     {
-        m_yaml_version_type = version;
+        if (!mp_directive_set)
+        {
+            mp_directive_set = std::shared_ptr<detail::directive_set>(new detail::directive_set());
+        }
+        mp_directive_set->version = version;
+        mp_directive_set->is_version_specified = true;
     }
 
     /// @brief Check whether or not this basic_node object has already had any anchor name.
@@ -8876,10 +9892,10 @@ public:
         return m_prop.anchor_status != detail::anchor_status_t::NONE && !m_prop.anchor.empty();
     }
 
-    /// @brief Get the anchor name associated to this basic_node object.
-    /// @note Some anchor name must be set before calling this method. Call basic_node::HasAnchorName() to see if this
-    /// basic_node object has any anchor name.
-    /// @return The anchor name associated to the node.
+    /// @brief Get the anchor name associated with this basic_node object.
+    /// @note Some anchor name must be set before calling this method. Call has_anchor_name() to see if this basic_node
+    /// object has any anchor name.
+    /// @return The anchor name associated with the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const
     {
@@ -8892,6 +9908,7 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name)
     {
@@ -8901,12 +9918,52 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
-    /// @param[in] anchor_name An anchor name.This should not be empty.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name)
     {
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
         m_prop.anchor = std::move(anchor_name);
+    }
+
+    /// @brief Check whether or not this basic_node object has already had any tag name.
+    /// @return true if ths basic_node has a tag name, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
+    bool has_tag_name() const noexcept
+    {
+        return !m_prop.tag.empty();
+    }
+
+    /// @brief Get the tag name associated with this basic_node object.
+    /// @note Some tag name must be set before calling this method. Call has_tag_name() to see if this basic_node
+    /// object has any tag name.
+    /// @return The tag name associated with the node. It may be empty.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_tag_name/
+    const std::string& get_tag_name() const
+    {
+        if (!has_tag_name())
+        {
+            throw fkyaml::exception("No tag name has been set.");
+        }
+        return m_prop.tag;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(const std::string& tag_name)
+    {
+        m_prop.tag = tag_name;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(std::string&& tag_name)
+    {
+        m_prop.tag = std::move(tag_name);
     }
 
     /// @brief Get the node value object converted into a given type.
@@ -8961,7 +10018,7 @@ public:
     {
         using std::swap;
         swap(m_node_type, rhs.m_node_type);
-        swap(m_yaml_version_type, rhs.m_yaml_version_type);
+        swap(mp_directive_set, rhs.mp_directive_set);
 
         node_value tmp {};
         std::memcpy(&tmp, &m_node_value, sizeof(node_value));
@@ -9196,8 +10253,8 @@ private:
 
     /// The current node value type.
     node_t m_node_type {node_t::NULL_OBJECT};
-    /// The YAML version specification.
-    yaml_version_t m_yaml_version_type {yaml_version_t::VER_1_2};
+    /// The shared set of YAML directives applied to this node.
+    mutable std::shared_ptr<detail::directive_set> mp_directive_set {};
     /// The current node value.
     node_value m_node_value {};
     /// The property set of this node.

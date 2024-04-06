@@ -23,6 +23,7 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
+#include <fkYAML/detail/directive_set.hpp>
 #include <fkYAML/detail/input/deserializer.hpp>
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/detail/iterator.hpp>
@@ -33,7 +34,6 @@
 #include <fkYAML/detail/node_ref_storage.hpp>
 #include <fkYAML/detail/output/serializer.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
-#include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
 #include <fkYAML/node_value_converter.hpp>
 #include <fkYAML/ordered_map.hpp>
@@ -100,6 +100,12 @@ public:
 private:
     template <node_t>
     friend struct fkyaml::detail::external_node_constructor;
+
+    template <typename BasicNodeType>
+    friend class fkyaml::detail::basic_deserializer;
+
+    template <typename BasicNodeType>
+    friend class fkyaml::detail::basic_serializer;
 
     /// @brief A type for YAML docs deserializers.
     using deserializer_type = detail::basic_deserializer<basic_node>;
@@ -285,7 +291,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type),
+          mp_directive_set(rhs.mp_directive_set),
           m_prop(rhs.m_prop)
     {
         switch (m_node_type)
@@ -322,7 +328,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type),
+          mp_directive_set(std::move(rhs.mp_directive_set)),
           m_prop(std::move(rhs.m_prop))
     {
         switch (m_node_type)
@@ -361,7 +367,6 @@ public:
         }
 
         rhs.m_node_type = node_t::NULL_OBJECT;
-        rhs.m_yaml_version_type = yaml_version_t::VER_1_2;
         rhs.m_node_value.p_mapping = nullptr;
         rhs.m_prop.anchor_status = detail::anchor_status_t::NONE;
     }
@@ -1191,19 +1196,26 @@ public:
     }
 
     /// @brief Get the YAML version specification for this basic_node object.
-    /// @return The version of the YAML format applied to the basic_node object.
+    /// @return The YAML version if any is applied to the basic_node object, `yaml_version_t::VER_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
     yaml_version_t get_yaml_version() const noexcept
     {
-        return m_yaml_version_type;
+        return (mp_directive_set && mp_directive_set->is_version_specified) ? mp_directive_set->version
+                                                                            : yaml_version_t::VER_1_2;
     }
 
     /// @brief Set the YAML version specification for this basic_node object.
+    /// @note If no YAML directive
     /// @param[in] A version of the YAML format.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     void set_yaml_version(const yaml_version_t version) noexcept
     {
-        m_yaml_version_type = version;
+        if (!mp_directive_set)
+        {
+            mp_directive_set = std::shared_ptr<detail::directive_set>(new detail::directive_set());
+        }
+        mp_directive_set->version = version;
+        mp_directive_set->is_version_specified = true;
     }
 
     /// @brief Check whether or not this basic_node object has already had any anchor name.
@@ -1214,10 +1226,10 @@ public:
         return m_prop.anchor_status != detail::anchor_status_t::NONE && !m_prop.anchor.empty();
     }
 
-    /// @brief Get the anchor name associated to this basic_node object.
-    /// @note Some anchor name must be set before calling this method. Call basic_node::HasAnchorName() to see if this
-    /// basic_node object has any anchor name.
-    /// @return The anchor name associated to the node.
+    /// @brief Get the anchor name associated with this basic_node object.
+    /// @note Some anchor name must be set before calling this method. Call has_anchor_name() to see if this basic_node
+    /// object has any anchor name.
+    /// @return The anchor name associated with the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const
     {
@@ -1230,6 +1242,7 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name)
     {
@@ -1239,12 +1252,52 @@ public:
 
     /// @brief Add an anchor name to this basic_node object.
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
-    /// @param[in] anchor_name An anchor name.This should not be empty.
+    /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name)
     {
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
         m_prop.anchor = std::move(anchor_name);
+    }
+
+    /// @brief Check whether or not this basic_node object has already had any tag name.
+    /// @return true if ths basic_node has a tag name, false otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
+    bool has_tag_name() const noexcept
+    {
+        return !m_prop.tag.empty();
+    }
+
+    /// @brief Get the tag name associated with this basic_node object.
+    /// @note Some tag name must be set before calling this method. Call has_tag_name() to see if this basic_node
+    /// object has any tag name.
+    /// @return The tag name associated with the node. It may be empty.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_tag_name/
+    const std::string& get_tag_name() const
+    {
+        if (!has_tag_name())
+        {
+            throw fkyaml::exception("No tag name has been set.");
+        }
+        return m_prop.tag;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(const std::string& tag_name)
+    {
+        m_prop.tag = tag_name;
+    }
+
+    /// @brief Add a tag name to this basic_node object.
+    /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
+    /// @param[in] tag_name A tag name to get associated with this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
+    void add_tag_name(std::string&& tag_name)
+    {
+        m_prop.tag = std::move(tag_name);
     }
 
     /// @brief Get the node value object converted into a given type.
@@ -1299,7 +1352,7 @@ public:
     {
         using std::swap;
         swap(m_node_type, rhs.m_node_type);
-        swap(m_yaml_version_type, rhs.m_yaml_version_type);
+        swap(mp_directive_set, rhs.mp_directive_set);
 
         node_value tmp {};
         std::memcpy(&tmp, &m_node_value, sizeof(node_value));
@@ -1534,8 +1587,8 @@ private:
 
     /// The current node value type.
     node_t m_node_type {node_t::NULL_OBJECT};
-    /// The YAML version specification.
-    yaml_version_t m_yaml_version_type {yaml_version_t::VER_1_2};
+    /// The shared set of YAML directives applied to this node.
+    mutable std::shared_ptr<detail::directive_set> mp_directive_set {};
     /// The current node value.
     node_value m_node_value {};
     /// The property set of this node.
