@@ -40,6 +40,15 @@ all:
 	@echo "update-version - update version descriptions in the project."
 	@echo "valgrind - check whether no memory leak is detected while running the unit test app."
 
+###############
+#   Testing   #
+###############
+
+yaml-test-suite:
+	cmake -B build_yaml_test_suite -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+	cmake --build build_yaml_test_suite --config Debug
+	ctest -C Debug --test-dir build_yaml_test_suite --output-on-failure
+
 #############################
 #   Static Code Analyzers   #
 #############################
@@ -206,4 +215,5 @@ clean:
 		build_coverage \
 		build_examples \
 		build_iwyu \
-		build_valgrind
+		build_valgrind \
+		build_yaml_test_suite
