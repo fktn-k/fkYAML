@@ -55,8 +55,7 @@ TEST_CASE("TagResolverClassTest_ResolveTag", "[TagResolverClassTest]")
 
         auto test_pair = GENERATE(
             test_pair_t {"!str", fkyaml::detail::tag_t::CUSTOM_TAG},
-            test_pair_t {"!<!str>", fkyaml::detail::tag_t::CUSTOM_TAG}
-        );
+            test_pair_t {"!<!str>", fkyaml::detail::tag_t::CUSTOM_TAG});
 
         REQUIRE_NOTHROW(tag_type = fkyaml::detail::tag_resolver::resolve_tag(test_pair.first, directives));
         REQUIRE(tag_type == test_pair.second);
@@ -102,11 +101,7 @@ TEST_CASE("TagResolverClassTest_ResolveTag", "[TagResolverClassTest]")
 
     SECTION("invalid tag name with empty directive_set")
     {
-        auto tag = GENERATE(
-            std::string(""),
-            std::string("invalid"),
-            std::string("!invalid!tag")
-        );
+        auto tag = GENERATE(std::string(""), std::string("invalid"), std::string("!invalid!tag"));
 
         REQUIRE_THROWS_AS(fkyaml::detail::tag_resolver::resolve_tag(tag, directives), fkyaml::invalid_tag);
     }
@@ -116,9 +111,7 @@ TEST_CASE("TagResolverClassTest_ResolveTag", "[TagResolverClassTest]")
         directives = std::shared_ptr<fkyaml::detail::directive_set>(new fkyaml::detail::directive_set());
         directives->named_handle_map.emplace("!valid!", "tag:example.com,2000");
 
-        auto tag = GENERATE(
-            std::string("!invalid!tag")
-        );
+        auto tag = GENERATE(std::string("!invalid!tag"));
 
         REQUIRE_THROWS_AS(fkyaml::detail::tag_resolver::resolve_tag(tag, directives), fkyaml::invalid_tag);
     }

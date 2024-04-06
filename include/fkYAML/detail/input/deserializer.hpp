@@ -16,12 +16,12 @@
 #include <unordered_map>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/directive_set.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/types/lexical_token_t.hpp>
-#include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
 
 /// @brief namespace for fkYAML library.
@@ -71,6 +71,57 @@ public:
         std::size_t cur_indent = lexer.get_last_token_begin_pos();
         std::size_t cur_line = lexer.get_lines_processed();
 
+        // parse directives first.
+        {
+            bool ends_directive_section = false;
+            do
+            {
+                switch (type)
+                {
+                case lexical_token_t::YAML_VER_DIRECTIVE: {
+                    if (!mp_directive_set)
+                    {
+                        mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
+                    }
+                    if (!root.mp_directive_set)
+                    {
+                        root.mp_directive_set = mp_directive_set;
+                    }
+                    mp_directive_set->version = convert_yaml_version(lexer.get_yaml_version());
+                    break;
+                }
+                case lexical_token_t::TAG_DIRECTIVE:
+                    if (!mp_directive_set)
+                    {
+                        mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
+                    }
+                    if (!root.mp_directive_set)
+                    {
+                        root.mp_directive_set = mp_directive_set;
+                    }
+                    // TODO: implement tag directive deserialization.
+                    break;
+                case lexical_token_t::INVALID_DIRECTIVE:
+                    // TODO: should output a warning log. Currently just ignore this case.
+                    break;
+                case lexical_token_t::END_OF_DIRECTIVES:
+                    ends_directive_section = true;
+                    break;
+                default:
+                    // move to the content parsing if the other tokens are found.
+                    ends_directive_section = true;
+                    break;
+                }
+
+                if (!ends_directive_section)
+                {
+                    type = lexer.get_next_token();
+                    cur_indent = lexer.get_last_token_begin_pos();
+                    cur_line = lexer.get_lines_processed();
+                }
+            } while (!ends_directive_section);
+        }
+
         do
         {
             switch (type)
@@ -110,12 +161,12 @@ public:
                 {
                     m_indent_stack.emplace_back(lexer.get_last_token_begin_pos(), false);
                     m_current_node = new BasicNodeType(node_t::SEQUENCE);
-                    set_yaml_version(*m_current_node);
+                    apply_directive_set(*m_current_node);
                     break;
                 }
 
                 m_current_node = new BasicNodeType();
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
                 cur_indent = lexer.get_last_token_begin_pos();
                 cur_line = lexer.get_lines_processed();
 
@@ -157,12 +208,12 @@ public:
                     case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                         // a key separator preceeding block sequence entries
                         *m_current_node = BasicNodeType::sequence();
-                        set_yaml_version(*m_current_node);
+                        apply_directive_set(*m_current_node);
                         break;
                     case lexical_token_t::EXPLICIT_KEY_PREFIX:
                         // a key separator for a explicit block mapping key.
                         *m_current_node = BasicNodeType::mapping();
-                        set_yaml_version(*m_current_node);
+                        apply_directive_set(*m_current_node);
                         break;
                     // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
                     // call.
@@ -218,7 +269,7 @@ public:
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
                     *m_current_node = BasicNodeType::sequence();
-                    set_yaml_version(*m_current_node);
+                    apply_directive_set(*m_current_node);
                 }
                 cur_indent = lexer.get_last_token_begin_pos();
                 cur_line = lexer.get_lines_processed();
@@ -242,22 +293,15 @@ public:
             }
             case lexical_token_t::COMMENT_PREFIX:
                 break;
-            case lexical_token_t::YAML_VER_DIRECTIVE: {
-                FK_YAML_ASSERT(m_current_node == &root);
-                update_yaml_version_from(lexer.get_yaml_version());
-                set_yaml_version(*m_current_node);
-                break;
-            }
+            // just ignore directives
+            case lexical_token_t::YAML_VER_DIRECTIVE:
             case lexical_token_t::TAG_DIRECTIVE:
-                // TODO: implement tag directive deserialization.
+            case lexical_token_t::INVALID_DIRECTIVE:
                 break;
             case lexical_token_t::TAG_PREFIX:
                 // TODO: implement tag name handling.
                 m_tag_name = lexer.get_string();
                 m_needs_tag_impl = true;
-                break;
-            case lexical_token_t::INVALID_DIRECTIVE:
-                // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                 if (m_current_node->is_sequence())
@@ -297,11 +341,11 @@ public:
                 m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
                 m_node_stack.push_back(m_current_node);
                 m_current_node = &(m_current_node->template get_value_ref<sequence_type&>().back());
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::sequence();
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_END:
                 m_current_node = m_node_stack.back();
@@ -309,7 +353,7 @@ public:
                 break;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 *m_current_node = BasicNodeType::mapping();
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
                 break;
             case lexical_token_t::MAPPING_FLOW_END:
                 m_current_node = m_node_stack.back();
@@ -336,7 +380,6 @@ public:
 
             lexical_token_t prev_type = type;
             type = lexer.get_next_token();
-            //
             cur_indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? cur_indent : lexer.get_last_token_begin_pos();
             cur_line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
@@ -464,7 +507,7 @@ private:
             break; // LCOV_EXCL_LINE
         }
 
-        set_yaml_version(node);
+        apply_directive_set(node);
 
         if (m_needs_anchor_impl)
         {
@@ -518,7 +561,7 @@ private:
                     return true;
                 }
                 *m_current_node = BasicNodeType::mapping();
-                set_yaml_version(*m_current_node);
+                apply_directive_set(*m_current_node);
             }
             add_new_key(std::move(node), indent, line);
         }
@@ -533,21 +576,19 @@ private:
 
     /// @brief Set the yaml_version_t object to the given node.
     /// @param node A BasicNodeType object to be set the yaml_version_t object.
-    void set_yaml_version(BasicNodeType& node) noexcept
+    void apply_directive_set(BasicNodeType& node) noexcept
     {
-        node.set_yaml_version(m_yaml_version);
+        if (mp_directive_set)
+        {
+            node.mp_directive_set = mp_directive_set;
+        }
     }
 
     /// @brief Update the target YAML version with an input string.
     /// @param version_str A YAML version string.
-    void update_yaml_version_from(const string_type& version_str) noexcept
+    yaml_version_t convert_yaml_version(const string_type& version_str) noexcept
     {
-        if (version_str == "1.1")
-        {
-            m_yaml_version = yaml_version_t::VER_1_1;
-            return;
-        }
-        m_yaml_version = yaml_version_t::VER_1_2;
+        return (version_str == "1.1") ? yaml_version_t::VER_1_1 : yaml_version_t::VER_1_2;
     }
 
 private:
@@ -557,8 +598,8 @@ private:
     std::vector<BasicNodeType*> m_node_stack {};
     /// The stack of indentation widths.
     std::vector<std::pair<std::size_t /*indent*/, bool /*is_explicit_key*/>> m_indent_stack {};
-    /// The YAML version specification type.
-    yaml_version_t m_yaml_version {yaml_version_t::VER_1_2};
+    /// The set of YAML directives.
+    std::shared_ptr<detail::directive_set> mp_directive_set {};
     /// A flag to determine the need for YAML anchor node implementation.
     bool m_needs_anchor_impl {false};
     /// A flag to determine the need for a corresponding node with the last YAML tag.

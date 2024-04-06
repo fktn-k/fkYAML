@@ -32,9 +32,11 @@ namespace detail
 
 namespace /*default prefixes*/
 {
-    const std::string default_primary_handle_prefix = "!";
-    const std::string default_secondary_handle_prefix = "tag:yaml.org,2002:";
-}
+
+const std::string default_primary_handle_prefix = "!";
+const std::string default_secondary_handle_prefix = "tag:yaml.org,2002:";
+
+} // namespace
 
 class tag_resolver
 {

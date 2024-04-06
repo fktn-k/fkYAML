@@ -1246,7 +1246,7 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
 
     SECTION("YAML 1.1")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.1\nfoo: one")));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.1\n---\nfoo: one")));
 
         REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
         REQUIRE(root.is_mapping());
@@ -1262,7 +1262,7 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
 
     SECTION("YAML 1.2")
     {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.2\nfoo: one")));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.2\n---\nfoo: one")));
 
         REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
         REQUIRE(root.is_mapping());
@@ -1274,6 +1274,24 @@ TEST_CASE("DeserializerClassTest_DeserializeYAMLVerDirectiveTest", "[Deserialize
         REQUIRE(foo_node.is_string());
         REQUIRE_NOTHROW(foo_node.get_value_ref<fkyaml::node::string_type&>());
         REQUIRE(foo_node.get_value_ref<fkyaml::node::string_type&>().compare("one") == 0);
+    }
+
+    SECTION("YAML directive in the content")
+    {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\n%YAML 1.1\ntrue: 123")));
+
+        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_string());
+        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
+
+        REQUIRE(root.contains(true));
+        REQUIRE(root[true].is_integer());
+        REQUIRE(root[true].get_value<int>() == 123);
     }
 }
 

@@ -23,6 +23,7 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
+#include <fkYAML/detail/directive_set.hpp>
 #include <fkYAML/detail/input/deserializer.hpp>
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/detail/iterator.hpp>
@@ -33,7 +34,6 @@
 #include <fkYAML/detail/node_ref_storage.hpp>
 #include <fkYAML/detail/output/serializer.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
-#include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
 #include <fkYAML/node_value_converter.hpp>
 #include <fkYAML/ordered_map.hpp>
@@ -100,6 +100,9 @@ public:
 private:
     template <node_t>
     friend struct fkyaml::detail::external_node_constructor;
+
+    template <typename BasicNodeType>
+    friend class fkyaml::detail::basic_deserializer;
 
     /// @brief A type for YAML docs deserializers.
     using deserializer_type = detail::basic_deserializer<basic_node>;
@@ -285,7 +288,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type),
+          mp_directive_set(rhs.mp_directive_set),
           m_prop(rhs.m_prop)
     {
         switch (m_node_type)
@@ -322,7 +325,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
-          m_yaml_version_type(rhs.m_yaml_version_type),
+          mp_directive_set(std::move(rhs.mp_directive_set)),
           m_prop(std::move(rhs.m_prop))
     {
         switch (m_node_type)
@@ -361,7 +364,6 @@ public:
         }
 
         rhs.m_node_type = node_t::NULL_OBJECT;
-        rhs.m_yaml_version_type = yaml_version_t::VER_1_2;
         rhs.m_node_value.p_mapping = nullptr;
         rhs.m_prop.anchor_status = detail::anchor_status_t::NONE;
     }
@@ -1191,19 +1193,24 @@ public:
     }
 
     /// @brief Get the YAML version specification for this basic_node object.
-    /// @return The version of the YAML format applied to the basic_node object.
+    /// @return The YAML version if any is applied to the basic_node object, `yaml_version_t::VER_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
     yaml_version_t get_yaml_version() const noexcept
     {
-        return m_yaml_version_type;
+        return (mp_directive_set) ? mp_directive_set->version : yaml_version_t::VER_1_2;
     }
 
     /// @brief Set the YAML version specification for this basic_node object.
+    /// @note If no YAML directive
     /// @param[in] A version of the YAML format.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     void set_yaml_version(const yaml_version_t version) noexcept
     {
-        m_yaml_version_type = version;
+        if (!mp_directive_set)
+        {
+            mp_directive_set = std::shared_ptr<detail::directive_set>(new detail::directive_set());
+        }
+        mp_directive_set->version = version;
     }
 
     /// @brief Check whether or not this basic_node object has already had any anchor name.
@@ -1340,7 +1347,7 @@ public:
     {
         using std::swap;
         swap(m_node_type, rhs.m_node_type);
-        swap(m_yaml_version_type, rhs.m_yaml_version_type);
+        swap(mp_directive_set, rhs.mp_directive_set);
 
         node_value tmp {};
         std::memcpy(&tmp, &m_node_value, sizeof(node_value));
@@ -1575,8 +1582,8 @@ private:
 
     /// The current node value type.
     node_t m_node_type {node_t::NULL_OBJECT};
-    /// The YAML version specification.
-    yaml_version_t m_yaml_version_type {yaml_version_t::VER_1_2};
+    /// The shared set of YAML directives applied to this node.
+    mutable std::shared_ptr<detail::directive_set> mp_directive_set {};
     /// The current node value.
     node_value m_node_value {};
     /// The property set of this node.
