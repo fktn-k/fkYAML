@@ -410,7 +410,8 @@ private:
                 skip_until_line_end();
                 return lexical_token_t::INVALID_DIRECTIVE;
             }
-            if (m_input_handler.get_next() != ' ')
+            int current = m_input_handler.get_next();
+            if (current != ' ' && current != '\t')
             {
                 emit_error("There must be a half-width space between \"%TAG\" and tag info.");
             }
@@ -420,14 +421,15 @@ private:
             // TODO: parse tag directives' information
             return scan_tag_directive();
         }
-        case 'Y':
+        case 'Y': {
             if (m_input_handler.get_next() != 'A' || m_input_handler.get_next() != 'M' ||
                 m_input_handler.get_next() != 'L')
             {
                 skip_until_line_end();
                 return lexical_token_t::INVALID_DIRECTIVE;
             }
-            if (m_input_handler.get_next() != ' ')
+            int current = m_input_handler.get_next();
+            if (current != ' ' && current != '\t')
             {
                 emit_error("There must be at least one half-width space between \"%YAML\" and a version number.");
             }
@@ -435,6 +437,7 @@ private:
             skip_white_spaces();
 
             return scan_yaml_version_directive();
+        }
         default:
             skip_until_line_end();
             return lexical_token_t::INVALID_DIRECTIVE;
@@ -462,6 +465,7 @@ private:
         switch (current)
         {
         case ' ':
+        case '\t':
             // primary handle (!)
             break;
         case '!':
@@ -604,9 +608,16 @@ private:
             emit_error("YAML version must be specified with digits and periods.");
         }
 
-        if (m_input_handler.get_next() != ' ' && m_input_handler.get_current() != '\r' &&
-            m_input_handler.get_current() != '\n')
+        int current = m_input_handler.get_next();
+        switch (current)
         {
+        case ' ':
+        case '\t':
+        case '\r':
+        case '\n':
+        case s_end_of_input:
+            break;
+        default:
             emit_error("Only YAML version 1.1/1.2 are supported.");
         }
 

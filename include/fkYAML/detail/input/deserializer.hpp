@@ -79,7 +79,7 @@ public:
             {
                 switch (type)
                 {
-                case lexical_token_t::YAML_VER_DIRECTIVE: {
+                case lexical_token_t::YAML_VER_DIRECTIVE:
                     if (!mp_directive_set)
                     {
                         mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
@@ -97,7 +97,6 @@ public:
                     mp_directive_set->version = convert_yaml_version(lexer.get_yaml_version());
                     mp_directive_set->is_version_specified = true;
                     break;
-                }
                 case lexical_token_t::TAG_DIRECTIVE: {
                     if (!mp_directive_set)
                     {
@@ -518,15 +517,42 @@ private:
             type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
             type == lexical_token_t::STRING_VALUE || type == lexical_token_t::ALIAS_PREFIX);
 
-        tag_t tag_type = tag_t::STRING;
         if (m_needs_tag_impl)
         {
-            tag_type = tag_resolver::resolve_tag(m_tag_name, mp_directive_set);
-            if (tag_type == tag_t::NON_SPECIFIC)
+            if (type == lexical_token_t::ALIAS_PREFIX)
             {
+                throw parse_error("Tag cannot be specified to alias nodes", line, indent);
+            }
+
+            tag_t tag_type = tag_resolver::resolve_tag(m_tag_name, mp_directive_set);
+
+            FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
+
+            switch (tag_type)
+            {
+            case tag_t::NULL_VALUE:
+                type = lexical_token_t::NULL_VALUE;
+                break;
+            case tag_t::BOOLEAN:
+                type = lexical_token_t::BOOLEAN_VALUE;
+                break;
+            case tag_t::INTEGER:
+                type = lexical_token_t::INTEGER_VALUE;
+                break;
+            case tag_t::FLOATING_NUMBER:
+                type = lexical_token_t::FLOAT_NUMBER_VALUE;
+                break;
+            case tag_t::STRING:
+                type = lexical_token_t::STRING_VALUE;
+                break;
+            case tag_t::NON_SPECIFIC:
                 // scalars with the non-specific tag is resolved to a string tag.
                 // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
-                tag_type = tag_t::STRING;
+                type = lexical_token_t::STRING_VALUE;
+                break;
+            case tag_t::CUSTOM_TAG:
+            default:
+                break;
             }
         }
 
