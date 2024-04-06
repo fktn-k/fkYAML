@@ -171,7 +171,7 @@
 #define FK_YAML_DETAIL_DIRECTIVE_SET_HPP_
 
 #include <string>
-#include <unordered_map>
+#include <map>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -236,7 +236,7 @@ struct directive_set
     /// The prefix of the secondary handle.
     std::string secondary_handle_prefix {};
     /// The map of handle-prefix pairs.
-    std::unordered_map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
+    std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
 };
 
 } // namespace detail
@@ -7247,6 +7247,8 @@ FK_YAML_NAMESPACE_END
 
 // #include <fkYAML/detail/types/node_t.hpp>
 
+// #include <fkYAML/detail/types/yaml_version_t.hpp>
+
 // #include <fkYAML/exception.hpp>
 
 
@@ -7273,11 +7275,67 @@ public:
     std::string serialize(const BasicNodeType& node)
     {
         std::string str {};
+        serialize_directives(node, str);
         serialize_node(node, 0, str);
         return str;
     } // LCOV_EXCL_LINE
 
 private:
+    /// @brief Serialize the directives if any is applied to the node.
+    /// @param node The targe node.
+    /// @param str A string to hold serialization result.
+    void serialize_directives(const BasicNodeType& node, std::string& str)
+    {
+        if (!node.mp_directive_set)
+        {
+            return;
+        }
+
+        const auto& directives = node.mp_directive_set;
+
+        if (directives->is_version_specified)
+        {
+            str += "%YAML ";
+            switch (directives->version)
+            {
+            case yaml_version_t::VER_1_1:
+                str += "1.1\n";
+                break;
+            case yaml_version_t::VER_1_2:
+                str += "1.2\n";
+                break;
+            }
+        }
+
+        if (!directives->primary_handle_prefix.empty())
+        {
+            str += "%TAG ! ";
+            str += directives->primary_handle_prefix;
+            str += "\n";
+        }
+
+        if (!directives->secondary_handle_prefix.empty())
+        {
+            str += "%TAG !! ";
+            str += directives->secondary_handle_prefix;
+            str += "\n";
+        }
+
+        if (!directives->named_handle_map.empty())
+        {
+            for (const auto& itr : directives->named_handle_map)
+            {
+                str += "%TAG ";
+                str += itr.first;
+                str += " ";
+                str += itr.second;
+                str += "\n";
+            }
+        }
+
+        str += "---\n";
+    }
+
     /// @brief Recursively serialize each Node object.
     /// @param node A Node object to be serialized.
     /// @param cur_indent The current indent width
@@ -8711,6 +8769,9 @@ private:
 
     template <typename BasicNodeType>
     friend class fkyaml::detail::basic_deserializer;
+
+    template <typename BasicNodeType>
+    friend class fkyaml::detail::basic_serializer;
 
     /// @brief A type for YAML docs deserializers.
     using deserializer_type = detail::basic_deserializer<basic_node>;
