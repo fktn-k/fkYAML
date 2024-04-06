@@ -199,3 +199,30 @@ TEST_CASE("SerializerClassTest_SerializeAliasNode", "[SerializerClassTest]")
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node) == expected);
 }
+
+TEST_CASE("SerializerClassTest_SerializeTaggedNode", "[SerializerClassTest]")
+{
+    fkyaml::node root = fkyaml::node::mapping();
+    fkyaml::node str_node("foo");
+    str_node.add_tag_name("!!str");
+    fkyaml::node null_node {};
+    null_node.add_tag_name("!!null");
+    fkyaml::node bool_node(true);
+    bool_node.add_tag_name("!<tag:yaml.org,2002:bool>");
+    fkyaml::node int_node(123);
+    int_node.add_tag_name("!!int");
+    fkyaml::node float_node(3.14);
+    float_node.add_tag_name("!<tag:yaml.org,2002:float>");
+
+    auto& mapping = root.get_value_ref<fkyaml::node::mapping_type&>();
+    mapping.emplace(str_node, null_node);
+    mapping.emplace(bool_node, int_node);
+    mapping.emplace(null_node, float_node);
+
+    std::string expected = "!!null null: !<tag:yaml.org,2002:float> 3.14\n"
+                           "!<tag:yaml.org,2002:bool> true: !!int 123\n"
+                           "!!str foo: !!null null\n";
+
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(serializer.serialize(root) == expected);
+}

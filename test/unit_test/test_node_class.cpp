@@ -2334,7 +2334,7 @@ TEST_CASE("NodeClassTest_HasAnchorNameTest", "[NodeClassTest]")
         REQUIRE_FALSE(node.has_anchor_name());
     }
 
-    SECTION("Test node wityh anchor name.")
+    SECTION("Test node with anchor name.")
     {
         node.add_anchor_name("anchor_name");
         REQUIRE(node.has_anchor_name());
@@ -2384,6 +2384,72 @@ TEST_CASE("NodeClassTest_AddAnchorNameTest", "[NodeClassTest]")
         REQUIRE_NOTHROW(node.get_anchor_name());
         REQUIRE_FALSE(node.get_anchor_name().compare("anchor_name") == 0);
         REQUIRE(node.get_anchor_name().compare("overwritten_name") == 0);
+    }
+}
+
+//
+// test cases for tag related APIs
+//
+
+TEST_CASE("NodeClassTest_HasTagNameTest", "[NodeClassTest]")
+{
+    fkyaml::node node;
+
+    SECTION("node with tag name")
+    {
+        node.add_tag_name("tag_name");
+        REQUIRE(node.has_tag_name());
+    }
+
+    SECTION("node without tag name")
+    {
+        REQUIRE_FALSE(node.has_tag_name());
+    }
+}
+
+TEST_CASE("NodeClassTest_GetTagNameTest", "[NodeClassTest]")
+{
+    fkyaml::node node;
+
+    SECTION("Test node without tag name.")
+    {
+        REQUIRE_THROWS_AS(node.get_tag_name(), fkyaml::exception);
+    }
+
+    SECTION("Test node with tag name.")
+    {
+        node.add_tag_name("tag_name");
+        REQUIRE_NOTHROW(node.get_tag_name());
+        REQUIRE(node.get_tag_name() == "tag_name");
+    }
+}
+
+TEST_CASE("NodeClassTest_AddTagNameTest", "[NodeClassTest]")
+{
+    fkyaml::node node;
+    std::string tag_name = "tag_name";
+
+    SECTION("Test lvalue tag name.")
+    {
+        node.add_tag_name(tag_name);
+        REQUIRE_NOTHROW(node.get_tag_name());
+        REQUIRE(node.get_tag_name().compare("tag_name") == 0);
+    }
+
+    SECTION("Test rvalue tag name.")
+    {
+        node.add_tag_name(std::move(tag_name));
+        REQUIRE_NOTHROW(node.get_tag_name());
+        REQUIRE(node.get_tag_name().compare("tag_name") == 0);
+    }
+
+    SECTION("Test overwritten tag name.")
+    {
+        node.add_tag_name(tag_name);
+        node.add_tag_name("overwritten_name");
+        REQUIRE_NOTHROW(node.get_tag_name());
+        REQUIRE_FALSE(node.get_tag_name().compare("tag_name") == 0);
+        REQUIRE(node.get_tag_name().compare("overwritten_name") == 0);
     }
 }
 

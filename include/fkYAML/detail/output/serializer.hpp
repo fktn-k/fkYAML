@@ -168,7 +168,8 @@ private:
             str += m_tmp_str_buff;
             break;
         case node_t::STRING: {
-            if (try_append_tag(node, str))
+            bool is_appended = try_append_tag(node, str);
+            if (is_appended)
             {
                 str += " ";
             }
@@ -454,7 +455,7 @@ private:
         }
 
         return escaped;
-    }
+    } // LCOV_EXCL_LINE
 
 private:
     /// A temporal buffer for conversion from a scalar to a string.
