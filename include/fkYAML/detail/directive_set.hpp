@@ -12,7 +12,7 @@
 #define FK_YAML_DETAIL_DIRECTIVE_SET_HPP_
 
 #include <string>
-#include <unordered_map>
+#include <map>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/types/yaml_version_t.hpp>
@@ -38,7 +38,7 @@ struct directive_set
     /// The prefix of the secondary handle.
     std::string secondary_handle_prefix {};
     /// The map of handle-prefix pairs.
-    std::unordered_map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
+    std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
 };
 
 } // namespace detail

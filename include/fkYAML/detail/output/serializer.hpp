@@ -21,6 +21,7 @@
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
+#include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
 
 FK_YAML_NAMESPACE_BEGIN
@@ -46,11 +47,67 @@ public:
     std::string serialize(const BasicNodeType& node)
     {
         std::string str {};
+        serialize_directives(node, str);
         serialize_node(node, 0, str);
         return str;
     } // LCOV_EXCL_LINE
 
 private:
+    /// @brief Serialize the directives if any is applied to the node.
+    /// @param node The targe node.
+    /// @param str A string to hold serialization result.
+    void serialize_directives(const BasicNodeType& node, std::string& str)
+    {
+        if (!node.mp_directive_set)
+        {
+            return;
+        }
+
+        const auto& directives = node.mp_directive_set;
+
+        if (directives->is_version_specified)
+        {
+            str += "%YAML ";
+            switch (directives->version)
+            {
+            case yaml_version_t::VER_1_1:
+                str += "1.1\n";
+                break;
+            case yaml_version_t::VER_1_2:
+                str += "1.2\n";
+                break;
+            }
+        }
+
+        if (!directives->primary_handle_prefix.empty())
+        {
+            str += "%TAG ! ";
+            str += directives->primary_handle_prefix;
+            str += "\n";
+        }
+
+        if (!directives->secondary_handle_prefix.empty())
+        {
+            str += "%TAG !! ";
+            str += directives->secondary_handle_prefix;
+            str += "\n";
+        }
+
+        if (!directives->named_handle_map.empty())
+        {
+            for (const auto& itr : directives->named_handle_map)
+            {
+                str += "%TAG ";
+                str += itr.first;
+                str += " ";
+                str += itr.second;
+                str += "\n";
+            }
+        }
+
+        str += "---\n";
+    }
+
     /// @brief Recursively serialize each Node object.
     /// @param node A Node object to be serialized.
     /// @param cur_indent The current indent width
