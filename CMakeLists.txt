@@ -31,6 +31,12 @@ if(FK_YAML_CODE_COVERAGE OR FK_YAML_RUN_VALGRIND OR FK_YAML_RUN_CLANG_SANITIZERS
   set(FK_YAML_BUILD_TEST ON)
 endif()
 
+if(FK_YAML_BUILD_ALL_TEST)
+  set(FK_YAML_BUILD_TEST ON)
+  set(FK_YAML_BUILD_FUZZ_TEST ON)
+  set(FK_YAML_USE_YAML_TEST_SUITE ON)
+endif()
+
 ###########################################
 #   Configure variables for the library   #
 ###########################################
@@ -118,15 +124,11 @@ if(FK_YAML_RUN_BENCHMARK)
   add_subdirectory(tools/benchmark)
 endif()
 
-#################################
-#   Install a pkg-config file   #
-#################################
-
 ###########################
 #   Build the test apps   #
 ###########################
 
-if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_FUZZ_TEST OR FK_YAML_BUILD_ALL_TEST)
+if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_FUZZ_TEST OR FK_YAML_USE_YAML_TEST_SUITE OR FK_YAML_BUILD_ALL_TEST)
   include(CTest)
   enable_testing()
   add_subdirectory(tests)
