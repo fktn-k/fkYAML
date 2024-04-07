@@ -51,7 +51,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanYamlVersionDirectiveTest", "[LexicalAnal
             std::string("%YUML 1.2"),
             std::string("%YANL 1.2  \r"),
             std::string("%YAMR 1.2 \r\n"),
-            std::string("%YANL 1.2    \n"));
+            std::string("%YANL 1.2    \n"),
+            std::string("%YAML1.2"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -71,7 +72,6 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanYamlVersionDirectiveTest", "[LexicalAnal
             std::string("%YAML 1.23"),
             std::string("%YAML 1.11"),
             std::string("%YAML 1.A"),
-            std::string("%YAML1.2 "),
             std::string("%YAML AbC"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
@@ -124,19 +124,13 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
 
     SECTION("Test nothrow expected tokens with invalid content.")
     {
-        auto buffer = GENERATE(std::string("%TUB"), std::string("%TAC"));
+        auto buffer = GENERATE(std::string("%TUB"), std::string("%TAC"), std::string("%TAGE"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::INVALID_DIRECTIVE);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
-    }
-
-    SECTION("Test nothrow expected tokens.")
-    {
-        lexer_t lexer(fkyaml::detail::input_adapter("%TAGE"));
-        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
     SECTION("invalid tag handle")
@@ -173,10 +167,19 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
     }
 }
 
+TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidDirectiveTest", "[LexicalAnalyzerClassTest]")
+{
+    auto buffer =
+        GENERATE(std::string("%INVALID\r"), std::string("%INVALID\r"), std::string("%TAG"), std::string("%YAML"));
+
+    lexer_t lexer(fkyaml::detail::input_adapter(buffer));
+    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+}
+
 TEST_CASE("LexicalAnalyzerClassTest_ScanReservedDirectiveTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer =
-        GENERATE(std::string("%TEST"), std::string("%1984\n"), std::string("%TEST4LIB\r"), std::string("%%ERROR\r\n"));
+        GENERATE(std::string("%TEST"), std::string("%1984"), std::string("%TEST4LIB"), std::string("%%ERROR"));
 
     fkyaml::detail::lexical_token_t token;
     lexer_t lexer(fkyaml::detail::input_adapter(buffer));
@@ -190,7 +193,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanReservedDirectiveTest", "[LexicalAnalyze
 TEST_CASE("LexicalAnalyzerClassTest_ScanEmptyDirectiveTest", "[LexicalAnalyzerClassTest]")
 {
     lexer_t lexer(fkyaml::detail::input_adapter("%"));
-    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    REQUIRE(lexer.get_next_token() == fkyaml::detail::lexical_token_t::INVALID_DIRECTIVE);
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanEndOfDirectivesTest", "[LexicalAnalyzerClassTest]")
@@ -1486,7 +1489,10 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagTokenTest", "[LexicalAnalyzerClassTes
 TEST_CASE("LexicalAnalyzerClassTest_ScanCommentTokenTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer = GENERATE(
-        std::string("# comment\r"), std::string("# comment\r\n"), std::string("# comment\n"), std::string("# comment"));
+        std::string("# comment\r "),
+        std::string("# comment\r\n"),
+        std::string("# comment\n"),
+        std::string("# comment"));
     lexer_t lexer(fkyaml::detail::input_adapter(buffer));
     fkyaml::detail::lexical_token_t token;
 
@@ -1800,7 +1806,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFlowMappingTokenTest", "[LexicalAnalyzer
 
     SECTION("Input source No.2.")
     {
-        lexer_t lexer(fkyaml::detail::input_adapter("test: {foo: bar}"));
+        lexer_t lexer(fkyaml::detail::input_adapter("test: {foo: bar baz}"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
@@ -1824,7 +1830,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFlowMappingTokenTest", "[LexicalAnalyzer
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("bar") == 0);
+        REQUIRE(lexer.get_string().compare("bar baz") == 0);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_FLOW_END);

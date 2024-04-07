@@ -2411,13 +2411,7 @@ public:
             return m_last_token_type = lexical_token_t::END_OF_BUFFER;
         }
 
-        char current = *m_cur_itr;
-        if (isdigit(current))
-        {
-            return m_last_token_type = scan_number();
-        }
-
-        switch (current)
+        switch (char current = *m_cur_itr)
         {
         case '?':
             if (++m_cur_itr == m_end_itr)
@@ -2431,8 +2425,7 @@ public:
             case ' ':
                 return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
-                m_value_buffer = "?";
-                return m_last_token_type = scan_string(false);
+                return m_last_token_type = scan_string();
             }
         case ':': { // key separater
             if (++m_cur_itr == m_end_itr)
@@ -2458,11 +2451,9 @@ public:
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
                 }
-                m_value_buffer = ":";
-                return scan_string(false);
+                return scan_string();
             default:
-                m_value_buffer = ":";
-                return scan_string(false);
+                return scan_string();
             }
 
             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
@@ -2490,7 +2481,6 @@ public:
             return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
         }
         case '!':
-            m_value_buffer.clear();
             extract_tag_name();
             return m_last_token_type = lexical_token_t::TAG_PREFIX;
         case '#': // comment prefix
@@ -2516,14 +2506,13 @@ public:
             if (is_available)
             {
                 m_cur_itr += 3;
-                m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
                 if (std::equal(m_token_begin_itr, m_cur_itr, "---"))
                 {
                     return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
                 }
             }
 
-            return m_last_token_type = scan_string(!is_available);
+            return m_last_token_type = scan_string();
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
@@ -2586,6 +2575,10 @@ public:
                        scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
         default:
+            if ('0' <= current && current <= '9')
+            {
+                return m_last_token_type = scan_number();
+            }
             return m_last_token_type = scan_string();
         }
     }
@@ -2668,12 +2661,16 @@ public:
         return m_value_buffer;
     }
 
+    /// @brief Get the YAML tag handle defined in the TAG directive.
+    /// @return const std::string& A tag handle.
     const std::string& get_tag_handle() const
     {
         FK_YAML_ASSERT(!m_tag_handle.empty());
         return m_tag_handle;
     }
 
+    /// @brief Get the YAML tag prefix defined in the TAG directive.
+    /// @return const std::string A tag prefix.
     const std::string& get_tag_prefix() const
     {
         FK_YAML_ASSERT(!m_tag_prefix.empty());
@@ -2724,76 +2721,76 @@ private:
     {
         FK_YAML_ASSERT(*m_cur_itr == '%');
 
-        if (++m_cur_itr == m_end_itr)
+        m_value_buffer.clear();
+        m_token_begin_itr = ++m_cur_itr;
+
+        bool ends_loop = false;
+        while (!ends_loop && m_cur_itr != m_end_itr)
         {
-            emit_error("invalid eof in a directive.");
+            switch (*m_cur_itr)
+            {
+            case ' ':
+            case '\t':
+                ends_loop = true;
+                break;
+            case '\r':
+            case '\n':
+                emit_error("invalid directive is found.");
+            default:
+                ++m_cur_itr;
+                break;
+            }
         }
 
-        switch (*m_cur_itr)
+        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
+
+        if (m_value_buffer == "TAG")
         {
-        case 'T': {
-            if (*++m_cur_itr != 'A' || *++m_cur_itr != 'G')
-            {
-                skip_until_line_end();
-                return lexical_token_t::INVALID_DIRECTIVE;
-            }
-            char current = *++m_cur_itr;
-            if (current != ' ' && current != '\t')
+            if (!ends_loop)
             {
                 emit_error("There must be at least one white space between \"%TAG\" and tag info.");
             }
-
             skip_white_spaces();
-
-            // TODO: parse tag directives' information
             return scan_tag_directive();
         }
-        case 'Y': {
-            if (*++m_cur_itr != 'A' || *++m_cur_itr != 'M' || *++m_cur_itr != 'L')
-            {
-                skip_until_line_end();
-                return lexical_token_t::INVALID_DIRECTIVE;
-            }
-            char current = *++m_cur_itr;
-            if (current != ' ' && current != '\t')
-            {
-                emit_error("There must be at least one white space between \"%YAML\" and a version number.");
-            }
 
+        if (m_value_buffer == "YAML")
+        {
+            if (!ends_loop)
+            {
+                emit_error("There must be at least one white space between \"%YAML\" and tag info.");
+            }
             skip_white_spaces();
-
             return scan_yaml_version_directive();
         }
-        default:
-            skip_until_line_end();
-            return lexical_token_t::INVALID_DIRECTIVE;
-        }
+
+        skip_until_line_end();
+        return lexical_token_t::INVALID_DIRECTIVE;
     }
 
+    /// @brief Scan a YAML tag directive.
+    /// @return lexical_token_t The lexical token type for YAML tag directives.
     lexical_token_t scan_tag_directive()
     {
         m_tag_handle.clear();
         m_tag_prefix.clear();
+        m_token_begin_itr = m_cur_itr;
 
         //
         // extract a tag handle
         //
 
-        char current = *m_cur_itr;
-        if (current != '!')
+        if (*m_cur_itr != '!')
         {
             emit_error("Tag handle must start with \'!\'.");
         }
-
-        m_tag_handle = "!";
 
         if (++m_cur_itr == m_end_itr)
         {
             emit_error("invalid TAG directive is found.");
         }
 
-        current = *m_cur_itr;
-        switch (current)
+        switch (*m_cur_itr)
         {
         case ' ':
         case '\t':
@@ -2804,41 +2801,42 @@ private:
             {
                 emit_error("invalid TAG directive is found.");
             }
-            current = *m_cur_itr;
-            if (current != ' ' && current != '\t')
+            if (*m_cur_itr != ' ' && *m_cur_itr != '\t')
             {
                 emit_error("invalid tag handle is found.");
             }
-            m_tag_handle.push_back('!');
             break;
         default: {
             bool ends_loop = false;
             do
             {
-                switch (current)
+                switch (*m_cur_itr)
                 {
                 case ' ':
                 case '\t':
                     emit_error("invalid tag handle is found.");
-                case '!':
-                    current = *(m_cur_itr + 1);
-                    if (current != ' ' && current != '\t')
+                case '!': {
+                    if (m_cur_itr + 1 == m_end_itr)
+                    {
+                        ends_loop = true;
+                        break;
+                    }
+                    char next = *(m_cur_itr + 1);
+                    if (next != ' ' && next != '\t')
                     {
                         emit_error("invalid tag handle is found.");
                     }
-                    m_tag_handle.push_back('!');
                     ends_loop = true;
                     break;
+                }
                 case '-':
-                    m_tag_handle.push_back('-');
                     break;
                 default:
-                    if (!isalnum(current))
+                    if (!isalnum(*m_cur_itr))
                     {
                         // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
                         emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
                     }
-                    m_tag_handle.push_back(current);
                     break;
                 }
 
@@ -2846,12 +2844,12 @@ private:
                 {
                     emit_error("invalid TAG directive is found.");
                 }
-
-                current = *m_cur_itr;
             } while (!ends_loop);
             break;
         }
         }
+
+        m_tag_handle.assign(m_token_begin_itr, m_cur_itr);
 
         skip_white_spaces();
 
@@ -2859,14 +2857,9 @@ private:
         // extract a tag prefix.
         //
 
-        current = *m_cur_itr;
-        switch (current)
+        m_token_begin_itr = m_cur_itr;
+        switch (*m_cur_itr)
         {
-        case '!':
-            // a local tag prefix
-            m_tag_prefix = "!";
-            current = *++m_cur_itr;
-            break;
         // a tag prefix must not start with flow indicators to avoid ambiguity.
         // See https://yaml.org/spec/1.2.2/#rule-ns-global-tag-prefix for more details.
         case ',':
@@ -2875,16 +2868,13 @@ private:
         case '{':
         case '}':
             emit_error("tag prefix must not start with flow indicators (\',\', [], {}).");
-        default:
-            // a global tag prefix
-            break;
         }
 
         // extract the rest of a tag prefix.
         bool ends_loop = false;
-        while (m_cur_itr != m_end_itr && !ends_loop)
+        do
         {
-            switch (current)
+            switch (*m_cur_itr)
             {
             case ' ':
             case '\t':
@@ -2892,16 +2882,10 @@ private:
             case '\n':
                 ends_loop = true;
                 break;
-            default:
-                m_tag_prefix.push_back(current);
-                break;
             }
+        } while (!ends_loop && ++m_cur_itr != m_end_itr);
 
-            if (++m_cur_itr != m_end_itr)
-            {
-                current = *m_cur_itr;
-            }
-        }
+        m_tag_prefix.assign(m_token_begin_itr, m_cur_itr);
 
         bool is_valid = uri_encoding::validate(m_tag_prefix.begin(), m_tag_prefix.end());
         if (!is_valid)
@@ -2918,57 +2902,30 @@ private:
     lexical_token_t scan_yaml_version_directive()
     {
         m_value_buffer.clear();
+        m_token_begin_itr = m_cur_itr;
 
-        if (std::distance(m_cur_itr, m_end_itr) < 3)
+        bool ends_loop = false;
+        while (!ends_loop && m_cur_itr != m_end_itr)
         {
-            emit_error("invalid YAML directive is found.");
+            switch (*m_cur_itr)
+            {
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+                ends_loop = true;
+                break;
+            default:
+                ++m_cur_itr;
+                break;
+            }
         }
 
-        if (*m_cur_itr != '1')
-        {
-            emit_error("Invalid YAML major version found.");
-        }
-        m_value_buffer.push_back(*m_cur_itr);
+        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
 
-        if (*++m_cur_itr != '.')
+        if (m_value_buffer != "1.1" && m_value_buffer != "1.2")
         {
-            emit_error("A period must be followed after the YAML major version.");
-        }
-        m_value_buffer.push_back(*m_cur_itr);
-
-        switch (*++m_cur_itr)
-        {
-        case '1':
-        case '2':
-            m_value_buffer.push_back(*m_cur_itr);
-            break;
-        case '0':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            emit_error("Unsupported YAML version.");
-        default:
-            emit_error("YAML version must be specified with digits and periods.");
-        }
-
-        if (++m_cur_itr == m_end_itr)
-        {
-            return lexical_token_t::YAML_VER_DIRECTIVE;
-        }
-
-        switch (*m_cur_itr)
-        {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-            break;
-        default:
-            emit_error("Only YAML version 1.1/1.2 are supported.");
+            emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
         }
 
         return lexical_token_t::YAML_VER_DIRECTIVE;
@@ -2977,15 +2934,15 @@ private:
     /// @brief Extracts an anchor name from the input and assigns the result to `m_value_buffer`.
     void extract_anchor_name()
     {
-        char current = *m_cur_itr++;
-        FK_YAML_ASSERT(current == '&' || current == '*');
+        FK_YAML_ASSERT(*m_cur_itr == '&' || *m_cur_itr == '*');
 
         m_value_buffer.clear();
+        m_token_begin_itr = ++m_cur_itr;
 
+        bool ends_loop = false;
         for (; m_cur_itr != m_end_itr; ++m_cur_itr)
         {
-            current = *m_cur_itr;
-            switch (current)
+            switch (*m_cur_itr)
             {
             // anchor name must not contain white spaces, newline codes and flow indicators.
             // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
@@ -2998,13 +2955,15 @@ private:
             case '[':
             case ']':
             case ',':
-                return;
+                ends_loop = true;
+                break;
             case ':': {
                 auto next_itr = m_cur_itr + 1;
                 if (next_itr == m_end_itr)
                 {
-                    m_value_buffer.push_back(*++m_cur_itr);
-                    return;
+                    ++m_cur_itr;
+                    ends_loop = true;
+                    break;
                 }
                 switch (*next_itr)
                 {
@@ -3013,58 +2972,60 @@ private:
                 case '\r':
                 case '\n':
                     // Stop the extraction at the key separator.
-                    return;
+                    ends_loop = true;
+                    break;
                 }
-                m_value_buffer.push_back(current);
                 break;
             }
             default:
-                m_value_buffer.push_back(current);
+                break;
+            }
+
+            if (ends_loop)
+            {
                 break;
             }
         }
+
+        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
     }
 
     /// @brief Extracts a tag name from the input and assigns the result to `m_value_buffer`.
     void extract_tag_name()
     {
-        char current = *m_cur_itr;
-        FK_YAML_ASSERT(current == '!');
+        m_value_buffer.clear();
 
-        m_value_buffer = "!";
+        FK_YAML_ASSERT(*m_cur_itr == '!');
 
         if (++m_cur_itr == m_end_itr)
         {
             // Just "!" is a non-specific tag.
+            m_value_buffer = "!";
             return;
         }
 
         bool is_verbatim = false;
         bool allows_another_tag_prefix = false;
 
-        current = *m_cur_itr;
-        switch (current)
+        switch (*m_cur_itr)
         {
         case ' ':
         case '\r':
         case '\n':
             // Just "!" is a non-specific tag.
+            m_value_buffer = "!";
             return;
         case '!':
             // Secondary tag handles (!!suffix)
-            m_value_buffer += "!";
             break;
         case '<':
             // Verbatim tags (!<TAG>)
             is_verbatim = true;
-            m_value_buffer.push_back(current);
-            current = *++m_cur_itr;
-            m_value_buffer.push_back(current);
+            ++m_cur_itr;
             break;
         default:
             // Either local tags (!suffix) or named handles (!tag!suffix)
             allows_another_tag_prefix = true;
-            m_value_buffer.push_back(current);
             break;
         }
 
@@ -3077,8 +3038,7 @@ private:
                 break;
             }
 
-            current = *m_cur_itr;
-            switch (current)
+            switch (*m_cur_itr)
             {
             // Tag names must not contain spaces or newline codes.
             case ' ':
@@ -3094,15 +3054,15 @@ private:
                 }
 
                 is_named_handle = true;
-                m_value_buffer.push_back('!');
                 // tag prefix must not appear three times.
                 allows_another_tag_prefix = false;
                 break;
             default:
-                m_value_buffer.push_back(current);
                 break;
             }
         } while (!ends_loop);
+
+        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
 
         if (is_verbatim)
         {
@@ -3155,7 +3115,7 @@ private:
     {
         m_value_buffer.clear();
 
-        int current = *m_cur_itr;
+        char current = *m_cur_itr;
         FK_YAML_ASSERT(std::isdigit(current) || current == '-' || current == '+');
 
         lexical_token_t ret = lexical_token_t::END_OF_BUFFER;
@@ -3219,7 +3179,12 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float).
     lexical_token_t scan_number_after_zero_at_first()
     {
-        char next = *++m_cur_itr;
+        if (++m_cur_itr == m_end_itr)
+        {
+            return lexical_token_t::INTEGER_VALUE;
+        }
+
+        char next = *m_cur_itr;
         switch (next)
         {
         case '.':
@@ -3233,8 +3198,8 @@ private:
         case 'x':
             m_value_buffer.push_back(next);
             return scan_hexadecimal_number();
-        default:
-            return lexical_token_t::INTEGER_VALUE;
+        default:                                   // LCOV_EXCL_LINE
+            return lexical_token_t::INTEGER_VALUE; // LCOV_EXCL_LINE
         }
     }
 
@@ -3242,36 +3207,37 @@ private:
     /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_decimal_point()
     {
-        char next = *++m_cur_itr;
-
-        if (std::isdigit(next))
+        if (++m_cur_itr == m_end_itr)
         {
-            m_value_buffer.push_back(next);
-            lexical_token_t token = scan_decimal_number();
-            return token == lexical_token_t::STRING_VALUE ? token : lexical_token_t::FLOAT_NUMBER_VALUE;
+            emit_error("Invalid eof found after a decimal point.");
         }
 
-        emit_error("Invalid character found after a decimal point."); // LCOV_EXCL_LINE
+        FK_YAML_ASSERT(std::isdigit(*m_cur_itr));
+        m_value_buffer.push_back(*m_cur_itr);
+        lexical_token_t token = scan_decimal_number();
+        return token == lexical_token_t::STRING_VALUE ? token : lexical_token_t::FLOAT_NUMBER_VALUE;
     }
 
     /// @brief Scan a next character after exponent(e/E).
     /// @return lexical_token_t The lexical token type for float numbers.
     lexical_token_t scan_decimal_number_after_exponent()
     {
-        char next = *++m_cur_itr;
+        if (++m_cur_itr == m_end_itr)
+        {
+            emit_error("unexpected character found after exponent.");
+        }
+
+        char next = *m_cur_itr;
         if (next == '+' || next == '-')
         {
             m_value_buffer.push_back(next);
             scan_decimal_number_after_sign();
         }
-        else if (std::isdigit(next))
-        {
-            m_value_buffer.push_back(next);
-            scan_decimal_number();
-        }
         else
         {
-            emit_error("unexpected character found after exponent.");
+            FK_YAML_ASSERT(std::isdigit(next));
+            m_value_buffer.push_back(next);
+            scan_decimal_number();
         }
         return lexical_token_t::FLOAT_NUMBER_VALUE;
     }
@@ -3295,7 +3261,12 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number()
     {
-        char next = *++m_cur_itr;
+        if (++m_cur_itr == m_end_itr)
+        {
+            return lexical_token_t::INTEGER_VALUE;
+        }
+
+        char next = *m_cur_itr;
 
         if (std::isdigit(next))
         {
@@ -3309,7 +3280,8 @@ private:
             if (m_value_buffer.find('.') != string_type::npos)
             {
                 // This path is for strings like 1.2.3
-                return scan_string(false);
+                m_value_buffer.clear();
+                return scan_string();
             }
             m_value_buffer.push_back(next);
             return scan_decimal_number_after_decimal_point();
@@ -3328,11 +3300,24 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_octal_number()
     {
-        char next = *++m_cur_itr;
-        if ('0' <= next && next <= '7')
+        if (++m_cur_itr == m_end_itr)
         {
-            m_value_buffer.push_back(next);
+            return lexical_token_t::INTEGER_VALUE;
+        }
+
+        switch (*m_cur_itr)
+        {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+            m_value_buffer.push_back(*m_cur_itr);
             scan_octal_number();
+            break;
         }
         return lexical_token_t::INTEGER_VALUE;
     }
@@ -3341,7 +3326,12 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_hexadecimal_number()
     {
-        char next = *++m_cur_itr;
+        if (++m_cur_itr == m_end_itr)
+        {
+            return lexical_token_t::INTEGER_VALUE;
+        }
+
+        char next = *m_cur_itr;
         if (std::isxdigit(next))
         {
             m_value_buffer.push_back(next);
@@ -3350,22 +3340,21 @@ private:
         return lexical_token_t::INTEGER_VALUE;
     }
 
-    /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
+    /// @brief Scan a string token, either plain, single-quoted or double-quoted.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_string(bool needs_clear = true)
+    lexical_token_t scan_string()
     {
+        m_value_buffer.clear();
+
         bool needs_last_single_quote = false;
         bool needs_last_double_quote = false;
-
-        if (needs_clear)
+        if (m_cur_itr == m_token_begin_itr)
         {
-            m_value_buffer.clear();
-
             needs_last_single_quote = (*m_cur_itr == '\'');
             needs_last_double_quote = (*m_cur_itr == '\"');
             if (needs_last_double_quote || needs_last_single_quote)
             {
-                ++m_cur_itr;
+                m_token_begin_itr = ++m_cur_itr;
             }
         }
 
@@ -3423,291 +3412,349 @@ private:
         return type;
     }
 
-    /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
-    /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote)
+    /// @brief Check if the given character is allowed in a single-quoted scalar token.
+    /// @param c The character to be checked.
+    /// @return true if the given character is allowed, false otherwise.
+    bool is_allowed_single(char c)
     {
-        for (; m_cur_itr != m_end_itr; ++m_cur_itr)
+        bool ret = false;
+
+        switch (c)
         {
-            char current = *m_cur_itr;
+        case '\r':
+        case '\n':
+            // TODO: Support multi-line string scalars.
+            emit_error("multi-line string scalars are unsupported.");
 
-            if (current == ' ')
+        case '\'':
+            // If single quotation marks are repeated twice in a single-quoted string token,
+            // they are considered as an escaped single quotation mark.
+            if (m_cur_itr + 1 == m_end_itr)
             {
-                if (!needs_last_double_quote && !needs_last_single_quote)
-                {
-                    // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
-                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                    char next = *(m_cur_itr + 1);
-
-                    // These characters are permitted when not inside a flow collection, and not inside an implicit key.
-                    // TODO: Support detection of implicit key context for this check.
-                    if (m_flow_context_depth > 0)
-                    {
-                        switch (next)
-                        {
-                        case '{':
-                        case '}':
-                        case '[':
-                        case ']':
-                        case ',':
-                            ++m_cur_itr;
-                            return lexical_token_t::STRING_VALUE;
-                        }
-                    }
-
-                    // " :" is permitted in a plain style string token, but not when followed by a space.
-                    if (next == ':')
-                    {
-                        char peeked = *(m_cur_itr + 2);
-                        if (peeked == ' ')
-                        {
-                            ++m_cur_itr;
-                            return lexical_token_t::STRING_VALUE;
-                        }
-                    }
-
-                    switch (next)
-                    {
-                    case ' ':
-                    case '\r':
-                    case '\n':
-                    case '#':
-                    case '\\':
-                        ++m_cur_itr;
-                        return lexical_token_t::STRING_VALUE;
-                    }
-                }
-                m_value_buffer.push_back(current);
-                continue;
+                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
+                m_token_begin_itr = m_cur_itr;
+                break;
             }
 
-            if (current == '\"')
+            if (*(m_cur_itr + 1) != '\'')
             {
-                if (needs_last_double_quote)
-                {
-                    ++m_cur_itr;
-                    return lexical_token_t::STRING_VALUE;
-                }
-
-                // if the target is a plain/single-quoted string token.
-                m_value_buffer.push_back(current);
-                continue;
+                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
+                break;
             }
 
-            // Handle single quotation marks.
-            if (current == '\'')
-            {
-                if (needs_last_single_quote)
-                {
-                    // If single quotation marks are repeated twice in a single-quoted string token, they are considered
-                    // as an escaped single quotation mark.
-                    current = *++m_cur_itr;
-                    if (current != '\'')
-                    {
-                        return lexical_token_t::STRING_VALUE;
-                    }
-                }
+            m_value_buffer.append(m_token_begin_itr, ++m_cur_itr);
+            m_token_begin_itr = m_cur_itr + 1;
+            ret = true;
+            break;
 
-                m_value_buffer.push_back(current);
-                continue;
+        case '\\':
+            emit_error("Escaped characters are only available in a double-quoted string token.");
+        }
+
+        return ret;
+    }
+
+    /// @brief Check if the given character is allowed in a double-quoted scalar token.
+    /// @param c The character to be checked.
+    /// @return true if the given character is allowed, false otherwise.
+    bool is_allowed_double(char c)
+    {
+        bool ret = false;
+
+        switch (c)
+        {
+        case '\r':
+        case '\n':
+            // TODO: Support multi-line string scalars.
+            emit_error("multi-line string scalars are unsupported.");
+
+        case '\"':
+            m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
+            break;
+
+        case '\\':
+            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+
+            // Handle escaped characters.
+            // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
+            c = *++m_cur_itr;
+            switch (c)
+            {
+            case 'a':
+                m_value_buffer.push_back('\a');
+                break;
+            case 'b':
+                m_value_buffer.push_back('\b');
+                break;
+            case 't':
+                m_value_buffer.push_back('\t');
+                break;
+            case 'n':
+                m_value_buffer.push_back('\n');
+                break;
+            case 'v':
+                m_value_buffer.push_back('\v');
+                break;
+            case 'f':
+                m_value_buffer.push_back('\f');
+                break;
+            case 'r':
+                m_value_buffer.push_back('\r');
+                break;
+            case 'e':
+                m_value_buffer.push_back(char(0x1B));
+                break;
+            case ' ':
+                m_value_buffer.push_back(' ');
+                break;
+            case '\"':
+                m_value_buffer.push_back('\"');
+                break;
+            case '/':
+                m_value_buffer.push_back('/');
+                break;
+            case '\\':
+                m_value_buffer.push_back('\\');
+                break;
+            case 'N': // next line
+                utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                break;
+            case '_': // non-breaking space
+                utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                break;
+            case 'L': // line separator
+                utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                break;
+            case 'P': // paragraph separator
+                utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                break;
+            case 'x':
+                handle_escaped_unicode(1);
+                break;
+            case 'u':
+                handle_escaped_unicode(2);
+                break;
+            case 'U':
+                handle_escaped_unicode(4);
+                break;
+            default:
+                emit_error("Unsupported escape sequence is found in a string token.");
             }
 
-            // Handle colons.
-            if (current == ':')
+            m_token_begin_itr = m_cur_itr + 1;
+            ret = true;
+            break;
+        }
+
+        return ret;
+    }
+
+    /// @brief Check if the given character is allowed in a plain scalar token.
+    /// @param c The character to be checked.
+    /// @return true if the given character is allowed, false otherwise.
+    bool is_allowed_plain(char c)
+    {
+        bool ret = false;
+
+        switch (c)
+        {
+        case '\r':
+        case '\n':
+            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+            break;
+
+        case ' ': {
+            // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
+            // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+            char next = *(m_cur_itr + 1);
+            bool is_appended = false;
+
+            // These characters are permitted when not inside a flow collection, and not inside an implicit key.
+            // TODO: Support detection of implicit key context for this check.
+            if (m_flow_context_depth > 0)
             {
-                // Just regard a colon as a character if surrounded by quotation marks.
-                if (needs_last_double_quote || needs_last_single_quote)
-                {
-                    m_value_buffer.push_back(current);
-                    continue;
-                }
-
-                char next = *(m_cur_itr + 1);
-
-                // A colon as a key separator must be followed by a space or a newline code.
-                if (next != ' ' && next != '\r' && next != '\n')
-                {
-                    m_value_buffer.push_back(current);
-                    continue;
-                }
-
-                return lexical_token_t::STRING_VALUE;
-            }
-
-            // Handle flow indicators.
-            {
-                bool flow_indicator_appended = false;
-                switch (current)
+                switch (next)
                 {
                 case '{':
                 case '}':
                 case '[':
                 case ']':
                 case ',':
-                    // just regard the flow indicators as a normal character:
-                    // - if single or double quotated,
-                    // - or if not inside flow context.
-
-                    if (needs_last_single_quote || needs_last_double_quote)
-                    {
-                        m_value_buffer.push_back(current);
-                    }
-                    else if (m_flow_context_depth == 0)
-                    {
-                        m_value_buffer.push_back(current);
-                    }
-                    else
-                    {
-                        return lexical_token_t::STRING_VALUE;
-                    }
-
-                    flow_indicator_appended = true;
-                    break;
-                default:
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
+                    is_appended = true;
                     break;
                 }
 
-                if (flow_indicator_appended)
+                if (is_appended)
                 {
-                    continue;
+                    break;
                 }
             }
 
-            // Handle newline codes.
-            if (current == '\r' || current == '\n')
+            // " :" is permitted in a plain style string token, but not when followed by a space.
+            if (next == ':')
             {
-                if (!(needs_last_double_quote || needs_last_single_quote))
+                char peeked = *(m_cur_itr + 2);
+                if (peeked == ' ')
+                {
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
+                    is_appended = true;
+                }
+
+                if (is_appended)
+                {
+                    break;
+                }
+            }
+
+            switch (next)
+            {
+            case ' ':
+            case '\r':
+            case '\n':
+            case '#':
+            case '\\':
+                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
+                is_appended = true;
+                break;
+            }
+
+            ret = !is_appended;
+            break;
+        }
+
+        case ':': {
+            char next = *(m_cur_itr + 1);
+
+            // A colon as a key separator must be followed by
+            // * a white space or
+            // * a newline code.
+            switch (next)
+            {
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+                m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+                break;
+            default:
+                ret = true;
+                break;
+            }
+            break;
+        }
+
+        case '{':
+        case '}':
+        case '[':
+        case ']':
+        case ',':
+            // just regard the flow indicators as a normal character if plain but not inside a flow context.
+            if (m_flow_context_depth == 0)
+            {
+                ret = true;
+                break;
+            }
+
+            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+            break;
+
+        case '\\':
+            emit_error("Escaped characters are only available in a double-quoted string token.");
+        }
+
+        return ret;
+    }
+
+    /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
+    /// @return lexical_token_t The lexical token type for strings.
+    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote)
+    {
+        // change behaviors depending on the type of a comming string scalar token.
+        // * single quoted
+        // * double quoted
+        // * plain
+
+        std::string check_filters {"\r\n\\"};
+        bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
+
+        if (needs_last_single_quote)
+        {
+            check_filters.append("\'");
+            pfn_is_allowed = &lexical_analyzer::is_allowed_single;
+        }
+        else if (needs_last_double_quote)
+        {
+            check_filters.append("\"");
+            pfn_is_allowed = &lexical_analyzer::is_allowed_double;
+        }
+        else // plain scalars
+        {
+            check_filters.append(" :{}[],");
+            pfn_is_allowed = &lexical_analyzer::is_allowed_plain;
+        }
+
+        // scan the contents of a string scalar token.
+
+        for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr)
+        {
+            char current = *m_cur_itr;
+
+            auto ret = check_filters.find(current);
+            if (ret != std::string::npos)
+            {
+                bool is_allowed = (this->*pfn_is_allowed)(current);
+                if (!is_allowed)
                 {
                     return lexical_token_t::STRING_VALUE;
                 }
 
-                // TODO: Support multi-line string tokens.
-                emit_error("multi-line string tokens are unsupported.");
-            }
-
-            // Handle escaped characters.
-            // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
-            if (current == '\\')
-            {
-                if (!needs_last_double_quote)
-                {
-                    emit_error("Escaped characters are only available in a double-quoted string token.");
-                }
-
-                current = *++m_cur_itr;
-                switch (current)
-                {
-                case 'a':
-                    m_value_buffer.push_back('\a');
-                    break;
-                case 'b':
-                    m_value_buffer.push_back('\b');
-                    break;
-                case 't':
-                    m_value_buffer.push_back('\t');
-                    break;
-                case 'n':
-                    m_value_buffer.push_back('\n');
-                    break;
-                case 'v':
-                    m_value_buffer.push_back('\v');
-                    break;
-                case 'f':
-                    m_value_buffer.push_back('\f');
-                    break;
-                case 'r':
-                    m_value_buffer.push_back('\r');
-                    break;
-                case 'e':
-                    m_value_buffer.push_back(char(0x1B));
-                    break;
-                case ' ':
-                    m_value_buffer.push_back(' ');
-                    break;
-                case '\"':
-                    m_value_buffer.push_back('\"');
-                    break;
-                case '/':
-                    m_value_buffer.push_back('/');
-                    break;
-                case '\\':
-                    m_value_buffer.push_back('\\');
-                    break;
-                case 'N': // next line
-                    utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
-                    break;
-                case '_': // non-breaking space
-                    utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
-                    break;
-                case 'L': // line separator
-                    utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
-                    break;
-                case 'P': // paragraph separator
-                    utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                    m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
-                    break;
-                case 'x':
-                    handle_escaped_unicode(1);
-                    break;
-                case 'u':
-                    handle_escaped_unicode(2);
-                    break;
-                case 'U':
-                    handle_escaped_unicode(4);
-                    break;
-                default:
-                    emit_error("Unsupported escape sequence is found in a string token.");
-                }
                 continue;
             }
 
             uint8_t byte = static_cast<uint8_t>(current);
 
             // Handle unescaped control characters.
-            if (byte <= 0x1Fu)
+            if (byte <= 0x1F)
             {
+                m_value_buffer.append(m_token_begin_itr, m_cur_itr);
                 handle_unescaped_control_char(current);
+                m_token_begin_itr = m_cur_itr + 1;
                 continue;
             }
 
             // The other characters are already checked while creating an input handler.
 
             // Handle ASCII characters except control characters.
-            else if (byte <= 0x7Eu)
+            if (byte <= 0x7E)
             {
-                m_value_buffer.push_back(current);
                 continue;
             }
 
             // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
-            else if (byte <= 0xDFu)
+            if (byte <= 0xDF)
             {
-                m_value_buffer.push_back(current);
-                m_value_buffer.push_back(*++m_cur_itr);
+                ++m_cur_itr;
                 continue;
             }
 
             // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
-            else if (byte <= 0xEFu)
+            if (byte <= 0xEF)
             {
-                m_value_buffer.push_back(current);
-                m_value_buffer.push_back(*++m_cur_itr);
-                m_value_buffer.push_back(*++m_cur_itr);
-
+                m_cur_itr += 2;
                 continue;
             }
 
             // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            m_value_buffer.push_back(current);
-            m_value_buffer.push_back(*++m_cur_itr);
-            m_value_buffer.push_back(*++m_cur_itr);
-            m_value_buffer.push_back(*++m_cur_itr);
+            m_cur_itr += 3;
         }
 
         // Handle the end of input buffer.
+
         if (needs_last_double_quote)
         {
             emit_error("Invalid end of input buffer in a double-quoted string token.");
@@ -3718,9 +3765,15 @@ private:
             emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
+        m_value_buffer.append(m_token_begin_itr, m_cur_itr);
         return lexical_token_t::STRING_VALUE;
     }
 
+    /// @brief Scan a block style string token either in the literal or folded style.
+    /// @param style The style of the given token, either literal or folded.
+    /// @param chomp The chomping indicator type of the given token, either strip, keep or clip.
+    /// @param indent The indent size specified for the given token.
+    /// @return The lexical token type for strings.
     lexical_token_t scan_block_style_string_token(
         block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent)
     {
@@ -3760,15 +3813,15 @@ private:
 
         m_pos_tracker.update_position(m_cur_itr);
         std::size_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
-        if (indent > 0 && cur_indent < indent)
-        {
-            emit_error("A block style scalar is less indented than the indicated level.");
-        }
 
         // TODO: preserve and compare the last indentation with `cur_indent`
         if (indent == 0)
         {
             indent = cur_indent;
+        }
+        else if (cur_indent < indent)
+        {
+            emit_error("A block style scalar is less indented than the indicated level.");
         }
 
         int chars_in_line = 0;
@@ -3781,12 +3834,8 @@ private:
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
             }
-            while (diff > 0)
-            {
-                m_value_buffer.push_back(' ');
-                --diff;
-                ++chars_in_line;
-            }
+            m_value_buffer.append(diff, ' ');
+            chars_in_line += static_cast<int>(diff);
         }
 
         for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr)
@@ -3824,7 +3873,7 @@ private:
                         continue;
                     }
 
-                    // Append a newline if the next line is an empty line.
+                    // Append a newline if the next line is empty.
                     bool is_end_of_token = false;
                     bool is_next_empty = false;
                     for (std::size_t i = 0; i < indent; i++)
@@ -3864,29 +3913,28 @@ private:
                     if (is_next_empty)
                     {
                         m_value_buffer.push_back('\n');
+                        continue;
                     }
-                    else
+
+                    switch (char next = *(m_cur_itr + 1))
                     {
-                        switch (char next = *(m_cur_itr + 1))
-                        {
-                        case '\r': {
-                            ++m_cur_itr;
-                            next = *++m_cur_itr;
-                            FK_YAML_ASSERT(next == '\n');
-                            m_value_buffer.push_back(next);
-                            break;
-                        }
-                        case '\n':
-                            ++m_cur_itr;
-                            m_value_buffer.push_back(next);
-                            break;
-                        case ' ':
-                            // The next line is more indented, so a newline will be appended in the coming loops.
-                            break;
-                        default:
-                            m_value_buffer.push_back(' ');
-                            break;
-                        }
+                    case '\r': {
+                        ++m_cur_itr;
+                        next = *++m_cur_itr;
+                        FK_YAML_ASSERT(next == '\n');
+                        m_value_buffer.push_back(next);
+                        break;
+                    }
+                    case '\n':
+                        ++m_cur_itr;
+                        m_value_buffer.push_back(next);
+                        break;
+                    case ' ':
+                        // The next line is more indented, so a newline will be appended in the coming loops.
+                        break;
+                    default:
+                        m_value_buffer.push_back(' ');
+                        break;
                     }
                 }
 
@@ -3925,11 +3973,11 @@ private:
         switch (chomp)
         {
         case chomping_indicator_t::STRIP:
-            while (true)
+            while (!m_value_buffer.empty())
             {
                 // Empty strings are handled above, so no check for the case.
-                auto last_char = m_value_buffer.back();
-                if (last_char != '\n')
+                char last = m_value_buffer.back();
+                if (last != '\n')
                 {
                     break;
                 }
@@ -3937,17 +3985,17 @@ private:
             }
             break;
         case chomping_indicator_t::CLIP: {
-            auto last_char = m_value_buffer.back();
-            if (last_char != '\n')
+            char last = m_value_buffer.back();
+            if (last != '\n')
             {
                 // No need to chomp the trailing newlines.
                 break;
             }
-            while (true)
+            while (m_value_buffer.size() > 1)
             {
                 // Strings with only newlines are handled above, so no check for the case.
-                auto second_last_char = m_value_buffer[m_value_buffer.size() - 2];
-                if (second_last_char != '\n')
+                char second_last = *(m_value_buffer.end() - 2);
+                if (second_last != '\n')
                 {
                     break;
                 }
@@ -3964,7 +4012,7 @@ private:
 
     /// @brief Handle unescaped control characters.
     /// @param c A target character.
-    void handle_unescaped_control_char(int c)
+    void handle_unescaped_control_char(char c)
     {
         FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
 
@@ -4035,6 +4083,8 @@ private:
         }
     }
 
+    /// @brief Unescape the given escaped unicode character.
+    /// @param bytes_to_read The number of bytes to be read from the input buffer.
     void handle_escaped_unicode(int bytes_to_read)
     {
         int read_size = bytes_to_read * 2;
@@ -4051,35 +4101,35 @@ private:
         m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
     }
 
+    /// @brief Gets the metadata of a following block style string scalar.
+    /// @param chomp_type A variable to store the retrieved chomping style type.
+    /// @param indent A variable to store the retrieved indent size.
     void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
     {
-        int ch = *++m_cur_itr;
-
         chomp_type = chomping_indicator_t::CLIP;
-        switch (ch)
+        switch (*++m_cur_itr)
         {
         case '-':
             chomp_type = chomping_indicator_t::STRIP;
-            ch = *++m_cur_itr;
+            ++m_cur_itr;
             break;
         case '+':
             chomp_type = chomping_indicator_t::KEEP;
-            ch = *++m_cur_itr;
+            ++m_cur_itr;
             break;
         default:
             break;
         }
 
-        if (ch == '0')
+        if (*m_cur_itr == '0')
         {
             emit_error("An indentation level for a block style scalar cannot be \'0\'");
         }
 
         indent = 0;
-        if (std::isdigit(ch))
+        if (std::isdigit(*m_cur_itr))
         {
-            indent = convert_hex_char_to_byte(ch);
-            ch = *++m_cur_itr;
+            indent = convert_hex_char_to_byte(*m_cur_itr++);
         }
 
         // skip characters including comments.
@@ -4089,40 +4139,27 @@ private:
     /// @brief Skip white spaces (half-width spaces and tabs) from the current position.
     void skip_white_spaces()
     {
-        do
-        {
-            switch (*m_cur_itr)
-            {
-            case ' ':
-            case '\t':
-                break;
-            default:
-                return;
-            }
-        } while (++m_cur_itr != m_end_itr);
+        m_cur_itr = std::find_if_not(m_cur_itr, m_end_itr, [](char c) { return (c == ' ' || c == '\t'); });
     }
 
     /// @brief Skip white spaces and newline codes (CR/LF) from the current position.
     void skip_white_spaces_and_newline_codes()
     {
-        do
+        if (m_cur_itr != m_end_itr)
         {
-            skip_white_spaces();
-
-            if (m_cur_itr == m_end_itr)
-            {
-                return;
-            }
-
-            switch (*m_cur_itr)
-            {
-            case '\n':
-            case '\r':
-                break;
-            default:
-                return;
-            }
-        } while (++m_cur_itr != m_end_itr);
+            m_cur_itr = std::find_if_not(m_cur_itr, m_end_itr, [](char c) {
+                switch (c)
+                {
+                case ' ':
+                case '\t':
+                case '\r':
+                case '\n':
+                    return true;
+                default:
+                    return false;
+                }
+            });
+        }
     }
 
     /// @brief Skip white spaces and comments from the current position.
@@ -4132,32 +4169,28 @@ private:
         {
             skip_white_spaces();
 
-            if (m_cur_itr == m_end_itr)
+            if (m_cur_itr == m_end_itr || *m_cur_itr != '#')
             {
                 return;
             }
 
-            switch (*m_cur_itr)
-            {
-            case '#': {
-                scan_comment();
-                break;
-            }
-            default:
-                return;
-            }
+            scan_comment();
         } while (++m_cur_itr != m_end_itr);
     }
 
     /// @brief Skip the rest in the current line.
     void skip_until_line_end()
     {
-        do
+        while (m_cur_itr != m_end_itr)
         {
             switch (*m_cur_itr)
             {
             case '\r':
-                if (*++m_cur_itr == '\n')
+                if (++m_cur_itr == m_end_itr)
+                {
+                    return;
+                }
+                if (*m_cur_itr == '\n')
                 {
                     ++m_cur_itr;
                 }
@@ -4166,11 +4199,14 @@ private:
                 ++m_cur_itr;
                 return;
             default:
+                ++m_cur_itr;
                 break;
             }
-        } while (++m_cur_itr != m_end_itr);
+        }
     }
 
+    /// @brief Emits an error with the given message.
+    /// @param msg A message for the resulting error.
     [[noreturn]] void emit_error(const char* msg) const
     {
         m_pos_tracker.update_position(m_cur_itr);
@@ -4178,9 +4214,6 @@ private:
     }
 
 private:
-    /// The value of EOF for the target characters.
-    static constexpr char s_end_of_input = char(0xFF);
-
     /// An input buffer adapter to be analyzed.
     std::string m_input_buffer {};
     /// The iterator to the current character in the input buffer.
