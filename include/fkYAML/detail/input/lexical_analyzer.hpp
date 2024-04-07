@@ -119,8 +119,7 @@ public:
             case ' ':
                 return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
-                m_value_buffer = "?";
-                return m_last_token_type = scan_string(false);
+                return m_last_token_type = scan_string();
             }
         case ':': { // key separater
             if (++m_cur_itr == m_end_itr)
@@ -146,11 +145,9 @@ public:
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
                 }
-                m_value_buffer = ":";
-                return scan_string(false);
+                return scan_string();
             default:
-                m_value_buffer = ":";
-                return scan_string(false);
+                return scan_string();
             }
 
             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
@@ -204,14 +201,13 @@ public:
             if (is_available)
             {
                 m_cur_itr += 3;
-                m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
                 if (std::equal(m_token_begin_itr, m_cur_itr, "---"))
                 {
                     return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
                 }
             }
 
-            return m_last_token_type = scan_string(!is_available);
+            return m_last_token_type = scan_string();
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
@@ -843,7 +839,7 @@ private:
     {
         m_value_buffer.clear();
 
-        int current = *m_cur_itr;
+        char current = *m_cur_itr;
         FK_YAML_ASSERT(std::isdigit(current) || current == '-' || current == '+');
 
         lexical_token_t ret = lexical_token_t::END_OF_BUFFER;
@@ -983,7 +979,12 @@ private:
     /// @return lexical_token_t The lexical token type for one of number types(integer/float)
     lexical_token_t scan_decimal_number()
     {
-        char next = *++m_cur_itr;
+        if (++m_cur_itr == m_end_itr)
+        {
+            return lexical_token_t::INTEGER_VALUE;
+        }
+
+        char next = *m_cur_itr;
 
         if (std::isdigit(next))
         {
@@ -997,7 +998,8 @@ private:
             if (m_value_buffer.find('.') != string_type::npos)
             {
                 // This path is for strings like 1.2.3
-                return scan_string(false);
+                m_value_buffer.clear();
+                return scan_string();
             }
             m_value_buffer.push_back(next);
             return scan_decimal_number_after_decimal_point();
@@ -1016,7 +1018,12 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_octal_number()
     {
-        char next = *++m_cur_itr;
+        if (++m_cur_itr == m_end_itr)
+        {
+            return lexical_token_t::INTEGER_VALUE;
+        }
+
+        char next = *m_cur_itr;
         if ('0' <= next && next <= '7')
         {
             m_value_buffer.push_back(next);
@@ -1029,7 +1036,12 @@ private:
     /// @return lexical_token_t The lexical token type for integers.
     lexical_token_t scan_hexadecimal_number()
     {
-        char next = *++m_cur_itr;
+        if (++m_cur_itr == m_end_itr)
+        {
+            return lexical_token_t::INTEGER_VALUE;
+        }
+
+        char next = *m_cur_itr;
         if (std::isxdigit(next))
         {
             m_value_buffer.push_back(next);
@@ -1040,20 +1052,19 @@ private:
 
     /// @brief Scan a string token(unquoted/single-quoted/double-quoted).
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_string(bool needs_clear = true)
+    lexical_token_t scan_string()
     {
+        m_value_buffer.clear();
+
         bool needs_last_single_quote = false;
         bool needs_last_double_quote = false;
-
-        if (needs_clear)
+        if (m_cur_itr == m_token_begin_itr)
         {
-            m_value_buffer.clear();
-
             needs_last_single_quote = (*m_cur_itr == '\'');
             needs_last_double_quote = (*m_cur_itr == '\"');
             if (needs_last_double_quote || needs_last_single_quote)
             {
-                ++m_cur_itr;
+                m_token_begin_itr = ++m_cur_itr;
             }
         }
 
@@ -1138,7 +1149,7 @@ private:
                         case '[':
                         case ']':
                         case ',':
-                            ++m_cur_itr;
+                            m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                             return lexical_token_t::STRING_VALUE;
                         }
                     }
@@ -1149,7 +1160,7 @@ private:
                         char peeked = *(m_cur_itr + 2);
                         if (peeked == ' ')
                         {
-                            ++m_cur_itr;
+                            m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                             return lexical_token_t::STRING_VALUE;
                         }
                     }
@@ -1161,11 +1172,10 @@ private:
                     case '\n':
                     case '#':
                     case '\\':
-                        ++m_cur_itr;
+                        m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                         return lexical_token_t::STRING_VALUE;
                     }
                 }
-                m_value_buffer.push_back(current);
                 continue;
             }
 
@@ -1173,12 +1183,11 @@ private:
             {
                 if (needs_last_double_quote)
                 {
-                    ++m_cur_itr;
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                     return lexical_token_t::STRING_VALUE;
                 }
 
                 // if the target is a plain/single-quoted string token.
-                m_value_buffer.push_back(current);
                 continue;
             }
 
@@ -1187,16 +1196,20 @@ private:
             {
                 if (needs_last_single_quote)
                 {
-                    // If single quotation marks are repeated twice in a single-quoted string token, they are considered
-                    // as an escaped single quotation mark.
-                    current = *++m_cur_itr;
+                    // If single quotation marks are repeated twice in a single-quoted string token,
+                    // they are considered as an escaped single quotation mark.
+                    current = *(m_cur_itr + 1);
                     if (current != '\'')
                     {
+                        m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                         return lexical_token_t::STRING_VALUE;
                     }
+
+                    m_value_buffer.append(m_token_begin_itr, ++m_cur_itr);
+                    m_token_begin_itr = m_cur_itr + 1;
+                    continue;
                 }
 
-                m_value_buffer.push_back(current);
                 continue;
             }
 
@@ -1206,25 +1219,31 @@ private:
                 // Just regard a colon as a character if surrounded by quotation marks.
                 if (needs_last_double_quote || needs_last_single_quote)
                 {
-                    m_value_buffer.push_back(current);
                     continue;
                 }
 
                 char next = *(m_cur_itr + 1);
 
-                // A colon as a key separator must be followed by a space or a newline code.
-                if (next != ' ' && next != '\r' && next != '\n')
+                // A colon as a key separator must be followed by
+                // * a white space or
+                // * a newline code.
+                switch (next)
                 {
-                    m_value_buffer.push_back(current);
-                    continue;
+                case ' ':
+                case '\t':
+                case '\r':
+                case '\n':
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+                    return lexical_token_t::STRING_VALUE;
+                default:
+                    break;
                 }
 
-                return lexical_token_t::STRING_VALUE;
+                continue;
             }
 
             // Handle flow indicators.
             {
-                bool flow_indicator_appended = false;
                 switch (current)
                 {
                 case '{':
@@ -1238,39 +1257,32 @@ private:
 
                     if (needs_last_single_quote || needs_last_double_quote)
                     {
-                        m_value_buffer.push_back(current);
-                    }
-                    else if (m_flow_context_depth == 0)
-                    {
-                        m_value_buffer.push_back(current);
-                    }
-                    else
-                    {
-                        return lexical_token_t::STRING_VALUE;
+                        break;
                     }
 
-                    flow_indicator_appended = true;
-                    break;
+                    if (m_flow_context_depth == 0)
+                    {
+                        break;
+                    }
+
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+                    return lexical_token_t::STRING_VALUE;
                 default:
                     break;
-                }
-
-                if (flow_indicator_appended)
-                {
-                    continue;
                 }
             }
 
             // Handle newline codes.
             if (current == '\r' || current == '\n')
             {
-                if (!(needs_last_double_quote || needs_last_single_quote))
+                if (!needs_last_double_quote && !needs_last_single_quote)
                 {
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
                     return lexical_token_t::STRING_VALUE;
                 }
 
-                // TODO: Support multi-line string tokens.
-                emit_error("multi-line string tokens are unsupported.");
+                // TODO: Support multi-line string scalars.
+                emit_error("multi-line string scalars are unsupported.");
             }
 
             // Handle escaped characters.
@@ -1281,6 +1293,8 @@ private:
                 {
                     emit_error("Escaped characters are only available in a double-quoted string token.");
                 }
+
+                m_value_buffer.append(m_token_begin_itr, m_cur_itr);
 
                 current = *++m_cur_itr;
                 switch (current)
@@ -1349,50 +1363,46 @@ private:
                 default:
                     emit_error("Unsupported escape sequence is found in a string token.");
                 }
+
+                m_token_begin_itr = m_cur_itr + 1;
                 continue;
             }
 
             uint8_t byte = static_cast<uint8_t>(current);
 
             // Handle unescaped control characters.
-            if (byte <= 0x1Fu)
+            if (byte <= 0x1F)
             {
+                m_value_buffer.append(m_token_begin_itr, m_cur_itr);
                 handle_unescaped_control_char(current);
+                m_token_begin_itr = m_cur_itr + 1;
                 continue;
             }
 
             // The other characters are already checked while creating an input handler.
 
             // Handle ASCII characters except control characters.
-            else if (byte <= 0x7Eu)
+            if (byte <= 0x7E)
             {
-                m_value_buffer.push_back(current);
                 continue;
             }
 
             // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
-            else if (byte <= 0xDFu)
+            if (byte <= 0xDF)
             {
-                m_value_buffer.push_back(current);
-                m_value_buffer.push_back(*++m_cur_itr);
+                ++m_cur_itr;
                 continue;
             }
 
             // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
-            else if (byte <= 0xEFu)
+            if (byte <= 0xEF)
             {
-                m_value_buffer.push_back(current);
-                m_value_buffer.push_back(*++m_cur_itr);
-                m_value_buffer.push_back(*++m_cur_itr);
-
+                m_cur_itr += 2;
                 continue;
             }
 
             // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            m_value_buffer.push_back(current);
-            m_value_buffer.push_back(*++m_cur_itr);
-            m_value_buffer.push_back(*++m_cur_itr);
-            m_value_buffer.push_back(*++m_cur_itr);
+            m_cur_itr += 3;
         }
 
         // Handle the end of input buffer.
@@ -1406,6 +1416,7 @@ private:
             emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
+        m_value_buffer.append(m_token_begin_itr, m_cur_itr);
         return lexical_token_t::STRING_VALUE;
     }
 
@@ -1652,7 +1663,7 @@ private:
 
     /// @brief Handle unescaped control characters.
     /// @param c A target character.
-    void handle_unescaped_control_char(int c)
+    void handle_unescaped_control_char(char c)
     {
         FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
 
@@ -1741,7 +1752,7 @@ private:
 
     void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
     {
-        int ch = *++m_cur_itr;
+        char ch = *++m_cur_itr;
 
         chomp_type = chomping_indicator_t::CLIP;
         switch (ch)
@@ -1777,6 +1788,11 @@ private:
     /// @brief Skip white spaces (half-width spaces and tabs) from the current position.
     void skip_white_spaces()
     {
+        if (m_cur_itr == m_end_itr)
+        {
+            return;
+        }
+
         do
         {
             switch (*m_cur_itr)
@@ -1866,9 +1882,6 @@ private:
     }
 
 private:
-    /// The value of EOF for the target characters.
-    static constexpr char s_end_of_input = char(0xFF);
-
     /// An input buffer adapter to be analyzed.
     std::string m_input_buffer {};
     /// The iterator to the current character in the input buffer.
