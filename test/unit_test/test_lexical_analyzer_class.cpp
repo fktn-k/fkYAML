@@ -51,7 +51,8 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanYamlVersionDirectiveTest", "[LexicalAnal
             std::string("%YUML 1.2"),
             std::string("%YANL 1.2  \r"),
             std::string("%YAMR 1.2 \r\n"),
-            std::string("%YANL 1.2    \n"));
+            std::string("%YANL 1.2    \n"),
+            std::string("%YAML1.2"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -67,10 +68,10 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanYamlVersionDirectiveTest", "[LexicalAnal
             std::string("%YAML 1.3\n"),
             std::string("%YAML 2.0\n"),
             std::string("%YAML 12"),
+            std::string("%YAML 123"),
             std::string("%YAML 1.23"),
             std::string("%YAML 1.11"),
             std::string("%YAML 1.A"),
-            std::string("%YAML1.2 "),
             std::string("%YAML AbC"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
@@ -123,7 +124,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
 
     SECTION("Test nothrow expected tokens with invalid content.")
     {
-        auto buffer = GENERATE(std::string("%TUB"), std::string("%TAC"));
+        auto buffer = GENERATE(std::string("%TUB"), std::string("%TAC"), std::string("%TAGE"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -132,17 +133,15 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
         REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("Test nothrow expected tokens.")
-    {
-        lexer_t lexer(fkyaml::detail::input_adapter("%TAGE"));
-        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
-    }
-
     SECTION("invalid tag handle")
     {
         auto input = GENERATE(
             std::string("%TAG foo bar"),
             std::string("%TAG !!abc bar"),
+            std::string("%TAG !"),
+            std::string("%TAG !!"),
+            std::string("%TAG !valid!"),
+            std::string("%TAG !invalid"),
             std::string("%TAG !invalid bar"),
             std::string("%TAG !invalid\tbar"),
             std::string("%TAG !inv@lid! bar"),
@@ -168,10 +167,19 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
     }
 }
 
+TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidDirectiveTest", "[LexicalAnalyzerClassTest]")
+{
+    auto buffer =
+        GENERATE(std::string("%INVALID\r"), std::string("%INVALID\r"), std::string("%TAG"), std::string("%YAML"));
+
+    lexer_t lexer(fkyaml::detail::input_adapter(buffer));
+    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+}
+
 TEST_CASE("LexicalAnalyzerClassTest_ScanReservedDirectiveTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer =
-        GENERATE(std::string("%TEST"), std::string("%1984\n"), std::string("%TEST4LIB\r"), std::string("%%ERROR\r\n"));
+        GENERATE(std::string("%TEST"), std::string("%1984"), std::string("%TEST4LIB"), std::string("%%ERROR"));
 
     fkyaml::detail::lexical_token_t token;
     lexer_t lexer(fkyaml::detail::input_adapter(buffer));
@@ -185,7 +193,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanReservedDirectiveTest", "[LexicalAnalyze
 TEST_CASE("LexicalAnalyzerClassTest_ScanEmptyDirectiveTest", "[LexicalAnalyzerClassTest]")
 {
     lexer_t lexer(fkyaml::detail::input_adapter("%"));
-    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    REQUIRE(lexer.get_next_token() == fkyaml::detail::lexical_token_t::INVALID_DIRECTIVE);
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanEndOfDirectivesTest", "[LexicalAnalyzerClassTest]")
@@ -254,6 +262,13 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanColonTest", "[LexicalAnalyzerClassTest]"
     SECTION("Test colon with LF newline code.")
     {
         lexer_t lexer(fkyaml::detail::input_adapter(":\n"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+    }
+
+    SECTION("Test colon with the end of the buffer")
+    {
+        lexer_t lexer(fkyaml::detail::input_adapter(":"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
@@ -562,6 +577,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanStringTokenTest", "[LexicalAnalyzerClass
         value_pair_t(std::string("-t"), fkyaml::node::string_type("-t")),
         value_pair_t(std::string("-foo"), fkyaml::node::string_type("-foo")),
         value_pair_t(std::string("-.test"), fkyaml::node::string_type("-.test")),
+        value_pair_t(std::string("?"), fkyaml::node::string_type("?")),
         value_pair_t(std::string("1.2.3"), fkyaml::node::string_type("1.2.3")),
         value_pair_t(std::string("foo,bar"), fkyaml::node::string_type("foo,bar")),
         value_pair_t(std::string("foo[bar"), fkyaml::node::string_type("foo[bar")),
@@ -1334,7 +1350,11 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanAnchorTokenTest", "[LexicalAnalyzerClass
             std::string("&:anchor["),
             std::string("&:anchor]"),
             std::string("&:anchor,"),
-            std::string("&:anchor: "));
+            std::string("&:anchor: "),
+            std::string("&:anchor:\t"),
+            std::string("&:anchor:\r"),
+            std::string("&:anchor:\n"),
+            std::string("&:anchor:"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
@@ -1439,6 +1459,16 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagTokenTest", "[LexicalAnalyzerClassTes
         REQUIRE(lexer.get_string() == "tag");
     }
 
+    SECTION("valid tag name (not followed by a value)")
+    {
+        auto input = GENERATE(std::string("!"), std::string("!!foo"), std::string("!foo!bar"), std::string("!foo"));
+
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::TAG_PREFIX);
+        REQUIRE(lexer.get_string() == input);
+    }
+
     SECTION("invalid tag names")
     {
         auto input = GENERATE(
@@ -1459,7 +1489,10 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagTokenTest", "[LexicalAnalyzerClassTes
 TEST_CASE("LexicalAnalyzerClassTest_ScanCommentTokenTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer = GENERATE(
-        std::string("# comment\r"), std::string("# comment\r\n"), std::string("# comment\n"), std::string("# comment"));
+        std::string("# comment\r "),
+        std::string("# comment\r\n"),
+        std::string("# comment\n"),
+        std::string("# comment"));
     lexer_t lexer(fkyaml::detail::input_adapter(buffer));
     fkyaml::detail::lexical_token_t token;
 
@@ -1773,7 +1806,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFlowMappingTokenTest", "[LexicalAnalyzer
 
     SECTION("Input source No.2.")
     {
-        lexer_t lexer(fkyaml::detail::input_adapter("test: {foo: bar}"));
+        lexer_t lexer(fkyaml::detail::input_adapter("test: {foo: bar baz}"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
@@ -1797,7 +1830,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanFlowMappingTokenTest", "[LexicalAnalyzer
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("bar") == 0);
+        REQUIRE(lexer.get_string().compare("bar baz") == 0);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::MAPPING_FLOW_END);
@@ -1820,7 +1853,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("test") == 0);
+        REQUIRE(lexer.get_string() == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
@@ -1831,7 +1864,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("foo") == 0);
+        REQUIRE(lexer.get_string() == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
@@ -1839,7 +1872,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("bar") == 0);
+        REQUIRE(lexer.get_string() == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -1856,7 +1889,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("test") == 0);
+        REQUIRE(lexer.get_string() == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
@@ -1867,7 +1900,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("foo") == 0);
+        REQUIRE(lexer.get_string() == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
@@ -1875,12 +1908,12 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("one") == 0);
+        REQUIRE(lexer.get_string() == "one");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("bar") == 0);
+        REQUIRE(lexer.get_string() == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
@@ -1896,7 +1929,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("foo") == 0);
+        REQUIRE(lexer.get_string() == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
@@ -1904,12 +1937,12 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanBlockSequenceTokenTest", "[LexicalAnalyz
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("two") == 0);
+        REQUIRE(lexer.get_string() == "two");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE_NOTHROW(lexer.get_string());
-        REQUIRE(lexer.get_string().compare("bar") == 0);
+        REQUIRE(lexer.get_string() == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);

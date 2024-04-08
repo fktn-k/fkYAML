@@ -199,12 +199,12 @@ add_executable(
   test_exception_class.cpp
   test_from_string.cpp
   test_input_adapter.cpp
-  test_input_handler.cpp
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
   test_node_class.cpp
   test_node_ref_storage_class.cpp
   test_ordered_map_class.cpp
+  test_position_tracker_class.cpp
   test_serializer_class.cpp
   test_string_formatter.cpp
   test_tag_resolver_class.cpp
