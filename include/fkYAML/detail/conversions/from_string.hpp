@@ -198,7 +198,7 @@ from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
     const auto tmp_ret = from_string(s, type_tag<unsigned long> {});
     if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret)
     {
-        throw exception("Failed to convert an unsigned long long into an UnsignedInteger value.");
+        throw exception("Failed to convert an unsigned long long into an unsigned integer value.");
     }
 
     return static_cast<UnsignedIntType>(tmp_ret);
@@ -234,7 +234,7 @@ inline float from_string(const std::string& s, type_tag<float> /*unused*/)
     }
     catch (const std::exception& /*unused*/)
     {
-        throw exception("Failed to a string into a float value.");
+        throw exception("Failed to convert a string into a float value.");
     }
 
     return ret;
@@ -270,7 +270,7 @@ inline double from_string(const std::string& s, type_tag<double> /*unused*/)
     }
     catch (const std::exception& /*unused*/)
     {
-        throw exception("Failed to a string into a double value.");
+        throw exception("Failed to convert a string into a double value.");
     }
 
     return ret;
