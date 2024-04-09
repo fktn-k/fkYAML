@@ -1424,6 +1424,8 @@ TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTe
 
         std::string buffer {};
         REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter with valid 1-byte UTF-8 encodings")
@@ -1487,6 +1489,8 @@ TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTe
 
         std::string buffer {};
         REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter with valid 2-byte UTF-8 encodings")
@@ -1553,6 +1557,8 @@ TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTe
 
         std::string buffer {};
         REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter with valid 3-byte UTF-8 encodings")
@@ -1623,6 +1629,8 @@ TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTe
 
         std::string buffer {};
         REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter with valid 4-byte UTF-8 encodings")
