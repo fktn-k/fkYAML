@@ -261,6 +261,7 @@ FK_YAML_NAMESPACE_END
 
 #include <algorithm>
 #include <cstdint>
+#include <deque>
 #include <unordered_map>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
@@ -1319,7 +1320,7 @@ from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
     const auto tmp_ret = from_string(s, type_tag<unsigned long> {});
     if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret)
     {
-        throw exception("Failed to convert an unsigned long long into an UnsignedInteger value.");
+        throw exception("Failed to convert an unsigned long long into an unsigned integer value.");
     }
 
     return static_cast<UnsignedIntType>(tmp_ret);
@@ -1355,7 +1356,7 @@ inline float from_string(const std::string& s, type_tag<float> /*unused*/)
     }
     catch (const std::exception& /*unused*/)
     {
-        throw exception("Failed to a string into a float value.");
+        throw exception("Failed to convert a string into a float value.");
     }
 
     return ret;
@@ -1391,7 +1392,7 @@ inline double from_string(const std::string& s, type_tag<double> /*unused*/)
     }
     catch (const std::exception& /*unused*/)
     {
-        throw exception("Failed to a string into a double value.");
+        throw exception("Failed to convert a string into a double value.");
     }
 
     return ret;
@@ -1888,6 +1889,334 @@ FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODING_HPP_ */
 
+// #include <fkYAML/detail/input/scalar_scanner.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
+#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
+
+#include <algorithm>
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/assert.hpp>
+
+// #include <fkYAML/detail/types/lexical_token_t.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+/// @brief namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @brief namespace for internal implementations of fkYAML library.
+namespace detail
+{
+
+/// @brief Definition of lexical token types.
+enum class lexical_token_t
+{
+    END_OF_BUFFER,         //!< the end of input buffer.
+    EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
+    KEY_SEPARATOR,         //!< the key separater `:`
+    VALUE_SEPARATOR,       //!< the value separater `,`
+    ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
+    ALIAS_PREFIX,          //!< the character for alias prefix `*`
+    COMMENT_PREFIX,        //!< the character for comment prefix `#`
+    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
+    TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
+    TAG_PREFIX,            //!< the character for tag prefix `!`
+    INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
+    SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
+    SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
+    SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
+    MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
+    MAPPING_FLOW_END,      //!< the character for mapping end `}`
+    NULL_VALUE,            //!< a null value found. use get_null() to get a value.
+    BOOLEAN_VALUE,         //!< a boolean value found. use get_boolean() to get a value.
+    INTEGER_VALUE,         //!< an integer value found. use get_integer() to get a value.
+    FLOAT_NUMBER_VALUE,    //!< a float number value found. use get_float_number() to get a value.
+    STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
+    END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
+    END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
+};
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
+
+
+/// @namespace fkyaml
+/// @brief namespace for fkYAML library.
+FK_YAML_NAMESPACE_BEGIN
+
+/// @namespace detail
+/// @brief namespace for internal implementations of fkYAML library.
+namespace detail
+{
+
+namespace
+{
+
+/// @brief Check if the given character is a digit.
+/// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with MSVC.
+/// @param c A character to be checked.
+/// @return true if the given character is a digit, false otherwise.
+inline bool is_digit(char c)
+{
+    return ('0' <= c && c <= '9');
+}
+
+inline bool is_xdigit(char c)
+{
+    return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
+}
+
+} // namespace
+class scalar_scanner
+{
+public:
+    static lexical_token_t scan(const std::string& token)
+    {
+        switch (token.size())
+        {
+        case 0:
+            return lexical_token_t::STRING_VALUE;
+        case 1:
+            if (token[0] == '~')
+            {
+                return lexical_token_t::NULL_VALUE;
+            }
+            break;
+        case 4:
+            if (token == "null" || token == "Null" || token == "NULL")
+            {
+                return lexical_token_t::NULL_VALUE;
+            }
+            if (token == "true" || token == "True" || token == "TRUE")
+            {
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+            if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
+                token == ".NAN")
+            {
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            }
+            break;
+        case 5:
+            if (token == "false" || token == "False" || token == "FALSE")
+            {
+                return lexical_token_t::BOOLEAN_VALUE;
+            }
+            if (token == "-.inf" || token == "-.Inf" || token == "-.INF")
+            {
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            }
+            break;
+        }
+
+        return scan_possible_number_token(token);
+    }
+
+private:
+    static lexical_token_t scan_possible_number_token(const std::string& token)
+    {
+        std::string::const_iterator itr = token.begin();
+        std::size_t size = token.size();
+        FK_YAML_ASSERT(size > 0);
+
+        switch (*itr)
+        {
+        case '-':
+            return (size > 1) ? scan_negative_number(++itr, --size) : lexical_token_t::STRING_VALUE;
+        case '+':
+            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::STRING_VALUE;
+        case '0':
+            return (size > 1) ? scan_after_zero_at_first(++itr, --size) : lexical_token_t::INTEGER_VALUE;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::INTEGER_VALUE;
+        default:
+            return lexical_token_t::STRING_VALUE;
+        }
+    }
+
+    static lexical_token_t scan_negative_number(std::string::const_iterator itr, std::size_t size)
+    {
+        FK_YAML_ASSERT(size > 0);
+
+        if (is_digit(*itr))
+        {
+            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::INTEGER_VALUE;
+        }
+
+        return lexical_token_t::STRING_VALUE;
+    }
+
+    static lexical_token_t scan_after_zero_at_first(std::string::const_iterator itr, std::size_t size)
+    {
+        FK_YAML_ASSERT(size > 0);
+
+        if (is_digit(*itr))
+        {
+            // a token consisting of the beginning '0' and some following numbers, e.g., `0123`, is not an integer
+            // according to https://yaml.org/spec/1.2.2/#10213-integer.
+            return lexical_token_t::STRING_VALUE;
+        }
+
+        switch (*itr)
+        {
+        case '.': {
+            if (size == 1)
+            {
+                return lexical_token_t::STRING_VALUE;
+            }
+            lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
+            return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
+                                                          : lexical_token_t::FLOAT_NUMBER_VALUE;
+        }
+        case 'o':
+            return (size > 1) ? scan_octal_number(++itr, --size) : lexical_token_t::STRING_VALUE;
+        case 'x':
+            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : lexical_token_t::STRING_VALUE;
+        default:
+            return lexical_token_t::STRING_VALUE;
+        }
+    }
+
+    static lexical_token_t scan_decimal_number(
+        std::string::const_iterator itr, std::size_t size, bool has_decimal_point)
+    {
+        FK_YAML_ASSERT(size > 0);
+
+        if (is_digit(*itr))
+        {
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::INTEGER_VALUE;
+        }
+
+        switch (*itr)
+        {
+        case '.': {
+            if (has_decimal_point)
+            {
+                // the token has more than one period, e.g., a semantic version `1.2.3`.
+                return lexical_token_t::STRING_VALUE;
+            }
+            lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
+            return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
+                                                          : lexical_token_t::FLOAT_NUMBER_VALUE;
+        }
+        case 'e':
+        case 'E':
+            return (size > 1) ? scan_after_exponent(++itr, --size, has_decimal_point) : lexical_token_t::STRING_VALUE;
+        default:
+            return lexical_token_t::STRING_VALUE;
+        }
+    }
+
+    static lexical_token_t scan_after_decimal_point(
+        std::string::const_iterator itr, std::size_t size, bool has_decimal_point)
+    {
+        FK_YAML_ASSERT(size > 0);
+
+        if (is_digit(*itr))
+        {
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
+                              : lexical_token_t::FLOAT_NUMBER_VALUE;
+        }
+
+        return lexical_token_t::STRING_VALUE;
+    }
+
+    static lexical_token_t scan_after_exponent(
+        std::string::const_iterator itr, std::size_t size, bool has_decimal_point)
+    {
+        FK_YAML_ASSERT(size > 0);
+
+        if (is_digit(*itr))
+        {
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
+                              : lexical_token_t::FLOAT_NUMBER_VALUE;
+        }
+
+        switch (*itr)
+        {
+        case '+':
+        case '-':
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::STRING_VALUE;
+        default:
+            return lexical_token_t::STRING_VALUE;
+        }
+    }
+
+    static lexical_token_t scan_octal_number(std::string::const_iterator itr, std::size_t size)
+    {
+        FK_YAML_ASSERT(size > 0);
+
+        switch (*itr)
+        {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+            return (size > 1) ? scan_octal_number(++itr, --size) : lexical_token_t::INTEGER_VALUE;
+        default:
+            return lexical_token_t::STRING_VALUE;
+        }
+    }
+
+    static lexical_token_t scan_hexadecimal_number(std::string::const_iterator itr, std::size_t size)
+    {
+        FK_YAML_ASSERT(size > 0);
+
+        if (is_xdigit(*itr))
+        {
+            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : lexical_token_t::INTEGER_VALUE;
+        }
+        return lexical_token_t::STRING_VALUE;
+    }
+};
+
+} // namespace detail
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_ */
+
 // #include <fkYAML/detail/input/position_tracker.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -2283,62 +2612,6 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
-
-/// @brief Definition of lexical token types.
-enum class lexical_token_t
-{
-    END_OF_BUFFER,         //!< the end of input buffer.
-    EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
-    KEY_SEPARATOR,         //!< the key separater `:`
-    VALUE_SEPARATOR,       //!< the value separater `,`
-    ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
-    ALIAS_PREFIX,          //!< the character for alias prefix `*`
-    COMMENT_PREFIX,        //!< the character for comment prefix `#`
-    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
-    TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
-    TAG_PREFIX,            //!< the character for tag prefix `!`
-    INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
-    SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
-    SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
-    SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
-    MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
-    MAPPING_FLOW_END,      //!< the character for mapping end `}`
-    NULL_VALUE,            //!< a null value found. use get_null() to get a value.
-    BOOLEAN_VALUE,         //!< a boolean value found. use get_boolean() to get a value.
-    INTEGER_VALUE,         //!< an integer value found. use get_integer() to get a value.
-    FLOAT_NUMBER_VALUE,    //!< a float number value found. use get_float_number() to get a value.
-    STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
-    END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
-    END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
-};
-
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
 
 // #include <fkYAML/exception.hpp>
 
@@ -2425,7 +2698,7 @@ public:
             case ' ':
                 return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
-                return m_last_token_type = scan_string();
+                return m_last_token_type = scan_scalar();
             }
         case ':': { // key separater
             if (++m_cur_itr == m_end_itr)
@@ -2451,9 +2724,9 @@ public:
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
                 }
-                return scan_string();
+                return scan_scalar();
             default:
-                return scan_string();
+                return scan_scalar();
             }
 
             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
@@ -2497,11 +2770,6 @@ public:
                 return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
             }
 
-            if (std::isdigit(next))
-            {
-                return m_last_token_type = scan_number();
-            }
-
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available)
             {
@@ -2512,7 +2780,7 @@ public:
                 }
             }
 
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_scalar();
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
@@ -2544,9 +2812,9 @@ public:
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
         case '\'':
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_scalar();
         case '+':
-            return m_last_token_type = scan_number();
+            return m_last_token_type = scan_scalar();
         case '.': {
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available)
@@ -2558,7 +2826,7 @@ public:
                 }
             }
 
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_scalar();
         }
         case '|': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
@@ -2575,11 +2843,7 @@ public:
                        scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
         default:
-            if ('0' <= current && current <= '9')
-            {
-                return m_last_token_type = scan_number();
-            }
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_scalar();
         }
     }
 
@@ -2601,11 +2865,7 @@ public:
     /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
     std::nullptr_t get_null() const
     {
-        if (m_last_token_type == lexical_token_t::NULL_VALUE)
-        {
-            return nullptr;
-        }
-        emit_error("Invalid request for a null value.");
+        return from_string(m_value_buffer, type_tag<std::nullptr_t> {});
     }
 
     /// @brief Convert from string to boolean and get the converted value.
@@ -2613,33 +2873,28 @@ public:
     /// @return false A string token is one of the followings: "false", "False", "FALSE".
     boolean_type get_boolean() const
     {
-        if (m_last_token_type == lexical_token_t::BOOLEAN_VALUE)
-        {
-            return m_boolean_val;
-        }
-        emit_error("Invalid request for a boolean value.");
+        return from_string(m_value_buffer, type_tag<bool> {});
     }
 
     /// @brief Convert from string to integer and get the converted value.
     /// @return integer_type An integer value converted from the source string.
     integer_type get_integer() const
     {
-        if (m_last_token_type == lexical_token_t::INTEGER_VALUE)
+        if (m_value_buffer.size() > 2 && m_value_buffer.rfind("0o", 0) != std::string::npos)
         {
-            return m_integer_val;
+            // Replace the prefix "0o" with "0" since STL functions can detect octal chars.
+            // Note that the YAML specifies octal values start with the prefix "0o", not "0".
+            // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
+            return from_string("0" + m_value_buffer.substr(2), type_tag<integer_type> {});
         }
-        emit_error("Invalid request for an integer value.");
+        return from_string(m_value_buffer, type_tag<integer_type> {});
     }
 
     /// @brief Convert from string to float number and get the converted value.
     /// @return float_number_type A float number value converted from the source string.
     float_number_type get_float_number() const
     {
-        if (m_last_token_type == lexical_token_t::FLOAT_NUMBER_VALUE)
-        {
-            return m_float_val;
-        }
-        emit_error("Invalid request for a float number value.");
+        return from_string(m_value_buffer, type_tag<float_number_type> {});
     }
 
     /// @brief Get a scanned string value.
@@ -3108,241 +3363,9 @@ private:
         }
     }
 
-    /// @brief Scan and determine a number type(integer/float). This method is the entrypoint for all number
-    /// tokens.
-    /// @return lexical_token_t A lexical token type for a determined number type.
-    lexical_token_t scan_number()
-    {
-        m_value_buffer.clear();
-
-        char current = *m_cur_itr;
-        FK_YAML_ASSERT(std::isdigit(current) || current == '-' || current == '+');
-
-        lexical_token_t ret = lexical_token_t::END_OF_BUFFER;
-        switch (current)
-        {
-        case '-':
-            m_value_buffer.push_back(current);
-            ret = scan_negative_number();
-            break;
-        case '+':
-            ret = scan_decimal_number();
-            break;
-        case '0':
-            m_value_buffer.push_back(current);
-            ret = scan_number_after_zero_at_first();
-            break;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            m_value_buffer.push_back(current);
-            ret = scan_decimal_number();
-            break;
-        default:                                                      // LCOV_EXCL_LINE
-            emit_error("Invalid character found in a number token."); // LCOV_EXCL_LINE
-        }
-
-        switch (ret)
-        {
-        case lexical_token_t::INTEGER_VALUE:
-            m_integer_val = from_string(m_value_buffer, type_tag<integer_type> {});
-            break;
-        case lexical_token_t::FLOAT_NUMBER_VALUE:
-            m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-            break;
-        default:
-            break;
-        }
-
-        return ret;
-    }
-
-    /// @brief Scan a next character after the negative sign(-).
-    /// @return lexical_token_t The lexical token type for either integer or float numbers.
-    lexical_token_t scan_negative_number()
-    {
-        char next = *++m_cur_itr;
-
-        // The value of `next` must be guranteed to be a digit in the get_next_token() function.
-        FK_YAML_ASSERT(std::isdigit(next));
-        m_value_buffer.push_back(next);
-        return scan_decimal_number();
-    }
-
-    /// @brief Scan a next character after '0' at the beginning of a token.
-    /// @return lexical_token_t The lexical token type for one of number types(integer/float).
-    lexical_token_t scan_number_after_zero_at_first()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            return lexical_token_t::INTEGER_VALUE;
-        }
-
-        char next = *m_cur_itr;
-        switch (next)
-        {
-        case '.':
-            m_value_buffer.push_back(next);
-            return scan_decimal_number_after_decimal_point();
-        case 'o':
-            // Do not store 'o' since std::stoXXX does not support "0o" but "0" as the prefix for octal numbers.
-            // YAML specifies octal values start with the prefix "0o".
-            // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
-            return scan_octal_number();
-        case 'x':
-            m_value_buffer.push_back(next);
-            return scan_hexadecimal_number();
-        default:                                   // LCOV_EXCL_LINE
-            return lexical_token_t::INTEGER_VALUE; // LCOV_EXCL_LINE
-        }
-    }
-
-    /// @brief Scan a next character after a decimal point.
-    /// @return lexical_token_t The lexical token type for float numbers.
-    lexical_token_t scan_decimal_number_after_decimal_point()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            emit_error("Invalid eof found after a decimal point.");
-        }
-
-        FK_YAML_ASSERT(std::isdigit(*m_cur_itr));
-        m_value_buffer.push_back(*m_cur_itr);
-        lexical_token_t token = scan_decimal_number();
-        return token == lexical_token_t::STRING_VALUE ? token : lexical_token_t::FLOAT_NUMBER_VALUE;
-    }
-
-    /// @brief Scan a next character after exponent(e/E).
-    /// @return lexical_token_t The lexical token type for float numbers.
-    lexical_token_t scan_decimal_number_after_exponent()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            emit_error("unexpected character found after exponent.");
-        }
-
-        char next = *m_cur_itr;
-        if (next == '+' || next == '-')
-        {
-            m_value_buffer.push_back(next);
-            scan_decimal_number_after_sign();
-        }
-        else
-        {
-            FK_YAML_ASSERT(std::isdigit(next));
-            m_value_buffer.push_back(next);
-            scan_decimal_number();
-        }
-        return lexical_token_t::FLOAT_NUMBER_VALUE;
-    }
-
-    /// @brief Scan a next character after a sign(+/-) after exponent(e/E).
-    /// @return lexical_token_t The lexical token type for one of number types(integer/float)
-    lexical_token_t scan_decimal_number_after_sign()
-    {
-        char next = *++m_cur_itr;
-
-        if (std::isdigit(next))
-        {
-            m_value_buffer.push_back(next);
-            return scan_decimal_number();
-        }
-
-        emit_error("Non-numeric character found after a sign(+/-) after exponent(e/E)."); // LCOV_EXCL_LINE
-    }
-
-    /// @brief Scan a next character for decimal numbers.
-    /// @return lexical_token_t The lexical token type for one of number types(integer/float)
-    lexical_token_t scan_decimal_number()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            return lexical_token_t::INTEGER_VALUE;
-        }
-
-        char next = *m_cur_itr;
-
-        if (std::isdigit(next))
-        {
-            m_value_buffer.push_back(next);
-            return scan_decimal_number();
-        }
-
-        if (next == '.')
-        {
-            // NOLINTNEXTLINE(abseil-string-find-str-contains)
-            if (m_value_buffer.find('.') != string_type::npos)
-            {
-                // This path is for strings like 1.2.3
-                m_value_buffer.clear();
-                return scan_string();
-            }
-            m_value_buffer.push_back(next);
-            return scan_decimal_number_after_decimal_point();
-        }
-
-        if (next == 'e' || next == 'E')
-        {
-            m_value_buffer.push_back(next);
-            return scan_decimal_number_after_exponent();
-        }
-
-        return lexical_token_t::INTEGER_VALUE;
-    }
-
-    /// @brief Scan a next character for octal numbers.
-    /// @return lexical_token_t The lexical token type for integers.
-    lexical_token_t scan_octal_number()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            return lexical_token_t::INTEGER_VALUE;
-        }
-
-        switch (*m_cur_itr)
-        {
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-            m_value_buffer.push_back(*m_cur_itr);
-            scan_octal_number();
-            break;
-        }
-        return lexical_token_t::INTEGER_VALUE;
-    }
-
-    /// @brief Scan a next character for hexadecimal numbers.
-    /// @return lexical_token_t The lexical token type for integers.
-    lexical_token_t scan_hexadecimal_number()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            return lexical_token_t::INTEGER_VALUE;
-        }
-
-        char next = *m_cur_itr;
-        if (std::isxdigit(next))
-        {
-            m_value_buffer.push_back(next);
-            scan_hexadecimal_number();
-        }
-        return lexical_token_t::INTEGER_VALUE;
-    }
-
     /// @brief Scan a string token, either plain, single-quoted or double-quoted.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_string()
+    lexical_token_t scan_scalar()
     {
         m_value_buffer.clear();
 
@@ -3367,49 +3390,7 @@ private:
             return type;
         }
 
-        if (m_value_buffer == "~")
-        {
-            return lexical_token_t::NULL_VALUE;
-        }
-
-        size_t val_size = m_value_buffer.size();
-        if (val_size == 4)
-        {
-            if (m_value_buffer == "null" || m_value_buffer == "Null" || m_value_buffer == "NULL")
-            {
-                from_string(m_value_buffer, type_tag<std::nullptr_t> {});
-                return lexical_token_t::NULL_VALUE;
-            }
-
-            if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
-            {
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-
-            if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF" ||
-                m_value_buffer == ".nan" || m_value_buffer == ".NaN" || m_value_buffer == ".NAN")
-            {
-                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-        }
-        else if (val_size == 5)
-        {
-            if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
-            {
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-
-            if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
-            {
-                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-        }
-
-        return type;
+        return scalar_scanner::scan(m_value_buffer);
     }
 
     /// @brief Check if the given character is allowed in a single-quoted scalar token.
@@ -4542,18 +4523,38 @@ class basic_deserializer
 {
     static_assert(is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts basic_node<...>");
 
+    /** A type for the target basic_node. */
+    using node_type = BasicNodeType;
+    /** A type for the lexical analyzer. */
+    using lexer_type = lexical_analyzer<node_type>;
     /** A type for sequence node value containers. */
-    using sequence_type = typename BasicNodeType::sequence_type;
+    using sequence_type = typename node_type::sequence_type;
     /** A type for mapping node value containers. */
-    using mapping_type = typename BasicNodeType::mapping_type;
+    using mapping_type = typename node_type::mapping_type;
     /** A type for boolean node values. */
-    using boolean_type = typename BasicNodeType::boolean_type;
+    using boolean_type = typename node_type::boolean_type;
     /** A type for integer node values. */
-    using integer_type = typename BasicNodeType::integer_type;
+    using integer_type = typename node_type::integer_type;
     /** A type for float number node values. */
-    using float_number_type = typename BasicNodeType::float_number_type;
+    using float_number_type = typename node_type::float_number_type;
     /** A type for string node values. */
-    using string_type = typename BasicNodeType::string_type;
+    using string_type = typename node_type::string_type;
+
+    struct indentation
+    {
+        indentation() = default;
+
+        indentation(std::size_t _line, std::size_t _indent, bool _is_explicit_key)
+            : line(_line),
+              indent(_indent),
+              is_explicit_key(_is_explicit_key)
+        {
+        }
+
+        std::size_t line {0};
+        std::size_t indent {0};
+        bool is_explicit_key {false};
+    };
 
 public:
     /// @brief Construct a new basic_deserializer object.
@@ -4562,110 +4563,141 @@ public:
 public:
     /// @brief Deserialize a YAML-formatted source string into a YAML node.
     /// @param source A YAML-formatted source string.
-    /// @return BasicNodeType A root YAML node deserialized from the source string.
+    /// @return node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    BasicNodeType deserialize(InputAdapterType&& input_adapter)
+    node_type deserialize(InputAdapterType&& input_adapter)
     {
-        lexical_analyzer<BasicNodeType> lexer(std::forward<InputAdapterType>(input_adapter));
+        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
+        lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
-        BasicNodeType root = BasicNodeType::mapping();
-        m_current_node = &root;
-
-        lexical_token_t type = lexer.get_next_token();
-        std::size_t cur_indent = lexer.get_last_token_begin_pos();
-        std::size_t cur_line = lexer.get_lines_processed();
+        node_type root = node_type::mapping();
+        mp_current_node = &root;
 
         // parse directives first.
+        deserialize_directives(lexer, root, type);
+
+        // parse YAML nodes recursively
+        deserialize_node(lexer, type);
+
+        // reset parameters for the next call.
+        mp_current_node = nullptr;
+        mp_directive_set.reset();
+        m_needs_anchor_impl = false;
+        m_anchor_table.clear();
+        m_node_stack.clear();
+        m_indent_stack.clear();
+
+        return root;
+    }
+
+private:
+    /// @brief Deserializes the YAML directives if specified.
+    /// @param lexer The lexical analyzer to be used.
+    /// @param root The root YAML node.
+    /// @param type The variable to store the last lexical token type.
+    void deserialize_directives(lexer_type& lexer, node_type& root, lexical_token_t& last_type)
+    {
+        for (;;)
         {
-            bool ends_directive_section = false;
-            do
+            lexical_token_t type = lexer.get_next_token();
+
+            switch (type)
             {
-                switch (type)
+            case lexical_token_t::YAML_VER_DIRECTIVE:
+                if (!mp_directive_set)
                 {
-                case lexical_token_t::YAML_VER_DIRECTIVE:
-                    if (!mp_directive_set)
-                    {
-                        mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
-                    }
-                    if (!root.mp_directive_set)
-                    {
-                        root.mp_directive_set = mp_directive_set;
-                    }
-
-                    if (mp_directive_set->is_version_specified)
-                    {
-                        throw parse_error("YAML version cannot be specified more than once.", cur_line, cur_indent);
-                    }
-
-                    mp_directive_set->version = convert_yaml_version(lexer.get_yaml_version());
-                    mp_directive_set->is_version_specified = true;
-                    break;
-                case lexical_token_t::TAG_DIRECTIVE: {
-                    if (!mp_directive_set)
-                    {
-                        mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
-                    }
-                    if (!root.mp_directive_set)
-                    {
-                        root.mp_directive_set = mp_directive_set;
-                    }
-
-                    const std::string& tag_handle = lexer.get_tag_handle();
-                    switch (tag_handle.size())
-                    {
-                    case 1: {
-                        bool is_already_specified = !mp_directive_set->primary_handle_prefix.empty();
-                        if (is_already_specified)
-                        {
-                            throw parse_error(
-                                "Primary handle cannot be specified more than once.", cur_line, cur_indent);
-                        }
-                        mp_directive_set->primary_handle_prefix = lexer.get_tag_prefix();
-                        break;
-                    }
-                    case 2: {
-                        bool is_already_specified = !mp_directive_set->secondary_handle_prefix.empty();
-                        if (is_already_specified)
-                        {
-                            throw parse_error(
-                                "Secondary handle cannot be specified more than once.", cur_line, cur_indent);
-                        }
-                        mp_directive_set->secondary_handle_prefix = lexer.get_tag_prefix();
-                        break;
-                    }
-                    default: {
-                        bool is_already_specified =
-                            !(mp_directive_set->named_handle_map.emplace(tag_handle, lexer.get_tag_prefix()).second);
-                        if (is_already_specified)
-                        {
-                            throw parse_error(
-                                "The same named handle cannot be specified more than once.", cur_line, cur_indent);
-                        }
-                        break;
-                    }
-                    }
-                    break;
+                    mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
                 }
-                case lexical_token_t::INVALID_DIRECTIVE:
-                    // TODO: should output a warning log. Currently just ignore this case.
-                    break;
-                case lexical_token_t::END_OF_DIRECTIVES:
-                    ends_directive_section = true;
-                    break;
-                default:
-                    // move to the content parsing if the other tokens are found.
-                    ends_directive_section = true;
-                    break;
-                }
-
-                if (!ends_directive_section)
+                if (!root.mp_directive_set)
                 {
-                    type = lexer.get_next_token();
-                    cur_indent = lexer.get_last_token_begin_pos();
-                    cur_line = lexer.get_lines_processed();
+                    root.mp_directive_set = mp_directive_set;
                 }
-            } while (!ends_directive_section);
+
+                if (mp_directive_set->is_version_specified)
+                {
+                    throw parse_error(
+                        "YAML version cannot be specified more than once.",
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos());
+                }
+
+                mp_directive_set->version = convert_yaml_version(lexer.get_yaml_version());
+                mp_directive_set->is_version_specified = true;
+                break;
+            case lexical_token_t::TAG_DIRECTIVE: {
+                if (!mp_directive_set)
+                {
+                    mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
+                }
+                if (!root.mp_directive_set)
+                {
+                    root.mp_directive_set = mp_directive_set;
+                }
+
+                const std::string& tag_handle = lexer.get_tag_handle();
+                switch (tag_handle.size())
+                {
+                case 1: {
+                    bool is_already_specified = !mp_directive_set->primary_handle_prefix.empty();
+                    if (is_already_specified)
+                    {
+                        throw parse_error(
+                            "Primary handle cannot be specified more than once.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
+                    mp_directive_set->primary_handle_prefix = lexer.get_tag_prefix();
+                    break;
+                }
+                case 2: {
+                    bool is_already_specified = !mp_directive_set->secondary_handle_prefix.empty();
+                    if (is_already_specified)
+                    {
+                        throw parse_error(
+                            "Secondary handle cannot be specified more than once.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
+                    mp_directive_set->secondary_handle_prefix = lexer.get_tag_prefix();
+                    break;
+                }
+                default: {
+                    bool is_already_specified =
+                        !(mp_directive_set->named_handle_map.emplace(tag_handle, lexer.get_tag_prefix()).second);
+                    if (is_already_specified)
+                    {
+                        throw parse_error(
+                            "The same named handle cannot be specified more than once.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
+                    break;
+                }
+                }
+                break;
+            }
+            case lexical_token_t::INVALID_DIRECTIVE:
+                // TODO: should output a warning log. Currently just ignore this case.
+                break;
+            case lexical_token_t::END_OF_DIRECTIVES:
+                last_type = type;
+                return;
+            default:
+                // end the parsing of directives if the other tokens are found.
+                last_type = type;
+                return;
+            }
         }
+    }
+
+    /// @brief Deserializes the YAML nodes recursively.
+    /// @param lexer The lexical analyzer to be used.
+    /// @param first_type The first lexical token type.
+    void deserialize_node(lexer_type& lexer, lexical_token_t first_type)
+    {
+        lexical_token_t type = first_type;
+        std::size_t line = lexer.get_lines_processed();
+        std::size_t indent = lexer.get_last_token_begin_pos();
 
         do
         {
@@ -4675,45 +4707,45 @@ public:
                 // This handles an empty input.
                 break;
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
-                bool needs_to_move_back = !m_indent_stack.empty() && cur_indent < m_indent_stack.back().first;
+                bool needs_to_move_back = !m_indent_stack.empty() && indent < m_indent_stack.back().indent;
                 if (needs_to_move_back)
                 {
                     auto target_itr = std::find_if( // LCOV_EXCL_LINE
                         m_indent_stack.rbegin(),
                         m_indent_stack.rend(),
-                        [cur_indent](std::pair<std::size_t, bool> p) { return cur_indent > p.first; });
+                        [indent](const indentation& i) { return indent > i.indent; });
 
                     auto pop_num = std::distance(m_indent_stack.rbegin(), target_itr);
                     for (auto i = 0; i < pop_num; i++)
                     {
                         // move back to the previous container node.
-                        m_current_node = m_node_stack.back();
+                        mp_current_node = m_node_stack.back();
                         m_node_stack.pop_back();
                         m_indent_stack.pop_back();
                     }
                 }
 
-                if (m_current_node->is_null())
+                if (mp_current_node->is_null())
                 {
-                    *m_current_node = BasicNodeType::mapping();
+                    *mp_current_node = node_type::mapping();
                 }
 
-                m_node_stack.push_back(m_current_node);
-                m_indent_stack.emplace_back(cur_indent, true);
+                m_node_stack.push_back(mp_current_node);
+                m_indent_stack.emplace_back(line, indent, true);
 
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
-                    m_indent_stack.emplace_back(lexer.get_last_token_begin_pos(), false);
-                    m_current_node = new BasicNodeType(node_t::SEQUENCE);
-                    apply_directive_set(*m_current_node);
+                    m_indent_stack.emplace_back(lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false);
+                    mp_current_node = new node_type(node_t::SEQUENCE);
+                    apply_directive_set(*mp_current_node);
                     break;
                 }
 
-                m_current_node = new BasicNodeType();
-                apply_directive_set(*m_current_node);
-                cur_indent = lexer.get_last_token_begin_pos();
-                cur_line = lexer.get_lines_processed();
+                mp_current_node = new node_type();
+                apply_directive_set(*mp_current_node);
+                indent = lexer.get_last_token_begin_pos();
+                line = lexer.get_lines_processed();
 
                 continue;
             }
@@ -4721,12 +4753,12 @@ public:
                 bool is_stack_empty = m_node_stack.empty();
                 if (is_stack_empty)
                 {
-                    throw parse_error("A key separator found without key.", cur_line, cur_indent);
+                    throw parse_error("A key separator found without key.", line, indent);
                 }
 
                 // hold the line count of the key separator for later use.
-                std::size_t old_indent = cur_indent;
-                std::size_t old_line = cur_line;
+                std::size_t old_indent = indent;
+                std::size_t old_line = line;
 
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::COMMENT_PREFIX)
@@ -4735,30 +4767,30 @@ public:
                     type = lexer.get_next_token();
                 }
 
-                cur_indent = lexer.get_last_token_begin_pos();
-                cur_line = lexer.get_lines_processed();
+                indent = lexer.get_last_token_begin_pos();
+                line = lexer.get_lines_processed();
 
                 bool is_implicit_same_line =
-                    (cur_line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().first);
+                    (line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().indent);
                 if (is_implicit_same_line)
                 {
                     // a key separator for an implicit key with its value on the same line.
                     continue;
                 }
 
-                if (cur_line > old_line)
+                if (line > old_line)
                 {
                     switch (type)
                     {
                     case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                         // a key separator preceeding block sequence entries
-                        *m_current_node = BasicNodeType::sequence();
-                        apply_directive_set(*m_current_node);
+                        *mp_current_node = node_type::sequence();
+                        apply_directive_set(*mp_current_node);
                         break;
                     case lexical_token_t::EXPLICIT_KEY_PREFIX:
                         // a key separator for a explicit block mapping key.
-                        *m_current_node = BasicNodeType::mapping();
-                        apply_directive_set(*m_current_node);
+                        *mp_current_node = node_type::mapping();
+                        apply_directive_set(*mp_current_node);
                         break;
                     // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
                     // call.
@@ -4780,19 +4812,19 @@ public:
 
                 // handle explicit mapping key separators.
 
-                while (!m_indent_stack.back().second)
+                while (!m_indent_stack.back().is_explicit_key)
                 {
-                    m_current_node = m_node_stack.back();
+                    mp_current_node = m_node_stack.back();
                     m_node_stack.pop_back();
                     m_indent_stack.pop_back();
                 }
 
                 if (m_node_stack.back()->is_sequence())
                 {
-                    m_current_node = m_node_stack.back();
+                    mp_current_node = m_node_stack.back();
                     m_node_stack.pop_back();
                 }
-                if (m_node_stack.back() == m_current_node)
+                if (m_node_stack.back() == mp_current_node)
                 {
                     // This path is for nested explicit mapping keys like:
                     // ```yaml
@@ -4803,21 +4835,21 @@ public:
                     m_node_stack.pop_back();
                 }
 
-                BasicNodeType* key_node = m_current_node;
-                m_node_stack.back()->template get_value_ref<mapping_type&>().emplace(*key_node, BasicNodeType());
-                m_current_node = &(m_node_stack.back()->operator[](*key_node));
+                node_type* key_node = mp_current_node;
+                m_node_stack.back()->template get_value_ref<mapping_type&>().emplace(*key_node, node_type());
+                mp_current_node = &(m_node_stack.back()->operator[](*key_node));
                 delete key_node;
                 key_node = nullptr;
                 m_node_stack.push_back(m_node_stack.back());
-                m_indent_stack.back().second = false;
+                m_indent_stack.back().is_explicit_key = false;
 
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
-                    *m_current_node = BasicNodeType::sequence();
-                    apply_directive_set(*m_current_node);
+                    *mp_current_node = node_type::sequence();
+                    apply_directive_set(*mp_current_node);
                 }
-                cur_indent = lexer.get_last_token_begin_pos();
-                cur_line = lexer.get_lines_processed();
+                indent = lexer.get_last_token_begin_pos();
+                line = lexer.get_lines_processed();
                 continue;
             }
             case lexical_token_t::VALUE_SEPARATOR:
@@ -4833,7 +4865,7 @@ public:
                 //   the correct indent width for the "bar" node key.
 
                 type = lexer.get_next_token();
-                cur_line = lexer.get_lines_processed();
+                line = lexer.get_lines_processed();
                 continue;
             }
             case lexical_token_t::COMMENT_PREFIX:
@@ -4849,19 +4881,19 @@ public:
                 m_needs_tag_impl = true;
                 break;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
-                if (m_current_node->is_sequence())
+                if (mp_current_node->is_sequence())
                 {
-                    bool is_empty = m_current_node->empty();
+                    bool is_empty = mp_current_node->empty();
                     if (is_empty)
                     {
-                        m_indent_stack.emplace_back(cur_indent, false);
+                        m_indent_stack.emplace_back(line, indent, false);
                         break;
                     }
 
                     // move back to the previous sequence if necessary.
-                    while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back().first)
+                    while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent)
                     {
-                        m_current_node = m_node_stack.back();
+                        mp_current_node = m_node_stack.back();
                         m_node_stack.pop_back();
                         m_indent_stack.pop_back();
                     }
@@ -4871,37 +4903,43 @@ public:
                 // if the current node is a mapping.
                 if (m_node_stack.empty())
                 {
-                    throw parse_error("Invalid sequence block prefix(- ) found.", cur_line, cur_indent);
+                    throw parse_error("Invalid sequence block prefix(- ) found.", line, indent);
                 }
 
                 // move back to the previous sequence if necessary.
-                while (!m_current_node->is_sequence() || cur_indent != m_indent_stack.back().first)
+                while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent)
                 {
-                    m_current_node = m_node_stack.back();
+                    mp_current_node = m_node_stack.back();
                     m_node_stack.pop_back();
                     m_indent_stack.pop_back();
                 }
 
                 // for mappings in a sequence.
-                m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
-                m_node_stack.push_back(m_current_node);
-                m_current_node = &(m_current_node->template get_value_ref<sequence_type&>().back());
-                apply_directive_set(*m_current_node);
+                mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
+                m_node_stack.push_back(mp_current_node);
+                mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                apply_directive_set(*mp_current_node);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
-                *m_current_node = BasicNodeType::sequence();
-                apply_directive_set(*m_current_node);
+                ++m_flow_context_depth;
+                *mp_current_node = node_type::sequence();
+                apply_directive_set(*mp_current_node);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_END:
-                m_current_node = m_node_stack.back();
+                FK_YAML_ASSERT(m_flow_context_depth > 0);
+                --m_flow_context_depth;
+                mp_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 break;
             case lexical_token_t::MAPPING_FLOW_BEGIN:
-                *m_current_node = BasicNodeType::mapping();
-                apply_directive_set(*m_current_node);
+                ++m_flow_context_depth;
+                *mp_current_node = node_type::mapping();
+                apply_directive_set(*mp_current_node);
                 break;
             case lexical_token_t::MAPPING_FLOW_END:
-                m_current_node = m_node_stack.back();
+                FK_YAML_ASSERT(m_flow_context_depth > 0);
+                --m_flow_context_depth;
+                mp_current_node = m_node_stack.back();
                 break;
             case lexical_token_t::ALIAS_PREFIX:
             case lexical_token_t::NULL_VALUE:
@@ -4909,7 +4947,7 @@ public:
             case lexical_token_t::INTEGER_VALUE:
             case lexical_token_t::FLOAT_NUMBER_VALUE:
             case lexical_token_t::STRING_VALUE: {
-                bool do_continue = deserialize_scalar(lexer, cur_indent, cur_line, type);
+                bool do_continue = deserialize_scalar(lexer, indent, line, type);
                 if (do_continue)
                 {
                     continue;
@@ -4925,29 +4963,20 @@ public:
 
             lexical_token_t prev_type = type;
             type = lexer.get_next_token();
-            cur_indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? cur_indent : lexer.get_last_token_begin_pos();
-            cur_line = lexer.get_lines_processed();
+            indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? indent : lexer.get_last_token_begin_pos();
+            line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
-
-        m_current_node = nullptr;
-        m_needs_anchor_impl = false;
-        m_anchor_table.clear();
-        m_node_stack.clear();
-        m_indent_stack.clear();
-
-        return root;
     }
 
-private:
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
-    void add_new_key(BasicNodeType&& key, const std::size_t indent, const std::size_t line)
+    void add_new_key(node_type&& key, const std::size_t indent, const std::size_t line)
     {
-        if (!m_indent_stack.empty() && indent < m_indent_stack.back().first)
+        if (!m_indent_stack.empty() && indent < m_indent_stack.back().indent)
         {
             auto target_itr =
-                std::find_if(m_indent_stack.rbegin(), m_indent_stack.rend(), [indent](std::pair<std::size_t, bool> p) {
-                    return indent == p.first;
+                std::find_if(m_indent_stack.rbegin(), m_indent_stack.rend(), [indent](const indentation& i) {
+                    return indent == i.indent;
                 });
             bool is_indent_valid = (target_itr != m_indent_stack.rend());
             if (!is_indent_valid)
@@ -4959,24 +4988,24 @@ private:
             for (auto i = 0; i < pop_num; i++)
             {
                 // move back to the previous container node.
-                m_current_node = m_node_stack.back();
+                mp_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
                 m_indent_stack.pop_back();
             }
         }
 
-        if (m_current_node->is_sequence())
+        if (mp_current_node->is_sequence())
         {
-            m_current_node->template get_value_ref<sequence_type&>().emplace_back(BasicNodeType::mapping());
-            m_node_stack.push_back(m_current_node);
-            m_current_node = &(m_current_node->operator[](m_current_node->size() - 1));
+            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
+            m_node_stack.push_back(mp_current_node);
+            mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
         }
 
-        mapping_type& map = m_current_node->template get_value_ref<mapping_type&>();
+        mapping_type& map = mp_current_node->template get_value_ref<mapping_type&>();
         bool is_empty = map.empty();
         if (is_empty)
         {
-            m_indent_stack.emplace_back(indent, false);
+            m_indent_stack.emplace_back(line, indent, false);
         }
         else
         {
@@ -4988,32 +5017,37 @@ private:
             }
         }
 
-        map.emplace(key, BasicNodeType());
-        m_node_stack.push_back(m_current_node);
-        m_current_node = &(m_current_node->operator[](key));
+        map.emplace(key, node_type());
+        m_node_stack.push_back(mp_current_node);
+        mp_current_node = &(mp_current_node->operator[](key));
     }
 
     /// @brief Assign node value to the current node.
-    /// @param node_value A rvalue BasicNodeType object to be assigned to the current node.
-    void assign_node_value(BasicNodeType&& node_value) noexcept
+    /// @param node_value A rvalue node_type object to be assigned to the current node.
+    void assign_node_value(node_type&& node_value) noexcept
     {
-        if (m_current_node->is_sequence())
+        if (mp_current_node->is_sequence())
         {
-            m_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
+            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
             return;
         }
 
         // a scalar node
-        *m_current_node = std::move(node_value);
-        if (!m_indent_stack.back().second)
+        *mp_current_node = std::move(node_value);
+        if (!m_indent_stack.back().is_explicit_key)
         {
-            m_current_node = m_node_stack.back();
+            mp_current_node = m_node_stack.back();
             m_node_stack.pop_back();
         }
     }
 
-    template <typename LexerType>
-    BasicNodeType create_scalar_node(LexerType& lexer, lexical_token_t type, std::size_t indent, std::size_t line)
+    /// @brief Creates a YAML scalar node with the retrieved token information by the lexer.
+    /// @param lexer The lexical analyzer to be used.
+    /// @param type The type of the last lexical token.
+    /// @param indent The last indent size.
+    /// @param line The last line.
+    /// @return The created YAML scalar node.
+    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, std::size_t indent, std::size_t line)
     {
         FK_YAML_ASSERT(
             type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
@@ -5059,23 +5093,23 @@ private:
             }
         }
 
-        BasicNodeType node {};
+        node_type node {};
         switch (type)
         {
         case lexical_token_t::NULL_VALUE:
-            node = BasicNodeType(lexer.get_null());
+            node = node_type(lexer.get_null());
             break;
         case lexical_token_t::BOOLEAN_VALUE:
-            node = BasicNodeType(lexer.get_boolean());
+            node = node_type(lexer.get_boolean());
             break;
         case lexical_token_t::INTEGER_VALUE:
-            node = BasicNodeType(lexer.get_integer());
+            node = node_type(lexer.get_integer());
             break;
         case lexical_token_t::FLOAT_NUMBER_VALUE:
-            node = BasicNodeType(lexer.get_float_number());
+            node = node_type(lexer.get_float_number());
             break;
         case lexical_token_t::STRING_VALUE:
-            node = BasicNodeType(lexer.get_string());
+            node = node_type(lexer.get_string());
             break;
         case lexical_token_t::ALIAS_PREFIX: {
             const string_type& alias_name = lexer.get_string();
@@ -5084,7 +5118,7 @@ private:
             {
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
-            node = BasicNodeType::alias_of(m_anchor_table[alias_name]);
+            node = node_type::alias_of(m_anchor_table[alias_name]);
             break;
         }
         default:   // LCOV_EXCL_LINE
@@ -5116,12 +5150,11 @@ private:
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
-    template <typename LexerType>
-    bool deserialize_scalar(LexerType& lexer, std::size_t& indent, std::size_t& line, lexical_token_t& type)
+    bool deserialize_scalar(lexer_type& lexer, std::size_t& indent, std::size_t& line, lexical_token_t& type)
     {
-        BasicNodeType node = create_scalar_node(lexer, type, indent, line);
+        node_type node = create_scalar_node(lexer, type, indent, line);
 
-        if (m_current_node->is_mapping())
+        if (mp_current_node->is_mapping())
         {
             add_new_key(std::move(node), indent, line);
             return false;
@@ -5130,13 +5163,13 @@ private:
         type = lexer.get_next_token();
         if (type == lexical_token_t::KEY_SEPARATOR)
         {
-            if (m_current_node->is_scalar())
+            if (mp_current_node->is_scalar())
             {
                 if (line != lexer.get_lines_processed())
                 {
                     // This path is for explicit mapping key separator(:)
                     assign_node_value(std::move(node));
-                    if (!m_indent_stack.back().second)
+                    if (!m_indent_stack.back().is_explicit_key)
                     {
                         m_indent_stack.pop_back();
                     }
@@ -5144,8 +5177,15 @@ private:
                     line = lexer.get_lines_processed();
                     return true;
                 }
-                *m_current_node = BasicNodeType::mapping();
-                apply_directive_set(*m_current_node);
+
+                indentation& last_indent = m_indent_stack.back();
+                if (last_indent.line == line && !last_indent.is_explicit_key)
+                {
+                    throw parse_error("multiple mapping keys are specified on the same line.", line, indent);
+                }
+
+                *mp_current_node = node_type::mapping();
+                apply_directive_set(*mp_current_node);
             }
             add_new_key(std::move(node), indent, line);
         }
@@ -5159,8 +5199,8 @@ private:
     }
 
     /// @brief Set the yaml_version_t object to the given node.
-    /// @param node A BasicNodeType object to be set the yaml_version_t object.
-    void apply_directive_set(BasicNodeType& node) noexcept
+    /// @param node A node_type object to be set the yaml_version_t object.
+    void apply_directive_set(node_type& node) noexcept
     {
         if (mp_directive_set)
         {
@@ -5177,11 +5217,13 @@ private:
 
 private:
     /// The currently focused YAML node.
-    BasicNodeType* m_current_node {nullptr};
+    node_type* mp_current_node {nullptr};
     /// The stack of YAML nodes.
-    std::vector<BasicNodeType*> m_node_stack {};
+    std::deque<node_type*> m_node_stack {};
     /// The stack of indentation widths.
-    std::vector<std::pair<std::size_t /*indent*/, bool /*is_explicit_key*/>> m_indent_stack {};
+    std::deque<indentation> m_indent_stack {};
+    /// The current depth of flow contexts.
+    std::size_t m_flow_context_depth {0};
     /// The set of YAML directives.
     std::shared_ptr<detail::directive_set> mp_directive_set {};
     /// A flag to determine the need for YAML anchor node implementation.
@@ -5191,7 +5233,7 @@ private:
     /// The last YAML anchor name.
     string_type m_anchor_name {};
     /// The table of YAML anchor nodes.
-    std::unordered_map<std::string, BasicNodeType> m_anchor_table {};
+    std::unordered_map<std::string, node_type> m_anchor_table {};
     /// The last tag name.
     string_type m_tag_name {};
 };

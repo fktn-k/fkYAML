@@ -59,6 +59,15 @@ class basic_deserializer
 
     struct indentation
     {
+        indentation() = default;
+
+        indentation(std::size_t _line, std::size_t _indent, bool _is_explicit_key)
+            : line(_line),
+              indent(_indent),
+              is_explicit_key(_is_explicit_key)
+        {
+        }
+
         std::size_t line {0};
         std::size_t indent {0};
         bool is_explicit_key {false};
@@ -239,13 +248,12 @@ private:
                 }
 
                 m_node_stack.push_back(mp_current_node);
-                m_indent_stack.emplace_back(indentation {line, indent, true});
+                m_indent_stack.emplace_back(line, indent, true);
 
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
                 {
-                    m_indent_stack.emplace_back(
-                        indentation {lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false});
+                    m_indent_stack.emplace_back(lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false);
                     mp_current_node = new node_type(node_t::SEQUENCE);
                     apply_directive_set(*mp_current_node);
                     break;
@@ -395,7 +403,7 @@ private:
                     bool is_empty = mp_current_node->empty();
                     if (is_empty)
                     {
-                        m_indent_stack.emplace_back(indentation {line, indent, false});
+                        m_indent_stack.emplace_back(line, indent, false);
                         break;
                     }
 
@@ -514,7 +522,7 @@ private:
         bool is_empty = map.empty();
         if (is_empty)
         {
-            m_indent_stack.emplace_back(indentation {line, indent, false});
+            m_indent_stack.emplace_back(line, indent, false);
         }
         else
         {
