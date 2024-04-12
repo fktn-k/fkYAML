@@ -686,14 +686,13 @@ private:
                     line = lexer.get_lines_processed();
                     return true;
                 }
-                else if (m_flow_context_depth == 0 && !m_indent_stack.empty())
+
+                indentation& last_indent = m_indent_stack.back();
+                if (last_indent.line == line && !last_indent.is_explicit_key)
                 {
-                    indentation& last_indent = m_indent_stack.back();
-                    if (last_indent.line == line && !last_indent.is_explicit_key)
-                    {
-                        throw parse_error("multiple mapping keys are specified on the same line.", line, indent);
-                    }
+                    throw parse_error("multiple mapping keys are specified on the same line.", line, indent);
                 }
+
                 *mp_current_node = node_type::mapping();
                 apply_directive_set(*mp_current_node);
             }

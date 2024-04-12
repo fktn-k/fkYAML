@@ -76,3 +76,16 @@ TEST_CASE("ScalarScannerClassTest_ScanFloatNumberValueToken", "[ScalarScannerCla
         std::string("1.863e+3"));
     REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
 }
+
+TEST_CASE("ScalarScannerClassTest_ScanStringValueToken", "[ScalarScannerClassTest]")
+{
+    auto token = GENERATE(
+        std::string("abc"),
+        std::string("0th"),
+        std::string("0123"),
+        std::string("1.non-digit"),
+        std::string("1exe"),
+        std::string("0oabc"),
+        std::string("0xyz"));
+    REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::STRING_VALUE);
+}
