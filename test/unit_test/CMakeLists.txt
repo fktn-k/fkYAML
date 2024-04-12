@@ -205,6 +205,7 @@ add_executable(
   test_node_ref_storage_class.cpp
   test_ordered_map_class.cpp
   test_position_tracker_class.cpp
+  test_scalar_scanner_class.cpp
   test_serializer_class.cpp
   test_string_formatter.cpp
   test_tag_resolver_class.cpp

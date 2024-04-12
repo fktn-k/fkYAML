@@ -24,6 +24,7 @@
 #include <fkYAML/detail/conversions/from_string.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf8_encoding.hpp>
+#include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/input/position_tracker.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
@@ -113,7 +114,7 @@ public:
             case ' ':
                 return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
-                return m_last_token_type = scan_string();
+                return m_last_token_type = scan_scalar();
             }
         case ':': { // key separater
             if (++m_cur_itr == m_end_itr)
@@ -139,9 +140,9 @@ public:
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
                 }
-                return scan_string();
+                return scan_scalar();
             default:
-                return scan_string();
+                return scan_scalar();
             }
 
             return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
@@ -185,11 +186,6 @@ public:
                 return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
             }
 
-            if (std::isdigit(next))
-            {
-                return m_last_token_type = scan_number();
-            }
-
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available)
             {
@@ -200,7 +196,7 @@ public:
                 }
             }
 
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_scalar();
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
@@ -232,9 +228,9 @@ public:
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
         case '\'':
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_scalar();
         case '+':
-            return m_last_token_type = scan_number();
+            return m_last_token_type = scan_scalar();
         case '.': {
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available)
@@ -246,7 +242,7 @@ public:
                 }
             }
 
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_scalar();
         }
         case '|': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
@@ -263,11 +259,7 @@ public:
                        scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
         default:
-            if ('0' <= current && current <= '9')
-            {
-                return m_last_token_type = scan_number();
-            }
-            return m_last_token_type = scan_string();
+            return m_last_token_type = scan_scalar();
         }
     }
 
@@ -289,11 +281,7 @@ public:
     /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
     std::nullptr_t get_null() const
     {
-        if (m_last_token_type == lexical_token_t::NULL_VALUE)
-        {
-            return nullptr;
-        }
-        emit_error("Invalid request for a null value.");
+        return from_string(m_value_buffer, type_tag<std::nullptr_t> {});
     }
 
     /// @brief Convert from string to boolean and get the converted value.
@@ -301,33 +289,28 @@ public:
     /// @return false A string token is one of the followings: "false", "False", "FALSE".
     boolean_type get_boolean() const
     {
-        if (m_last_token_type == lexical_token_t::BOOLEAN_VALUE)
-        {
-            return m_boolean_val;
-        }
-        emit_error("Invalid request for a boolean value.");
+        return from_string(m_value_buffer, type_tag<bool> {});
     }
 
     /// @brief Convert from string to integer and get the converted value.
     /// @return integer_type An integer value converted from the source string.
     integer_type get_integer() const
     {
-        if (m_last_token_type == lexical_token_t::INTEGER_VALUE)
+        if (m_value_buffer.size() > 2 && m_value_buffer.rfind("0o", 0) != std::string::npos)
         {
-            return m_integer_val;
+            // Replace the prefix "0o" with "0" since STL functions can detect octal chars.
+            // Note that the YAML specifies octal values start with the prefix "0o", not "0".
+            // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
+            return from_string("0" + m_value_buffer.substr(2), type_tag<integer_type> {});
         }
-        emit_error("Invalid request for an integer value.");
+        return from_string(m_value_buffer, type_tag<integer_type> {});
     }
 
     /// @brief Convert from string to float number and get the converted value.
     /// @return float_number_type A float number value converted from the source string.
     float_number_type get_float_number() const
     {
-        if (m_last_token_type == lexical_token_t::FLOAT_NUMBER_VALUE)
-        {
-            return m_float_val;
-        }
-        emit_error("Invalid request for a float number value.");
+        return from_string(m_value_buffer, type_tag<float_number_type> {});
     }
 
     /// @brief Get a scanned string value.
@@ -796,241 +779,9 @@ private:
         }
     }
 
-    /// @brief Scan and determine a number type(integer/float). This method is the entrypoint for all number
-    /// tokens.
-    /// @return lexical_token_t A lexical token type for a determined number type.
-    lexical_token_t scan_number()
-    {
-        m_value_buffer.clear();
-
-        char current = *m_cur_itr;
-        FK_YAML_ASSERT(std::isdigit(current) || current == '-' || current == '+');
-
-        lexical_token_t ret = lexical_token_t::END_OF_BUFFER;
-        switch (current)
-        {
-        case '-':
-            m_value_buffer.push_back(current);
-            ret = scan_negative_number();
-            break;
-        case '+':
-            ret = scan_decimal_number();
-            break;
-        case '0':
-            m_value_buffer.push_back(current);
-            ret = scan_number_after_zero_at_first();
-            break;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            m_value_buffer.push_back(current);
-            ret = scan_decimal_number();
-            break;
-        default:                                                      // LCOV_EXCL_LINE
-            emit_error("Invalid character found in a number token."); // LCOV_EXCL_LINE
-        }
-
-        switch (ret)
-        {
-        case lexical_token_t::INTEGER_VALUE:
-            m_integer_val = from_string(m_value_buffer, type_tag<integer_type> {});
-            break;
-        case lexical_token_t::FLOAT_NUMBER_VALUE:
-            m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-            break;
-        default:
-            break;
-        }
-
-        return ret;
-    }
-
-    /// @brief Scan a next character after the negative sign(-).
-    /// @return lexical_token_t The lexical token type for either integer or float numbers.
-    lexical_token_t scan_negative_number()
-    {
-        char next = *++m_cur_itr;
-
-        // The value of `next` must be guranteed to be a digit in the get_next_token() function.
-        FK_YAML_ASSERT(std::isdigit(next));
-        m_value_buffer.push_back(next);
-        return scan_decimal_number();
-    }
-
-    /// @brief Scan a next character after '0' at the beginning of a token.
-    /// @return lexical_token_t The lexical token type for one of number types(integer/float).
-    lexical_token_t scan_number_after_zero_at_first()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            return lexical_token_t::INTEGER_VALUE;
-        }
-
-        char next = *m_cur_itr;
-        switch (next)
-        {
-        case '.':
-            m_value_buffer.push_back(next);
-            return scan_decimal_number_after_decimal_point();
-        case 'o':
-            // Do not store 'o' since std::stoXXX does not support "0o" but "0" as the prefix for octal numbers.
-            // YAML specifies octal values start with the prefix "0o".
-            // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
-            return scan_octal_number();
-        case 'x':
-            m_value_buffer.push_back(next);
-            return scan_hexadecimal_number();
-        default:                                   // LCOV_EXCL_LINE
-            return lexical_token_t::INTEGER_VALUE; // LCOV_EXCL_LINE
-        }
-    }
-
-    /// @brief Scan a next character after a decimal point.
-    /// @return lexical_token_t The lexical token type for float numbers.
-    lexical_token_t scan_decimal_number_after_decimal_point()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            emit_error("Invalid eof found after a decimal point.");
-        }
-
-        FK_YAML_ASSERT(std::isdigit(*m_cur_itr));
-        m_value_buffer.push_back(*m_cur_itr);
-        lexical_token_t token = scan_decimal_number();
-        return token == lexical_token_t::STRING_VALUE ? token : lexical_token_t::FLOAT_NUMBER_VALUE;
-    }
-
-    /// @brief Scan a next character after exponent(e/E).
-    /// @return lexical_token_t The lexical token type for float numbers.
-    lexical_token_t scan_decimal_number_after_exponent()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            emit_error("unexpected character found after exponent.");
-        }
-
-        char next = *m_cur_itr;
-        if (next == '+' || next == '-')
-        {
-            m_value_buffer.push_back(next);
-            scan_decimal_number_after_sign();
-        }
-        else
-        {
-            FK_YAML_ASSERT(std::isdigit(next));
-            m_value_buffer.push_back(next);
-            scan_decimal_number();
-        }
-        return lexical_token_t::FLOAT_NUMBER_VALUE;
-    }
-
-    /// @brief Scan a next character after a sign(+/-) after exponent(e/E).
-    /// @return lexical_token_t The lexical token type for one of number types(integer/float)
-    lexical_token_t scan_decimal_number_after_sign()
-    {
-        char next = *++m_cur_itr;
-
-        if (std::isdigit(next))
-        {
-            m_value_buffer.push_back(next);
-            return scan_decimal_number();
-        }
-
-        emit_error("Non-numeric character found after a sign(+/-) after exponent(e/E)."); // LCOV_EXCL_LINE
-    }
-
-    /// @brief Scan a next character for decimal numbers.
-    /// @return lexical_token_t The lexical token type for one of number types(integer/float)
-    lexical_token_t scan_decimal_number()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            return lexical_token_t::INTEGER_VALUE;
-        }
-
-        char next = *m_cur_itr;
-
-        if (std::isdigit(next))
-        {
-            m_value_buffer.push_back(next);
-            return scan_decimal_number();
-        }
-
-        if (next == '.')
-        {
-            // NOLINTNEXTLINE(abseil-string-find-str-contains)
-            if (m_value_buffer.find('.') != string_type::npos)
-            {
-                // This path is for strings like 1.2.3
-                m_value_buffer.clear();
-                return scan_string();
-            }
-            m_value_buffer.push_back(next);
-            return scan_decimal_number_after_decimal_point();
-        }
-
-        if (next == 'e' || next == 'E')
-        {
-            m_value_buffer.push_back(next);
-            return scan_decimal_number_after_exponent();
-        }
-
-        return lexical_token_t::INTEGER_VALUE;
-    }
-
-    /// @brief Scan a next character for octal numbers.
-    /// @return lexical_token_t The lexical token type for integers.
-    lexical_token_t scan_octal_number()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            return lexical_token_t::INTEGER_VALUE;
-        }
-
-        switch (*m_cur_itr)
-        {
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-            m_value_buffer.push_back(*m_cur_itr);
-            scan_octal_number();
-            break;
-        }
-        return lexical_token_t::INTEGER_VALUE;
-    }
-
-    /// @brief Scan a next character for hexadecimal numbers.
-    /// @return lexical_token_t The lexical token type for integers.
-    lexical_token_t scan_hexadecimal_number()
-    {
-        if (++m_cur_itr == m_end_itr)
-        {
-            return lexical_token_t::INTEGER_VALUE;
-        }
-
-        char next = *m_cur_itr;
-        if (std::isxdigit(next))
-        {
-            m_value_buffer.push_back(next);
-            scan_hexadecimal_number();
-        }
-        return lexical_token_t::INTEGER_VALUE;
-    }
-
     /// @brief Scan a string token, either plain, single-quoted or double-quoted.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_string()
+    lexical_token_t scan_scalar()
     {
         m_value_buffer.clear();
 
@@ -1055,49 +806,7 @@ private:
             return type;
         }
 
-        if (m_value_buffer == "~")
-        {
-            return lexical_token_t::NULL_VALUE;
-        }
-
-        size_t val_size = m_value_buffer.size();
-        if (val_size == 4)
-        {
-            if (m_value_buffer == "null" || m_value_buffer == "Null" || m_value_buffer == "NULL")
-            {
-                from_string(m_value_buffer, type_tag<std::nullptr_t> {});
-                return lexical_token_t::NULL_VALUE;
-            }
-
-            if (m_value_buffer == "true" || m_value_buffer == "True" || m_value_buffer == "TRUE")
-            {
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-
-            if (m_value_buffer == ".inf" || m_value_buffer == ".Inf" || m_value_buffer == ".INF" ||
-                m_value_buffer == ".nan" || m_value_buffer == ".NaN" || m_value_buffer == ".NAN")
-            {
-                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-        }
-        else if (val_size == 5)
-        {
-            if (m_value_buffer == "false" || m_value_buffer == "False" || m_value_buffer == "FALSE")
-            {
-                m_boolean_val = from_string(m_value_buffer, type_tag<boolean_type> {});
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-
-            if (m_value_buffer == "-.inf" || m_value_buffer == "-.Inf" || m_value_buffer == "-.INF")
-            {
-                m_float_val = from_string(m_value_buffer, type_tag<float_number_type> {});
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
-            }
-        }
-
-        return type;
+        return scalar_scanner::scan(m_value_buffer);
     }
 
     /// @brief Check if the given character is allowed in a single-quoted scalar token.

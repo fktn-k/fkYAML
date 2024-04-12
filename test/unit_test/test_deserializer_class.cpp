@@ -1213,6 +1213,30 @@ TEST_CASE("DeserializerClassTest_DeserializeFlowMappingTest", "[DeserializerClas
     {
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: }")), fkyaml::parse_error);
     }
+
+    SECTION("Nested flow mappings")
+    {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test: {foo: [true,123]}")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
+
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_mapping());
+        REQUIRE(test_node.size() == 1);
+        REQUIRE(test_node.contains("foo"));
+
+        fkyaml::node& test_foo_node = test_node["foo"];
+        REQUIRE(test_foo_node.is_sequence());
+        REQUIRE(test_foo_node.size() == 2);
+
+        REQUIRE(test_foo_node[0].is_boolean());
+        REQUIRE(test_foo_node[0].get_value<bool>() == true);
+
+        REQUIRE(test_foo_node[1].is_integer());
+        REQUIRE(test_foo_node[1].get_value<int>() == 123);
+    }
 }
 
 TEST_CASE("DeserializerClassTest_DeserializeInputWithCommentTest", "[DeserializerClassTest]")
