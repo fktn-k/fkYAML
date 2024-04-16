@@ -174,7 +174,7 @@ public:
             return m_last_token_type = lexical_token_t::TAG_PREFIX;
         case '#': // comment prefix
             scan_comment();
-            return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
+            return get_next_token();
         case '%': // directive prefix
             return m_last_token_type = scan_directive();
         case '-': {
@@ -376,13 +376,10 @@ private:
     }
 
     /// @brief Skip until a newline code or a null character is found.
-    /// @return lexical_token_t The lexical token type for comments
-    lexical_token_t scan_comment()
+    void scan_comment()
     {
         FK_YAML_ASSERT(*m_cur_itr == '#');
-
         skip_until_line_end();
-        return lexical_token_t::COMMENT_PREFIX;
     }
 
     /// @brief Scan directives starting with the prefix '%'
@@ -406,7 +403,8 @@ private:
                 break;
             case '\r':
             case '\n':
-                emit_error("invalid directive is found.");
+                skip_until_line_end();
+                return lexical_token_t::INVALID_DIRECTIVE;
             default:
                 ++m_cur_itr;
                 break;
@@ -1557,22 +1555,6 @@ private:
                 }
             });
         }
-    }
-
-    /// @brief Skip white spaces and comments from the current position.
-    void skip_white_spaces_and_comments()
-    {
-        do
-        {
-            skip_white_spaces();
-
-            if (m_cur_itr == m_end_itr || *m_cur_itr != '#')
-            {
-                return;
-            }
-
-            scan_comment();
-        } while (++m_cur_itr != m_end_itr);
     }
 
     /// @brief Skip the rest in the current line.

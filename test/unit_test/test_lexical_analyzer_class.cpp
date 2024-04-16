@@ -169,8 +169,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagDirectiveTest", "[LexicalAnalyzerClas
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidDirectiveTest", "[LexicalAnalyzerClassTest]")
 {
-    auto buffer =
-        GENERATE(std::string("%INVALID\r"), std::string("%INVALID\r"), std::string("%TAG"), std::string("%YAML"));
+    auto buffer = GENERATE(std::string("%TAG"), std::string("%YAML"));
 
     lexer_t lexer(fkyaml::detail::input_adapter(buffer));
     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -179,7 +178,7 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanInvalidDirectiveTest", "[LexicalAnalyzer
 TEST_CASE("LexicalAnalyzerClassTest_ScanReservedDirectiveTest", "[LexicalAnalyzerClassTest]")
 {
     auto buffer =
-        GENERATE(std::string("%TEST"), std::string("%1984"), std::string("%TEST4LIB"), std::string("%%ERROR"));
+        GENERATE(std::string("%TEST\r\n"), std::string("%1984\r "), std::string("%TEST4LIB\n"), std::string("%%ERROR"));
 
     fkyaml::detail::lexical_token_t token;
     lexer_t lexer(fkyaml::detail::input_adapter(buffer));
@@ -1484,23 +1483,6 @@ TEST_CASE("LexicalAnalyzerClassTest_ScanTagTokenTest", "[LexicalAnalyzerClassTes
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
     }
-}
-
-TEST_CASE("LexicalAnalyzerClassTest_ScanCommentTokenTest", "[LexicalAnalyzerClassTest]")
-{
-    auto buffer = GENERATE(
-        std::string("# comment\r "),
-        std::string("# comment\r\n"),
-        std::string("# comment\n"),
-        std::string("# comment"));
-    lexer_t lexer(fkyaml::detail::input_adapter(buffer));
-    fkyaml::detail::lexical_token_t token;
-
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token == fkyaml::detail::lexical_token_t::COMMENT_PREFIX);
-
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
 }
 
 TEST_CASE("LexicalAnalyzerClassTest_ScanReservedIndicatorTokenTest", "[LexicalAnalyzerClassTest]")
