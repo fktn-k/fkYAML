@@ -262,6 +262,7 @@ FK_YAML_NAMESPACE_END
 #include <algorithm>
 #include <cstdint>
 #include <deque>
+#include <set>
 #include <unordered_map>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
@@ -1943,7 +1944,6 @@ enum class lexical_token_t
     VALUE_SEPARATOR,       //!< the value separater `,`
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
     ALIAS_PREFIX,          //!< the character for alias prefix `*`
-    COMMENT_PREFIX,        //!< the character for comment prefix `#`
     YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
     TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
     TAG_PREFIX,            //!< the character for tag prefix `!`
@@ -2758,7 +2758,7 @@ public:
             return m_last_token_type = lexical_token_t::TAG_PREFIX;
         case '#': // comment prefix
             scan_comment();
-            return m_last_token_type = lexical_token_t::COMMENT_PREFIX;
+            return get_next_token();
         case '%': // directive prefix
             return m_last_token_type = scan_directive();
         case '-': {
@@ -2960,13 +2960,10 @@ private:
     }
 
     /// @brief Skip until a newline code or a null character is found.
-    /// @return lexical_token_t The lexical token type for comments
-    lexical_token_t scan_comment()
+    void scan_comment()
     {
         FK_YAML_ASSERT(*m_cur_itr == '#');
-
         skip_until_line_end();
-        return lexical_token_t::COMMENT_PREFIX;
     }
 
     /// @brief Scan directives starting with the prefix '%'
@@ -2990,7 +2987,8 @@ private:
                 break;
             case '\r':
             case '\n':
-                emit_error("invalid directive is found.");
+                skip_until_line_end();
+                return lexical_token_t::INVALID_DIRECTIVE;
             default:
                 ++m_cur_itr;
                 break;
@@ -4143,22 +4141,6 @@ private:
         }
     }
 
-    /// @brief Skip white spaces and comments from the current position.
-    void skip_white_spaces_and_comments()
-    {
-        do
-        {
-            skip_white_spaces();
-
-            if (m_cur_itr == m_end_itr || *m_cur_itr != '#')
-            {
-                return;
-            }
-
-            scan_comment();
-        } while (++m_cur_itr != m_end_itr);
-    }
-
     /// @brief Skip the rest in the current line.
     void skip_until_line_end()
     {
@@ -4761,14 +4743,18 @@ private:
                 std::size_t old_line = line;
 
                 type = lexer.get_next_token();
-                if (type == lexical_token_t::COMMENT_PREFIX)
+                line = lexer.get_lines_processed();
+                indent = lexer.get_last_token_begin_pos();
+
+                bool found_props = deserialize_node_properties(lexer, type, line, indent);
+                if (found_props && line == lexer.get_lines_processed())
                 {
-                    // just skip the comment and get the next token.
-                    type = lexer.get_next_token();
+                    // defer applying node properties for the subsequent node on the same line.
+                    continue;
                 }
 
-                indent = lexer.get_last_token_begin_pos();
                 line = lexer.get_lines_processed();
+                indent = lexer.get_last_token_begin_pos();
 
                 bool is_implicit_same_line =
                     (line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().indent);
@@ -4780,12 +4766,34 @@ private:
 
                 if (line > old_line)
                 {
+                    if (m_needs_tag_impl)
+                    {
+                        tag_t tag_type = tag_resolver::resolve_tag(m_tag_name, mp_directive_set);
+                        if (tag_type == tag_t::MAPPING)
+                        {
+                            // set YAML node properties here to distinguish them from those for the first key node
+                            // as shown in the following snippet:
+                            //
+                            // ```yaml
+                            // foo: !!map
+                            //   !!str 123: true
+                            //   ^
+                            //   this !!str tag overwrites the preceeding !!map tag.
+                            // ```
+                            *mp_current_node = node_type::mapping();
+                            apply_directive_set(*mp_current_node);
+                            apply_node_properties(*mp_current_node);
+                            continue;
+                        }
+                    }
+
                     switch (type)
                     {
                     case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                         // a key separator preceeding block sequence entries
                         *mp_current_node = node_type::sequence();
                         apply_directive_set(*mp_current_node);
+                        apply_node_properties(*mp_current_node);
                         break;
                     case lexical_token_t::EXPLICIT_KEY_PREFIX:
                         // a key separator for a explicit block mapping key.
@@ -4847,6 +4855,7 @@ private:
                 {
                     *mp_current_node = node_type::sequence();
                     apply_directive_set(*mp_current_node);
+                    apply_node_properties(*mp_current_node);
                 }
                 indent = lexer.get_last_token_begin_pos();
                 line = lexer.get_lines_processed();
@@ -4854,9 +4863,14 @@ private:
             }
             case lexical_token_t::VALUE_SEPARATOR:
                 break;
-            case lexical_token_t::ANCHOR_PREFIX: {
-                m_anchor_name = lexer.get_string();
-                m_needs_anchor_impl = true;
+            // just ignore directives
+            case lexical_token_t::YAML_VER_DIRECTIVE:
+            case lexical_token_t::TAG_DIRECTIVE:
+            case lexical_token_t::INVALID_DIRECTIVE:
+                break;
+            case lexical_token_t::ANCHOR_PREFIX:
+            case lexical_token_t::TAG_PREFIX:
+                deserialize_node_properties(lexer, type, line, indent);
 
                 // Skip updating the current indent to avoid stacking a wrong indentation.
                 //
@@ -4864,22 +4878,7 @@ private:
                 //   ^
                 //   the correct indent width for the "bar" node key.
 
-                type = lexer.get_next_token();
-                line = lexer.get_lines_processed();
                 continue;
-            }
-            case lexical_token_t::COMMENT_PREFIX:
-                break;
-            // just ignore directives
-            case lexical_token_t::YAML_VER_DIRECTIVE:
-            case lexical_token_t::TAG_DIRECTIVE:
-            case lexical_token_t::INVALID_DIRECTIVE:
-                break;
-            case lexical_token_t::TAG_PREFIX:
-                // TODO: implement tag name handling.
-                m_tag_name = lexer.get_string();
-                m_needs_tag_impl = true;
-                break;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                 if (mp_current_node->is_sequence())
                 {
@@ -4924,6 +4923,7 @@ private:
                 ++m_flow_context_depth;
                 *mp_current_node = node_type::sequence();
                 apply_directive_set(*mp_current_node);
+                apply_node_properties(*mp_current_node);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_END:
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
@@ -4935,6 +4935,7 @@ private:
                 ++m_flow_context_depth;
                 *mp_current_node = node_type::mapping();
                 apply_directive_set(*mp_current_node);
+                apply_node_properties(*mp_current_node);
                 break;
             case lexical_token_t::MAPPING_FLOW_END:
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
@@ -4966,6 +4967,93 @@ private:
             indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? indent : lexer.get_last_token_begin_pos();
             line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
+    }
+
+    /// @brief Deserializes YAML node properties (anchor and/or tag names) if they exist
+    /// @param lexer The lexical analyzer to be used.
+    /// @param last_type The variable to store the last lexical token type.
+    /// @param line The variable to store the line of either the first property or the last non-property token.
+    /// @param indent The variable to store the indent of either the first property or the last non-property token.
+    /// @return true if any property is found, false otherwise.
+    bool deserialize_node_properties(
+        lexer_type& lexer, lexical_token_t& last_type, std::size_t& line, std::size_t& indent)
+    {
+        std::set<lexical_token_t> prop_types {lexical_token_t::ANCHOR_PREFIX, lexical_token_t::TAG_PREFIX};
+
+        lexical_token_t type = last_type;
+        bool ends_loop {false};
+        do
+        {
+            if (line < lexer.get_lines_processed())
+            {
+                break;
+            }
+
+            switch (type)
+            {
+            case lexical_token_t::ANCHOR_PREFIX: {
+                bool already_specified = prop_types.find(type) == prop_types.end();
+                if (already_specified)
+                {
+                    throw parse_error(
+                        "anchor name cannot be specified more than once to the same node.",
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos());
+                }
+
+                prop_types.erase(type);
+                m_anchor_name = lexer.get_string();
+                m_needs_anchor_impl = true;
+
+                if (prop_types.size() == 1)
+                {
+                    line = lexer.get_lines_processed();
+                    indent = lexer.get_last_token_begin_pos();
+                }
+
+                break;
+            }
+            case lexical_token_t::TAG_PREFIX: {
+                bool already_specified = prop_types.find(type) == prop_types.end();
+                if (already_specified)
+                {
+                    throw parse_error(
+                        "tag name cannot be specified more than once to the same node.",
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos());
+                }
+
+                prop_types.erase(type);
+                m_tag_name = lexer.get_string();
+                m_needs_tag_impl = true;
+
+                if (prop_types.size() == 1)
+                {
+                    line = lexer.get_lines_processed();
+                    indent = lexer.get_last_token_begin_pos();
+                }
+
+                break;
+            }
+            default:
+                ends_loop = true;
+                break;
+            }
+
+            if (!ends_loop)
+            {
+                type = lexer.get_next_token();
+            }
+        } while (!ends_loop);
+
+        last_type = type;
+        if (prop_types.size() == 2)
+        {
+            line = lexer.get_lines_processed();
+            indent = lexer.get_last_token_begin_pos();
+        }
+
+        return prop_types.size() < 2;
     }
 
     /// @brief Add new key string to the current YAML node.
@@ -5126,21 +5214,7 @@ private:
         }
 
         apply_directive_set(node);
-
-        if (m_needs_anchor_impl)
-        {
-            node.add_anchor_name(m_anchor_name);
-            m_anchor_table[m_anchor_name] = node;
-            m_needs_anchor_impl = false;
-            m_anchor_name.clear();
-        }
-
-        if (m_needs_tag_impl)
-        {
-            node.add_tag_name(m_tag_name);
-            m_needs_tag_impl = false;
-            m_tag_name.clear();
-        }
+        apply_node_properties(node);
 
         return node;
     }
@@ -5198,13 +5272,33 @@ private:
         return true;
     }
 
-    /// @brief Set the yaml_version_t object to the given node.
-    /// @param node A node_type object to be set the yaml_version_t object.
+    /// @brief Set YAML directive properties to the given node.
+    /// @param node A node_type object to be set YAML directive properties.
     void apply_directive_set(node_type& node) noexcept
     {
         if (mp_directive_set)
         {
             node.mp_directive_set = mp_directive_set;
+        }
+    }
+
+    /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
+    /// @param node A node type object to be set YAML node properties.
+    void apply_node_properties(node_type& node)
+    {
+        if (m_needs_anchor_impl)
+        {
+            node.add_anchor_name(m_anchor_name);
+            m_anchor_table[m_anchor_name] = node;
+            m_needs_anchor_impl = false;
+            m_anchor_name.clear();
+        }
+
+        if (m_needs_tag_impl)
+        {
+            node.add_tag_name(m_tag_name);
+            m_needs_tag_impl = false;
+            m_tag_name.clear();
         }
     }
 
