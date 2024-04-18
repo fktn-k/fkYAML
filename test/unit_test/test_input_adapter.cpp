@@ -12,11 +12,7 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/input/input_adapter.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
 // generated in test/unit_test/CMakeLists.txt
 #include <test_data.hpp>
@@ -29,13 +25,18 @@
     #define ENABLE_C4996
 #endif
 
-static constexpr char input_file_path[] = FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt";
+namespace /* file-scoped global variable for test cases */
+{
 
-TEST_CASE("InputAdapterTest_IteratorInputAdapterProviderTest", "[InputAdapterTest]")
+constexpr char input_file_path[] = FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt";
+
+} // namespace
+
+TEST_CASE("InputAdapter_IteratorInputAdapterProvider")
 {
     char input[] = "test";
 
-    SECTION("c-style char array")
+    SECTION("C-style char array")
     {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -47,14 +48,14 @@ TEST_CASE("InputAdapterTest_IteratorInputAdapterProviderTest", "[InputAdapterTes
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
     }
 
-    SECTION("c-style char16_t array")
+    SECTION("C-style char16_t array")
     {
         char16_t input16[] = u"test";
         auto input_adapter = fkyaml::detail::input_adapter(input16);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
     }
 
-    SECTION("c-style char32_t array")
+    SECTION("C-style char32_t array")
     {
         char32_t intput32[] = U"test";
         auto input_adapter = fkyaml::detail::input_adapter(intput32);
@@ -70,7 +71,7 @@ TEST_CASE("InputAdapterTest_IteratorInputAdapterProviderTest", "[InputAdapterTes
     }
 }
 
-TEST_CASE("InputAdapterTest_FileInputAdapterProviderTest", "[InputAdapterTest]")
+TEST_CASE("InputAdapter_FileInputAdapterProvider")
 {
     SECTION("invalid FILE object pointer")
     {
@@ -78,7 +79,7 @@ TEST_CASE("InputAdapterTest_FileInputAdapterProviderTest", "[InputAdapterTest]")
         REQUIRE_THROWS_AS(fkyaml::detail::input_adapter(p_file), fkyaml::exception);
     }
 
-    SECTION("valie FILE object pointer")
+    SECTION("valid FILE object pointer")
     {
         DISABLE_C4996
         FILE* p_file = std::fopen(input_file_path, "r");
@@ -92,7 +93,7 @@ TEST_CASE("InputAdapterTest_FileInputAdapterProviderTest", "[InputAdapterTest]")
     }
 }
 
-TEST_CASE("InputAdapterTest_StreamInputAdapterProviderTest", "[InputAdapterTest]")
+TEST_CASE("InputAdapter_StreamInputAdapterProvider")
 {
     std::ifstream ifs(input_file_path);
     REQUIRE(ifs);
@@ -100,7 +101,7 @@ TEST_CASE("InputAdapterTest_StreamInputAdapterProviderTest", "[InputAdapterTest]
     REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 }
 
-TEST_CASE("InputAdapterTest_FillBufferTest", "[InputAdapterTest]")
+TEST_CASE("InputAdapter_FillBuffer")
 {
     ///////////////
     //   UTF-8   //
@@ -1387,7 +1388,7 @@ TEST_CASE("InputAdapterTest_FillBufferTest", "[InputAdapterTest]")
     }
 }
 
-TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTest]")
+TEST_CASE("InputAdapter_FillBufferUTF8CharsValidation")
 {
     /////////////////////////////////
     //   UTF-8 1-Byte Characters   //

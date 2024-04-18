@@ -10,12 +10,9 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/encodings/encode_detector.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
+// generated in test/unit_test/CMakeLists.txt
 #include <test_data.hpp>
 
 #ifdef _MSC_VER
@@ -26,7 +23,7 @@
     #define ENABLE_C4996
 #endif
 
-TEST_CASE("EncodeDetectorTest_DetectEncodingTypeTest", "[EncodeDetectorTest]")
+TEST_CASE("EncodeDetector_DetectEncodingType")
 {
     struct test_data_t
     {
@@ -91,7 +88,7 @@ TEST_CASE("EncodeDetectorTest_DetectEncodingTypeTest", "[EncodeDetectorTest]")
     REQUIRE(has_bom == d.has_bom);
 }
 
-TEST_CASE("EncodeDetectorTest_DetectEncodingAndSkipBomTest", "[EncodeDetectorTest]")
+TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom")
 {
     ////////////////////////
     //   char iterators   //

@@ -8,12 +8,9 @@
 
 #include <catch2/catch.hpp>
 
-#ifndef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/detail/iterator.hpp>
-#endif
 #include <fkYAML/node.hpp>
 
-TEST_CASE("IteratorClassTest_SequenceCtorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_SequenceCtor")
 {
     fkyaml::node sequence = fkyaml::node::sequence();
     fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -21,7 +18,7 @@ TEST_CASE("IteratorClassTest_SequenceCtorTest", "[IteratorClassTest]")
     REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
 }
 
-TEST_CASE("IteratorClassTest_MappingCtorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_MappingCtor")
 {
     fkyaml::node mapping = fkyaml::node::mapping();
     fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -29,7 +26,7 @@ TEST_CASE("IteratorClassTest_MappingCtorTest", "[IteratorClassTest]")
     REQUIRE(iterator.type() == fkyaml::detail::iterator_t::MAPPING);
 }
 
-TEST_CASE("IteratorClassTest_SequenceCopyCtorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_SequenceCopyCtor")
 {
     fkyaml::node sequence = fkyaml::node::sequence({fkyaml::node()});
     fkyaml::detail::iterator<fkyaml::node> copied(
@@ -39,7 +36,7 @@ TEST_CASE("IteratorClassTest_SequenceCopyCtorTest", "[IteratorClassTest]")
     REQUIRE(iterator->is_null());
 }
 
-TEST_CASE("IteratorClassTest_MappingCopyCtorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_MappingCopyCtor")
 {
     fkyaml::node mapping = fkyaml::node::mapping({{"test", fkyaml::node()}});
     fkyaml::detail::iterator<fkyaml::node> copied(
@@ -50,7 +47,7 @@ TEST_CASE("IteratorClassTest_MappingCopyCtorTest", "[IteratorClassTest]")
     REQUIRE(iterator.value().is_null());
 }
 
-TEST_CASE("IteratorClassTest_SequenceMoveCtorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_SequenceMoveCtor")
 {
     fkyaml::node sequence = {"test"};
     fkyaml::detail::iterator<fkyaml::node> moved(
@@ -61,7 +58,7 @@ TEST_CASE("IteratorClassTest_SequenceMoveCtorTest", "[IteratorClassTest]")
     REQUIRE(iterator->get_value_ref<fkyaml::node::string_type&>().compare("test") == 0);
 }
 
-TEST_CASE("IteratorClassTest_MappingMoveCtorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_MappingMoveCtor")
 {
     fkyaml::node mapping = fkyaml::node::mapping({{"test", fkyaml::node()}});
     fkyaml::detail::iterator<fkyaml::node> moved(
@@ -72,22 +69,22 @@ TEST_CASE("IteratorClassTest_MappingMoveCtorTest", "[IteratorClassTest]")
     REQUIRE(iterator.value().is_null());
 }
 
-TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_AssignmentOperator")
 {
-    SECTION("Test self assignment.")
+    SECTION("self assignment.")
     {
         fkyaml::node sequence = fkyaml::node::sequence({fkyaml::node()});
         fkyaml::detail::iterator<fkyaml::node> iterator(
             fkyaml::detail::sequence_iterator_tag {}, sequence.get_value_ref<fkyaml::node::sequence_type&>().begin());
 
-        SECTION("Test lvalue iterator.")
+        SECTION("lvalue iterator")
         {
             iterator = *&iterator;
             REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
             REQUIRE(iterator->is_null());
         }
 
-        SECTION("Test rvalue iterator.")
+        SECTION("rvalue iterator")
         {
             iterator = std::move(*&iterator);
             REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
@@ -95,7 +92,7 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
         }
     }
 
-    SECTION("Test sequence iterators.")
+    SECTION("sequence iterators")
     {
         fkyaml::node copied_seq = {"test"};
         fkyaml::detail::iterator<fkyaml::node> copied_itr(
@@ -104,7 +101,7 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
         fkyaml::detail::iterator<fkyaml::node> iterator(
             fkyaml::detail::sequence_iterator_tag {}, sequence.get_value_ref<fkyaml::node::sequence_type&>().begin());
 
-        SECTION("Test lvalue iterator.")
+        SECTION("lvalue iterator")
         {
             iterator = copied_itr;
             REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
@@ -112,7 +109,7 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
             REQUIRE(iterator->get_value_ref<fkyaml::node::string_type&>().compare("test") == 0);
         }
 
-        SECTION("Test rvalue iterator.")
+        SECTION("rvalue iterator")
         {
             iterator = std::move(copied_itr);
             REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
@@ -121,7 +118,7 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
         }
     }
 
-    SECTION("Test mapping iterators.")
+    SECTION("mapping iterators")
     {
         fkyaml::node copied_map = {{"key", "test"}};
         fkyaml::detail::iterator<fkyaml::node> copied_itr(
@@ -130,7 +127,7 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
         fkyaml::detail::iterator<fkyaml::node> iterator(
             fkyaml::detail::mapping_iterator_tag {}, map.get_value_ref<fkyaml::node::mapping_type&>().begin());
 
-        SECTION("Test lvalue iterator.")
+        SECTION("lvalue iterator")
         {
             iterator = copied_itr;
             REQUIRE(iterator.type() == fkyaml::detail::iterator_t::MAPPING);
@@ -139,7 +136,7 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
             REQUIRE(iterator.value().get_value_ref<fkyaml::node::string_type&>().compare("test") == 0);
         }
 
-        SECTION("Test rvalue iterator.")
+        SECTION("rvalue iterator")
         {
             iterator = std::move(copied_itr);
             REQUIRE(iterator.type() == fkyaml::detail::iterator_t::MAPPING);
@@ -150,9 +147,9 @@ TEST_CASE("IteratorClassTest_AssignmentOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_ArrowOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_ArrowOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node seq = {"test"};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -160,7 +157,7 @@ TEST_CASE("IteratorClassTest_ArrowOperatorTest", "[IteratorClassTest]")
         REQUIRE(iterator.operator->() == &(seq.get_value_ref<fkyaml::node::sequence_type&>().operator[](0)));
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node map = {{"key", "test"}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -169,9 +166,9 @@ TEST_CASE("IteratorClassTest_ArrowOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_DereferenceOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_DereferenceOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node seq = {"test"};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -179,7 +176,7 @@ TEST_CASE("IteratorClassTest_DereferenceOperatorTest", "[IteratorClassTest]")
         REQUIRE(&(iterator.operator*()) == &(seq.get_value_ref<fkyaml::node::sequence_type&>().operator[](0)));
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node map = fkyaml::node::mapping({{"key", "test"}});
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -188,9 +185,9 @@ TEST_CASE("IteratorClassTest_DereferenceOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_CompoundAssignmentOperatorBySumTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_CompoundAssignmentOperatorBySum")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -200,7 +197,7 @@ TEST_CASE("IteratorClassTest_CompoundAssignmentOperatorBySumTest", "[IteratorCla
         REQUIRE(iterator->get_value<fkyaml::node::boolean_type>() == true);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -212,9 +209,9 @@ TEST_CASE("IteratorClassTest_CompoundAssignmentOperatorBySumTest", "[IteratorCla
     }
 }
 
-TEST_CASE("IteratorClassTest_PlusOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_PlusOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -224,7 +221,7 @@ TEST_CASE("IteratorClassTest_PlusOperatorTest", "[IteratorClassTest]")
         REQUIRE(after_plus_itr->get_value<fkyaml::node::boolean_type>() == true);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -236,9 +233,9 @@ TEST_CASE("IteratorClassTest_PlusOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_PreIncrementOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_PreIncrementOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -248,7 +245,7 @@ TEST_CASE("IteratorClassTest_PreIncrementOperatorTest", "[IteratorClassTest]")
         REQUIRE(iterator->get_value<fkyaml::node::boolean_type>() == true);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -260,9 +257,9 @@ TEST_CASE("IteratorClassTest_PreIncrementOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_PostIncrementOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_PostIncrementOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -272,7 +269,7 @@ TEST_CASE("IteratorClassTest_PostIncrementOperatorTest", "[IteratorClassTest]")
         REQUIRE(iterator->get_value<fkyaml::node::boolean_type>() == true);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -284,9 +281,9 @@ TEST_CASE("IteratorClassTest_PostIncrementOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_CompoundAssignmentOperatorByDifferenceTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_CompoundAssignmentOperatorByDifference")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -296,7 +293,7 @@ TEST_CASE("IteratorClassTest_CompoundAssignmentOperatorByDifferenceTest", "[Iter
         REQUIRE(iterator->get_value<fkyaml::node::boolean_type>() == true);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -308,9 +305,9 @@ TEST_CASE("IteratorClassTest_CompoundAssignmentOperatorByDifferenceTest", "[Iter
     }
 }
 
-TEST_CASE("IteratorClassTest_MinusOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_MinusOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -320,7 +317,7 @@ TEST_CASE("IteratorClassTest_MinusOperatorTest", "[IteratorClassTest]")
         REQUIRE(after_minus_itr->get_value<fkyaml::node::boolean_type>() == true);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator.")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -332,9 +329,9 @@ TEST_CASE("IteratorClassTest_MinusOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_PreDecrementOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_PreDecrementOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -344,7 +341,7 @@ TEST_CASE("IteratorClassTest_PreDecrementOperatorTest", "[IteratorClassTest]")
         REQUIRE(iterator->get_value<fkyaml::node::boolean_type>() == true);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -356,9 +353,9 @@ TEST_CASE("IteratorClassTest_PreDecrementOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_PostDecrementOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_PostDecrementOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -368,7 +365,7 @@ TEST_CASE("IteratorClassTest_PostDecrementOperatorTest", "[IteratorClassTest]")
         REQUIRE(iterator->get_value<fkyaml::node::boolean_type>() == true);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -380,9 +377,9 @@ TEST_CASE("IteratorClassTest_PostDecrementOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_EqualToOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_EqualToOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -392,7 +389,7 @@ TEST_CASE("IteratorClassTest_EqualToOperatorTest", "[IteratorClassTest]")
         REQUIRE(lhs == rhs);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -402,7 +399,7 @@ TEST_CASE("IteratorClassTest_EqualToOperatorTest", "[IteratorClassTest]")
         REQUIRE(lhs == rhs);
     }
 
-    SECTION("Test equality check between different type iterators.")
+    SECTION("equality check between different type iterators")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -414,9 +411,9 @@ TEST_CASE("IteratorClassTest_EqualToOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_NotEqualToOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_NotEqualToOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator.")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -427,7 +424,7 @@ TEST_CASE("IteratorClassTest_NotEqualToOperatorTest", "[IteratorClassTest]")
         REQUIRE(lhs != rhs);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -438,7 +435,7 @@ TEST_CASE("IteratorClassTest_NotEqualToOperatorTest", "[IteratorClassTest]")
         REQUIRE(lhs != rhs);
     }
 
-    SECTION("Test equality check between different type iterators.")
+    SECTION("equality check between different type iterators")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -450,9 +447,9 @@ TEST_CASE("IteratorClassTest_NotEqualToOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_LessThanOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_LessThanOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -464,7 +461,7 @@ TEST_CASE("IteratorClassTest_LessThanOperatorTest", "[IteratorClassTest]")
         REQUIRE(lhs < rhs);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -474,7 +471,7 @@ TEST_CASE("IteratorClassTest_LessThanOperatorTest", "[IteratorClassTest]")
         REQUIRE_THROWS_AS(lhs < rhs, fkyaml::exception);
     }
 
-    SECTION("Test less-than check between different type iterators.")
+    SECTION("less-than check between different type iterators")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -486,9 +483,9 @@ TEST_CASE("IteratorClassTest_LessThanOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_LessThanOrEqualToOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_LessThanOrEqualToOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -503,7 +500,7 @@ TEST_CASE("IteratorClassTest_LessThanOrEqualToOperatorTest", "[IteratorClassTest
         REQUIRE(lhs < rhs);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -513,7 +510,7 @@ TEST_CASE("IteratorClassTest_LessThanOrEqualToOperatorTest", "[IteratorClassTest
         REQUIRE_THROWS_AS(lhs <= rhs, fkyaml::exception);
     }
 
-    SECTION("Test less-than-or-equal-to check between different type iterators.")
+    SECTION("less-than-or-equal-to check between different type iterators")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -525,9 +522,9 @@ TEST_CASE("IteratorClassTest_LessThanOrEqualToOperatorTest", "[IteratorClassTest
     }
 }
 
-TEST_CASE("IteratorClassTest_GreaterThanOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_GreaterThanOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -539,7 +536,7 @@ TEST_CASE("IteratorClassTest_GreaterThanOperatorTest", "[IteratorClassTest]")
         REQUIRE(lhs > rhs);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -549,7 +546,7 @@ TEST_CASE("IteratorClassTest_GreaterThanOperatorTest", "[IteratorClassTest]")
         REQUIRE_THROWS_AS(lhs > rhs, fkyaml::exception);
     }
 
-    SECTION("Test greater-than check between different type iterators.")
+    SECTION("greater-than check between different type iterators")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -561,9 +558,9 @@ TEST_CASE("IteratorClassTest_GreaterThanOperatorTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_GreaterThanOrEqualToOperatorTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_GreaterThanOrEqualToOperator")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -578,7 +575,7 @@ TEST_CASE("IteratorClassTest_GreaterThanOrEqualToOperatorTest", "[IteratorClassT
         REQUIRE(lhs >= rhs);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -588,7 +585,7 @@ TEST_CASE("IteratorClassTest_GreaterThanOrEqualToOperatorTest", "[IteratorClassT
         REQUIRE_THROWS_AS(lhs >= rhs, fkyaml::exception);
     }
 
-    SECTION("Test greater-than-or-equal-to check between different type iterators.")
+    SECTION("greater-than-or-equal-to check between different type iterators")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> lhs(
@@ -600,9 +597,9 @@ TEST_CASE("IteratorClassTest_GreaterThanOrEqualToOperatorTest", "[IteratorClassT
     }
 }
 
-TEST_CASE("IteratorClassTest_TypeGetterTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_TypeGetter")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -610,7 +607,7 @@ TEST_CASE("IteratorClassTest_TypeGetterTest", "[IteratorClassTest]")
         REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -619,9 +616,9 @@ TEST_CASE("IteratorClassTest_TypeGetterTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_KeyGetterTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_KeyGetter")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -629,7 +626,7 @@ TEST_CASE("IteratorClassTest_KeyGetterTest", "[IteratorClassTest]")
         REQUIRE_THROWS_AS(iterator.key(), fkyaml::exception);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -639,9 +636,9 @@ TEST_CASE("IteratorClassTest_KeyGetterTest", "[IteratorClassTest]")
     }
 }
 
-TEST_CASE("IteratorClassTest_ValueGetterTest", "[IteratorClassTest]")
+TEST_CASE("Iterator_ValueGetter")
 {
-    SECTION("Test sequence iterator.")
+    SECTION("sequence iterator")
     {
         fkyaml::node sequence = {false, true};
         fkyaml::detail::iterator<fkyaml::node> iterator(
@@ -650,7 +647,7 @@ TEST_CASE("IteratorClassTest_ValueGetterTest", "[IteratorClassTest]")
         REQUIRE(iterator.value().get_value<fkyaml::node::boolean_type>() == false);
     }
 
-    SECTION("Test mapping iterator.")
+    SECTION("mapping iterator")
     {
         fkyaml::node mapping = {{"test0", false}, {"test1", true}};
         fkyaml::detail::iterator<fkyaml::node> iterator(

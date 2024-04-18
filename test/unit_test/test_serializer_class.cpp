@@ -10,12 +10,9 @@
 
 #include <catch2/catch.hpp>
 
-#ifndef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/detail/output/serializer.hpp>
-#endif
 #include <fkYAML/node.hpp>
 
-TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")
+TEST_CASE("Serializer_SequenceNode")
 {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
@@ -25,7 +22,7 @@ TEST_CASE("SerializerClassTest_SerializeSequenceNode", "[SerializerClassTest]")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializerClassTest_SerializeMappingNode", "[SerializerClassTest]")
+TEST_CASE("Serializer_MappingNode")
 {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
@@ -35,14 +32,14 @@ TEST_CASE("SerializerClassTest_SerializeMappingNode", "[SerializerClassTest]")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializerClassTest_SerializeNullNode", "[SerializerClassTest]")
+TEST_CASE("Serializer_NullNode")
 {
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     fkyaml::node node;
     REQUIRE(serializer.serialize(node) == "null");
 }
 
-TEST_CASE("SerializerClassTest_SerializeBooleanNode", "[SerializerClassTest]")
+TEST_CASE("Serializer_BooleanNode")
 {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(node_str_pair_t(false, "false"), node_str_pair_t(true, "true"));
@@ -50,7 +47,7 @@ TEST_CASE("SerializerClassTest_SerializeBooleanNode", "[SerializerClassTest]")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializerClassTest_SerializeIntegerNode", "[SerializerClassTest]")
+TEST_CASE("Serializer_IntegerNode")
 {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(node_str_pair_t(-1234, "-1234"), node_str_pair_t(5678, "5678"));
@@ -58,7 +55,7 @@ TEST_CASE("SerializerClassTest_SerializeIntegerNode", "[SerializerClassTest]")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializeClassTest_SerializeFloatNumberNode", "[SerializeClassTest]")
+TEST_CASE("SerializeClassTest_FloatNumberNode", "[SerializeClassTest]")
 {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
@@ -71,7 +68,7 @@ TEST_CASE("SerializeClassTest_SerializeFloatNumberNode", "[SerializeClassTest]")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializerClassTest_SerializeStringNode", "[SerializerClassTest]")
+TEST_CASE("Serializer_StringNode")
 {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     const char NEXT_LINE[] = {char(0xC2u), char(0x85u), char(0)};
@@ -155,7 +152,7 @@ TEST_CASE("SerializerClassTest_SerializeStringNode", "[SerializerClassTest]")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializerClassTest_SerializeAnchorNode", "[SerializerClassTest]")
+TEST_CASE("Serializer_AnchorNode")
 {
     fkyaml::node node = {{"foo", 123}, {nullptr, {true, "bar", 3.14}}};
     node[nullptr].add_anchor_name("A");
@@ -175,7 +172,7 @@ TEST_CASE("SerializerClassTest_SerializeAnchorNode", "[SerializerClassTest]")
     REQUIRE(serializer.serialize(node) == expected);
 }
 
-TEST_CASE("SerializerClassTest_SerializeAliasNode", "[SerializerClassTest]")
+TEST_CASE("Serializer_AliasNode")
 {
     fkyaml::node node = {{"foo", 123}};
     node["foo"].add_anchor_name("A");
@@ -200,7 +197,7 @@ TEST_CASE("SerializerClassTest_SerializeAliasNode", "[SerializerClassTest]")
     REQUIRE(serializer.serialize(node) == expected);
 }
 
-TEST_CASE("SerializerClassTest_SerializeTaggedNode", "[SerializerClassTest]")
+TEST_CASE("Serializer_TaggedNode")
 {
     fkyaml::node root = fkyaml::node::mapping();
     fkyaml::node str_node("foo");
@@ -227,7 +224,7 @@ TEST_CASE("SerializerClassTest_SerializeTaggedNode", "[SerializerClassTest]")
     REQUIRE(serializer.serialize(root) == expected);
 }
 
-TEST_CASE("SerializerClassTest_SerializeNodesWithDirectives", "[SerializerClassTest]")
+TEST_CASE("Serializer_NodesWithDirectives")
 {
     fkyaml::node root;
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;

@@ -1,5 +1,5 @@
 add_test(
-  NAME cmake_find_package_test_configure
+  NAME cmake_find_package_configure
   COMMAND
     ${CMAKE_COMMAND}
       -G "${CMAKE_GENERATOR}"
@@ -9,11 +9,11 @@ add_test(
 )
 
 add_test(
-  NAME cmake_find_package_test_build
+  NAME cmake_find_package_build
   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/build
 )
 set_tests_properties(
-  cmake_find_package_test_build
+  cmake_find_package_build
   PROPERTIES
-    DEPENDS cmake_find_package_test_configure
+    DEPENDS cmake_find_package_configure
 )
