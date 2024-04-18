@@ -257,6 +257,28 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_typ
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
 }
 
+/// @brief from_node function for compatible string type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatibleStringType A compatible string type.
+/// @param n A basic_node object.
+/// @param s A compatible string object.
+template <
+    typename BasicNodeType, typename CompatibleStringType,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>,
+            negation<std::is_same<CompatibleStringType, typename BasicNodeType::string_type>>,
+            std::is_constructible<CompatibleStringType, const typename BasicNodeType::string_type&>>::value,
+        int> = 0>
+inline void from_node(const BasicNodeType& n, CompatibleStringType& s)
+{
+    if (!n.is_string())
+    {
+        throw type_error("The target node value type is not string type.", n.type());
+    }
+    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
+}
+
 /// @brief A function object to call from_node functions.
 /// @note User-defined specialization is available by providing implementation **OUTSIDE** fkyaml namespace.
 struct from_node_fn

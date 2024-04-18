@@ -19,6 +19,10 @@
 // generated in test/unit_test/CMakeLists.txt
 #include <test_data.hpp>
 
+#ifdef FK_YAML_HAS_CXX_17
+    #include <string_view>
+#endif
+
 //
 // test cases for constructors
 //
@@ -2651,6 +2655,15 @@ TEST_CASE("Node_GetValue")
             REQUIRE(str.size() == 4);
             REQUIRE(str == "test");
         }
+
+#ifdef FK_YAML_HAS_CXX_17
+        SECTION("string view")
+        {
+            auto str_view = node.get_value<std::string_view>();
+            REQUIRE(str_view.size() == 4);
+            REQUIRE(str_view == "test");
+        }
+#endif
 
         SECTION("non-string values")
         {
