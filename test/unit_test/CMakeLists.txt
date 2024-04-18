@@ -100,7 +100,6 @@ target_compile_definitions(
   unit_test_config
   INTERFACE
     $<$<CONFIG:Release>:NDEBUG>
-    $<$<BOOL:${FK_YAML_USE_SINGLE_HEADER}>:FK_YAML_TEST_USE_SINGLE_HEADER>
 )
 
 # Configure compile options according to the target compiler.

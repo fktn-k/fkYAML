@@ -10,19 +10,15 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/ordered_map.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("OrderedMapClassTest_DefaultCtorTest", "[OrderedMapClassTest]")
+TEST_CASE("OrderedMap_DefaultCtor")
 {
     fkyaml::ordered_map<std::string, bool> map;
     REQUIRE(map.empty());
 }
 
-TEST_CASE("OrderedMapClassTest_InitListCtorTest", "[OrderedMapClassTest]")
+TEST_CASE("OrderedMap_InitListCtor")
 {
     fkyaml::ordered_map<std::string, bool> map {{"foo", true}, {"bar", false}};
     REQUIRE_FALSE(map.empty());
@@ -40,7 +36,7 @@ TEST_CASE("OrderedMapClassTest_InitListCtorTest", "[OrderedMapClassTest]")
     REQUIRE(itr->second == false);
 }
 
-TEST_CASE("OrderedMapClassTest_SubscriptOperatorTest", "[OrderedMapClassTest]")
+TEST_CASE("OrderedMap_SubscriptOperator")
 {
     fkyaml::ordered_map<std::string, bool> map {{"foo", true}, {"buz", false}};
     REQUIRE(map["foo"] == true);
@@ -50,7 +46,7 @@ TEST_CASE("OrderedMapClassTest_SubscriptOperatorTest", "[OrderedMapClassTest]")
     REQUIRE(map["buz"] == true);
 }
 
-TEST_CASE("OrderedMapClassTest_EmplaceTest", "[OrderedMapClassTest]")
+TEST_CASE("OrderedMap_Emplace")
 {
     fkyaml::ordered_map<std::string, bool> map;
     REQUIRE(map.emplace("foo", true).second == true);
@@ -60,7 +56,7 @@ TEST_CASE("OrderedMapClassTest_EmplaceTest", "[OrderedMapClassTest]")
     REQUIRE(map["bar"] == false);
 }
 
-TEST_CASE("OrderedMapClassTest_NonConstAtTest", "[OrderedMapClassTest]")
+TEST_CASE("OrderedMap_NonConstAt")
 {
     fkyaml::ordered_map<std::string, bool> map;
     REQUIRE_THROWS_AS(map.at("foo"), fkyaml::exception);
@@ -71,7 +67,7 @@ TEST_CASE("OrderedMapClassTest_NonConstAtTest", "[OrderedMapClassTest]")
     REQUIRE_THROWS_AS(map.at(key), fkyaml::exception);
 }
 
-TEST_CASE("OrderedMapClassTest_ConstAtTest", "[OrderedMapClassTest]")
+TEST_CASE("OrderedMap_ConstAt")
 {
     const fkyaml::ordered_map<std::string, bool> map;
     REQUIRE_THROWS_AS(map.at("foo"), fkyaml::exception);
@@ -87,7 +83,7 @@ TEST_CASE("OrderedMapClassTest_ConstAtTest", "[OrderedMapClassTest]")
     REQUIRE_THROWS_AS(map__.at(key), fkyaml::exception);
 }
 
-TEST_CASE("OrderedMapClassTest_NonConstFindTest", "[OrderedMapClassTest]")
+TEST_CASE("OrderedMap_NonConstFind")
 {
     fkyaml::ordered_map<std::string, bool> map;
     REQUIRE(map.find("foo") == map.end());
@@ -98,7 +94,7 @@ TEST_CASE("OrderedMapClassTest_NonConstFindTest", "[OrderedMapClassTest]")
     REQUIRE(map.find("bar") == map.end());
 }
 
-TEST_CASE("OrderedMapClassTest_ConstFindTest", "[OrderedMapClassTest]")
+TEST_CASE("OrderedMap_ConstFind")
 {
     const fkyaml::ordered_map<std::string, bool> map;
     REQUIRE(map.find("foo") == map.end());

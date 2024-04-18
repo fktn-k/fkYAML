@@ -1,5 +1,5 @@
 add_test(
-  NAME cmake_add_subdirectory_test_configure
+  NAME cmake_add_subdirectory_configure
   COMMAND
     ${CMAKE_COMMAND}
       -G "${CMAKE_GENERATOR}"
@@ -10,11 +10,11 @@ add_test(
 )
 
 add_test(
-  NAME cmake_add_subdirectory_test_build
+  NAME cmake_add_subdirectory_build
   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/build
 )
 set_tests_properties(
-  cmake_add_subdirectory_test_build
+  cmake_add_subdirectory_build
   PROPERTIES
-    DEPENDS cmake_add_subdirectory_test_configure
+    DEPENDS cmake_add_subdirectory_configure
 )

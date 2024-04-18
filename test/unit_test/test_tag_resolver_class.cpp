@@ -8,13 +8,9 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/input/tag_resolver.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("TagResolverClassTest_ResolveTag", "[TagResolverClassTest]")
+TEST_CASE("TagResolver_ResolveTag")
 {
     using test_pair_t = std::pair<std::string, fkyaml::detail::tag_t>;
 

@@ -8,13 +8,9 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/string_formatter.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("StringFormatterTest_ValidMessageFormat", "[StringFormatterTest]")
+TEST_CASE("StringFormatter_ValidMessageFormat")
 {
     const char* p_label = "foo_label";
     int result = 0;

@@ -10,28 +10,24 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/exception.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("ExceptionClassTest_DefaultCtorTest", "[ExceptionClassTest]")
+TEST_CASE("Exception_DefaultCtor")
 {
     fkyaml::exception exception;
     REQUIRE(std::string(exception.what()).empty());
 }
 
-TEST_CASE("ExceptionClassTest_CtorWithMessageTest", "[ExceptionClassTest]")
+TEST_CASE("Exception_CtorWithMessage")
 {
-    SECTION("Test non-null message.")
+    SECTION("non-null message.")
     {
         const char* message = "test error message.";
         fkyaml::exception exception(message);
         REQUIRE(std::string(exception.what()).compare(message) == 0);
     }
 
-    SECTION("Test null message.")
+    SECTION("null message.")
     {
         const char* message = nullptr;
         fkyaml::exception exception(message);

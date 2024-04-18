@@ -10,13 +10,9 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/input/position_tracker.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("PositionTrackerClassTest_InitialStateTest", "[PositionTrackerClassTest]")
+TEST_CASE("PositionTracker_InitialState")
 {
     std::string input = "test";
     fkyaml::detail::position_tracker pos_tracker {};
@@ -27,11 +23,11 @@ TEST_CASE("PositionTrackerClassTest_InitialStateTest", "[PositionTrackerClassTes
     REQUIRE(pos_tracker.get_lines_read() == 0);
 }
 
-TEST_CASE("PositionTrackerClassTest_TestMultipleLinesTest", "[PositionTrackerClassTest]")
+TEST_CASE("PositionTracker_MultipleLines")
 {
     fkyaml::detail::position_tracker pos_tracker {};
 
-    SECTION("first character is not a newline code.")
+    SECTION("first character is not a newline code")
     {
         std::string input = "test\nfoo";
         pos_tracker.set_target_buffer(input);
@@ -66,7 +62,7 @@ TEST_CASE("PositionTrackerClassTest_TestMultipleLinesTest", "[PositionTrackerCla
         REQUIRE(pos_tracker.get_lines_read() == 1);
     }
 
-    SECTION("first character is a newline code.")
+    SECTION("first character is a newline code")
     {
         std::string input = "\ntest\nfoo";
         pos_tracker.set_target_buffer(input);

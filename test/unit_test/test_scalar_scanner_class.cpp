@@ -8,24 +8,20 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/input/scalar_scanner.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("ScalarScannerClassTest_ScanEmptyToken", "[ScalarScannerClassTest]")
+TEST_CASE("ScalarScanner_Empty")
 {
     REQUIRE(fkyaml::detail::scalar_scanner::scan("") == fkyaml::detail::lexical_token_t::STRING_VALUE);
 }
 
-TEST_CASE("ScalarScannerClassTest_ScanNullValueToken", "[ScalarScannerClassTest]")
+TEST_CASE("ScalarScanner_NullValue")
 {
     auto token = GENERATE(std::string("~"), std::string("null"), std::string("Null"), std::string("NULL"));
     REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::NULL_VALUE);
 }
 
-TEST_CASE("ScalarScannerClassTest_ScanBooleanValueToken", "[ScalarScannerClassTest]")
+TEST_CASE("ScalarScanner_BooleanValue")
 {
     auto token = GENERATE(
         std::string("true"),
@@ -37,7 +33,7 @@ TEST_CASE("ScalarScannerClassTest_ScanBooleanValueToken", "[ScalarScannerClassTe
     REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
 }
 
-TEST_CASE("ScalarScannerClassTEst_ScanIntegerNumberValueToken", "[ScalarScannerClassTEst]")
+TEST_CASE("ScalarScanner_IntegerNumberValue")
 {
     auto token = GENERATE(
         std::string("-1234"),
@@ -56,7 +52,7 @@ TEST_CASE("ScalarScannerClassTEst_ScanIntegerNumberValueToken", "[ScalarScannerC
     REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::INTEGER_VALUE);
 }
 
-TEST_CASE("ScalarScannerClassTest_ScanFloatNumberValueToken", "[ScalarScannerClassTest]")
+TEST_CASE("ScalarScanner_FloatNumberValue")
 {
     auto token = GENERATE(
         std::string(".inf"),
@@ -77,7 +73,7 @@ TEST_CASE("ScalarScannerClassTest_ScanFloatNumberValueToken", "[ScalarScannerCla
     REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
 }
 
-TEST_CASE("ScalarScannerClassTest_ScanStringValueToken", "[ScalarScannerClassTest]")
+TEST_CASE("ScalarScanner_StringValue")
 {
     auto token = GENERATE(
         std::string("abc"),

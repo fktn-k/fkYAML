@@ -8,13 +8,9 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/encodings/uri_encoding.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("URIEncodingClassTest_ValidateTest", "[URIEncodingClassTest]")
+TEST_CASE("URIEncoding_Validate")
 {
     SECTION("valid URI characters")
     {
