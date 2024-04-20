@@ -268,7 +268,9 @@ template <
         conjunction<
             is_basic_node<BasicNodeType>,
             negation<std::is_same<CompatibleStringType, typename BasicNodeType::string_type>>,
-            std::is_constructible<CompatibleStringType, const typename BasicNodeType::string_type&>>::value,
+            disjunction<
+                std::is_constructible<CompatibleStringType, const typename BasicNodeType::string_type&>,
+                std::is_assignable<CompatibleStringType, const typename BasicNodeType::string_type&>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, CompatibleStringType& s)
 {

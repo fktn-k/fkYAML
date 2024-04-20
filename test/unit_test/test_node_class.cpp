@@ -2501,8 +2501,20 @@ TEST_CASE("Node_AddTagName")
 // test cases for value getters (copy)
 //
 
+struct string_wrap
+{
+    string_wrap() = default;
+    string_wrap& operator=(const std::string& _str)
+    {
+        str = _str;
+        return *this;
+    }
+    std::string str;
+};
+
 TEST_CASE("Node_GetValue")
 {
+
     SECTION("sequence")
     {
         fkyaml::node node(fkyaml::node::sequence_type {fkyaml::node(true), fkyaml::node(false)});
@@ -2525,6 +2537,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
     }
 
@@ -2552,6 +2565,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
     }
 
@@ -2573,6 +2587,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
     }
 
@@ -2593,6 +2608,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
     }
 
@@ -2620,6 +2636,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::boolean_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
 
         SECTION("non-integer node value")
@@ -2660,6 +2677,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::boolean_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
 
         SECTION("non-float-number node value")
@@ -2690,6 +2708,13 @@ TEST_CASE("Node_GetValue")
             auto str = node.get_value<fkyaml::node::string_type>();
             REQUIRE(str.size() == 4);
             REQUIRE(str == "test");
+        }
+
+        SECTION("compatible string value")
+        {
+            auto str_wrap = node.get_value<string_wrap>();
+            REQUIRE(str_wrap.str.size() == 4);
+            REQUIRE(str_wrap.str == "test");
         }
 
 #ifdef FK_YAML_HAS_CXX_17
