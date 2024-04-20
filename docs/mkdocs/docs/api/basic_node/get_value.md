@@ -25,7 +25,8 @@ If the copying costs a lot, or if you need an address of the original value, the
 
 ***ValueType***
 :   A compatible value type.  
-    This is, by default, a result of [std::remove_cvref_t<T>](https://en.cppreference.com/w/cpp/types/remove_cvref).  
+    This is, by default, a type of [std::remove_cvref_t<T>](https://en.cppreference.com/w/cpp/types/remove_cvref).  
+    If fkYAML is compiled with C++11, C++14 or C++17, fkYAML uses its own implementation.  
 
 ## **Return Value**
 

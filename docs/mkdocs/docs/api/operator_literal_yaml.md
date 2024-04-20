@@ -4,9 +4,9 @@
 
 ```cpp
 inline node operator"" _yaml(const char* s, std::size_t n);
+inline node operator"" _yaml(const char8_t* s, std::size_t n); // for C++20 or better
 inline node operator"" _yaml(const char16_t* s, std::size_t n);
 inline node operator"" _yaml(const char32_t* s, std::size_t n);
-inline node operator"" _yaml(const char8_t* s, std::size_t n); // for C++20 or later
 ```
 
 This operator implements a user-defined string literal for YAML node objects.  
@@ -24,7 +24,7 @@ Access to this operator can be gained with:
 
 ***`s`*** [in]
 :   A string representation of a YAML node object.  
-    `char` or `char8_t`(for C++20 or later), `char16_t` and `char32_t` are interpreted as the UTF-8, UTF-16 and UTF-32 encodings, respectively.
+    `char` or `char8_t`(for C++20 or better), `char16_t` and `char32_t` are interpreted as the UTF-8, UTF-16 and UTF-32 encodings, respectively.
 
 ***`n`*** [in]
 :   The length of the string `s`.
