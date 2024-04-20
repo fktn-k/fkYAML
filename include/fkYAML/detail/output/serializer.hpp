@@ -133,6 +133,7 @@ private:
                 }
 
                 try_append_anchor(seq_item, true, str);
+                try_append_tag(seq_item, true, str);
 
                 bool is_scalar = seq_item.is_scalar();
                 if (is_scalar)
@@ -159,8 +160,9 @@ private:
                 bool is_appended = try_append_alias(itr.key(), false, str);
                 if (!is_appended)
                 {
-                    is_appended = try_append_anchor(itr.key(), false, str);
-                    if (is_appended)
+                    bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
+                    bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
+                    if (is_anchor_appended || is_tag_appended)
                     {
                         str += " ";
                     }
@@ -177,6 +179,7 @@ private:
                 }
 
                 try_append_anchor(*itr, true, str);
+                try_append_tag(*itr, true, str);
 
                 bool is_scalar = itr->is_scalar();
                 if (is_scalar)
@@ -193,44 +196,22 @@ private:
             }
             break;
         case node_t::NULL_OBJECT:
-            if (try_append_tag(node, str))
-            {
-                str += " ";
-            }
             to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::BOOLEAN:
-            if (try_append_tag(node, str))
-            {
-                str += " ";
-            }
             to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::INTEGER:
-            if (try_append_tag(node, str))
-            {
-                str += " ";
-            }
             to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::FLOAT_NUMBER:
-            if (try_append_tag(node, str))
-            {
-                str += " ";
-            }
             to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
         case node_t::STRING: {
-            bool is_appended = try_append_tag(node, str);
-            if (is_appended)
-            {
-                str += " ";
-            }
-
             bool is_escaped = false;
             typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
 
@@ -315,10 +296,14 @@ private:
     /// @param[in] node The target node which possibly has a tag name.
     /// @param[out] str A string to hold serialization result.
     /// @return true if a tag name has been appended, false otherwise.
-    bool try_append_tag(const BasicNodeType& node, std::string& str) const
+    bool try_append_tag(const BasicNodeType& node, bool prepends_space, std::string& str) const
     {
         if (node.has_tag_name())
         {
+            if (prepends_space)
+            {
+                str += " ";
+            }
             str += node.get_tag_name();
             return true;
         }
