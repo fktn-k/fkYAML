@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,17 +12,13 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/encodings/utf8_encoding.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("UTF8EncodingClassTest_ValidateTest", "[UTFEncodingClassTest]")
+TEST_CASE("UTF8Encoding_Validate")
 {
     using int_type = std::char_traits<char>::int_type;
 
-    SECTION("1 byte character encoded in UTF-8.")
+    SECTION("1 byte character encoded in UTF-8")
     {
         using array_ret_pair_t = std::pair<std::array<int_type, 1>, bool>;
         auto pair = GENERATE(
@@ -40,7 +36,7 @@ TEST_CASE("UTF8EncodingClassTest_ValidateTest", "[UTFEncodingClassTest]")
         REQUIRE(fkyaml::detail::utf8_encoding::validate(pair.first) == pair.second);
     }
 
-    SECTION("2 byte characters encoded in UTF-8.")
+    SECTION("2 byte characters encoded in UTF-8")
     {
         using array_ret_pair_t = std::pair<std::array<int_type, 2>, bool>;
         auto pair = GENERATE(
@@ -61,7 +57,7 @@ TEST_CASE("UTF8EncodingClassTest_ValidateTest", "[UTFEncodingClassTest]")
         REQUIRE(fkyaml::detail::utf8_encoding::validate(pair.first) == pair.second);
     }
 
-    SECTION("3 byte characters encoded in UTF-8.")
+    SECTION("3 byte characters encoded in UTF-8")
     {
         using array_ret_pair_t = std::pair<std::array<int_type, 3>, bool>;
         auto pair = GENERATE(
@@ -118,7 +114,7 @@ TEST_CASE("UTF8EncodingClassTest_ValidateTest", "[UTFEncodingClassTest]")
         REQUIRE(fkyaml::detail::utf8_encoding::validate(pair.first) == pair.second);
     }
 
-    SECTION("4 byte characters encoded in UTF-8.")
+    SECTION("4 byte characters encoded in UTF-8")
     {
         using array_ret_pair_t = std::pair<std::array<int_type, 4>, bool>;
         auto pair = GENERATE(
@@ -188,7 +184,7 @@ TEST_CASE("UTF8EncodingClassTest_ValidateTest", "[UTFEncodingClassTest]")
     }
 }
 
-TEST_CASE("UTF8EncodingClassTest_FromUTF16Test", "[UTF8EncodingClassTest]")
+TEST_CASE("UTF8Encoding_FromUTF16")
 {
     SECTION("valid UTF-16 character(s)")
     {
@@ -258,7 +254,7 @@ TEST_CASE("UTF8EncodingClassTest_FromUTF16Test", "[UTF8EncodingClassTest]")
     }
 }
 
-TEST_CASE("UTF8EncodingClassTest_FromUTF32Test", "[UTF8EncodingClassTest]")
+TEST_CASE("UTF8Encoding_FromUTF32")
 {
     SECTION("valid UTF-32 character")
     {

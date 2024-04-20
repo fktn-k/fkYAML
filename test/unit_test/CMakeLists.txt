@@ -100,7 +100,6 @@ target_compile_definitions(
   unit_test_config
   INTERFACE
     $<$<CONFIG:Release>:NDEBUG>
-    $<$<BOOL:${FK_YAML_USE_SINGLE_HEADER}>:FK_YAML_TEST_USE_SINGLE_HEADER>
 )
 
 # Configure compile options according to the target compiler.
@@ -199,14 +198,17 @@ add_executable(
   test_exception_class.cpp
   test_from_string.cpp
   test_input_adapter.cpp
-  test_input_handler.cpp
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
   test_node_class.cpp
   test_node_ref_storage_class.cpp
   test_ordered_map_class.cpp
+  test_position_tracker_class.cpp
+  test_scalar_scanner_class.cpp
   test_serializer_class.cpp
   test_string_formatter.cpp
+  test_tag_resolver_class.cpp
+  test_uri_encoding_class.cpp
   test_utf8_encoding_class.cpp
   main.cpp
 )

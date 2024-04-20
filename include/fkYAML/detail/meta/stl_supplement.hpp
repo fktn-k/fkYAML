@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -29,7 +29,7 @@ namespace detail
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   For contributors:
 //     This file is for supplementing future C++ STL implementations to utilize some useful features
-//     implemented in C++14 or later.
+//     implemented in C++14 or better.
 //     This file is needed to keep the fkYAML library requirement to C++11.
 //     **DO NOT** implement features which are not included any version of STL in this file.
 //     Such implementations must be in the type_traits.hpp file.

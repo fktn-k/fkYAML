@@ -16,8 +16,9 @@ Note that the `TargetType` must be default-constructible.
 !!! Tips
 
     This function can be used for user-defined types by implementing (partial) specialization for `from_node()` function which is called internally by this function.  
-    Note that the specialization **must be implemented in the same namespace as the user-defined types** so that the specialization can successfully be found by ADL (Argument Dependent Lookup).  
-    See the example below for more information.  
+    Note that the specialization **must be implemented in the same namespace as the user-defined types (including the global namespace)** so that the specialization can successfully be found by ADL (Argument Dependent Lookup).  
+    You can find a detailed explanation of how this customization point works at [this link](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4381.html).  
+    Also, see the example below for the feel of how it can be achieved.  
 
 ## **Template Parameters**
 

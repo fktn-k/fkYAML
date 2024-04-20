@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -181,6 +181,21 @@ private:
     std::string generate_error_message(const char* key)
     {
         return detail::format("out_of_range: key \'%s\' is not found.", key);
+    }
+};
+
+class invalid_tag : public exception
+{
+public:
+    explicit invalid_tag(const char* msg, const char* tag)
+        : exception(generate_error_message(msg, tag).c_str())
+    {
+    }
+
+private:
+    std::string generate_error_message(const char* msg, const char* tag)
+    {
+        return detail::format("invalid_tag: %s tag=%s", msg, tag);
     }
 };
 

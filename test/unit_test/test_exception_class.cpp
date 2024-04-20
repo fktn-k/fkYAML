@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10,28 +10,24 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/exception.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("ExceptionClassTest_DefaultCtorTest", "[ExceptionClassTest]")
+TEST_CASE("Exception_DefaultCtor")
 {
     fkyaml::exception exception;
     REQUIRE(std::string(exception.what()).empty());
 }
 
-TEST_CASE("ExceptionClassTest_CtorWithMessageTest", "[ExceptionClassTest]")
+TEST_CASE("Exception_CtorWithMessage")
 {
-    SECTION("Test non-null message.")
+    SECTION("non-null message.")
     {
         const char* message = "test error message.";
         fkyaml::exception exception(message);
         REQUIRE(std::string(exception.what()).compare(message) == 0);
     }
 
-    SECTION("Test null message.")
+    SECTION("null message.")
     {
         const char* message = nullptr;
         fkyaml::exception exception(message);

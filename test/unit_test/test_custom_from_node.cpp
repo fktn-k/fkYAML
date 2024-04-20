@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -60,7 +60,7 @@ void from_node(const fkyaml::node& node, rgb& rgb)
 
 } // namespace test
 
-TEST_CASE("FromNodeTest_UserDefinedTypeTest", "[FromNodeTest]")
+TEST_CASE("FromNode_UserDefinedType")
 {
     std::string input = "title: Robinson Crusoe\n"
                         "author: Daniel Defoe\n"
@@ -73,7 +73,7 @@ TEST_CASE("FromNodeTest_UserDefinedTypeTest", "[FromNodeTest]")
     REQUIRE(novel.year == 1678);
 }
 
-TEST_CASE("FromNodeTest_UserDefinedTypeVectorTest", "[FromNodeTest]")
+TEST_CASE("FromNode_UserDefinedTypeVector")
 {
     std::string input = "novels:\n"
                         "  - title: Robinson Crusoe\n"
@@ -93,7 +93,7 @@ TEST_CASE("FromNodeTest_UserDefinedTypeVectorTest", "[FromNodeTest]")
     REQUIRE(novels[1].year == 1818);
 }
 
-TEST_CASE("FromNodeTest_UserDefinedTypeVectorErrorTest", "[FromNodeTest]")
+TEST_CASE("FromNode_UserDefinedTypeVectorError")
 {
     std::string input = "novels:\n"
                         "  - title: Robinson Crusoe\n"
@@ -106,7 +106,7 @@ TEST_CASE("FromNodeTest_UserDefinedTypeVectorErrorTest", "[FromNodeTest]")
     REQUIRE_THROWS_AS(node.get_value<std::vector<test::novel>>(), fkyaml::exception);
 }
 
-TEST_CASE("FromNodeTest_UserDefinedTypeMapTest", "[FromNodeTest]")
+TEST_CASE("FromNode_UserDefinedTypeMap")
 {
     std::string input = "colors:\n"
                         "  ? color: 0xFFFFFF\n"
@@ -138,7 +138,7 @@ TEST_CASE("FromNodeTest_UserDefinedTypeMapTest", "[FromNodeTest]")
     REQUIRE(colors.at(test::color {0x586776}).b == 0x76);
 }
 
-TEST_CASE("FromNodeTest_UserDefinedTypeMapErrorTest", "[FromNodeTest]")
+TEST_CASE("FromNode_UserDefinedTypeMapError")
 {
     std::string input = "colors:\n"
                         "  ? color: 0xFFFFFF\n"

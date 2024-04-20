@@ -16,7 +16,7 @@ int main()
         std::cout << e.what() << std::endl;
     }
 
-    // add an anchor name to the node.
+    // set an anchor name to the node.
     n.add_anchor_name("anchor");
     std::cout << n.get_anchor_name() << std::endl;
 

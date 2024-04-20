@@ -1,5 +1,47 @@
 # Releases
 
+## **fkYAML version 0.3.4**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.4/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.4/fkYAML.zip)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.4/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.4/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.4/node.hpp) (single header)
+
+### Summary
+
+This release adds the new support for YAML tags in both the deserialization and serialization features while improving the performance and efficiency of the deserialization feature.  
+In addition, std::basic_string_view types, such as std::string_view, are now explicitly supported, and implementations of conversion from string scalar nodes and test cases for the functions that take those types as arguments.  
+For CI processes, workflows using the macOS 14 GitHub Actions runner image have been added, and platform support for fkYAML has been extended.  
+
+### What's Changed
+
+#### :sparkles: New Features
+
+- \#181 support tag for scalars by [fktn-k](https://github.com/fktn-k) in [\#305](https://github.com/fktn-k/fkYAML/pull/305)
+- support tags for container nodes with some cleanup in test suite by [fktn-k](https://github.com/fktn-k) in [\#309](https://github.com/fktn-k/fkYAML/pull/309)
+- Add workflow jobs with the macOS14 runner image by [fktn-k](https://github.com/fktn-k) in [\#310](https://github.com/fktn-k/fkYAML/pull/310)
+- \#294 Support std::basic\_string\_view by [fktn-k](https://github.com/fktn-k) in [\#313](https://github.com/fktn-k/fkYAML/pull/313)
+- \#181 Serialize container tags by [fktn-k](https://github.com/fktn-k) in [\#314](https://github.com/fktn-k/fkYAML/pull/314)
+
+#### :zap: Improvements
+
+- Scan inputs using iterators by [fktn-k](https://github.com/fktn-k) in [\#306](https://github.com/fktn-k/fkYAML/pull/306)
+- Defer scalar conversions by [fktn-k](https://github.com/fktn-k) in [\#308](https://github.com/fktn-k/fkYAML/pull/308)
+
+#### :robot: CI
+
+- Fix Valgrind error in the test suite by [fktn-k](https://github.com/fktn-k) in [\#307](https://github.com/fktn-k/fkYAML/pull/307)
+- Organized the contents of the test suite by [fktn-k](https://github.com/fktn-k) in [\#311](https://github.com/fktn-k/fkYAML/pull/311)
+
+#### :memo: Documentation
+
+- updated dependencies for mkdocs to the latest versions by [fktn-k](https://github.com/fktn-k) in [\#312](https://github.com/fktn-k/fkYAML/pull/312)
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.3...v0.3.4
+
 ## **fkYAML version 0.3.3**
 
 !!! abstract "Release Packages"

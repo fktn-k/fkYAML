@@ -17,6 +17,7 @@ Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization pro
 
     fkYAML supports UTF-8, UTF-16 and UTF-32 encodings for input characters.  
     As the YAML specification shows [(here)](https://yaml.org/spec/1.2.2/#52-character-encodings), all input streams must begin with either a byte order mark(BOM) or an ASCII character, which will allow the encoding to be deduced by the pattern of the first few bytes of the input sequence.  
+    If an input fails to meet the above requirement, the input is interpreted as a UTF-8 encoded character sequence starting without a BOM.  
     If a stream with `char` as a character type is used (including FILE pointers), the encoding will be automatically detected in the deserialization process, while an array/container of `char16_t` and `char32_t` denotes that its contents are encoded in the UTF-16BE/LE and UTF-32BE/LE format, respectively.  
     Furthermore, a byte order mark (BOM) can be put only at the beginning of an input sequence.  
     The deserialization process internally converts input characters into the UTF-8 encoded ones if they are encoded in the UTF-16 or UTF-32 format.  
@@ -36,9 +37,9 @@ static basic_node deserialize(InputType&& input);
     * an `std::istream` object
     * a `FILE` pointer (must not be `nullptr`)
     * a C-style array of characters (`char`, `char16_t` or `char32_t`. See the "Supported Unicode Encodings" above.)
-        * char[N], char16_t[N], or char32_t[N] (N: the size of an array)
-    * a container `obj` for which `begin(obj)` and `end(obj)` produces a valid pair of iterators
-        * std::basic_string, std::array, and the likes.
+        * char[N], char16_t[N], or char32_t[N] (N is the size of an array)
+    * a container `obj` with which `begin(obj)` and `end(obj)` produces a valid pair of iterators
+        * std::basic_string, std::array, std::string_view (with C++17 or better) and the likes.
 
 ### **Parameters**
 
@@ -61,7 +62,7 @@ static basic_node deserialize(ItrType&& begin, ItrType&& end);
 ***`ItrType`***
 :   Type of a compatible iterator, for instance:
 
-    * a pair of `std::string::iterator`
+    * a pair of iterators such as return values of `std::string::begin()` and `std::string::end()`
     * a pair of pointers such as `ptr` and `ptr + len`
 
 ### **Parameters**

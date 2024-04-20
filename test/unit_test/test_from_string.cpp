@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,21 +12,17 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/conversions/from_string.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
-TEST_CASE("FromStringTest_NullptrTest", "[FromStringTest]")
+TEST_CASE("FromString_Null")
 {
-    SECTION("nothrow expected tests")
+    SECTION("valid string for the null value")
     {
         auto input = GENERATE(std::string("null"), std::string("Null"), std::string("NULL"), std::string("~"));
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<std::nullptr_t> {}) == nullptr);
     }
 
-    SECTION("nothrow unexpected test")
+    SECTION("invalid string for the null value")
     {
         std::string input("test");
         REQUIRE_THROWS_AS(
@@ -34,30 +30,30 @@ TEST_CASE("FromStringTest_NullptrTest", "[FromStringTest]")
     }
 }
 
-TEST_CASE("FromStringTest_BoolTest", "[FromStringTest]")
+TEST_CASE("FromString_Bool")
 {
-    SECTION("true value expected tests")
+    SECTION("valid string for the true value")
     {
         auto input = GENERATE(std::string("true"), std::string("True"), std::string("TRUE"));
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<bool> {}) == true);
     }
 
-    SECTION("false value expected tests")
+    SECTION("valid string for the false value")
     {
         auto input = GENERATE(std::string("false"), std::string("False"), std::string("FALSE"));
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<bool> {}) == false);
     }
 
-    SECTION("nothrow unexpected test")
+    SECTION("invalid string for the boolean values")
     {
         std::string input("test");
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<bool> {}), fkyaml::exception);
     }
 }
 
-TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
+TEST_CASE("FromString_Integer")
 {
-    SECTION("char type tests")
+    SECTION("char type")
     {
         std::string input("-64");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<char> {}) == -64);
@@ -66,7 +62,7 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<char> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned char type tests")
+    SECTION("unsigned char type")
     {
         std::string input("64");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned char> {}) == 64);
@@ -76,7 +72,7 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned char> {}), fkyaml::exception);
     }
 
-    SECTION("short type tests")
+    SECTION("short type")
     {
         std::string input("-15464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<short> {}) == -15464);
@@ -85,7 +81,7 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<short> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned short type tests")
+    SECTION("unsigned short type")
     {
         std::string input("15464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned short> {}) == 15464);
@@ -95,7 +91,7 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned short> {}), fkyaml::exception);
     }
 
-    SECTION("int type tests")
+    SECTION("int type")
     {
         std::string input("-1154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<int> {}) == -1154357464);
@@ -104,7 +100,7 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<int> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned int type tests")
+    SECTION("unsigned int type")
     {
         std::string input("3154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned int> {}) == 3154357464u);
@@ -114,7 +110,7 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned int> {}), fkyaml::exception);
     }
 
-    SECTION("long type tests")
+    SECTION("long type")
     {
         std::string input("-1154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<long> {}) == -1154357464l);
@@ -123,7 +119,7 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<long> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned long type tests")
+    SECTION("unsigned long type")
     {
         std::string input("317464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned long> {}) == 317464ul);
@@ -133,7 +129,7 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned long> {}), fkyaml::exception);
     }
 
-    SECTION("long long type tests")
+    SECTION("long long type")
     {
         std::string input("-1154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<long long> {}) == -1154357464ll);
@@ -143,7 +139,7 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<long long> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned long long type tests")
+    SECTION("unsigned long long type")
     {
         std::string input("3154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned long long> {}) == 3154357464ull);
@@ -154,9 +150,9 @@ TEST_CASE("FromStringTest_IntegerTest", "[FromStringTest]")
     }
 }
 
-TEST_CASE("FromStringTest_FloatTest", "[FromStringTest]")
+TEST_CASE("FromString_Float")
 {
-    SECTION("positive infinity test")
+    SECTION("positive infinity")
     {
         auto input = GENERATE(std::string(".inf"), std::string(".Inf"), std::string(".INF"));
         REQUIRE(
@@ -164,7 +160,7 @@ TEST_CASE("FromStringTest_FloatTest", "[FromStringTest]")
             std::numeric_limits<float>::infinity());
     }
 
-    SECTION("negative infinity test")
+    SECTION("negative infinity")
     {
         auto input = GENERATE(std::string("-.inf"), std::string("-.Inf"), std::string("-.INF"));
         REQUIRE(
@@ -172,7 +168,7 @@ TEST_CASE("FromStringTest_FloatTest", "[FromStringTest]")
             -1 * std::numeric_limits<float>::infinity());
     }
 
-    SECTION("NaN test")
+    SECTION("NaN")
     {
         auto input = GENERATE(std::string(".nan"), std::string(".NaN"), std::string(".NAN"));
         float ret = 0.0f;
@@ -180,7 +176,7 @@ TEST_CASE("FromStringTest_FloatTest", "[FromStringTest]")
         REQUIRE(std::isnan(ret));
     }
 
-    SECTION("value conversion tests")
+    SECTION("valid string for a float value")
     {
         std::string input("3.14");
         REQUIRE(std::abs(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<float> {}) - 3.14f) < FLT_EPSILON);
@@ -190,9 +186,9 @@ TEST_CASE("FromStringTest_FloatTest", "[FromStringTest]")
     }
 }
 
-TEST_CASE("FromStringTest_DoubleTest", "[FromStringTest]")
+TEST_CASE("FromString_Double")
 {
-    SECTION("positive infinity test")
+    SECTION("positive infinity")
     {
         auto input = GENERATE(std::string(".inf"), std::string(".Inf"), std::string(".INF"));
         REQUIRE(
@@ -200,7 +196,7 @@ TEST_CASE("FromStringTest_DoubleTest", "[FromStringTest]")
             std::numeric_limits<double>::infinity());
     }
 
-    SECTION("negative infinity test")
+    SECTION("negative infinity")
     {
         auto input = GENERATE(std::string("-.inf"), std::string("-.Inf"), std::string("-.INF"));
         REQUIRE(
@@ -208,7 +204,7 @@ TEST_CASE("FromStringTest_DoubleTest", "[FromStringTest]")
             -1 * std::numeric_limits<double>::infinity());
     }
 
-    SECTION("NaN test")
+    SECTION("NaN")
     {
         auto input = GENERATE(std::string(".nan"), std::string(".NaN"), std::string(".NAN"));
         double ret = 0.0;
@@ -216,7 +212,7 @@ TEST_CASE("FromStringTest_DoubleTest", "[FromStringTest]")
         REQUIRE(std::isnan(ret));
     }
 
-    SECTION("value conversion tests")
+    SECTION("valid string for a double value")
     {
         std::string input("3.14");
         REQUIRE(std::abs(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<double> {}) - 3.14) < DBL_EPSILON);

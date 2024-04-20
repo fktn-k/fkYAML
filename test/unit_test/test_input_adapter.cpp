@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,14 +12,14 @@
 
 #include <catch2/catch.hpp>
 
-#ifdef FK_YAML_TEST_USE_SINGLE_HEADER
-    #include <fkYAML/node.hpp>
-#else
-    #include <fkYAML/detail/input/input_adapter.hpp>
-#endif
+#include <fkYAML/node.hpp>
 
 // generated in test/unit_test/CMakeLists.txt
 #include <test_data.hpp>
+
+#ifdef FK_YAML_HAS_CXX_17
+    #include <string_view>
+#endif
 
 #ifdef _MSC_VER
     #define DISABLE_C4996 __pragma(warning(push)) __pragma(warning(disable : 4996))
@@ -29,13 +29,18 @@
     #define ENABLE_C4996
 #endif
 
-static constexpr char input_file_path[] = FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt";
+namespace /* file-scoped global variable for test cases */
+{
 
-TEST_CASE("InputAdapterTest_IteratorInputAdapterProviderTest", "[InputAdapterTest]")
+constexpr char input_file_path[] = FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt";
+
+} // namespace
+
+TEST_CASE("InputAdapter_IteratorInputAdapterProvider")
 {
     char input[] = "test";
 
-    SECTION("c-style char array")
+    SECTION("C-style char array")
     {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -47,14 +52,14 @@ TEST_CASE("InputAdapterTest_IteratorInputAdapterProviderTest", "[InputAdapterTes
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
     }
 
-    SECTION("c-style char16_t array")
+    SECTION("C-style char16_t array")
     {
         char16_t input16[] = u"test";
         auto input_adapter = fkyaml::detail::input_adapter(input16);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
     }
 
-    SECTION("c-style char32_t array")
+    SECTION("C-style char32_t array")
     {
         char32_t intput32[] = U"test";
         auto input_adapter = fkyaml::detail::input_adapter(intput32);
@@ -68,9 +73,72 @@ TEST_CASE("InputAdapterTest_IteratorInputAdapterProviderTest", "[InputAdapterTes
         using iterator_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
+
+    SECTION("std::u16string")
+    {
+        std::u16string input_str(u"test");
+        auto input_adapter = fkyaml::detail::input_adapter(input_str);
+        using iterator_type = typename std::u16string::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+    SECTION("std::u32string")
+    {
+        std::u32string input_str(U"test");
+        auto input_adapter = fkyaml::detail::input_adapter(input_str);
+        using iterator_type = typename std::u32string::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+#ifdef FK_YAML_HAS_CXX_17
+    SECTION("std::string_view")
+    {
+        std::string_view input_str_view(input);
+        auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
+        using iterator_type = typename std::string_view::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+    SECTION("std::u16string_view")
+    {
+        using namespace std::string_view_literals;
+        std::u16string_view input_str_view = u"test"sv;
+        auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
+        using iterator_type = typename std::u16string_view::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+    SECTION("std::u32string_view")
+    {
+        using namespace std::string_view_literals;
+        std::u32string_view input_str_view = U"test"sv;
+        auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
+        using iterator_type = typename std::u32string_view::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+#endif
+
+#ifdef FK_YAML_HAS_CXX_20
+    SECTION("std::u32string")
+    {
+        std::u8string input_str(u8"test");
+        auto input_adapter = fkyaml::detail::input_adapter(input_str);
+        using iterator_type = typename std::u8string::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+    SECTION("std::u8string_view")
+    {
+        using namespace std::string_view_literals;
+        std::u8string_view input_str_view = u8"test"sv;
+        auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
+        using iterator_type = typename std::u8string_view::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+#endif
 }
 
-TEST_CASE("InputAdapterTest_FileInputAdapterProviderTest", "[InputAdapterTest]")
+TEST_CASE("InputAdapter_FileInputAdapterProvider")
 {
     SECTION("invalid FILE object pointer")
     {
@@ -78,7 +146,7 @@ TEST_CASE("InputAdapterTest_FileInputAdapterProviderTest", "[InputAdapterTest]")
         REQUIRE_THROWS_AS(fkyaml::detail::input_adapter(p_file), fkyaml::exception);
     }
 
-    SECTION("valie FILE object pointer")
+    SECTION("valid FILE object pointer")
     {
         DISABLE_C4996
         FILE* p_file = std::fopen(input_file_path, "r");
@@ -92,7 +160,7 @@ TEST_CASE("InputAdapterTest_FileInputAdapterProviderTest", "[InputAdapterTest]")
     }
 }
 
-TEST_CASE("InputAdapterTest_StreamInputAdapterProviderTest", "[InputAdapterTest]")
+TEST_CASE("InputAdapter_StreamInputAdapterProvider")
 {
     std::ifstream ifs(input_file_path);
     REQUIRE(ifs);
@@ -100,7 +168,7 @@ TEST_CASE("InputAdapterTest_StreamInputAdapterProviderTest", "[InputAdapterTest]
     REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 }
 
-TEST_CASE("InputAdapterTest_FillBufferTest", "[InputAdapterTest]")
+TEST_CASE("InputAdapter_FillBuffer")
 {
     ///////////////
     //   UTF-8   //
@@ -1387,7 +1455,7 @@ TEST_CASE("InputAdapterTest_FillBufferTest", "[InputAdapterTest]")
     }
 }
 
-TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTest]")
+TEST_CASE("InputAdapter_FillBufferUTF8CharsValidation")
 {
     /////////////////////////////////
     //   UTF-8 1-Byte Characters   //
@@ -1424,6 +1492,8 @@ TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTe
 
         std::string buffer {};
         REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter with valid 1-byte UTF-8 encodings")
@@ -1487,6 +1557,8 @@ TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTe
 
         std::string buffer {};
         REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter with valid 2-byte UTF-8 encodings")
@@ -1553,6 +1625,8 @@ TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTe
 
         std::string buffer {};
         REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter with valid 3-byte UTF-8 encodings")
@@ -1623,6 +1697,8 @@ TEST_CASE("InputAdapterTest_FillBufferUTF8CharsValidationTest", "[InputAdapterTe
 
         std::string buffer {};
         REQUIRE_THROWS_AS(input_adapter.fill_buffer(buffer), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter with valid 4-byte UTF-8 encodings")

@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -31,6 +31,7 @@ class utf_encoding;
 //   UTF-8 Encoding   ///
 /////////////////////////
 
+/// @brief A class which handles UTF-8 encodings.
 class utf8_encoding
 {
     using int_type = std::char_traits<char>::int_type;

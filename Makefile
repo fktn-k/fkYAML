@@ -1,4 +1,4 @@
-.PHONY: update-version-macros CHANGELOG.md update-version fkYAML.natvis
+.PHONY: update-version-macros CHANGELOG.md update-version examples fkYAML.natvis
 
 #################
 #   variables   #
@@ -14,7 +14,7 @@ TEST_SRCS = $(shell find test -type f \( -name '*.hpp' -o -name '*.cpp' \) | sor
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 3
+TARGET_PATCH_VERSION := 4
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -96,6 +96,20 @@ update-params-for-natvis:
 fkYAML.natvis: update-params-for-natvis
 	@$(MAKE) -C ./tool/natvis_generator generate
 
+#####################
+#   Documentation   #
+#####################
+
+examples:
+	cmake -B build_examples -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_EXAMPLES=ON
+	cmake --build build_examples --config Debug
+
+build-docs: examples
+	@$(MAKE) -C ./docs/mkdocs build
+
+serve-docs: examples
+	@$(MAKE) -C serve
+
 ###############
 #   Version   #
 ###############
@@ -169,5 +183,6 @@ clean:
 		build_clang_sanitizers \
 		build_clang_tidy \
 		build_coverage \
+		build_examples \
 		build_iwyu \
 		build_valgrind

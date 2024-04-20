@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.3
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -249,6 +249,30 @@ inline void from_node(const BasicNodeType& n, FloatType& f)
 /// @param s A string node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_type& s)
+{
+    if (!n.is_string())
+    {
+        throw type_error("The target node value type is not string type.", n.type());
+    }
+    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
+}
+
+/// @brief from_node function for compatible string type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatibleStringType A compatible string type.
+/// @param n A basic_node object.
+/// @param s A compatible string object.
+template <
+    typename BasicNodeType, typename CompatibleStringType,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>,
+            negation<std::is_same<CompatibleStringType, typename BasicNodeType::string_type>>,
+            disjunction<
+                std::is_constructible<CompatibleStringType, const typename BasicNodeType::string_type&>,
+                std::is_assignable<CompatibleStringType, const typename BasicNodeType::string_type&>>>::value,
+        int> = 0>
+inline void from_node(const BasicNodeType& n, CompatibleStringType& s)
 {
     if (!n.is_string())
     {
