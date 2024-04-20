@@ -19,6 +19,10 @@
 // generated in test/unit_test/CMakeLists.txt
 #include <test_data.hpp>
 
+#ifdef FK_YAML_HAS_CXX_17
+    #include <string_view>
+#endif
+
 //
 // test cases for constructors
 //
@@ -153,6 +157,18 @@ TEST_CASE("Node_StringCtor")
     REQUIRE(node.size() == 4);
     REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
 }
+
+#ifdef FK_YAML_HAS_CXX_17
+TEST_CASE("Node_StringViewCtor")
+{
+    using namespace std::string_view_literals;
+    auto node = fkyaml::node("test"sv);
+    REQUIRE(node.type() == fkyaml::node::node_t::STRING);
+    REQUIRE(node.is_string());
+    REQUIRE(node.size() == 4);
+    REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+}
+#endif
 
 TEST_CASE("Node_SequenceCopyCtor")
 {
@@ -772,6 +788,14 @@ TEST_CASE("Node_SubscriptOperator")
                 REQUIRE_NOTHROW(node["test"]);
             }
         }
+
+#ifdef FK_YAML_HAS_CXX_17
+        SECTION("string view value")
+        {
+            std::string_view key = "test";
+            REQUIRE(map[key].is_null());
+        }
+#endif
 
         SECTION("non-const string node")
         {
@@ -1900,6 +1924,14 @@ TEST_CASE("Node_Contains")
             REQUIRE(node.contains("test"));
         }
 
+#ifdef FK_YAML_HAS_CXX_17
+        SECTION("mapping node with a string view key")
+        {
+            using namespace std::string_view_literals;
+            REQUIRE(node.contains("test"sv));
+        }
+#endif
+
         SECTION("mapping node with a string node key")
         {
             fkyaml::node node_key = "test";
@@ -2032,7 +2064,7 @@ TEST_CASE("Node_At")
             }
         }
 
-        SECTION("const string node")
+        SECTION("const string value")
         {
             const fkyaml::node node = fkyaml::node::mapping(map);
             std::string key = "test";
@@ -2047,6 +2079,14 @@ TEST_CASE("Node_At")
                 REQUIRE_NOTHROW(node.at("test"));
             }
         }
+
+#ifdef FK_YAML_HAS_CXX_17
+        SECTION("string view value")
+        {
+            std::string_view key = "test";
+            REQUIRE(map.at(key).is_null());
+        }
+#endif
 
         SECTION("non-const string node")
         {
@@ -2461,8 +2501,20 @@ TEST_CASE("Node_AddTagName")
 // test cases for value getters (copy)
 //
 
+struct string_wrap
+{
+    string_wrap() = default;
+    string_wrap& operator=(const std::string& _str)
+    {
+        str = _str;
+        return *this;
+    }
+    std::string str;
+};
+
 TEST_CASE("Node_GetValue")
 {
+
     SECTION("sequence")
     {
         fkyaml::node node(fkyaml::node::sequence_type {fkyaml::node(true), fkyaml::node(false)});
@@ -2485,6 +2537,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
     }
 
@@ -2512,6 +2565,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
     }
 
@@ -2533,6 +2587,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
     }
 
@@ -2553,6 +2608,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
     }
 
@@ -2580,6 +2636,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::boolean_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::float_number_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
 
         SECTION("non-integer node value")
@@ -2620,6 +2677,7 @@ TEST_CASE("Node_GetValue")
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::boolean_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::string_type>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<string_wrap>(), fkyaml::type_error);
         }
 
         SECTION("non-float-number node value")
@@ -2651,6 +2709,22 @@ TEST_CASE("Node_GetValue")
             REQUIRE(str.size() == 4);
             REQUIRE(str == "test");
         }
+
+        SECTION("compatible string value")
+        {
+            auto str_wrap = node.get_value<string_wrap>();
+            REQUIRE(str_wrap.str.size() == 4);
+            REQUIRE(str_wrap.str == "test");
+        }
+
+#ifdef FK_YAML_HAS_CXX_17
+        SECTION("string view")
+        {
+            auto str_view = node.get_value<std::string_view>();
+            REQUIRE(str_view.size() == 4);
+            REQUIRE(str_view == "test");
+        }
+#endif
 
         SECTION("non-string values")
         {

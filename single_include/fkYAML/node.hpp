@@ -350,7 +350,7 @@ namespace detail
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   For contributors:
 //     This file is for supplementing future C++ STL implementations to utilize some useful features
-//     implemented in C++14 or later.
+//     implemented in C++14 or better.
 //     This file is needed to keep the fkYAML library requirement to C++11.
 //     **DO NOT** implement features which are not included any version of STL in this file.
 //     Such implementations must be in the type_traits.hpp file.
@@ -8193,6 +8193,30 @@ inline void from_node(const BasicNodeType& n, FloatType& f)
 /// @param s A string node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_type& s)
+{
+    if (!n.is_string())
+    {
+        throw type_error("The target node value type is not string type.", n.type());
+    }
+    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
+}
+
+/// @brief from_node function for compatible string type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatibleStringType A compatible string type.
+/// @param n A basic_node object.
+/// @param s A compatible string object.
+template <
+    typename BasicNodeType, typename CompatibleStringType,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>,
+            negation<std::is_same<CompatibleStringType, typename BasicNodeType::string_type>>,
+            disjunction<
+                std::is_constructible<CompatibleStringType, const typename BasicNodeType::string_type&>,
+                std::is_assignable<CompatibleStringType, const typename BasicNodeType::string_type&>>>::value,
+        int> = 0>
+inline void from_node(const BasicNodeType& n, CompatibleStringType& s)
 {
     if (!n.is_string())
     {

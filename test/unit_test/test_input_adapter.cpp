@@ -17,6 +17,10 @@
 // generated in test/unit_test/CMakeLists.txt
 #include <test_data.hpp>
 
+#ifdef FK_YAML_HAS_CXX_17
+    #include <string_view>
+#endif
+
 #ifdef _MSC_VER
     #define DISABLE_C4996 __pragma(warning(push)) __pragma(warning(disable : 4996))
     #define ENABLE_C4996 __pragma(warning(pop))
@@ -69,6 +73,69 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider")
         using iterator_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
+
+    SECTION("std::u16string")
+    {
+        std::u16string input_str(u"test");
+        auto input_adapter = fkyaml::detail::input_adapter(input_str);
+        using iterator_type = typename std::u16string::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+    SECTION("std::u32string")
+    {
+        std::u32string input_str(U"test");
+        auto input_adapter = fkyaml::detail::input_adapter(input_str);
+        using iterator_type = typename std::u32string::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+#ifdef FK_YAML_HAS_CXX_17
+    SECTION("std::string_view")
+    {
+        std::string_view input_str_view(input);
+        auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
+        using iterator_type = typename std::string_view::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+    SECTION("std::u16string_view")
+    {
+        using namespace std::string_view_literals;
+        std::u16string_view input_str_view = u"test"sv;
+        auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
+        using iterator_type = typename std::u16string_view::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+    SECTION("std::u32string_view")
+    {
+        using namespace std::string_view_literals;
+        std::u32string_view input_str_view = U"test"sv;
+        auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
+        using iterator_type = typename std::u32string_view::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+#endif
+
+#ifdef FK_YAML_HAS_CXX_20
+    SECTION("std::u32string")
+    {
+        std::u8string input_str(u8"test");
+        auto input_adapter = fkyaml::detail::input_adapter(input_str);
+        using iterator_type = typename std::u8string::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+
+    SECTION("std::u8string_view")
+    {
+        using namespace std::string_view_literals;
+        std::u8string_view input_str_view = u8"test"sv;
+        auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
+        using iterator_type = typename std::u8string_view::iterator;
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
+    }
+#endif
 }
 
 TEST_CASE("InputAdapter_FileInputAdapterProvider")
