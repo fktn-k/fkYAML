@@ -87,20 +87,29 @@ $ make -C docs/mkdocs serve
 
 The commands above will automatically install all the dependencies using [Python venv](https://docs.python.org/3.10/library/venv.html) with the [`requirements.txt`](https://github.com/fktn-k/fkYAML/blob/develop/docs/mkdocs/requirements.txt) file. The generated documentation will be available by accessing http://127.0.0.1:8000/.
 
-## Before Opening a PR
+### 4. Format source files
 
-[GitHub Actions](https://github.com/fktn-k/fkYAML/actions) will test the updated project with the following Clang tools with the specific versions listed down below once you open a PR for your changes. So, it would be more efficient to check if your changes follow the predefined rules on your local environment in advance.  
+[GitHub Actions](https://github.com/fktn-k/fkYAML/actions) will test the updated project with the [Clang-Format](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormat.html) tool (14.0.0) when you push commits which include changes in the source files in either `include` or `test` directories.  
+So, it would be more efficient to check if your changes follow the rules defined in the [`.clang-format`](https://github.com/fktn-k/fkYAML/tree/develop/.clang-format) file on your local environment in advance.  
+Since the Clang-Format tool does not seem to gurantee backward compatibility and its behaviors vary from version to version, the Bash script [`run_clang_format.sh`](https://github.com/fktn-k/fkYAML/tool/clang_format/run_clang_format.sh) is available to avoid unnecessary confusion for that kind of reason.  
+The script uses [the Clang-Format Python distribution](https://pypi.org/project/clang-format/14.0.0/) and installs it using [the Python venv module](https://docs.python.org/3/library/venv.html) if it's not installed yet.  
+So, all you need to run the script is only Python 3.3 or better.  
+You can run it with the following commands:  
 
-| Clang Tool Name                                                                                   | Version |
-| ------------------------------------------------------------------------------------------------- | ------- |
-| [Clang-Format](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormat.html)                | 14.0.0  |
-| [Clang-Tidy](https://releases.llvm.org/14.0.0/tools/clang/tools/extra/docs/clang-tidy/index.html) | 14.0.0  |
+```bash
+# if Make is available
+$ cd path/to/fkYAML
+$ make clang-format
 
-Those Clang tools, however, do not seem to gurantee backward compatibility and their behaviours vary from version to version. So, it is highly recommended to use the specific versions listed above to avoid unnecessary confusion.  
+# otherwise
+$ cd path/to/fkYAML/tool/clang_format
+$ chmod a+x run_clang_format.sh  # just in case the script is not allowed to be not executed.
+$ run_clang_format.sh
+```
 
 ## Note
 
-When you open a pull request, fkYAML will automatically be built/tested with (1) various combinations of compilers and operating systems and (2) [Valgrind](https://valgrind.org/) and [Clang Sanitizers](https://clang.llvm.org/docs/index.html) to detect runtime issues (e.g., memory leaks), on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
+When you open a pull request, fkYAML will automatically be built/tested with (1) various combinations of compilers and operating systems and (2) analyzers such as [Valgrind](https://valgrind.org/) and [Clang Sanitizers](https://clang.llvm.org/docs/index.html) to detect runtime issues (e.g., memory leaks), on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
 These can result in failing builds and/or unit tests which run successfully on your local environment.  
 As a policy of this project, however, all the workflow checks must be passed before merging.  
 

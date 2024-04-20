@@ -42,9 +42,9 @@ all:
 #   Static Code Analyzers   #
 #############################
 
-# pre-requisites: clang-format
 clang-format:
-	for FILE in $(SRCS) $(TEST_SRCS); do echo $$FILE; clang-format -i $$FILE; done
+	chmod a+x tool/clang_format/run_clang_format.sh
+	tool/clang_format/run_clang_format.sh
 
 # pre-requisites: clang-tidy
 clang-tidy:
