@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.4](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.4) (2024-04-20)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.3...v0.3.4)
+
+- Fix Valgrind error in the test suite [\#307](https://github.com/fktn-k/fkYAML/pull/307) ([fktn-k](https://github.com/fktn-k))
+
+- \#181 Serialize container tags [\#314](https://github.com/fktn-k/fkYAML/pull/314) ([fktn-k](https://github.com/fktn-k))
+- \#294 Support std::basic\_string\_view [\#313](https://github.com/fktn-k/fkYAML/pull/313) ([fktn-k](https://github.com/fktn-k))
+- updated dependencies for mkdocs to the latest versions [\#312](https://github.com/fktn-k/fkYAML/pull/312) ([fktn-k](https://github.com/fktn-k))
+- Organized the contents of the test suite [\#311](https://github.com/fktn-k/fkYAML/pull/311) ([fktn-k](https://github.com/fktn-k))
+- Add workflow jobs with the macOS14 runner image [\#310](https://github.com/fktn-k/fkYAML/pull/310) ([fktn-k](https://github.com/fktn-k))
+- support tags for container nodes with some cleanup in test suite [\#309](https://github.com/fktn-k/fkYAML/pull/309) ([fktn-k](https://github.com/fktn-k))
+- Defer scalar conversions [\#308](https://github.com/fktn-k/fkYAML/pull/308) ([fktn-k](https://github.com/fktn-k))
+- Scan inputs using iterators [\#306](https://github.com/fktn-k/fkYAML/pull/306) ([fktn-k](https://github.com/fktn-k))
+- \#181 support tag for scalars [\#305](https://github.com/fktn-k/fkYAML/pull/305) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.3](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.3) (2024-03-31)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.2...v0.3.3)

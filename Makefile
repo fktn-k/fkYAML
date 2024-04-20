@@ -14,7 +14,7 @@ TEST_SRCS = $(shell find test -type f \( -name '*.hpp' -o -name '*.cpp' \) | sor
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 3
+TARGET_PATCH_VERSION := 4
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
