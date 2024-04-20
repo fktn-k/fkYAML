@@ -210,15 +210,26 @@ TEST_CASE("Serializer_TaggedNode")
     int_node.add_tag_name("!!int");
     fkyaml::node float_node(3.14);
     float_node.add_tag_name("!<tag:yaml.org,2002:float>");
+    fkyaml::node map_node = {{"bar", false}};
+    map_node.add_tag_name("!!map");
+    fkyaml::node seq_node = {nullptr, 456};
+    seq_node.add_tag_name("!!seq");
 
     auto& mapping = root.get_value_ref<fkyaml::node::mapping_type&>();
     mapping.emplace(str_node, null_node);
     mapping.emplace(bool_node, int_node);
     mapping.emplace(null_node, float_node);
+    mapping.emplace("map", map_node);
+    mapping.emplace("seq", seq_node);
 
     std::string expected = "!!null null: !<tag:yaml.org,2002:float> 3.14\n"
                            "!<tag:yaml.org,2002:bool> true: !!int 123\n"
-                           "!!str foo: !!null null\n";
+                           "!!str foo: !!null null\n"
+                           "map: !!map\n"
+                           "  bar: false\n"
+                           "seq: !!seq\n"
+                           "  - null\n"
+                           "  - 456\n";
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(root) == expected);
