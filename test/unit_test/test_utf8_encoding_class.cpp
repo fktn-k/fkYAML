@@ -14,6 +14,33 @@
 
 #include <fkYAML/node.hpp>
 
+TEST_CASE("UTF8Encoding_GetNumBytes")
+{
+    SECTION("valid bytes")
+    {
+        using test_value_pair_t = std::pair<uint8_t, uint32_t>;
+        auto pair = GENERATE(
+            test_value_pair_t(0u, 1),
+            test_value_pair_t(0x7Fu, 1),
+            test_value_pair_t(0xC0u, 2),
+            test_value_pair_t(0xC1u, 2),
+            test_value_pair_t(0xDFu, 2),
+            test_value_pair_t(0xE0u, 3),
+            test_value_pair_t(0xE1u, 3),
+            test_value_pair_t(0xEFu, 3),
+            test_value_pair_t(0xF0u, 4),
+            test_value_pair_t(0xF1u, 4));
+
+        REQUIRE(fkyaml::detail::utf8_encoding::get_num_bytes(pair.first) == pair.second);
+    }
+
+    SECTION("invalid bytes")
+    {
+        uint8_t byte = GENERATE(uint8_t(0x80u), uint8_t(0xF8u));
+        REQUIRE_THROWS_AS(fkyaml::detail::utf8_encoding::get_num_bytes(byte), fkyaml::invalid_encoding);
+    }
+}
+
 TEST_CASE("UTF8Encoding_Validate")
 {
     using int_type = std::char_traits<char>::int_type;

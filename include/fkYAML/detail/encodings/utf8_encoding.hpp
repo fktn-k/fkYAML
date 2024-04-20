@@ -34,13 +34,42 @@ class utf_encoding;
 /// @brief A class which handles UTF-8 encodings.
 class utf8_encoding
 {
-    using int_type = std::char_traits<char>::int_type;
-
 public:
+    /// @brief Query the number of UTF-8 character bytes with the first byte.
+    /// @param first_byte The first byte of a UTF-8 character.
+    /// @return The number of UTF-8 character bytes.
+    static uint32_t get_num_bytes(uint8_t first_byte)
+    {
+        // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+        if (first_byte < 0x80)
+        {
+            return 1;
+        }
+        // The first byte starts with 0b110X'XXXX -> 2-byte character
+        else if ((first_byte & 0xE0) == 0xC0)
+        {
+            return 2;
+        }
+        // The first byte starts with 0b1110'XXXX -> 3-byte character
+        else if ((first_byte & 0xF0) == 0xE0)
+        {
+            return 3;
+        }
+        // The first byte starts with 0b1111'0XXX -> 4-byte character
+        else if ((first_byte & 0xF8) == 0xF0)
+        {
+            return 4;
+        }
+
+        // The first byte starts with 0b10XX'XXXX or 0b1111'1XXX -> invalid
+        std::array<int, 1> bytes {{first_byte}};
+        throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+    }
+
     /// @brief Validates the encoding of a given byte array whose length is 1.
     /// @param[in] byte_array The byte array to be validated.
     /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 1> byte_array) noexcept
+    static bool validate(std::array<int, 1> byte_array) noexcept
     {
         // U+0000..U+007F
         return (0x00 <= byte_array[0] && byte_array[0] <= 0x7F);
@@ -49,7 +78,7 @@ public:
     /// @brief Validates the encoding of a given byte array whose length is 2.
     /// @param[in] byte_array The byte array to be validated.
     /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 2> byte_array) noexcept
+    static bool validate(std::array<int, 2> byte_array) noexcept
     {
         // U+0080..U+07FF
         //   1st Byte: 0xC2..0xDF
@@ -69,7 +98,7 @@ public:
     /// @brief Validates the encoding of a given byte array whose length is 3.
     /// @param[in] byte_array The byte array to be validated.
     /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 3> byte_array) noexcept
+    static bool validate(std::array<int, 3> byte_array) noexcept
     {
         // U+1000..U+CFFF:
         //   1st Byte: 0xE0..0xEC
@@ -126,7 +155,7 @@ public:
     /// @brief Validates the encoding of a given byte array whose length is 4.
     /// @param[in] byte_array The byte array to be validated.
     /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 4> byte_array) noexcept
+    static bool validate(std::array<int, 4> byte_array) noexcept
     {
         // U+10000..U+3FFFF:
         //   1st Byte: 0xF0

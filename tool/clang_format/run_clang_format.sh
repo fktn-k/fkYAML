@@ -4,7 +4,7 @@ CALLER_DIR=$(pwd)
 ROOT_DIR=$(cd "$(dirname "$0")" && cd ../.. && pwd)
 
 # move to the directory where this script is placed.
-cd test/clang_format
+cd tool/clang_format
 
 # install the clang-format package if not installed yet.
 if [ ! -e ./venv/bin/clang-format ]; then

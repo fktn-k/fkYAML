@@ -1098,54 +1098,38 @@ private:
         for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr)
         {
             char current = *m_cur_itr;
-
-            auto ret = check_filters.find(current);
-            if (ret != std::string::npos)
+            uint32_t num_bytes = utf8_encoding::get_num_bytes(static_cast<uint8_t>(current));
+            if (num_bytes == 1)
             {
-                bool is_allowed = (this->*pfn_is_allowed)(current);
-                if (!is_allowed)
+                auto ret = check_filters.find(current);
+                if (ret != std::string::npos)
                 {
-                    return lexical_token_t::STRING_VALUE;
+                    bool is_allowed = (this->*pfn_is_allowed)(current);
+                    if (!is_allowed)
+                    {
+                        return lexical_token_t::STRING_VALUE;
+                    }
+
+                    continue;
+                }
+
+                uint8_t byte = static_cast<uint8_t>(current);
+
+                // Handle unescaped control characters.
+                if (byte <= 0x1F)
+                {
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+                    handle_unescaped_control_char(current);
+                    m_token_begin_itr = m_cur_itr + 1;
+                    continue;
                 }
 
                 continue;
             }
 
-            uint8_t byte = static_cast<uint8_t>(current);
-
-            // Handle unescaped control characters.
-            if (byte <= 0x1F)
-            {
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-                handle_unescaped_control_char(current);
-                m_token_begin_itr = m_cur_itr + 1;
-                continue;
-            }
-
-            // The other characters are already checked while creating an input handler.
-
-            // Handle ASCII characters except control characters.
-            if (byte <= 0x7E)
-            {
-                continue;
-            }
-
-            // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
-            if (byte <= 0xDF)
-            {
-                ++m_cur_itr;
-                continue;
-            }
-
-            // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
-            if (byte <= 0xEF)
-            {
-                m_cur_itr += 2;
-                continue;
-            }
-
-            // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            m_cur_itr += 3;
+            // Multi-byte characters are already validated while creating an input handler.
+            // So just advance the iterator.
+            m_cur_itr += num_bytes - 1;
         }
 
         // Handle the end of input buffer.
