@@ -158,6 +158,18 @@ TEST_CASE("Node_StringCtor")
     REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
 }
 
+#ifdef FK_YAML_HAS_CXX_17
+TEST_CASE("Node_StringViewCtor")
+{
+    using namespace std::string_view_literals;
+    auto node = fkyaml::node("test"sv);
+    REQUIRE(node.type() == fkyaml::node::node_t::STRING);
+    REQUIRE(node.is_string());
+    REQUIRE(node.size() == 4);
+    REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+}
+#endif
+
 TEST_CASE("Node_SequenceCopyCtor")
 {
     fkyaml::node n = "test";
@@ -776,6 +788,14 @@ TEST_CASE("Node_SubscriptOperator")
                 REQUIRE_NOTHROW(node["test"]);
             }
         }
+
+#ifdef FK_YAML_HAS_CXX_17
+        SECTION("string view value")
+        {
+            std::string_view key = "test";
+            REQUIRE(map[key].is_null());
+        }
+#endif
 
         SECTION("non-const string node")
         {
@@ -1904,6 +1924,14 @@ TEST_CASE("Node_Contains")
             REQUIRE(node.contains("test"));
         }
 
+#ifdef FK_YAML_HAS_CXX_17
+        SECTION("mapping node with a string view key")
+        {
+            using namespace std::string_view_literals;
+            REQUIRE(node.contains("test"sv));
+        }
+#endif
+
         SECTION("mapping node with a string node key")
         {
             fkyaml::node node_key = "test";
@@ -2036,7 +2064,7 @@ TEST_CASE("Node_At")
             }
         }
 
-        SECTION("const string node")
+        SECTION("const string value")
         {
             const fkyaml::node node = fkyaml::node::mapping(map);
             std::string key = "test";
@@ -2051,6 +2079,14 @@ TEST_CASE("Node_At")
                 REQUIRE_NOTHROW(node.at("test"));
             }
         }
+
+#ifdef FK_YAML_HAS_CXX_17
+        SECTION("string view value")
+        {
+            std::string_view key = "test";
+            REQUIRE(map.at(key).is_null());
+        }
+#endif
 
         SECTION("non-const string node")
         {

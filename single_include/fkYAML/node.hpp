@@ -350,7 +350,7 @@ namespace detail
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   For contributors:
 //     This file is for supplementing future C++ STL implementations to utilize some useful features
-//     implemented in C++14 or later.
+//     implemented in C++14 or better.
 //     This file is needed to keep the fkYAML library requirement to C++11.
 //     **DO NOT** implement features which are not included any version of STL in this file.
 //     Such implementations must be in the type_traits.hpp file.
