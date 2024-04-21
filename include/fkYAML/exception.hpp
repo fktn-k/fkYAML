@@ -12,6 +12,7 @@
 #define FK_YAML_EXCEPTION_HPP_
 
 #include <array>
+#include <initializer_list>
 #include <stdexcept>
 #include <string>
 
@@ -61,8 +62,10 @@ private:
 class invalid_encoding : public exception
 {
 public:
-    template <std::size_t N>
-    explicit invalid_encoding(const char* msg, std::array<int, N> u8) noexcept
+    /// @brief Construct a new invalid_encoding object for UTF-8 related errors.
+    /// @param msg An error message.
+    /// @param u8 The UTF-8 character bytes.
+    explicit invalid_encoding(const char* msg, const std::initializer_list<uint8_t>& u8) noexcept
         : exception(generate_error_message(msg, u8).c_str())
     {
     }
@@ -85,13 +88,14 @@ public:
     }
 
 private:
-    template <std::size_t N>
-    std::string generate_error_message(const char* msg, std::array<int, N> u8) const noexcept
+    std::string generate_error_message(const char* msg, const std::initializer_list<uint8_t>& u8) const noexcept
     {
-        std::string formatted = detail::format("invalid_encoding: %s in=[ 0x%02x", msg, u8[0]);
-        for (std::size_t i = 1; i < N; i++)
+        auto itr = u8.begin();
+        auto end_itr = u8.end();
+        std::string formatted = detail::format("invalid_encoding: %s in=[ 0x%02x", msg, *itr++);
+        while (itr != end_itr)
         {
-            formatted += detail::format(", 0x%02x", u8[i]);
+            formatted += detail::format(", 0x%02x", *itr++);
         }
         formatted += " ]";
         return formatted;

@@ -34,162 +34,196 @@ class utf_encoding;
 /// @brief A class which handles UTF-8 encodings.
 class utf8_encoding
 {
-    using int_type = std::char_traits<char>::int_type;
-
 public:
+    /// @brief Query the number of UTF-8 character bytes with the first byte.
+    /// @param first_byte The first byte of a UTF-8 character.
+    /// @return The number of UTF-8 character bytes.
+    static uint32_t get_num_bytes(uint8_t first_byte)
+    {
+        // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+        if (first_byte < 0x80)
+        {
+            return 1;
+        }
+        // The first byte starts with 0b110X'XXXX -> 2-byte character
+        else if ((first_byte & 0xE0) == 0xC0)
+        {
+            return 2;
+        }
+        // The first byte starts with 0b1110'XXXX -> 3-byte character
+        else if ((first_byte & 0xF0) == 0xE0)
+        {
+            return 3;
+        }
+        // The first byte starts with 0b1111'0XXX -> 4-byte character
+        else if ((first_byte & 0xF8) == 0xF0)
+        {
+            return 4;
+        }
+
+        // The first byte starts with 0b10XX'XXXX or 0b1111'1XXX -> invalid
+        throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first_byte});
+    }
+
     /// @brief Validates the encoding of a given byte array whose length is 1.
     /// @param[in] byte_array The byte array to be validated.
     /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 1> byte_array) noexcept
+    static bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept
     {
-        // U+0000..U+007F
-        return (0x00 <= byte_array[0] && byte_array[0] <= 0x7F);
-    }
-
-    /// @brief Validates the encoding of a given byte array whose length is 2.
-    /// @param[in] byte_array The byte array to be validated.
-    /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 2> byte_array) noexcept
-    {
-        // U+0080..U+07FF
-        //   1st Byte: 0xC2..0xDF
-        //   2nd Byte: 0x80..0xBF
-        if (0xC2 <= byte_array[0] && byte_array[0] <= 0xDF)
+        switch (byte_array.size())
         {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0xBF)
-            {
-                return true;
-            }
-        }
+        case 1:
+            // U+0000..U+007F
+            return uint8_t(*(byte_array.begin())) <= uint8_t(0x7Fu);
+        case 2: {
+            auto itr = byte_array.begin();
+            uint8_t first = *itr++;
+            uint8_t second = *itr;
 
-        // The rest of byte combinations are invalid.
-        return false;
-    }
-
-    /// @brief Validates the encoding of a given byte array whose length is 3.
-    /// @param[in] byte_array The byte array to be validated.
-    /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 3> byte_array) noexcept
-    {
-        // U+1000..U+CFFF:
-        //   1st Byte: 0xE0..0xEC
-        //   2nd Byte: 0x80..0xBF
-        //   3rd Byte: 0x80..0xBF
-        if (0xE0 <= byte_array[0] && byte_array[0] <= 0xEC)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0xBF)
+            // U+0080..U+07FF
+            //   1st Byte: 0xC2..0xDF
+            //   2nd Byte: 0x80..0xBF
+            if (uint8_t(0xC2u) <= first && first <= uint8_t(0xDFu))
             {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
+                if (0x80 <= second && second <= 0xBF)
                 {
                     return true;
                 }
             }
+
+            // The rest of byte combinations are invalid.
             return false;
         }
+        case 3: {
+            auto itr = byte_array.begin();
+            uint8_t first = *itr++;
+            uint8_t second = *itr++;
+            uint8_t third = *itr;
 
-        // U+D000..U+D7FF:
-        //   1st Byte: 0xED
-        //   2nd Byte: 0x80..0x9F
-        //   3rd Byte: 0x80..0xBF
-        if (byte_array[0] == 0xED)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0x9F)
+            // U+1000..U+CFFF:
+            //   1st Byte: 0xE0..0xEC
+            //   2nd Byte: 0x80..0xBF
+            //   3rd Byte: 0x80..0xBF
+            if (0xE0 <= first && first <= 0xEC)
             {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
+                if (0x80 <= second && second <= 0xBF)
                 {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // U+E000..U+FFFF:
-        //   1st Byte: 0xEE..0xEF
-        //   2nd Byte: 0x80..0xBF
-        //   3rd Byte: 0x80..0xBF
-        if (byte_array[0] == 0xEE || byte_array[0] == 0xEF)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0xBF)
-            {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // The rest of byte combinations are invalid.
-        return false;
-    }
-
-    /// @brief Validates the encoding of a given byte array whose length is 4.
-    /// @param[in] byte_array The byte array to be validated.
-    /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 4> byte_array) noexcept
-    {
-        // U+10000..U+3FFFF:
-        //   1st Byte: 0xF0
-        //   2nd Byte: 0x90..0xBF
-        //   3rd Byte: 0x80..0xBF
-        //   4th Byte: 0x80..0xBF
-        if (byte_array[0] == 0xF0)
-        {
-            if (0x90 <= byte_array[1] && byte_array[1] <= 0xBF)
-            {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
-                {
-                    if (0x80 <= byte_array[3] && byte_array[3] <= 0xBF)
+                    if (0x80 <= third && third <= 0xBF)
                     {
                         return true;
                     }
                 }
+                return false;
             }
-            return false;
-        }
 
-        // U+40000..U+FFFFF:
-        //   1st Byte: 0xF1..0xF3
-        //   2nd Byte: 0x80..0xBF
-        //   3rd Byte: 0x80..0xBF
-        //   4th Byte: 0x80..0xBF
-        if (0xF1 <= byte_array[0] && byte_array[0] <= 0xF3)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0xBF)
+            // U+D000..U+D7FF:
+            //   1st Byte: 0xED
+            //   2nd Byte: 0x80..0x9F
+            //   3rd Byte: 0x80..0xBF
+            if (first == 0xED)
             {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
+                if (0x80 <= second && second <= 0x9F)
                 {
-                    if (0x80 <= byte_array[3] && byte_array[3] <= 0xBF)
+                    if (0x80 <= third && third <= 0xBF)
                     {
                         return true;
                     }
                 }
+                return false;
             }
-            return false;
-        }
 
-        // U+100000..U+10FFFF:
-        //   1st Byte: 0xF4
-        //   2nd Byte: 0x80..0x8F
-        //   3rd Byte: 0x80..0xBF
-        //   4th Byte: 0x80..0xBF
-        if (byte_array[0] == 0xF4)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0x8F)
+            // U+E000..U+FFFF:
+            //   1st Byte: 0xEE..0xEF
+            //   2nd Byte: 0x80..0xBF
+            //   3rd Byte: 0x80..0xBF
+            if (first == 0xEE || first == 0xEF)
             {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
+                if (0x80 <= second && second <= 0xBF)
                 {
-                    if (0x80 <= byte_array[3] && byte_array[3] <= 0xBF)
+                    if (0x80 <= third && third <= 0xBF)
                     {
                         return true;
                     }
                 }
+                return false;
             }
+
+            // The rest of byte combinations are invalid.
             return false;
         }
+        case 4: {
+            auto itr = byte_array.begin();
+            uint8_t first = *itr++;
+            uint8_t second = *itr++;
+            uint8_t third = *itr++;
+            uint8_t fourth = *itr;
 
-        // The rest of byte combinations are invalid.
-        return false;
+            // U+10000..U+3FFFF:
+            //   1st Byte: 0xF0
+            //   2nd Byte: 0x90..0xBF
+            //   3rd Byte: 0x80..0xBF
+            //   4th Byte: 0x80..0xBF
+            if (first == 0xF0)
+            {
+                if (0x90 <= second && second <= 0xBF)
+                {
+                    if (0x80 <= third && third <= 0xBF)
+                    {
+                        if (0x80 <= fourth && fourth <= 0xBF)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            // U+40000..U+FFFFF:
+            //   1st Byte: 0xF1..0xF3
+            //   2nd Byte: 0x80..0xBF
+            //   3rd Byte: 0x80..0xBF
+            //   4th Byte: 0x80..0xBF
+            if (0xF1 <= first && first <= 0xF3)
+            {
+                if (0x80 <= second && second <= 0xBF)
+                {
+                    if (0x80 <= third && third <= 0xBF)
+                    {
+                        if (0x80 <= fourth && fourth <= 0xBF)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            // U+100000..U+10FFFF:
+            //   1st Byte: 0xF4
+            //   2nd Byte: 0x80..0x8F
+            //   3rd Byte: 0x80..0xBF
+            //   4th Byte: 0x80..0xBF
+            if (first == 0xF4)
+            {
+                if (0x80 <= second && second <= 0x8F)
+                {
+                    if (0x80 <= third && third <= 0xBF)
+                    {
+                        if (0x80 <= fourth && fourth <= 0xBF)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            // The rest of byte combinations are invalid.
+            return false;
+        }
+        default:          // LCOV_EXCL_LINE
+            return false; // LCOV_EXCL_LINE
+        }
     }
 
     /// @brief Converts UTF-16 encoded characters to UTF-8 encoded bytes.
