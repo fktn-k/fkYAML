@@ -20,16 +20,16 @@ TEST_CASE("UTF8Encoding_GetNumBytes")
     {
         using test_value_pair_t = std::pair<uint8_t, uint32_t>;
         auto pair = GENERATE(
-            test_value_pair_t(0u, 1),
-            test_value_pair_t(0x7Fu, 1),
-            test_value_pair_t(0xC0u, 2),
-            test_value_pair_t(0xC1u, 2),
-            test_value_pair_t(0xDFu, 2),
-            test_value_pair_t(0xE0u, 3),
-            test_value_pair_t(0xE1u, 3),
-            test_value_pair_t(0xEFu, 3),
-            test_value_pair_t(0xF0u, 4),
-            test_value_pair_t(0xF1u, 4));
+            test_value_pair_t(uint8_t(0u), 1u),
+            test_value_pair_t(uint8_t(0x7Fu), 1u),
+            test_value_pair_t(uint8_t(0xC0u), 2u),
+            test_value_pair_t(uint8_t(0xC1u), 2u),
+            test_value_pair_t(uint8_t(0xDFu), 2u),
+            test_value_pair_t(uint8_t(0xE0u), 3u),
+            test_value_pair_t(uint8_t(0xE1u), 3u),
+            test_value_pair_t(uint8_t(0xEFu), 3u),
+            test_value_pair_t(uint8_t(0xF0u), 4u),
+            test_value_pair_t(uint8_t(0xF1u), 4u));
 
         REQUIRE(fkyaml::detail::utf8_encoding::get_num_bytes(pair.first) == pair.second);
     }
@@ -43,171 +43,249 @@ TEST_CASE("UTF8Encoding_GetNumBytes")
 
 TEST_CASE("UTF8Encoding_Validate")
 {
-    using int_type = std::char_traits<char>::int_type;
-
     SECTION("1 byte character encoded in UTF-8")
     {
-        using array_ret_pair_t = std::pair<std::array<int_type, 1>, bool>;
-        auto pair = GENERATE(
-            array_ret_pair_t({{-2}}, false),
-            array_ret_pair_t({{-1}}, false),
-            array_ret_pair_t({{0x00}}, true),
-            array_ret_pair_t({{0x01}}, true),
-            array_ret_pair_t({{0x02}}, true),
-            array_ret_pair_t({{0x7D}}, true),
-            array_ret_pair_t({{0x7E}}, true),
-            array_ret_pair_t({{0x7F}}, true),
-            array_ret_pair_t({{0x80}}, false),
-            array_ret_pair_t({{0x81}}, false));
-
-        REQUIRE(fkyaml::detail::utf8_encoding::validate(pair.first) == pair.second);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0x00u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0x01u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0x02u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0x7Du)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0x7Eu)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0x7Fu)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0x81u)}) == false);
     }
 
     SECTION("2 byte characters encoded in UTF-8")
     {
-        using array_ret_pair_t = std::pair<std::array<int_type, 2>, bool>;
-        auto pair = GENERATE(
-            array_ret_pair_t({{0xC0, 0x80}}, false),
-            array_ret_pair_t({{0xC1, 0x80}}, false),
-            array_ret_pair_t({{0xC2, 0x7E}}, false),
-            array_ret_pair_t({{0xC2, 0x7F}}, false),
-            array_ret_pair_t({{0xC2, 0x80}}, true),
-            array_ret_pair_t({{0xC3, 0x81}}, true),
-            array_ret_pair_t({{0xD0, 0xA0}}, true),
-            array_ret_pair_t({{0xDE, 0xBE}}, true),
-            array_ret_pair_t({{0xDF, 0xBF}}, true),
-            array_ret_pair_t({{0xDF, 0xC0}}, false),
-            array_ret_pair_t({{0xDF, 0xC1}}, false),
-            array_ret_pair_t({{0xE0, 0xBF}}, false),
-            array_ret_pair_t({{0xE1, 0xBF}}, false));
-
-        REQUIRE(fkyaml::detail::utf8_encoding::validate(pair.first) == pair.second);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xC0u), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xC1u), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xC2u), uint8_t(0x7Eu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xC2u), uint8_t(0x7Fu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xC2u), uint8_t(0x80u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xC3u), uint8_t(0x81u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xD0u), uint8_t(0xA0u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xDEu), uint8_t(0xBEu)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xDFu), uint8_t(0xBFu)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xDFu), uint8_t(0xC0u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xDFu), uint8_t(0xC1u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0xBFu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xE1u), uint8_t(0xBFu)}) == false);
     }
 
     SECTION("3 byte characters encoded in UTF-8")
     {
-        using array_ret_pair_t = std::pair<std::array<int_type, 3>, bool>;
-        auto pair = GENERATE(
-            array_ret_pair_t({{0xDE, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xDF, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xE0, 0x7E, 0x80}}, false),
-            array_ret_pair_t({{0xE0, 0x7F, 0x80}}, false),
-            array_ret_pair_t({{0xE0, 0x80, 0x7E}}, false),
-            array_ret_pair_t({{0xE0, 0x80, 0x7F}}, false),
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xDEu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xDFu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x7Fu), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x80u), uint8_t(0x7Eu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x80u), uint8_t(0x7Fu)}) == false);
 
-            array_ret_pair_t({{0xE0, 0x80, 0x80}}, true),
-            array_ret_pair_t({{0xE6, 0xA0, 0xA0}}, true),
-            array_ret_pair_t({{0xEC, 0xBF, 0xBF}}, true),
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x80u), uint8_t(0x80u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xE6u), uint8_t(0xA0u), uint8_t(0xA0u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xECu), uint8_t(0xBFu), uint8_t(0xBFu)}) == true);
 
-            array_ret_pair_t({{0xEC, 0xC0, 0xBF}}, false),
-            array_ret_pair_t({{0xEC, 0xC1, 0xBF}}, false),
-            array_ret_pair_t({{0xEC, 0xBF, 0xC0}}, false),
-            array_ret_pair_t({{0xEC, 0xBF, 0xC1}}, false),
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xECu), uint8_t(0xC0u), uint8_t(0xBFu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xECu), uint8_t(0xC1u), uint8_t(0xBFu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xECu), uint8_t(0xBFu), uint8_t(0xC0u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xECu), uint8_t(0xBFu), uint8_t(0xC1u)}) == false);
 
-            //////////////////////////////////////////////
+        //////////////////////////////////////////////
 
-            array_ret_pair_t({{0xED, 0x7E, 0x80}}, false),
-            array_ret_pair_t({{0xED, 0x7F, 0x80}}, false),
-            array_ret_pair_t({{0xED, 0x80, 0x7E}}, false),
-            array_ret_pair_t({{0xED, 0x80, 0x7F}}, false),
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0x7Fu), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0x80u), uint8_t(0x7Eu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0x80u), uint8_t(0x7Fu)}) == false);
 
-            array_ret_pair_t({{0xED, 0x80, 0x80}}, true),
-            array_ret_pair_t({{0xED, 0x90, 0xA0}}, true),
-            array_ret_pair_t({{0xED, 0x9F, 0xBF}}, true),
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0x80u), uint8_t(0x80u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0x90u), uint8_t(0xA0u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xBFu)}) == true);
 
-            array_ret_pair_t({{0xED, 0xA0, 0xBF}}, false),
-            array_ret_pair_t({{0xED, 0xA1, 0xBF}}, false),
-            array_ret_pair_t({{0xED, 0x9F, 0xC0}}, false),
-            array_ret_pair_t({{0xED, 0x9F, 0xC1}}, false),
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0xA0u), uint8_t(0xBFu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0xA1u), uint8_t(0xBFu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xC0u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xC1u)}) == false);
 
-            //////////////////////////////////////////////
+        //////////////////////////////////////////////
 
-            array_ret_pair_t({{0xEE, 0x7E, 0x80}}, false),
-            array_ret_pair_t({{0xEE, 0x7F, 0x80}}, false),
-            array_ret_pair_t({{0xEE, 0x80, 0x7E}}, false),
-            array_ret_pair_t({{0xEE, 0x80, 0x7F}}, false),
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEEu), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEEu), uint8_t(0x7Fu), uint8_t(0x80u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x7Eu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x7Fu)}) == false);
 
-            array_ret_pair_t({{0xEE, 0x80, 0x80}}, true),
-            array_ret_pair_t({{0xEE, 0xA0, 0xA0}}, true),
-            array_ret_pair_t({{0xEF, 0xBF, 0xBF}}, true),
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x80u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEEu), uint8_t(0xA0u), uint8_t(0xA0u)}) == true);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xBFu)}) == true);
 
-            array_ret_pair_t({{0xEF, 0xC0, 0xBF}}, false),
-            array_ret_pair_t({{0xEF, 0xC1, 0xBF}}, false),
-            array_ret_pair_t({{0xEF, 0xBF, 0xC0}}, false),
-            array_ret_pair_t({{0xEF, 0xBF, 0xC1}}, false),
-            array_ret_pair_t({{0xF0, 0xBF, 0xBF}}, false),
-            array_ret_pair_t({{0xF1, 0xBF, 0xBF}}, false));
-
-        REQUIRE(fkyaml::detail::utf8_encoding::validate(pair.first) == pair.second);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEFu), uint8_t(0xC0u), uint8_t(0xBFu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEFu), uint8_t(0xC1u), uint8_t(0xBFu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xC0u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xC1u)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
+        REQUIRE(fkyaml::detail::utf8_encoding::validate({uint8_t(0xF1u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
     }
 
     SECTION("4 byte characters encoded in UTF-8")
     {
-        using array_ret_pair_t = std::pair<std::array<int_type, 4>, bool>;
-        auto pair = GENERATE(
-            array_ret_pair_t({{0xDE, 0x90, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xDF, 0x90, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xE0, 0x8E, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xE0, 0x8F, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xE0, 0x90, 0x7E, 0x80}}, false),
-            array_ret_pair_t({{0xE0, 0x90, 0x7F, 0x80}}, false),
-            array_ret_pair_t({{0xE0, 0x90, 0x80, 0x7E}}, false),
-            array_ret_pair_t({{0xE0, 0x90, 0x80, 0x7F}}, false),
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xDEu), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xDFu), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x8Eu), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x8Fu), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x7Eu), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x7Fu), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x7Eu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x7Fu)}) ==
+            false);
 
-            array_ret_pair_t({{0xF0, 0x90, 0x80, 0x80}}, true),
-            array_ret_pair_t({{0xF0, 0xA8, 0xA0, 0xA0}}, true),
-            array_ret_pair_t({{0xF0, 0xBF, 0xBF, 0xBF}}, true),
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            true);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0xA8u), uint8_t(0xA0u), uint8_t(0xA0u)}) ==
+            true);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            true);
 
-            array_ret_pair_t({{0xF0, 0xC0, 0xBF, 0xBF}}, false),
-            array_ret_pair_t({{0xF0, 0xC1, 0xBF, 0xBF}}, false),
-            array_ret_pair_t({{0xF0, 0xBF, 0xC0, 0xBF}}, false),
-            array_ret_pair_t({{0xF0, 0xBF, 0xC1, 0xBF}}, false),
-            array_ret_pair_t({{0xF0, 0xBF, 0xBF, 0xC0}}, false),
-            array_ret_pair_t({{0xF0, 0xBF, 0xBF, 0xC1}}, false),
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0xC0u), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0xC1u), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xC0u), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xC1u), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC0u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC1u)}) ==
+            false);
 
-            ////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////
 
-            array_ret_pair_t({{0xF1, 0x7E, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xF1, 0x7F, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xF1, 0x80, 0x7E, 0x80}}, false),
-            array_ret_pair_t({{0xF1, 0x80, 0x7F, 0x80}}, false),
-            array_ret_pair_t({{0xF1, 0x80, 0x80, 0x7E}}, false),
-            array_ret_pair_t({{0xF1, 0x80, 0x80, 0x7F}}, false),
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF1u), uint8_t(0x7Eu), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF1u), uint8_t(0x7Fu), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x7Eu), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x7Fu), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Eu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Fu)}) ==
+            false);
 
-            array_ret_pair_t({{0xF1, 0x80, 0x80, 0x80}}, true),
-            array_ret_pair_t({{0xF2, 0xA0, 0xA0, 0xA0}}, true),
-            array_ret_pair_t({{0xF3, 0xBF, 0xBF, 0xBF}}, true),
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            true);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF2u), uint8_t(0xA0u), uint8_t(0xA0u), uint8_t(0xA0u)}) ==
+            true);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            true);
 
-            array_ret_pair_t({{0xF3, 0xC0, 0xBF, 0xBF}}, false),
-            array_ret_pair_t({{0xF3, 0xC1, 0xBF, 0xBF}}, false),
-            array_ret_pair_t({{0xF3, 0xBF, 0xC0, 0xBF}}, false),
-            array_ret_pair_t({{0xF3, 0xBF, 0xC1, 0xBF}}, false),
-            array_ret_pair_t({{0xF3, 0xBF, 0xBF, 0xC0}}, false),
-            array_ret_pair_t({{0xF3, 0xBF, 0xBF, 0xC1}}, false),
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF3u), uint8_t(0xC0u), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF3u), uint8_t(0xC1u), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xC0u), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xC1u), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC0u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC1u)}) ==
+            false);
 
-            ////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////
 
-            array_ret_pair_t({{0xF4, 0x7E, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xF4, 0x7F, 0x80, 0x80}}, false),
-            array_ret_pair_t({{0xF4, 0x80, 0x7E, 0x80}}, false),
-            array_ret_pair_t({{0xF4, 0x80, 0x7F, 0x80}}, false),
-            array_ret_pair_t({{0xF4, 0x80, 0x80, 0x7E}}, false),
-            array_ret_pair_t({{0xF4, 0x80, 0x80, 0x7F}}, false),
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x7Eu), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x7Fu), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x7Eu), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x7Fu), uint8_t(0x80u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Eu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Fu)}) ==
+            false);
 
-            array_ret_pair_t({{0xF4, 0x80, 0x80, 0x80}}, true),
-            array_ret_pair_t({{0xF4, 0x88, 0xA0, 0x80}}, true),
-            array_ret_pair_t({{0xF4, 0x8F, 0xBF, 0xBF}}, true),
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x80u)}) ==
+            true);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x88u), uint8_t(0xA0u), uint8_t(0x80u)}) ==
+            true);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            true);
 
-            array_ret_pair_t({{0xF4, 0x90, 0xBF, 0xBF}}, false),
-            array_ret_pair_t({{0xF4, 0x91, 0xBF, 0xBF}}, false),
-            array_ret_pair_t({{0xF4, 0x8F, 0xC0, 0xBF}}, false),
-            array_ret_pair_t({{0xF4, 0x8F, 0xC1, 0xBF}}, false),
-            array_ret_pair_t({{0xF4, 0x8F, 0xBF, 0xC0}}, false),
-            array_ret_pair_t({{0xF4, 0x8F, 0xBF, 0xC1}}, false),
-            array_ret_pair_t({{0xF5, 0x8F, 0xBF, 0xBF}}, false),
-            array_ret_pair_t({{0xF6, 0x8F, 0xBF, 0xBF}}, false));
-
-        REQUIRE(fkyaml::detail::utf8_encoding::validate(pair.first) == pair.second);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x90u), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x91u), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xC0u), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xC1u), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xC0u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xC1u)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF5u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            false);
+        REQUIRE(
+            fkyaml::detail::utf8_encoding::validate({uint8_t(0xF6u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)}) ==
+            false);
     }
 }
 

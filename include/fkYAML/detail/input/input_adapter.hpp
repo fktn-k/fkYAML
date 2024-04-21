@@ -106,7 +106,7 @@ private:
             switch (num_bytes)
             {
             case 2: {
-                std::array<int, 2> bytes {{first, uint8_t(*current++)}};
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
@@ -115,7 +115,7 @@ private:
                 break;
             }
             case 3: {
-                std::array<int, 3> bytes {{first, uint8_t(*current++), uint8_t(*current++)}};
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
@@ -124,7 +124,8 @@ private:
                 break;
             }
             case 4: {
-                std::array<int, 4> bytes {{first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+                std::initializer_list<uint8_t> bytes {
+                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
@@ -270,45 +271,42 @@ public:
         IterType current = m_current;
         while (current != m_end)
         {
-            char first = *current++;
+            uint8_t first = static_cast<uint8_t>(*current++);
+            uint32_t num_bytes = utf8_encoding::get_num_bytes(first);
 
-            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
-            if ((first & 0xC0) == 0x80)
+            switch (num_bytes)
             {
-                // The first byte must not start with 0b10XX'XXXX
-                std::array<int, 1> bytes {{first}};
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
-            }
-            // The first byte starts with 0b110X'XXXX -> 2-byte character
-            else if ((first & 0xE0) == 0xC0)
-            {
-                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+            case 2: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0b1110'XXXX -> 3-byte character
-            else if ((first & 0xF0) == 0xE0)
-            {
-                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+            case 3: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0x1111'0XXX -> 4-byte character
-            else if ((first & 0xF8) == 0xF0)
-            {
-                std::array<int, 4> bytes {
-                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+            case 4: {
+                std::initializer_list<uint8_t> bytes {
+                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
+            }
+            case 1:
+            default:
+                break;
             }
         }
 
@@ -535,45 +533,42 @@ private:
         auto end = buffer.end();
         while (current != end)
         {
-            char first = *current++;
+            uint8_t first = static_cast<uint8_t>(*current++);
+            uint32_t num_bytes = utf8_encoding::get_num_bytes(first);
 
-            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
-            if ((first & 0xC0) == 0x80)
+            switch (num_bytes)
             {
-                // The first byte must not start with 0b10XX'XXXX
-                std::array<int, 1> bytes {{first}};
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
-            }
-            // The first byte starts with 0b110X'XXXX -> 2-byte character
-            else if ((first & 0xE0) == 0xC0)
-            {
-                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+            case 2: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0b1110'XXXX -> 3-byte character
-            else if ((first & 0xF0) == 0xE0)
-            {
-                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+            case 3: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0x1111'0XXX -> 4-byte character
-            else if ((first & 0xF8) == 0xF0)
-            {
-                std::array<int, 4> bytes {
-                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+            case 4: {
+                std::initializer_list<uint8_t> bytes {
+                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
+            }
+            case 1:
+            default:
+                break;
             }
         }
     }
@@ -733,45 +728,42 @@ private:
         auto end = buffer.end();
         while (current != end)
         {
-            char first = *current++;
+            uint8_t first = static_cast<uint8_t>(*current++);
+            uint32_t num_bytes = utf8_encoding::get_num_bytes(first);
 
-            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
-            if ((first & 0xC0) == 0x80)
+            switch (num_bytes)
             {
-                // The first byte must not start with 0b10XX'XXXX
-                std::array<int, 1> bytes {{first}};
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
-            }
-            // The first byte starts with 0b110X'XXXX -> 2-byte character
-            else if ((first & 0xE0) == 0xC0)
-            {
-                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
+            case 2: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0b1110'XXXX -> 3-byte character
-            else if ((first & 0xF0) == 0xE0)
-            {
-                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
+            case 3: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0x1111'0XXX -> 4-byte character
-            else if ((first & 0xF8) == 0xF0)
-            {
-                std::array<int, 4> bytes {
-                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
+            case 4: {
+                std::initializer_list<uint8_t> bytes {
+                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8_encoding::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
+            }
+            case 1:
+            default:
+                break;
             }
         }
     }
