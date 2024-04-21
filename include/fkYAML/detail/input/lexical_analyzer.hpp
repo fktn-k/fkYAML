@@ -23,7 +23,7 @@
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/from_string.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
-#include <fkYAML/detail/encodings/utf8_encoding.hpp>
+#include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/input/position_tracker.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
@@ -912,20 +912,20 @@ private:
                 m_value_buffer.push_back('\\');
                 break;
             case 'N': // next line
-                utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case '_': // non-breaking space
-                utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case 'L': // line separator
-                utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case 'P': // paragraph separator
-                utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case 'x':
                 handle_escaped_unicode(1);
@@ -1098,7 +1098,7 @@ private:
         for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr)
         {
             char current = *m_cur_itr;
-            uint32_t num_bytes = utf8_encoding::get_num_bytes(static_cast<uint8_t>(current));
+            uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
             if (num_bytes == 1)
             {
                 auto ret = check_filters.find(current);
@@ -1476,8 +1476,8 @@ private:
         }
 
         // Treats the code point as a UTF-32 encoded character.
-        utf8_encoding::from_utf32(code_point, m_encode_buffer, m_encoded_size);
-        m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+        utf8::from_utf32(code_point, m_encode_buffer, m_encoded_size);
+        m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
     }
 
     /// @brief Gets the metadata of a following block style string scalar.
@@ -1594,7 +1594,7 @@ private:
     /// The last tag prefix
     std::string m_tag_prefix {};
     /// A temporal buffer to store a UTF-8 encoded char sequence.
-    std::array<char, 4> m_encode_buffer {};
+    std::array<uint8_t, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.
     std::size_t m_encoded_size {0};
     /// The beginning position of the last lexical token. (zero origin)

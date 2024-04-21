@@ -103,7 +103,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
     switch (ElemSize)
     {
-    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 features.
+    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 or better.
         for (std::size_t i = 0; i < 4 && begin + i != end; i++)
         {
             bytes[i] = uint8_t(begin[i]);

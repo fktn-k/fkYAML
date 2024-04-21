@@ -22,7 +22,7 @@
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/encodings/encode_detector.hpp>
 #include <fkYAML/detail/encodings/utf_encode_t.hpp>
-#include <fkYAML/detail/encodings/utf8_encoding.hpp>
+#include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/exception.hpp>
 
@@ -101,13 +101,13 @@ private:
         while (current != m_end)
         {
             uint8_t first = uint8_t(*current++);
-            uint32_t num_bytes = utf8_encoding::get_num_bytes(first);
+            uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes)
             {
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -116,7 +116,7 @@ private:
             }
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -126,7 +126,7 @@ private:
             case 4: {
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -160,19 +160,19 @@ private:
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
         std::size_t encoded_buf_size {0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         while (m_current != m_end || encoded_buf_size != 0)
         {
             while (m_current != m_end && encoded_buf_size < 2)
             {
-                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(*m_current++) << shift_bits[0]);
-                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(*m_current++) << shift_bits[1]);
+                encoded_buffer[encoded_buf_size] = static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[0]);
+                encoded_buffer[encoded_buf_size++] |= static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[1]);
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
+            utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
@@ -181,7 +181,7 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -205,19 +205,19 @@ private:
             shift_bits[3] = 24;
         }
 
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         while (m_current != m_end)
         {
-            char32_t utf32 = char32_t(*m_current++ << shift_bits[0]);
-            utf32 |= char32_t(*m_current++ << shift_bits[1]);
-            utf32 |= char32_t(*m_current++ << shift_bits[2]);
-            utf32 |= char32_t(*m_current++ << shift_bits[3]);
+            char32_t utf32 = static_cast<char32_t>(*m_current++ << shift_bits[0]);
+            utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[1]);
+            utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[2]);
+            utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[3]);
 
-            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -272,13 +272,13 @@ public:
         while (current != m_end)
         {
             uint8_t first = static_cast<uint8_t>(*current++);
-            uint32_t num_bytes = utf8_encoding::get_num_bytes(first);
+            uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes)
             {
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -287,7 +287,7 @@ public:
             }
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -297,7 +297,7 @@ public:
             case 4: {
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -365,7 +365,7 @@ public:
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
         std::size_t encoded_buf_size {0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         while (m_current != m_end || encoded_buf_size != 0)
@@ -373,12 +373,13 @@ public:
             while (m_current != m_end && encoded_buf_size < 2)
             {
                 char16_t tmp = *m_current++;
-                encoded_buffer[encoded_buf_size] = char16_t((tmp & 0x00FFu) << shift_bits);
-                encoded_buffer[encoded_buf_size++] |= char16_t((tmp & 0xFF00u) >> shift_bits);
+                encoded_buffer[encoded_buf_size++] = char16_t(
+                    static_cast<uint16_t>((tmp & 0x00FFu) << shift_bits) |
+                    static_cast<uint16_t>((tmp & 0xFF00u) >> shift_bits));
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
+            utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
@@ -387,7 +388,7 @@ public:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -443,20 +444,21 @@ public:
             shift_bits[3] = 24;
         }
 
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         while (m_current != m_end)
         {
             char32_t tmp = *m_current++;
-            char32_t utf32 = char32_t((tmp & 0xFF000000u) >> shift_bits[0]);
-            utf32 |= char32_t((tmp & 0x00FF0000u) >> shift_bits[1]);
-            utf32 |= char32_t((tmp & 0x0000FF00u) << shift_bits[2]);
-            utf32 |= char32_t((tmp & 0x000000FFu) << shift_bits[3]);
+            char32_t utf32 = char32_t(
+                static_cast<uint32_t>((tmp & 0xFF000000u) >> shift_bits[0]) |
+                static_cast<uint32_t>((tmp & 0x00FF0000u) >> shift_bits[1]) |
+                static_cast<uint32_t>((tmp & 0x0000FF00u) << shift_bits[2]) |
+                static_cast<uint32_t>((tmp & 0x000000FFu) << shift_bits[3]));
 
-            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -534,13 +536,13 @@ private:
         while (current != end)
         {
             uint8_t first = static_cast<uint8_t>(*current++);
-            uint32_t num_bytes = utf8_encoding::get_num_bytes(first);
+            uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes)
             {
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -549,7 +551,7 @@ private:
             }
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -559,7 +561,7 @@ private:
             case 4: {
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -592,19 +594,20 @@ private:
         char chars[2] = {0, 0};
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
         std::size_t encoded_buf_size {0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         while (std::feof(m_file) == 0)
         {
             while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2)
             {
-                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
-                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
+                encoded_buffer[encoded_buf_size++] = char16_t(
+                    static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
+                    static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
+            utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
@@ -613,7 +616,7 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -638,7 +641,7 @@ private:
         }
 
         char chars[4] = {0, 0, 0, 0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         while (std::feof(m_file) == 0)
@@ -649,14 +652,15 @@ private:
                 return;
             }
 
-            char32_t utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
-            utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
-            utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
-            utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
+            char32_t utf32 = char32_t(
+                static_cast<uint32_t>(uint8_t(chars[0]) << shift_bits[0]) |
+                static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
+                static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
+                static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -729,13 +733,13 @@ private:
         while (current != end)
         {
             uint8_t first = static_cast<uint8_t>(*current++);
-            uint32_t num_bytes = utf8_encoding::get_num_bytes(first);
+            uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes)
             {
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -744,7 +748,7 @@ private:
             }
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -754,7 +758,7 @@ private:
             case 4: {
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8_encoding::validate(bytes);
+                bool is_valid = utf8::validate(bytes);
                 if (!is_valid)
                 {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -787,7 +791,7 @@ private:
         char chars[2] = {0, 0};
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
         std::size_t encoded_buf_size {0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         do
@@ -801,12 +805,13 @@ private:
                     break;
                 }
 
-                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
-                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
+                encoded_buffer[encoded_buf_size++] = char16_t(
+                    static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
+                    static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
             };
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
+            utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1)
             {
@@ -815,7 +820,7 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
@@ -840,7 +845,7 @@ private:
         }
 
         char chars[4] = {0, 0, 0, 0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
         do
@@ -852,14 +857,15 @@ private:
                 return;
             }
 
-            char32_t utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
-            utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
-            utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
-            utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
+            char32_t utf32 = char32_t(
+                static_cast<uint32_t>(uint8_t(chars[0]) << shift_bits[0]) |
+                static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
+                static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
+                static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
