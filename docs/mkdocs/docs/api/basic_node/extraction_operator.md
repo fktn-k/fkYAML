@@ -8,7 +8,7 @@ inline std::istream& operator>>(std::istream& is, basic_node& n);
 
 Insertion operator for basic_node template class.  
 Deserializes an input stream into a [`basic_node`](index.md).  
-This API is a wrapper of [`basic_node::deserialize()`](deserialize.md) function for input streams to simplify the implementation in the user's code.  
+This API is a wrapper of [`basic_node::deserialize()`](deserialize.md) function for input streams to simplify the implementation in the client code.  
 Note that the contents of the input stream must be encoded in either the UTF-8, UTF-16BE/LE or UTF-32LE/BE format and begin with either a byte order mark or an ASCII character.  
 
 ## **Parameters**

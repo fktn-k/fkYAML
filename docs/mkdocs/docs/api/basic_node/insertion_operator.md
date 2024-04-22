@@ -8,7 +8,7 @@ inline std::ostream& operator<<(std::ostream& os, const basic_node& n);
 
 Extraction operator for basic_node template class.  
 Serializes YAML node values into an output stream.  
-This API is a wrapper of [`basic_node::serialize()`](serialize.md) function to simplify the implementation in the user's code.  
+This API is a wrapper of [`basic_node::serialize()`](serialize.md) function to simplify the implementation in the client code.  
 For more detailed descriptions, please visit the reference page for the [`basic_node::serialize()`](serialize.md) function.  
 
 ## **Template Parameters**
