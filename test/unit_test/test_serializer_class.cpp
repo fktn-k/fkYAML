@@ -152,6 +152,21 @@ TEST_CASE("Serializer_StringNode")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
+TEST_CASE("Serializer_MappingKeyNode")
+{
+    fkyaml::node map_key = {{true, 123}};
+    fkyaml::node seq_key = {3.14, nullptr};
+    fkyaml::node node = {{map_key, 3.14}, {seq_key, "foo"}};
+    std::string expected = "? - 3.14\n"
+                           "  - null\n"
+                           ": foo\n"
+                           "? true: 123\n"
+                           ": 3.14\n";
+
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(serializer.serialize(node) == expected);
+}
+
 TEST_CASE("Serializer_AnchorNode")
 {
     fkyaml::node node = {{"foo", 123}, {nullptr, {true, "bar", 3.14}}};
