@@ -15,29 +15,20 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
-
-enum class anchor_status_t
-{
+enum class anchor_status_t {
     NONE,
     ANCHOR,
     ALIAS,
 };
 
-struct node_property
-{
+struct node_property {
     std::string tag {};
     anchor_status_t anchor_status {anchor_status_t::NONE};
     std::string anchor {};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP_ */

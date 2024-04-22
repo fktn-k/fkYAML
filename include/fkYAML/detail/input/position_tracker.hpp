@@ -20,20 +20,13 @@
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A position tracker of the target buffer.
-class position_tracker
-{
+class position_tracker {
 private:
     /// @brief A set of information on the current position in an input buffer.
-    struct position
-    {
+    struct position {
         /// The current position from the beginning of an input buffer.
         std::size_t cur_pos {0};
         /// The current position in the current line.
@@ -43,8 +36,7 @@ private:
     };
 
 public:
-    void set_target_buffer(const std::string& buffer)
-    {
+    void set_target_buffer(const std::string& buffer) {
         m_begin = m_last = buffer.begin();
         m_end = buffer.end();
         m_position = position {};
@@ -53,23 +45,19 @@ public:
     /// @brief Update the set of the current position informations.
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
-    void update_position(std::string::const_iterator cur_pos)
-    {
+    void update_position(std::string::const_iterator cur_pos) {
         m_position.cur_pos = static_cast<std::size_t>(std::distance(m_begin, cur_pos));
         m_position.lines_read += std::count(m_last, cur_pos, '\n');
         m_last = cur_pos;
 
-        if (m_position.lines_read == 0)
-        {
+        if (m_position.lines_read == 0) {
             m_position.cur_pos_in_line = m_position.cur_pos;
             return;
         }
 
         std::size_t count = 0;
-        while (--cur_pos != m_begin)
-        {
-            if (*cur_pos == '\n')
-            {
+        while (--cur_pos != m_begin) {
+            if (*cur_pos == '\n') {
                 break;
             }
             count++;
@@ -77,22 +65,19 @@ public:
         m_position.cur_pos_in_line = count;
     }
 
-    std::size_t get_cur_pos() const noexcept
-    {
+    std::size_t get_cur_pos() const noexcept {
         return m_position.cur_pos;
     }
 
     /// @brief Get the current position in the current line.
     /// @return std::size_t The current position in the current line.
-    std::size_t get_cur_pos_in_line() const noexcept
-    {
+    std::size_t get_cur_pos_in_line() const noexcept {
         return m_position.cur_pos_in_line;
     }
 
     /// @brief Get the number of lines which have already been read.
     /// @return std::size_t The number of lines which have already been read.
-    std::size_t get_lines_read() const noexcept
-    {
+    std::size_t get_lines_read() const noexcept {
         return m_position.lines_read;
     }
 
@@ -107,8 +92,6 @@ private:
     position m_position {};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_ */

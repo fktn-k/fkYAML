@@ -18,28 +18,18 @@
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/exception.hpp>
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A tag which tells Iterator will contain sequence value iterator.
-struct sequence_iterator_tag
-{
-};
+struct sequence_iterator_tag {};
 
 /// @brief A tag which tells Iterator will contain mapping value iterator.
-struct mapping_iterator_tag
-{
-};
+struct mapping_iterator_tag {};
 
 /// @brief The template definitions of type informations used in @ref Iterator class
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
-struct iterator_traits
-{
+struct iterator_traits {
     /// A type of iterated elements.
     using value_type = ValueType;
     /// A type to represent difference between iterators.
@@ -55,8 +45,7 @@ struct iterator_traits
 /// @brief A specialization of @ref iterator_traits for constant value types.
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
-struct iterator_traits<const ValueType>
-{
+struct iterator_traits<const ValueType> {
     /// A type of iterated elements.
     using value_type = ValueType;
     /// A type to represent difference between iterators.
@@ -70,8 +59,7 @@ struct iterator_traits<const ValueType>
 };
 
 /// @brief Definitions of iterator types for iterators internally held.
-enum class iterator_t
-{
+enum class iterator_t {
     SEQUENCE, //!< sequence iterator type.
     MAPPING,  //!< mapping iterator type.
 };
@@ -79,8 +67,7 @@ enum class iterator_t
 /// @brief A class which holds iterators either of sequence or mapping type
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
-class iterator
-{
+class iterator {
 public:
     /// A type for iterator traits of instantiated @Iterator template class.
     using ItrTraitsType = iterator_traits<ValueType>;
@@ -105,8 +92,7 @@ private:
     static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts basic_node<...>");
 
     /// @brief The actual storage for iterators internally held in @ref Iterator.
-    struct iterator_holder
-    {
+    struct iterator_holder {
         /// A sequence iterator object.
         typename NonConstValueType::sequence_type::iterator sequence_iterator {};
         /// A mapping iterator object.
@@ -117,26 +103,22 @@ public:
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
     iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept
-        : m_inner_iterator_type(iterator_t::SEQUENCE)
-    {
+        : m_inner_iterator_type(iterator_t::SEQUENCE) {
         m_iterator_holder.sequence_iterator = itr;
     }
 
     /// @brief Construct a new iterator object with mapping iterator object.
     /// @param[in] itr An mapping iterator object.
     iterator(mapping_iterator_tag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
-        : m_inner_iterator_type(iterator_t::MAPPING)
-    {
+        : m_inner_iterator_type(iterator_t::MAPPING) {
         m_iterator_holder.mapping_iterator = itr;
     }
 
     /// @brief Copy constructor of the iterator class.
     /// @param other An iterator object to be copied with.
     iterator(const iterator& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type)
-    {
-        switch (m_inner_iterator_type)
-        {
+        : m_inner_iterator_type(other.m_inner_iterator_type) {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             m_iterator_holder.sequence_iterator = other.m_iterator_holder.sequence_iterator;
             break;
@@ -149,10 +131,8 @@ public:
     /// @brief Move constructor of the iterator class.
     /// @param other An iterator object to be moved from.
     iterator(iterator&& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type)
-    {
-        switch (m_inner_iterator_type)
-        {
+        : m_inner_iterator_type(other.m_inner_iterator_type) {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             m_iterator_holder.sequence_iterator = std::move(other.m_iterator_holder.sequence_iterator);
             break;
@@ -169,16 +149,13 @@ public:
     /// @brief A copy assignment operator of the iterator class.
     /// @param rhs An iterator object to be copied with.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator=(const iterator& rhs) noexcept
-    {
-        if (&rhs == this)
-        {
+    iterator& operator=(const iterator& rhs) noexcept {
+        if (&rhs == this) {
             return *this;
         }
 
         m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type)
-        {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             m_iterator_holder.sequence_iterator = rhs.m_iterator_holder.sequence_iterator;
             break;
@@ -193,16 +170,13 @@ public:
     /// @brief A move assignment operator of the iterator class.
     /// @param rhs An iterator object to be moved from.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator=(iterator&& rhs) noexcept
-    {
-        if (&rhs == this)
-        {
+    iterator& operator=(iterator&& rhs) noexcept {
+        if (&rhs == this) {
             return *this;
         }
 
         m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type)
-        {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             m_iterator_holder.sequence_iterator = std::move(rhs.m_iterator_holder.sequence_iterator);
             break;
@@ -216,10 +190,8 @@ public:
 
     /// @brief An arrow operator of the iterator class.
     /// @return pointer A pointer to the BasicNodeType object internally referenced by the actual iterator object.
-    pointer operator->() noexcept
-    {
-        if (m_inner_iterator_type == iterator_t::SEQUENCE)
-        {
+    pointer operator->() noexcept {
+        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return &(*(m_iterator_holder.sequence_iterator));
         }
 
@@ -229,10 +201,8 @@ public:
 
     /// @brief A dereference operator of the iterator class.
     /// @return reference Reference to the Node object internally referenced by the actual iterator object.
-    reference operator*() noexcept
-    {
-        if (m_inner_iterator_type == iterator_t::SEQUENCE)
-        {
+    reference operator*() noexcept {
+        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return *(m_iterator_holder.sequence_iterator);
         }
 
@@ -243,10 +213,8 @@ public:
     /// @brief A compound assignment operator by sum of the Iterator class.
     /// @param i The difference from this Iterator object with which it moves forward.
     /// @return Iterator& Reference to this Iterator object.
-    iterator& operator+=(difference_type i) noexcept
-    {
-        switch (m_inner_iterator_type)
-        {
+    iterator& operator+=(difference_type i) noexcept {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             std::advance(m_iterator_holder.sequence_iterator, i);
             break;
@@ -260,8 +228,7 @@ public:
     /// @brief A plus operator of the iterator class.
     /// @param i The difference from this iterator object.
     /// @return iterator An iterator object which has been added @a i.
-    iterator operator+(difference_type i) const noexcept
-    {
+    iterator operator+(difference_type i) const noexcept {
         auto result = *this;
         result += i;
         return result;
@@ -269,10 +236,8 @@ public:
 
     /// @brief An pre-increment operator of the iterator class.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator++() noexcept
-    {
-        switch (m_inner_iterator_type)
-        {
+    iterator& operator++() noexcept {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             std::advance(m_iterator_holder.sequence_iterator, 1);
             break;
@@ -285,8 +250,7 @@ public:
 
     /// @brief A post-increment opretor of the iterator class.
     /// @return iterator An iterator object which has been incremented.
-    iterator operator++(int) & noexcept
-    {
+    iterator operator++(int) & noexcept {
         auto result = *this;
         ++(*this);
         return result;
@@ -295,16 +259,14 @@ public:
     /// @brief A compound assignment operator by difference of the iterator class.
     /// @param i The difference from this iterator object with which it moves backward.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator-=(difference_type i) noexcept
-    {
+    iterator& operator-=(difference_type i) noexcept {
         return operator+=(-i);
     }
 
     /// @brief A minus operator of the iterator class.
     /// @param i The difference from this iterator object.
     /// @return iterator An iterator object from which has been subtracted @ i.
-    iterator operator-(difference_type i) noexcept
-    {
+    iterator operator-(difference_type i) noexcept {
         auto result = *this;
         result -= i;
         return result;
@@ -312,10 +274,8 @@ public:
 
     /// @brief A pre-decrement operator of the iterator class.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator--() noexcept
-    {
-        switch (m_inner_iterator_type)
-        {
+    iterator& operator--() noexcept {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             std::advance(m_iterator_holder.sequence_iterator, -1);
             break;
@@ -328,8 +288,7 @@ public:
 
     /// @brief A post-decrement operator of the iterator class
     /// @return iterator An iterator object which has been decremented.
-    iterator operator--(int) & noexcept
-    {
+    iterator operator--(int) & noexcept {
         auto result = *this;
         --(*this);
         return result;
@@ -339,15 +298,12 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is equal to the other.
     /// @return false This iterator object is not equal to the other.
-    bool operator==(const iterator& rhs) const
-    {
-        if (m_inner_iterator_type != rhs.m_inner_iterator_type)
-        {
+    bool operator==(const iterator& rhs) const {
+        if (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
-        if (m_inner_iterator_type == iterator_t::SEQUENCE)
-        {
+        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return (m_iterator_holder.sequence_iterator == rhs.m_iterator_holder.sequence_iterator);
         }
 
@@ -359,8 +315,7 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is not equal to the other.
     /// @return false This iterator object is equal to the other.
-    bool operator!=(const iterator& rhs) const
-    {
+    bool operator!=(const iterator& rhs) const {
         return !operator==(rhs);
     }
 
@@ -368,15 +323,12 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is less than the other.
     /// @return false This iterator object is not less than the other.
-    bool operator<(const iterator& rhs) const
-    {
-        if (m_inner_iterator_type != rhs.m_inner_iterator_type)
-        {
+    bool operator<(const iterator& rhs) const {
+        if (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
-        if (m_inner_iterator_type == iterator_t::MAPPING)
-        {
+        if (m_inner_iterator_type == iterator_t::MAPPING) {
             throw fkyaml::exception("Cannot compare order of iterators of the mapping container type");
         }
 
@@ -387,8 +339,7 @@ public:
     ///  @param rhs An iterator object to be compared with this iterator object.
     ///  @return true  This iterator object is either less than or equal to the other.
     ///  @return false This iterator object is neither less than nor equal to the other.
-    bool operator<=(const iterator& rhs) const
-    {
+    bool operator<=(const iterator& rhs) const {
         return !rhs.operator<(*this);
     }
 
@@ -396,8 +347,7 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is greater than the other.
     /// @return false This iterator object is not greater than the other.
-    bool operator>(const iterator& rhs) const
-    {
+    bool operator>(const iterator& rhs) const {
         return !operator<=(rhs);
     }
 
@@ -405,25 +355,21 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is either greater than or equal to the other.
     /// @return false This iterator object is neither greater than nor equal to the other.
-    bool operator>=(const iterator& rhs) const
-    {
+    bool operator>=(const iterator& rhs) const {
         return !operator<(rhs);
     }
 
 public:
     /// @brief Get the type of the internal iterator implementation.
     /// @return iterator_t The type of the internal iterator implementation.
-    iterator_t type() const noexcept
-    {
+    iterator_t type() const noexcept {
         return m_inner_iterator_type;
     }
 
     /// @brief Get the key string of the YAML mapping node for the current iterator.
     /// @return const std::string& The key string of the YAML mapping node for the current iterator.
-    const typename ValueType::mapping_type::key_type& key() const
-    {
-        if (m_inner_iterator_type == iterator_t::SEQUENCE)
-        {
+    const typename ValueType::mapping_type::key_type& key() const {
+        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             throw fkyaml::exception("Cannot retrieve key from non-mapping iterators.");
         }
 
@@ -432,8 +378,7 @@ public:
 
     /// @brief Get the reference of the YAML node for the current iterator.
     /// @return reference A reference to the YAML node for the current iterator.
-    reference value() noexcept
-    {
+    reference value() noexcept {
         return operator*();
     }
 
@@ -444,8 +389,6 @@ private:
     mutable iterator_holder m_iterator_holder {};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ITERATOR_HPP_ */

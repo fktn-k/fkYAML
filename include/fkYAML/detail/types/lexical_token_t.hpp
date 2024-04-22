@@ -13,16 +13,10 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of lexical token types.
-enum class lexical_token_t
-{
+enum class lexical_token_t {
     END_OF_BUFFER,         //!< the end of input buffer.
     EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
     KEY_SEPARATOR,         //!< the key separater `:`
@@ -47,8 +41,6 @@ enum class lexical_token_t
     END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */

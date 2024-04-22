@@ -12,23 +12,19 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("Exception_DefaultCtor")
-{
+TEST_CASE("Exception_DefaultCtor") {
     fkyaml::exception exception;
     REQUIRE(std::string(exception.what()).empty());
 }
 
-TEST_CASE("Exception_CtorWithMessage")
-{
-    SECTION("non-null message.")
-    {
+TEST_CASE("Exception_CtorWithMessage") {
+    SECTION("non-null message.") {
         const char* message = "test error message.";
         fkyaml::exception exception(message);
         REQUIRE(std::string(exception.what()).compare(message) == 0);
     }
 
-    SECTION("null message.")
-    {
+    SECTION("null message.") {
         const char* message = nullptr;
         fkyaml::exception exception(message);
         REQUIRE(std::string(exception.what()).empty());

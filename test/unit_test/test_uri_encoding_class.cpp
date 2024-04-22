@@ -10,10 +10,8 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("URIEncoding_Validate")
-{
-    SECTION("valid URI characters")
-    {
+TEST_CASE("URIEncoding_Validate") {
+    SECTION("valid URI characters") {
         auto input = GENERATE(
             std::string(""),
             std::string("%00%99%AF%af"),
@@ -26,8 +24,7 @@ TEST_CASE("URIEncoding_Validate")
         REQUIRE(fkyaml::detail::uri_encoding::validate(input.begin(), input.end()));
     }
 
-    SECTION("invalid URI characters")
-    {
+    SECTION("invalid URI characters") {
         auto input = GENERATE(
             std::string("%//"),
             std::string("%::"),
