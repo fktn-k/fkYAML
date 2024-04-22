@@ -7498,10 +7498,7 @@ private:
         case node_t::SEQUENCE:
             for (const auto& seq_item : node)
             {
-                if (cur_indent > 0)
-                {
-                    insert_indentation(cur_indent, str);
-                }
+                insert_indentation(cur_indent, str);
                 str += "-";
 
                 bool is_appended = try_append_alias(seq_item, true, str);
@@ -7531,10 +7528,7 @@ private:
         case node_t::MAPPING:
             for (auto itr = node.begin(); itr != node.end(); ++itr)
             {
-                if (cur_indent > 0)
-                {
-                    insert_indentation(cur_indent, str);
-                }
+                insert_indentation(cur_indent, str);
 
                 bool is_appended = try_append_alias(itr.key(), false, str);
                 if (!is_appended)
@@ -7545,7 +7539,19 @@ private:
                     {
                         str += " ";
                     }
-                    serialize_node(itr.key(), cur_indent, str);
+
+                    bool is_container = !itr.key().is_scalar();
+                    if (is_container)
+                    {
+                        str += "? ";
+                    }
+                    uint32_t indent = static_cast<uint32_t>(get_cur_indent(str));
+                    serialize_node(itr.key(), indent, str);
+                    if (is_container)
+                    {
+                        // a newline code is already inserted in the above serialize_node() call.
+                        insert_indentation(indent - 2, str);
+                    }
                 }
 
                 str += ":";
@@ -7625,12 +7631,32 @@ private:
         }
     }
 
-    /// @brief Insert indentation to the serialization result.
-    /// @param cur_indent The current indent width to be inserted.
-    /// @param str A string to hold serialization result.
-    void insert_indentation(const uint32_t cur_indent, std::string& str) const noexcept
+    /// @brief Get the current indentation width.
+    /// @param s The target string object.
+    /// @return The current indentation width.
+    std::size_t get_cur_indent(const std::string& s) const noexcept
     {
-        str.append(cur_indent, ' ');
+        bool is_empty = s.empty();
+        if (is_empty)
+        {
+            return 0;
+        }
+
+        std::size_t last_lf_pos = s.rfind('\n');
+        return (last_lf_pos != std::string::npos) ? s.size() - last_lf_pos - 1 : s.size();
+    }
+
+    /// @brief Insert indentation to the serialization result.
+    /// @param indent The indent width to be inserted.
+    /// @param str A string to hold serialization result.
+    void insert_indentation(const uint32_t indent, std::string& str) const noexcept
+    {
+        if (indent == 0)
+        {
+            return;
+        }
+
+        str.append(indent - get_cur_indent(str), ' ');
     }
 
     /// @brief Append an anchor property if it's available. Do nothing otherwise.
