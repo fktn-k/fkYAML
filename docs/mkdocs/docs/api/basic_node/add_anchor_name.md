@@ -18,7 +18,7 @@ If the basic_node has already had any anchor name, the new anchor name overwrite
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_add_anchor_name.cpp"
+    --8<-- "examples/ex_basic_node_add_anchor_name.cpp:9"
     ```
 
     output:

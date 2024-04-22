@@ -15,7 +15,7 @@ Note that sequence objects are stored as pointers to the decided type in a [`bas
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_sequence_type.cpp"
+    --8<-- "examples/ex_basic_node_sequence_type.cpp:9"
     ```
 
     output:

@@ -37,7 +37,7 @@ The `KeyType` can be a compatible type with [`fkyaml::basic_node`](index.md) or 
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_contains.cpp"
+    --8<-- "examples/ex_basic_node_contains.cpp:9"
     ```
 
     output:

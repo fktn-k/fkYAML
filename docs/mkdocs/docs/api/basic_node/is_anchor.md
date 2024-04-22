@@ -15,7 +15,7 @@ Tests whether the node is an anchor node.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_is_anchor.cpp"
+    --8<-- "examples/ex_basic_node_is_anchor.cpp:9"
     ```
 
     output:

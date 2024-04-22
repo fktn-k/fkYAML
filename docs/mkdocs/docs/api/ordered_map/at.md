@@ -34,7 +34,7 @@ Reference, or constant reference, to a `mapped_type` object associated with the 
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_ordered_map_at.cpp"
+    --8<-- "examples/ex_ordered_map_at.cpp:9"
     ```
 
     output:

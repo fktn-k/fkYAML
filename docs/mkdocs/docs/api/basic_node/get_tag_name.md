@@ -18,7 +18,7 @@ If no tag name has been set, an [`fkyaml::exception`](../exception/index.md) wil
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_get_tag_name.cpp"
+    --8<-- "examples/ex_basic_node_get_tag_name.cpp:9"
     ```
 
     output:

@@ -17,7 +17,7 @@ These macros are available for client applications as the metadata of this libra
 ??? Example annotate "Example: print the library version"
 
     ```cpp
-    --8<-- "examples/ex_macros_versions.cpp"
+    --8<-- "examples/ex_macros_versions.cpp:9"
     ```
 
     output:

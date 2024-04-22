@@ -1,19 +1,22 @@
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
 #include <iostream>
 #include <fkYAML/node.hpp>
 
-int main()
-{
+int main() {
     // create a basic_node object.
     fkyaml::node n = {
         {"foo", true},
         {"bar", {1, 2, 3}},
-        {"baz", {
-            {"qux", 3.14},
-            {"corge", nullptr}
-        }},
+        {"baz", {{"qux", 3.14}, {"corge", nullptr}}},
         {{{true, 123}}, false},
-        {{1.23, 4.56, 7.89}, 123456789}
-    };
+        {{1.23, 4.56, 7.89}, 123456789}};
     // set tags to some nodes.
     n["foo"].add_tag_name("!!bool");
     n["bar"][1].add_tag_name("!<tag:yaml.org,2002:int>");

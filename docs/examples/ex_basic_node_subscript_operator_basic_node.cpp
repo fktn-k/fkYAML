@@ -1,19 +1,26 @@
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
 #include <iostream>
 #include <fkYAML/node.hpp>
 
-int main()
-{
+int main() {
     // create a YAML sequence node.
     fkyaml::node n1 = {123, 234, 345, 456};
 
     // print YAML nodes at the following indexes.
-    fkyaml::node index_zero  = 0;
-    fkyaml::node index_one   = 1;
-    fkyaml::node index_two   = 2;
+    fkyaml::node index_zero = 0;
+    fkyaml::node index_one = 1;
+    fkyaml::node index_two = 2;
     fkyaml::node index_three = 3;
-    std::cout << n1[index_zero]  << std::endl;
-    std::cout << n1[index_one]   << std::endl;
-    std::cout << n1[index_two]   << std::endl;
+    std::cout << n1[index_zero] << std::endl;
+    std::cout << n1[index_one] << std::endl;
+    std::cout << n1[index_two] << std::endl;
     std::cout << n1[index_three] << std::endl;
 
     // this will cause an undefined behavior!

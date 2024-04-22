@@ -15,7 +15,7 @@ This enumeration collects the used versions of YAML specification. It is used as
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_yaml_version_t.cpp"
+    --8<-- "examples/ex_basic_node_yaml_version_t.cpp:9"
     ```
 
     output:

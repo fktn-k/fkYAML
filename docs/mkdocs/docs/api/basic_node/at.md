@@ -76,7 +76,7 @@ Reference, or constant reference, to the YAML node object associated with the gi
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_at_compatible_type.cpp"
+    --8<-- "examples/ex_basic_node_at_compatible_type.cpp:9"
     ```
 
     output:
@@ -117,7 +117,7 @@ Reference, or constant reference, to the YAML node object associated with the gi
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_at_basic_node.cpp"
+    --8<-- "examples/ex_basic_node_at_basic_node.cpp:9"
     ```
 
     output:

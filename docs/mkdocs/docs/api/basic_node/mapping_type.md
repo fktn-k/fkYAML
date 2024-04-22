@@ -36,7 +36,7 @@ Note that mapping objects are stored as pointers in a [`basic_node`](index.md) s
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_mapping_type.cpp"
+    --8<-- "examples/ex_basic_node_mapping_type.cpp:9"
     ```
 
     output:

@@ -15,7 +15,7 @@ With the decided type, integer objects are stored directly inside a [`basic_node
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_integer_type.cpp"
+    --8<-- "examples/ex_basic_node_integer_type.cpp:9"
     ```
 
     output:

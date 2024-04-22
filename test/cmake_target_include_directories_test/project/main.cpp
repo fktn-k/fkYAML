@@ -10,8 +10,7 @@
 
 #include <fkYAML/node.hpp>
 
-int main()
-{
+int main() {
     fkyaml::node node = fkyaml::node::deserialize("test: true");
 
     std::cout << "test: " << node["test"].get_value<fkyaml::node::boolean_type>() << std::endl;

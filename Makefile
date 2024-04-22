@@ -9,7 +9,9 @@ SRCS = $(shell find include -type f -name '*.hpp' | sort)
 # The single-header version
 SINGLE_SRC = 'single_include/fkYAML/node.hpp'
 # list of sources in the test directory.
-TEST_SRCS = $(shell find test -type f \( -name '*.hpp' -o -name '*.cpp' \) | sort)
+TEST_SRCS = $(shell find test -type f -name '*.hpp' -o -name '*.cpp' | sort)
+# list of sources in the examples directory.
+EXAMPLE_SRCS = $(shell find docs/examples -type f -name '*.cpp' | sort)
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
@@ -108,7 +110,7 @@ build-docs: examples
 	@$(MAKE) -C ./docs/mkdocs build
 
 serve-docs: examples
-	@$(MAKE) -C serve
+	@$(MAKE) -C ./docs/mkdocs serve
 
 ###############
 #   Version   #
@@ -134,7 +136,7 @@ reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
 		--license MIT --year "2023-2024" --style c
-	pipx run reuse annotate $(TEST_SRCS) --template fkYAML_support \
+	pipx run reuse annotate $(TEST_SRCS) $(EXAMPLE_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
 		--license MIT --year "2023-2024" --style c
 	pipx run reuse lint

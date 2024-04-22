@@ -76,7 +76,7 @@ Also, make sure the example.yaml file is encoded in either the UTF-8, UTF-16BE/L
 === "tutorial.cpp"
 
     ```cpp
-    --8<-- "examples/tutorial_1.cpp"
+    --8<-- "examples/tutorial_1.cpp:9"
     ```
 === "CMakeLists.txt"
 
@@ -113,8 +113,8 @@ You can also access each YAML node with the fkYAML APIs.
 Say you just want to care about values associated with the `title` key and ignore the others.  
 You can do it by modifying the tutorial.cpp file as follows:  
 
-```cpp title="tutorial.cpp" hl_lines="13-18"
---8<-- "examples/tutorial_2.cpp"
+```cpp title="tutorial.cpp" hl_lines="12-16"
+--8<-- "examples/tutorial_2.cpp:9"
 ```
 
 Rebuild and run the application, and you'll see the output like:  
@@ -130,8 +130,8 @@ The fkYAML library also provides a feature to realize such a need.
 
 You can achieve that by changing the highlighted part of the code snippet:  
 
-```cpp title="tutorial.cpp" hl_lines="14-16 18 21-26 29-30"
---8<-- "examples/tutorial_3.cpp"
+```cpp title="tutorial.cpp" hl_lines="13-15 17 19-21 24-25"
+--8<-- "examples/tutorial_3.cpp:9"
 ```
 
 Rebuild and run the application, and you'll see the output like:  
@@ -147,8 +147,8 @@ Note that you don't need to implement specializations for STL types (such as std
 
 The updated code snippet down below shows how the specializations for user-defined types can reduce boilerplate code.  
 
-```cpp title="tutorial.cpp" hl_lines="6-39 53-54 56-57 59-61"
---8<-- "examples/tutorial_4.cpp"
+```cpp title="tutorial.cpp" hl_lines="6-31 44-45 48-51"
+--8<-- "examples/tutorial_4.cpp:9"
 ```
 
 Rebuild and run the application, and you'll see the same output as before:  

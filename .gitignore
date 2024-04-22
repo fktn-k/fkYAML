@@ -3,7 +3,6 @@
 /.vs/
 
 # documentation
-/docs/mkdocs/docs/examples/
 /docs/mkdocs/site/
 /docs/mkdocs/venv/
 

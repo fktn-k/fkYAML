@@ -25,7 +25,7 @@ The type of the YAML node value.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_type.cpp"
+    --8<-- "examples/ex_basic_node_type.cpp:9"
     ```
 
     output:

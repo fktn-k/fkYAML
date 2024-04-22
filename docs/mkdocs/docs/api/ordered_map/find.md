@@ -33,7 +33,7 @@ An iterator to the target value if found, the result of end() otherwise.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_ordered_map_emplace.cpp"
+    --8<-- "examples/ex_ordered_map_emplace.cpp:9"
     ```
 
     output:
