@@ -14,47 +14,38 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("FromString_Null")
-{
-    SECTION("valid string for the null value")
-    {
+TEST_CASE("FromString_Null") {
+    SECTION("valid string for the null value") {
         auto input = GENERATE(std::string("null"), std::string("Null"), std::string("NULL"), std::string("~"));
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<std::nullptr_t> {}) == nullptr);
     }
 
-    SECTION("invalid string for the null value")
-    {
+    SECTION("invalid string for the null value") {
         std::string input("test");
         REQUIRE_THROWS_AS(
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<std::nullptr_t> {}), fkyaml::exception);
     }
 }
 
-TEST_CASE("FromString_Bool")
-{
-    SECTION("valid string for the true value")
-    {
+TEST_CASE("FromString_Bool") {
+    SECTION("valid string for the true value") {
         auto input = GENERATE(std::string("true"), std::string("True"), std::string("TRUE"));
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<bool> {}) == true);
     }
 
-    SECTION("valid string for the false value")
-    {
+    SECTION("valid string for the false value") {
         auto input = GENERATE(std::string("false"), std::string("False"), std::string("FALSE"));
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<bool> {}) == false);
     }
 
-    SECTION("invalid string for the boolean values")
-    {
+    SECTION("invalid string for the boolean values") {
         std::string input("test");
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<bool> {}), fkyaml::exception);
     }
 }
 
-TEST_CASE("FromString_Integer")
-{
-    SECTION("char type")
-    {
+TEST_CASE("FromString_Integer") {
+    SECTION("char type") {
         std::string input("-64");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<char> {}) == -64);
 
@@ -62,8 +53,7 @@ TEST_CASE("FromString_Integer")
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<char> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned char type")
-    {
+    SECTION("unsigned char type") {
         std::string input("64");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned char> {}) == 64);
 
@@ -72,8 +62,7 @@ TEST_CASE("FromString_Integer")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned char> {}), fkyaml::exception);
     }
 
-    SECTION("short type")
-    {
+    SECTION("short type") {
         std::string input("-15464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<short> {}) == -15464);
 
@@ -81,8 +70,7 @@ TEST_CASE("FromString_Integer")
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<short> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned short type")
-    {
+    SECTION("unsigned short type") {
         std::string input("15464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned short> {}) == 15464);
 
@@ -91,8 +79,7 @@ TEST_CASE("FromString_Integer")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned short> {}), fkyaml::exception);
     }
 
-    SECTION("int type")
-    {
+    SECTION("int type") {
         std::string input("-1154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<int> {}) == -1154357464);
 
@@ -100,8 +87,7 @@ TEST_CASE("FromString_Integer")
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<int> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned int type")
-    {
+    SECTION("unsigned int type") {
         std::string input("3154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned int> {}) == 3154357464u);
 
@@ -110,8 +96,7 @@ TEST_CASE("FromString_Integer")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned int> {}), fkyaml::exception);
     }
 
-    SECTION("long type")
-    {
+    SECTION("long type") {
         std::string input("-1154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<long> {}) == -1154357464l);
 
@@ -119,8 +104,7 @@ TEST_CASE("FromString_Integer")
         REQUIRE_THROWS_AS(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<long> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned long type")
-    {
+    SECTION("unsigned long type") {
         std::string input("317464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned long> {}) == 317464ul);
 
@@ -129,8 +113,7 @@ TEST_CASE("FromString_Integer")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned long> {}), fkyaml::exception);
     }
 
-    SECTION("long long type")
-    {
+    SECTION("long long type") {
         std::string input("-1154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<long long> {}) == -1154357464ll);
 
@@ -139,8 +122,7 @@ TEST_CASE("FromString_Integer")
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<long long> {}), fkyaml::exception);
     }
 
-    SECTION("unsigned long long type")
-    {
+    SECTION("unsigned long long type") {
         std::string input("3154357464");
         REQUIRE(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<unsigned long long> {}) == 3154357464ull);
 
@@ -150,34 +132,29 @@ TEST_CASE("FromString_Integer")
     }
 }
 
-TEST_CASE("FromString_Float")
-{
-    SECTION("positive infinity")
-    {
+TEST_CASE("FromString_Float") {
+    SECTION("positive infinity") {
         auto input = GENERATE(std::string(".inf"), std::string(".Inf"), std::string(".INF"));
         REQUIRE(
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<float> {}) ==
             std::numeric_limits<float>::infinity());
     }
 
-    SECTION("negative infinity")
-    {
+    SECTION("negative infinity") {
         auto input = GENERATE(std::string("-.inf"), std::string("-.Inf"), std::string("-.INF"));
         REQUIRE(
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<float> {}) ==
             -1 * std::numeric_limits<float>::infinity());
     }
 
-    SECTION("NaN")
-    {
+    SECTION("NaN") {
         auto input = GENERATE(std::string(".nan"), std::string(".NaN"), std::string(".NAN"));
         float ret = 0.0f;
         REQUIRE_NOTHROW(ret = fkyaml::detail::from_string(input, fkyaml::detail::type_tag<float> {}));
         REQUIRE(std::isnan(ret));
     }
 
-    SECTION("valid string for a float value")
-    {
+    SECTION("valid string for a float value") {
         std::string input("3.14");
         REQUIRE(std::abs(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<float> {}) - 3.14f) < FLT_EPSILON);
 
@@ -186,34 +163,29 @@ TEST_CASE("FromString_Float")
     }
 }
 
-TEST_CASE("FromString_Double")
-{
-    SECTION("positive infinity")
-    {
+TEST_CASE("FromString_Double") {
+    SECTION("positive infinity") {
         auto input = GENERATE(std::string(".inf"), std::string(".Inf"), std::string(".INF"));
         REQUIRE(
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<double> {}) ==
             std::numeric_limits<double>::infinity());
     }
 
-    SECTION("negative infinity")
-    {
+    SECTION("negative infinity") {
         auto input = GENERATE(std::string("-.inf"), std::string("-.Inf"), std::string("-.INF"));
         REQUIRE(
             fkyaml::detail::from_string(input, fkyaml::detail::type_tag<double> {}) ==
             -1 * std::numeric_limits<double>::infinity());
     }
 
-    SECTION("NaN")
-    {
+    SECTION("NaN") {
         auto input = GENERATE(std::string(".nan"), std::string(".NaN"), std::string(".NAN"));
         double ret = 0.0;
         REQUIRE_NOTHROW(ret = fkyaml::detail::from_string(input, fkyaml::detail::type_tag<double> {}));
         REQUIRE(std::isnan(ret));
     }
 
-    SECTION("valid string for a double value")
-    {
+    SECTION("valid string for a double value") {
         std::string input("3.14");
         REQUIRE(std::abs(fkyaml::detail::from_string(input, fkyaml::detail::type_tag<double> {}) - 3.14) < DBL_EPSILON);
 

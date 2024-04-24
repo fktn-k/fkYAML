@@ -38,7 +38,7 @@ A [`fkyaml::exception`](../exception/index.md) would be thrown otherwise.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_get_value_ref.cpp"
+    --8<-- "examples/ex_basic_node_get_value_ref.cpp:9"
     ```
 
     output:

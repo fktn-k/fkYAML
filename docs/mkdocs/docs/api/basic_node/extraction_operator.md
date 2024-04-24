@@ -30,7 +30,7 @@ Reference to the input stream object `is`.
     ```
 
     ```cpp
-    --8<-- "examples/ex_basic_node_extraction_operator.cpp"
+    --8<-- "examples/ex_basic_node_extraction_operator.cpp:9"
     ```
 
     output:

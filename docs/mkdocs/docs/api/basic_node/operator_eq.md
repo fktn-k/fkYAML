@@ -24,7 +24,7 @@ Compares two `basic_node` objects for equality according to the following rules:
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_operator_eq.cpp"
+    --8<-- "examples/ex_basic_node_operator_eq.cpp:9"
     ```
 
     output:

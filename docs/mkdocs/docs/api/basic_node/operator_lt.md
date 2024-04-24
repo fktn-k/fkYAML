@@ -33,7 +33,7 @@ Check if `this` object is less than `rhs` according to the following rules:
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_operator_lt.cpp"
+    --8<-- "examples/ex_basic_node_operator_lt.cpp:9"
     ```
 
     output:

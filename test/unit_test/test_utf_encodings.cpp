@@ -14,10 +14,8 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("UTF8_GetNumBytes")
-{
-    SECTION("valid bytes")
-    {
+TEST_CASE("UTF8_GetNumBytes") {
+    SECTION("valid bytes") {
         using test_value_pair_t = std::pair<uint8_t, uint32_t>;
         auto pair = GENERATE(
             test_value_pair_t(uint8_t(0u), 1u),
@@ -34,17 +32,14 @@ TEST_CASE("UTF8_GetNumBytes")
         REQUIRE(fkyaml::detail::utf8::get_num_bytes(pair.first) == pair.second);
     }
 
-    SECTION("invalid bytes")
-    {
+    SECTION("invalid bytes") {
         uint8_t byte = GENERATE(uint8_t(0x80u), uint8_t(0xF8u));
         REQUIRE_THROWS_AS(fkyaml::detail::utf8::get_num_bytes(byte), fkyaml::invalid_encoding);
     }
 }
 
-TEST_CASE("UTF8_Validate")
-{
-    SECTION("1 byte character encoded in UTF-8")
-    {
+TEST_CASE("UTF8_Validate") {
+    SECTION("1 byte character encoded in UTF-8") {
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x00u)}) == true);
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x01u)}) == true);
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x02u)}) == true);
@@ -55,8 +50,7 @@ TEST_CASE("UTF8_Validate")
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x81u)}) == false);
     }
 
-    SECTION("2 byte characters encoded in UTF-8")
-    {
+    SECTION("2 byte characters encoded in UTF-8") {
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xC0u), uint8_t(0x80u)}) == false);
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xC1u), uint8_t(0x80u)}) == false);
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xC2u), uint8_t(0x7Eu)}) == false);
@@ -72,8 +66,7 @@ TEST_CASE("UTF8_Validate")
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE1u), uint8_t(0xBFu)}) == false);
     }
 
-    SECTION("3 byte characters encoded in UTF-8")
-    {
+    SECTION("3 byte characters encoded in UTF-8") {
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xDEu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xDFu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
@@ -125,8 +118,7 @@ TEST_CASE("UTF8_Validate")
         REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xF1u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
     }
 
-    SECTION("4 byte characters encoded in UTF-8")
-    {
+    SECTION("4 byte characters encoded in UTF-8") {
         REQUIRE(
             fkyaml::detail::utf8::validate({uint8_t(0xDEu), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}) == false);
         REQUIRE(
@@ -240,12 +232,9 @@ TEST_CASE("UTF8_Validate")
     }
 }
 
-TEST_CASE("UTF8_FromUTF16")
-{
-    SECTION("valid UTF-16 character(s)")
-    {
-        struct test_params
-        {
+TEST_CASE("UTF8_FromUTF16") {
+    SECTION("valid UTF-16 character(s)") {
+        struct test_params {
             std::array<char16_t, 2> utf16;
             std::array<uint8_t, 4> utf8_bytes;
             std::size_t consumed_size;
@@ -309,8 +298,7 @@ TEST_CASE("UTF8_FromUTF16")
         REQUIRE(encoded_size == params.encoded_size);
     }
 
-    SECTION("invalid UTF-16 character(s)")
-    {
+    SECTION("invalid UTF-16 character(s)") {
         auto utf16 = GENERATE(
             std::array<char16_t, 2> {{char16_t(0xDC00u), char16_t(0xDC00u)}},
             std::array<char16_t, 2> {{char16_t(0xDBFFu), char16_t(0xDBFFu)}},
@@ -325,12 +313,9 @@ TEST_CASE("UTF8_FromUTF16")
     }
 }
 
-TEST_CASE("UTF8_FromUTF32")
-{
-    SECTION("valid UTF-32 character")
-    {
-        struct test_params
-        {
+TEST_CASE("UTF8_FromUTF32") {
+    SECTION("valid UTF-32 character") {
+        struct test_params {
             char32_t utf32;
             std::array<uint8_t, 4> utf8_bytes;
             std::size_t size;
@@ -361,8 +346,7 @@ TEST_CASE("UTF8_FromUTF32")
         REQUIRE(size == params.size);
     }
 
-    SECTION("invalid UTF-32 character")
-    {
+    SECTION("invalid UTF-32 character") {
         char32_t utf32 = 0x110000u;
         std::array<uint8_t, 4> utf8_bytes;
         std::size_t encoded_size;

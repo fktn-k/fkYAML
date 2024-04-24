@@ -18,12 +18,7 @@
 #include <fkYAML/detail/meta/detect.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Type trait to check if T and U are comparable types.
 /// @tparam Comparator An object type to compare T and U objects.
@@ -31,9 +26,7 @@ namespace detail
 /// @tparam U The other type for comparison.
 /// @tparam typename Placeholder for determining T and U are comparable types.
 template <typename Comparator, typename T, typename U, typename = void>
-struct is_comparable : std::false_type
-{
-};
+struct is_comparable : std::false_type {};
 
 /// @brief A partial specialization of is_comparable if T and U are comparable types.
 /// @tparam Comparator An object type to compare T and U objects.
@@ -44,9 +37,7 @@ struct is_comparable<
     Comparator, T, U,
     void_t<
         decltype(std::declval<Comparator>()(std::declval<T>(), std::declval<U>())),
-        decltype(std::declval<Comparator>()(std::declval<U>(), std::declval<T>()))>> : std::true_type
-{
-};
+        decltype(std::declval<Comparator>()(std::declval<U>(), std::declval<T>()))>> : std::true_type {};
 
 /// @brief Type trait to check if KeyType can be used as key type.
 /// @tparam Comparator An object type to compare T and U objects.
@@ -60,9 +51,7 @@ using is_usable_as_key_type = typename std::conditional<
 /// @tparam IntegralType A type to be checked.
 /// @tparam typename N/A
 template <typename IntegralType, typename = void>
-struct is_non_bool_integral : std::false_type
-{
-};
+struct is_non_bool_integral : std::false_type {};
 
 /// @brief A partial specialization of is_non_bool_integral if IntegralType is of non-boolean integral types.
 /// @tparam IntegralType A type to be checked.
@@ -70,9 +59,7 @@ template <typename IntegralType>
 struct is_non_bool_integral<
     IntegralType,
     enable_if_t<conjunction<std::is_integral<IntegralType>, negation<std::is_same<bool, IntegralType>>>::value>>
-    : std::true_type
-{
-};
+    : std::true_type {};
 
 /// @brief Type traits to check if Types are all signed arithmetic types.
 /// @tparam Types Types to check if they are all signed arithmetic types.
@@ -90,9 +77,7 @@ using is_all_unsigned = conjunction<std::is_unsigned<Types>...>;
 /// @tparam CompatibleIntegerType A compatible integer type.
 /// @tparam typename N/A
 template <typename TargetIntegerType, typename CompatibleIntegerType, typename = void>
-struct is_compatible_integer_type_impl : std::false_type
-{
-};
+struct is_compatible_integer_type_impl : std::false_type {};
 
 /// @brief A partial specialization of is_compatible_integer_type_impl if TargetIntegerType and CompatibleIntegerType
 /// are compatible integer types.
@@ -101,38 +86,29 @@ struct is_compatible_integer_type_impl : std::false_type
 template <typename TargetIntegerType, typename CompatibleIntegerType>
 struct is_compatible_integer_type_impl<
     TargetIntegerType, CompatibleIntegerType, enable_if_t<is_non_bool_integral<CompatibleIntegerType>::value>>
-    : std::true_type
-{
-};
+    : std::true_type {};
 
 /// @brief Type traits to check if TargetIntegerType and CompatibleIntegerType are compatible integer types.
 /// @tparam TargetIntegerType A target integer type.
 /// @tparam CompatibleIntegerType A compatible integer type.
 template <typename TargetIntegerType, typename CompatibleIntegerType>
-struct is_compatible_integer_type : is_compatible_integer_type_impl<TargetIntegerType, CompatibleIntegerType>
-{
-};
+struct is_compatible_integer_type : is_compatible_integer_type_impl<TargetIntegerType, CompatibleIntegerType> {};
 
 /// @brief Type traits to check if T is a complete type.
 /// @tparam T A type to be checked if a complete type.
 /// @tparam typename N/A
 template <typename T, typename = void>
-struct is_complete_type : std::false_type
-{
-};
+struct is_complete_type : std::false_type {};
 
 /// @brief A partial specialization of is_complete_type if T is a complete type.
 /// @tparam T
 template <typename T>
-struct is_complete_type<T, decltype(void(sizeof(T)))> : std::true_type
-{
-};
+struct is_complete_type<T, decltype(void(sizeof(T)))> : std::true_type {};
 
 /// @brief A utility struct to generate static constant instance.
 /// @tparam T A target type for the resulting static constant instance.
 template <typename T>
-struct static_const
-{
+struct static_const {
     static FK_YAML_INLINE_VAR constexpr T value {}; // NOLINT(readability-identifier-naming)
 };
 
@@ -147,8 +123,7 @@ constexpr T static_const<T>::value;
 /// @brief A helper structure for tag dispatch.
 /// @tparam T A tag type.
 template <typename T>
-struct type_tag
-{
+struct type_tag {
     /// @brief A tagged type.
     using type = T;
 };
@@ -161,8 +136,7 @@ struct get_head_type;
 /// @brief A specialization of get_head_type if variadic template has no arguments.
 /// @tparam  N/A
 template <>
-struct get_head_type<>
-{
+struct get_head_type<> {
     /// @brief A head type
     using type = void;
 };
@@ -171,8 +145,7 @@ struct get_head_type<>
 /// @tparam First The first type in the arguments
 /// @tparam Rest The rest of the types in the arguments.
 template <typename First, typename... Rest>
-struct get_head_type<First, Rest...>
-{
+struct get_head_type<First, Rest...> {
     /// @brief A head type.
     using type = First;
 };
@@ -182,8 +155,6 @@ struct get_head_type<First, Rest...>
 template <typename... Types>
 using head_type = typename get_head_type<Types...>::type;
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_ */

@@ -37,7 +37,7 @@ This function is usually called by the constructors of the [`basic_node`](../bas
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_node_value_converter_to_node.cpp"
+    --8<-- "examples/ex_node_value_converter_to_node.cpp:9"
     ```
 
     output:

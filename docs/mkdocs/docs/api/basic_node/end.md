@@ -19,7 +19,7 @@ An iterator to the past-the-last element of a container node value (either seque
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_end.cpp"
+    --8<-- "examples/ex_basic_node_end.cpp:9"
     ```
 
     output:

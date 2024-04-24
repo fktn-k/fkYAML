@@ -15,7 +15,7 @@ The resulting basic_node has the [`node_t::MAPPING`](node_t.md) type.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_mapping.cpp"
+    --8<-- "examples/ex_basic_node_mapping.cpp:9"
     ```
 
     output:

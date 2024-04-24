@@ -26,7 +26,7 @@ If the given anchor node does not have any non-empty anchor name, an [`fkyaml::e
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_alias_of.cpp"
+    --8<-- "examples/ex_basic_node_alias_of.cpp:9"
     ```
 
     output:

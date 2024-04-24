@@ -19,7 +19,7 @@ With the decided type, boolean objects are stored directly inside a [`basic_node
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_boolean_type.cpp"
+    --8<-- "examples/ex_basic_node_boolean_type.cpp:9"
     ```
 
     output:

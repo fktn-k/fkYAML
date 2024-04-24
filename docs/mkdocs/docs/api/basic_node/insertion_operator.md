@@ -49,7 +49,7 @@ Reference to the output stream object `os`.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_insertion_operator.cpp"
+    --8<-- "examples/ex_basic_node_insertion_operator.cpp:9"
     ```
 
     output:

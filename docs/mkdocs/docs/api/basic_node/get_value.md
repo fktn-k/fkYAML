@@ -35,7 +35,7 @@ A compatible native data value converted from the basic_node object.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_get_value.cpp"
+    --8<-- "examples/ex_basic_node_get_value.cpp:9"
     ```
 
     output:

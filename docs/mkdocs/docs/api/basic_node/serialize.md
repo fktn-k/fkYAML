@@ -57,7 +57,7 @@ The resulting string object from the serialization of the `node` object.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_serialize.cpp"
+    --8<-- "examples/ex_basic_node_serialize.cpp:9"
     ```
 
     output:

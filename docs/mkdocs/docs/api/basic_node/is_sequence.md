@@ -15,7 +15,7 @@ Tests whether the node value type is [`node_t::SEQUENCE`](node_t.md).
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_is_sequence.cpp"
+    --8<-- "examples/ex_basic_node_is_sequence.cpp:9"
     ```
 
     output:

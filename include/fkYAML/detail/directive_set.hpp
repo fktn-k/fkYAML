@@ -17,18 +17,10 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/types/yaml_version_t.hpp>
 
-/// @namespace fkyaml
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @namespace detail
-/// @brief namespace for internal implementaions of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief The set of directives for a YAML document.
-struct directive_set
-{
+struct directive_set {
     /// The YAML version used for the YAML document.
     yaml_version_t version {yaml_version_t::VER_1_2};
     /// Whether or not the YAML version has been specified.
@@ -41,8 +33,6 @@ struct directive_set
     std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_DIRECTIVE_SET_HPP_ */

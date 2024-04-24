@@ -10,15 +10,13 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("TagResolver_ResolveTag")
-{
+TEST_CASE("TagResolver_ResolveTag") {
     using test_pair_t = std::pair<std::string, fkyaml::detail::tag_t>;
 
     fkyaml::detail::tag_t tag_type {};
     std::shared_ptr<fkyaml::detail::directive_set> directives {};
 
-    SECTION("valid tag name with default tag handle prefixes")
-    {
+    SECTION("valid tag name with default tag handle prefixes") {
         auto test_pair = GENERATE(
             test_pair_t {"!", fkyaml::detail::tag_t::NON_SPECIFIC},
             test_pair_t {"!local", fkyaml::detail::tag_t::CUSTOM_TAG},
@@ -44,8 +42,7 @@ TEST_CASE("TagResolver_ResolveTag")
         REQUIRE(tag_type == test_pair.second);
     }
 
-    SECTION("valid tag name with non-default primary handle prefix")
-    {
+    SECTION("valid tag name with non-default primary handle prefix") {
         directives = std::shared_ptr<fkyaml::detail::directive_set>(new fkyaml::detail::directive_set());
         directives->primary_handle_prefix = "tag:example.com,2000:";
 
@@ -57,8 +54,7 @@ TEST_CASE("TagResolver_ResolveTag")
         REQUIRE(tag_type == test_pair.second);
     }
 
-    SECTION("valid tag name with non-default secondary handle prefix")
-    {
+    SECTION("valid tag name with non-default secondary handle prefix") {
         directives = std::shared_ptr<fkyaml::detail::directive_set>(new fkyaml::detail::directive_set());
         directives->secondary_handle_prefix = "tag:example.com,2000";
 
@@ -75,8 +71,7 @@ TEST_CASE("TagResolver_ResolveTag")
         REQUIRE(tag_type == test_pair.second);
     }
 
-    SECTION("valid tag name with named handles")
-    {
+    SECTION("valid tag name with named handles") {
         directives = std::shared_ptr<fkyaml::detail::directive_set>(new fkyaml::detail::directive_set());
         directives->named_handle_map.emplace("!yaml!", "tag:yaml.org,2002:");
         directives->named_handle_map.emplace("!test0!", "!test-");
@@ -95,15 +90,13 @@ TEST_CASE("TagResolver_ResolveTag")
         REQUIRE(tag_type == test_pair.second);
     }
 
-    SECTION("invalid tag name with empty directive_set")
-    {
+    SECTION("invalid tag name with empty directive_set") {
         auto tag = GENERATE(std::string(""), std::string("invalid"), std::string("!invalid!tag"));
 
         REQUIRE_THROWS_AS(fkyaml::detail::tag_resolver::resolve_tag(tag, directives), fkyaml::invalid_tag);
     }
 
-    SECTION("invalid tag name with non-empty directive_set")
-    {
+    SECTION("invalid tag name with non-empty directive_set") {
         directives = std::shared_ptr<fkyaml::detail::directive_set>(new fkyaml::detail::directive_set());
         directives->named_handle_map.emplace("!valid!", "tag:example.com,2000");
 

@@ -30,7 +30,7 @@ void swap(basic_node& rhs) noexcept; // (1)
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_swap_member.cpp"
+    --8<-- "examples/ex_basic_node_swap_member.cpp:9"
     ```
 
     output:
@@ -61,7 +61,7 @@ inline void swap(
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_swap_std.cpp"
+    --8<-- "examples/ex_basic_node_swap_std.cpp:9"
     ```
 
     output:

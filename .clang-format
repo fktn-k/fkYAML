@@ -31,23 +31,23 @@ BinPackParameters: true
 BitFieldColonSpacing: Both
 BraceWrapping:
   AfterCaseLabel:  false
-  AfterClass:      true
-  AfterControlStatement: Always
-  AfterEnum:       true
-  AfterExternBlock: true
-  AfterFunction:   true
-  AfterNamespace:  true
-  AfterObjCDeclaration: true
-  AfterStruct:     true
-  AfterUnion:      true
+  AfterClass:      false
+  AfterControlStatement: Never
+  AfterEnum:       false
+  AfterExternBlock: false
+  AfterFunction:   false
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     false
+  AfterUnion:      false
   BeforeCatch:     true
   BeforeElse:      true
   BeforeLambdaBody: false
   BeforeWhile:     false
   IndentBraces:    false
-  SplitEmptyFunction: true
-  SplitEmptyRecord: true
-  SplitEmptyNamespace: true
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
 # BreakAfterAttributes: Never # since clang-format 16
 BreakAfterJavaFieldAnnotations: false
 # BreakArrays:     true # since clang-format 16
@@ -100,7 +100,7 @@ IndentCaseBlocks: false
 IndentCaseLabels: false
 IndentExternBlock: AfterExternBlock
 IndentGotoLabels: true
-IndentPPDirectives: BeforeHash
+IndentPPDirectives: None
 # IndentRequiresClause: true # since clang-format 15
 IndentWidth:     4
 IndentWrappedFunctionNames: false

@@ -10,8 +10,7 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("StringFormatter_ValidMessageFormat")
-{
+TEST_CASE("StringFormatter_ValidMessageFormat") {
     const char* p_label = "foo_label";
     int result = 0;
     std::string formatted = fkyaml::detail::format("%s: ret=%d", p_label, result);

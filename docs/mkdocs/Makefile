@@ -1,5 +1,5 @@
 # build the site
-build: install-venv prepare_files
+build: install-venv
 	venv/bin/mkdocs build
 
 # serve the site locally
@@ -14,11 +14,3 @@ install-venv: requirements.txt
 
 uninstall-venv:
 	rm -rf venv
-
-clean:
-	rm -rf docs/examples
-
-# prepare example snippets and outputs
-prepare_files: clean
-	mkdir docs/examples
-	cp -r ../examples/*.cpp ../examples/*.output ../examples/*.yaml docs/examples

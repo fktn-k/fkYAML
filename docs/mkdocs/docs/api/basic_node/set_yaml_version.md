@@ -16,7 +16,7 @@ Sets the version of the YAML format to the `basic_node` object.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_set_yaml_version.cpp"
+    --8<-- "examples/ex_basic_node_set_yaml_version.cpp:9"
     ```
 
     output:

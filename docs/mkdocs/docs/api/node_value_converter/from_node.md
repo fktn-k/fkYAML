@@ -39,7 +39,7 @@ Note that the `TargetType` must be default-constructible.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_node_value_converter_from_node.cpp"
+    --8<-- "examples/ex_node_value_converter_from_node.cpp:9"
     ```
 
     output:

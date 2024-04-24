@@ -21,7 +21,6 @@
 #include <fkYAML/detail/meta/type_traits.hpp>
 #include <fkYAML/exception.hpp>
 
-/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
 /// @brief A minimal map-like container which preserves insertion order.
@@ -33,8 +32,7 @@ FK_YAML_NAMESPACE_BEGIN
 template <
     typename Key, typename Value, typename IgnoredCompare = std::less<Key>,
     typename Allocator = std::allocator<std::pair<const Key, Value>>>
-class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator>
-{
+class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator> {
 public:
     /// A type for keys.
     using key_type = Key;
@@ -57,16 +55,14 @@ public:
     /// @brief Construct a new ordered_map object.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/constructor/
     ordered_map() noexcept(noexcept(Container()))
-        : Container()
-    {
+        : Container() {
     }
 
     /// @brief Construct a new ordered_map object with an initializer list.
     /// @param init An initializer list to construct the inner container object.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/constructor/
     ordered_map(std::initializer_list<value_type> init)
-        : Container {init}
-    {
+        : Container {init} {
     }
 
 public:
@@ -78,8 +74,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    mapped_type& operator[](KeyType&& key) noexcept
-    {
+    mapped_type& operator[](KeyType&& key) noexcept {
         return emplace(std::forward<KeyType>(key), mapped_type()).first->second;
     }
 
@@ -93,12 +88,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    std::pair<iterator, bool> emplace(KeyType&& key, const mapped_type& value) noexcept
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    std::pair<iterator, bool> emplace(KeyType&& key, const mapped_type& value) noexcept {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return {itr, false};
             }
         }
@@ -114,12 +106,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    mapped_type& at(KeyType&& key)
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    mapped_type& at(KeyType&& key) {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return itr->second;
             }
         }
@@ -134,12 +123,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    const mapped_type& at(KeyType&& key) const
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    const mapped_type& at(KeyType&& key) const {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return itr->second;
             }
         }
@@ -154,12 +140,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    iterator find(KeyType&& key) noexcept
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    iterator find(KeyType&& key) noexcept {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return itr;
             }
         }
@@ -174,12 +157,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    const_iterator find(KeyType&& key) const noexcept
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    const_iterator find(KeyType&& key) const noexcept {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return itr;
             }
         }

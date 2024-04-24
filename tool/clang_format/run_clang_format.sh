@@ -12,7 +12,7 @@ if [ ! -e ./venv/bin/clang-format ]; then
     venv/bin/pip install clang-format==14.0.0
 fi
 
-for f in $(find "$ROOT_DIR/include" "$ROOT_DIR/test/unit_test" -type f -name "*.hpp" -o -name "*.cpp" | sort); do
+for f in $(find "$ROOT_DIR/include" "$ROOT_DIR/test" "$ROOT_DIR/docs/examples" -type f -name "*.hpp" -o -name "*.cpp" | sort); do
     venv/bin/clang-format "$f" -i
 done
 

@@ -1,15 +1,21 @@
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <string>
 #include <fkYAML/node.hpp>
 
-int main()
-{
+int main() {
     // deserialize a YAML string.
     FILE* p_file = std::fopen("input.yaml", "r");
-    if (!p_file)
-    {
+    if (!p_file) {
         // You must not pass a null FILE pointer.
         return -1;
     }

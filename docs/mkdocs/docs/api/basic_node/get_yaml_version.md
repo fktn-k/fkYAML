@@ -20,7 +20,7 @@ The version of the YAML format applied to the basic_node object.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_get_yaml_version.cpp"
+    --8<-- "examples/ex_basic_node_get_yaml_version.cpp:9"
     ```
 
     output:

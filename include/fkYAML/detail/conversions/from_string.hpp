@@ -22,11 +22,7 @@
 #include <fkYAML/detail/meta/type_traits.hpp>
 #include <fkYAML/exception.hpp>
 
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Convert a string YAML token to a ValueType object.
 /// @tparam ValueType A target value type.
@@ -37,10 +33,8 @@ inline ValueType from_string(const std::basic_string<CharType>& s, type_tag<Valu
 /// @brief Specialization of from_string() for null values with std::string
 /// @tparam  N/A
 template <>
-inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t> /*unused*/)
-{
-    if (s == "null" || s == "Null" || s == "NULL" || s == "~")
-    {
+inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t> /*unused*/) {
+    if (s == "null" || s == "Null" || s == "NULL" || s == "~") {
         return nullptr;
     }
 
@@ -50,15 +44,12 @@ inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t>
 /// @brief Specialization of from_string() for boolean values with std::string.
 /// @tparam  N/A
 template <>
-inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
-{
-    if (s == "true" || s == "True" || s == "TRUE")
-    {
+inline bool from_string(const std::string& s, type_tag<bool> /*unused*/) {
+    if (s == "true" || s == "True" || s == "TRUE") {
         return true;
     }
 
-    if (s == "false" || s == "False" || s == "FALSE")
-    {
+    if (s == "false" || s == "False" || s == "FALSE") {
         return false;
     }
 
@@ -68,17 +59,14 @@ inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
 /// @brief Specialization of from_string() for int values with std::string.
 /// @tparam  N/A
 template <>
-inline int from_string(const std::string& s, type_tag<int> /*unused*/)
-{
+inline int from_string(const std::string& s, type_tag<int> /*unused*/) {
     std::size_t idx = 0;
     long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stoi(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into an int value.");
     }
 
@@ -88,17 +76,14 @@ inline int from_string(const std::string& s, type_tag<int> /*unused*/)
 /// @brief Specialization of from_string() for long values with std::string.
 /// @tparam  N/A
 template <>
-inline long from_string(const std::string& s, type_tag<long> /*unused*/)
-{
+inline long from_string(const std::string& s, type_tag<long> /*unused*/) {
     std::size_t idx = 0;
     long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stol(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into a long value.");
     }
 
@@ -108,17 +93,14 @@ inline long from_string(const std::string& s, type_tag<long> /*unused*/)
 /// @brief Specialization of from_string() for long long values with std::string.
 /// @tparam  N/A
 template <>
-inline long long from_string(const std::string& s, type_tag<long long> /*unused*/)
-{
+inline long long from_string(const std::string& s, type_tag<long long> /*unused*/) {
     std::size_t idx = 0;
     long long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stoll(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into a long long value.");
     }
 
@@ -133,11 +115,9 @@ inline enable_if_t<
         is_non_bool_integral<SignedIntType>, std::is_signed<SignedIntType>, negation<std::is_same<SignedIntType, int>>,
         negation<std::is_same<SignedIntType, long>>, negation<std::is_same<SignedIntType, long long>>>::value,
     SignedIntType>
-from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
-{
+from_string(const std::string& s, type_tag<SignedIntType> /*unused*/) {
     const auto tmp_ret = from_string(s, type_tag<int> {});
-    if (static_cast<long long>(std::numeric_limits<SignedIntType>::max()) < tmp_ret)
-    {
+    if (static_cast<long long>(std::numeric_limits<SignedIntType>::max()) < tmp_ret) {
         throw exception("Failed to convert a long long value into a SignedIntegerType value.");
     }
 
@@ -147,17 +127,14 @@ from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
 /// @brief Specialization of from_string() for unsigned long values with std::string.
 /// @tparam  N/A
 template <>
-inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /*unused*/)
-{
+inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /*unused*/) {
     std::size_t idx = 0;
     unsigned long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stoul(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into an unsigned long value.");
     }
 
@@ -167,17 +144,14 @@ inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /
 /// @brief Specialization of from_string() for unsigned long long values with std::string.
 /// @tparam  N/A
 template <>
-inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/)
-{
+inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/) {
     std::size_t idx = 0;
     unsigned long long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stoull(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into an unsigned long long value.");
     }
 
@@ -193,11 +167,9 @@ inline enable_if_t<
         negation<std::is_same<UnsignedIntType, unsigned long>>,
         negation<std::is_same<UnsignedIntType, unsigned long long>>>::value,
     UnsignedIntType>
-from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
-{
+from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/) {
     const auto tmp_ret = from_string(s, type_tag<unsigned long> {});
-    if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret)
-    {
+    if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret) {
         throw exception("Failed to convert an unsigned long long into an unsigned integer value.");
     }
 
@@ -207,33 +179,27 @@ from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
 /// @brief Specialization of from_string() for float values with std::string.
 /// @tparam  N/A
 template <>
-inline float from_string(const std::string& s, type_tag<float> /*unused*/)
-{
-    if (s == ".inf" || s == ".Inf" || s == ".INF")
-    {
+inline float from_string(const std::string& s, type_tag<float> /*unused*/) {
+    if (s == ".inf" || s == ".Inf" || s == ".INF") {
         return std::numeric_limits<float>::infinity();
     }
 
-    if (s == "-.inf" || s == "-.Inf" || s == "-.INF")
-    {
+    if (s == "-.inf" || s == "-.Inf" || s == "-.INF") {
         static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required.");
         return -1 * std::numeric_limits<float>::infinity();
     }
 
-    if (s == ".nan" || s == ".NaN" || s == ".NAN")
-    {
+    if (s == ".nan" || s == ".NaN" || s == ".NAN") {
         return std::nanf("");
     }
 
     std::size_t idx = 0;
     float ret = 0.0f;
 
-    try
-    {
+    try {
         ret = std::stof(s, &idx);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into a float value.");
     }
 
@@ -243,41 +209,33 @@ inline float from_string(const std::string& s, type_tag<float> /*unused*/)
 /// @brief Specialization of from_string() for double values with std::string.
 /// @tparam  N/A
 template <>
-inline double from_string(const std::string& s, type_tag<double> /*unused*/)
-{
-    if (s == ".inf" || s == ".Inf" || s == ".INF")
-    {
+inline double from_string(const std::string& s, type_tag<double> /*unused*/) {
+    if (s == ".inf" || s == ".Inf" || s == ".INF") {
         return std::numeric_limits<double>::infinity();
     }
 
-    if (s == "-.inf" || s == "-.Inf" || s == "-.INF")
-    {
+    if (s == "-.inf" || s == "-.Inf" || s == "-.INF") {
         static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 required.");
         return -1 * std::numeric_limits<double>::infinity();
     }
 
-    if (s == ".nan" || s == ".NaN" || s == ".NAN")
-    {
+    if (s == ".nan" || s == ".NaN" || s == ".NAN") {
         return std::nan("");
     }
 
     std::size_t idx = 0;
     double ret = 0.0;
 
-    try
-    {
+    try {
         ret = std::stod(s, &idx);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into a double value.");
     }
 
     return ret;
 }
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_ */

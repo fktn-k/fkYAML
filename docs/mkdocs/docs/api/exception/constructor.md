@@ -22,7 +22,7 @@ Constructs an exception object without an error message.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_exception_constructor_noarg.cpp"
+    --8<-- "examples/ex_exception_constructor_noarg.cpp:9"
     ```
 
     output:
@@ -47,7 +47,7 @@ The given error message can be retrieved by calling [`exception::what()`](what.m
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_exception_constructor_msg.cpp"
+    --8<-- "examples/ex_exception_constructor_msg.cpp:9"
     ```
 
     output:

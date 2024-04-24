@@ -12,7 +12,7 @@ This iterator type is commonly used for sequence and mapping container values.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_iterator.cpp"
+    --8<-- "examples/ex_basic_node_iterator.cpp:9"
     ```
 
     output:

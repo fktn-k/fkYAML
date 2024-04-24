@@ -19,7 +19,7 @@ With the decided type, floating point number objects are stored directly inside 
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_float_number_type.cpp"
+    --8<-- "examples/ex_basic_node_float_number_type.cpp:9"
     ```
 
     output:

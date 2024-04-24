@@ -24,17 +24,12 @@
 #include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
 
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A basic implementation of serialization feature for YAML nodes.
 /// @tparam BasicNodeType A BasicNode template class instantiation.
 template <typename BasicNodeType>
-class basic_serializer
-{
+class basic_serializer {
     static_assert(detail::is_basic_node<BasicNodeType>::value, "basic_serializer only accepts basic_node<...>");
 
 public:
@@ -44,8 +39,7 @@ public:
     /// @brief Serialize the given Node value.
     /// @param node A Node object to be serialized.
     /// @return std::string A serialization result of the given Node value.
-    std::string serialize(const BasicNodeType& node)
-    {
+    std::string serialize(const BasicNodeType& node) {
         std::string str {};
         serialize_directives(node, str);
         serialize_node(node, 0, str);
@@ -56,20 +50,16 @@ private:
     /// @brief Serialize the directives if any is applied to the node.
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
-    void serialize_directives(const BasicNodeType& node, std::string& str)
-    {
-        if (!node.mp_directive_set)
-        {
+    void serialize_directives(const BasicNodeType& node, std::string& str) {
+        if (!node.mp_directive_set) {
             return;
         }
 
         const auto& directives = node.mp_directive_set;
 
-        if (directives->is_version_specified)
-        {
+        if (directives->is_version_specified) {
             str += "%YAML ";
-            switch (directives->version)
-            {
+            switch (directives->version) {
             case yaml_version_t::VER_1_1:
                 str += "1.1\n";
                 break;
@@ -79,24 +69,20 @@ private:
             }
         }
 
-        if (!directives->primary_handle_prefix.empty())
-        {
+        if (!directives->primary_handle_prefix.empty()) {
             str += "%TAG ! ";
             str += directives->primary_handle_prefix;
             str += "\n";
         }
 
-        if (!directives->secondary_handle_prefix.empty())
-        {
+        if (!directives->secondary_handle_prefix.empty()) {
             str += "%TAG !! ";
             str += directives->secondary_handle_prefix;
             str += "\n";
         }
 
-        if (!directives->named_handle_map.empty())
-        {
-            for (const auto& itr : directives->named_handle_map)
-            {
+        if (!directives->named_handle_map.empty()) {
+            for (const auto& itr : directives->named_handle_map) {
                 str += "%TAG ";
                 str += itr.first;
                 str += " ";
@@ -112,19 +98,15 @@ private:
     /// @param node A Node object to be serialized.
     /// @param cur_indent The current indent width
     /// @param str A string to hold serialization result.
-    void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str)
-    {
-        switch (node.type())
-        {
+    void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
+        switch (node.type()) {
         case node_t::SEQUENCE:
-            for (const auto& seq_item : node)
-            {
+            for (const auto& seq_item : node) {
                 insert_indentation(cur_indent, str);
                 str += "-";
 
                 bool is_appended = try_append_alias(seq_item, true, str);
-                if (is_appended)
-                {
+                if (is_appended) {
                     str += "\n";
                     continue;
                 }
@@ -133,43 +115,36 @@ private:
                 try_append_tag(seq_item, true, str);
 
                 bool is_scalar = seq_item.is_scalar();
-                if (is_scalar)
-                {
+                if (is_scalar) {
                     str += " ";
                     serialize_node(seq_item, cur_indent, str);
                     str += "\n";
                 }
-                else
-                {
+                else {
                     str += "\n";
                     serialize_node(seq_item, cur_indent + 2, str);
                 }
             }
             break;
         case node_t::MAPPING:
-            for (auto itr = node.begin(); itr != node.end(); ++itr)
-            {
+            for (auto itr = node.begin(); itr != node.end(); ++itr) {
                 insert_indentation(cur_indent, str);
 
                 bool is_appended = try_append_alias(itr.key(), false, str);
-                if (!is_appended)
-                {
+                if (!is_appended) {
                     bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
                     bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
-                    if (is_anchor_appended || is_tag_appended)
-                    {
+                    if (is_anchor_appended || is_tag_appended) {
                         str += " ";
                     }
 
                     bool is_container = !itr.key().is_scalar();
-                    if (is_container)
-                    {
+                    if (is_container) {
                         str += "? ";
                     }
                     uint32_t indent = static_cast<uint32_t>(get_cur_indent(str));
                     serialize_node(itr.key(), indent, str);
-                    if (is_container)
-                    {
+                    if (is_container) {
                         // a newline code is already inserted in the above serialize_node() call.
                         insert_indentation(indent - 2, str);
                     }
@@ -178,8 +153,7 @@ private:
                 str += ":";
 
                 is_appended = try_append_alias(*itr, true, str);
-                if (is_appended)
-                {
+                if (is_appended) {
                     str += "\n";
                     continue;
                 }
@@ -188,14 +162,12 @@ private:
                 try_append_tag(*itr, true, str);
 
                 bool is_scalar = itr->is_scalar();
-                if (is_scalar)
-                {
+                if (is_scalar) {
                     str += " ";
                     serialize_node(*itr, cur_indent, str);
                     str += "\n";
                 }
-                else
-                {
+                else {
                     str += "\n";
                     serialize_node(*itr, cur_indent + 2, str);
                 }
@@ -221,8 +193,7 @@ private:
             bool is_escaped = false;
             typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
 
-            if (is_escaped)
-            {
+            if (is_escaped) {
                 // There's no other token type with escapes than strings.
                 // Also, escapes must be in double-quoted strings.
                 str += '\"';
@@ -235,16 +206,14 @@ private:
             lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
             lexical_token_t token_type = lexer.get_next_token();
 
-            if (token_type != lexical_token_t::STRING_VALUE)
-            {
+            if (token_type != lexical_token_t::STRING_VALUE) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
                 str += str_val;
                 str += '\"';
             }
-            else
-            {
+            else {
                 str += str_val;
             }
             break;
@@ -255,11 +224,9 @@ private:
     /// @brief Get the current indentation width.
     /// @param s The target string object.
     /// @return The current indentation width.
-    std::size_t get_cur_indent(const std::string& s) const noexcept
-    {
+    std::size_t get_cur_indent(const std::string& s) const noexcept {
         bool is_empty = s.empty();
-        if (is_empty)
-        {
+        if (is_empty) {
             return 0;
         }
 
@@ -270,10 +237,8 @@ private:
     /// @brief Insert indentation to the serialization result.
     /// @param indent The indent width to be inserted.
     /// @param str A string to hold serialization result.
-    void insert_indentation(const uint32_t indent, std::string& str) const noexcept
-    {
-        if (indent == 0)
-        {
+    void insert_indentation(const uint32_t indent, std::string& str) const noexcept {
+        if (indent == 0) {
             return;
         }
 
@@ -285,12 +250,9 @@ private:
     /// @param prepends_space Whether or not to prepend a space before an anchor property.
     /// @param str A string to hold serialization result.
     /// @return true if an anchor property has been appended, false otherwise.
-    bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const
-    {
-        if (node.is_anchor())
-        {
-            if (prepends_space)
-            {
+    bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const {
+        if (node.is_anchor()) {
+            if (prepends_space) {
                 str += " ";
             }
             str += "&" + node.get_anchor_name();
@@ -304,12 +266,9 @@ private:
     /// @param prepends_space Whether or not to prepend a space before an alias property.
     /// @param str A string to hold serialization result.
     /// @return true if an alias property has been appended, false otherwise.
-    bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const
-    {
-        if (node.is_alias())
-        {
-            if (prepends_space)
-            {
+    bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const {
+        if (node.is_alias()) {
+            if (prepends_space) {
                 str += " ";
             }
             str += "*" + node.get_anchor_name();
@@ -322,12 +281,9 @@ private:
     /// @param[in] node The target node which possibly has a tag name.
     /// @param[out] str A string to hold serialization result.
     /// @return true if a tag name has been appended, false otherwise.
-    bool try_append_tag(const BasicNodeType& node, bool prepends_space, std::string& str) const
-    {
-        if (node.has_tag_name())
-        {
-            if (prepends_space)
-            {
+    bool try_append_tag(const BasicNodeType& node, bool prepends_space, std::string& str) const {
+        if (node.has_tag_name()) {
+            if (prepends_space) {
                 str += " ";
             }
             str += node.get_tag_name();
@@ -340,8 +296,7 @@ private:
     /// @param[in] node The target string YAML node.
     /// @param[out] is_escaped Whether or not the contents of an ouput string has been escaped.
     /// @return The (escaped) string node value.
-    typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped)
-    {
+    typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
         FK_YAML_ASSERT(node.is_string());
 
         using string_type = typename BasicNodeType::string_type;
@@ -352,10 +307,8 @@ private:
         string_type escaped {};
         escaped.reserve(size);
 
-        for (size_t i = 0; i < size; i++)
-        {
-            switch (s[i])
-            {
+        for (size_t i = 0; i < size; i++) {
+            switch (s[i]) {
             case 0x01:
                 escaped += "\\u0001";
                 is_escaped = true;
@@ -489,29 +442,25 @@ private:
                 is_escaped = true;
                 break;
             default:
-                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u))
-                {
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u)) {
                     escaped += "\\N";
                     i++;
                     is_escaped = true;
                     break;
                 }
-                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u))
-                {
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u)) {
                     escaped += "\\_";
                     i++;
                     is_escaped = true;
                     break;
                 }
-                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u))
-                {
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u)) {
                     escaped += "\\L";
                     i += 2;
                     is_escaped = true;
                     break;
                 }
-                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u))
-                {
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u)) {
                     escaped += "\\P";
                     i += 2;
                     is_escaped = true;
@@ -530,8 +479,6 @@ private:
     std::string m_tmp_str_buff;
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_ */
