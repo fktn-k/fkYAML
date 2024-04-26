@@ -5638,7 +5638,7 @@ private:
         char tmp_buf[256] {};
         do {
             m_istream->read(&tmp_buf[0], 256);
-            std::size_t read_size = m_istream->gcount();
+            std::size_t read_size = static_cast<std::size_t>(m_istream->gcount());
             buffer.append(tmp_buf, read_size);
         } while (!m_istream->eof());
 
