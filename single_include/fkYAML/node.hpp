@@ -4295,11 +4295,6 @@ private:
                     break;
                 }
 
-                // if the current node is a mapping.
-                if (m_node_stack.empty()) {
-                    throw parse_error("Invalid sequence block prefix(- ) found.", line, indent);
-                }
-
                 // move back to the previous sequence if necessary.
                 while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent) {
                     mp_current_node = m_node_stack.back();
