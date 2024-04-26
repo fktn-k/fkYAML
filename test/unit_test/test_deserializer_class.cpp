@@ -287,6 +287,22 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(root["foo"][0].is_string());
         REQUIRE(root["foo"][0].get_value_ref<std::string&>() == "bar");
     }
+
+    SECTION("root sequence") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("- foo\n- 123\n- 3.14")));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 3);
+
+        REQUIRE(root[0].is_string());
+        REQUIRE(root[0].get_value_ref<std::string&>() == "foo");
+
+        REQUIRE(root[1].is_integer());
+        REQUIRE(root[1].get_value<int>() == 123);
+
+        REQUIRE(root[2].is_float_number());
+        REQUIRE(root[2].get_value<double>() == 3.14);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMapping") {
@@ -788,6 +804,21 @@ TEST_CASE("Deserializer_FlowSequence") {
     SECTION("lack the beginning of a flow sequence") {
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: ]")), fkyaml::parse_error);
     }
+
+    SECTION("root flow sequence") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("[foo,123,3.14]")));
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 3);
+
+        REQUIRE(root[0].is_string());
+        REQUIRE(root[0].get_value_ref<std::string&>() == "foo");
+
+        REQUIRE(root[1].is_integer());
+        REQUIRE(root[1].get_value<int>() == 123);
+
+        REQUIRE(root[2].is_float_number());
+        REQUIRE(root[2].get_value<double>() == 3.14);
+    }
 }
 
 TEST_CASE("Deserializer_FlowMapping") {
@@ -879,6 +910,21 @@ TEST_CASE("Deserializer_FlowMapping") {
 
         REQUIRE(test_foo_node[1].is_integer());
         REQUIRE(test_foo_node[1].get_value<int>() == 123);
+    }
+
+    SECTION("root flow mapping") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("{foo: 123, true: 3.14}")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains(true));
+
+        REQUIRE(root["foo"].is_integer());
+        REQUIRE(root["foo"].get_value<int>() == 123);
+
+        REQUIRE(root[true].is_float_number());
+        REQUIRE(root[true].get_value<double>() == 3.14);
     }
 }
 
