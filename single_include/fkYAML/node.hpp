@@ -3976,6 +3976,16 @@ public:
         // parse directives first.
         deserialize_directives(lexer, root, type);
 
+        switch (type) {
+        case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
+        case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+            root = node_type::sequence();
+            apply_directive_set(root);
+            break;
+        default:
+            break;
+        }
+
         // parse YAML nodes recursively
         deserialize_node(lexer, type);
 
@@ -4250,6 +4260,7 @@ private:
                 continue;
             }
             case lexical_token_t::VALUE_SEPARATOR:
+                FK_YAML_ASSERT(m_flow_context_depth > 0);
                 break;
             // just ignore directives
             case lexical_token_t::YAML_VER_DIRECTIVE:
@@ -4284,11 +4295,6 @@ private:
                     break;
                 }
 
-                // if the current node is a mapping.
-                if (m_node_stack.empty()) {
-                    throw parse_error("Invalid sequence block prefix(- ) found.", line, indent);
-                }
-
                 // move back to the previous sequence if necessary.
                 while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent) {
                     mp_current_node = m_node_stack.back();
@@ -4308,23 +4314,32 @@ private:
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
                 break;
-            case lexical_token_t::SEQUENCE_FLOW_END:
+            case lexical_token_t::SEQUENCE_FLOW_END: {
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
                 --m_flow_context_depth;
-                mp_current_node = m_node_stack.back();
-                m_node_stack.pop_back();
+                bool is_stack_empty = m_node_stack.empty();
+                if (!is_stack_empty) {
+                    mp_current_node = m_node_stack.back();
+                    m_node_stack.pop_back();
+                }
                 break;
+            }
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 ++m_flow_context_depth;
                 *mp_current_node = node_type::mapping();
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
                 break;
-            case lexical_token_t::MAPPING_FLOW_END:
+            case lexical_token_t::MAPPING_FLOW_END: {
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
                 --m_flow_context_depth;
-                mp_current_node = m_node_stack.back();
+                bool is_stack_empty = m_node_stack.empty();
+                if (!is_stack_empty) {
+                    mp_current_node = m_node_stack.back();
+                    m_node_stack.pop_back();
+                }
                 break;
+            }
             case lexical_token_t::ALIAS_PREFIX:
             case lexical_token_t::NULL_VALUE:
             case lexical_token_t::BOOLEAN_VALUE:
@@ -4344,9 +4359,8 @@ private:
                 break;
             }
 
-            lexical_token_t prev_type = type;
             type = lexer.get_next_token();
-            indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? indent : lexer.get_last_token_begin_pos();
+            indent = lexer.get_last_token_begin_pos();
             line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
     }
@@ -4459,7 +4473,9 @@ private:
         mapping_type& map = mp_current_node->template get_value_ref<mapping_type&>();
         bool is_empty = map.empty();
         if (is_empty) {
-            m_indent_stack.emplace_back(line, indent, false);
+            if (m_flow_context_depth == 0) {
+                m_indent_stack.emplace_back(line, indent, false);
+            }
         }
         else {
             // check key duplication in the current mapping if not empty.
@@ -4484,7 +4500,7 @@ private:
 
         // a scalar node
         *mp_current_node = std::move(node_value);
-        if (!m_indent_stack.back().is_explicit_key) {
+        if (m_flow_context_depth > 0 || !m_indent_stack.back().is_explicit_key) {
             mp_current_node = m_node_stack.back();
             m_node_stack.pop_back();
         }
