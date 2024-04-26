@@ -91,7 +91,9 @@ class Amalgamation(object):
 			t = TranslationUnit(file_path, self, True)
 			amalgamation += t.content
 
-		with open(self.target, 'w') as f:
+		# Force newline codes to be LF.
+		# Without the parameter, they would be CRLF on Windows.
+		with open(self.target, 'w', newline='\n') as f:
 			f.write(amalgamation)
 
 		print("...done!\n")
