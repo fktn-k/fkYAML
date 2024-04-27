@@ -1,20 +1,18 @@
 #!/bin/bash
 
-set -e
+set -eu
 
-CALLER_DIR=$(pwd)
-ROOT_DIR=$(cd "$(dirname "$0")" && cd ../.. && pwd)
+ROOT_DIR="$(dirname "$0")/.."
 
-SINGLE_HEADER_PATH=$ROOT_DIR/single_include/fkYAML/node.hpp
-mv $SINGLE_HEADER_PATH $SINGLE_HEADER_PATH~
-./scripts/run_amalgamation.sh
-diff $SINGLE_HEADER_PATH $SINGLE_HEADER_PATH~ || \
-    (echo Amalgamation required. ; \
-     echo Please follow the guideline in the CONTRIBUTING.md file. ; \
-     mv $SINGLE_HEADER_PATH~ $SINGLE_HEADER_PATH ; \
-     cd $CALLER_DIR ; false)
-mv $SINGLE_HEADER_PATH~ $SINGLE_HEADER_PATH
+SINGLE_HEADER_PATH="$ROOT_DIR/single_include/fkYAML/node.hpp"
+mv "$SINGLE_HEADER_PATH" "$SINGLE_HEADER_PATH~"
+"$ROOT_DIR"/scripts/run_amalgamation.sh >/dev/null
 
-echo Amalgamation check passed!
+if cmp -s "$SINGLE_HEADER_PATH" "$SINGLE_HEADER_PATH~" ; then
+    echo Amalgamation check passed!
+else
+    echo Amalgamation required.
+    echo Please follow the guideline in the CONTRIBUTING.md file.
+fi
 
-cd $CALLER_DIR
+mv "$SINGLE_HEADER_PATH~" "$SINGLE_HEADER_PATH"

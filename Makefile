@@ -43,7 +43,6 @@ all:
 #############################
 
 clang-format:
-	chmod a+x ./scripts/run_clang_format.sh
 	./scripts/run_clang_format.sh
 
 # pre-requisites: clang-tidy
@@ -77,11 +76,9 @@ valgrind:
 ###########################
 
 amalgamate:
-	chmod a+x ./scripts/run_amalgamation.sh
 	./scripts/run_amalgamation.sh
 
 check-amalgamate:
-	chmod a+x ./scripts/check_amalgamation.sh
 	./scripts/check_amalgamation.sh
 
 ##########################################
