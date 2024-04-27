@@ -9,11 +9,13 @@ on:
       - .github/workflows/amalgamation_check.yml
       - include/fkYAML/**
       - single_include/fkYAML/**
+      - scripts/*_amalgamation.*
   pull_request:
     paths:
       - .github/workflows/amalgamation_check.yml
       - include/fkYAML/**
       - single_include/fkYAML/**
+      - scripts/*_amalgamation.*
   workflow_dispatch:
 
 concurrency:
