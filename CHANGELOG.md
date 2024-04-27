@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.5](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.5) (2024-04-27)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.4...v0.3.5)
+
+- Fix parse error on the first node which isn't a block mapping [\#322](https://github.com/fktn-k/fkYAML/pull/322) ([fktn-k](https://github.com/fktn-k))
+
+- Add Bash & Batch scripts to run clang-format & amalgamation [\#325](https://github.com/fktn-k/fkYAML/pull/325) ([fktn-k](https://github.com/fktn-k))
+- Force LF newline codes in the amalgamated file [\#324](https://github.com/fktn-k/fkYAML/pull/324) ([fktn-k](https://github.com/fktn-k))
+- Add workflows items to test Win32 builds [\#323](https://github.com/fktn-k/fkYAML/pull/323) ([fktn-k](https://github.com/fktn-k))
+- Set the unit test app as the Visual Studio startup project [\#321](https://github.com/fktn-k/fkYAML/pull/321) ([fktn-k](https://github.com/fktn-k))
+- Reformat source files [\#320](https://github.com/fktn-k/fkYAML/pull/320) ([fktn-k](https://github.com/fktn-k))
+- Serialize container keys [\#319](https://github.com/fktn-k/fkYAML/pull/319) ([fktn-k](https://github.com/fktn-k))
+- Improved UTF encoding processing [\#318](https://github.com/fktn-k/fkYAML/pull/318) ([fktn-k](https://github.com/fktn-k))
+- Query the count of UTF-8 character bytes [\#317](https://github.com/fktn-k/fkYAML/pull/317) ([fktn-k](https://github.com/fktn-k))
+- Use Clang-Format python distribution [\#316](https://github.com/fktn-k/fkYAML/pull/316) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.4](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.4) (2024-04-20)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.3...v0.3.4)
