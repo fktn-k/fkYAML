@@ -1,5 +1,57 @@
 # Releases
 
+## **fkYAML version 0.3.5**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.5/fkYAML.tgz)
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.5/fkYAML.zip)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.5/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.5/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.5/node.hpp) (single header)
+
+### Summary
+
+This release adds the new support for serialization of YAML container key nodes either with or without tags and/or anchors.  
+In addition, Win32 builds are now tested during the GitHub Actions workflows.
+Moreover, the performance and efficiency of Unicode handlings have been improved by refactoring the deserialization feature.  
+
+For contributors, fkYAML now depends on the Clang-Format Python distribution as the source code formatter and provides Bash/Batch scripts for running the Clang-Format and amalgamation.  
+For more information, see the latest CONTRIBUTING.md file.  
+
+### What's Changed
+
+#### :sparkles: New Features
+
+- Serialize container keys by [@fktn-k](https://github.com/fktn-k) in [\#319](https://github.com/fktn-k/fkYAML/pull/319)
+
+#### :zap: Improvements
+
+- Query the count of UTF-8 character bytes by [@fktn-k](https://github.com/fktn-k) in [\#317](https://github.com/fktn-k/fkYAML/pull/317)
+- Improved UTF encoding processing by [@fktn-k](https://github.com/fktn-k) in [\#318](https://github.com/fktn-k/fkYAML/pull/318)
+- Reformat source files by [@fktn-k](https://github.com/fktn-k) in [\#320](https://github.com/fktn-k/fkYAML/pull/320)
+
+#### :bug: Bug Fixes
+
+- Fix parse error on the first node which isn't a block mapping by [@fktn-k](https://github.com/fktn-k) in [\#322](https://github.com/fktn-k/fkYAML/pull/322)
+- Force LF newline codes in the amalgamated file by [@fktn-k](https://github.com/fktn-k) in [\#324](https://github.com/fktn-k/fkYAML/pull/324)
+
+#### :robot: CI
+
+- Add workflows items to test Win32 builds by [@fktn-k](https://github.com/fktn-k) in [\#323](https://github.com/fktn-k/fkYAML/pull/323)
+
+#### :people_holding_hands: Community
+
+- Use Clang-Format python distribution by [@fktn-k](https://github.com/fktn-k) in [\#316](https://github.com/fktn-k/fkYAML/pull/316)
+- Set the unit test app as the Visual Studio startup project by [@fktn-k](https://github.com/fktn-k) in [\#321](https://github.com/fktn-k/fkYAML/pull/321)
+- Add Bash & Batch scripts to run clang-format & amalgamation by [@fktn-k](https://github.com/fktn-k) in [\#325](https://github.com/fktn-k/fkYAML/pull/325)
+
+
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.3...v0.3.5
+
+---
+
 ## **fkYAML version 0.3.4**
 
 !!! abstract "Release Packages"
@@ -41,6 +93,8 @@ For CI processes, workflows using the macOS 14 GitHub Actions runner image have 
 - updated dependencies for mkdocs to the latest versions by [fktn-k](https://github.com/fktn-k) in [\#312](https://github.com/fktn-k/fkYAML/pull/312)
 
 **Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.3...v0.3.4
+
+---
 
 ## **fkYAML version 0.3.3**
 
