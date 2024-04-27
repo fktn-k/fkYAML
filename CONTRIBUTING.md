@@ -8,18 +8,15 @@ To make it as easy as possible for you to contribute and for me to keep an overv
 
 Usually, all issues are tracked publicly on [GitHub](https://github.com/fktn-k/fkYAML/issues). If you want to make a private report (e.g., for a vulnerability or to attach an example that is not meant to be published), please send an email to <fktn.dev@gmail.com>.
 
-## Prerequisites
+## Describe your request/issue
 
 Please create a [discussion](https://github.com/fktn-k/fkYAML/discussions) or [issue](https://github.com/fktn-k/fkYAML/issues/new/choose), assuming one does not already exist, and describe your concern.  
 Note you need a [GitHub account](https://github.com/signup/free) for this.
 
-## Describe your request/issue
-
-Clearly describe the request/issue:
-
+Please keep in mind the followings:
 - If you propose a change or addition, try to give an **example** how the improved code could look like or how to use it.
-- If it is a bug, please describe how to **reproduce** it. If possible, attach a complete example which demonstrates the error. Please also state what you **expected** to happen instead of the error.
-- If you found a compilation error, please tell us which **compiler** (version and operating system) you used and paste the (relevant part of) the error messages to the ticket.
+- If you find a bug, please describe how to **reproduce** it. If possible, attach a complete example which demonstrates the error. Please also state what you **expected** to happen instead of the error.
+- If you find a compilation error, please tell us which **compiler** (version and operating system) you used and paste the (relevant part of) the error messages to the ticket.
 
 For questions, feature or support requests, please [open a discussion](https://github.com/fktn-k/fkYAML/discussions/new).  
 
@@ -30,14 +27,33 @@ To make changes to the fkYAML project, you need to edit the following files:
 
 ### 1. [`include/fkYAML/**.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/include/fkYAML)
 
-These files are the sources of the fkYAML library. After making changes in those files, please run `make amalgamate` to regenerate [`single_include/fkYAML/node.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/single_include/fkYAML/node.hpp) at least before making a PR. If the `make` command is unavailable on your local environment, the following commands will do the same:  
+These files are the sources of the fkYAML library. After making changes in those files, please run the script ([`run_amalgamation.bat`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.bat) for Windows, [`run_amalgamation.sh`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.sh) otherwise) to regenerate [`single_include/fkYAML/node.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/single_include/fkYAML/node.hpp) at least before making a PR, with the following commands:  
 
-```bash
-$ cd path/to/fkYAML
-$ python3 ./tool/amalgamation/amalgamate.py -c ./tool/amalgamation/fkYAML.json -s . --verbose=yes
+**Windows**
+```batch
+cd path\to\fkYAML
+scripts\run_amalgamation.bat
 ```
 
-Note that the amalgamation tool assumes that your current directory is at the root of the fkYAML project.  
+**Otherwise**
+```bash
+cd path/to/fkYAML
+scripts/run_amalgamation.sh
+```
+
+If you just want to check if amalgamation is needed, run the script ([`run_amalgamation.bat`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.bat) for Windows, [`run_amalgamation.sh`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.sh) otherwise) with the following commands:  
+
+**Windows**
+```batch
+cd path\to\fkYAML
+scripts\check_amalgamation.bat
+```
+
+**Otherwise**
+```bash
+cd path/to/fkYAML
+scripts/check_amalgamation.sh
+```
 
 ### 2. [`test/unit_test/*.cpp`](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test)
 
@@ -46,10 +62,10 @@ These files contain the [Catch2](https://github.com/catchorg/Catch2) unit tests 
 The unit tests can be compiled and executed with the following commands:  
 
 ```bash
-$ cd path/to/fkYAML
-$ cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON [-DFK_YAML_USE_SINGLE_HEADER=ON|OFF]
-$ cmake --build build --config Debug
-$ ctest -C Debug --test-dir build --output-on-failure
+cd path/to/fkYAML
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON [-DFK_YAML_USE_SINGLE_HEADER=(ON|OFF)]
+cmake --build build --config Debug
+ctest -C Debug --test-dir build --output-on-failure
 ```
 
 Furthermore, you can test the single-header version of fkYAML by passing `-DFK_YAML_USE_SINGLE_HEADER=ON` when you configure CMake. (disabled by default)  
@@ -64,8 +80,8 @@ In such cases, please run the following commands and open a generated `index.htm
 Make sure `lcov` and `genhtml` commands are available before execution.  
 
 ```bash
-$ cd /path/to/fkYAML
-$ make html-coverage
+cd /path/to/fkYAML
+make html-coverage
 ```
 
 ##### For Windows users (help needed)
@@ -81,8 +97,8 @@ These files are the sources of the documentation from which [MkDocs](https://www
 Also, you can build & check the updated documentation on your local environment by executing the following commands:
 
 ```bash
-$ cd path/to/fkYAML
-$ make -C docs/mkdocs serve
+cd path/to/fkYAML
+make -C docs/mkdocs serve
 ```
 
 The commands above will automatically install all the dependencies using [Python venv](https://docs.python.org/3.10/library/venv.html) with the [`requirements.txt`](https://github.com/fktn-k/fkYAML/blob/develop/docs/mkdocs/requirements.txt) file. The generated documentation will be available by accessing http://127.0.0.1:8000/.
@@ -91,20 +107,21 @@ The commands above will automatically install all the dependencies using [Python
 
 [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) will test the updated project with the [Clang-Format](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormat.html) tool (14.0.0) when you push commits which include changes in the source files in either `include` or `test` directories.  
 So, it would be more efficient to check if your changes follow the rules defined in the [`.clang-format`](https://github.com/fktn-k/fkYAML/tree/develop/.clang-format) file on your local environment in advance.  
-Since the Clang-Format tool does not seem to gurantee backward compatibility and its behaviors vary from version to version, the Bash script [`run_clang_format.sh`](https://github.com/fktn-k/fkYAML/tool/clang_format/run_clang_format.sh) is available to avoid unnecessary confusion for that kind of reason.  
-The script uses [the Clang-Format Python distribution](https://pypi.org/project/clang-format/14.0.0/) and installs it using [the Python venv module](https://docs.python.org/3/library/venv.html) if it's not installed yet.  
+Since the Clang-Format tool does not seem to gurantee backward compatibility and its behaviors vary from version to version, the script files ([`run_clang_format.bat`](https://github.com/fktn-k/fkYAML/scripts/run_clang_format.bat) for Windows, [`run_clang_format.sh`](https://github.com/fktn-k/fkYAML/scripts/run_clang_format.sh) otherwise) are available to avoid unnecessary confusion for that kind of reason.  
+The scripts uses [the Clang-Format Python distribution](https://pypi.org/project/clang-format/14.0.0/) and installs it using [the Python venv module](https://docs.python.org/3/library/venv.html) if it's not installed yet.  
 So, all you need to run the script is only Python 3.3 or better.  
 You can run it with the following commands:  
 
-```bash
-# if Make is available
-$ cd path/to/fkYAML
-$ make clang-format
+**Windows**
+```batch
+cd path\to\fkYAML
+scripts\run_clang_format.bat
+```
 
-# otherwise
-$ cd path/to/fkYAML/tool/clang_format
-$ chmod a+x run_clang_format.sh  # just in case the script is not allowed to be not executed.
-$ run_clang_format.sh
+**Otherwise**
+```bash
+cd path/to/fkYAML
+scripts/run_clang_format.sh
 ```
 
 ## Note
@@ -112,6 +129,23 @@ $ run_clang_format.sh
 When you open a pull request, fkYAML will automatically be built/tested with (1) various combinations of compilers and operating systems and (2) analyzers such as [Valgrind](https://valgrind.org/) and [Clang Sanitizers](https://clang.llvm.org/docs/index.html) to detect runtime issues (e.g., memory leaks), on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
 These can result in failing builds and/or unit tests which run successfully on your local environment.  
 As a policy of this project, however, all the workflow checks must be passed before merging.  
+You can run tests with those tools with the following commands:  
+
+**Valgrind** (assuming Valgrind is already installed.)
+```bash
+cd path/to/fkYAML
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUOLD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
+cmake --build build --config Debug
+ctest -C Debug -T memcheck --test-dir build --output-on-failure
+```
+
+**Clang Sanitizers** (assuming some version of Clang is already installed.)
+```bash
+cd path/to/fkYAML
+CXX=clang++ cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_CLANG_SANITIZERS=ON
+cmake --build build --config Debug
+ctest -C Debug --test-dir build --output-on-failure
+```
 
 ## Please don't
 
