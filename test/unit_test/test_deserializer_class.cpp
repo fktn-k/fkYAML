@@ -1449,6 +1449,21 @@ TEST_CASE("Deserializer_Tag") {
         REQUIRE(root["seq_flow"][1].get_value<float>() == 3.14f);
     }
 
+    SECTION("specify tags using TAG directives") {
+        std::string input = "%TAG !e! tag:example.com,2000:app/\n"
+                            "---\n"
+                            "- !e!foo \"bar\"";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 1);
+
+        REQUIRE(root[0].has_tag_name());
+        REQUIRE(root[0].get_tag_name() == "!e!foo");
+        REQUIRE(root[0].is_string());
+        REQUIRE(root[0].get_value_ref<std::string&>() == "bar");
+    }
+
     SECTION("multiple tags specified") {
         auto input = GENERATE(std::string("foo: !!map !!map\n  bar: baz"), std::string("!!str !!bool true: 123"));
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);

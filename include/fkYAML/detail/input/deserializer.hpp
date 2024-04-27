@@ -187,8 +187,8 @@ private:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case lexical_token_t::END_OF_DIRECTIVES:
-                last_type = type;
-                return;
+                // Ignore this directives end marker so the caller will get the beginning token of the contents.
+                break;
             default:
                 // end the parsing of directives if the other tokens are found.
                 last_type = type;
