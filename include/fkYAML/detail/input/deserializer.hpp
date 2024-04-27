@@ -462,7 +462,6 @@ private:
                 break;
             }
             case lexical_token_t::END_OF_DIRECTIVES:
-                break;
             case lexical_token_t::END_OF_DOCUMENT:
                 // TODO: This token should be handled to support multiple documents.
                 break;
