@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -16,16 +16,10 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of node value types.
-enum class node_t : std::uint32_t
-{
+enum class node_t : std::uint32_t {
     SEQUENCE,     //!< sequence value type
     MAPPING,      //!< mapping value type
     NULL_OBJECT,  //!< null value type
@@ -35,10 +29,8 @@ enum class node_t : std::uint32_t
     STRING,       //!< string value type
 };
 
-inline const char* to_string(node_t t) noexcept
-{
-    switch (t)
-    {
+inline const char* to_string(node_t t) noexcept {
+    switch (t) {
     case node_t::SEQUENCE:
         return "sequence";
     case node_t::MAPPING:
@@ -58,8 +50,6 @@ inline const char* to_string(node_t t) noexcept
     }
 }
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP_ */

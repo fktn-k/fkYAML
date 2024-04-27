@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -18,12 +18,7 @@
 #include <fkYAML/detail/meta/detect.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 ///////////////////////////////////////////
 //   Input Adapter API detection traits
@@ -38,17 +33,13 @@ using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer(std::declval<std
 /// @tparam InputAdapterType An input adapter type to check if it has get_character function.
 /// @tparam typename N/A
 template <typename InputAdapterType, typename = void>
-struct has_fill_buffer : std::false_type
-{
-};
+struct has_fill_buffer : std::false_type {};
 
 /// @brief A partial specialization of has_fill_buffer if InputAdapterType has get_character member function.
 /// @tparam InputAdapterType A type of a target input adapter.
 template <typename InputAdapterType>
 struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_t, InputAdapterType>::value>>
-    : std::true_type
-{
-};
+    : std::true_type {};
 
 ////////////////////////////////
 //   is_input_adapter traits
@@ -58,19 +49,13 @@ struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_
 /// @tparam T A target type.
 /// @tparam typename N/A
 template <typename T, typename = void>
-struct is_input_adapter : std::false_type
-{
-};
+struct is_input_adapter : std::false_type {};
 
 /// @brief A partial specialization of is_input_adapter if T is an input adapter type.
 /// @tparam InputAdapterType
 template <typename InputAdapterType>
-struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type
-{
-};
+struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type {};
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */

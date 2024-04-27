@@ -24,7 +24,7 @@ If you want to convert some type from/to `basic_node`, however, it is recommende
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_value_converter_type.cpp"
+    --8<-- "examples/ex_basic_node_value_converter_type.cpp:9"
     ```
 
     output:

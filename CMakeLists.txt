@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project(
   fkYAML
-  VERSION 0.3.4
+  VERSION 0.3.5
   LANGUAGES CXX)
 
 #############################################################
@@ -140,6 +140,13 @@ if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
   include(CTest)
   enable_testing()
   add_subdirectory(test)
+
+  # Set the unit test app project as the Visual Studio startup project
+  # if the target compiler is some version of Microsoft Visual C++ and
+  # if this project is the main project.
+  if(MSVC AND CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT fkYAMLUnitTest)
+  endif()
 endif()
 
 #######################

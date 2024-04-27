@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -13,17 +13,11 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of Unicode encoding types
 /// @note Since fkYAML doesn't treat UTF-16/UTF-32 encoded characters per byte, endians do not matter.
-enum class utf_encode_t
-{
+enum class utf_encode_t {
     UTF_8,    //!< UTF-8
     UTF_16BE, //!< UTF-16 Big Endian
     UTF_16LE, //!< UTF-16 Little Endian
@@ -31,8 +25,6 @@ enum class utf_encode_t
     UTF_32LE, //!< UTF-32 Little Endian
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_ */

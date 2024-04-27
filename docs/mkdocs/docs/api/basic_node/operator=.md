@@ -32,7 +32,7 @@ Reference to this basic_node object.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_copy_assignment_operator.cpp"
+    --8<-- "examples/ex_basic_node_copy_assignment_operator.cpp:9"
     ```
 
     output:

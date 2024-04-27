@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,14 +12,12 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("OrderedMap_DefaultCtor")
-{
+TEST_CASE("OrderedMap_DefaultCtor") {
     fkyaml::ordered_map<std::string, bool> map;
     REQUIRE(map.empty());
 }
 
-TEST_CASE("OrderedMap_InitListCtor")
-{
+TEST_CASE("OrderedMap_InitListCtor") {
     fkyaml::ordered_map<std::string, bool> map {{"foo", true}, {"bar", false}};
     REQUIRE_FALSE(map.empty());
     REQUIRE(map.size() == 2);
@@ -36,8 +34,7 @@ TEST_CASE("OrderedMap_InitListCtor")
     REQUIRE(itr->second == false);
 }
 
-TEST_CASE("OrderedMap_SubscriptOperator")
-{
+TEST_CASE("OrderedMap_SubscriptOperator") {
     fkyaml::ordered_map<std::string, bool> map {{"foo", true}, {"buz", false}};
     REQUIRE(map["foo"] == true);
     REQUIRE(map["bar"] == false);
@@ -46,8 +43,7 @@ TEST_CASE("OrderedMap_SubscriptOperator")
     REQUIRE(map["buz"] == true);
 }
 
-TEST_CASE("OrderedMap_Emplace")
-{
+TEST_CASE("OrderedMap_Emplace") {
     fkyaml::ordered_map<std::string, bool> map;
     REQUIRE(map.emplace("foo", true).second == true);
     REQUIRE(map.emplace("foo", false).second == false);
@@ -56,8 +52,7 @@ TEST_CASE("OrderedMap_Emplace")
     REQUIRE(map["bar"] == false);
 }
 
-TEST_CASE("OrderedMap_NonConstAt")
-{
+TEST_CASE("OrderedMap_NonConstAt") {
     fkyaml::ordered_map<std::string, bool> map;
     REQUIRE_THROWS_AS(map.at("foo"), fkyaml::exception);
     map.emplace("foo", true);
@@ -67,8 +62,7 @@ TEST_CASE("OrderedMap_NonConstAt")
     REQUIRE_THROWS_AS(map.at(key), fkyaml::exception);
 }
 
-TEST_CASE("OrderedMap_ConstAt")
-{
+TEST_CASE("OrderedMap_ConstAt") {
     const fkyaml::ordered_map<std::string, bool> map;
     REQUIRE_THROWS_AS(map.at("foo"), fkyaml::exception);
     fkyaml::ordered_map<std::string, bool> map_ = map;
@@ -83,8 +77,7 @@ TEST_CASE("OrderedMap_ConstAt")
     REQUIRE_THROWS_AS(map__.at(key), fkyaml::exception);
 }
 
-TEST_CASE("OrderedMap_NonConstFind")
-{
+TEST_CASE("OrderedMap_NonConstFind") {
     fkyaml::ordered_map<std::string, bool> map;
     REQUIRE(map.find("foo") == map.end());
     map.emplace("foo", true);
@@ -94,8 +87,7 @@ TEST_CASE("OrderedMap_NonConstFind")
     REQUIRE(map.find("bar") == map.end());
 }
 
-TEST_CASE("OrderedMap_ConstFind")
-{
+TEST_CASE("OrderedMap_ConstFind") {
     const fkyaml::ordered_map<std::string, bool> map;
     REQUIRE(map.find("foo") == map.end());
     fkyaml::ordered_map<std::string, bool> map_ = map;

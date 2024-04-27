@@ -35,7 +35,7 @@ Possibly a default value of the `mapped_type` if the ordered_map does not contai
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_ordered_map_subscript_operator.cpp"
+    --8<-- "examples/ex_ordered_map_subscript_operator.cpp:9"
     ```
 
     output:

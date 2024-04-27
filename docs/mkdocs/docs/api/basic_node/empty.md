@@ -16,7 +16,7 @@ Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not h
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_empty.cpp"
+    --8<-- "examples/ex_basic_node_empty.cpp:9"
     ```
 
     output:

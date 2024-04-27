@@ -20,7 +20,7 @@ Tests whether the node value type is one of the followings:
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_is_scalar.cpp"
+    --8<-- "examples/ex_basic_node_is_scalar.cpp:9"
     ```
 
     output:

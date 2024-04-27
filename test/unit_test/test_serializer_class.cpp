@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,8 +12,7 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("Serializer_SequenceNode")
-{
+TEST_CASE("Serializer_SequenceNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
         node_str_pair_t({true, false}, "- true\n- false\n"),
@@ -22,8 +21,7 @@ TEST_CASE("Serializer_SequenceNode")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("Serializer_MappingNode")
-{
+TEST_CASE("Serializer_MappingNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
         node_str_pair_t({{"foo", -1234}, {"bar", nullptr}}, "bar: null\nfoo: -1234\n"),
@@ -32,31 +30,27 @@ TEST_CASE("Serializer_MappingNode")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("Serializer_NullNode")
-{
+TEST_CASE("Serializer_NullNode") {
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     fkyaml::node node;
     REQUIRE(serializer.serialize(node) == "null");
 }
 
-TEST_CASE("Serializer_BooleanNode")
-{
+TEST_CASE("Serializer_BooleanNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(node_str_pair_t(false, "false"), node_str_pair_t(true, "true"));
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("Serializer_IntegerNode")
-{
+TEST_CASE("Serializer_IntegerNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(node_str_pair_t(-1234, "-1234"), node_str_pair_t(5678, "5678"));
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializeClassTest_FloatNumberNode", "[SerializeClassTest]")
-{
+TEST_CASE("SerializeClassTest_FloatNumberNode", "[SerializeClassTest]") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
         node_str_pair_t(3.14, "3.14"),
@@ -68,8 +62,7 @@ TEST_CASE("SerializeClassTest_FloatNumberNode", "[SerializeClassTest]")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("Serializer_StringNode")
-{
+TEST_CASE("Serializer_StringNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     const char NEXT_LINE[] = {char(0xC2u), char(0x85u), char(0)};
 
@@ -152,8 +145,21 @@ TEST_CASE("Serializer_StringNode")
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("Serializer_AnchorNode")
-{
+TEST_CASE("Serializer_MappingKeyNode") {
+    fkyaml::node map_key = {{true, 123}};
+    fkyaml::node seq_key = {3.14, nullptr};
+    fkyaml::node node = {{map_key, 3.14}, {seq_key, "foo"}};
+    std::string expected = "? - 3.14\n"
+                           "  - null\n"
+                           ": foo\n"
+                           "? true: 123\n"
+                           ": 3.14\n";
+
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(serializer.serialize(node) == expected);
+}
+
+TEST_CASE("Serializer_AnchorNode") {
     fkyaml::node node = {{"foo", 123}, {nullptr, {true, "bar", 3.14}}};
     node[nullptr].add_anchor_name("A");
     node[nullptr][2].add_anchor_name("B");
@@ -172,8 +178,7 @@ TEST_CASE("Serializer_AnchorNode")
     REQUIRE(serializer.serialize(node) == expected);
 }
 
-TEST_CASE("Serializer_AliasNode")
-{
+TEST_CASE("Serializer_AliasNode") {
     fkyaml::node node = {{"foo", 123}};
     node["foo"].add_anchor_name("A");
     node.get_value_ref<fkyaml::node::mapping_type&>().emplace(true, fkyaml::node::alias_of(node["foo"]));
@@ -197,8 +202,7 @@ TEST_CASE("Serializer_AliasNode")
     REQUIRE(serializer.serialize(node) == expected);
 }
 
-TEST_CASE("Serializer_TaggedNode")
-{
+TEST_CASE("Serializer_TaggedNode") {
     fkyaml::node root = fkyaml::node::mapping();
     fkyaml::node str_node("foo");
     str_node.add_tag_name("!!str");
@@ -235,14 +239,12 @@ TEST_CASE("Serializer_TaggedNode")
     REQUIRE(serializer.serialize(root) == expected);
 }
 
-TEST_CASE("Serializer_NodesWithDirectives")
-{
+TEST_CASE("Serializer_NodesWithDirectives") {
     fkyaml::node root;
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
 
-    SECTION("YAML version 1.1")
-    {
+    SECTION("YAML version 1.1") {
         std::string expected = "%YAML 1.1\n"
                                "---\n"
                                "foo: 123\n";
@@ -251,8 +253,7 @@ TEST_CASE("Serializer_NodesWithDirectives")
         REQUIRE(serializer.serialize(root) == expected);
     }
 
-    SECTION("YAML version 1.2")
-    {
+    SECTION("YAML version 1.2") {
         std::string expected = "%YAML 1.2\n"
                                "---\n"
                                "foo: 123\n";
@@ -261,8 +262,7 @@ TEST_CASE("Serializer_NodesWithDirectives")
         REQUIRE(serializer.serialize(root) == expected);
     }
 
-    SECTION("primary handle prefix")
-    {
+    SECTION("primary handle prefix") {
         std::string expected = "%TAG ! tag:example.com,2000:\n"
                                "---\n"
                                "foo: 123\n";
@@ -271,8 +271,7 @@ TEST_CASE("Serializer_NodesWithDirectives")
         REQUIRE(serializer.serialize(root) == expected);
     }
 
-    SECTION("secondary handle prefix")
-    {
+    SECTION("secondary handle prefix") {
         std::string expected = "%TAG !! tag:example.com,2000:\n"
                                "---\n"
                                "foo: 123\n";
@@ -281,8 +280,7 @@ TEST_CASE("Serializer_NodesWithDirectives")
         REQUIRE(serializer.serialize(root) == expected);
     }
 
-    SECTION("named handles")
-    {
+    SECTION("named handles") {
         std::string expected = "%TAG !e! tag:example.com,2000:\n"
                                "%TAG !t! !test-\n"
                                "---\n"

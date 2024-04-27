@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -24,7 +24,7 @@
 // #include <fkYAML/detail/macros/version_macros.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -34,42 +34,47 @@
 
 // Check version definitions if already defined.
 #if defined(FK_YAML_MAJOR_VERSION) && defined(FK_YAML_MINOR_VERSION) && defined(FK_YAML_PATCH_VERSION)
-    #if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 3 || FK_YAML_PATCH_VERSION != 4
-        #warning Already included a different version of the fkYAML library!
-    #else
-        // define macros to skip defining macros down below.
-        #define FK_YAML_VERCHECK_SUCCEEDED
-    #endif
+#if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 3 || FK_YAML_PATCH_VERSION != 5
+#warning Already included a different version of the fkYAML library!
+#else
+// define macros to skip defining macros down below.
+#define FK_YAML_VERCHECK_SUCCEEDED
+#endif
 #endif
 
 #ifndef FK_YAML_VERCHECK_SUCCEEDED
 
-    #define FK_YAML_MAJOR_VERSION 0
-    #define FK_YAML_MINOR_VERSION 3
-    #define FK_YAML_PATCH_VERSION 4
+#define FK_YAML_MAJOR_VERSION 0
+#define FK_YAML_MINOR_VERSION 3
+#define FK_YAML_PATCH_VERSION 5
 
-    #define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
+#define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
 
-    #define FK_YAML_NAMESPACE_VERSION_CONCAT(major, minor, patch)                                                      \
-        FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch)
+#define FK_YAML_NAMESPACE_VERSION_CONCAT(major, minor, patch) FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch)
 
-    #define FK_YAML_NAMESPACE_VERSION                                                                                  \
-        FK_YAML_NAMESPACE_VERSION_CONCAT(FK_YAML_MAJOR_VERSION, FK_YAML_MINOR_VERSION, FK_YAML_PATCH_VERSION)
+#define FK_YAML_NAMESPACE_VERSION                                                                                      \
+    FK_YAML_NAMESPACE_VERSION_CONCAT(FK_YAML_MAJOR_VERSION, FK_YAML_MINOR_VERSION, FK_YAML_PATCH_VERSION)
 
-    #define FK_YAML_NAMESPACE_BEGIN                                                                                    \
-        namespace fkyaml                                                                                               \
-        {                                                                                                              \
-        inline namespace FK_YAML_NAMESPACE_VERSION                                                                     \
-        {
+#define FK_YAML_NAMESPACE_BEGIN                                                                                        \
+    namespace fkyaml {                                                                                                 \
+    inline namespace FK_YAML_NAMESPACE_VERSION {
 
-    #define FK_YAML_NAMESPACE_END                                                                                      \
-        } /* namespace (inline namespace) */                                                                           \
-        } // namespace fkyaml
+#define FK_YAML_NAMESPACE_END                                                                                          \
+    } /* inline namespace FK_YAML_NAMESPACE_VERSION */                                                                 \
+    } // namespace fkyaml
 
-    // #include <fkYAML/detail/macros/cpp_config_macros.hpp>
+#define FK_YAML_DETAIL_NAMESPACE_BEGIN                                                                                 \
+    FK_YAML_NAMESPACE_BEGIN                                                                                            \
+    namespace detail {
+
+#define FK_YAML_DETAIL_NAMESPACE_END                                                                                   \
+    } /* namespace detail */                                                                                           \
+    FK_YAML_NAMESPACE_END
+
+// #include <fkYAML/detail/macros/cpp_config_macros.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -87,42 +92,42 @@
 // Skip detection if the definitions listed below already exist.
 #if !defined(FK_YAML_HAS_CXX_20) && !defined(FK_YAML_HAS_CXX_17) && !defined(FK_YAML_HAS_CXX_14) &&                    \
     !defined(FK_YAML_CXX_11)
-    #if (defined(__cplusplus) && __cplusplus >= 202002L) || (defined(_MSVC_LANG) && MSVC_LANG >= 202002L)
-        #define FK_YAML_HAS_CXX_20
-        #define FK_YAML_HAS_CXX_17
-        #define FK_YAML_HAS_CXX_14
-    #elif (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)
-        #define FK_YAML_HAS_CXX_17
-        #define FK_YAML_HAS_CXX_14
-    #elif (defined(__cplusplus) && __cplusplus >= 201402L) || (defined(_HAS_CXX14) && _HAS_CXX14 == 1)
-        #define FK_YAML_HAS_CXX_14
-    #endif
+#if (defined(__cplusplus) && __cplusplus >= 202002L) || (defined(_MSVC_LANG) && MSVC_LANG >= 202002L)
+#define FK_YAML_HAS_CXX_20
+#define FK_YAML_HAS_CXX_17
+#define FK_YAML_HAS_CXX_14
+#elif (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)
+#define FK_YAML_HAS_CXX_17
+#define FK_YAML_HAS_CXX_14
+#elif (defined(__cplusplus) && __cplusplus >= 201402L) || (defined(_HAS_CXX14) && _HAS_CXX14 == 1)
+#define FK_YAML_HAS_CXX_14
+#endif
 
-    // C++11 is the minimum required version of the fkYAML library.
-    #define FK_YAML_HAS_CXX_11
+// C++11 is the minimum required version of the fkYAML library.
+#define FK_YAML_HAS_CXX_11
 #endif
 
 // switch usage of inline variables. Inline variables have been introduced since C++17.
 #if defined(FK_YAML_HAS_CXX_17)
-    #define FK_YAML_INLINE_VAR inline
+#define FK_YAML_INLINE_VAR inline
 #else
-    #define FK_YAML_INLINE_VAR
+#define FK_YAML_INLINE_VAR
 #endif
 
 #ifdef __has_include
-    #if __has_include(<version>)
-        // <version> is available since C++20
-        #include <version>
-    #endif
+#if __has_include(<version>)
+// <version> is available since C++20
+#include <version>
+#endif
 #endif
 
 // switch usage of char8_t. char8_t has been introduced since C++20
 #if !defined(FK_YAML_HAS_CHAR8_T)
-    #if defined(FK_YAML_HAS_CXX_20)
-        #if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
-            #define FK_YAML_HAS_CHAR8_T
-        #endif
-    #endif
+#if defined(FK_YAML_HAS_CXX_20)
+#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
+#define FK_YAML_HAS_CHAR8_T
+#endif
+#endif
 #endif
 
 #endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */
@@ -133,7 +138,7 @@
 // #include <fkYAML/detail/assert.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -146,12 +151,12 @@
 
 // if FK_YAML_ASSERT is not user-defined. apply the default assert impl.
 #ifndef FK_YAML_ASSERT
-    #ifndef NDEBUG
-        #include <cassert>
-        #define FK_YAML_ASSERT(x) assert(x) // NOLINT(cppcoreguidelines-macro-usage)
-    #else
-        #define FK_YAML_ASSERT(x) // NOLINT(cppcoreguidelines-macro-usage)
-    #endif
+#ifndef NDEBUG
+#include <cassert>
+#define FK_YAML_ASSERT(x) assert(x) // NOLINT(cppcoreguidelines-macro-usage)
+#else
+#define FK_YAML_ASSERT(x) // NOLINT(cppcoreguidelines-macro-usage)
+#endif
 #endif
 
 #endif /* FK_YAML_DETAIL_ASSERT_HPP_ */
@@ -159,7 +164,7 @@
 // #include <fkYAML/detail/directive_set.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -178,7 +183,7 @@
 // #include <fkYAML/detail/types/yaml_version_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -194,39 +199,23 @@
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of YAML version types.
-enum class yaml_version_t : std::uint32_t
-{
+enum class yaml_version_t : std::uint32_t {
     VER_1_1, //!< YAML version 1.1
     VER_1_2, //!< YAML version 1.2
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_ */
 
 
-/// @namespace fkyaml
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @namespace detail
-/// @brief namespace for internal implementaions of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief The set of directives for a YAML document.
-struct directive_set
-{
+struct directive_set {
     /// The YAML version used for the YAML document.
     yaml_version_t version {yaml_version_t::VER_1_2};
     /// Whether or not the YAML version has been specified.
@@ -239,16 +228,14 @@ struct directive_set
     std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_DIRECTIVE_SET_HPP_ */
 
 // #include <fkYAML/detail/input/deserializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -272,7 +259,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/input/lexical_analyzer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -298,7 +285,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/from_string.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -320,7 +307,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -337,15 +324,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   For contributors:
@@ -378,9 +357,7 @@ using enable_if_t = typename std::enable_if<Condition, T>::type;
 /// @sa https://en.cppreference.com/w/cpp/types/is_null_pointer
 /// @tparam T The type to be checked if it's equal to std::nullptr_t.
 template <typename T>
-struct is_null_pointer : std::is_same<std::nullptr_t, typename std::remove_cv<T>::type>
-{
-};
+struct is_null_pointer : std::is_same<std::nullptr_t, typename std::remove_cv<T>::type> {};
 
 /// @brief An alias template for std::remove_cv::type with C++11.
 /// @note std::remove_cv_t is available since C++14.
@@ -428,24 +405,18 @@ using bool_constant = std::integral_constant<bool, Val>;
 /// @sa https://en.cppreference.com/w/cpp/types/conjunction
 /// @tparam Traits Type traits to be checked if their ::value are all true.
 template <typename... Traits>
-struct conjunction : std::true_type
-{
-};
+struct conjunction : std::true_type {};
 
 /// @brief A partial specialization of conjunction if only one Trait is given.
 /// @tparam Trait Type trait to be checked if its ::value is true.
 template <typename Trait>
-struct conjunction<Trait> : Trait
-{
-};
+struct conjunction<Trait> : Trait {};
 
 /// @brief A partial specialization of conjunction if more than one traits are given.
 /// @tparam First The first type trait to be checked if its ::value is true.
 /// @tparam Rest The rest of traits passed as another conjunction template arguments if First::value is true.
 template <typename First, typename... Rest>
-struct conjunction<First, Rest...> : std::conditional<First::value, conjunction<Rest...>, First>::type
-{
-};
+struct conjunction<First, Rest...> : std::conditional<First::value, conjunction<Rest...>, First>::type {};
 
 /// @brief A simple implementation to use std::disjunction with C++11/C++14.
 /// @note
@@ -454,39 +425,30 @@ struct conjunction<First, Rest...> : std::conditional<First::value, conjunction<
 /// @sa https://en.cppreference.com/w/cpp/types/disjunction
 /// @tparam Traits Type traits to be checked if at least one of their ::value is true.
 template <typename... Traits>
-struct disjunction : std::false_type
-{
-};
+struct disjunction : std::false_type {};
 
 /// @brief A partial specialization of disjunction if only one Trait is given.
 /// @tparam Trait Type trait to be checked if its ::value is true.
 template <typename Trait>
-struct disjunction<Trait> : Trait
-{
-};
+struct disjunction<Trait> : Trait {};
 
 /// @brief A partial specialization of disjunction if more than one traits are given.
 /// @tparam First The first type trait to be checked if its ::value is true.
 /// @tparam Rest The rest of traits passed as another conjunction template arguments if First::value is false.
 template <typename First, typename... Rest>
-struct disjunction<First, Rest...> : std::conditional<First::value, First, disjunction<Rest...>>::type
-{
-};
+struct disjunction<First, Rest...> : std::conditional<First::value, First, disjunction<Rest...>>::type {};
 
 /// @brief A simple implementation to use std::negation with C++11/C++14.
 /// @note std::negation is available since C++17.
 /// @sa https://en.cppreference.com/w/cpp/types/negation
 /// @tparam Trait Type trait whose ::value is negated.
 template <typename Trait>
-struct negation : std::integral_constant<bool, !Trait::value>
-{
-};
+struct negation : std::integral_constant<bool, !Trait::value> {};
 
 /// @brief A helper for void_t.
 /// @tparam Types Any types to be transformed to void type.
 template <typename... Types>
-struct make_void
-{
+struct make_void {
     using type = void;
 };
 
@@ -522,16 +484,14 @@ using std::remove_cvref_t;
 
 #endif
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_ */
 
 // #include <fkYAML/detail/meta/type_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -550,7 +510,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/detect.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -568,16 +528,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A dummy struct to represent detection failure.
-struct nonesuch
-{
+struct nonesuch {
     nonesuch() = delete;
     ~nonesuch() = delete;
     nonesuch(const nonesuch&) = delete;
@@ -587,8 +541,7 @@ struct nonesuch
 };
 
 /// @brief namespace to implement detector type traits
-namespace detector_impl
-{
+namespace detector_impl {
 
 /// @brief A helper for general type detection.
 /// @tparam Default A type to represent detection failure.
@@ -596,8 +549,7 @@ namespace detector_impl
 /// @tparam Op A type for desired operation type.
 /// @tparam Args Argument types passed to desired operation.
 template <typename Default, typename AlwaysVoid, template <typename...> class Op, typename... Args>
-struct detector : std::false_type
-{
+struct detector : std::false_type {
     /// @brief A type which represents detection failure.
     using type = Default;
 };
@@ -607,8 +559,7 @@ struct detector : std::false_type
 /// @tparam Op A type for desired operation type.
 /// @tparam Args Argument types passed to desired operation.
 template <typename Default, template <typename...> class Op, typename... Args>
-struct detector<Default, void_t<Op<Args...>>, Op, Args...> : std::true_type
-{
+struct detector<Default, void_t<Op<Args...>>, Op, Args...> : std::true_type {
     /// @brief A detected type.
     using type = Op<Args...>;
 };
@@ -634,21 +585,14 @@ using detected_t = typename detector_impl::detector<nonesuch, void, Op, Args...>
 template <typename Expected, template <typename...> class Op, typename... Args>
 using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_DETECT_HPP_ */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Type trait to check if T and U are comparable types.
 /// @tparam Comparator An object type to compare T and U objects.
@@ -656,9 +600,7 @@ namespace detail
 /// @tparam U The other type for comparison.
 /// @tparam typename Placeholder for determining T and U are comparable types.
 template <typename Comparator, typename T, typename U, typename = void>
-struct is_comparable : std::false_type
-{
-};
+struct is_comparable : std::false_type {};
 
 /// @brief A partial specialization of is_comparable if T and U are comparable types.
 /// @tparam Comparator An object type to compare T and U objects.
@@ -669,9 +611,7 @@ struct is_comparable<
     Comparator, T, U,
     void_t<
         decltype(std::declval<Comparator>()(std::declval<T>(), std::declval<U>())),
-        decltype(std::declval<Comparator>()(std::declval<U>(), std::declval<T>()))>> : std::true_type
-{
-};
+        decltype(std::declval<Comparator>()(std::declval<U>(), std::declval<T>()))>> : std::true_type {};
 
 /// @brief Type trait to check if KeyType can be used as key type.
 /// @tparam Comparator An object type to compare T and U objects.
@@ -685,9 +625,7 @@ using is_usable_as_key_type = typename std::conditional<
 /// @tparam IntegralType A type to be checked.
 /// @tparam typename N/A
 template <typename IntegralType, typename = void>
-struct is_non_bool_integral : std::false_type
-{
-};
+struct is_non_bool_integral : std::false_type {};
 
 /// @brief A partial specialization of is_non_bool_integral if IntegralType is of non-boolean integral types.
 /// @tparam IntegralType A type to be checked.
@@ -695,9 +633,7 @@ template <typename IntegralType>
 struct is_non_bool_integral<
     IntegralType,
     enable_if_t<conjunction<std::is_integral<IntegralType>, negation<std::is_same<bool, IntegralType>>>::value>>
-    : std::true_type
-{
-};
+    : std::true_type {};
 
 /// @brief Type traits to check if Types are all signed arithmetic types.
 /// @tparam Types Types to check if they are all signed arithmetic types.
@@ -715,9 +651,7 @@ using is_all_unsigned = conjunction<std::is_unsigned<Types>...>;
 /// @tparam CompatibleIntegerType A compatible integer type.
 /// @tparam typename N/A
 template <typename TargetIntegerType, typename CompatibleIntegerType, typename = void>
-struct is_compatible_integer_type_impl : std::false_type
-{
-};
+struct is_compatible_integer_type_impl : std::false_type {};
 
 /// @brief A partial specialization of is_compatible_integer_type_impl if TargetIntegerType and CompatibleIntegerType
 /// are compatible integer types.
@@ -726,38 +660,29 @@ struct is_compatible_integer_type_impl : std::false_type
 template <typename TargetIntegerType, typename CompatibleIntegerType>
 struct is_compatible_integer_type_impl<
     TargetIntegerType, CompatibleIntegerType, enable_if_t<is_non_bool_integral<CompatibleIntegerType>::value>>
-    : std::true_type
-{
-};
+    : std::true_type {};
 
 /// @brief Type traits to check if TargetIntegerType and CompatibleIntegerType are compatible integer types.
 /// @tparam TargetIntegerType A target integer type.
 /// @tparam CompatibleIntegerType A compatible integer type.
 template <typename TargetIntegerType, typename CompatibleIntegerType>
-struct is_compatible_integer_type : is_compatible_integer_type_impl<TargetIntegerType, CompatibleIntegerType>
-{
-};
+struct is_compatible_integer_type : is_compatible_integer_type_impl<TargetIntegerType, CompatibleIntegerType> {};
 
 /// @brief Type traits to check if T is a complete type.
 /// @tparam T A type to be checked if a complete type.
 /// @tparam typename N/A
 template <typename T, typename = void>
-struct is_complete_type : std::false_type
-{
-};
+struct is_complete_type : std::false_type {};
 
 /// @brief A partial specialization of is_complete_type if T is a complete type.
 /// @tparam T
 template <typename T>
-struct is_complete_type<T, decltype(void(sizeof(T)))> : std::true_type
-{
-};
+struct is_complete_type<T, decltype(void(sizeof(T)))> : std::true_type {};
 
 /// @brief A utility struct to generate static constant instance.
 /// @tparam T A target type for the resulting static constant instance.
 template <typename T>
-struct static_const
-{
+struct static_const {
     static FK_YAML_INLINE_VAR constexpr T value {}; // NOLINT(readability-identifier-naming)
 };
 
@@ -772,8 +697,7 @@ constexpr T static_const<T>::value;
 /// @brief A helper structure for tag dispatch.
 /// @tparam T A tag type.
 template <typename T>
-struct type_tag
-{
+struct type_tag {
     /// @brief A tagged type.
     using type = T;
 };
@@ -786,8 +710,7 @@ struct get_head_type;
 /// @brief A specialization of get_head_type if variadic template has no arguments.
 /// @tparam  N/A
 template <>
-struct get_head_type<>
-{
+struct get_head_type<> {
     /// @brief A head type
     using type = void;
 };
@@ -796,8 +719,7 @@ struct get_head_type<>
 /// @tparam First The first type in the arguments
 /// @tparam Rest The rest of the types in the arguments.
 template <typename First, typename... Rest>
-struct get_head_type<First, Rest...>
-{
+struct get_head_type<First, Rest...> {
     /// @brief A head type.
     using type = First;
 };
@@ -807,16 +729,14 @@ struct get_head_type<First, Rest...>
 template <typename... Types>
 using head_type = typename get_head_type<Types...>::type;
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_ */
 
 // #include <fkYAML/exception.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -828,6 +748,7 @@ FK_YAML_NAMESPACE_END
 #define FK_YAML_EXCEPTION_HPP_
 
 #include <array>
+#include <initializer_list>
 #include <stdexcept>
 #include <string>
 
@@ -836,7 +757,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/string_formatter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -855,23 +776,16 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
-/// @namespace namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @namespace namespace for internal implementation of fkYAML library.
-namespace detail
-{
-
-inline std::string format(const char* fmt, ...)
-{
+inline std::string format(const char* fmt, ...) {
     va_list vl;
     va_start(vl, fmt);
     int size = std::vsnprintf(nullptr, 0, fmt, vl);
     va_end(vl);
 
     // LCOV_EXCL_START
-    if (size < 0)
-    {
+    if (size < 0) {
         return "";
     }
     // LCOV_EXCL_STOP
@@ -885,16 +799,14 @@ inline std::string format(const char* fmt, ...)
     return std::string(buffer.get(), size);
 }
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_STRING_FORMATTER_HPP_ */
 
 // #include <fkYAML/detail/types/node_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -911,16 +823,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of node value types.
-enum class node_t : std::uint32_t
-{
+enum class node_t : std::uint32_t {
     SEQUENCE,     //!< sequence value type
     MAPPING,      //!< mapping value type
     NULL_OBJECT,  //!< null value type
@@ -930,10 +836,8 @@ enum class node_t : std::uint32_t
     STRING,       //!< string value type
 };
 
-inline const char* to_string(node_t t) noexcept
-{
-    switch (t)
-    {
+inline const char* to_string(node_t t) noexcept {
+    switch (t) {
     case node_t::SEQUENCE:
         return "sequence";
     case node_t::MAPPING:
@@ -953,20 +857,16 @@ inline const char* to_string(node_t t) noexcept
     }
 }
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP_ */
 
 
-/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
 /// @brief A base exception class used in fkYAML library.
 /// @sa https://fktn-k.github.io/fkYAML/api/exception/
-class exception : public std::exception
-{
+class exception : public std::exception {
 public:
     /// @brief Construct a new exception object without any error messages.
     /// @sa https://fktn-k.github.io/fkYAML/api/exception/constructor/
@@ -975,10 +875,8 @@ public:
     /// @brief Construct a new exception object with an error message.
     /// @param[in] msg An error message.
     /// @sa https://fktn-k.github.io/fkYAML/api/exception/constructor/
-    explicit exception(const char* msg) noexcept
-    {
-        if (msg)
-        {
+    explicit exception(const char* msg) noexcept {
+        if (msg) {
             m_error_msg = msg;
         }
     }
@@ -987,8 +885,7 @@ public:
     /// @brief Returns an error message internally held. If nothing, a non-null, empty string will be returned.
     /// @return An error message internally held. The message might be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/exception/what/
-    const char* what() const noexcept override
-    {
+    const char* what() const noexcept override {
         return m_error_msg.c_str();
     }
 
@@ -999,13 +896,13 @@ private:
 
 /// @brief An exception class indicating an encoding error.
 /// @sa https://fktn-k.github.io/fkYAML/api/exception/invalid_encoding/
-class invalid_encoding : public exception
-{
+class invalid_encoding : public exception {
 public:
-    template <std::size_t N>
-    explicit invalid_encoding(const char* msg, std::array<int, N> u8) noexcept
-        : exception(generate_error_message(msg, u8).c_str())
-    {
+    /// @brief Construct a new invalid_encoding object for UTF-8 related errors.
+    /// @param msg An error message.
+    /// @param u8 The UTF-8 character bytes.
+    explicit invalid_encoding(const char* msg, const std::initializer_list<uint8_t>& u8) noexcept
+        : exception(generate_error_message(msg, u8).c_str()) {
     }
 
     /// @brief Construct a new invalid_encoding object for UTF-16 related errors.
@@ -1013,26 +910,23 @@ public:
     /// @param u16_h The first UTF-16 encoded element used for the UTF-8 encoding.
     /// @param u16_l The second UTF-16 encoded element used for the UTF-8 encoding.
     explicit invalid_encoding(const char* msg, std::array<char16_t, 2> u16) noexcept
-        : exception(generate_error_message(msg, u16).c_str())
-    {
+        : exception(generate_error_message(msg, u16).c_str()) {
     }
 
     /// @brief Construct a new invalid_encoding object for UTF-32 related errors.
     /// @param msg An error message.
     /// @param u32 The UTF-32 encoded element used for the UTF-8 encoding.
     explicit invalid_encoding(const char* msg, char32_t u32) noexcept
-        : exception(generate_error_message(msg, u32).c_str())
-    {
+        : exception(generate_error_message(msg, u32).c_str()) {
     }
 
 private:
-    template <std::size_t N>
-    std::string generate_error_message(const char* msg, std::array<int, N> u8) const noexcept
-    {
-        std::string formatted = detail::format("invalid_encoding: %s in=[ 0x%02x", msg, u8[0]);
-        for (std::size_t i = 1; i < N; i++)
-        {
-            formatted += detail::format(", 0x%02x", u8[i]);
+    std::string generate_error_message(const char* msg, const std::initializer_list<uint8_t>& u8) const noexcept {
+        auto itr = u8.begin();
+        auto end_itr = u8.end();
+        std::string formatted = detail::format("invalid_encoding: %s in=[ 0x%02x", msg, *itr++);
+        while (itr != end_itr) {
+            formatted += detail::format(", 0x%02x", *itr++);
         }
         formatted += " ]";
         return formatted;
@@ -1043,8 +937,7 @@ private:
     /// @param h The first UTF-16 encoded element used for the UTF-8 encoding.
     /// @param l The second UTF-16 encoded element used for the UTF-8 encoding.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16) const noexcept
-    {
+    std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16) const noexcept {
         // uint16_t is large enough for UTF-16 encoded elements.
         return detail::format("invalid_encoding: %s in=[ 0x%04x, 0x%04x ]", msg, uint16_t(u16[0]), uint16_t(u16[1]));
     }
@@ -1053,40 +946,34 @@ private:
     /// @param msg An error message.
     /// @param u32 The UTF-32 encoded element used for the UTF-8 encoding.
     /// @return A genereated error message.
-    std::string generate_error_message(const char* msg, char32_t u32) const noexcept
-    {
+    std::string generate_error_message(const char* msg, char32_t u32) const noexcept {
         // uint32_t is large enough for UTF-32 encoded elements.
         return detail::format("invalid_encoding: %s in=0x%08x", msg, uint32_t(u32));
     }
 };
 
 /// @brief An exception class indicating an error in parsing.
-class parse_error : public exception
-{
+class parse_error : public exception {
 public:
     explicit parse_error(const char* msg, std::size_t lines, std::size_t cols_in_line) noexcept
-        : exception(generate_error_message(msg, lines, cols_in_line).c_str())
-    {
+        : exception(generate_error_message(msg, lines, cols_in_line).c_str()) {
     }
 
 private:
-    std::string generate_error_message(const char* msg, std::size_t lines, std::size_t cols_in_line) const noexcept
-    {
+    std::string generate_error_message(const char* msg, std::size_t lines, std::size_t cols_in_line) const noexcept {
         return detail::format("parse_error: %s (at line %zu, column %zu)", msg, lines, cols_in_line);
     }
 };
 
 /// @brief An exception class indicating an invalid type conversion.
 /// @sa https://fktn-k.github.io/fkYAML/api/exception/type_error/
-class type_error : public exception
-{
+class type_error : public exception {
 public:
     /// @brief Construct a new type_error object with an error message and a node type.
     /// @param[in] msg An error message.
     /// @param[in] type The type of a source node value.
     explicit type_error(const char* msg, detail::node_t type) noexcept
-        : exception(generate_error_message(msg, type).c_str())
-    {
+        : exception(generate_error_message(msg, type).c_str()) {
     }
 
 private:
@@ -1094,48 +981,39 @@ private:
     /// @param msg An error message.
     /// @param type The type of a source node value.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, detail::node_t type) const noexcept
-    {
+    std::string generate_error_message(const char* msg, detail::node_t type) const noexcept {
         return detail::format("type_error: %s type=%s", msg, detail::to_string(type));
     }
 };
 
-class out_of_range : public exception
-{
+class out_of_range : public exception {
 public:
     explicit out_of_range(int index) noexcept
-        : exception(generate_error_message(index).c_str())
-    {
+        : exception(generate_error_message(index).c_str()) {
     }
 
     explicit out_of_range(const char* key) noexcept
-        : exception(generate_error_message(key).c_str())
-    {
+        : exception(generate_error_message(key).c_str()) {
     }
 
 private:
-    std::string generate_error_message(int index)
-    {
+    std::string generate_error_message(int index) {
         return detail::format("out_of_range: index %d is out of range", index);
     }
 
-    std::string generate_error_message(const char* key)
-    {
+    std::string generate_error_message(const char* key) {
         return detail::format("out_of_range: key \'%s\' is not found.", key);
     }
 };
 
-class invalid_tag : public exception
-{
+class invalid_tag : public exception {
 public:
     explicit invalid_tag(const char* msg, const char* tag)
-        : exception(generate_error_message(msg, tag).c_str())
-    {
+        : exception(generate_error_message(msg, tag).c_str()) {
     }
 
 private:
-    std::string generate_error_message(const char* msg, const char* tag)
-    {
+    std::string generate_error_message(const char* msg, const char* tag) {
         return detail::format("invalid_tag: %s tag=%s", msg, tag);
     }
 };
@@ -1145,11 +1023,7 @@ FK_YAML_NAMESPACE_END
 #endif /* FK_YAML_EXCEPTION_HPP_ */
 
 
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Convert a string YAML token to a ValueType object.
 /// @tparam ValueType A target value type.
@@ -1160,10 +1034,8 @@ inline ValueType from_string(const std::basic_string<CharType>& s, type_tag<Valu
 /// @brief Specialization of from_string() for null values with std::string
 /// @tparam  N/A
 template <>
-inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t> /*unused*/)
-{
-    if (s == "null" || s == "Null" || s == "NULL" || s == "~")
-    {
+inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t> /*unused*/) {
+    if (s == "null" || s == "Null" || s == "NULL" || s == "~") {
         return nullptr;
     }
 
@@ -1173,15 +1045,12 @@ inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t>
 /// @brief Specialization of from_string() for boolean values with std::string.
 /// @tparam  N/A
 template <>
-inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
-{
-    if (s == "true" || s == "True" || s == "TRUE")
-    {
+inline bool from_string(const std::string& s, type_tag<bool> /*unused*/) {
+    if (s == "true" || s == "True" || s == "TRUE") {
         return true;
     }
 
-    if (s == "false" || s == "False" || s == "FALSE")
-    {
+    if (s == "false" || s == "False" || s == "FALSE") {
         return false;
     }
 
@@ -1191,17 +1060,14 @@ inline bool from_string(const std::string& s, type_tag<bool> /*unused*/)
 /// @brief Specialization of from_string() for int values with std::string.
 /// @tparam  N/A
 template <>
-inline int from_string(const std::string& s, type_tag<int> /*unused*/)
-{
+inline int from_string(const std::string& s, type_tag<int> /*unused*/) {
     std::size_t idx = 0;
     long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stoi(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into an int value.");
     }
 
@@ -1211,17 +1077,14 @@ inline int from_string(const std::string& s, type_tag<int> /*unused*/)
 /// @brief Specialization of from_string() for long values with std::string.
 /// @tparam  N/A
 template <>
-inline long from_string(const std::string& s, type_tag<long> /*unused*/)
-{
+inline long from_string(const std::string& s, type_tag<long> /*unused*/) {
     std::size_t idx = 0;
     long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stol(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into a long value.");
     }
 
@@ -1231,17 +1094,14 @@ inline long from_string(const std::string& s, type_tag<long> /*unused*/)
 /// @brief Specialization of from_string() for long long values with std::string.
 /// @tparam  N/A
 template <>
-inline long long from_string(const std::string& s, type_tag<long long> /*unused*/)
-{
+inline long long from_string(const std::string& s, type_tag<long long> /*unused*/) {
     std::size_t idx = 0;
     long long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stoll(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into a long long value.");
     }
 
@@ -1256,11 +1116,9 @@ inline enable_if_t<
         is_non_bool_integral<SignedIntType>, std::is_signed<SignedIntType>, negation<std::is_same<SignedIntType, int>>,
         negation<std::is_same<SignedIntType, long>>, negation<std::is_same<SignedIntType, long long>>>::value,
     SignedIntType>
-from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
-{
+from_string(const std::string& s, type_tag<SignedIntType> /*unused*/) {
     const auto tmp_ret = from_string(s, type_tag<int> {});
-    if (static_cast<long long>(std::numeric_limits<SignedIntType>::max()) < tmp_ret)
-    {
+    if (static_cast<long long>(std::numeric_limits<SignedIntType>::max()) < tmp_ret) {
         throw exception("Failed to convert a long long value into a SignedIntegerType value.");
     }
 
@@ -1270,17 +1128,14 @@ from_string(const std::string& s, type_tag<SignedIntType> /*unused*/)
 /// @brief Specialization of from_string() for unsigned long values with std::string.
 /// @tparam  N/A
 template <>
-inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /*unused*/)
-{
+inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /*unused*/) {
     std::size_t idx = 0;
     unsigned long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stoul(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into an unsigned long value.");
     }
 
@@ -1290,17 +1145,14 @@ inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /
 /// @brief Specialization of from_string() for unsigned long long values with std::string.
 /// @tparam  N/A
 template <>
-inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/)
-{
+inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/) {
     std::size_t idx = 0;
     unsigned long long ret = 0;
 
-    try
-    {
+    try {
         ret = std::stoull(s, &idx, 0);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into an unsigned long long value.");
     }
 
@@ -1316,11 +1168,9 @@ inline enable_if_t<
         negation<std::is_same<UnsignedIntType, unsigned long>>,
         negation<std::is_same<UnsignedIntType, unsigned long long>>>::value,
     UnsignedIntType>
-from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
-{
+from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/) {
     const auto tmp_ret = from_string(s, type_tag<unsigned long> {});
-    if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret)
-    {
+    if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret) {
         throw exception("Failed to convert an unsigned long long into an unsigned integer value.");
     }
 
@@ -1330,33 +1180,27 @@ from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/)
 /// @brief Specialization of from_string() for float values with std::string.
 /// @tparam  N/A
 template <>
-inline float from_string(const std::string& s, type_tag<float> /*unused*/)
-{
-    if (s == ".inf" || s == ".Inf" || s == ".INF")
-    {
+inline float from_string(const std::string& s, type_tag<float> /*unused*/) {
+    if (s == ".inf" || s == ".Inf" || s == ".INF") {
         return std::numeric_limits<float>::infinity();
     }
 
-    if (s == "-.inf" || s == "-.Inf" || s == "-.INF")
-    {
+    if (s == "-.inf" || s == "-.Inf" || s == "-.INF") {
         static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required.");
         return -1 * std::numeric_limits<float>::infinity();
     }
 
-    if (s == ".nan" || s == ".NaN" || s == ".NAN")
-    {
+    if (s == ".nan" || s == ".NaN" || s == ".NAN") {
         return std::nanf("");
     }
 
     std::size_t idx = 0;
     float ret = 0.0f;
 
-    try
-    {
+    try {
         ret = std::stof(s, &idx);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into a float value.");
     }
 
@@ -1366,49 +1210,41 @@ inline float from_string(const std::string& s, type_tag<float> /*unused*/)
 /// @brief Specialization of from_string() for double values with std::string.
 /// @tparam  N/A
 template <>
-inline double from_string(const std::string& s, type_tag<double> /*unused*/)
-{
-    if (s == ".inf" || s == ".Inf" || s == ".INF")
-    {
+inline double from_string(const std::string& s, type_tag<double> /*unused*/) {
+    if (s == ".inf" || s == ".Inf" || s == ".INF") {
         return std::numeric_limits<double>::infinity();
     }
 
-    if (s == "-.inf" || s == "-.Inf" || s == "-.INF")
-    {
+    if (s == "-.inf" || s == "-.Inf" || s == "-.INF") {
         static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 required.");
         return -1 * std::numeric_limits<double>::infinity();
     }
 
-    if (s == ".nan" || s == ".NaN" || s == ".NAN")
-    {
+    if (s == ".nan" || s == ".NaN" || s == ".NAN") {
         return std::nan("");
     }
 
     std::size_t idx = 0;
     double ret = 0.0;
 
-    try
-    {
+    try {
         ret = std::stod(s, &idx);
     }
-    catch (const std::exception& /*unused*/)
-    {
+    catch (const std::exception& /*unused*/) {
         throw exception("Failed to convert a string into a double value.");
     }
 
     return ret;
 }
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_ */
 
 // #include <fkYAML/detail/encodings/uri_encoding.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1425,39 +1261,26 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
-/// @namespace fkyaml
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @namespace detail
-/// @brief namespace for internal implementaions of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A class which handles URI encodings.
-class uri_encoding
-{
+class uri_encoding {
 public:
     /// @brief Validates the encoding of the given character sequence.
     /// @param begin An iterator to the first element of the character sequence.
     /// @param end An iterator to the past-the-end element of the character sequence.
     /// @return true if all the characters are valid, false otherwise.
-    static bool validate(std::string::const_iterator begin, std::string::const_iterator end) noexcept
-    {
-        if (begin == end)
-        {
+    static bool validate(std::string::const_iterator begin, std::string::const_iterator end) noexcept {
+        if (begin == end) {
             return true;
         }
 
         std::string::const_iterator current = begin;
 
-        for (; current != end; ++current)
-        {
-            if (*current == '%')
-            {
+        for (; current != end; ++current) {
+            if (*current == '%') {
                 bool are_valid_octets = validate_octets(++current, end);
-                if (!are_valid_octets)
-                {
+                if (!are_valid_octets) {
                     return false;
                 }
 
@@ -1465,8 +1288,7 @@ public:
             }
 
             bool is_allowed_character = validate_character(*current);
-            if (!is_allowed_character)
-            {
+            if (!is_allowed_character) {
                 return false;
             }
         }
@@ -1479,25 +1301,20 @@ private:
     /// @param begin An iterator to the first octet.
     /// @param end An iterator to the past-the-end element of the whole character sequence.
     /// @return true if the octets are valid, false otherwise.
-    static bool validate_octets(std::string::const_iterator& begin, std::string::const_iterator& end)
-    {
-        for (int i = 0; i < 2; i++, ++begin)
-        {
-            if (begin == end)
-            {
+    static bool validate_octets(std::string::const_iterator& begin, std::string::const_iterator& end) {
+        for (int i = 0; i < 2; i++, ++begin) {
+            if (begin == end) {
                 return false;
             }
 
             // Normalize a character for a-f/A-F comparison
             int octet = std::tolower(*begin);
 
-            if ('0' <= octet && octet <= '9')
-            {
+            if ('0' <= octet && octet <= '9') {
                 continue;
             }
 
-            if ('a' <= octet && octet <= 'f')
-            {
+            if ('a' <= octet && octet <= 'f') {
                 continue;
             }
 
@@ -1510,15 +1327,13 @@ private:
     /// @brief Verify if the given character is allowed as a URI character.
     /// @param c The target character.
     /// @return true if the given character is allowed as a URI character, false otherwise.
-    static bool validate_character(char c)
-    {
+    static bool validate_character(char c) {
         // Check if the current character is one of reserved/unreserved characters which are allowed for
         // use. See the following links for details:
         // * reserved characters:   https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
         // * unreserved characters: https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
 
-        switch (c)
-        {
+        switch (c) {
         // reserved characters (gen-delims)
         case ':':
         case '/':
@@ -1552,16 +1367,14 @@ private:
     }
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_ */
 
-// #include <fkYAML/detail/encodings/utf8_encoding.hpp>
+// #include <fkYAML/detail/encodings/utf_encodings.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1569,8 +1382,8 @@ FK_YAML_NAMESPACE_END
 ///
 /// @file
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODING_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODING_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
 
 #include <array>
 #include <cstdint>
@@ -1580,47 +1393,58 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
-
-template <typename CharType>
-class utf_encoding;
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /////////////////////////
 //   UTF-8 Encoding   ///
 /////////////////////////
 
 /// @brief A class which handles UTF-8 encodings.
-class utf8_encoding
-{
-    using int_type = std::char_traits<char>::int_type;
+namespace utf8 {
 
-public:
-    /// @brief Validates the encoding of a given byte array whose length is 1.
-    /// @param[in] byte_array The byte array to be validated.
-    /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 1> byte_array) noexcept
-    {
-        // U+0000..U+007F
-        return (0x00 <= byte_array[0] && byte_array[0] <= 0x7F);
+/// @brief Query the number of UTF-8 character bytes with the first byte.
+/// @param first_byte The first byte of a UTF-8 character.
+/// @return The number of UTF-8 character bytes.
+inline uint32_t get_num_bytes(uint8_t first_byte) {
+    // The first byte starts with 0b0XXX'XXXX -> 1-byte character
+    if (first_byte < 0x80) {
+        return 1;
+    }
+    // The first byte starts with 0b110X'XXXX -> 2-byte character
+    else if ((first_byte & 0xE0) == 0xC0) {
+        return 2;
+    }
+    // The first byte starts with 0b1110'XXXX -> 3-byte character
+    else if ((first_byte & 0xF0) == 0xE0) {
+        return 3;
+    }
+    // The first byte starts with 0b1111'0XXX -> 4-byte character
+    else if ((first_byte & 0xF8) == 0xF0) {
+        return 4;
     }
 
-    /// @brief Validates the encoding of a given byte array whose length is 2.
-    /// @param[in] byte_array The byte array to be validated.
-    /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 2> byte_array) noexcept
-    {
+    // The first byte starts with 0b10XX'XXXX or 0b1111'1XXX -> invalid
+    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first_byte});
+}
+
+/// @brief Validates the encoding of a given byte array whose length is 1.
+/// @param[in] byte_array The byte array to be validated.
+/// @return true if a given byte array is valid, false otherwise.
+inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept {
+    switch (byte_array.size()) {
+    case 1:
+        // U+0000..U+007F
+        return uint8_t(*(byte_array.begin())) <= uint8_t(0x7Fu);
+    case 2: {
+        auto itr = byte_array.begin();
+        uint8_t first = *itr++;
+        uint8_t second = *itr;
+
         // U+0080..U+07FF
         //   1st Byte: 0xC2..0xDF
         //   2nd Byte: 0x80..0xBF
-        if (0xC2 <= byte_array[0] && byte_array[0] <= 0xDF)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0xBF)
-            {
+        if (uint8_t(0xC2u) <= first && first <= uint8_t(0xDFu)) {
+            if (0x80 <= second && second <= 0xBF) {
                 return true;
             }
         }
@@ -1628,22 +1452,19 @@ public:
         // The rest of byte combinations are invalid.
         return false;
     }
+    case 3: {
+        auto itr = byte_array.begin();
+        uint8_t first = *itr++;
+        uint8_t second = *itr++;
+        uint8_t third = *itr;
 
-    /// @brief Validates the encoding of a given byte array whose length is 3.
-    /// @param[in] byte_array The byte array to be validated.
-    /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 3> byte_array) noexcept
-    {
         // U+1000..U+CFFF:
         //   1st Byte: 0xE0..0xEC
         //   2nd Byte: 0x80..0xBF
         //   3rd Byte: 0x80..0xBF
-        if (0xE0 <= byte_array[0] && byte_array[0] <= 0xEC)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0xBF)
-            {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
-                {
+        if (0xE0 <= first && first <= 0xEC) {
+            if (0x80 <= second && second <= 0xBF) {
+                if (0x80 <= third && third <= 0xBF) {
                     return true;
                 }
             }
@@ -1654,12 +1475,9 @@ public:
         //   1st Byte: 0xED
         //   2nd Byte: 0x80..0x9F
         //   3rd Byte: 0x80..0xBF
-        if (byte_array[0] == 0xED)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0x9F)
-            {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
-                {
+        if (first == 0xED) {
+            if (0x80 <= second && second <= 0x9F) {
+                if (0x80 <= third && third <= 0xBF) {
                     return true;
                 }
             }
@@ -1670,12 +1488,9 @@ public:
         //   1st Byte: 0xEE..0xEF
         //   2nd Byte: 0x80..0xBF
         //   3rd Byte: 0x80..0xBF
-        if (byte_array[0] == 0xEE || byte_array[0] == 0xEF)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0xBF)
-            {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
-                {
+        if (first == 0xEE || first == 0xEF) {
+            if (0x80 <= second && second <= 0xBF) {
+                if (0x80 <= third && third <= 0xBF) {
                     return true;
                 }
             }
@@ -1685,25 +1500,22 @@ public:
         // The rest of byte combinations are invalid.
         return false;
     }
+    case 4: {
+        auto itr = byte_array.begin();
+        uint8_t first = *itr++;
+        uint8_t second = *itr++;
+        uint8_t third = *itr++;
+        uint8_t fourth = *itr;
 
-    /// @brief Validates the encoding of a given byte array whose length is 4.
-    /// @param[in] byte_array The byte array to be validated.
-    /// @return true if a given byte array is valid, false otherwise.
-    static bool validate(std::array<int_type, 4> byte_array) noexcept
-    {
         // U+10000..U+3FFFF:
         //   1st Byte: 0xF0
         //   2nd Byte: 0x90..0xBF
         //   3rd Byte: 0x80..0xBF
         //   4th Byte: 0x80..0xBF
-        if (byte_array[0] == 0xF0)
-        {
-            if (0x90 <= byte_array[1] && byte_array[1] <= 0xBF)
-            {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
-                {
-                    if (0x80 <= byte_array[3] && byte_array[3] <= 0xBF)
-                    {
+        if (first == 0xF0) {
+            if (0x90 <= second && second <= 0xBF) {
+                if (0x80 <= third && third <= 0xBF) {
+                    if (0x80 <= fourth && fourth <= 0xBF) {
                         return true;
                     }
                 }
@@ -1716,14 +1528,10 @@ public:
         //   2nd Byte: 0x80..0xBF
         //   3rd Byte: 0x80..0xBF
         //   4th Byte: 0x80..0xBF
-        if (0xF1 <= byte_array[0] && byte_array[0] <= 0xF3)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0xBF)
-            {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
-                {
-                    if (0x80 <= byte_array[3] && byte_array[3] <= 0xBF)
-                    {
+        if (0xF1 <= first && first <= 0xF3) {
+            if (0x80 <= second && second <= 0xBF) {
+                if (0x80 <= third && third <= 0xBF) {
+                    if (0x80 <= fourth && fourth <= 0xBF) {
                         return true;
                     }
                 }
@@ -1736,14 +1544,10 @@ public:
         //   2nd Byte: 0x80..0x8F
         //   3rd Byte: 0x80..0xBF
         //   4th Byte: 0x80..0xBF
-        if (byte_array[0] == 0xF4)
-        {
-            if (0x80 <= byte_array[1] && byte_array[1] <= 0x8F)
-            {
-                if (0x80 <= byte_array[2] && byte_array[2] <= 0xBF)
-                {
-                    if (0x80 <= byte_array[3] && byte_array[3] <= 0xBF)
-                    {
+        if (first == 0xF4) {
+            if (0x80 <= second && second <= 0x8F) {
+                if (0x80 <= third && third <= 0xBF) {
+                    if (0x80 <= fourth && fourth <= 0xBF) {
                         return true;
                     }
                 }
@@ -1754,146 +1558,117 @@ public:
         // The rest of byte combinations are invalid.
         return false;
     }
+    default:          // LCOV_EXCL_LINE
+        return false; // LCOV_EXCL_LINE
+    }
+}
 
-    /// @brief Converts UTF-16 encoded characters to UTF-8 encoded bytes.
-    /// @param[in] utf16 UTF-16 encoded character(s).
-    /// @param[out] utf8_bytes UTF-8 encoded bytes.
-    /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
-    /// @param[out] encoded_size The size of UTF-encoded bytes.
-    static void from_utf16(
-        std::array<char16_t, 2> utf16, std::array<char, 4>& utf8_bytes, std::size_t& consumed_size,
-        std::size_t& encoded_size)
-    {
-        utf8_bytes.fill(0);
-        consumed_size = 0;
-        encoded_size = 0;
-        bool is_valid = false;
-
-        if (utf16[0] < char16_t(0x80u))
-        {
-            utf8_bytes[0] = static_cast<char>(utf16[0] & 0x7Fu);
-            consumed_size = 1;
-            encoded_size = 1;
-            is_valid = true;
-        }
-        else if (utf16[0] <= char16_t(0x7FFu))
-        {
-            uint16_t utf8_encoded = 0xC080u;
-            utf8_encoded |= static_cast<uint16_t>((utf16[0] & 0x07C0u) << 2);
-            utf8_encoded |= static_cast<uint16_t>(utf16[0] & 0x003Fu);
-            utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF00u) >> 8);
-            utf8_bytes[1] = static_cast<char>(utf8_encoded & 0x00FFu);
-            consumed_size = 1;
-            encoded_size = 2;
-            is_valid = true;
-        }
-        else if (utf16[0] < char16_t(0xD800u) || char16_t(0xE000u) <= utf16[0])
-        {
-            uint32_t utf8_encoded = 0xE08080u;
-            utf8_encoded |= static_cast<uint32_t>((utf16[0] & 0xF000u) << 4);
-            utf8_encoded |= static_cast<uint32_t>((utf16[0] & 0x0FC0u) << 2);
-            utf8_encoded |= static_cast<uint32_t>(utf16[0] & 0x003Fu);
-            utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF0000u) >> 16);
-            utf8_bytes[1] = static_cast<char>((utf8_encoded & 0x00FF00u) >> 8);
-            utf8_bytes[2] = static_cast<char>(utf8_encoded & 0x0000FFu);
-            consumed_size = 1;
-            encoded_size = 3;
-            is_valid = true;
-        }
-        else if (utf16[0] <= char16_t(0xDBFFu) && char16_t(0xDC00u) <= utf16[1] && utf16[1] <= char16_t(0xDFFFu))
-        {
-            // for surrogate pairs
-            uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
-            uint32_t utf8_encoded = 0xF0808080u;
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0x1C0000u) << 6);
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0x03F000u) << 4);
-            utf8_encoded |= static_cast<uint32_t>((code_point & 0x000FC0u) << 2);
-            utf8_encoded |= static_cast<uint32_t>(code_point & 0x00003Fu);
-            utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF000000u) >> 24);
-            utf8_bytes[1] = static_cast<char>((utf8_encoded & 0x00FF0000u) >> 16);
-            utf8_bytes[2] = static_cast<char>((utf8_encoded & 0x0000FF00u) >> 8);
-            utf8_bytes[3] = static_cast<char>(utf8_encoded & 0x000000FFu);
-            consumed_size = 2;
-            encoded_size = 4;
-            is_valid = true;
-        }
-
-        if (!is_valid)
-        {
-            throw invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
-        }
+/// @brief Converts UTF-16 encoded characters to UTF-8 encoded bytes.
+/// @param[in] utf16 UTF-16 encoded character(s).
+/// @param[out] utf8 UTF-8 encoded bytes.
+/// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
+/// @param[out] encoded_size The size of UTF-encoded bytes.
+inline void from_utf16(
+    std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, std::size_t& consumed_size,
+    std::size_t& encoded_size) {
+    if (utf16[0] < char16_t(0x80u)) {
+        utf8[0] = static_cast<uint8_t>(utf16[0] & 0x7Fu);
+        consumed_size = 1;
+        encoded_size = 1;
+        return;
+    }
+    else if (utf16[0] <= char16_t(0x7FFu)) {
+        uint16_t utf8_chunk = static_cast<uint16_t>(0xC080u) | static_cast<uint16_t>((utf16[0] & 0x07C0u) << 2) |
+                              static_cast<uint16_t>(utf16[0] & 0x003Fu);
+        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF00u) >> 8);
+        utf8[1] = static_cast<uint8_t>(utf8_chunk & 0x00FFu);
+        consumed_size = 1;
+        encoded_size = 2;
+        return;
+    }
+    else if (utf16[0] < char16_t(0xD800u) || char16_t(0xE000u) <= utf16[0]) {
+        uint32_t utf8_chunk = static_cast<uint32_t>(0xE08080u) | static_cast<uint32_t>((utf16[0] & 0xF000u) << 4) |
+                              static_cast<uint32_t>((utf16[0] & 0x0FC0u) << 2) |
+                              static_cast<uint32_t>(utf16[0] & 0x003Fu);
+        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF0000u) >> 16);
+        utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF00u) >> 8);
+        utf8[2] = static_cast<uint8_t>(utf8_chunk & 0x0000FFu);
+        consumed_size = 1;
+        encoded_size = 3;
+        return;
+    }
+    else if (utf16[0] <= char16_t(0xDBFFu) && char16_t(0xDC00u) <= utf16[1] && utf16[1] <= char16_t(0xDFFFu)) {
+        // for surrogate pairs
+        uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
+        uint32_t utf8_chunk =
+            static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((code_point & 0x1C0000u) << 6) |
+            static_cast<uint32_t>((code_point & 0x03F000u) << 4) |
+            static_cast<uint32_t>((code_point & 0x000FC0u) << 2) | static_cast<uint32_t>(code_point & 0x00003Fu);
+        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
+        utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
+        utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
+        utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
+        consumed_size = 2;
+        encoded_size = 4;
+        return;
     }
 
-    /// @brief Converts a UTF-32 encoded character to UTF-8 encoded bytes.
-    /// @param[in] utf32 A UTF-32 encoded character.
-    /// @param[out] utf8_bytes UTF-8 encoded bytes.
-    /// @param[in] encoded_size The size of UTF-encoded bytes.
-    static void from_utf32(const char32_t utf32, std::array<char, 4>& utf8_bytes, std::size_t& encoded_size)
-    {
-        utf8_bytes.fill(0);
-        encoded_size = 0;
-        bool is_valid = false;
+    throw invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
+}
 
-        if (utf32 < char32_t(0x80u))
-        {
-            utf8_bytes[0] = static_cast<char>(utf32 & 0x007F);
-            encoded_size = 1;
-            is_valid = true;
-        }
-        else if (utf32 <= char32_t(0x7FFu))
-        {
-            uint16_t utf8_encoded = 0xC080u;
-            utf8_encoded |= static_cast<uint16_t>((utf32 & 0x07C0u) << 2);
-            utf8_encoded |= static_cast<uint16_t>(utf32 & 0x003Fu);
-            utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF00u) >> 8);
-            utf8_bytes[1] = static_cast<char>(utf8_encoded & 0x00FFu);
-            encoded_size = 2;
-            is_valid = true;
-        }
-        else if (utf32 <= char32_t(0xFFFFu))
-        {
-            uint32_t utf8_encoded = 0xE08080u;
-            utf8_encoded |= static_cast<uint32_t>((utf32 & 0xF000u) << 4);
-            utf8_encoded |= static_cast<uint32_t>((utf32 & 0x0FC0u) << 2);
-            utf8_encoded |= static_cast<uint32_t>(utf32 & 0x003F);
-            utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF0000u) >> 16);
-            utf8_bytes[1] = static_cast<char>((utf8_encoded & 0x00FF00u) >> 8);
-            utf8_bytes[2] = static_cast<char>(utf8_encoded & 0x0000FFu);
-            encoded_size = 3;
-            is_valid = true;
-        }
-        else if (utf32 <= char32_t(0x10FFFFu))
-        {
-            uint32_t utf8_encoded = 0xF0808080u;
-            utf8_encoded |= static_cast<uint32_t>((utf32 & 0x1C0000u) << 6);
-            utf8_encoded |= static_cast<uint32_t>((utf32 & 0x03F000u) << 4);
-            utf8_encoded |= static_cast<uint32_t>((utf32 & 0x000FC0u) << 2);
-            utf8_encoded |= static_cast<uint32_t>(utf32 & 0x00003Fu);
-            utf8_bytes[0] = static_cast<char>((utf8_encoded & 0xFF000000u) >> 24);
-            utf8_bytes[1] = static_cast<char>((utf8_encoded & 0x00FF0000u) >> 16);
-            utf8_bytes[2] = static_cast<char>((utf8_encoded & 0x0000FF00u) >> 8);
-            utf8_bytes[3] = static_cast<char>(utf8_encoded & 0x000000FFu);
-            encoded_size = 4;
-            is_valid = true;
-        }
-
-        if (!is_valid)
-        {
-            throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
-        }
+/// @brief Converts a UTF-32 encoded character to UTF-8 encoded bytes.
+/// @param[in] utf32 A UTF-32 encoded character.
+/// @param[out] utf8 UTF-8 encoded bytes.
+/// @param[in] encoded_size The size of UTF-encoded bytes.
+inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, std::size_t& encoded_size) {
+    if (utf32 < char32_t(0x80u)) {
+        utf8[0] = static_cast<uint8_t>(utf32 & 0x007F);
+        encoded_size = 1;
+        return;
     }
-};
+    else if (utf32 <= char32_t(0x7FFu)) {
+        uint16_t utf8_chunk = static_cast<uint16_t>(0xC080u) | static_cast<uint16_t>((utf32 & 0x07C0u) << 2) |
+                              static_cast<uint16_t>(utf32 & 0x003Fu);
+        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF00u) >> 8);
+        utf8[1] = static_cast<uint8_t>(utf8_chunk & 0x00FFu);
+        encoded_size = 2;
+        return;
+    }
+    else if (utf32 <= char32_t(0xFFFFu)) {
+        uint32_t utf8_chunk = static_cast<uint32_t>(0xE08080u) | static_cast<uint32_t>((utf32 & 0xF000u) << 4) |
+                              static_cast<uint32_t>((utf32 & 0x0FC0u) << 2) | static_cast<uint32_t>(utf32 & 0x003F);
+        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF0000u) >> 16);
+        utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF00u) >> 8);
+        utf8[2] = static_cast<uint8_t>(utf8_chunk & 0x0000FFu);
+        encoded_size = 3;
+        return;
+    }
+    else if (utf32 <= char32_t(0x10FFFFu)) {
+        uint32_t utf8_chunk = static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((utf32 & 0x1C0000u) << 6) |
+                              static_cast<uint32_t>((utf32 & 0x03F000u) << 4) |
+                              static_cast<uint32_t>((utf32 & 0x000FC0u) << 2) |
+                              static_cast<uint32_t>(utf32 & 0x00003Fu);
+        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
+        utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
+        utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
+        utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
+        encoded_size = 4;
+        return;
+    }
 
-} // namespace detail
+    throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+}
 
-FK_YAML_NAMESPACE_END
+} // namespace utf8
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODING_HPP_ */
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_ */
 
 // #include <fkYAML/detail/input/scalar_scanner.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1914,7 +1689,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1928,16 +1703,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of lexical token types.
-enum class lexical_token_t
-{
+enum class lexical_token_t {
     END_OF_BUFFER,         //!< the end of input buffer.
     EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
     KEY_SEPARATOR,         //!< the key separater `:`
@@ -1962,77 +1731,56 @@ enum class lexical_token_t
     END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
 
 
-/// @namespace fkyaml
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @namespace detail
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
-
-namespace
-{
+namespace {
 
 /// @brief Check if the given character is a digit.
 /// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with MSVC.
 /// @param c A character to be checked.
 /// @return true if the given character is a digit, false otherwise.
-inline bool is_digit(char c)
-{
+inline bool is_digit(char c) {
     return ('0' <= c && c <= '9');
 }
 
-inline bool is_xdigit(char c)
-{
+inline bool is_xdigit(char c) {
     return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
 }
 
 } // namespace
-class scalar_scanner
-{
+class scalar_scanner {
 public:
-    static lexical_token_t scan(const std::string& token)
-    {
-        switch (token.size())
-        {
+    static lexical_token_t scan(const std::string& token) {
+        switch (token.size()) {
         case 0:
             return lexical_token_t::STRING_VALUE;
         case 1:
-            if (token[0] == '~')
-            {
+            if (token[0] == '~') {
                 return lexical_token_t::NULL_VALUE;
             }
             break;
         case 4:
-            if (token == "null" || token == "Null" || token == "NULL")
-            {
+            if (token == "null" || token == "Null" || token == "NULL") {
                 return lexical_token_t::NULL_VALUE;
             }
-            if (token == "true" || token == "True" || token == "TRUE")
-            {
+            if (token == "true" || token == "True" || token == "TRUE") {
                 return lexical_token_t::BOOLEAN_VALUE;
             }
             if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
-                token == ".NAN")
-            {
+                token == ".NAN") {
                 return lexical_token_t::FLOAT_NUMBER_VALUE;
             }
             break;
         case 5:
-            if (token == "false" || token == "False" || token == "FALSE")
-            {
+            if (token == "false" || token == "False" || token == "FALSE") {
                 return lexical_token_t::BOOLEAN_VALUE;
             }
-            if (token == "-.inf" || token == "-.Inf" || token == "-.INF")
-            {
+            if (token == "-.inf" || token == "-.Inf" || token == "-.INF") {
                 return lexical_token_t::FLOAT_NUMBER_VALUE;
             }
             break;
@@ -2042,14 +1790,12 @@ public:
     }
 
 private:
-    static lexical_token_t scan_possible_number_token(const std::string& token)
-    {
+    static lexical_token_t scan_possible_number_token(const std::string& token) {
         std::string::const_iterator itr = token.begin();
         std::size_t size = token.size();
         FK_YAML_ASSERT(size > 0);
 
-        switch (*itr)
-        {
+        switch (*itr) {
         case '-':
             return (size > 1) ? scan_negative_number(++itr, --size) : lexical_token_t::STRING_VALUE;
         case '+':
@@ -2071,34 +1817,28 @@ private:
         }
     }
 
-    static lexical_token_t scan_negative_number(std::string::const_iterator itr, std::size_t size)
-    {
+    static lexical_token_t scan_negative_number(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
-        if (is_digit(*itr))
-        {
+        if (is_digit(*itr)) {
             return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::INTEGER_VALUE;
         }
 
         return lexical_token_t::STRING_VALUE;
     }
 
-    static lexical_token_t scan_after_zero_at_first(std::string::const_iterator itr, std::size_t size)
-    {
+    static lexical_token_t scan_after_zero_at_first(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
-        if (is_digit(*itr))
-        {
+        if (is_digit(*itr)) {
             // a token consisting of the beginning '0' and some following numbers, e.g., `0123`, is not an integer
             // according to https://yaml.org/spec/1.2.2/#10213-integer.
             return lexical_token_t::STRING_VALUE;
         }
 
-        switch (*itr)
-        {
+        switch (*itr) {
         case '.': {
-            if (size == 1)
-            {
+            if (size == 1) {
                 return lexical_token_t::STRING_VALUE;
             }
             lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
@@ -2115,20 +1855,16 @@ private:
     }
 
     static lexical_token_t scan_decimal_number(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point)
-    {
+        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
         FK_YAML_ASSERT(size > 0);
 
-        if (is_digit(*itr))
-        {
+        if (is_digit(*itr)) {
             return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::INTEGER_VALUE;
         }
 
-        switch (*itr)
-        {
+        switch (*itr) {
         case '.': {
-            if (has_decimal_point)
-            {
+            if (has_decimal_point) {
                 // the token has more than one period, e.g., a semantic version `1.2.3`.
                 return lexical_token_t::STRING_VALUE;
             }
@@ -2145,12 +1881,10 @@ private:
     }
 
     static lexical_token_t scan_after_decimal_point(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point)
-    {
+        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
         FK_YAML_ASSERT(size > 0);
 
-        if (is_digit(*itr))
-        {
+        if (is_digit(*itr)) {
             return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
                               : lexical_token_t::FLOAT_NUMBER_VALUE;
         }
@@ -2159,18 +1893,15 @@ private:
     }
 
     static lexical_token_t scan_after_exponent(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point)
-    {
+        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
         FK_YAML_ASSERT(size > 0);
 
-        if (is_digit(*itr))
-        {
+        if (is_digit(*itr)) {
             return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
                               : lexical_token_t::FLOAT_NUMBER_VALUE;
         }
 
-        switch (*itr)
-        {
+        switch (*itr) {
         case '+':
         case '-':
             return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::STRING_VALUE;
@@ -2179,12 +1910,10 @@ private:
         }
     }
 
-    static lexical_token_t scan_octal_number(std::string::const_iterator itr, std::size_t size)
-    {
+    static lexical_token_t scan_octal_number(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
-        switch (*itr)
-        {
+        switch (*itr) {
         case '0':
         case '1':
         case '2':
@@ -2199,28 +1928,24 @@ private:
         }
     }
 
-    static lexical_token_t scan_hexadecimal_number(std::string::const_iterator itr, std::size_t size)
-    {
+    static lexical_token_t scan_hexadecimal_number(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
-        if (is_xdigit(*itr))
-        {
+        if (is_xdigit(*itr)) {
             return (size > 1) ? scan_hexadecimal_number(++itr, --size) : lexical_token_t::INTEGER_VALUE;
         }
         return lexical_token_t::STRING_VALUE;
     }
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_ */
 
 // #include <fkYAML/detail/input/position_tracker.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2241,7 +1966,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2262,12 +1987,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 ///////////////////////////////////////////
 //   Input Adapter API detection traits
@@ -2282,17 +2002,13 @@ using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer(std::declval<std
 /// @tparam InputAdapterType An input adapter type to check if it has get_character function.
 /// @tparam typename N/A
 template <typename InputAdapterType, typename = void>
-struct has_fill_buffer : std::false_type
-{
-};
+struct has_fill_buffer : std::false_type {};
 
 /// @brief A partial specialization of has_fill_buffer if InputAdapterType has get_character member function.
 /// @tparam InputAdapterType A type of a target input adapter.
 template <typename InputAdapterType>
 struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_t, InputAdapterType>::value>>
-    : std::true_type
-{
-};
+    : std::true_type {};
 
 ////////////////////////////////
 //   is_input_adapter traits
@@ -2302,40 +2018,27 @@ struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_
 /// @tparam T A target type.
 /// @tparam typename N/A
 template <typename T, typename = void>
-struct is_input_adapter : std::false_type
-{
-};
+struct is_input_adapter : std::false_type {};
 
 /// @brief A partial specialization of is_input_adapter if T is an input adapter type.
 /// @tparam InputAdapterType
 template <typename InputAdapterType>
-struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type
-{
-};
+struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type {};
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A position tracker of the target buffer.
-class position_tracker
-{
+class position_tracker {
 private:
     /// @brief A set of information on the current position in an input buffer.
-    struct position
-    {
+    struct position {
         /// The current position from the beginning of an input buffer.
         std::size_t cur_pos {0};
         /// The current position in the current line.
@@ -2345,8 +2048,7 @@ private:
     };
 
 public:
-    void set_target_buffer(const std::string& buffer)
-    {
+    void set_target_buffer(const std::string& buffer) {
         m_begin = m_last = buffer.begin();
         m_end = buffer.end();
         m_position = position {};
@@ -2355,23 +2057,19 @@ public:
     /// @brief Update the set of the current position informations.
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
-    void update_position(std::string::const_iterator cur_pos)
-    {
+    void update_position(std::string::const_iterator cur_pos) {
         m_position.cur_pos = static_cast<std::size_t>(std::distance(m_begin, cur_pos));
         m_position.lines_read += std::count(m_last, cur_pos, '\n');
         m_last = cur_pos;
 
-        if (m_position.lines_read == 0)
-        {
+        if (m_position.lines_read == 0) {
             m_position.cur_pos_in_line = m_position.cur_pos;
             return;
         }
 
         std::size_t count = 0;
-        while (--cur_pos != m_begin)
-        {
-            if (*cur_pos == '\n')
-            {
+        while (--cur_pos != m_begin) {
+            if (*cur_pos == '\n') {
                 break;
             }
             count++;
@@ -2379,22 +2077,19 @@ public:
         m_position.cur_pos_in_line = count;
     }
 
-    std::size_t get_cur_pos() const noexcept
-    {
+    std::size_t get_cur_pos() const noexcept {
         return m_position.cur_pos;
     }
 
     /// @brief Get the current position in the current line.
     /// @return std::size_t The current position in the current line.
-    std::size_t get_cur_pos_in_line() const noexcept
-    {
+    std::size_t get_cur_pos_in_line() const noexcept {
         return m_position.cur_pos_in_line;
     }
 
     /// @brief Get the number of lines which have already been read.
     /// @return std::size_t The number of lines which have already been read.
-    std::size_t get_lines_read() const noexcept
-    {
+    std::size_t get_lines_read() const noexcept {
         return m_position.lines_read;
     }
 
@@ -2409,9 +2104,7 @@ private:
     position m_position {};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_ */
 
@@ -2420,7 +2113,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/node_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2440,7 +2133,6 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/type_traits.hpp>
 
 
-/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
 // forward declaration for basic_node<...>
@@ -2450,9 +2142,9 @@ template <
     template <typename, typename> class ConverterType>
 class basic_node;
 
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_NAMESPACE_END
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /////////////////////////////
 //   is_basic_node traits
@@ -2461,9 +2153,7 @@ namespace detail
 /// @brief A struct to check the template parameter class is a kind of basic_node template class.
 /// @tparam T A class to be checked if it's a kind of basic_node template class.
 template <typename T>
-struct is_basic_node : std::false_type
-{
-};
+struct is_basic_node : std::false_type {};
 
 /// @brief A partial specialization of is_basic_node for basic_node template class.
 /// @tparam SequenceType A type for sequence node value containers.
@@ -2479,9 +2169,7 @@ template <
     template <typename, typename> class Converter>
 struct is_basic_node<
     basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, Converter>>
-    : std::true_type
-{
-};
+    : std::true_type {};
 
 ///////////////////////////////////
 //   is_node_ref_storage traits
@@ -2494,16 +2182,12 @@ class node_ref_storage;
 /// @brief A struct to check the template parameter class is a kind of node_ref_storage_template class.
 /// @tparam T A type to be checked if it's a kind of node_ref_storage template class.
 template <typename T>
-struct is_node_ref_storage : std::false_type
-{
-};
+struct is_node_ref_storage : std::false_type {};
 
 /// @brief A partial specialization for node_ref_storage template class.
 /// @tparam T A template parameter type of node_ref_storage template class.
 template <typename T>
-struct is_node_ref_storage<node_ref_storage<T>> : std::true_type
-{
-};
+struct is_node_ref_storage<node_ref_storage<T>> : std::true_type {};
 
 ///////////////////////////////////////////////////////
 //   basic_node conversion API representative types
@@ -2530,16 +2214,13 @@ using to_node_funcion_t = decltype(T::to_node(std::declval<Args>()...));
 /// @tparam T A target type passed to from_node function.
 /// @tparam typename N/A
 template <typename BasicNodeType, typename T, typename = void>
-struct has_from_node : std::false_type
-{
-};
+struct has_from_node : std::false_type {};
 
 /// @brief A partial specialization of has_from_node if T is not a basic_node template instance type.
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T A target type passed to from_node function.
 template <typename BasicNodeType, typename T>
-struct has_from_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
-{
+struct has_from_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>> {
     using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
@@ -2553,16 +2234,13 @@ struct has_from_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
 /// @tparam T A target type passed to to_node function.
 /// @tparam typename N/A
 template <typename BasicNodeType, typename T, typename = void>
-struct has_to_node : std::false_type
-{
-};
+struct has_to_node : std::false_type {};
 
 /// @brief A partial specialization of has_to_node if T is not a basic_node template instance type.
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T A target type passed to to_node function.
 template <typename BasicNodeType, typename T>
-struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
-{
+struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>> {
     using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
@@ -2579,9 +2257,7 @@ struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>>
 /// @tparam CompatibleType A target type for compatibility check.
 /// @tparam typename N/A
 template <typename BasicNodeType, typename CompatibleType, typename = void>
-struct is_node_compatible_type_impl : std::false_type
-{
-};
+struct is_node_compatible_type_impl : std::false_type {};
 
 /// @brief A partial specialization of is_node_compatible_type_impl if CompatibleType is a complete type and is
 /// compatible for BasicNodeType.
@@ -2591,21 +2267,15 @@ template <typename BasicNodeType, typename CompatibleType>
 struct is_node_compatible_type_impl<
     BasicNodeType, CompatibleType,
     enable_if_t<conjunction<is_complete_type<CompatibleType>, has_to_node<BasicNodeType, CompatibleType>>::value>>
-    : std::true_type
-{
-};
+    : std::true_type {};
 
 /// @brief Type traits to check if CompatibleType is a compatible type for BasicNodeType.
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam CompatibleType A target type for compatibility check.
 template <typename BasicNodeType, typename CompatibleType>
-struct is_node_compatible_type : is_node_compatible_type_impl<BasicNodeType, CompatibleType>
-{
-};
+struct is_node_compatible_type : is_node_compatible_type_impl<BasicNodeType, CompatibleType> {};
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP_ */
 
@@ -2616,35 +2286,21 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
-FK_YAML_NAMESPACE_BEGIN
-
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A class which lexically analizes YAML formatted inputs.
 /// @tparam BasicNodeType A type of the container for YAML values.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-class lexical_analyzer
-{
+class lexical_analyzer {
 private:
     using char_traits_type = typename std::char_traits<char>;
 
-    enum class block_style_indicator_t
-    {
+    enum class block_style_indicator_t {
         LITERAL, //!< keeps newlines inside the block as they are indicated by a pipe `|`.
         FOLDED,  //!< replaces newlines inside the block with spaces indicated by a right angle bracket `>`.
     };
 
-    enum class chomping_indicator_t
-    {
+    enum class chomping_indicator_t {
         STRIP, //!< excludes final line breaks and traiing empty lines indicated by `-`.
         KEEP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
         CLIP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
@@ -2660,8 +2316,7 @@ public:
     /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    explicit lexical_analyzer(InputAdapterType&& input_adapter)
-    {
+    explicit lexical_analyzer(InputAdapterType&& input_adapter) {
         std::forward<InputAdapterType>(input_adapter).fill_buffer(m_input_buffer);
         m_cur_itr = m_token_begin_itr = m_input_buffer.cbegin();
         m_end_itr = m_input_buffer.cend();
@@ -2670,8 +2325,7 @@ public:
 
     /// @brief Get the next lexical token type by scanning the left of the input buffer.
     /// @return lexical_token_t The next lexical token type.
-    lexical_token_t get_next_token()
-    {
+    lexical_token_t get_next_token() {
         skip_white_spaces_and_newline_codes();
 
         m_token_begin_itr = m_cur_itr;
@@ -2679,35 +2333,29 @@ public:
         m_last_token_begin_pos = m_pos_tracker.get_cur_pos_in_line();
         m_last_token_begin_line = m_pos_tracker.get_lines_read();
 
-        if (m_cur_itr == m_end_itr)
-        {
+        if (m_cur_itr == m_end_itr) {
             return m_last_token_type = lexical_token_t::END_OF_BUFFER;
         }
 
-        switch (char current = *m_cur_itr)
-        {
+        switch (char current = *m_cur_itr) {
         case '?':
-            if (++m_cur_itr == m_end_itr)
-            {
+            if (++m_cur_itr == m_end_itr) {
                 m_value_buffer = "?";
                 return m_last_token_type = lexical_token_t::STRING_VALUE;
             }
 
-            switch (*m_cur_itr)
-            {
+            switch (*m_cur_itr) {
             case ' ':
                 return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
                 return m_last_token_type = scan_scalar();
             }
         case ':': { // key separater
-            if (++m_cur_itr == m_end_itr)
-            {
+            if (++m_cur_itr == m_end_itr) {
                 return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
             }
 
-            switch (*m_cur_itr)
-            {
+            switch (*m_cur_itr) {
             case ' ':
             case '\t':
             case '\r':
@@ -2718,8 +2366,7 @@ public:
             case ']':
             case '{':
             case '}':
-                if (m_flow_context_depth > 0)
-                {
+                if (m_flow_context_depth > 0) {
                     // the above characters are not "safe" to be followed in a flow context.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
@@ -2737,8 +2384,7 @@ public:
         case '&': { // anchor prefix
             extract_anchor_name();
             bool is_empty = m_value_buffer.empty();
-            if (is_empty)
-            {
+            if (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
             return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
@@ -2746,8 +2392,7 @@ public:
         case '*': { // alias prefix
             extract_anchor_name();
             bool is_empty = m_value_buffer.empty();
-            if (is_empty)
-            {
+            if (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
 
@@ -2763,19 +2408,16 @@ public:
             return m_last_token_type = scan_directive();
         case '-': {
             char next = *(m_cur_itr + 1);
-            if (next == ' ')
-            {
+            if (next == ' ') {
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
                 return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
             }
 
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
-            if (is_available)
-            {
+            if (is_available) {
                 m_cur_itr += 3;
-                if (std::equal(m_token_begin_itr, m_cur_itr, "---"))
-                {
+                if (std::equal(m_token_begin_itr, m_cur_itr, "---")) {
                     return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
                 }
             }
@@ -2787,8 +2429,7 @@ public:
             ++m_cur_itr;
             return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
-            if (m_flow_context_depth == 0)
-            {
+            if (m_flow_context_depth == 0) {
                 emit_error("An invalid flow sequence ending.");
             }
             m_flow_context_depth--;
@@ -2799,8 +2440,7 @@ public:
             ++m_cur_itr;
             return m_last_token_type = lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
-            if (m_flow_context_depth == 0)
-            {
+            if (m_flow_context_depth == 0) {
                 emit_error("An invalid flow mapping ending.");
             }
             m_flow_context_depth--;
@@ -2817,10 +2457,8 @@ public:
             return m_last_token_type = scan_scalar();
         case '.': {
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
-            if (is_available)
-            {
-                if (std::equal(m_cur_itr, m_cur_itr + 3, "..."))
-                {
+            if (is_available) {
+                if (std::equal(m_cur_itr, m_cur_itr + 3, "...")) {
                     m_cur_itr += 3;
                     return m_last_token_type = lexical_token_t::END_OF_DOCUMENT;
                 }
@@ -2849,39 +2487,33 @@ public:
 
     /// @brief Get the beginning position of a last token.
     /// @return std::size_t The beginning position of a last token.
-    std::size_t get_last_token_begin_pos() const noexcept
-    {
+    std::size_t get_last_token_begin_pos() const noexcept {
         return m_last_token_begin_pos;
     }
 
     /// @brief Get the number of lines already processed.
     /// @return std::size_t The number of lines already processed.
-    std::size_t get_lines_processed() const noexcept
-    {
+    std::size_t get_lines_processed() const noexcept {
         return m_last_token_begin_line;
     }
 
     /// @brief Convert from string to null and get the converted value.
     /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
-    std::nullptr_t get_null() const
-    {
+    std::nullptr_t get_null() const {
         return from_string(m_value_buffer, type_tag<std::nullptr_t> {});
     }
 
     /// @brief Convert from string to boolean and get the converted value.
     /// @return true  A string token is one of the followings: "true", "True", "TRUE".
     /// @return false A string token is one of the followings: "false", "False", "FALSE".
-    boolean_type get_boolean() const
-    {
+    boolean_type get_boolean() const {
         return from_string(m_value_buffer, type_tag<bool> {});
     }
 
     /// @brief Convert from string to integer and get the converted value.
     /// @return integer_type An integer value converted from the source string.
-    integer_type get_integer() const
-    {
-        if (m_value_buffer.size() > 2 && m_value_buffer.rfind("0o", 0) != std::string::npos)
-        {
+    integer_type get_integer() const {
+        if (m_value_buffer.size() > 2 && m_value_buffer.rfind("0o", 0) != std::string::npos) {
             // Replace the prefix "0o" with "0" since STL functions can detect octal chars.
             // Note that the YAML specifies octal values start with the prefix "0o", not "0".
             // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
@@ -2892,15 +2524,13 @@ public:
 
     /// @brief Convert from string to float number and get the converted value.
     /// @return float_number_type A float number value converted from the source string.
-    float_number_type get_float_number() const
-    {
+    float_number_type get_float_number() const {
         return from_string(m_value_buffer, type_tag<float_number_type> {});
     }
 
     /// @brief Get a scanned string value.
     /// @return const string_type& Constant reference to a scanned string.
-    const string_type& get_string() const noexcept
-    {
+    const string_type& get_string() const noexcept {
         // TODO: Provide support for different string types between nodes & inputs.
         static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
         return m_value_buffer;
@@ -2908,8 +2538,7 @@ public:
 
     /// @brief Get the YAML version specification.
     /// @return const string_type& A YAML version specification.
-    const string_type& get_yaml_version() const
-    {
+    const string_type& get_yaml_version() const {
         FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
         FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
 
@@ -2918,16 +2547,14 @@ public:
 
     /// @brief Get the YAML tag handle defined in the TAG directive.
     /// @return const std::string& A tag handle.
-    const std::string& get_tag_handle() const
-    {
+    const std::string& get_tag_handle() const {
         FK_YAML_ASSERT(!m_tag_handle.empty());
         return m_tag_handle;
     }
 
     /// @brief Get the YAML tag prefix defined in the TAG directive.
     /// @return const std::string A tag prefix.
-    const std::string& get_tag_prefix() const
-    {
+    const std::string& get_tag_prefix() const {
         FK_YAML_ASSERT(!m_tag_prefix.empty());
         return m_tag_prefix;
     }
@@ -2936,22 +2563,18 @@ private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
-    char convert_hex_char_to_byte(char source) const
-    {
-        if ('0' <= source && source <= '9')
-        {
+    char convert_hex_char_to_byte(char source) const {
+        if ('0' <= source && source <= '9') {
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
             return static_cast<char>(source - '0');
         }
 
-        if ('A' <= source && source <= 'F')
-        {
+        if ('A' <= source && source <= 'F') {
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
             return static_cast<char>(source - 'A' + 10);
         }
 
-        if ('a' <= source && source <= 'f')
-        {
+        if ('a' <= source && source <= 'f') {
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
             return static_cast<char>(source - 'a' + 10);
         }
@@ -2960,8 +2583,7 @@ private:
     }
 
     /// @brief Skip until a newline code or a null character is found.
-    void scan_comment()
-    {
+    void scan_comment() {
         FK_YAML_ASSERT(*m_cur_itr == '#');
         skip_until_line_end();
     }
@@ -2969,18 +2591,15 @@ private:
     /// @brief Scan directives starting with the prefix '%'
     /// @note Currently, only %YAML directive is supported. If not, returns invalid or throws an exception.
     /// @return lexical_token_t The lexical token type for directives.
-    lexical_token_t scan_directive()
-    {
+    lexical_token_t scan_directive() {
         FK_YAML_ASSERT(*m_cur_itr == '%');
 
         m_value_buffer.clear();
         m_token_begin_itr = ++m_cur_itr;
 
         bool ends_loop = false;
-        while (!ends_loop && m_cur_itr != m_end_itr)
-        {
-            switch (*m_cur_itr)
-            {
+        while (!ends_loop && m_cur_itr != m_end_itr) {
+            switch (*m_cur_itr) {
             case ' ':
             case '\t':
                 ends_loop = true;
@@ -2997,20 +2616,16 @@ private:
 
         m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
 
-        if (m_value_buffer == "TAG")
-        {
-            if (!ends_loop)
-            {
+        if (m_value_buffer == "TAG") {
+            if (!ends_loop) {
                 emit_error("There must be at least one white space between \"%TAG\" and tag info.");
             }
             skip_white_spaces();
             return scan_tag_directive();
         }
 
-        if (m_value_buffer == "YAML")
-        {
-            if (!ends_loop)
-            {
+        if (m_value_buffer == "YAML") {
+            if (!ends_loop) {
                 emit_error("There must be at least one white space between \"%YAML\" and tag info.");
             }
             skip_white_spaces();
@@ -3023,8 +2638,7 @@ private:
 
     /// @brief Scan a YAML tag directive.
     /// @return lexical_token_t The lexical token type for YAML tag directives.
-    lexical_token_t scan_tag_directive()
-    {
+    lexical_token_t scan_tag_directive() {
         m_tag_handle.clear();
         m_tag_prefix.clear();
         m_token_begin_itr = m_cur_itr;
@@ -3033,50 +2647,41 @@ private:
         // extract a tag handle
         //
 
-        if (*m_cur_itr != '!')
-        {
+        if (*m_cur_itr != '!') {
             emit_error("Tag handle must start with \'!\'.");
         }
 
-        if (++m_cur_itr == m_end_itr)
-        {
+        if (++m_cur_itr == m_end_itr) {
             emit_error("invalid TAG directive is found.");
         }
 
-        switch (*m_cur_itr)
-        {
+        switch (*m_cur_itr) {
         case ' ':
         case '\t':
             // primary handle (!)
             break;
         case '!':
-            if (++m_cur_itr == m_end_itr)
-            {
+            if (++m_cur_itr == m_end_itr) {
                 emit_error("invalid TAG directive is found.");
             }
-            if (*m_cur_itr != ' ' && *m_cur_itr != '\t')
-            {
+            if (*m_cur_itr != ' ' && *m_cur_itr != '\t') {
                 emit_error("invalid tag handle is found.");
             }
             break;
         default: {
             bool ends_loop = false;
-            do
-            {
-                switch (*m_cur_itr)
-                {
+            do {
+                switch (*m_cur_itr) {
                 case ' ':
                 case '\t':
                     emit_error("invalid tag handle is found.");
                 case '!': {
-                    if (m_cur_itr + 1 == m_end_itr)
-                    {
+                    if (m_cur_itr + 1 == m_end_itr) {
                         ends_loop = true;
                         break;
                     }
                     char next = *(m_cur_itr + 1);
-                    if (next != ' ' && next != '\t')
-                    {
+                    if (next != ' ' && next != '\t') {
                         emit_error("invalid tag handle is found.");
                     }
                     ends_loop = true;
@@ -3085,16 +2690,14 @@ private:
                 case '-':
                     break;
                 default:
-                    if (!isalnum(*m_cur_itr))
-                    {
+                    if (!isalnum(*m_cur_itr)) {
                         // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
                         emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
                     }
                     break;
                 }
 
-                if (++m_cur_itr == m_end_itr)
-                {
+                if (++m_cur_itr == m_end_itr) {
                     emit_error("invalid TAG directive is found.");
                 }
             } while (!ends_loop);
@@ -3111,8 +2714,7 @@ private:
         //
 
         m_token_begin_itr = m_cur_itr;
-        switch (*m_cur_itr)
-        {
+        switch (*m_cur_itr) {
         // a tag prefix must not start with flow indicators to avoid ambiguity.
         // See https://yaml.org/spec/1.2.2/#rule-ns-global-tag-prefix for more details.
         case ',':
@@ -3125,10 +2727,8 @@ private:
 
         // extract the rest of a tag prefix.
         bool ends_loop = false;
-        do
-        {
-            switch (*m_cur_itr)
-            {
+        do {
+            switch (*m_cur_itr) {
             case ' ':
             case '\t':
             case '\r':
@@ -3141,8 +2741,7 @@ private:
         m_tag_prefix.assign(m_token_begin_itr, m_cur_itr);
 
         bool is_valid = uri_encoding::validate(m_tag_prefix.begin(), m_tag_prefix.end());
-        if (!is_valid)
-        {
+        if (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
 
@@ -3152,16 +2751,13 @@ private:
     /// @brief Scan a YAML version directive.
     /// @note Only 1.1 and 1.2 are supported. If not, throws an exception.
     /// @return lexical_token_t The lexical token type for YAML version directives.
-    lexical_token_t scan_yaml_version_directive()
-    {
+    lexical_token_t scan_yaml_version_directive() {
         m_value_buffer.clear();
         m_token_begin_itr = m_cur_itr;
 
         bool ends_loop = false;
-        while (!ends_loop && m_cur_itr != m_end_itr)
-        {
-            switch (*m_cur_itr)
-            {
+        while (!ends_loop && m_cur_itr != m_end_itr) {
+            switch (*m_cur_itr) {
             case ' ':
             case '\t':
             case '\r':
@@ -3176,8 +2772,7 @@ private:
 
         m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
 
-        if (m_value_buffer != "1.1" && m_value_buffer != "1.2")
-        {
+        if (m_value_buffer != "1.1" && m_value_buffer != "1.2") {
             emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
         }
 
@@ -3185,18 +2780,15 @@ private:
     }
 
     /// @brief Extracts an anchor name from the input and assigns the result to `m_value_buffer`.
-    void extract_anchor_name()
-    {
+    void extract_anchor_name() {
         FK_YAML_ASSERT(*m_cur_itr == '&' || *m_cur_itr == '*');
 
         m_value_buffer.clear();
         m_token_begin_itr = ++m_cur_itr;
 
         bool ends_loop = false;
-        for (; m_cur_itr != m_end_itr; ++m_cur_itr)
-        {
-            switch (*m_cur_itr)
-            {
+        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
+            switch (*m_cur_itr) {
             // anchor name must not contain white spaces, newline codes and flow indicators.
             // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
             case ' ':
@@ -3212,14 +2804,12 @@ private:
                 break;
             case ':': {
                 auto next_itr = m_cur_itr + 1;
-                if (next_itr == m_end_itr)
-                {
+                if (next_itr == m_end_itr) {
                     ++m_cur_itr;
                     ends_loop = true;
                     break;
                 }
-                switch (*next_itr)
-                {
+                switch (*next_itr) {
                 case ' ':
                 case '\t':
                 case '\r':
@@ -3234,8 +2824,7 @@ private:
                 break;
             }
 
-            if (ends_loop)
-            {
+            if (ends_loop) {
                 break;
             }
         }
@@ -3244,14 +2833,12 @@ private:
     }
 
     /// @brief Extracts a tag name from the input and assigns the result to `m_value_buffer`.
-    void extract_tag_name()
-    {
+    void extract_tag_name() {
         m_value_buffer.clear();
 
         FK_YAML_ASSERT(*m_cur_itr == '!');
 
-        if (++m_cur_itr == m_end_itr)
-        {
+        if (++m_cur_itr == m_end_itr) {
             // Just "!" is a non-specific tag.
             m_value_buffer = "!";
             return;
@@ -3260,8 +2847,7 @@ private:
         bool is_verbatim = false;
         bool allows_another_tag_prefix = false;
 
-        switch (*m_cur_itr)
-        {
+        switch (*m_cur_itr) {
         case ' ':
         case '\r':
         case '\n':
@@ -3284,15 +2870,12 @@ private:
 
         bool is_named_handle = false;
         bool ends_loop = false;
-        do
-        {
-            if (++m_cur_itr == m_end_itr)
-            {
+        do {
+            if (++m_cur_itr == m_end_itr) {
                 break;
             }
 
-            switch (*m_cur_itr)
-            {
+            switch (*m_cur_itr) {
             // Tag names must not contain spaces or newline codes.
             case ' ':
             case '\t':
@@ -3301,8 +2884,7 @@ private:
                 ends_loop = true;
                 break;
             case '!':
-                if (!allows_another_tag_prefix)
-                {
+                if (!allows_another_tag_prefix) {
                     emit_error("invalid tag prefix (!) is found.");
                 }
 
@@ -3317,35 +2899,29 @@ private:
 
         m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
 
-        if (is_verbatim)
-        {
+        if (is_verbatim) {
             char last = m_value_buffer.back();
-            if (last != '>')
-            {
+            if (last != '>') {
                 emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
             }
 
             auto tag_begin = m_value_buffer.begin() + 2;
             auto tag_end = m_value_buffer.end() - 1;
-            if (tag_begin == tag_end)
-            {
+            if (tag_begin == tag_end) {
                 emit_error("verbatim tag(!<TAG>) must not be empty.");
             }
 
             bool is_valid_uri = uri_encoding::validate(tag_begin, tag_end);
-            if (!is_valid_uri)
-            {
+            if (!is_valid_uri) {
                 emit_error("invalid URI character is found in a verbatim tag.");
             }
 
             return;
         }
 
-        if (is_named_handle)
-        {
+        if (is_named_handle) {
             char last = m_value_buffer.back();
-            if (last == '!')
-            {
+            if (last == '!') {
                 // Tag shorthand must be followed by a non-empty suffix.
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
                 emit_error("named handle has no suffix.");
@@ -3354,8 +2930,7 @@ private:
             std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
             bool is_valid_uri =
                 uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
-            if (!is_valid_uri)
-            {
+            if (!is_valid_uri) {
                 emit_error("Invalid URI character is found in a named tag handle.");
             }
         }
@@ -3363,18 +2938,15 @@ private:
 
     /// @brief Scan a string token, either plain, single-quoted or double-quoted.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_scalar()
-    {
+    lexical_token_t scan_scalar() {
         m_value_buffer.clear();
 
         bool needs_last_single_quote = false;
         bool needs_last_double_quote = false;
-        if (m_cur_itr == m_token_begin_itr)
-        {
+        if (m_cur_itr == m_token_begin_itr) {
             needs_last_single_quote = (*m_cur_itr == '\'');
             needs_last_double_quote = (*m_cur_itr == '\"');
-            if (needs_last_double_quote || needs_last_single_quote)
-            {
+            if (needs_last_double_quote || needs_last_single_quote) {
                 m_token_begin_itr = ++m_cur_itr;
             }
         }
@@ -3382,8 +2954,7 @@ private:
         lexical_token_t type = extract_string_token(needs_last_single_quote, needs_last_double_quote);
         FK_YAML_ASSERT(type == lexical_token_t::STRING_VALUE);
 
-        if (needs_last_single_quote || needs_last_double_quote)
-        {
+        if (needs_last_single_quote || needs_last_double_quote) {
             // just returned the extracted string value if quoted.
             return type;
         }
@@ -3394,12 +2965,10 @@ private:
     /// @brief Check if the given character is allowed in a single-quoted scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_single(char c)
-    {
+    bool is_allowed_single(char c) {
         bool ret = false;
 
-        switch (c)
-        {
+        switch (c) {
         case '\r':
         case '\n':
             // TODO: Support multi-line string scalars.
@@ -3408,15 +2977,13 @@ private:
         case '\'':
             // If single quotation marks are repeated twice in a single-quoted string token,
             // they are considered as an escaped single quotation mark.
-            if (m_cur_itr + 1 == m_end_itr)
-            {
+            if (m_cur_itr + 1 == m_end_itr) {
                 m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                 m_token_begin_itr = m_cur_itr;
                 break;
             }
 
-            if (*(m_cur_itr + 1) != '\'')
-            {
+            if (*(m_cur_itr + 1) != '\'') {
                 m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                 break;
             }
@@ -3436,12 +3003,10 @@ private:
     /// @brief Check if the given character is allowed in a double-quoted scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_double(char c)
-    {
+    bool is_allowed_double(char c) {
         bool ret = false;
 
-        switch (c)
-        {
+        switch (c) {
         case '\r':
         case '\n':
             // TODO: Support multi-line string scalars.
@@ -3457,8 +3022,7 @@ private:
             // Handle escaped characters.
             // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
             c = *++m_cur_itr;
-            switch (c)
-            {
+            switch (c) {
             case 'a':
                 m_value_buffer.push_back('\a');
                 break;
@@ -3496,20 +3060,20 @@ private:
                 m_value_buffer.push_back('\\');
                 break;
             case 'N': // next line
-                utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case '_': // non-breaking space
-                utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case 'L': // line separator
-                utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case 'P': // paragraph separator
-                utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case 'x':
                 handle_escaped_unicode(1);
@@ -3535,12 +3099,10 @@ private:
     /// @brief Check if the given character is allowed in a plain scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_plain(char c)
-    {
+    bool is_allowed_plain(char c) {
         bool ret = false;
 
-        switch (c)
-        {
+        switch (c) {
         case '\r':
         case '\n':
             m_value_buffer.append(m_token_begin_itr, m_cur_itr);
@@ -3554,10 +3116,8 @@ private:
 
             // These characters are permitted when not inside a flow collection, and not inside an implicit key.
             // TODO: Support detection of implicit key context for this check.
-            if (m_flow_context_depth > 0)
-            {
-                switch (next)
-                {
+            if (m_flow_context_depth > 0) {
+                switch (next) {
                 case '{':
                 case '}':
                 case '[':
@@ -3568,30 +3128,25 @@ private:
                     break;
                 }
 
-                if (is_appended)
-                {
+                if (is_appended) {
                     break;
                 }
             }
 
             // " :" is permitted in a plain style string token, but not when followed by a space.
-            if (next == ':')
-            {
+            if (next == ':') {
                 char peeked = *(m_cur_itr + 2);
-                if (peeked == ' ')
-                {
+                if (peeked == ' ') {
                     m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                     is_appended = true;
                 }
 
-                if (is_appended)
-                {
+                if (is_appended) {
                     break;
                 }
             }
 
-            switch (next)
-            {
+            switch (next) {
             case ' ':
             case '\r':
             case '\n':
@@ -3612,8 +3167,7 @@ private:
             // A colon as a key separator must be followed by
             // * a white space or
             // * a newline code.
-            switch (next)
-            {
+            switch (next) {
             case ' ':
             case '\t':
             case '\r':
@@ -3633,8 +3187,7 @@ private:
         case ']':
         case ',':
             // just regard the flow indicators as a normal character if plain but not inside a flow context.
-            if (m_flow_context_depth == 0)
-            {
+            if (m_flow_context_depth == 0) {
                 ret = true;
                 break;
             }
@@ -3651,8 +3204,7 @@ private:
 
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote)
-    {
+    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
         // change behaviors depending on the type of a comming string scalar token.
         // * single quoted
         // * double quoted
@@ -3661,13 +3213,11 @@ private:
         std::string check_filters {"\r\n\\"};
         bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
 
-        if (needs_last_single_quote)
-        {
+        if (needs_last_single_quote) {
             check_filters.append("\'");
             pfn_is_allowed = &lexical_analyzer::is_allowed_single;
         }
-        else if (needs_last_double_quote)
-        {
+        else if (needs_last_double_quote) {
             check_filters.append("\"");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
@@ -3679,68 +3229,45 @@ private:
 
         // scan the contents of a string scalar token.
 
-        for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr)
-        {
+        for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr) {
             char current = *m_cur_itr;
+            uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
+            if (num_bytes == 1) {
+                auto ret = check_filters.find(current);
+                if (ret != std::string::npos) {
+                    bool is_allowed = (this->*pfn_is_allowed)(current);
+                    if (!is_allowed) {
+                        return lexical_token_t::STRING_VALUE;
+                    }
 
-            auto ret = check_filters.find(current);
-            if (ret != std::string::npos)
-            {
-                bool is_allowed = (this->*pfn_is_allowed)(current);
-                if (!is_allowed)
-                {
-                    return lexical_token_t::STRING_VALUE;
+                    continue;
+                }
+
+                uint8_t byte = static_cast<uint8_t>(current);
+
+                // Handle unescaped control characters.
+                if (byte <= 0x1F) {
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+                    handle_unescaped_control_char(current);
+                    m_token_begin_itr = m_cur_itr + 1;
+                    continue;
                 }
 
                 continue;
             }
 
-            uint8_t byte = static_cast<uint8_t>(current);
-
-            // Handle unescaped control characters.
-            if (byte <= 0x1F)
-            {
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-                handle_unescaped_control_char(current);
-                m_token_begin_itr = m_cur_itr + 1;
-                continue;
-            }
-
-            // The other characters are already checked while creating an input handler.
-
-            // Handle ASCII characters except control characters.
-            if (byte <= 0x7E)
-            {
-                continue;
-            }
-
-            // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
-            if (byte <= 0xDF)
-            {
-                ++m_cur_itr;
-                continue;
-            }
-
-            // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
-            if (byte <= 0xEF)
-            {
-                m_cur_itr += 2;
-                continue;
-            }
-
-            // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            m_cur_itr += 3;
+            // Multi-byte characters are already validated while creating an input handler.
+            // So just advance the iterator.
+            m_cur_itr += num_bytes - 1;
         }
 
         // Handle the end of input buffer.
 
-        if (needs_last_double_quote)
-        {
+        if (needs_last_double_quote) {
             emit_error("Invalid end of input buffer in a double-quoted string token.");
         }
 
-        if (needs_last_single_quote)
-        {
+        if (needs_last_single_quote) {
             emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
@@ -3754,26 +3281,21 @@ private:
     /// @param indent The indent size specified for the given token.
     /// @return The lexical token type for strings.
     lexical_token_t scan_block_style_string_token(
-        block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent)
-    {
+        block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent) {
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
-        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr)
-        {
+        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
             current = *m_cur_itr;
 
-            if (current == ' ')
-            {
+            if (current == ' ') {
                 continue;
             }
 
-            if (current == '\r')
-            {
+            if (current == '\r') {
                 current = *++m_cur_itr;
             }
-            if (current == '\n')
-            {
+            if (current == '\n') {
                 m_value_buffer.push_back('\n');
                 continue;
             }
@@ -3781,10 +3303,8 @@ private:
             break;
         }
 
-        if (m_cur_itr == m_end_itr)
-        {
-            if (chomp != chomping_indicator_t::KEEP)
-            {
+        if (m_cur_itr == m_end_itr) {
+            if (chomp != chomping_indicator_t::KEEP) {
                 m_value_buffer.clear();
             }
             return lexical_token_t::STRING_VALUE;
@@ -3794,22 +3314,18 @@ private:
         std::size_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
 
         // TODO: preserve and compare the last indentation with `cur_indent`
-        if (indent == 0)
-        {
+        if (indent == 0) {
             indent = cur_indent;
         }
-        else if (cur_indent < indent)
-        {
+        else if (cur_indent < indent) {
             emit_error("A block style scalar is less indented than the indicated level.");
         }
 
         int chars_in_line = 0;
         bool is_extra_indented = false;
-        if (cur_indent > indent)
-        {
+        if (cur_indent > indent) {
             std::size_t diff = cur_indent - indent;
-            if (style == block_style_indicator_t::FOLDED)
-            {
+            if (style == block_style_indicator_t::FOLDED) {
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
             }
@@ -3817,34 +3333,28 @@ private:
             chars_in_line += static_cast<int>(diff);
         }
 
-        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr)
-        {
+        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
             current = *m_cur_itr;
 
-            if (current == '\r')
-            {
+            if (current == '\r') {
                 // Ignore CR assuming the next character is LF.
                 continue;
             }
 
-            if (current == '\n')
-            {
-                if (style == block_style_indicator_t::LITERAL)
-                {
+            if (current == '\n') {
+                if (style == block_style_indicator_t::LITERAL) {
                     m_value_buffer.push_back(current);
                 }
                 else // block_style_indicator_t::FOLDED
                 {
-                    if (chars_in_line == 0)
-                    {
+                    if (chars_in_line == 0) {
                         // Just append a newline if the current line is empty.
                         m_value_buffer.push_back('\n');
                         is_extra_indented = false;
                         continue;
                     }
 
-                    if (is_extra_indented)
-                    {
+                    if (is_extra_indented) {
                         // A line being more indented is not folded.
                         m_value_buffer.push_back('\n');
                         chars_in_line = 0;
@@ -3855,26 +3365,21 @@ private:
                     // Append a newline if the next line is empty.
                     bool is_end_of_token = false;
                     bool is_next_empty = false;
-                    for (std::size_t i = 0; i < indent; i++)
-                    {
-                        if (++m_cur_itr == m_end_itr)
-                        {
+                    for (std::size_t i = 0; i < indent; i++) {
+                        if (++m_cur_itr == m_end_itr) {
                             is_end_of_token = true;
                             break;
                         }
 
                         current = *m_cur_itr;
-                        if (current == ' ')
-                        {
+                        if (current == ' ') {
                             continue;
                         }
 
-                        if (current == '\r')
-                        {
+                        if (current == '\r') {
                             current = *++m_cur_itr;
                         }
-                        if (current == '\n')
-                        {
+                        if (current == '\n') {
                             is_next_empty = true;
                             break;
                         }
@@ -3883,20 +3388,17 @@ private:
                         break;
                     }
 
-                    if (is_end_of_token)
-                    {
+                    if (is_end_of_token) {
                         m_value_buffer.push_back('\n');
                         break;
                     }
 
-                    if (is_next_empty)
-                    {
+                    if (is_next_empty) {
                         m_value_buffer.push_back('\n');
                         continue;
                     }
 
-                    switch (char next = *(m_cur_itr + 1))
-                    {
+                    switch (char next = *(m_cur_itr + 1)) {
                     case '\r': {
                         ++m_cur_itr;
                         next = *++m_cur_itr;
@@ -3927,10 +3429,8 @@ private:
             // Handle indentation
             m_pos_tracker.update_position(m_cur_itr);
             cur_indent = m_pos_tracker.get_cur_pos_in_line();
-            if (cur_indent < indent)
-            {
-                if (current != ' ')
-                {
+            if (cur_indent < indent) {
+                if (current != ' ') {
                     // Interpret less indented non-space characters as the start of the next token.
                     break;
                 }
@@ -3938,8 +3438,7 @@ private:
                 continue;
             }
 
-            if (style == block_style_indicator_t::FOLDED && chars_in_line == 0 && current == ' ')
-            {
+            if (style == block_style_indicator_t::FOLDED && chars_in_line == 0 && current == ' ') {
                 // A line being more indented is not folded.
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
@@ -3949,15 +3448,12 @@ private:
         }
 
         // Manipulate the trailing line endings chomping indicator type.
-        switch (chomp)
-        {
+        switch (chomp) {
         case chomping_indicator_t::STRIP:
-            while (!m_value_buffer.empty())
-            {
+            while (!m_value_buffer.empty()) {
                 // Empty strings are handled above, so no check for the case.
                 char last = m_value_buffer.back();
-                if (last != '\n')
-                {
+                if (last != '\n') {
                     break;
                 }
                 m_value_buffer.pop_back();
@@ -3965,17 +3461,14 @@ private:
             break;
         case chomping_indicator_t::CLIP: {
             char last = m_value_buffer.back();
-            if (last != '\n')
-            {
+            if (last != '\n') {
                 // No need to chomp the trailing newlines.
                 break;
             }
-            while (m_value_buffer.size() > 1)
-            {
+            while (m_value_buffer.size() > 1) {
                 // Strings with only newlines are handled above, so no check for the case.
                 char second_last = *(m_value_buffer.end() - 2);
-                if (second_last != '\n')
-                {
+                if (second_last != '\n') {
                     break;
                 }
                 m_value_buffer.pop_back();
@@ -3991,12 +3484,10 @@ private:
 
     /// @brief Handle unescaped control characters.
     /// @param c A target character.
-    void handle_unescaped_control_char(char c)
-    {
+    void handle_unescaped_control_char(char c) {
         FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
 
-        switch (c)
-        {
+        switch (c) {
         // 0x00(NULL) has already been handled above.
         case 0x01:
             emit_error("Control character U+0001 (SOH) must be escaped to \\u0001.");
@@ -4064,30 +3555,26 @@ private:
 
     /// @brief Unescape the given escaped unicode character.
     /// @param bytes_to_read The number of bytes to be read from the input buffer.
-    void handle_escaped_unicode(int bytes_to_read)
-    {
+    void handle_escaped_unicode(int bytes_to_read) {
         int read_size = bytes_to_read * 2;
         char32_t code_point = 0;
-        for (int i = read_size - 1; i >= 0; i--)
-        {
+        for (int i = read_size - 1; i >= 0; i--) {
             char four_bits = convert_hex_char_to_byte(*++m_cur_itr);
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
             code_point |= static_cast<char32_t>(four_bits << (4 * i));
         }
 
         // Treats the code point as a UTF-32 encoded character.
-        utf8_encoding::from_utf32(code_point, m_encode_buffer, m_encoded_size);
-        m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+        utf8::from_utf32(code_point, m_encode_buffer, m_encoded_size);
+        m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
     }
 
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
-    void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
-    {
+    void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent) {
         chomp_type = chomping_indicator_t::CLIP;
-        switch (*++m_cur_itr)
-        {
+        switch (*++m_cur_itr) {
         case '-':
             chomp_type = chomping_indicator_t::STRIP;
             ++m_cur_itr;
@@ -4100,14 +3587,12 @@ private:
             break;
         }
 
-        if (*m_cur_itr == '0')
-        {
+        if (*m_cur_itr == '0') {
             emit_error("An indentation level for a block style scalar cannot be \'0\'");
         }
 
         indent = 0;
-        if (std::isdigit(*m_cur_itr))
-        {
+        if (std::isdigit(*m_cur_itr)) {
             indent = convert_hex_char_to_byte(*m_cur_itr++);
         }
 
@@ -4116,19 +3601,15 @@ private:
     }
 
     /// @brief Skip white spaces (half-width spaces and tabs) from the current position.
-    void skip_white_spaces()
-    {
+    void skip_white_spaces() {
         m_cur_itr = std::find_if_not(m_cur_itr, m_end_itr, [](char c) { return (c == ' ' || c == '\t'); });
     }
 
     /// @brief Skip white spaces and newline codes (CR/LF) from the current position.
-    void skip_white_spaces_and_newline_codes()
-    {
-        if (m_cur_itr != m_end_itr)
-        {
+    void skip_white_spaces_and_newline_codes() {
+        if (m_cur_itr != m_end_itr) {
             m_cur_itr = std::find_if_not(m_cur_itr, m_end_itr, [](char c) {
-                switch (c)
-                {
+                switch (c) {
                 case ' ':
                 case '\t':
                 case '\r':
@@ -4142,19 +3623,14 @@ private:
     }
 
     /// @brief Skip the rest in the current line.
-    void skip_until_line_end()
-    {
-        while (m_cur_itr != m_end_itr)
-        {
-            switch (*m_cur_itr)
-            {
+    void skip_until_line_end() {
+        while (m_cur_itr != m_end_itr) {
+            switch (*m_cur_itr) {
             case '\r':
-                if (++m_cur_itr == m_end_itr)
-                {
+                if (++m_cur_itr == m_end_itr) {
                     return;
                 }
-                if (*m_cur_itr == '\n')
-                {
+                if (*m_cur_itr == '\n') {
                     ++m_cur_itr;
                 }
                 return;
@@ -4170,8 +3646,7 @@ private:
 
     /// @brief Emits an error with the given message.
     /// @param msg A message for the resulting error.
-    [[noreturn]] void emit_error(const char* msg) const
-    {
+    [[noreturn]] void emit_error(const char* msg) const {
         m_pos_tracker.update_position(m_cur_itr);
         throw fkyaml::parse_error(msg, m_pos_tracker.get_lines_read(), m_pos_tracker.get_cur_pos_in_line());
     }
@@ -4194,7 +3669,7 @@ private:
     /// The last tag prefix
     std::string m_tag_prefix {};
     /// A temporal buffer to store a UTF-8 encoded char sequence.
-    std::array<char, 4> m_encode_buffer {};
+    std::array<uint8_t, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.
     std::size_t m_encoded_size {0};
     /// The beginning position of the last lexical token. (zero origin)
@@ -4213,16 +3688,14 @@ private:
     float_number_type m_float_val {0.0};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_ */
 
 // #include <fkYAML/detail/input/tag_resolver.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -4246,7 +3719,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/input/tag_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -4260,18 +3733,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
-/// @namespace fkyaml
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @namespace detail
-/// @brief namespace for internal implementaions of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of YAML directive sets.
-enum class tag_t
-{
+enum class tag_t {
     NON_SPECIFIC,    //!< Represents a non-specific tag.
     CUSTOM_TAG,      //!< Represents a cumstom tag
     SEQUENCE,        //!< Represents a sequence tag.
@@ -4283,23 +3748,14 @@ enum class tag_t
     STRING,          //!< Represents a string tag.
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_TAG_T_HPP_ */
 
 // #include <fkYAML/exception.hpp>
 
 
-/// @namespace fkyaml
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @namespace detail
-/// @brief namespace for internal implementaions of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 namespace /*default prefixes*/
 {
@@ -4309,32 +3765,26 @@ const std::string default_secondary_handle_prefix = "tag:yaml.org,2002:";
 
 } // namespace
 
-class tag_resolver
-{
+class tag_resolver {
 public:
     /// @brief Resolve the input tag name into an expanded tag name prepended with a registered prefix.
     /// @param tag The input tag name.
     /// @return The type of a node deduced from the given tag name.
-    static tag_t resolve_tag(const std::string& tag, const std::shared_ptr<directive_set>& directives)
-    {
+    static tag_t resolve_tag(const std::string& tag, const std::shared_ptr<directive_set>& directives) {
         std::string normalized = normalize_tag_name(tag, directives);
         return convert_to_tag_type(normalized);
     }
 
 private:
-    static std::string normalize_tag_name(const std::string& tag, const std::shared_ptr<directive_set>& directives)
-    {
-        if (tag.empty())
-        {
+    static std::string normalize_tag_name(const std::string& tag, const std::shared_ptr<directive_set>& directives) {
+        if (tag.empty()) {
             throw invalid_tag("tag must not be empty.", "");
         }
-        if (tag[0] != '!')
-        {
+        if (tag[0] != '!') {
             throw invalid_tag("tag must start with \'!\'", tag.c_str());
         }
 
-        if (tag.size() == 1)
-        {
+        if (tag.size() == 1) {
             // Non-specific tag ("!") will be interpreted as one of the following:
             //   * tag:yaml.org,2002:seq
             //   * tag:yaml.org,2002:map
@@ -4345,27 +3795,22 @@ private:
         }
 
         std::string normalized {"!<"};
-        switch (tag[1])
-        {
+        switch (tag[1]) {
         case '!': {
             // handle a secondary tag handle (!!suffix -> !<[secondary][suffix]>)
             bool is_null_or_empty = !directives || directives->secondary_handle_prefix.empty();
-            if (is_null_or_empty)
-            {
+            if (is_null_or_empty) {
                 normalized += default_secondary_handle_prefix + tag.substr(2);
             }
-            else
-            {
+            else {
                 normalized += directives->secondary_handle_prefix + tag.substr(2);
             }
             break;
         }
         case '<':
-            if (tag[2] == '!')
-            {
+            if (tag[2] == '!') {
                 bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
-                if (is_null_or_empty)
-                {
+                if (is_null_or_empty) {
                     return normalized + default_primary_handle_prefix + tag.substr(3);
                 }
                 return normalized + directives->primary_handle_prefix + tag.substr(3);
@@ -4378,22 +3823,19 @@ private:
             auto tag_end_pos = tag.find_first_of('!', 1);
 
             // handle a named handle (!tag!suffix -> !<[tag][suffix]>)
-            if (tag_end_pos != std::string::npos)
-            {
+            if (tag_end_pos != std::string::npos) {
                 // there must be a non-empty suffix. (already checked by the lexer.)
                 FK_YAML_ASSERT(tag_end_pos < tag.size() - 1);
 
                 bool is_null_or_empty = !directives || directives->named_handle_map.empty();
-                if (is_null_or_empty)
-                {
+                if (is_null_or_empty) {
                     throw invalid_tag("named handle has not been registered.", tag.c_str());
                 }
 
                 // find the extracted named handle in the map.
                 auto named_handle_itr = directives->named_handle_map.find(tag.substr(0, tag_end_pos + 1));
                 auto end_itr = directives->named_handle_map.end();
-                if (named_handle_itr == end_itr)
-                {
+                if (named_handle_itr == end_itr) {
                     throw invalid_tag("named handle has not been registered.", tag.c_str());
                 }
 
@@ -4408,12 +3850,10 @@ private:
 
             // handle a primary tag handle (!suffix -> !<[primary][suffix]>)
             bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
-            if (is_null_or_empty)
-            {
+            if (is_null_or_empty) {
                 normalized += default_primary_handle_prefix + tag.substr(1);
             }
-            else
-            {
+            else {
                 normalized += directives->primary_handle_prefix + tag.substr(1);
             }
 
@@ -4425,48 +3865,37 @@ private:
         return normalized;
     }
 
-    static tag_t convert_to_tag_type(const std::string& normalized)
-    {
-        if (normalized == "!")
-        {
+    static tag_t convert_to_tag_type(const std::string& normalized) {
+        if (normalized == "!") {
             return tag_t::NON_SPECIFIC;
         }
 
-        if (normalized.size() < 24 /* size of !<tag:yaml.org,2002:xxx */)
-        {
+        if (normalized.size() < 24 /* size of !<tag:yaml.org,2002:xxx */) {
             return tag_t::CUSTOM_TAG;
         }
-        if (normalized.rfind("!<tag:yaml.org,2002:", 0) == std::string::npos)
-        {
+        if (normalized.rfind("!<tag:yaml.org,2002:", 0) == std::string::npos) {
             return tag_t::CUSTOM_TAG;
         }
 
-        if (normalized == "!<tag:yaml.org,2002:seq>")
-        {
+        if (normalized == "!<tag:yaml.org,2002:seq>") {
             return tag_t::SEQUENCE;
         }
-        if (normalized == "!<tag:yaml.org,2002:map>")
-        {
+        if (normalized == "!<tag:yaml.org,2002:map>") {
             return tag_t::MAPPING;
         }
-        if (normalized == "!<tag:yaml.org,2002:null>")
-        {
+        if (normalized == "!<tag:yaml.org,2002:null>") {
             return tag_t::NULL_VALUE;
         }
-        if (normalized == "!<tag:yaml.org,2002:bool>")
-        {
+        if (normalized == "!<tag:yaml.org,2002:bool>") {
             return tag_t::BOOLEAN;
         }
-        if (normalized == "!<tag:yaml.org,2002:int>")
-        {
+        if (normalized == "!<tag:yaml.org,2002:int>") {
             return tag_t::INTEGER;
         }
-        if (normalized == "!<tag:yaml.org,2002:float>")
-        {
+        if (normalized == "!<tag:yaml.org,2002:float>") {
             return tag_t::FLOATING_NUMBER;
         }
-        if (normalized == "!<tag:yaml.org,2002:str>")
-        {
+        if (normalized == "!<tag:yaml.org,2002:str>") {
             return tag_t::STRING;
         }
 
@@ -4474,9 +3903,7 @@ private:
     }
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_ */
 
@@ -4491,18 +3918,12 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A class which provides the feature of deserializing YAML documents.
 /// @tparam BasicNodeType A type of the container for deserialized YAML values.
 template <typename BasicNodeType>
-class basic_deserializer
-{
+class basic_deserializer {
     static_assert(is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts basic_node<...>");
 
     /** A type for the target basic_node. */
@@ -4522,15 +3943,13 @@ class basic_deserializer
     /** A type for string node values. */
     using string_type = typename node_type::string_type;
 
-    struct indentation
-    {
+    struct indentation {
         indentation() = default;
 
         indentation(std::size_t _line, std::size_t _indent, bool _is_explicit_key)
             : line(_line),
               indent(_indent),
-              is_explicit_key(_is_explicit_key)
-        {
+              is_explicit_key(_is_explicit_key) {
         }
 
         std::size_t line {0};
@@ -4547,8 +3966,7 @@ public:
     /// @param source A YAML-formatted source string.
     /// @return node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    node_type deserialize(InputAdapterType&& input_adapter)
-    {
+    node_type deserialize(InputAdapterType&& input_adapter) {
         lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
@@ -4557,6 +3975,16 @@ public:
 
         // parse directives first.
         deserialize_directives(lexer, root, type);
+
+        switch (type) {
+        case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
+        case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+            root = node_type::sequence();
+            apply_directive_set(root);
+            break;
+        default:
+            break;
+        }
 
         // parse YAML nodes recursively
         deserialize_node(lexer, type);
@@ -4577,26 +4005,20 @@ private:
     /// @param lexer The lexical analyzer to be used.
     /// @param root The root YAML node.
     /// @param type The variable to store the last lexical token type.
-    void deserialize_directives(lexer_type& lexer, node_type& root, lexical_token_t& last_type)
-    {
-        for (;;)
-        {
+    void deserialize_directives(lexer_type& lexer, node_type& root, lexical_token_t& last_type) {
+        for (;;) {
             lexical_token_t type = lexer.get_next_token();
 
-            switch (type)
-            {
+            switch (type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
-                if (!mp_directive_set)
-                {
+                if (!mp_directive_set) {
                     mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
                 }
-                if (!root.mp_directive_set)
-                {
+                if (!root.mp_directive_set) {
                     root.mp_directive_set = mp_directive_set;
                 }
 
-                if (mp_directive_set->is_version_specified)
-                {
+                if (mp_directive_set->is_version_specified) {
                     throw parse_error(
                         "YAML version cannot be specified more than once.",
                         lexer.get_lines_processed(),
@@ -4607,22 +4029,18 @@ private:
                 mp_directive_set->is_version_specified = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
-                if (!mp_directive_set)
-                {
+                if (!mp_directive_set) {
                     mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
                 }
-                if (!root.mp_directive_set)
-                {
+                if (!root.mp_directive_set) {
                     root.mp_directive_set = mp_directive_set;
                 }
 
                 const std::string& tag_handle = lexer.get_tag_handle();
-                switch (tag_handle.size())
-                {
+                switch (tag_handle.size()) {
                 case 1: {
                     bool is_already_specified = !mp_directive_set->primary_handle_prefix.empty();
-                    if (is_already_specified)
-                    {
+                    if (is_already_specified) {
                         throw parse_error(
                             "Primary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
@@ -4633,8 +4051,7 @@ private:
                 }
                 case 2: {
                     bool is_already_specified = !mp_directive_set->secondary_handle_prefix.empty();
-                    if (is_already_specified)
-                    {
+                    if (is_already_specified) {
                         throw parse_error(
                             "Secondary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
@@ -4646,8 +4063,7 @@ private:
                 default: {
                     bool is_already_specified =
                         !(mp_directive_set->named_handle_map.emplace(tag_handle, lexer.get_tag_prefix()).second);
-                    if (is_already_specified)
-                    {
+                    if (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
@@ -4675,31 +4091,26 @@ private:
     /// @brief Deserializes the YAML nodes recursively.
     /// @param lexer The lexical analyzer to be used.
     /// @param first_type The first lexical token type.
-    void deserialize_node(lexer_type& lexer, lexical_token_t first_type)
-    {
+    void deserialize_node(lexer_type& lexer, lexical_token_t first_type) {
         lexical_token_t type = first_type;
         std::size_t line = lexer.get_lines_processed();
         std::size_t indent = lexer.get_last_token_begin_pos();
 
-        do
-        {
-            switch (type)
-            {
+        do {
+            switch (type) {
             case lexical_token_t::END_OF_BUFFER:
                 // This handles an empty input.
                 break;
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
                 bool needs_to_move_back = !m_indent_stack.empty() && indent < m_indent_stack.back().indent;
-                if (needs_to_move_back)
-                {
+                if (needs_to_move_back) {
                     auto target_itr = std::find_if( // LCOV_EXCL_LINE
                         m_indent_stack.rbegin(),
                         m_indent_stack.rend(),
                         [indent](const indentation& i) { return indent > i.indent; });
 
                     auto pop_num = std::distance(m_indent_stack.rbegin(), target_itr);
-                    for (auto i = 0; i < pop_num; i++)
-                    {
+                    for (auto i = 0; i < pop_num; i++) {
                         // move back to the previous container node.
                         mp_current_node = m_node_stack.back();
                         m_node_stack.pop_back();
@@ -4707,8 +4118,7 @@ private:
                     }
                 }
 
-                if (mp_current_node->is_null())
-                {
+                if (mp_current_node->is_null()) {
                     *mp_current_node = node_type::mapping();
                 }
 
@@ -4716,8 +4126,7 @@ private:
                 m_indent_stack.emplace_back(line, indent, true);
 
                 type = lexer.get_next_token();
-                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
-                {
+                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     m_indent_stack.emplace_back(lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false);
                     mp_current_node = new node_type(node_t::SEQUENCE);
                     apply_directive_set(*mp_current_node);
@@ -4733,8 +4142,7 @@ private:
             }
             case lexical_token_t::KEY_SEPARATOR: {
                 bool is_stack_empty = m_node_stack.empty();
-                if (is_stack_empty)
-                {
+                if (is_stack_empty) {
                     throw parse_error("A key separator found without key.", line, indent);
                 }
 
@@ -4747,8 +4155,7 @@ private:
                 indent = lexer.get_last_token_begin_pos();
 
                 bool found_props = deserialize_node_properties(lexer, type, line, indent);
-                if (found_props && line == lexer.get_lines_processed())
-                {
+                if (found_props && line == lexer.get_lines_processed()) {
                     // defer applying node properties for the subsequent node on the same line.
                     continue;
                 }
@@ -4758,19 +4165,15 @@ private:
 
                 bool is_implicit_same_line =
                     (line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().indent);
-                if (is_implicit_same_line)
-                {
+                if (is_implicit_same_line) {
                     // a key separator for an implicit key with its value on the same line.
                     continue;
                 }
 
-                if (line > old_line)
-                {
-                    if (m_needs_tag_impl)
-                    {
+                if (line > old_line) {
+                    if (m_needs_tag_impl) {
                         tag_t tag_type = tag_resolver::resolve_tag(m_tag_name, mp_directive_set);
-                        if (tag_type == tag_t::MAPPING)
-                        {
+                        if (tag_type == tag_t::MAPPING) {
                             // set YAML node properties here to distinguish them from those for the first key node
                             // as shown in the following snippet:
                             //
@@ -4787,8 +4190,7 @@ private:
                         }
                     }
 
-                    switch (type)
-                    {
+                    switch (type) {
                     case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                         // a key separator preceeding block sequence entries
                         *mp_current_node = node_type::sequence();
@@ -4820,20 +4222,17 @@ private:
 
                 // handle explicit mapping key separators.
 
-                while (!m_indent_stack.back().is_explicit_key)
-                {
+                while (!m_indent_stack.back().is_explicit_key) {
                     mp_current_node = m_node_stack.back();
                     m_node_stack.pop_back();
                     m_indent_stack.pop_back();
                 }
 
-                if (m_node_stack.back()->is_sequence())
-                {
+                if (m_node_stack.back()->is_sequence()) {
                     mp_current_node = m_node_stack.back();
                     m_node_stack.pop_back();
                 }
-                if (m_node_stack.back() == mp_current_node)
-                {
+                if (m_node_stack.back() == mp_current_node) {
                     // This path is for nested explicit mapping keys like:
                     // ```yaml
                     // ? ? foo
@@ -4851,8 +4250,7 @@ private:
                 m_node_stack.push_back(m_node_stack.back());
                 m_indent_stack.back().is_explicit_key = false;
 
-                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX)
-                {
+                if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     *mp_current_node = node_type::sequence();
                     apply_directive_set(*mp_current_node);
                     apply_node_properties(*mp_current_node);
@@ -4862,6 +4260,7 @@ private:
                 continue;
             }
             case lexical_token_t::VALUE_SEPARATOR:
+                FK_YAML_ASSERT(m_flow_context_depth > 0);
                 break;
             // just ignore directives
             case lexical_token_t::YAML_VER_DIRECTIVE:
@@ -4880,18 +4279,15 @@ private:
 
                 continue;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
-                if (mp_current_node->is_sequence())
-                {
+                if (mp_current_node->is_sequence()) {
                     bool is_empty = mp_current_node->empty();
-                    if (is_empty)
-                    {
+                    if (is_empty) {
                         m_indent_stack.emplace_back(line, indent, false);
                         break;
                     }
 
                     // move back to the previous sequence if necessary.
-                    while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent)
-                    {
+                    while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent) {
                         mp_current_node = m_node_stack.back();
                         m_node_stack.pop_back();
                         m_indent_stack.pop_back();
@@ -4899,15 +4295,8 @@ private:
                     break;
                 }
 
-                // if the current node is a mapping.
-                if (m_node_stack.empty())
-                {
-                    throw parse_error("Invalid sequence block prefix(- ) found.", line, indent);
-                }
-
                 // move back to the previous sequence if necessary.
-                while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent)
-                {
+                while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent) {
                     mp_current_node = m_node_stack.back();
                     m_node_stack.pop_back();
                     m_indent_stack.pop_back();
@@ -4925,23 +4314,32 @@ private:
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
                 break;
-            case lexical_token_t::SEQUENCE_FLOW_END:
+            case lexical_token_t::SEQUENCE_FLOW_END: {
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
                 --m_flow_context_depth;
-                mp_current_node = m_node_stack.back();
-                m_node_stack.pop_back();
+                bool is_stack_empty = m_node_stack.empty();
+                if (!is_stack_empty) {
+                    mp_current_node = m_node_stack.back();
+                    m_node_stack.pop_back();
+                }
                 break;
+            }
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 ++m_flow_context_depth;
                 *mp_current_node = node_type::mapping();
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
                 break;
-            case lexical_token_t::MAPPING_FLOW_END:
+            case lexical_token_t::MAPPING_FLOW_END: {
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
                 --m_flow_context_depth;
-                mp_current_node = m_node_stack.back();
+                bool is_stack_empty = m_node_stack.empty();
+                if (!is_stack_empty) {
+                    mp_current_node = m_node_stack.back();
+                    m_node_stack.pop_back();
+                }
                 break;
+            }
             case lexical_token_t::ALIAS_PREFIX:
             case lexical_token_t::NULL_VALUE:
             case lexical_token_t::BOOLEAN_VALUE:
@@ -4949,8 +4347,7 @@ private:
             case lexical_token_t::FLOAT_NUMBER_VALUE:
             case lexical_token_t::STRING_VALUE: {
                 bool do_continue = deserialize_scalar(lexer, indent, line, type);
-                if (do_continue)
-                {
+                if (do_continue) {
                     continue;
                 }
                 break;
@@ -4962,9 +4359,8 @@ private:
                 break;
             }
 
-            lexical_token_t prev_type = type;
             type = lexer.get_next_token();
-            indent = (prev_type == lexical_token_t::ANCHOR_PREFIX) ? indent : lexer.get_last_token_begin_pos();
+            indent = lexer.get_last_token_begin_pos();
             line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
     }
@@ -4976,25 +4372,20 @@ private:
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
     bool deserialize_node_properties(
-        lexer_type& lexer, lexical_token_t& last_type, std::size_t& line, std::size_t& indent)
-    {
+        lexer_type& lexer, lexical_token_t& last_type, std::size_t& line, std::size_t& indent) {
         std::set<lexical_token_t> prop_types {lexical_token_t::ANCHOR_PREFIX, lexical_token_t::TAG_PREFIX};
 
         lexical_token_t type = last_type;
         bool ends_loop {false};
-        do
-        {
-            if (line < lexer.get_lines_processed())
-            {
+        do {
+            if (line < lexer.get_lines_processed()) {
                 break;
             }
 
-            switch (type)
-            {
+            switch (type) {
             case lexical_token_t::ANCHOR_PREFIX: {
                 bool already_specified = prop_types.find(type) == prop_types.end();
-                if (already_specified)
-                {
+                if (already_specified) {
                     throw parse_error(
                         "anchor name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
@@ -5005,8 +4396,7 @@ private:
                 m_anchor_name = lexer.get_string();
                 m_needs_anchor_impl = true;
 
-                if (prop_types.size() == 1)
-                {
+                if (prop_types.size() == 1) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
@@ -5015,8 +4405,7 @@ private:
             }
             case lexical_token_t::TAG_PREFIX: {
                 bool already_specified = prop_types.find(type) == prop_types.end();
-                if (already_specified)
-                {
+                if (already_specified) {
                     throw parse_error(
                         "tag name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
@@ -5027,8 +4416,7 @@ private:
                 m_tag_name = lexer.get_string();
                 m_needs_tag_impl = true;
 
-                if (prop_types.size() == 1)
-                {
+                if (prop_types.size() == 1) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
@@ -5040,15 +4428,13 @@ private:
                 break;
             }
 
-            if (!ends_loop)
-            {
+            if (!ends_loop) {
                 type = lexer.get_next_token();
             }
         } while (!ends_loop);
 
         last_type = type;
-        if (prop_types.size() == 2)
-        {
+        if (prop_types.size() == 2) {
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
         }
@@ -5058,23 +4444,19 @@ private:
 
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
-    void add_new_key(node_type&& key, const std::size_t indent, const std::size_t line)
-    {
-        if (!m_indent_stack.empty() && indent < m_indent_stack.back().indent)
-        {
+    void add_new_key(node_type&& key, const std::size_t indent, const std::size_t line) {
+        if (!m_indent_stack.empty() && indent < m_indent_stack.back().indent) {
             auto target_itr =
                 std::find_if(m_indent_stack.rbegin(), m_indent_stack.rend(), [indent](const indentation& i) {
                     return indent == i.indent;
                 });
             bool is_indent_valid = (target_itr != m_indent_stack.rend());
-            if (!is_indent_valid)
-            {
+            if (!is_indent_valid) {
                 throw parse_error("Detected invalid indentaion.", line, indent);
             }
 
             auto pop_num = std::distance(m_indent_stack.rbegin(), target_itr);
-            for (auto i = 0; i < pop_num; i++)
-            {
+            for (auto i = 0; i < pop_num; i++) {
                 // move back to the previous container node.
                 mp_current_node = m_node_stack.back();
                 m_node_stack.pop_back();
@@ -5082,8 +4464,7 @@ private:
             }
         }
 
-        if (mp_current_node->is_sequence())
-        {
+        if (mp_current_node->is_sequence()) {
             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
             m_node_stack.push_back(mp_current_node);
             mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
@@ -5091,16 +4472,15 @@ private:
 
         mapping_type& map = mp_current_node->template get_value_ref<mapping_type&>();
         bool is_empty = map.empty();
-        if (is_empty)
-        {
-            m_indent_stack.emplace_back(line, indent, false);
+        if (is_empty) {
+            if (m_flow_context_depth == 0) {
+                m_indent_stack.emplace_back(line, indent, false);
+            }
         }
-        else
-        {
+        else {
             // check key duplication in the current mapping if not empty.
             auto itr = map.find(key);
-            if (itr != map.end())
-            {
+            if (itr != map.end()) {
                 throw parse_error("Detected duplication in mapping keys.", line, indent);
             }
         }
@@ -5112,18 +4492,15 @@ private:
 
     /// @brief Assign node value to the current node.
     /// @param node_value A rvalue node_type object to be assigned to the current node.
-    void assign_node_value(node_type&& node_value) noexcept
-    {
-        if (mp_current_node->is_sequence())
-        {
+    void assign_node_value(node_type&& node_value) noexcept {
+        if (mp_current_node->is_sequence()) {
             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
             return;
         }
 
         // a scalar node
         *mp_current_node = std::move(node_value);
-        if (!m_indent_stack.back().is_explicit_key)
-        {
+        if (m_flow_context_depth > 0 || !m_indent_stack.back().is_explicit_key) {
             mp_current_node = m_node_stack.back();
             m_node_stack.pop_back();
         }
@@ -5135,17 +4512,14 @@ private:
     /// @param indent The last indent size.
     /// @param line The last line.
     /// @return The created YAML scalar node.
-    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, std::size_t indent, std::size_t line)
-    {
+    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, std::size_t indent, std::size_t line) {
         FK_YAML_ASSERT(
             type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
             type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
             type == lexical_token_t::STRING_VALUE || type == lexical_token_t::ALIAS_PREFIX);
 
-        if (m_needs_tag_impl)
-        {
-            if (type == lexical_token_t::ALIAS_PREFIX)
-            {
+        if (m_needs_tag_impl) {
+            if (type == lexical_token_t::ALIAS_PREFIX) {
                 throw parse_error("Tag cannot be specified to alias nodes", line, indent);
             }
 
@@ -5153,8 +4527,7 @@ private:
 
             FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
 
-            switch (tag_type)
-            {
+            switch (tag_type) {
             case tag_t::NULL_VALUE:
                 type = lexical_token_t::NULL_VALUE;
                 break;
@@ -5182,8 +4555,7 @@ private:
         }
 
         node_type node {};
-        switch (type)
-        {
+        switch (type) {
         case lexical_token_t::NULL_VALUE:
             node = node_type(lexer.get_null());
             break;
@@ -5202,8 +4574,7 @@ private:
         case lexical_token_t::ALIAS_PREFIX: {
             const string_type& alias_name = lexer.get_string();
             auto itr = m_anchor_table.find(alias_name);
-            if (itr == m_anchor_table.end())
-            {
+            if (itr == m_anchor_table.end()) {
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
             node = node_type::alias_of(m_anchor_table[alias_name]);
@@ -5224,27 +4595,21 @@ private:
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
-    bool deserialize_scalar(lexer_type& lexer, std::size_t& indent, std::size_t& line, lexical_token_t& type)
-    {
+    bool deserialize_scalar(lexer_type& lexer, std::size_t& indent, std::size_t& line, lexical_token_t& type) {
         node_type node = create_scalar_node(lexer, type, indent, line);
 
-        if (mp_current_node->is_mapping())
-        {
+        if (mp_current_node->is_mapping()) {
             add_new_key(std::move(node), indent, line);
             return false;
         }
 
         type = lexer.get_next_token();
-        if (type == lexical_token_t::KEY_SEPARATOR)
-        {
-            if (mp_current_node->is_scalar())
-            {
-                if (line != lexer.get_lines_processed())
-                {
+        if (type == lexical_token_t::KEY_SEPARATOR) {
+            if (mp_current_node->is_scalar()) {
+                if (line != lexer.get_lines_processed()) {
                     // This path is for explicit mapping key separator(:)
                     assign_node_value(std::move(node));
-                    if (!m_indent_stack.back().is_explicit_key)
-                    {
+                    if (!m_indent_stack.back().is_explicit_key) {
                         m_indent_stack.pop_back();
                     }
                     indent = lexer.get_last_token_begin_pos();
@@ -5253,8 +4618,7 @@ private:
                 }
 
                 indentation& last_indent = m_indent_stack.back();
-                if (last_indent.line == line && !last_indent.is_explicit_key)
-                {
+                if (last_indent.line == line && !last_indent.is_explicit_key) {
                     throw parse_error("multiple mapping keys are specified on the same line.", line, indent);
                 }
 
@@ -5263,8 +4627,7 @@ private:
             }
             add_new_key(std::move(node), indent, line);
         }
-        else
-        {
+        else {
             assign_node_value(std::move(node));
         }
         indent = lexer.get_last_token_begin_pos();
@@ -5274,28 +4637,23 @@ private:
 
     /// @brief Set YAML directive properties to the given node.
     /// @param node A node_type object to be set YAML directive properties.
-    void apply_directive_set(node_type& node) noexcept
-    {
-        if (mp_directive_set)
-        {
+    void apply_directive_set(node_type& node) noexcept {
+        if (mp_directive_set) {
             node.mp_directive_set = mp_directive_set;
         }
     }
 
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
     /// @param node A node type object to be set YAML node properties.
-    void apply_node_properties(node_type& node)
-    {
-        if (m_needs_anchor_impl)
-        {
+    void apply_node_properties(node_type& node) {
+        if (m_needs_anchor_impl) {
             node.add_anchor_name(m_anchor_name);
             m_anchor_table[m_anchor_name] = node;
             m_needs_anchor_impl = false;
             m_anchor_name.clear();
         }
 
-        if (m_needs_tag_impl)
-        {
+        if (m_needs_tag_impl) {
             node.add_tag_name(m_tag_name);
             m_needs_tag_impl = false;
             m_tag_name.clear();
@@ -5304,8 +4662,7 @@ private:
 
     /// @brief Update the target YAML version with an input string.
     /// @param version_str A YAML version string.
-    yaml_version_t convert_yaml_version(const string_type& version_str) noexcept
-    {
+    yaml_version_t convert_yaml_version(const string_type& version_str) noexcept {
         return (version_str == "1.1") ? yaml_version_t::VER_1_1 : yaml_version_t::VER_1_2;
     }
 
@@ -5332,16 +4689,14 @@ private:
     string_type m_tag_name {};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_ */
 
 // #include <fkYAML/detail/input/input_adapter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5366,7 +4721,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/encodings/encode_detector.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5385,7 +4740,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5399,17 +4754,11 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of Unicode encoding types
 /// @note Since fkYAML doesn't treat UTF-16/UTF-32 encoded characters per byte, endians do not matter.
-enum class utf_encode_t
-{
+enum class utf_encode_t {
     UTF_8,    //!< UTF-8
     UTF_16BE, //!< UTF-16 Big Endian
     UTF_16LE, //!< UTF-16 Little Endian
@@ -5417,82 +4766,65 @@ enum class utf_encode_t
     UTF_32LE, //!< UTF-32 Little Endian
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_ */
 
 // #include <fkYAML/exception.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Detect an encoding type for UTF-8 expected inputs.
 /// @note This function doesn't support the case where the first character is null.
 /// @param[in] bytes 4 bytes of an input character sequence.
 /// @param[out] has_bom Whether or not the input contains a BOM.
 /// @return A detected encoding type.
-inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept
-{
+inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept {
     has_bom = false;
 
     // Check if a BOM exists.
 
-    if (bytes[0] == uint8_t(0xEFu) && bytes[1] == uint8_t(0xBBu) && bytes[2] == uint8_t(0xBFu))
-    {
+    if (bytes[0] == uint8_t(0xEFu) && bytes[1] == uint8_t(0xBBu) && bytes[2] == uint8_t(0xBFu)) {
         has_bom = true;
         return utf_encode_t::UTF_8;
     }
 
-    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == uint8_t(0xFEu) && bytes[3] == uint8_t(0xFFu))
-    {
+    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == uint8_t(0xFEu) && bytes[3] == uint8_t(0xFFu)) {
         has_bom = true;
         return utf_encode_t::UTF_32BE;
     }
 
-    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu) && bytes[2] == 0 && bytes[3] == 0)
-    {
+    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu) && bytes[2] == 0 && bytes[3] == 0) {
         has_bom = true;
         return utf_encode_t::UTF_32LE;
     }
 
-    if (bytes[0] == uint8_t(0xFEu) && bytes[1] == uint8_t(0xFFu))
-    {
+    if (bytes[0] == uint8_t(0xFEu) && bytes[1] == uint8_t(0xFFu)) {
         has_bom = true;
         return utf_encode_t::UTF_16BE;
     }
 
-    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu))
-    {
+    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu)) {
         has_bom = true;
         return utf_encode_t::UTF_16LE;
     }
 
     // Test the first character assuming it's an ASCII character.
 
-    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && 0 < bytes[3] && bytes[3] < uint8_t(0x80u))
-    {
+    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && 0 < bytes[3] && bytes[3] < uint8_t(0x80u)) {
         return utf_encode_t::UTF_32BE;
     }
 
-    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0)
-    {
+    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0) {
         return utf_encode_t::UTF_32LE;
     }
 
-    if (bytes[0] == 0 && 0 < bytes[1] && bytes[1] < uint8_t(0x80u))
-    {
+    if (bytes[0] == 0 && 0 < bytes[1] && bytes[1] < uint8_t(0x80u)) {
         return utf_encode_t::UTF_16BE;
     }
 
-    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0)
-    {
+    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0) {
         return utf_encode_t::UTF_16LE;
     }
 
@@ -5506,25 +4838,20 @@ inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bo
 /// @param end The end of input iterators.
 /// @return A detected encoding type.
 template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
-inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end)
-{
+inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end) {
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    switch (ElemSize)
-    {
-    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 features.
-        for (std::size_t i = 0; i < 4 && begin + i != end; i++)
-        {
+    switch (ElemSize) {
+    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 or better.
+        for (std::size_t i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = uint8_t(begin[i]);
         }
 
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-        if (has_bom)
-        {
+        if (has_bom) {
             // skip reading the BOM.
-            switch (encode_type)
-            {
+            switch (encode_type) {
             case utf_encode_t::UTF_8:
                 std::advance(begin, 3);
                 break;
@@ -5542,12 +4869,10 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
         return encode_type;
     }
     case sizeof(char16_t): {
-        if (begin == end)
-        {
+        if (begin == end) {
             return utf_encode_t::UTF_16BE;
         }
-        for (int i = 0; i < 2 && begin + i != end; i++)
-        {
+        for (int i = 0; i < 2 && begin + i != end; i++) {
             bytes[i * 2] = uint8_t((begin[i] & 0xFF00u) >> 8);
             bytes[i * 2 + 1] = uint8_t(begin[i] & 0xFFu);
         }
@@ -5555,13 +4880,11 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-        if (encode_type != utf_encode_t::UTF_16BE && encode_type != utf_encode_t::UTF_16LE)
-        {
+        if (encode_type != utf_encode_t::UTF_16BE && encode_type != utf_encode_t::UTF_16LE) {
             throw exception("char16_t characters must be encoded in the UTF-16 format.");
         }
 
-        if (has_bom)
-        {
+        if (has_bom) {
             // skip reading the BOM.
             std::advance(begin, 1);
         }
@@ -5569,8 +4892,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
         return encode_type;
     }
     case sizeof(char32_t): {
-        if (begin == end)
-        {
+        if (begin == end) {
             return utf_encode_t::UTF_32BE;
         }
 
@@ -5582,13 +4904,11 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-        if (encode_type != utf_encode_t::UTF_32BE && encode_type != utf_encode_t::UTF_32LE)
-        {
+        if (encode_type != utf_encode_t::UTF_32BE && encode_type != utf_encode_t::UTF_32LE) {
             throw exception("char32_t characters must be encoded in the UTF-32 format.");
         }
 
-        if (has_bom)
-        {
+        if (has_bom) {
             // skip reading the BOM.
             std::advance(begin, 1);
         }
@@ -5600,15 +4920,12 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
     }
 }
 
-inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept
-{
+inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept {
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (std::size_t i = 0; i < 4; i++)
-    {
+    for (std::size_t i = 0; i < 4; i++) {
         char byte = 0;
         std::size_t size = std::fread(&byte, sizeof(char), 1, file);
-        if (size != sizeof(char))
-        {
+        if (size != sizeof(char)) {
             break;
         }
         bytes[i] = uint8_t(byte & 0xFF);
@@ -5619,10 +4936,8 @@ inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept
 
     // move back to the beginning if a BOM doesn't exist.
     long offset = 0;
-    if (has_bom)
-    {
-        switch (encode_type)
-        {
+    if (has_bom) {
+        switch (encode_type) {
         case utf_encode_t::UTF_8:
             offset = 3;
             break;
@@ -5641,16 +4956,13 @@ inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept
     return encode_type;
 }
 
-inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
-{
+inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept {
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (std::size_t i = 0; i < 4; i++)
-    {
+    for (std::size_t i = 0; i < 4; i++) {
         char ch = 0;
         is.read(&ch, 1);
         std::streamsize size = is.gcount();
-        if (size != 1)
-        {
+        if (size != 1) {
             // without this, seekg() fails in the switch-case statement below.
             is.clear();
             break;
@@ -5663,10 +4975,8 @@ inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
 
     // move back to the beginning if a BOM doesn't exist.
     std::streamoff offset = 0;
-    if (has_bom)
-    {
-        switch (encode_type)
-        {
+    if (has_bom) {
+        switch (encode_type) {
         case utf_encode_t::UTF_8:
             offset = 3;
             break;
@@ -5685,27 +4995,20 @@ inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept
     return encode_type;
 }
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_ENCODE_DETECTOR_HPP_ */
 
 // #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 
-// #include <fkYAML/detail/encodings/utf8_encoding.hpp>
+// #include <fkYAML/detail/encodings/utf_encodings.hpp>
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/exception.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 ///////////////////////
 //   input_adapter   //
@@ -5718,8 +5021,8 @@ class iterator_input_adapter;
 /// @tparam IterType An iterator type.
 template <typename IterType>
 class iterator_input_adapter<
-    IterType, enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char>::value>>
-{
+    IterType,
+    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -5731,8 +5034,7 @@ public:
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
-          m_encode_type(encode_type)
-    {
+          m_encode_type(encode_type) {
     }
 
     // allow only move construct/assignment like other input adapters.
@@ -5744,12 +5046,10 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer)
-    {
+    void fill_buffer(std::string& buffer) {
         buffer.clear();
 
-        switch (m_encode_type)
-        {
+        switch (m_encode_type) {
         case utf_encode_t::UTF_8:
             fill_buffer_utf8(buffer);
             break;
@@ -5767,52 +5067,43 @@ public:
 private:
     /// @brief The concrete implementation of fill_buffer() for UTF-8 encoded inputs.
     /// @param buffer A buffer to be filled with the input.
-    void fill_buffer_utf8(std::string& buffer)
-    {
+    void fill_buffer_utf8(std::string& buffer) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         IterType current = m_current;
-        while (current != m_end)
-        {
-            char first = *current++;
+        while (current != m_end) {
+            uint8_t first = uint8_t(*current++);
+            uint32_t num_bytes = utf8::get_num_bytes(first);
 
-            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
-            if ((first & 0xC0) == 0x80)
-            {
-                // The first byte must not start with 0b10XX'XXXX
-                std::array<int, 1> bytes {{first}};
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
-            }
-            // The first byte starts with 0b110X'XXXX -> 2-byte character
-            else if ((first & 0xE0) == 0xC0)
-            {
-                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            switch (num_bytes) {
+            case 2: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0b1110'XXXX -> 3-byte character
-            else if ((first & 0xF0) == 0xE0)
-            {
-                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            case 3: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0x1111'0XXX -> 4-byte character
-            else if ((first & 0xF8) == 0xF0)
-            {
-                std::array<int, 4> bytes {
-                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            case 4: {
+                std::initializer_list<uint8_t> bytes {
+                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
+            }
+            case 1:
+            default:
+                break;
             }
         }
 
@@ -5821,13 +5112,11 @@ private:
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @param buffer A buffer to be filled with the input.
-    void fill_buffer_utf16(std::string& buffer)
-    {
+    void fill_buffer_utf16(std::string& buffer) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         int shift_bits[2] {0, 0};
-        if (m_encode_type == utf_encode_t::UTF_16BE)
-        {
+        if (m_encode_type == utf_encode_t::UTF_16BE) {
             shift_bits[0] = 8;
         }
         else // m_encode_type == utf_encode_t::UTF_16LE
@@ -5837,40 +5126,35 @@ private:
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
         std::size_t encoded_buf_size {0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
-        while (m_current != m_end || encoded_buf_size != 0)
-        {
-            while (m_current != m_end && encoded_buf_size < 2)
-            {
-                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(*m_current++) << shift_bits[0]);
-                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(*m_current++) << shift_bits[1]);
+        while (m_current != m_end || encoded_buf_size != 0) {
+            while (m_current != m_end && encoded_buf_size < 2) {
+                encoded_buffer[encoded_buf_size] = static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[0]);
+                encoded_buffer[encoded_buf_size++] |= static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[1]);
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
+            utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1)
-            {
+            if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32(std::string& buffer)
-    {
+    void fill_buffer_utf32(std::string& buffer) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         int shift_bits[4] {0, 0, 0, 0};
-        if (m_encode_type == utf_encode_t::UTF_32BE)
-        {
+        if (m_encode_type == utf_encode_t::UTF_32BE) {
             shift_bits[0] = 24;
             shift_bits[1] = 16;
             shift_bits[2] = 8;
@@ -5882,19 +5166,18 @@ private:
             shift_bits[3] = 24;
         }
 
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
-        while (m_current != m_end)
-        {
-            char32_t utf32 = char32_t(*m_current++ << shift_bits[0]);
-            utf32 |= char32_t(*m_current++ << shift_bits[1]);
-            utf32 |= char32_t(*m_current++ << shift_bits[2]);
-            utf32 |= char32_t(*m_current++ << shift_bits[3]);
+        while (m_current != m_end) {
+            char32_t utf32 = static_cast<char32_t>(*m_current++ << shift_bits[0]);
+            utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[1]);
+            utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[2]);
+            utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[3]);
 
-            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -5914,8 +5197,7 @@ private:
 template <typename IterType>
 class iterator_input_adapter<
     IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>>
-{
+    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -5927,8 +5209,7 @@ public:
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
-          m_encode_type(encode_type)
-    {
+          m_encode_type(encode_type) {
         // char8_t characters must be encoded in the UTF-8 format.
         // See https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0482r6.html.
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
@@ -5943,55 +5224,45 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer)
-    {
+    void fill_buffer(std::string& buffer) {
         IterType current = m_current;
-        while (current != m_end)
-        {
-            char first = *current++;
+        while (current != m_end) {
+            uint8_t first = static_cast<uint8_t>(*current++);
+            uint32_t num_bytes = utf8::get_num_bytes(first);
 
-            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
-            if ((first & 0xC0) == 0x80)
-            {
-                // The first byte must not start with 0b10XX'XXXX
-                std::array<int, 1> bytes {{first}};
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
-            }
-            // The first byte starts with 0b110X'XXXX -> 2-byte character
-            else if ((first & 0xE0) == 0xC0)
-            {
-                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            switch (num_bytes) {
+            case 2: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0b1110'XXXX -> 3-byte character
-            else if ((first & 0xF0) == 0xE0)
-            {
-                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            case 3: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0x1111'0XXX -> 4-byte character
-            else if ((first & 0xF8) == 0xF0)
-            {
-                std::array<int, 4> bytes {
-                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            case 4: {
+                std::initializer_list<uint8_t> bytes {
+                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
+            }
+            case 1:
+            default:
+                break;
             }
         }
 
-        while (m_current != m_end)
-        {
+        while (m_current != m_end) {
             buffer.push_back(char(*m_current++));
         }
     }
@@ -6012,8 +5283,7 @@ private:
 template <typename IterType>
 class iterator_input_adapter<
     IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char16_t>::value>>
-{
+    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char16_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -6025,8 +5295,7 @@ public:
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
-          m_encode_type(encode_type)
-    {
+          m_encode_type(encode_type) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
     }
 
@@ -6039,35 +5308,32 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer)
-    {
+    void fill_buffer(std::string& buffer) {
         int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
         std::size_t encoded_buf_size {0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
-        while (m_current != m_end || encoded_buf_size != 0)
-        {
-            while (m_current != m_end && encoded_buf_size < 2)
-            {
+        while (m_current != m_end || encoded_buf_size != 0) {
+            while (m_current != m_end && encoded_buf_size < 2) {
                 char16_t tmp = *m_current++;
-                encoded_buffer[encoded_buf_size] = char16_t((tmp & 0x00FFu) << shift_bits);
-                encoded_buffer[encoded_buf_size++] |= char16_t((tmp & 0xFF00u) >> shift_bits);
+                encoded_buffer[encoded_buf_size++] = char16_t(
+                    static_cast<uint16_t>((tmp & 0x00FFu) << shift_bits) |
+                    static_cast<uint16_t>((tmp & 0xFF00u) >> shift_bits));
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
+            utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1)
-            {
+            if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -6085,8 +5351,7 @@ private:
 template <typename IterType>
 class iterator_input_adapter<
     IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char32_t>::value>>
-{
+    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char32_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -6098,8 +5363,7 @@ public:
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
         : m_current(begin),
           m_end(end),
-          m_encode_type(encode_type)
-    {
+          m_encode_type(encode_type) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
     }
 
@@ -6112,31 +5376,29 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer)
-    {
+    void fill_buffer(std::string& buffer) {
         int shift_bits[4] {0, 0, 0, 0};
-        if (m_encode_type == utf_encode_t::UTF_32LE)
-        {
+        if (m_encode_type == utf_encode_t::UTF_32LE) {
             shift_bits[0] = 24;
             shift_bits[1] = 8;
             shift_bits[2] = 8;
             shift_bits[3] = 24;
         }
 
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
-        while (m_current != m_end)
-        {
+        while (m_current != m_end) {
             char32_t tmp = *m_current++;
-            char32_t utf32 = char32_t((tmp & 0xFF000000u) >> shift_bits[0]);
-            utf32 |= char32_t((tmp & 0x00FF0000u) >> shift_bits[1]);
-            utf32 |= char32_t((tmp & 0x0000FF00u) << shift_bits[2]);
-            utf32 |= char32_t((tmp & 0x000000FFu) << shift_bits[3]);
+            char32_t utf32 = char32_t(
+                static_cast<uint32_t>((tmp & 0xFF000000u) >> shift_bits[0]) |
+                static_cast<uint32_t>((tmp & 0x00FF0000u) >> shift_bits[1]) |
+                static_cast<uint32_t>((tmp & 0x0000FF00u) << shift_bits[2]) |
+                static_cast<uint32_t>((tmp & 0x000000FFu) << shift_bits[3]));
 
-            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -6150,8 +5412,7 @@ private:
 };
 
 /// @brief An input adapter for C-style file handles.
-class file_input_adapter
-{
+class file_input_adapter {
 public:
     /// @brief Construct a new file_input_adapter object.
     file_input_adapter() = default;
@@ -6164,8 +5425,7 @@ public:
     /// @param encode_type The encoding type for this input adapter.
     explicit file_input_adapter(std::FILE* file, utf_encode_t encode_type) noexcept
         : m_file(file),
-          m_encode_type(encode_type)
-    {
+          m_encode_type(encode_type) {
     }
 
     // allow only move construct/assignment
@@ -6177,10 +5437,8 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer)
-    {
-        switch (m_encode_type)
-        {
+    void fill_buffer(std::string& buffer) {
+        switch (m_encode_type) {
         case utf_encode_t::UTF_8:
             fill_buffer_utf8(buffer);
             break;
@@ -6198,73 +5456,61 @@ public:
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf8(std::string& buffer)
-    {
+    void fill_buffer_utf8(std::string& buffer) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
         std::size_t read_size = 0;
-        while ((read_size = std::fread(&tmp_buf[0], sizeof(char), sizeof(tmp_buf) / sizeof(tmp_buf[0]), m_file)) > 0)
-        {
+        while ((read_size = std::fread(&tmp_buf[0], sizeof(char), sizeof(tmp_buf) / sizeof(tmp_buf[0]), m_file)) > 0) {
             buffer.append(tmp_buf, read_size);
         }
 
         auto current = buffer.begin();
         auto end = buffer.end();
-        while (current != end)
-        {
-            char first = *current++;
+        while (current != end) {
+            uint8_t first = static_cast<uint8_t>(*current++);
+            uint32_t num_bytes = utf8::get_num_bytes(first);
 
-            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
-            if ((first & 0xC0) == 0x80)
-            {
-                // The first byte must not start with 0b10XX'XXXX
-                std::array<int, 1> bytes {{first}};
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
-            }
-            // The first byte starts with 0b110X'XXXX -> 2-byte character
-            else if ((first & 0xE0) == 0xC0)
-            {
-                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            switch (num_bytes) {
+            case 2: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0b1110'XXXX -> 3-byte character
-            else if ((first & 0xF0) == 0xE0)
-            {
-                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            case 3: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0x1111'0XXX -> 4-byte character
-            else if ((first & 0xF8) == 0xF0)
-            {
-                std::array<int, 4> bytes {
-                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            case 4: {
+                std::initializer_list<uint8_t> bytes {
+                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
+            }
+            case 1:
+            default:
+                break;
             }
         }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf16(std::string& buffer)
-    {
+    void fill_buffer_utf16(std::string& buffer) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         int shift_bits[2] {0, 0};
-        if (m_encode_type == utf_encode_t::UTF_16BE)
-        {
+        if (m_encode_type == utf_encode_t::UTF_16BE) {
             shift_bits[0] = 8;
         }
         else // m_encode_type == utf_encode_t::UTF_16LE
@@ -6275,40 +5521,36 @@ private:
         char chars[2] = {0, 0};
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
         std::size_t encoded_buf_size {0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
-        while (std::feof(m_file) == 0)
-        {
-            while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2)
-            {
-                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
-                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
+        while (std::feof(m_file) == 0) {
+            while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2) {
+                encoded_buffer[encoded_buf_size++] = char16_t(
+                    static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
+                    static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
             }
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
+            utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1)
-            {
+            if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32(std::string& buffer)
-    {
+    void fill_buffer_utf32(std::string& buffer) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         int shift_bits[4] {0, 0, 0, 0};
-        if (m_encode_type == utf_encode_t::UTF_32BE)
-        {
+        if (m_encode_type == utf_encode_t::UTF_32BE) {
             shift_bits[0] = 24;
             shift_bits[1] = 16;
             shift_bits[2] = 8;
@@ -6321,25 +5563,24 @@ private:
         }
 
         char chars[4] = {0, 0, 0, 0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
-        while (std::feof(m_file) == 0)
-        {
+        while (std::feof(m_file) == 0) {
             std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
-            if (size != 4)
-            {
+            if (size != 4) {
                 return;
             }
 
-            char32_t utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
-            utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
-            utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
-            utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
+            char32_t utf32 = char32_t(
+                static_cast<uint32_t>(uint8_t(chars[0]) << shift_bits[0]) |
+                static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
+                static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
+                static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -6351,8 +5592,7 @@ private:
 };
 
 /// @brief An input adapter for streams
-class stream_input_adapter
-{
+class stream_input_adapter {
 public:
     /// @brief Construct a new stream_input_adapter object.
     stream_input_adapter() = default;
@@ -6361,8 +5601,7 @@ public:
     /// @param is A reference to the target input stream.
     explicit stream_input_adapter(std::istream& is, utf_encode_t encode_type) noexcept
         : m_istream(&is),
-          m_encode_type(encode_type)
-    {
+          m_encode_type(encode_type) {
     }
 
     // allow only move construct/assignment
@@ -6374,10 +5613,8 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer)
-    {
-        switch (m_encode_type)
-        {
+    void fill_buffer(std::string& buffer) {
+        switch (m_encode_type) {
         case utf_encode_t::UTF_8:
             fill_buffer_utf8(buffer);
             break;
@@ -6395,74 +5632,62 @@ public:
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf8(std::string& buffer)
-    {
+    void fill_buffer_utf8(std::string& buffer) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
-        do
-        {
+        do {
             m_istream->read(&tmp_buf[0], 256);
-            std::size_t read_size = m_istream->gcount();
+            std::size_t read_size = static_cast<std::size_t>(m_istream->gcount());
             buffer.append(tmp_buf, read_size);
         } while (!m_istream->eof());
 
         auto current = buffer.begin();
         auto end = buffer.end();
-        while (current != end)
-        {
-            char first = *current++;
+        while (current != end) {
+            uint8_t first = static_cast<uint8_t>(*current++);
+            uint32_t num_bytes = utf8::get_num_bytes(first);
 
-            // The first byte starts with 0b0XXX'XXXX -> 1-byte character
-            if ((first & 0xC0) == 0x80)
-            {
-                // The first byte must not start with 0b10XX'XXXX
-                std::array<int, 1> bytes {{first}};
-                throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
-            }
-            // The first byte starts with 0b110X'XXXX -> 2-byte character
-            else if ((first & 0xE0) == 0xC0)
-            {
-                std::array<int, 2> bytes {{uint8_t(first), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            switch (num_bytes) {
+            case 2: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0b1110'XXXX -> 3-byte character
-            else if ((first & 0xF0) == 0xE0)
-            {
-                std::array<int, 3> bytes {{uint8_t(first), uint8_t(*current++), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            case 3: {
+                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
             }
-            // The first byte starts with 0x1111'0XXX -> 4-byte character
-            else if ((first & 0xF8) == 0xF0)
-            {
-                std::array<int, 4> bytes {
-                    {uint8_t(first), uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)}};
-                bool is_valid = utf8_encoding::validate(bytes);
-                if (!is_valid)
-                {
+            case 4: {
+                std::initializer_list<uint8_t> bytes {
+                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
+                bool is_valid = utf8::validate(bytes);
+                if (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
+                break;
+            }
+            case 1:
+            default:
+                break;
             }
         }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf16(std::string& buffer)
-    {
+    void fill_buffer_utf16(std::string& buffer) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         int shift_bits[2] {0, 0};
-        if (m_encode_type == utf_encode_t::UTF_16BE)
-        {
+        if (m_encode_type == utf_encode_t::UTF_16BE) {
             shift_bits[0] = 8;
         }
         else // m_encode_type == utf_encode_t::UTF_16LE
@@ -6473,47 +5698,42 @@ private:
         char chars[2] = {0, 0};
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
         std::size_t encoded_buf_size {0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
-        do
-        {
-            while (encoded_buf_size < 2)
-            {
+        do {
+            while (encoded_buf_size < 2) {
                 m_istream->read(&chars[0], 2);
                 std::streamsize size = m_istream->gcount();
-                if (size != 2)
-                {
+                if (size != 2) {
                     break;
                 }
 
-                encoded_buffer[encoded_buf_size] = char16_t(uint8_t(chars[0]) << shift_bits[0]);
-                encoded_buffer[encoded_buf_size++] |= char16_t(uint8_t(chars[1]) << shift_bits[1]);
+                encoded_buffer[encoded_buf_size++] = char16_t(
+                    static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
+                    static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
             };
 
             std::size_t consumed_size = 0;
-            utf8_encoding::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
+            utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1)
-            {
+            if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32(std::string& buffer)
-    {
+    void fill_buffer_utf32(std::string& buffer) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         int shift_bits[4] {0, 0, 0, 0};
-        if (m_encode_type == utf_encode_t::UTF_32BE)
-        {
+        if (m_encode_type == utf_encode_t::UTF_32BE) {
             shift_bits[0] = 24;
             shift_bits[1] = 16;
             shift_bits[2] = 8;
@@ -6526,26 +5746,25 @@ private:
         }
 
         char chars[4] = {0, 0, 0, 0};
-        std::array<char, 4> utf8_buffer {{0, 0, 0, 0}};
+        std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         std::size_t utf8_buf_size {0};
 
-        do
-        {
+        do {
             m_istream->read(&chars[0], 4);
             std::streamsize size = m_istream->gcount();
-            if (size != 4)
-            {
+            if (size != 4) {
                 return;
             }
 
-            char32_t utf32 = char32_t(uint8_t(chars[0]) << shift_bits[0]);
-            utf32 |= char32_t(uint8_t(chars[1]) << shift_bits[1]);
-            utf32 |= char32_t(uint8_t(chars[2]) << shift_bits[2]);
-            utf32 |= char32_t(uint8_t(chars[3]) << shift_bits[3]);
+            char32_t utf32 = char32_t(
+                static_cast<uint32_t>(uint8_t(chars[0]) << shift_bits[0]) |
+                static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
+                static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
+                static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            utf8_encoding::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(utf8_buffer.data(), utf8_buf_size);
+            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
@@ -6566,8 +5785,7 @@ private:
 /// @param end The end of iterators.
 /// @return iterator_input_adapter<ItrType> An iterator_input_adapter object for the target iterator type.
 template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
-inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
-{
+inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end) {
     utf_encode_t encode_type = detect_encoding_and_skip_bom(begin, end);
     return iterator_input_adapter<ItrType>(begin, end, encode_type);
 }
@@ -6577,14 +5795,12 @@ inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
 /// @tparam N A size of an array.
 /// @return decltype(input_adapter(array, array + N)) An iterator_input_adapter object for the target array.
 template <typename T, std::size_t N>
-inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array + (N - 1)))
-{
+inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array + (N - 1))) {
     return input_adapter(array, array + (N - 1));
 }
 
 /// @brief A namespace to implement container_input_adapter_factory for internal use.
-namespace input_adapter_factory
-{
+namespace input_adapter_factory {
 
 using std::begin;
 using std::end;
@@ -6593,16 +5809,13 @@ using std::end;
 /// @tparam ContainerType A container type.
 /// @tparam typename N/A
 template <typename ContainerType, typename = void>
-struct container_input_adapter_factory
-{
-};
+struct container_input_adapter_factory {};
 
 /// @brief A partial specialization of container_input_adapter_factory if begin()/end() are available for ContainerType.
 /// @tparam ContainerType A container type.
 template <typename ContainerType>
 struct container_input_adapter_factory<
-    ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>>
-{
+    ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>> {
     /// A type for resulting input adapter object.
     using adapter_type =
         decltype(input_adapter(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>())));
@@ -6610,8 +5823,7 @@ struct container_input_adapter_factory<
     /// @brief A factory method of input adapter objects for the target container objects.
     /// @param container A container-like input object.
     /// @return adapter_type An iterator_input_adapter object.
-    static adapter_type create(const ContainerType& container)
-    {
+    static adapter_type create(const ContainerType& container) {
         return input_adapter(begin(container), end(container));
     }
 };
@@ -6624,18 +5836,15 @@ struct container_input_adapter_factory<
 /// @return input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type
 template <typename ContainerType>
 inline typename input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type input_adapter(
-    ContainerType&& container)
-{
+    ContainerType&& container) {
     return input_adapter_factory::container_input_adapter_factory<ContainerType>::create(container);
 }
 
 /// @brief A factory method for file_input_adapter objects with C-style file handles.
 /// @param file A file handle.
 /// @return file_input_adapter A file_input_adapter object.
-inline file_input_adapter input_adapter(std::FILE* file)
-{
-    if (!file)
-    {
+inline file_input_adapter input_adapter(std::FILE* file) {
+    if (!file) {
         throw fkyaml::exception("Invalid FILE object pointer.");
     }
     utf_encode_t encode_type = detect_encoding_and_skip_bom(file);
@@ -6645,22 +5854,19 @@ inline file_input_adapter input_adapter(std::FILE* file)
 /// @brief A factory method for stream_input_adapter objects with std::istream objects.
 /// @param stream An input stream.
 /// @return stream_input_adapter A stream_input_adapter object.
-inline stream_input_adapter input_adapter(std::istream& stream) noexcept
-{
+inline stream_input_adapter input_adapter(std::istream& stream) noexcept {
     utf_encode_t encode_type = detect_encoding_and_skip_bom(stream);
     return stream_input_adapter(stream, encode_type);
 }
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_ */
 
 // #include <fkYAML/detail/iterator.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6681,28 +5887,18 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A tag which tells Iterator will contain sequence value iterator.
-struct sequence_iterator_tag
-{
-};
+struct sequence_iterator_tag {};
 
 /// @brief A tag which tells Iterator will contain mapping value iterator.
-struct mapping_iterator_tag
-{
-};
+struct mapping_iterator_tag {};
 
 /// @brief The template definitions of type informations used in @ref Iterator class
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
-struct iterator_traits
-{
+struct iterator_traits {
     /// A type of iterated elements.
     using value_type = ValueType;
     /// A type to represent difference between iterators.
@@ -6718,8 +5914,7 @@ struct iterator_traits
 /// @brief A specialization of @ref iterator_traits for constant value types.
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
-struct iterator_traits<const ValueType>
-{
+struct iterator_traits<const ValueType> {
     /// A type of iterated elements.
     using value_type = ValueType;
     /// A type to represent difference between iterators.
@@ -6733,8 +5928,7 @@ struct iterator_traits<const ValueType>
 };
 
 /// @brief Definitions of iterator types for iterators internally held.
-enum class iterator_t
-{
+enum class iterator_t {
     SEQUENCE, //!< sequence iterator type.
     MAPPING,  //!< mapping iterator type.
 };
@@ -6742,8 +5936,7 @@ enum class iterator_t
 /// @brief A class which holds iterators either of sequence or mapping type
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
-class iterator
-{
+class iterator {
 public:
     /// A type for iterator traits of instantiated @Iterator template class.
     using ItrTraitsType = iterator_traits<ValueType>;
@@ -6768,8 +5961,7 @@ private:
     static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts basic_node<...>");
 
     /// @brief The actual storage for iterators internally held in @ref Iterator.
-    struct iterator_holder
-    {
+    struct iterator_holder {
         /// A sequence iterator object.
         typename NonConstValueType::sequence_type::iterator sequence_iterator {};
         /// A mapping iterator object.
@@ -6780,26 +5972,22 @@ public:
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
     iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept
-        : m_inner_iterator_type(iterator_t::SEQUENCE)
-    {
+        : m_inner_iterator_type(iterator_t::SEQUENCE) {
         m_iterator_holder.sequence_iterator = itr;
     }
 
     /// @brief Construct a new iterator object with mapping iterator object.
     /// @param[in] itr An mapping iterator object.
     iterator(mapping_iterator_tag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
-        : m_inner_iterator_type(iterator_t::MAPPING)
-    {
+        : m_inner_iterator_type(iterator_t::MAPPING) {
         m_iterator_holder.mapping_iterator = itr;
     }
 
     /// @brief Copy constructor of the iterator class.
     /// @param other An iterator object to be copied with.
     iterator(const iterator& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type)
-    {
-        switch (m_inner_iterator_type)
-        {
+        : m_inner_iterator_type(other.m_inner_iterator_type) {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             m_iterator_holder.sequence_iterator = other.m_iterator_holder.sequence_iterator;
             break;
@@ -6812,10 +6000,8 @@ public:
     /// @brief Move constructor of the iterator class.
     /// @param other An iterator object to be moved from.
     iterator(iterator&& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type)
-    {
-        switch (m_inner_iterator_type)
-        {
+        : m_inner_iterator_type(other.m_inner_iterator_type) {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             m_iterator_holder.sequence_iterator = std::move(other.m_iterator_holder.sequence_iterator);
             break;
@@ -6832,16 +6018,13 @@ public:
     /// @brief A copy assignment operator of the iterator class.
     /// @param rhs An iterator object to be copied with.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator=(const iterator& rhs) noexcept
-    {
-        if (&rhs == this)
-        {
+    iterator& operator=(const iterator& rhs) noexcept {
+        if (&rhs == this) {
             return *this;
         }
 
         m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type)
-        {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             m_iterator_holder.sequence_iterator = rhs.m_iterator_holder.sequence_iterator;
             break;
@@ -6856,16 +6039,13 @@ public:
     /// @brief A move assignment operator of the iterator class.
     /// @param rhs An iterator object to be moved from.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator=(iterator&& rhs) noexcept
-    {
-        if (&rhs == this)
-        {
+    iterator& operator=(iterator&& rhs) noexcept {
+        if (&rhs == this) {
             return *this;
         }
 
         m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type)
-        {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             m_iterator_holder.sequence_iterator = std::move(rhs.m_iterator_holder.sequence_iterator);
             break;
@@ -6879,10 +6059,8 @@ public:
 
     /// @brief An arrow operator of the iterator class.
     /// @return pointer A pointer to the BasicNodeType object internally referenced by the actual iterator object.
-    pointer operator->() noexcept
-    {
-        if (m_inner_iterator_type == iterator_t::SEQUENCE)
-        {
+    pointer operator->() noexcept {
+        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return &(*(m_iterator_holder.sequence_iterator));
         }
 
@@ -6892,10 +6070,8 @@ public:
 
     /// @brief A dereference operator of the iterator class.
     /// @return reference Reference to the Node object internally referenced by the actual iterator object.
-    reference operator*() noexcept
-    {
-        if (m_inner_iterator_type == iterator_t::SEQUENCE)
-        {
+    reference operator*() noexcept {
+        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return *(m_iterator_holder.sequence_iterator);
         }
 
@@ -6906,10 +6082,8 @@ public:
     /// @brief A compound assignment operator by sum of the Iterator class.
     /// @param i The difference from this Iterator object with which it moves forward.
     /// @return Iterator& Reference to this Iterator object.
-    iterator& operator+=(difference_type i) noexcept
-    {
-        switch (m_inner_iterator_type)
-        {
+    iterator& operator+=(difference_type i) noexcept {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             std::advance(m_iterator_holder.sequence_iterator, i);
             break;
@@ -6923,8 +6097,7 @@ public:
     /// @brief A plus operator of the iterator class.
     /// @param i The difference from this iterator object.
     /// @return iterator An iterator object which has been added @a i.
-    iterator operator+(difference_type i) const noexcept
-    {
+    iterator operator+(difference_type i) const noexcept {
         auto result = *this;
         result += i;
         return result;
@@ -6932,10 +6105,8 @@ public:
 
     /// @brief An pre-increment operator of the iterator class.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator++() noexcept
-    {
-        switch (m_inner_iterator_type)
-        {
+    iterator& operator++() noexcept {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             std::advance(m_iterator_holder.sequence_iterator, 1);
             break;
@@ -6948,8 +6119,7 @@ public:
 
     /// @brief A post-increment opretor of the iterator class.
     /// @return iterator An iterator object which has been incremented.
-    iterator operator++(int) & noexcept
-    {
+    iterator operator++(int) & noexcept {
         auto result = *this;
         ++(*this);
         return result;
@@ -6958,16 +6128,14 @@ public:
     /// @brief A compound assignment operator by difference of the iterator class.
     /// @param i The difference from this iterator object with which it moves backward.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator-=(difference_type i) noexcept
-    {
+    iterator& operator-=(difference_type i) noexcept {
         return operator+=(-i);
     }
 
     /// @brief A minus operator of the iterator class.
     /// @param i The difference from this iterator object.
     /// @return iterator An iterator object from which has been subtracted @ i.
-    iterator operator-(difference_type i) noexcept
-    {
+    iterator operator-(difference_type i) noexcept {
         auto result = *this;
         result -= i;
         return result;
@@ -6975,10 +6143,8 @@ public:
 
     /// @brief A pre-decrement operator of the iterator class.
     /// @return iterator& Reference to this iterator object.
-    iterator& operator--() noexcept
-    {
-        switch (m_inner_iterator_type)
-        {
+    iterator& operator--() noexcept {
+        switch (m_inner_iterator_type) {
         case iterator_t::SEQUENCE:
             std::advance(m_iterator_holder.sequence_iterator, -1);
             break;
@@ -6991,8 +6157,7 @@ public:
 
     /// @brief A post-decrement operator of the iterator class
     /// @return iterator An iterator object which has been decremented.
-    iterator operator--(int) & noexcept
-    {
+    iterator operator--(int) & noexcept {
         auto result = *this;
         --(*this);
         return result;
@@ -7002,15 +6167,12 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is equal to the other.
     /// @return false This iterator object is not equal to the other.
-    bool operator==(const iterator& rhs) const
-    {
-        if (m_inner_iterator_type != rhs.m_inner_iterator_type)
-        {
+    bool operator==(const iterator& rhs) const {
+        if (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
-        if (m_inner_iterator_type == iterator_t::SEQUENCE)
-        {
+        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return (m_iterator_holder.sequence_iterator == rhs.m_iterator_holder.sequence_iterator);
         }
 
@@ -7022,8 +6184,7 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is not equal to the other.
     /// @return false This iterator object is equal to the other.
-    bool operator!=(const iterator& rhs) const
-    {
+    bool operator!=(const iterator& rhs) const {
         return !operator==(rhs);
     }
 
@@ -7031,15 +6192,12 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is less than the other.
     /// @return false This iterator object is not less than the other.
-    bool operator<(const iterator& rhs) const
-    {
-        if (m_inner_iterator_type != rhs.m_inner_iterator_type)
-        {
+    bool operator<(const iterator& rhs) const {
+        if (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
-        if (m_inner_iterator_type == iterator_t::MAPPING)
-        {
+        if (m_inner_iterator_type == iterator_t::MAPPING) {
             throw fkyaml::exception("Cannot compare order of iterators of the mapping container type");
         }
 
@@ -7050,8 +6208,7 @@ public:
     ///  @param rhs An iterator object to be compared with this iterator object.
     ///  @return true  This iterator object is either less than or equal to the other.
     ///  @return false This iterator object is neither less than nor equal to the other.
-    bool operator<=(const iterator& rhs) const
-    {
+    bool operator<=(const iterator& rhs) const {
         return !rhs.operator<(*this);
     }
 
@@ -7059,8 +6216,7 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is greater than the other.
     /// @return false This iterator object is not greater than the other.
-    bool operator>(const iterator& rhs) const
-    {
+    bool operator>(const iterator& rhs) const {
         return !operator<=(rhs);
     }
 
@@ -7068,25 +6224,21 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is either greater than or equal to the other.
     /// @return false This iterator object is neither greater than nor equal to the other.
-    bool operator>=(const iterator& rhs) const
-    {
+    bool operator>=(const iterator& rhs) const {
         return !operator<(rhs);
     }
 
 public:
     /// @brief Get the type of the internal iterator implementation.
     /// @return iterator_t The type of the internal iterator implementation.
-    iterator_t type() const noexcept
-    {
+    iterator_t type() const noexcept {
         return m_inner_iterator_type;
     }
 
     /// @brief Get the key string of the YAML mapping node for the current iterator.
     /// @return const std::string& The key string of the YAML mapping node for the current iterator.
-    const typename ValueType::mapping_type::key_type& key() const
-    {
-        if (m_inner_iterator_type == iterator_t::SEQUENCE)
-        {
+    const typename ValueType::mapping_type::key_type& key() const {
+        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             throw fkyaml::exception("Cannot retrieve key from non-mapping iterators.");
         }
 
@@ -7095,8 +6247,7 @@ public:
 
     /// @brief Get the reference of the YAML node for the current iterator.
     /// @return reference A reference to the YAML node for the current iterator.
-    reference value() noexcept
-    {
+    reference value() noexcept {
         return operator*();
     }
 
@@ -7107,9 +6258,7 @@ private:
     mutable iterator_holder m_iterator_holder {};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ITERATOR_HPP_ */
 
@@ -7122,7 +6271,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/node_property.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7138,37 +6287,28 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
-
-enum class anchor_status_t
-{
+enum class anchor_status_t {
     NONE,
     ANCHOR,
     ALIAS,
 };
 
-struct node_property
-{
+struct node_property {
     std::string tag {};
     anchor_status_t anchor_status {anchor_status_t::NONE};
     std::string anchor {};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP_ */
 
 // #include <fkYAML/detail/node_ref_storage.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7190,19 +6330,13 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A temporal storage for basic_node class objects.
 /// @note This class makes it easier to handle lvalue basic_node objects in basic_node ctor with std::initializer_list.
 /// @tparam BasicNodeType A basic_node template instance type.
 template <typename BasicNodeType>
-class node_ref_storage
-{
+class node_ref_storage {
     static_assert(is_basic_node<BasicNodeType>::value, "node_ref_storage only accepts basic_node<...>");
 
     using node_type = BasicNodeType;
@@ -7211,22 +6345,19 @@ public:
     /// @brief Construct a new node ref storage object with an rvalue basic_node object.
     /// @param n An rvalue basic_node object.
     explicit node_ref_storage(node_type&& n) noexcept(std::is_nothrow_move_constructible<node_type>::value)
-        : owned_value(std::move(n))
-    {
+        : owned_value(std::move(n)) {
     }
 
     /// @brief Construct a new node ref storage object with an lvalue basic_node object.
     /// @param n An lvalue basic_node object.
     explicit node_ref_storage(const node_type& n) noexcept
-        : value_ref(&n)
-    {
+        : value_ref(&n) {
     }
 
     /// @brief Construct a new node ref storage object with a std::initializer_list object.
     /// @param init A std::initializer_list object.
     node_ref_storage(std::initializer_list<node_ref_storage> init)
-        : owned_value(init)
-    {
+        : owned_value(init) {
     }
 
     /// @brief Construct a new node ref storage object with variadic template arguments
@@ -7234,8 +6365,7 @@ public:
     /// @param args Arguments to construct a basic_node object.
     template <typename... Args, enable_if_t<std::is_constructible<node_type, Args...>::value, int> = 0>
     node_ref_storage(Args&&... args)
-        : owned_value(std::forward<Args>(args)...)
-    {
+        : owned_value(std::forward<Args>(args)...) {
     }
 
     // allow only move construct/assignment
@@ -7247,15 +6377,13 @@ public:
 public:
     /// @brief An arrow operator for node_ref_storage objects.
     /// @return const node_type* A constant pointer to a basic_node object.
-    const node_type* operator->() const noexcept
-    {
+    const node_type* operator->() const noexcept {
         return value_ref ? value_ref : &owned_value;
     }
 
     /// @brief Releases a basic_node object internally held.
     /// @return node_type A basic_node object internally held.
-    node_type release() const noexcept
-    {
+    node_type release() const noexcept {
         return value_ref ? *value_ref : std::move(owned_value);
     }
 
@@ -7266,16 +6394,14 @@ private:
     const node_type* value_ref = nullptr;
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_ */
 
 // #include <fkYAML/detail/output/serializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7295,7 +6421,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_string.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7319,12 +6445,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/type_traits.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Converts a ValueType object to a string YAML token.
 /// @tparam ValueType A source value type.
@@ -7338,8 +6459,7 @@ inline void to_string(ValueType v, std::basic_string<CharType>& s) noexcept;
 /// @param s A resulting string YAML token.
 /// @param (unused) nullptr
 template <>
-inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept
-{
+inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept {
     s = "null";
 }
 
@@ -7347,8 +6467,7 @@ inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept
 /// @param s A resulting string YAML token.
 /// @param b A boolean source value.
 template <>
-inline void to_string(bool b, std::string& s) noexcept
-{
+inline void to_string(bool b, std::string& s) noexcept {
     s = b ? "true" : "false";
 }
 
@@ -7357,8 +6476,7 @@ inline void to_string(bool b, std::string& s) noexcept
 /// @param s A resulting string YAML token.
 /// @param i An integer source value.
 template <typename IntegerType>
-inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept
-{
+inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept {
     s = std::to_string(i);
 }
 
@@ -7367,22 +6485,17 @@ inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerTy
 /// @param s A resulting string YAML token.
 /// @param f A floating point number source value.
 template <typename FloatType>
-inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept
-{
-    if (std::isnan(f))
-    {
+inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept {
+    if (std::isnan(f)) {
         s = ".nan";
         return;
     }
 
-    if (std::isinf(f))
-    {
-        if (f == std::numeric_limits<FloatType>::infinity())
-        {
+    if (std::isinf(f)) {
+        if (f == std::numeric_limits<FloatType>::infinity()) {
             s = ".inf";
         }
-        else
-        {
+        else {
             s = "-.inf";
         }
         return;
@@ -7393,9 +6506,7 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
     s = oss.str();
 }
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* TO__string_HPP_ */
 
@@ -7412,17 +6523,12 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 
 
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A basic implementation of serialization feature for YAML nodes.
 /// @tparam BasicNodeType A BasicNode template class instantiation.
 template <typename BasicNodeType>
-class basic_serializer
-{
+class basic_serializer {
     static_assert(detail::is_basic_node<BasicNodeType>::value, "basic_serializer only accepts basic_node<...>");
 
 public:
@@ -7432,8 +6538,7 @@ public:
     /// @brief Serialize the given Node value.
     /// @param node A Node object to be serialized.
     /// @return std::string A serialization result of the given Node value.
-    std::string serialize(const BasicNodeType& node)
-    {
+    std::string serialize(const BasicNodeType& node) {
         std::string str {};
         serialize_directives(node, str);
         serialize_node(node, 0, str);
@@ -7444,20 +6549,16 @@ private:
     /// @brief Serialize the directives if any is applied to the node.
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
-    void serialize_directives(const BasicNodeType& node, std::string& str)
-    {
-        if (!node.mp_directive_set)
-        {
+    void serialize_directives(const BasicNodeType& node, std::string& str) {
+        if (!node.mp_directive_set) {
             return;
         }
 
         const auto& directives = node.mp_directive_set;
 
-        if (directives->is_version_specified)
-        {
+        if (directives->is_version_specified) {
             str += "%YAML ";
-            switch (directives->version)
-            {
+            switch (directives->version) {
             case yaml_version_t::VER_1_1:
                 str += "1.1\n";
                 break;
@@ -7467,24 +6568,20 @@ private:
             }
         }
 
-        if (!directives->primary_handle_prefix.empty())
-        {
+        if (!directives->primary_handle_prefix.empty()) {
             str += "%TAG ! ";
             str += directives->primary_handle_prefix;
             str += "\n";
         }
 
-        if (!directives->secondary_handle_prefix.empty())
-        {
+        if (!directives->secondary_handle_prefix.empty()) {
             str += "%TAG !! ";
             str += directives->secondary_handle_prefix;
             str += "\n";
         }
 
-        if (!directives->named_handle_map.empty())
-        {
-            for (const auto& itr : directives->named_handle_map)
-            {
+        if (!directives->named_handle_map.empty()) {
+            for (const auto& itr : directives->named_handle_map) {
                 str += "%TAG ";
                 str += itr.first;
                 str += " ";
@@ -7500,22 +6597,15 @@ private:
     /// @param node A Node object to be serialized.
     /// @param cur_indent The current indent width
     /// @param str A string to hold serialization result.
-    void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str)
-    {
-        switch (node.type())
-        {
+    void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
+        switch (node.type()) {
         case node_t::SEQUENCE:
-            for (const auto& seq_item : node)
-            {
-                if (cur_indent > 0)
-                {
-                    insert_indentation(cur_indent, str);
-                }
+            for (const auto& seq_item : node) {
+                insert_indentation(cur_indent, str);
                 str += "-";
 
                 bool is_appended = try_append_alias(seq_item, true, str);
-                if (is_appended)
-                {
+                if (is_appended) {
                     str += "\n";
                     continue;
                 }
@@ -7524,44 +6614,45 @@ private:
                 try_append_tag(seq_item, true, str);
 
                 bool is_scalar = seq_item.is_scalar();
-                if (is_scalar)
-                {
+                if (is_scalar) {
                     str += " ";
                     serialize_node(seq_item, cur_indent, str);
                     str += "\n";
                 }
-                else
-                {
+                else {
                     str += "\n";
                     serialize_node(seq_item, cur_indent + 2, str);
                 }
             }
             break;
         case node_t::MAPPING:
-            for (auto itr = node.begin(); itr != node.end(); ++itr)
-            {
-                if (cur_indent > 0)
-                {
-                    insert_indentation(cur_indent, str);
-                }
+            for (auto itr = node.begin(); itr != node.end(); ++itr) {
+                insert_indentation(cur_indent, str);
 
                 bool is_appended = try_append_alias(itr.key(), false, str);
-                if (!is_appended)
-                {
+                if (!is_appended) {
                     bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
                     bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
-                    if (is_anchor_appended || is_tag_appended)
-                    {
+                    if (is_anchor_appended || is_tag_appended) {
                         str += " ";
                     }
-                    serialize_node(itr.key(), cur_indent, str);
+
+                    bool is_container = !itr.key().is_scalar();
+                    if (is_container) {
+                        str += "? ";
+                    }
+                    uint32_t indent = static_cast<uint32_t>(get_cur_indent(str));
+                    serialize_node(itr.key(), indent, str);
+                    if (is_container) {
+                        // a newline code is already inserted in the above serialize_node() call.
+                        insert_indentation(indent - 2, str);
+                    }
                 }
 
                 str += ":";
 
                 is_appended = try_append_alias(*itr, true, str);
-                if (is_appended)
-                {
+                if (is_appended) {
                     str += "\n";
                     continue;
                 }
@@ -7570,14 +6661,12 @@ private:
                 try_append_tag(*itr, true, str);
 
                 bool is_scalar = itr->is_scalar();
-                if (is_scalar)
-                {
+                if (is_scalar) {
                     str += " ";
                     serialize_node(*itr, cur_indent, str);
                     str += "\n";
                 }
-                else
-                {
+                else {
                     str += "\n";
                     serialize_node(*itr, cur_indent + 2, str);
                 }
@@ -7603,8 +6692,7 @@ private:
             bool is_escaped = false;
             typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
 
-            if (is_escaped)
-            {
+            if (is_escaped) {
                 // There's no other token type with escapes than strings.
                 // Also, escapes must be in double-quoted strings.
                 str += '\"';
@@ -7617,16 +6705,14 @@ private:
             lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
             lexical_token_t token_type = lexer.get_next_token();
 
-            if (token_type != lexical_token_t::STRING_VALUE)
-            {
+            if (token_type != lexical_token_t::STRING_VALUE) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
                 str += str_val;
                 str += '\"';
             }
-            else
-            {
+            else {
                 str += str_val;
             }
             break;
@@ -7634,12 +6720,28 @@ private:
         }
     }
 
+    /// @brief Get the current indentation width.
+    /// @param s The target string object.
+    /// @return The current indentation width.
+    std::size_t get_cur_indent(const std::string& s) const noexcept {
+        bool is_empty = s.empty();
+        if (is_empty) {
+            return 0;
+        }
+
+        std::size_t last_lf_pos = s.rfind('\n');
+        return (last_lf_pos != std::string::npos) ? s.size() - last_lf_pos - 1 : s.size();
+    }
+
     /// @brief Insert indentation to the serialization result.
-    /// @param cur_indent The current indent width to be inserted.
+    /// @param indent The indent width to be inserted.
     /// @param str A string to hold serialization result.
-    void insert_indentation(const uint32_t cur_indent, std::string& str) const noexcept
-    {
-        str.append(cur_indent, ' ');
+    void insert_indentation(const uint32_t indent, std::string& str) const noexcept {
+        if (indent == 0) {
+            return;
+        }
+
+        str.append(indent - get_cur_indent(str), ' ');
     }
 
     /// @brief Append an anchor property if it's available. Do nothing otherwise.
@@ -7647,12 +6749,9 @@ private:
     /// @param prepends_space Whether or not to prepend a space before an anchor property.
     /// @param str A string to hold serialization result.
     /// @return true if an anchor property has been appended, false otherwise.
-    bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const
-    {
-        if (node.is_anchor())
-        {
-            if (prepends_space)
-            {
+    bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const {
+        if (node.is_anchor()) {
+            if (prepends_space) {
                 str += " ";
             }
             str += "&" + node.get_anchor_name();
@@ -7666,12 +6765,9 @@ private:
     /// @param prepends_space Whether or not to prepend a space before an alias property.
     /// @param str A string to hold serialization result.
     /// @return true if an alias property has been appended, false otherwise.
-    bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const
-    {
-        if (node.is_alias())
-        {
-            if (prepends_space)
-            {
+    bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const {
+        if (node.is_alias()) {
+            if (prepends_space) {
                 str += " ";
             }
             str += "*" + node.get_anchor_name();
@@ -7684,12 +6780,9 @@ private:
     /// @param[in] node The target node which possibly has a tag name.
     /// @param[out] str A string to hold serialization result.
     /// @return true if a tag name has been appended, false otherwise.
-    bool try_append_tag(const BasicNodeType& node, bool prepends_space, std::string& str) const
-    {
-        if (node.has_tag_name())
-        {
-            if (prepends_space)
-            {
+    bool try_append_tag(const BasicNodeType& node, bool prepends_space, std::string& str) const {
+        if (node.has_tag_name()) {
+            if (prepends_space) {
                 str += " ";
             }
             str += node.get_tag_name();
@@ -7702,8 +6795,7 @@ private:
     /// @param[in] node The target string YAML node.
     /// @param[out] is_escaped Whether or not the contents of an ouput string has been escaped.
     /// @return The (escaped) string node value.
-    typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped)
-    {
+    typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
         FK_YAML_ASSERT(node.is_string());
 
         using string_type = typename BasicNodeType::string_type;
@@ -7714,10 +6806,8 @@ private:
         string_type escaped {};
         escaped.reserve(size);
 
-        for (size_t i = 0; i < size; i++)
-        {
-            switch (s[i])
-            {
+        for (size_t i = 0; i < size; i++) {
+            switch (s[i]) {
             case 0x01:
                 escaped += "\\u0001";
                 is_escaped = true;
@@ -7851,29 +6941,25 @@ private:
                 is_escaped = true;
                 break;
             default:
-                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u))
-                {
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u)) {
                     escaped += "\\N";
                     i++;
                     is_escaped = true;
                     break;
                 }
-                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u))
-                {
+                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u)) {
                     escaped += "\\_";
                     i++;
                     is_escaped = true;
                     break;
                 }
-                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u))
-                {
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u)) {
                     escaped += "\\L";
                     i += 2;
                     is_escaped = true;
                     break;
                 }
-                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u))
-                {
+                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u)) {
                     escaped += "\\P";
                     i += 2;
                     is_escaped = true;
@@ -7892,9 +6978,7 @@ private:
     std::string m_tmp_str_buff;
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_ */
 
@@ -7905,7 +6989,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/node_value_converter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7923,7 +7007,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/from_node.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7952,15 +7036,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 ///////////////////
 //   from_node   //
@@ -7971,10 +7047,8 @@ namespace detail
 /// @param n A basic_node object.
 /// @param s A sequence node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_type& s)
-{
-    if (!n.is_sequence())
-    {
+inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_type& s) {
+    if (!n.is_sequence()) {
         throw type_error("The target node value type is not sequence type.", n.type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::sequence_type&>();
@@ -7993,17 +7067,14 @@ template <
             has_from_node<BasicNodeType, CompatibleValueType>,
             negation<std::is_same<std::vector<CompatibleValueType>, typename BasicNodeType::sequence_type>>>::value,
         int> = 0>
-inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& s)
-{
-    if (!n.is_sequence())
-    {
+inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& s) {
+    if (!n.is_sequence()) {
         throw type_error("The target node value is not sequence type.", n.type());
     }
 
     s.reserve(n.size());
 
-    for (const auto& elem : n)
-    {
+    for (const auto& elem : n) {
         s.emplace_back(elem.template get_value<CompatibleValueType>());
     }
 }
@@ -8013,15 +7084,12 @@ inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& 
 /// @param n A basic_node object.
 /// @param m A mapping node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_type& m)
-{
-    if (!n.is_mapping())
-    {
+inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_type& m) {
+    if (!n.is_mapping()) {
         throw type_error("The target node value type is not mapping type.", n.type());
     }
 
-    for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>())
-    {
+    for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
         m.emplace(pair.first, pair.second);
     }
 }
@@ -8035,15 +7103,12 @@ template <
             negation<is_basic_node<CompatibleValueType>>, has_from_node<BasicNodeType, CompatibleKeyType>,
             has_from_node<BasicNodeType, CompatibleValueType>>::value,
         int> = 0>
-inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, CompatibleValueType, Compare, Allocator>& m)
-{
-    if (!n.is_mapping())
-    {
+inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, CompatibleValueType, Compare, Allocator>& m) {
+    if (!n.is_mapping()) {
         throw type_error("The target node value type is not mapping type.", n.type());
     }
 
-    for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>())
-    {
+    for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
         m.emplace(
             pair.first.template get_value<CompatibleKeyType>(), pair.second.template get_value<CompatibleValueType>());
     }
@@ -8054,11 +7119,9 @@ inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, Compat
 /// @param n A basic_node object.
 /// @param null A null node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, std::nullptr_t& null)
-{
+inline void from_node(const BasicNodeType& n, std::nullptr_t& null) {
     // to ensure the target node value type is null.
-    if (!n.is_null())
-    {
+    if (!n.is_null()) {
         throw type_error("The target node value type is not null type.", n.type());
     }
     null = nullptr;
@@ -8069,10 +7132,8 @@ inline void from_node(const BasicNodeType& n, std::nullptr_t& null)
 /// @param n A basic_node object.
 /// @param b A boolean node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_type& b)
-{
-    if (!n.is_boolean())
-    {
+inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_type& b) {
+    if (!n.is_boolean()) {
         throw type_error("The target node value type is not boolean type.", n.type());
     }
     b = n.template get_value_ref<const typename BasicNodeType::boolean_type&>();
@@ -8083,10 +7144,8 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_ty
 /// @param n A basic_node object.
 /// @param i An integer node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_type& i)
-{
-    if (!n.is_integer())
-    {
+inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_type& i) {
+    if (!n.is_integer()) {
         throw type_error("The target node value type is not integer type.", n.type());
     }
     i = n.template get_value_ref<const typename BasicNodeType::integer_type&>();
@@ -8104,22 +7163,18 @@ template <
             is_non_bool_integral<IntegerType>,
             negation<std::is_same<IntegerType, typename BasicNodeType::integer_type>>>::value,
         int> = 0>
-inline void from_node(const BasicNodeType& n, IntegerType& i)
-{
-    if (!n.is_integer())
-    {
+inline void from_node(const BasicNodeType& n, IntegerType& i) {
+    if (!n.is_integer()) {
         throw type_error("The target node value type is not integer type.", n.type());
     }
 
     // under/overflow check.
     using node_int_type = typename BasicNodeType::integer_type;
     node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
-    if (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min()))
-    {
+    if (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min())) {
         throw exception("Integer value underflow detected.");
     }
-    if (static_cast<node_int_type>(std::numeric_limits<IntegerType>::max()) < tmp_int)
-    {
+    if (static_cast<node_int_type>(std::numeric_limits<IntegerType>::max()) < tmp_int) {
         throw exception("Integer value overflow detected.");
     }
 
@@ -8131,10 +7186,8 @@ inline void from_node(const BasicNodeType& n, IntegerType& i)
 /// @param n A basic_node object.
 /// @param f A float number node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_number_type& f)
-{
-    if (!n.is_float_number())
-    {
+inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_number_type& f) {
+    if (!n.is_float_number()) {
         throw type_error("The target node value type is not float number type.", n.type());
     }
     f = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
@@ -8152,20 +7205,16 @@ template <
             std::is_floating_point<FloatType>,
             negation<std::is_same<FloatType, typename BasicNodeType::float_number_type>>>::value,
         int> = 0>
-inline void from_node(const BasicNodeType& n, FloatType& f)
-{
-    if (!n.is_float_number())
-    {
+inline void from_node(const BasicNodeType& n, FloatType& f) {
+    if (!n.is_float_number()) {
         throw type_error("The target node value type is not float number type.", n.type());
     }
 
     auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
-    if (tmp_float < std::numeric_limits<FloatType>::min())
-    {
+    if (tmp_float < std::numeric_limits<FloatType>::min()) {
         throw exception("Floating point value underflow detected.");
     }
-    if (std::numeric_limits<FloatType>::max() < tmp_float)
-    {
+    if (std::numeric_limits<FloatType>::max() < tmp_float) {
         throw exception("Floating point value overflow detected.");
     }
 
@@ -8177,10 +7226,8 @@ inline void from_node(const BasicNodeType& n, FloatType& f)
 /// @param n A basic_node object.
 /// @param s A string node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_type& s)
-{
-    if (!n.is_string())
-    {
+inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_type& s) {
+    if (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
@@ -8201,10 +7248,8 @@ template <
                 std::is_constructible<CompatibleStringType, const typename BasicNodeType::string_type&>,
                 std::is_assignable<CompatibleStringType, const typename BasicNodeType::string_type&>>>::value,
         int> = 0>
-inline void from_node(const BasicNodeType& n, CompatibleStringType& s)
-{
-    if (!n.is_string())
-    {
+inline void from_node(const BasicNodeType& n, CompatibleStringType& s) {
+    if (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
@@ -8212,8 +7257,7 @@ inline void from_node(const BasicNodeType& n, CompatibleStringType& s)
 
 /// @brief A function object to call from_node functions.
 /// @note User-defined specialization is available by providing implementation **OUTSIDE** fkyaml namespace.
-struct from_node_fn
-{
+struct from_node_fn {
     /// @brief Call from_node function suitable for the given T type.
     /// @tparam BasicNodeType A basic_node template instance type.
     /// @tparam T A target value type assigned from the basic_node object.
@@ -8222,13 +7266,14 @@ struct from_node_fn
     /// @return decltype(from_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
     template <typename BasicNodeType, typename T>
     auto operator()(const BasicNodeType& n, T&& val) const noexcept(noexcept(from_node(n, std::forward<T>(val))))
-        -> decltype(from_node(n, std::forward<T>(val)))
-    {
+        -> decltype(from_node(n, std::forward<T>(val))) {
         return from_node(n, std::forward<T>(val));
     }
 };
 
-} // namespace detail
+FK_YAML_DETAIL_NAMESPACE_END
+
+FK_YAML_NAMESPACE_BEGIN
 
 #ifndef FK_YAML_HAS_CXX_17
 // anonymous namespace to hold `from_node` functor.
@@ -8252,7 +7297,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_node.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8276,12 +7321,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 ///////////////////////////////////
 //   external_node_constructor   //
@@ -8298,15 +7338,13 @@ struct external_node_constructor;
 
 /// @brief The specialization of external_node_constructor for sequence nodes.
 template <>
-struct external_node_constructor<node_t::SEQUENCE>
-{
+struct external_node_constructor<node_t::SEQUENCE> {
     /// @brief Constructs a basic_node object with const lvalue sequence.
     /// @tparam BasicNodeType A basic_node template instance type.
     /// @param n A basic_node object.
     /// @param s A lvalue sequence value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, const typename BasicNodeType::sequence_type& s) noexcept
-    {
+    static void construct(BasicNodeType& n, const typename BasicNodeType::sequence_type& s) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::SEQUENCE;
         n.m_node_value.p_sequence = BasicNodeType::template create_object<typename BasicNodeType::sequence_type>(s);
@@ -8317,8 +7355,7 @@ struct external_node_constructor<node_t::SEQUENCE>
     /// @param n A basic_node object.
     /// @param s A rvalue sequence value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, typename BasicNodeType::sequence_type&& s) noexcept
-    {
+    static void construct(BasicNodeType& n, typename BasicNodeType::sequence_type&& s) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::SEQUENCE;
         n.m_node_value.p_sequence =
@@ -8328,15 +7365,13 @@ struct external_node_constructor<node_t::SEQUENCE>
 
 /// @brief The specialization of external_node_constructor for mapping nodes.
 template <>
-struct external_node_constructor<node_t::MAPPING>
-{
+struct external_node_constructor<node_t::MAPPING> {
     /// @brief Constructs a basic_node object with const lvalue mapping.
     /// @tparam BasicNodeType A basic_node template instance type.
     /// @param n A basic_node object.
     /// @param m A lvalue mapping value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, const typename BasicNodeType::mapping_type& m) noexcept
-    {
+    static void construct(BasicNodeType& n, const typename BasicNodeType::mapping_type& m) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::MAPPING;
         n.m_node_value.p_mapping = BasicNodeType::template create_object<typename BasicNodeType::mapping_type>(m);
@@ -8347,8 +7382,7 @@ struct external_node_constructor<node_t::MAPPING>
     /// @param n A basic_node object.
     /// @param m A rvalue mapping value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, typename BasicNodeType::mapping_type&& m) noexcept
-    {
+    static void construct(BasicNodeType& n, typename BasicNodeType::mapping_type&& m) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::MAPPING;
         n.m_node_value.p_mapping =
@@ -8358,15 +7392,13 @@ struct external_node_constructor<node_t::MAPPING>
 
 /// @brief The specialization of external_node_constructor for null nodes.
 template <>
-struct external_node_constructor<node_t::NULL_OBJECT>
-{
+struct external_node_constructor<node_t::NULL_OBJECT> {
     /// @brief Constructs a basic_node object with nullptr.
     /// @tparam BasicNodeType A basic_node template instance type.
     /// @param n A basic_node object.
     /// @param (unused) nullptr
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, std::nullptr_t /*unused*/) noexcept
-    {
+    static void construct(BasicNodeType& n, std::nullptr_t /*unused*/) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::NULL_OBJECT;
         n.m_node_value.p_mapping = nullptr;
@@ -8375,15 +7407,13 @@ struct external_node_constructor<node_t::NULL_OBJECT>
 
 /// @brief The specialization of external_node_constructor for boolean scalar nodes.
 template <>
-struct external_node_constructor<node_t::BOOLEAN>
-{
+struct external_node_constructor<node_t::BOOLEAN> {
     /// @brief Constructs a basic_node object with boolean.
     /// @tparam BasicNodeType A basic_node template instance type.
     /// @param n A basic_node object.
     /// @param b A boolean value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, typename BasicNodeType::boolean_type b) noexcept
-    {
+    static void construct(BasicNodeType& n, typename BasicNodeType::boolean_type b) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::BOOLEAN;
         n.m_node_value.boolean = b;
@@ -8392,15 +7422,13 @@ struct external_node_constructor<node_t::BOOLEAN>
 
 /// @brief The specialization of external_node_constructor for integer scalar nodes.
 template <>
-struct external_node_constructor<node_t::INTEGER>
-{
+struct external_node_constructor<node_t::INTEGER> {
     /// @brief Constructs a basic_node object with integers.
     /// @tparam BasicNodeType A basic_node template instance type.
     /// @param n A basic_node object.
     /// @param i An integer value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, typename BasicNodeType::integer_type i) noexcept
-    {
+    static void construct(BasicNodeType& n, typename BasicNodeType::integer_type i) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::INTEGER;
         n.m_node_value.integer = i;
@@ -8409,15 +7437,13 @@ struct external_node_constructor<node_t::INTEGER>
 
 /// @brief The specialization of external_node_constructor for float number scalar nodes.
 template <>
-struct external_node_constructor<node_t::FLOAT_NUMBER>
-{
+struct external_node_constructor<node_t::FLOAT_NUMBER> {
     /// @brief Constructs a basic_node object with floating point numbers.
     /// @tparam BasicNodeType A basic_node template instance type.
     /// @param n A basic_node object.
     /// @param f A floating point number.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, typename BasicNodeType::float_number_type f) noexcept
-    {
+    static void construct(BasicNodeType& n, typename BasicNodeType::float_number_type f) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::FLOAT_NUMBER;
         n.m_node_value.float_val = f;
@@ -8426,15 +7452,13 @@ struct external_node_constructor<node_t::FLOAT_NUMBER>
 
 /// @brief The specialization of external_node_constructor for string scalar nodes.
 template <>
-struct external_node_constructor<node_t::STRING>
-{
+struct external_node_constructor<node_t::STRING> {
     /// @brief Constructs a basic_node object with const lvalue strings.
     /// @tparam BasicNodeType A basic_node template instance type.
     /// @param n A basic_node object.
     /// @param s A constant lvalue string.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, const typename BasicNodeType::string_type& s) noexcept
-    {
+    static void construct(BasicNodeType& n, const typename BasicNodeType::string_type& s) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::STRING;
         n.m_node_value.p_string = BasicNodeType::template create_object<typename BasicNodeType::string_type>(s);
@@ -8445,8 +7469,7 @@ struct external_node_constructor<node_t::STRING>
     /// @param n A basic_node object.
     /// @param s A rvalue string.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-    static void construct(BasicNodeType& n, typename BasicNodeType::string_type&& s) noexcept
-    {
+    static void construct(BasicNodeType& n, typename BasicNodeType::string_type&& s) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::STRING;
         n.m_node_value.p_string =
@@ -8465,8 +7488,7 @@ struct external_node_constructor<node_t::STRING>
                 is_basic_node<BasicNodeType>,
                 negation<std::is_same<typename BasicNodeType::string_type, CompatibleStringType>>>::value,
             int> = 0>
-    static void construct(BasicNodeType& n, const CompatibleStringType& s) noexcept
-    {
+    static void construct(BasicNodeType& n, const CompatibleStringType& s) noexcept {
         n.m_node_value.destroy(n.m_node_type);
         n.m_node_type = node_t::STRING;
         n.m_node_value.p_string = BasicNodeType::template create_object<typename BasicNodeType::string_type>(s);
@@ -8489,8 +7511,7 @@ template <
             is_basic_node<BasicNodeType>,
             std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<T>>>::value,
         int> = 0>
-inline void to_node(BasicNodeType& n, T&& s) noexcept
-{
+inline void to_node(BasicNodeType& n, T&& s) noexcept {
     external_node_constructor<node_t::SEQUENCE>::construct(n, std::forward<T>(s));
 }
 
@@ -8505,8 +7526,7 @@ template <
         conjunction<
             is_basic_node<BasicNodeType>, std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<T>>>::value,
         int> = 0>
-inline void to_node(BasicNodeType& n, T&& m) noexcept
-{
+inline void to_node(BasicNodeType& n, T&& m) noexcept {
     external_node_constructor<node_t::MAPPING>::construct(n, std::forward<T>(m));
 }
 
@@ -8516,8 +7536,7 @@ inline void to_node(BasicNodeType& n, T&& m) noexcept
 template <
     typename BasicNodeType, typename NullType,
     enable_if_t<conjunction<is_basic_node<BasicNodeType>, std::is_same<NullType, std::nullptr_t>>::value, int> = 0>
-inline void to_node(BasicNodeType& n, NullType /*unused*/)
-{
+inline void to_node(BasicNodeType& n, NullType /*unused*/) {
     external_node_constructor<node_t::NULL_OBJECT>::construct(n, nullptr);
 }
 
@@ -8531,8 +7550,7 @@ template <
     enable_if_t<
         conjunction<is_basic_node<BasicNodeType>, std::is_same<typename BasicNodeType::boolean_type, T>>::value, int> =
         0>
-inline void to_node(BasicNodeType& n, T b) noexcept
-{
+inline void to_node(BasicNodeType& n, T b) noexcept {
     external_node_constructor<node_t::BOOLEAN>::construct(n, b);
 }
 
@@ -8544,8 +7562,7 @@ inline void to_node(BasicNodeType& n, T b) noexcept
 template <
     typename BasicNodeType, typename T,
     enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_non_bool_integral<T>>::value, int> = 0>
-inline void to_node(BasicNodeType& n, T i) noexcept
-{
+inline void to_node(BasicNodeType& n, T i) noexcept {
     external_node_constructor<node_t::INTEGER>::construct(n, i);
 }
 
@@ -8557,8 +7574,7 @@ inline void to_node(BasicNodeType& n, T i) noexcept
 template <
     typename BasicNodeType, typename T,
     enable_if_t<conjunction<is_basic_node<BasicNodeType>, std::is_floating_point<T>>::value, int> = 0>
-inline void to_node(BasicNodeType& n, T f) noexcept
-{
+inline void to_node(BasicNodeType& n, T f) noexcept {
     external_node_constructor<node_t::FLOAT_NUMBER>::construct(n, f);
 }
 
@@ -8574,8 +7590,7 @@ template <
             is_basic_node<BasicNodeType>, negation<is_null_pointer<T>>,
             std::is_constructible<typename BasicNodeType::string_type, const T&>>::value,
         int> = 0>
-inline void to_node(BasicNodeType& n, const T& s)
-{
+inline void to_node(BasicNodeType& n, const T& s) {
     external_node_constructor<node_t::STRING>::construct(n, s);
 }
 
@@ -8584,15 +7599,13 @@ inline void to_node(BasicNodeType& n, const T& s)
 /// @param n A basic_node object.
 /// @param s An rvalue string node value.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void to_node(BasicNodeType& n, typename BasicNodeType::string_type&& s) noexcept
-{
+inline void to_node(BasicNodeType& n, typename BasicNodeType::string_type&& s) noexcept {
     external_node_constructor<node_t::STRING>::construct(n, std::move(s));
 }
 
 /// @brief A function object to call to_node functions.
 /// @note User-defined specialization is available by providing implementation **OUTSIDE** fkyaml namespace.
-struct to_node_fn
-{
+struct to_node_fn {
     /// @brief Call to_node function suitable for the given T type.
     /// @tparam BasicNodeType A basic_node template instance type.
     /// @tparam T A target value type assigned to the basic_node object.
@@ -8601,13 +7614,14 @@ struct to_node_fn
     /// @return decltype(to_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
     template <typename BasicNodeType, typename T>
     auto operator()(BasicNodeType& n, T&& val) const noexcept(noexcept(to_node(n, std::forward<T>(val))))
-        -> decltype(to_node(n, std::forward<T>(val)))
-    {
+        -> decltype(to_node(n, std::forward<T>(val))) {
         return to_node(n, std::forward<T>(val));
     }
 };
 
-} // namespace detail
+FK_YAML_DETAIL_NAMESPACE_END
+
+FK_YAML_NAMESPACE_BEGIN
 
 #ifndef FK_YAML_HAS_CXX_17
 // anonymous namespace to hold `to_node` functor.
@@ -8635,8 +7649,7 @@ FK_YAML_NAMESPACE_BEGIN
 /// @tparam ValueType A default target data type.
 /// @sa https://fktn-k.github.io/fkYAML/api/node_value_converter/
 template <typename ValueType, typename>
-class node_value_converter
-{
+class node_value_converter {
 public:
     /// @brief Convert a YAML node value into compatible native data.
     /// @tparam BasicNodeType A basic_node template instance type.
@@ -8647,8 +7660,7 @@ public:
     template <typename BasicNodeType, typename TargetType = ValueType>
     static auto from_node(BasicNodeType&& n, TargetType& val) noexcept(
         noexcept(::fkyaml::from_node(std::forward<BasicNodeType>(n), val)))
-        -> decltype(::fkyaml::from_node(std::forward<BasicNodeType>(n), val), void())
-    {
+        -> decltype(::fkyaml::from_node(std::forward<BasicNodeType>(n), val), void()) {
         ::fkyaml::from_node(std::forward<BasicNodeType>(n), val);
     }
 
@@ -8661,8 +7673,7 @@ public:
     template <typename BasicNodeType, typename TargetType = ValueType>
     static auto to_node(BasicNodeType& n, TargetType&& val) noexcept(
         noexcept(::fkyaml::to_node(n, std::forward<TargetType>(val))))
-        -> decltype(::fkyaml::to_node(n, std::forward<TargetType>(val)))
-    {
+        -> decltype(::fkyaml::to_node(n, std::forward<TargetType>(val))) {
         ::fkyaml::to_node(n, std::forward<TargetType>(val));
     }
 };
@@ -8674,7 +7685,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/ordered_map.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8698,7 +7709,6 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 
 
-/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
 /// @brief A minimal map-like container which preserves insertion order.
@@ -8710,8 +7720,7 @@ FK_YAML_NAMESPACE_BEGIN
 template <
     typename Key, typename Value, typename IgnoredCompare = std::less<Key>,
     typename Allocator = std::allocator<std::pair<const Key, Value>>>
-class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator>
-{
+class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator> {
 public:
     /// A type for keys.
     using key_type = Key;
@@ -8734,16 +7743,14 @@ public:
     /// @brief Construct a new ordered_map object.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/constructor/
     ordered_map() noexcept(noexcept(Container()))
-        : Container()
-    {
+        : Container() {
     }
 
     /// @brief Construct a new ordered_map object with an initializer list.
     /// @param init An initializer list to construct the inner container object.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/constructor/
     ordered_map(std::initializer_list<value_type> init)
-        : Container {init}
-    {
+        : Container {init} {
     }
 
 public:
@@ -8755,8 +7762,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    mapped_type& operator[](KeyType&& key) noexcept
-    {
+    mapped_type& operator[](KeyType&& key) noexcept {
         return emplace(std::forward<KeyType>(key), mapped_type()).first->second;
     }
 
@@ -8770,12 +7776,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    std::pair<iterator, bool> emplace(KeyType&& key, const mapped_type& value) noexcept
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    std::pair<iterator, bool> emplace(KeyType&& key, const mapped_type& value) noexcept {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return {itr, false};
             }
         }
@@ -8791,12 +7794,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    mapped_type& at(KeyType&& key)
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    mapped_type& at(KeyType&& key) {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return itr->second;
             }
         }
@@ -8811,12 +7811,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    const mapped_type& at(KeyType&& key) const
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    const mapped_type& at(KeyType&& key) const {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return itr->second;
             }
         }
@@ -8831,12 +7828,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    iterator find(KeyType&& key) noexcept
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    iterator find(KeyType&& key) noexcept {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return itr;
             }
         }
@@ -8851,12 +7845,9 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    const_iterator find(KeyType&& key) const noexcept
-    {
-        for (auto itr = this->begin(); itr != this->end(); ++itr)
-        {
-            if (m_compare(itr->first, key))
-            {
+    const_iterator find(KeyType&& key) const noexcept {
+        for (auto itr = this->begin(); itr != this->end(); ++itr) {
+            if (m_compare(itr->first, key)) {
                 return itr;
             }
         }
@@ -8873,7 +7864,6 @@ FK_YAML_NAMESPACE_END
 #endif /* FK_YAML_ORDERED_MAP_HPP_ */
 
 
-/// @brief namespace for fkYAML library.
 FK_YAML_NAMESPACE_BEGIN
 
 /// @brief A class to store value of YAML nodes.
@@ -8883,8 +7873,7 @@ template <
     template <typename, typename, typename...> class MappingType = std::map, typename BooleanType = bool,
     typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
     template <typename, typename = void> class ConverterType = node_value_converter>
-class basic_node
-{
+class basic_node {
 public:
     /// @brief A type for iterators of basic_node containers.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
@@ -8953,18 +7942,15 @@ private:
     /// @details This union combines the different sotrage types for the YAML value types defined in @ref node_t.
     /// @note Container types are stored as pointers so that the size of this union will not exceed 64 bits by
     /// default.
-    union node_value
-    {
+    union node_value {
         /// @brief Constructs a new basic_node Value object for null types.
         node_value() = default;
 
         /// @brief Constructs a new basic_node value object with a node type. The default value for the specified
         /// type will be assigned.
         /// @param[in] type A node type.
-        explicit node_value(node_t type)
-        {
-            switch (type)
-            {
+        explicit node_value(node_t type) {
+            switch (type) {
             case node_t::SEQUENCE:
                 p_sequence = create_object<sequence_type>();
                 break;
@@ -8992,43 +7978,34 @@ private:
         /// @brief Destroys the existing Node value. This process is recursive if the specified node type is for
         /// containers.
         /// @param[in] type A Node type to determine the value to be destroyed.
-        void destroy(node_t type)
-        {
-            if (type == node_t::SEQUENCE || type == node_t::MAPPING)
-            {
+        void destroy(node_t type) {
+            if (type == node_t::SEQUENCE || type == node_t::MAPPING) {
                 std::vector<basic_node> stack;
 
-                if (type == node_t::SEQUENCE)
-                {
+                if (type == node_t::SEQUENCE) {
                     stack.reserve(p_sequence->size());
                     std::move(p_sequence->begin(), p_sequence->end(), std::back_inserter(stack));
                 }
-                else
-                {
+                else {
                     stack.reserve(p_mapping->size());
-                    for (auto&& it : *p_mapping)
-                    {
+                    for (auto&& it : *p_mapping) {
                         stack.push_back(std::move(it.second));
                     }
                 }
 
-                while (!stack.empty())
-                {
+                while (!stack.empty()) {
                     basic_node current_node(std::move(stack.back()));
                     stack.pop_back();
 
-                    if (current_node.is_sequence())
-                    {
+                    if (current_node.is_sequence()) {
                         std::move(
                             current_node.m_node_value.p_sequence->begin(),
                             current_node.m_node_value.p_sequence->end(),
                             std::back_inserter(stack));
                         current_node.m_node_value.p_sequence->clear();
                     }
-                    else if (current_node.is_mapping())
-                    {
-                        for (auto&& it : *current_node.m_node_value.p_mapping)
-                        {
+                    else if (current_node.is_mapping()) {
+                        for (auto&& it : *current_node.m_node_value.p_mapping) {
                             stack.push_back(std::move(it.second));
                         }
                         current_node.m_node_value.p_mapping->clear();
@@ -9036,8 +8013,7 @@ private:
                 }
             }
 
-            switch (type)
-            {
+            switch (type) {
             case node_t::SEQUENCE:
                 destroy_object<sequence_type>(p_sequence);
                 p_sequence = nullptr;
@@ -9076,8 +8052,7 @@ private:
     /// @param[in] args A parameter pack for constructor arguments of the target object type.
     /// @return ObjType* An address of allocated memory on the heap.
     template <typename ObjType, typename... ArgTypes>
-    static ObjType* create_object(ArgTypes&&... args)
-    {
+    static ObjType* create_object(ArgTypes&&... args) {
         using AllocType = std::allocator<ObjType>;
         using AllocTraitsType = std::allocator_traits<AllocType>;
 
@@ -9099,8 +8074,7 @@ private:
     /// @tparam ObjType The target object type.
     /// @param[in] obj A pointer to the target object to be destroyed.
     template <typename ObjType>
-    static void destroy_object(ObjType* obj)
-    {
+    static void destroy_object(ObjType* obj) {
         FK_YAML_ASSERT(obj != nullptr);
         std::allocator<ObjType> alloc;
         std::allocator_traits<decltype(alloc)>::destroy(alloc, obj);
@@ -9117,8 +8091,7 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     explicit basic_node(const node_t type)
         : m_node_type(type),
-          m_node_value(type)
-    {
+          m_node_value(type) {
     }
 
     /// @brief Copy constructor of the basic_node class.
@@ -9127,10 +8100,8 @@ public:
     basic_node(const basic_node& rhs)
         : m_node_type(rhs.m_node_type),
           mp_directive_set(rhs.mp_directive_set),
-          m_prop(rhs.m_prop)
-    {
-        switch (m_node_type)
-        {
+          m_prop(rhs.m_prop) {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             m_node_value.p_sequence = create_object<sequence_type>(*(rhs.m_node_value.p_sequence));
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
@@ -9164,10 +8135,8 @@ public:
     basic_node(basic_node&& rhs) noexcept
         : m_node_type(rhs.m_node_type),
           mp_directive_set(std::move(rhs.mp_directive_set)),
-          m_prop(std::move(rhs.m_prop))
-    {
-        switch (m_node_type)
-        {
+          m_prop(std::move(rhs.m_prop)) {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(rhs.m_node_value.p_sequence != nullptr);
             m_node_value.p_sequence = rhs.m_node_value.p_sequence;
@@ -9219,8 +8188,7 @@ public:
                 detail::disjunction<detail::is_node_compatible_type<basic_node, U>>>::value,
             int> = 0>
     basic_node(CompatibleType&& val) noexcept(
-        noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>())))
-    {
+        noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>()))) {
         ConverterType<U>::to_node(*this, std::forward<CompatibleType>(val));
     }
 
@@ -9232,34 +8200,29 @@ public:
         typename NodeRefStorageType,
         detail::enable_if_t<detail::is_node_ref_storage<NodeRefStorageType>::value, int> = 0>
     basic_node(const NodeRefStorageType& node_ref_storage) noexcept
-        : basic_node(node_ref_storage.release())
-    {
+        : basic_node(node_ref_storage.release()) {
     }
 
     /// @brief Construct a new basic node object with std::initializer_list.
     /// @param[in] init A initializer list of basic_node objects.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
-    basic_node(initializer_list_t init)
-    {
+    basic_node(initializer_list_t init) {
         bool is_mapping =
             std::all_of(init.begin(), init.end(), [](const detail::node_ref_storage<basic_node>& node_ref) {
                 return node_ref->is_sequence() && node_ref->size() == 2;
             });
 
-        if (is_mapping)
-        {
+        if (is_mapping) {
             m_node_type = node_t::MAPPING;
             m_node_value.p_mapping = create_object<mapping_type>();
 
-            for (auto& elem_ref : init)
-            {
+            for (auto& elem_ref : init) {
                 auto elem = elem_ref.release();
                 m_node_value.p_mapping->emplace(
                     std::move((*(elem.m_node_value.p_sequence))[0]), std::move((*(elem.m_node_value.p_sequence))[1]));
             }
         }
-        else
-        {
+        else {
             m_node_type = node_t::SEQUENCE;
             m_node_value.p_sequence = create_object<sequence_type>(init.begin(), init.end());
         }
@@ -9280,8 +8243,7 @@ public:
     /// @return The resulting basic_node object deserialized from the input source.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/
     template <typename InputType>
-    static basic_node deserialize(InputType&& input)
-    {
+    static basic_node deserialize(InputType&& input) {
         return deserializer_type().deserialize(detail::input_adapter(std::forward<InputType>(input)));
     }
 
@@ -9292,8 +8254,7 @@ public:
     /// @return The resulting basic_node object deserialized from the pair of iterators.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/
     template <typename ItrType>
-    static basic_node deserialize(ItrType&& begin, ItrType&& end)
-    {
+    static basic_node deserialize(ItrType&& begin, ItrType&& end) {
         return deserializer_type().deserialize(
             detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
@@ -9302,16 +8263,14 @@ public:
     /// @param[in] node A basic_node object to be serialized.
     /// @return The resulting string object from the serialization of the node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
-    static std::string serialize(const basic_node& node)
-    {
+    static std::string serialize(const basic_node& node) {
         return serializer_type().serialize(node);
     }
 
     /// @brief A factory method for sequence basic_node objects without sequence_type objects.
     /// @return A YAML sequence node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence/
-    static basic_node sequence()
-    {
+    static basic_node sequence() {
         basic_node node;
         node.m_node_type = node_t::SEQUENCE;
         node.m_node_value.p_sequence = create_object<sequence_type>();
@@ -9323,8 +8282,7 @@ public:
     /// @param[in] seq A lvalue sequence node value.
     /// @return A YAML sequence node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence/
-    static basic_node sequence(const sequence_type& seq)
-    {
+    static basic_node sequence(const sequence_type& seq) {
         basic_node node;
         node.m_node_type = node_t::SEQUENCE;
         node.m_node_value.p_sequence = create_object<sequence_type>(seq);
@@ -9336,8 +8294,7 @@ public:
     /// @param[in] seq A rvalue sequence node value.
     /// @return A YAML sequence node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence/
-    static basic_node sequence(sequence_type&& seq)
-    {
+    static basic_node sequence(sequence_type&& seq) {
         basic_node node;
         node.m_node_type = node_t::SEQUENCE;
         node.m_node_value.p_sequence = create_object<sequence_type>(std::move(seq));
@@ -9348,8 +8305,7 @@ public:
     /// @brief A factory method for mapping basic_node objects without mapping_type objects.
     /// @return A YAML mapping node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping/
-    static basic_node mapping()
-    {
+    static basic_node mapping() {
         basic_node node;
         node.m_node_type = node_t::MAPPING;
         node.m_node_value.p_mapping = create_object<mapping_type>();
@@ -9361,8 +8317,7 @@ public:
     /// @param[in] map A lvalue mapping node value.
     /// @return A YAML mapping node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping/
-    static basic_node mapping(const mapping_type& map)
-    {
+    static basic_node mapping(const mapping_type& map) {
         basic_node node;
         node.m_node_type = node_t::MAPPING;
         node.m_node_value.p_mapping = create_object<mapping_type>(map);
@@ -9374,8 +8329,7 @@ public:
     /// @param[in] map A rvalue mapping node value.
     /// @return A YAML mapping node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/mapping/
-    static basic_node mapping(mapping_type&& map)
-    {
+    static basic_node mapping(mapping_type&& map) {
         basic_node node;
         node.m_node_type = node_t::MAPPING;
         node.m_node_value.p_mapping = create_object<mapping_type>(std::move(map));
@@ -9388,10 +8342,8 @@ public:
     /// @param[in] anchor_node A basic_node object with an anchor name.
     /// @return An alias YAML node created from the given anchor node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/alias_of/
-    static basic_node alias_of(const basic_node& anchor_node)
-    {
-        if (!anchor_node.has_anchor_name() || anchor_node.m_prop.anchor_status != detail::anchor_status_t::ANCHOR)
-        {
+    static basic_node alias_of(const basic_node& anchor_node) {
+        if (!anchor_node.has_anchor_name() || anchor_node.m_prop.anchor_status != detail::anchor_status_t::ANCHOR) {
             throw fkyaml::exception("Cannot create an alias without anchor name.");
         }
 
@@ -9406,8 +8358,7 @@ public:
     /// @param[in] rhs A lvalue basic_node object to be copied with.
     /// @return Reference to this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator=/
-    basic_node& operator=(const basic_node& rhs) noexcept
-    {
+    basic_node& operator=(const basic_node& rhs) noexcept {
         basic_node(rhs).swap(*this);
         return *this;
     }
@@ -9416,8 +8367,7 @@ public:
     /// @param[in] rhs A rvalue basic_node object to be moved from.
     /// @return Reference to this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator=/
-    basic_node& operator=(basic_node&& rhs) noexcept
-    {
+    basic_node& operator=(basic_node&& rhs) noexcept {
         basic_node(std::move(rhs)).swap(*this);
         return *this;
     }
@@ -9433,19 +8383,15 @@ public:
                                   detail::negation<detail::is_basic_node<KeyType>>,
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
-    basic_node& operator[](KeyType&& key)
-    {
-        if (is_scalar())
-        {
+    basic_node& operator[](KeyType&& key) {
+        if (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", m_node_type);
         }
 
         basic_node n = std::forward<KeyType>(key);
 
-        if (is_sequence())
-        {
-            if (!n.is_integer())
-            {
+        if (is_sequence()) {
+            if (!n.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", m_node_type);
             }
@@ -9468,19 +8414,15 @@ public:
                                   detail::negation<detail::is_basic_node<KeyType>>,
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
-    const basic_node& operator[](KeyType&& key) const
-    {
-        if (is_scalar())
-        {
+    const basic_node& operator[](KeyType&& key) const {
+        if (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", m_node_type);
         }
 
         basic_node node_key = std::forward<KeyType>(key);
 
-        if (is_sequence())
-        {
-            if (!node_key.is_integer())
-            {
+        if (is_sequence()) {
+            if (!node_key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", m_node_type);
             }
@@ -9499,17 +8441,13 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-    basic_node& operator[](KeyType&& key)
-    {
-        if (is_scalar())
-        {
+    basic_node& operator[](KeyType&& key) {
+        if (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", m_node_type);
         }
 
-        if (is_sequence())
-        {
-            if (!key.is_integer())
-            {
+        if (is_sequence()) {
+            if (!key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", m_node_type);
             }
@@ -9528,17 +8466,13 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-    const basic_node& operator[](KeyType&& key) const
-    {
-        if (is_scalar())
-        {
+    const basic_node& operator[](KeyType&& key) const {
+        if (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", m_node_type);
         }
 
-        if (is_sequence())
-        {
-            if (!key.is_integer())
-            {
+        if (is_sequence()) {
+            if (!key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", m_node_type);
             }
@@ -9554,16 +8488,13 @@ public:
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true if both types and values are equal, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_eq/
-    bool operator==(const basic_node& rhs) const noexcept
-    {
-        if (m_node_type != rhs.m_node_type)
-        {
+    bool operator==(const basic_node& rhs) const noexcept {
+        if (m_node_type != rhs.m_node_type) {
             return false;
         }
 
         bool ret = false;
-        switch (m_node_type)
-        {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             ret = (*(m_node_value.p_sequence) == *(rhs.m_node_value.p_sequence));
             break;
@@ -9597,8 +8528,7 @@ public:
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true if either types or values are different, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_ne/
-    bool operator!=(const basic_node& rhs) const noexcept
-    {
+    bool operator!=(const basic_node& rhs) const noexcept {
         return !operator==(rhs);
     }
 
@@ -9606,26 +8536,21 @@ public:
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true this basic_node object is less than `rhs`.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_lt/
-    bool operator<(const basic_node& rhs) const noexcept
-    {
-        if (operator==(rhs))
-        {
+    bool operator<(const basic_node& rhs) const noexcept {
+        if (operator==(rhs)) {
             return false;
         }
 
-        if (uint32_t(m_node_type) < uint32_t(rhs.m_node_type))
-        {
+        if (uint32_t(m_node_type) < uint32_t(rhs.m_node_type)) {
             return true;
         }
 
-        if (m_node_type != rhs.m_node_type)
-        {
+        if (m_node_type != rhs.m_node_type) {
             return false;
         }
 
         bool ret = false;
-        switch (m_node_type)
-        {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             ret = (*(m_node_value.p_sequence) < *(rhs.m_node_value.p_sequence));
             break;
@@ -9657,8 +8582,7 @@ public:
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true this basic_node object is less than or equal to `rhs`.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_le/
-    bool operator<=(const basic_node& rhs) const noexcept
-    {
+    bool operator<=(const basic_node& rhs) const noexcept {
         return !rhs.operator<(*this);
     }
 
@@ -9666,8 +8590,7 @@ public:
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true this basic_node object is greater than `rhs`.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_gt/
-    bool operator>(const basic_node& rhs) const noexcept
-    {
+    bool operator>(const basic_node& rhs) const noexcept {
         return !operator<=(rhs);
     }
 
@@ -9675,8 +8598,7 @@ public:
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true this basic_node object is greater than or equal to `rhs`.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_ge/
-    bool operator>=(const basic_node& rhs) const noexcept
-    {
+    bool operator>=(const basic_node& rhs) const noexcept {
         return !operator<(rhs);
     }
 
@@ -9684,98 +8606,85 @@ public:
     /// @brief Returns the type of the current basic_node value.
     /// @return The type of the YAML node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/type/
-    node_t type() const noexcept
-    {
+    node_t type() const noexcept {
         return m_node_type;
     }
 
     /// @brief Tests whether the current basic_node value is of sequence type.
     /// @return true if the type is sequence, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_sequence/
-    bool is_sequence() const noexcept
-    {
+    bool is_sequence() const noexcept {
         return m_node_type == node_t::SEQUENCE;
     }
 
     /// @brief Tests whether the current basic_node value is of mapping type.
     /// @return true if the type is mapping, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_mapping/
-    bool is_mapping() const noexcept
-    {
+    bool is_mapping() const noexcept {
         return m_node_type == node_t::MAPPING;
     }
 
     /// @brief Tests whether the current basic_node value is of null type.
     /// @return true if the type is null, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_null/
-    bool is_null() const noexcept
-    {
+    bool is_null() const noexcept {
         return m_node_type == node_t::NULL_OBJECT;
     }
 
     /// @brief Tests whether the current basic_node value is of boolean type.
     /// @return true if the type is boolean, false otherwise
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_boolean/
-    bool is_boolean() const noexcept
-    {
+    bool is_boolean() const noexcept {
         return m_node_type == node_t::BOOLEAN;
     }
 
     /// @brief Tests whether the current basic_node value is of integer type.
     /// @return true if the type is integer, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_integer/
-    bool is_integer() const noexcept
-    {
+    bool is_integer() const noexcept {
         return m_node_type == node_t::INTEGER;
     }
 
     /// @brief Tests whether the current basic_node value is of float number type.
     /// @return true if the type is floating point number, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_float_number/
-    bool is_float_number() const noexcept
-    {
+    bool is_float_number() const noexcept {
         return m_node_type == node_t::FLOAT_NUMBER;
     }
 
     /// @brief Tests whether the current basic_node value is of string type.
     /// @return true if the type is string, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_string/
-    bool is_string() const noexcept
-    {
+    bool is_string() const noexcept {
         return m_node_type == node_t::STRING;
     }
 
     /// @brief Tests whether the current basic_node value is of scalar types.
     /// @return true if the type is scalar, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_scalar/
-    bool is_scalar() const noexcept
-    {
+    bool is_scalar() const noexcept {
         return !is_sequence() && !is_mapping();
     }
 
     /// @brief Tests whether the current basic_node is an anchor node.
     /// @return true if the current basic_node is an anchor node, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_anchor/
-    bool is_anchor() const noexcept
-    {
+    bool is_anchor() const noexcept {
         return m_prop.anchor_status == detail::anchor_status_t::ANCHOR;
     }
 
     /// @brief Tests whether the current basic_node is an alias node.
     /// @return true if the current basic_node is an alias node, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_alias/
-    bool is_alias() const noexcept
-    {
+    bool is_alias() const noexcept {
         return m_prop.anchor_status == detail::anchor_status_t::ALIAS;
     }
 
     /// @brief Tests whether the current basic_node value (sequence, mapping, string) is empty.
     /// @return true if the node value is empty, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/empty/
-    bool empty() const
-    {
-        switch (m_node_type)
-        {
+    bool empty() const {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             return m_node_value.p_sequence->empty();
@@ -9793,10 +8702,8 @@ public:
     /// @brief Returns the size of the current basic_node value (sequence, mapping, string).
     /// @return The size of a node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/size/
-    std::size_t size() const
-    {
-        switch (m_node_type)
-        {
+    std::size_t size() const {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             return m_node_value.p_sequence->size();
@@ -9822,10 +8729,8 @@ public:
                                   detail::negation<detail::is_basic_node<detail::remove_cvref_t<KeyType>>>,
                                   detail::is_node_compatible_type<basic_node, detail::remove_cvref_t<KeyType>>>::value,
                               int> = 0>
-    bool contains(KeyType&& key) const
-    {
-        switch (m_node_type)
-        {
+    bool contains(KeyType&& key) const {
+        switch (m_node_type) {
         case node_t::MAPPING: {
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
             mapping_type& map = *m_node_value.p_mapping;
@@ -9844,10 +8749,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/contains/
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-    bool contains(KeyType&& key) const
-    {
-        switch (m_node_type)
-        {
+    bool contains(KeyType&& key) const {
+        switch (m_node_type) {
         case node_t::MAPPING: {
             FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
             mapping_type& map = *m_node_value.p_mapping;
@@ -9869,27 +8772,22 @@ public:
                                   detail::negation<detail::is_basic_node<KeyType>>,
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
-    basic_node& at(KeyType&& key)
-    {
-        if (is_scalar())
-        {
+    basic_node& at(KeyType&& key) {
+        if (is_scalar()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
         }
 
         basic_node node_key = std::forward<KeyType>(key);
 
-        if (is_sequence())
-        {
-            if (!node_key.is_integer())
-            {
+        if (is_sequence()) {
+            if (!node_key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
             }
 
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             int index = node_key.template get_value<int>();
             int size = static_cast<int>(m_node_value.p_sequence->size());
-            if (index >= size)
-            {
+            if (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
             return m_node_value.p_sequence->at(index);
@@ -9897,8 +8795,7 @@ public:
 
         FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
         bool is_found = m_node_value.p_mapping->find(node_key) != m_node_value.p_mapping->end();
-        if (!is_found)
-        {
+        if (!is_found) {
             throw fkyaml::out_of_range(serialize(node_key).c_str());
         }
         return m_node_value.p_mapping->at(node_key);
@@ -9915,27 +8812,22 @@ public:
                                   detail::negation<detail::is_basic_node<KeyType>>,
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
-    const basic_node& at(KeyType&& key) const
-    {
-        if (is_scalar())
-        {
+    const basic_node& at(KeyType&& key) const {
+        if (is_scalar()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
         }
 
         basic_node node_key = std::forward<KeyType>(key);
 
-        if (is_sequence())
-        {
-            if (!node_key.is_integer())
-            {
+        if (is_sequence()) {
+            if (!node_key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
             }
 
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             int index = node_key.template get_value<int>();
             int size = static_cast<int>(m_node_value.p_sequence->size());
-            if (index >= size)
-            {
+            if (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
             return m_node_value.p_sequence->at(index);
@@ -9943,8 +8835,7 @@ public:
 
         FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
         bool is_found = m_node_value.p_mapping->find(node_key) != m_node_value.p_mapping->end();
-        if (!is_found)
-        {
+        if (!is_found) {
             throw fkyaml::out_of_range(serialize(node_key).c_str());
         }
         return m_node_value.p_mapping->at(node_key);
@@ -9957,25 +8848,20 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-    basic_node& at(KeyType&& key)
-    {
-        if (is_scalar())
-        {
+    basic_node& at(KeyType&& key) {
+        if (is_scalar()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
         }
 
-        if (is_sequence())
-        {
-            if (!key.is_integer())
-            {
+        if (is_sequence()) {
+            if (!key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
             }
 
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             int index = std::forward<KeyType>(key).template get_value<int>();
             int size = static_cast<int>(m_node_value.p_sequence->size());
-            if (index >= size)
-            {
+            if (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
             return m_node_value.p_sequence->at(index);
@@ -9983,8 +8869,7 @@ public:
 
         FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
         bool is_found = m_node_value.p_mapping->find(key) != m_node_value.p_mapping->end();
-        if (!is_found)
-        {
+        if (!is_found) {
             throw fkyaml::out_of_range(serialize(key).c_str());
         }
         return m_node_value.p_mapping->at(key);
@@ -9997,25 +8882,20 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-    const basic_node& at(KeyType&& key) const
-    {
-        if (is_scalar())
-        {
+    const basic_node& at(KeyType&& key) const {
+        if (is_scalar()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", m_node_type);
         }
 
-        if (is_sequence())
-        {
-            if (!key.is_integer())
-            {
+        if (is_sequence()) {
+            if (!key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", m_node_type);
             }
 
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             int index = std::forward<KeyType>(key).template get_value<int>();
             int size = static_cast<int>(m_node_value.p_sequence->size());
-            if (index >= size)
-            {
+            if (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
             return m_node_value.p_sequence->at(index);
@@ -10023,8 +8903,7 @@ public:
 
         FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
         bool is_found = m_node_value.p_mapping->find(key) != m_node_value.p_mapping->end();
-        if (!is_found)
-        {
+        if (!is_found) {
             throw fkyaml::out_of_range(serialize(key).c_str());
         }
         return m_node_value.p_mapping->at(key);
@@ -10033,8 +8912,7 @@ public:
     /// @brief Get the YAML version specification for this basic_node object.
     /// @return The YAML version if any is applied to the basic_node object, `yaml_version_t::VER_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
-    yaml_version_t get_yaml_version() const noexcept
-    {
+    yaml_version_t get_yaml_version() const noexcept {
         return (mp_directive_set && mp_directive_set->is_version_specified) ? mp_directive_set->version
                                                                             : yaml_version_t::VER_1_2;
     }
@@ -10043,10 +8921,8 @@ public:
     /// @note If no YAML directive
     /// @param[in] A version of the YAML format.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
-    void set_yaml_version(const yaml_version_t version) noexcept
-    {
-        if (!mp_directive_set)
-        {
+    void set_yaml_version(const yaml_version_t version) noexcept {
+        if (!mp_directive_set) {
             mp_directive_set = std::shared_ptr<detail::directive_set>(new detail::directive_set());
         }
         mp_directive_set->version = version;
@@ -10056,8 +8932,7 @@ public:
     /// @brief Check whether or not this basic_node object has already had any anchor name.
     /// @return true if ths basic_node has an anchor name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
-    bool has_anchor_name() const noexcept
-    {
+    bool has_anchor_name() const noexcept {
         return m_prop.anchor_status != detail::anchor_status_t::NONE && !m_prop.anchor.empty();
     }
 
@@ -10066,10 +8941,8 @@ public:
     /// object has any anchor name.
     /// @return The anchor name associated with the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
-    const std::string& get_anchor_name() const
-    {
-        if (!has_anchor_name())
-        {
+    const std::string& get_anchor_name() const {
+        if (!has_anchor_name()) {
             throw fkyaml::exception("No anchor name has been set.");
         }
         return m_prop.anchor;
@@ -10079,8 +8952,7 @@ public:
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
     /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
-    void add_anchor_name(const std::string& anchor_name)
-    {
+    void add_anchor_name(const std::string& anchor_name) {
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
         m_prop.anchor = anchor_name;
     }
@@ -10089,8 +8961,7 @@ public:
     /// @note If this basic_node object has already had any anchor name, the new anchor name will overwrite the old one.
     /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
-    void add_anchor_name(std::string&& anchor_name)
-    {
+    void add_anchor_name(std::string&& anchor_name) {
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
         m_prop.anchor = std::move(anchor_name);
     }
@@ -10098,8 +8969,7 @@ public:
     /// @brief Check whether or not this basic_node object has already had any tag name.
     /// @return true if ths basic_node has a tag name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
-    bool has_tag_name() const noexcept
-    {
+    bool has_tag_name() const noexcept {
         return !m_prop.tag.empty();
     }
 
@@ -10108,10 +8978,8 @@ public:
     /// object has any tag name.
     /// @return The tag name associated with the node. It may be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_tag_name/
-    const std::string& get_tag_name() const
-    {
-        if (!has_tag_name())
-        {
+    const std::string& get_tag_name() const {
+        if (!has_tag_name()) {
             throw fkyaml::exception("No tag name has been set.");
         }
         return m_prop.tag;
@@ -10121,8 +8989,7 @@ public:
     /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
     /// @param[in] tag_name A tag name to get associated with this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
-    void add_tag_name(const std::string& tag_name)
-    {
+    void add_tag_name(const std::string& tag_name) {
         m_prop.tag = tag_name;
     }
 
@@ -10130,8 +8997,7 @@ public:
     /// @note If this basic_node object has already had any tag name, the new tag name will overwrite the old one.
     /// @param[in] tag_name A tag name to get associated with this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
-    void add_tag_name(std::string&& tag_name)
-    {
+    void add_tag_name(std::string&& tag_name) {
         m_prop.tag = std::move(tag_name);
     }
 
@@ -10148,8 +9014,7 @@ public:
                 std::is_default_constructible<ValueType>, detail::has_from_node<basic_node, ValueType>>::value,
             int> = 0>
     T get_value() const noexcept(
-        noexcept(ConverterType<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>())))
-    {
+        noexcept(ConverterType<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>()))) {
         auto ret = ValueType();
         ConverterType<ValueType>::from_node(*this, ret);
         return ret;
@@ -10160,8 +9025,7 @@ public:
     /// @return Reference to the internally stored YAML node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_ref/
     template <typename ReferenceType, detail::enable_if_t<std::is_reference<ReferenceType>::value, int> = 0>
-    ReferenceType get_value_ref()
-    {
+    ReferenceType get_value_ref() {
         return get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
     }
 
@@ -10175,16 +9039,14 @@ public:
             detail::conjunction<
                 std::is_reference<ReferenceType>, std::is_const<detail::remove_reference_t<ReferenceType>>>::value,
             int> = 0>
-    ReferenceType get_value_ref() const
-    {
+    ReferenceType get_value_ref() const {
         return get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
     }
 
     /// @brief Swaps the internally stored data with the specified basic_node object.
     /// @param[in] rhs A basic_node object to be swapped with.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/swap/
-    void swap(basic_node& rhs) noexcept
-    {
+    void swap(basic_node& rhs) noexcept {
         using std::swap;
         swap(m_node_type, rhs.m_node_type);
         swap(mp_directive_set, rhs.mp_directive_set);
@@ -10203,10 +9065,8 @@ public:
     /// basic_node object. Throws exception if the basic_node value is not of container types.
     /// @return An iterator to the first element of a YAML node value (either sequence or mapping).
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
-    iterator begin()
-    {
-        switch (m_node_type)
-        {
+    iterator begin() {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             return {detail::sequence_iterator_tag(), m_node_value.p_sequence->begin()};
@@ -10222,10 +9082,8 @@ public:
     /// basic_node object. Throws exception if the basic_node value is not of container types.
     /// @return A constant iterator to the first element of a YAML node value (either sequence or mapping).
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
-    const_iterator begin() const
-    {
-        switch (m_node_type)
-        {
+    const_iterator begin() const {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             return {detail::sequence_iterator_tag(), m_node_value.p_sequence->begin()};
@@ -10241,10 +9099,8 @@ public:
     /// basic_node object. Throws exception if the basic_node value is not of container types.
     /// @return An iterator to the past-the end element of a YAML node value (either sequence or mapping).
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
-    iterator end()
-    {
-        switch (m_node_type)
-        {
+    iterator end() {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             return {detail::sequence_iterator_tag(), m_node_value.p_sequence->end()};
@@ -10260,10 +9116,8 @@ public:
     /// basic_node object. Throws exception if the basic_node value is not of container types.
     /// @return A constant iterator to the past-the end element of a YAML node value (either sequence or mapping).
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
-    const_iterator end() const
-    {
-        switch (m_node_type)
-        {
+    const_iterator end() const {
+        switch (m_node_type) {
         case node_t::SEQUENCE:
             FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
             return {detail::sequence_iterator_tag(), m_node_value.p_sequence->end()};
@@ -10279,10 +9133,8 @@ private:
     /// @brief Returns reference to the sequence node value.
     /// @throw fkyaml::exception The node value is not a sequence.
     /// @return Reference to the sequence node value.
-    sequence_type& get_value_ref_impl(sequence_type* /*unused*/)
-    {
-        if (!is_sequence())
-        {
+    sequence_type& get_value_ref_impl(sequence_type* /*unused*/) {
+        if (!is_sequence()) {
             throw fkyaml::type_error("The node value is not a sequence.", m_node_type);
         }
         return *(m_node_value.p_sequence);
@@ -10291,10 +9143,8 @@ private:
     /// @brief Returns constant reference to the sequence node value.
     /// @throw fkyaml::exception The node value is not a sequence.
     /// @return Constant reference to the sequence node value.
-    const sequence_type& get_value_ref_impl(const sequence_type* /*unused*/) const
-    {
-        if (!is_sequence())
-        {
+    const sequence_type& get_value_ref_impl(const sequence_type* /*unused*/) const {
+        if (!is_sequence()) {
             throw fkyaml::type_error("The node value is not a sequence.", m_node_type);
         }
         return *(m_node_value.p_sequence);
@@ -10303,10 +9153,8 @@ private:
     /// @brief Returns reference to the mapping node value.
     /// @throw fkyaml::exception The node value is not a mapping.
     /// @return Reference to the mapping node value.
-    mapping_type& get_value_ref_impl(mapping_type* /*unused*/)
-    {
-        if (!is_mapping())
-        {
+    mapping_type& get_value_ref_impl(mapping_type* /*unused*/) {
+        if (!is_mapping()) {
             throw fkyaml::type_error("The node value is not a mapping.", m_node_type);
         }
         return *(m_node_value.p_mapping);
@@ -10315,10 +9163,8 @@ private:
     /// @brief Returns constant reference to the mapping node value.
     /// @throw fkyaml::exception The node value is not a mapping.
     /// @return Constant reference to the mapping node value.
-    const mapping_type& get_value_ref_impl(const mapping_type* /*unused*/) const
-    {
-        if (!is_mapping())
-        {
+    const mapping_type& get_value_ref_impl(const mapping_type* /*unused*/) const {
+        if (!is_mapping()) {
             throw fkyaml::type_error("The node value is not a mapping.", m_node_type);
         }
         return *(m_node_value.p_mapping);
@@ -10327,10 +9173,8 @@ private:
     /// @brief Returns reference to the boolean node value.
     /// @throw fkyaml::exception The node value is not a boolean.
     /// @return Reference to the boolean node value.
-    boolean_type& get_value_ref_impl(boolean_type* /*unused*/)
-    {
-        if (!is_boolean())
-        {
+    boolean_type& get_value_ref_impl(boolean_type* /*unused*/) {
+        if (!is_boolean()) {
             throw fkyaml::type_error("The node value is not a boolean.", m_node_type);
         }
         return m_node_value.boolean;
@@ -10339,10 +9183,8 @@ private:
     /// @brief Returns reference to the boolean node value.
     /// @throw fkyaml::exception The node value is not a boolean.
     /// @return Constant reference to the boolean node value.
-    const boolean_type& get_value_ref_impl(const boolean_type* /*unused*/) const
-    {
-        if (!is_boolean())
-        {
+    const boolean_type& get_value_ref_impl(const boolean_type* /*unused*/) const {
+        if (!is_boolean()) {
             throw fkyaml::type_error("The node value is not a boolean.", m_node_type);
         }
         return m_node_value.boolean;
@@ -10351,10 +9193,8 @@ private:
     /// @brief Returns reference to the integer node value.
     /// @throw fkyaml::exception The node value is not an integer.
     /// @return Reference to the integer node value.
-    integer_type& get_value_ref_impl(integer_type* /*unused*/)
-    {
-        if (!is_integer())
-        {
+    integer_type& get_value_ref_impl(integer_type* /*unused*/) {
+        if (!is_integer()) {
             throw fkyaml::type_error("The node value is not an integer.", m_node_type);
         }
         return m_node_value.integer;
@@ -10363,10 +9203,8 @@ private:
     /// @brief Returns reference to the integer node value.
     /// @throw fkyaml::exception The node value is not an integer.
     /// @return Constant reference to the integer node value.
-    const integer_type& get_value_ref_impl(const integer_type* /*unused*/) const
-    {
-        if (!is_integer())
-        {
+    const integer_type& get_value_ref_impl(const integer_type* /*unused*/) const {
+        if (!is_integer()) {
             throw fkyaml::type_error("The node value is not an integer.", m_node_type);
         }
         return m_node_value.integer;
@@ -10375,10 +9213,8 @@ private:
     /// @brief Returns reference to the floating point number node value.
     /// @throw fkyaml::exception The node value is not a floating point number.
     /// @return Reference to the floating point number node value.
-    float_number_type& get_value_ref_impl(float_number_type* /*unused*/)
-    {
-        if (!is_float_number())
-        {
+    float_number_type& get_value_ref_impl(float_number_type* /*unused*/) {
+        if (!is_float_number()) {
             throw fkyaml::type_error("The node value is not a floating point number.", m_node_type);
         }
         return m_node_value.float_val;
@@ -10387,10 +9223,8 @@ private:
     /// @brief Returns reference to the floating point number node value.
     /// @throw fkyaml::exception The node value is not a floating point number.
     /// @return Constant reference to the floating point number node value.
-    const float_number_type& get_value_ref_impl(const float_number_type* /*unused*/) const
-    {
-        if (!is_float_number())
-        {
+    const float_number_type& get_value_ref_impl(const float_number_type* /*unused*/) const {
+        if (!is_float_number()) {
             throw fkyaml::type_error("The node value is not a floating point number.", m_node_type);
         }
         return m_node_value.float_val;
@@ -10399,10 +9233,8 @@ private:
     /// @brief Returns reference to the string node value.
     /// @throw fkyaml::exception The node value is not a string.
     /// @return Reference to the string node value.
-    string_type& get_value_ref_impl(string_type* /*unused*/)
-    {
-        if (!is_string())
-        {
+    string_type& get_value_ref_impl(string_type* /*unused*/) {
+        if (!is_string()) {
             throw fkyaml::type_error("The node value is not a string.", m_node_type);
         }
         return *(m_node_value.p_string);
@@ -10411,10 +9243,8 @@ private:
     /// @brief Returns reference to the string node value.
     /// @throw fkyaml::exception The node value is not a string.
     /// @return Constant reference to the string node value.
-    const string_type& get_value_ref_impl(const string_type* /*unused*/) const
-    {
-        if (!is_string())
-        {
+    const string_type& get_value_ref_impl(const string_type* /*unused*/) const {
+        if (!is_string()) {
             throw fkyaml::type_error("The node value is not a string.", m_node_type);
         }
         return *(m_node_value.p_string);
@@ -10441,8 +9271,7 @@ template <
 inline void swap(
     basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& lhs,
     basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>&
-        rhs) noexcept(noexcept(lhs.swap(rhs)))
-{
+        rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 
@@ -10458,8 +9287,7 @@ template <
 inline std::ostream& operator<<(
     std::ostream& os,
     const basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>&
-        n)
-{
+        n) {
     os << basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>::
             serialize(n);
     return os;
@@ -10477,8 +9305,7 @@ template <
     template <typename, typename = void> class ConverterType>
 inline std::istream& operator>>(
     std::istream& is,
-    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& n)
-{
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& n) {
     n = basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>::
         deserialize(is);
     return is;
@@ -10489,19 +9316,16 @@ inline std::istream& operator>>(
 using node = basic_node<>;
 
 /// @brief namespace for user-defined literals for the fkYAML library.
-inline namespace literals
-{
+inline namespace literals {
 /// @brief namespace for user-defined literals for YAML node objects.
-inline namespace yaml_literals
-{
+inline namespace yaml_literals {
 
 /// @brief The user-defined string literal which deserializes a `char` array into a `node` object.
 /// @param s An input `char` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
-inline fkyaml::node operator"" _yaml(const char* s, std::size_t n)
-{
+inline fkyaml::node operator"" _yaml(const char* s, std::size_t n) {
     return fkyaml::node::deserialize((const char*)s, (const char*)s + n);
 }
 
@@ -10510,8 +9334,7 @@ inline fkyaml::node operator"" _yaml(const char* s, std::size_t n)
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
-inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n)
-{
+inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n) {
     return fkyaml::node::deserialize((const char16_t*)s, (const char16_t*)s + n);
 }
 
@@ -10520,8 +9343,7 @@ inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n)
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
-inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
-{
+inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n) {
     return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);
 }
 
@@ -10530,8 +9352,7 @@ inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n)
 /// @param s An input `char8_t` array.
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
-inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n)
-{
+inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
     return fkyaml::node::deserialize((const char8_t*)s, (const char8_t*)s + n);
 }
 #endif

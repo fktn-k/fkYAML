@@ -11,7 +11,7 @@ Returns an error message for an exception. If nothing, a non-null, empty string 
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_exception_what.cpp"
+    --8<-- "examples/ex_exception_what.cpp:9"
     ```
 
     output:

@@ -64,7 +64,7 @@ markdown_extensions:
       alternate_style: true
   - pymdownx.tilde
   - pymdownx.snippets:
-      base_path: docs
+      base_path: ..
       check_paths: true
   - toc:
       permalink: true

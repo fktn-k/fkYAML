@@ -82,7 +82,7 @@ The resulting `basic_node` object deserialized from the pair of iterators.
 ???+ Example "Example (a character array)"
 
     ```cpp
-    --8<-- "examples/ex_basic_node_deserialize_char_array.cpp"
+    --8<-- "examples/ex_basic_node_deserialize_char_array.cpp:9"
     ```
 
     output:
@@ -93,7 +93,7 @@ The resulting `basic_node` object deserialized from the pair of iterators.
 ???+ Example "Example (a std::string object)"
 
     ```cpp
-    --8<-- "examples/ex_basic_node_deserialize_string.cpp"
+    --8<-- "examples/ex_basic_node_deserialize_string.cpp:9"
     ```
 
     output:
@@ -108,7 +108,7 @@ The resulting `basic_node` object deserialized from the pair of iterators.
     ```
 
     ```cpp
-    --8<-- "examples/ex_basic_node_deserialize_file_pointer.cpp"
+    --8<-- "examples/ex_basic_node_deserialize_file_pointer.cpp:9"
     ```
 
     output:
@@ -119,7 +119,7 @@ The resulting `basic_node` object deserialized from the pair of iterators.
 ???+ Example "Example (a pair of iterators)"
 
     ```cpp
-    --8<-- "examples/ex_basic_node_deserialize_iterators.cpp"
+    --8<-- "examples/ex_basic_node_deserialize_iterators.cpp:9"
     ```
 
     output:

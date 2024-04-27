@@ -15,7 +15,7 @@ The resulting basic_node has the [`node_t::SEQUENCE`](node_t.md) type.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_sequence.cpp"
+    --8<-- "examples/ex_basic_node_sequence.cpp:9"
     ```
 
     output:

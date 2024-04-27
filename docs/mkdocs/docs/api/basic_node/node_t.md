@@ -29,7 +29,7 @@ This enumeration collects the different YAML value types. They are internally us
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_node_t.cpp"
+    --8<-- "examples/ex_basic_node_node_t.cpp:9"
     ```
 
     output:

@@ -15,7 +15,7 @@ Tests whether the node is an alias node.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_is_alias.cpp"
+    --8<-- "examples/ex_basic_node_is_alias.cpp:9"
     ```
 
     output:

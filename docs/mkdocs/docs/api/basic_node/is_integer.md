@@ -15,7 +15,7 @@ Tests whether the node value type is [`node_t::INTEGER`](node_t.md).
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_is_integer.cpp"
+    --8<-- "examples/ex_basic_node_is_integer.cpp:9"
     ```
 
     output:

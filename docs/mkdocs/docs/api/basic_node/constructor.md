@@ -43,7 +43,7 @@ The resulting basic_node has the [`node_t::NULL_OBJECT`](node_t.md) type.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_1.cpp"
+    --8<-- "examples/ex_basic_node_constructor_1.cpp:9"
     ```
 
     output:
@@ -67,7 +67,7 @@ The resulting basic_node has a default value for the given type.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_2.cpp"
+    --8<-- "examples/ex_basic_node_constructor_2.cpp:9"
     ```
 
     output:
@@ -91,7 +91,7 @@ The resulting basic_node has the same type and value as `rhs`.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_3.cpp"
+    --8<-- "examples/ex_basic_node_constructor_3.cpp:9"
     ```
 
     output:
@@ -116,7 +116,7 @@ The value of the argument `rhs` after calling this move constructor, will be the
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_4.cpp"
+    --8<-- "examples/ex_basic_node_constructor_4.cpp:9"
     ```
 
     output:
@@ -156,7 +156,7 @@ The resulting basic_node has the value of `val` and the type which is associated
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_5.cpp"
+    --8<-- "examples/ex_basic_node_constructor_5.cpp:9"
     ```
 
     output:
@@ -194,7 +194,7 @@ The resulting basic_node has the value of the referenced basic_node by `node_ref
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_6.cpp"
+    --8<-- "examples/ex_basic_node_constructor_6.cpp:9"
     ```
 
     output:
@@ -220,7 +220,7 @@ If `init` contains a sequence of basic_node objects in which the number of basic
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_7.cpp"
+    --8<-- "examples/ex_basic_node_constructor_7.cpp:9"
     ```
 
     output:

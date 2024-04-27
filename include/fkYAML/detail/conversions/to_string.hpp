@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -21,12 +21,7 @@
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 
-/// @brief namespace for fkYAML library.
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Converts a ValueType object to a string YAML token.
 /// @tparam ValueType A source value type.
@@ -40,8 +35,7 @@ inline void to_string(ValueType v, std::basic_string<CharType>& s) noexcept;
 /// @param s A resulting string YAML token.
 /// @param (unused) nullptr
 template <>
-inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept
-{
+inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept {
     s = "null";
 }
 
@@ -49,8 +43,7 @@ inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept
 /// @param s A resulting string YAML token.
 /// @param b A boolean source value.
 template <>
-inline void to_string(bool b, std::string& s) noexcept
-{
+inline void to_string(bool b, std::string& s) noexcept {
     s = b ? "true" : "false";
 }
 
@@ -59,8 +52,7 @@ inline void to_string(bool b, std::string& s) noexcept
 /// @param s A resulting string YAML token.
 /// @param i An integer source value.
 template <typename IntegerType>
-inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept
-{
+inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept {
     s = std::to_string(i);
 }
 
@@ -69,22 +61,17 @@ inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerTy
 /// @param s A resulting string YAML token.
 /// @param f A floating point number source value.
 template <typename FloatType>
-inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept
-{
-    if (std::isnan(f))
-    {
+inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept {
+    if (std::isnan(f)) {
         s = ".nan";
         return;
     }
 
-    if (std::isinf(f))
-    {
-        if (f == std::numeric_limits<FloatType>::infinity())
-        {
+    if (std::isinf(f)) {
+        if (f == std::numeric_limits<FloatType>::infinity()) {
             s = ".inf";
         }
-        else
-        {
+        else {
             s = "-.inf";
         }
         return;
@@ -95,8 +82,6 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
     s = oss.str();
 }
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* TO__string_HPP_ */

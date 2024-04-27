@@ -29,7 +29,7 @@ A pair consisting of an iterator to the inserted element, or the already-existin
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_ordered_map_constructor_initializer_list.cpp"
+    --8<-- "examples/ex_ordered_map_constructor_initializer_list.cpp:9"
     ```
 
     output:

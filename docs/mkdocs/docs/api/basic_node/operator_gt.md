@@ -22,7 +22,7 @@ The operator returns the result of `!(*this <= rhs)`. (see [`operator<=`](operat
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_operator_gt.cpp"
+    --8<-- "examples/ex_basic_node_operator_gt.cpp:9"
     ```
 
     output:

@@ -15,7 +15,7 @@ Note that string objects are stored as pointers to the decided type in a [`basic
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_string_type.cpp"
+    --8<-- "examples/ex_basic_node_string_type.cpp:9"
     ```
 
     output:

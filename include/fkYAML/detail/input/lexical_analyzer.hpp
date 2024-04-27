@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -23,7 +23,7 @@
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/from_string.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
-#include <fkYAML/detail/encodings/utf8_encoding.hpp>
+#include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/input/position_tracker.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
@@ -32,35 +32,21 @@
 #include <fkYAML/detail/types/lexical_token_t.hpp>
 #include <fkYAML/exception.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
-FK_YAML_NAMESPACE_BEGIN
-
-/**
- * @namespace detail
- * @brief namespace for internal implementations of fkYAML library.
- */
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A class which lexically analizes YAML formatted inputs.
 /// @tparam BasicNodeType A type of the container for YAML values.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-class lexical_analyzer
-{
+class lexical_analyzer {
 private:
     using char_traits_type = typename std::char_traits<char>;
 
-    enum class block_style_indicator_t
-    {
+    enum class block_style_indicator_t {
         LITERAL, //!< keeps newlines inside the block as they are indicated by a pipe `|`.
         FOLDED,  //!< replaces newlines inside the block with spaces indicated by a right angle bracket `>`.
     };
 
-    enum class chomping_indicator_t
-    {
+    enum class chomping_indicator_t {
         STRIP, //!< excludes final line breaks and traiing empty lines indicated by `-`.
         KEEP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
         CLIP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
@@ -76,8 +62,7 @@ public:
     /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    explicit lexical_analyzer(InputAdapterType&& input_adapter)
-    {
+    explicit lexical_analyzer(InputAdapterType&& input_adapter) {
         std::forward<InputAdapterType>(input_adapter).fill_buffer(m_input_buffer);
         m_cur_itr = m_token_begin_itr = m_input_buffer.cbegin();
         m_end_itr = m_input_buffer.cend();
@@ -86,8 +71,7 @@ public:
 
     /// @brief Get the next lexical token type by scanning the left of the input buffer.
     /// @return lexical_token_t The next lexical token type.
-    lexical_token_t get_next_token()
-    {
+    lexical_token_t get_next_token() {
         skip_white_spaces_and_newline_codes();
 
         m_token_begin_itr = m_cur_itr;
@@ -95,35 +79,29 @@ public:
         m_last_token_begin_pos = m_pos_tracker.get_cur_pos_in_line();
         m_last_token_begin_line = m_pos_tracker.get_lines_read();
 
-        if (m_cur_itr == m_end_itr)
-        {
+        if (m_cur_itr == m_end_itr) {
             return m_last_token_type = lexical_token_t::END_OF_BUFFER;
         }
 
-        switch (char current = *m_cur_itr)
-        {
+        switch (char current = *m_cur_itr) {
         case '?':
-            if (++m_cur_itr == m_end_itr)
-            {
+            if (++m_cur_itr == m_end_itr) {
                 m_value_buffer = "?";
                 return m_last_token_type = lexical_token_t::STRING_VALUE;
             }
 
-            switch (*m_cur_itr)
-            {
+            switch (*m_cur_itr) {
             case ' ':
                 return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
                 return m_last_token_type = scan_scalar();
             }
         case ':': { // key separater
-            if (++m_cur_itr == m_end_itr)
-            {
+            if (++m_cur_itr == m_end_itr) {
                 return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
             }
 
-            switch (*m_cur_itr)
-            {
+            switch (*m_cur_itr) {
             case ' ':
             case '\t':
             case '\r':
@@ -134,8 +112,7 @@ public:
             case ']':
             case '{':
             case '}':
-                if (m_flow_context_depth > 0)
-                {
+                if (m_flow_context_depth > 0) {
                     // the above characters are not "safe" to be followed in a flow context.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
@@ -153,8 +130,7 @@ public:
         case '&': { // anchor prefix
             extract_anchor_name();
             bool is_empty = m_value_buffer.empty();
-            if (is_empty)
-            {
+            if (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
             return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
@@ -162,8 +138,7 @@ public:
         case '*': { // alias prefix
             extract_anchor_name();
             bool is_empty = m_value_buffer.empty();
-            if (is_empty)
-            {
+            if (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
 
@@ -179,19 +154,16 @@ public:
             return m_last_token_type = scan_directive();
         case '-': {
             char next = *(m_cur_itr + 1);
-            if (next == ' ')
-            {
+            if (next == ' ') {
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
                 return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
             }
 
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
-            if (is_available)
-            {
+            if (is_available) {
                 m_cur_itr += 3;
-                if (std::equal(m_token_begin_itr, m_cur_itr, "---"))
-                {
+                if (std::equal(m_token_begin_itr, m_cur_itr, "---")) {
                     return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
                 }
             }
@@ -203,8 +175,7 @@ public:
             ++m_cur_itr;
             return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
-            if (m_flow_context_depth == 0)
-            {
+            if (m_flow_context_depth == 0) {
                 emit_error("An invalid flow sequence ending.");
             }
             m_flow_context_depth--;
@@ -215,8 +186,7 @@ public:
             ++m_cur_itr;
             return m_last_token_type = lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
-            if (m_flow_context_depth == 0)
-            {
+            if (m_flow_context_depth == 0) {
                 emit_error("An invalid flow mapping ending.");
             }
             m_flow_context_depth--;
@@ -233,10 +203,8 @@ public:
             return m_last_token_type = scan_scalar();
         case '.': {
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
-            if (is_available)
-            {
-                if (std::equal(m_cur_itr, m_cur_itr + 3, "..."))
-                {
+            if (is_available) {
+                if (std::equal(m_cur_itr, m_cur_itr + 3, "...")) {
                     m_cur_itr += 3;
                     return m_last_token_type = lexical_token_t::END_OF_DOCUMENT;
                 }
@@ -265,39 +233,33 @@ public:
 
     /// @brief Get the beginning position of a last token.
     /// @return std::size_t The beginning position of a last token.
-    std::size_t get_last_token_begin_pos() const noexcept
-    {
+    std::size_t get_last_token_begin_pos() const noexcept {
         return m_last_token_begin_pos;
     }
 
     /// @brief Get the number of lines already processed.
     /// @return std::size_t The number of lines already processed.
-    std::size_t get_lines_processed() const noexcept
-    {
+    std::size_t get_lines_processed() const noexcept {
         return m_last_token_begin_line;
     }
 
     /// @brief Convert from string to null and get the converted value.
     /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
-    std::nullptr_t get_null() const
-    {
+    std::nullptr_t get_null() const {
         return from_string(m_value_buffer, type_tag<std::nullptr_t> {});
     }
 
     /// @brief Convert from string to boolean and get the converted value.
     /// @return true  A string token is one of the followings: "true", "True", "TRUE".
     /// @return false A string token is one of the followings: "false", "False", "FALSE".
-    boolean_type get_boolean() const
-    {
+    boolean_type get_boolean() const {
         return from_string(m_value_buffer, type_tag<bool> {});
     }
 
     /// @brief Convert from string to integer and get the converted value.
     /// @return integer_type An integer value converted from the source string.
-    integer_type get_integer() const
-    {
-        if (m_value_buffer.size() > 2 && m_value_buffer.rfind("0o", 0) != std::string::npos)
-        {
+    integer_type get_integer() const {
+        if (m_value_buffer.size() > 2 && m_value_buffer.rfind("0o", 0) != std::string::npos) {
             // Replace the prefix "0o" with "0" since STL functions can detect octal chars.
             // Note that the YAML specifies octal values start with the prefix "0o", not "0".
             // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
@@ -308,15 +270,13 @@ public:
 
     /// @brief Convert from string to float number and get the converted value.
     /// @return float_number_type A float number value converted from the source string.
-    float_number_type get_float_number() const
-    {
+    float_number_type get_float_number() const {
         return from_string(m_value_buffer, type_tag<float_number_type> {});
     }
 
     /// @brief Get a scanned string value.
     /// @return const string_type& Constant reference to a scanned string.
-    const string_type& get_string() const noexcept
-    {
+    const string_type& get_string() const noexcept {
         // TODO: Provide support for different string types between nodes & inputs.
         static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
         return m_value_buffer;
@@ -324,8 +284,7 @@ public:
 
     /// @brief Get the YAML version specification.
     /// @return const string_type& A YAML version specification.
-    const string_type& get_yaml_version() const
-    {
+    const string_type& get_yaml_version() const {
         FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
         FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
 
@@ -334,16 +293,14 @@ public:
 
     /// @brief Get the YAML tag handle defined in the TAG directive.
     /// @return const std::string& A tag handle.
-    const std::string& get_tag_handle() const
-    {
+    const std::string& get_tag_handle() const {
         FK_YAML_ASSERT(!m_tag_handle.empty());
         return m_tag_handle;
     }
 
     /// @brief Get the YAML tag prefix defined in the TAG directive.
     /// @return const std::string A tag prefix.
-    const std::string& get_tag_prefix() const
-    {
+    const std::string& get_tag_prefix() const {
         FK_YAML_ASSERT(!m_tag_prefix.empty());
         return m_tag_prefix;
     }
@@ -352,22 +309,18 @@ private:
     /// @brief A utility function to convert a hexadecimal character to an integer.
     /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
     /// @return char A integer converted from @a source.
-    char convert_hex_char_to_byte(char source) const
-    {
-        if ('0' <= source && source <= '9')
-        {
+    char convert_hex_char_to_byte(char source) const {
+        if ('0' <= source && source <= '9') {
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
             return static_cast<char>(source - '0');
         }
 
-        if ('A' <= source && source <= 'F')
-        {
+        if ('A' <= source && source <= 'F') {
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
             return static_cast<char>(source - 'A' + 10);
         }
 
-        if ('a' <= source && source <= 'f')
-        {
+        if ('a' <= source && source <= 'f') {
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
             return static_cast<char>(source - 'a' + 10);
         }
@@ -376,8 +329,7 @@ private:
     }
 
     /// @brief Skip until a newline code or a null character is found.
-    void scan_comment()
-    {
+    void scan_comment() {
         FK_YAML_ASSERT(*m_cur_itr == '#');
         skip_until_line_end();
     }
@@ -385,18 +337,15 @@ private:
     /// @brief Scan directives starting with the prefix '%'
     /// @note Currently, only %YAML directive is supported. If not, returns invalid or throws an exception.
     /// @return lexical_token_t The lexical token type for directives.
-    lexical_token_t scan_directive()
-    {
+    lexical_token_t scan_directive() {
         FK_YAML_ASSERT(*m_cur_itr == '%');
 
         m_value_buffer.clear();
         m_token_begin_itr = ++m_cur_itr;
 
         bool ends_loop = false;
-        while (!ends_loop && m_cur_itr != m_end_itr)
-        {
-            switch (*m_cur_itr)
-            {
+        while (!ends_loop && m_cur_itr != m_end_itr) {
+            switch (*m_cur_itr) {
             case ' ':
             case '\t':
                 ends_loop = true;
@@ -413,20 +362,16 @@ private:
 
         m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
 
-        if (m_value_buffer == "TAG")
-        {
-            if (!ends_loop)
-            {
+        if (m_value_buffer == "TAG") {
+            if (!ends_loop) {
                 emit_error("There must be at least one white space between \"%TAG\" and tag info.");
             }
             skip_white_spaces();
             return scan_tag_directive();
         }
 
-        if (m_value_buffer == "YAML")
-        {
-            if (!ends_loop)
-            {
+        if (m_value_buffer == "YAML") {
+            if (!ends_loop) {
                 emit_error("There must be at least one white space between \"%YAML\" and tag info.");
             }
             skip_white_spaces();
@@ -439,8 +384,7 @@ private:
 
     /// @brief Scan a YAML tag directive.
     /// @return lexical_token_t The lexical token type for YAML tag directives.
-    lexical_token_t scan_tag_directive()
-    {
+    lexical_token_t scan_tag_directive() {
         m_tag_handle.clear();
         m_tag_prefix.clear();
         m_token_begin_itr = m_cur_itr;
@@ -449,50 +393,41 @@ private:
         // extract a tag handle
         //
 
-        if (*m_cur_itr != '!')
-        {
+        if (*m_cur_itr != '!') {
             emit_error("Tag handle must start with \'!\'.");
         }
 
-        if (++m_cur_itr == m_end_itr)
-        {
+        if (++m_cur_itr == m_end_itr) {
             emit_error("invalid TAG directive is found.");
         }
 
-        switch (*m_cur_itr)
-        {
+        switch (*m_cur_itr) {
         case ' ':
         case '\t':
             // primary handle (!)
             break;
         case '!':
-            if (++m_cur_itr == m_end_itr)
-            {
+            if (++m_cur_itr == m_end_itr) {
                 emit_error("invalid TAG directive is found.");
             }
-            if (*m_cur_itr != ' ' && *m_cur_itr != '\t')
-            {
+            if (*m_cur_itr != ' ' && *m_cur_itr != '\t') {
                 emit_error("invalid tag handle is found.");
             }
             break;
         default: {
             bool ends_loop = false;
-            do
-            {
-                switch (*m_cur_itr)
-                {
+            do {
+                switch (*m_cur_itr) {
                 case ' ':
                 case '\t':
                     emit_error("invalid tag handle is found.");
                 case '!': {
-                    if (m_cur_itr + 1 == m_end_itr)
-                    {
+                    if (m_cur_itr + 1 == m_end_itr) {
                         ends_loop = true;
                         break;
                     }
                     char next = *(m_cur_itr + 1);
-                    if (next != ' ' && next != '\t')
-                    {
+                    if (next != ' ' && next != '\t') {
                         emit_error("invalid tag handle is found.");
                     }
                     ends_loop = true;
@@ -501,16 +436,14 @@ private:
                 case '-':
                     break;
                 default:
-                    if (!isalnum(*m_cur_itr))
-                    {
+                    if (!isalnum(*m_cur_itr)) {
                         // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
                         emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
                     }
                     break;
                 }
 
-                if (++m_cur_itr == m_end_itr)
-                {
+                if (++m_cur_itr == m_end_itr) {
                     emit_error("invalid TAG directive is found.");
                 }
             } while (!ends_loop);
@@ -527,8 +460,7 @@ private:
         //
 
         m_token_begin_itr = m_cur_itr;
-        switch (*m_cur_itr)
-        {
+        switch (*m_cur_itr) {
         // a tag prefix must not start with flow indicators to avoid ambiguity.
         // See https://yaml.org/spec/1.2.2/#rule-ns-global-tag-prefix for more details.
         case ',':
@@ -541,10 +473,8 @@ private:
 
         // extract the rest of a tag prefix.
         bool ends_loop = false;
-        do
-        {
-            switch (*m_cur_itr)
-            {
+        do {
+            switch (*m_cur_itr) {
             case ' ':
             case '\t':
             case '\r':
@@ -557,8 +487,7 @@ private:
         m_tag_prefix.assign(m_token_begin_itr, m_cur_itr);
 
         bool is_valid = uri_encoding::validate(m_tag_prefix.begin(), m_tag_prefix.end());
-        if (!is_valid)
-        {
+        if (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
 
@@ -568,16 +497,13 @@ private:
     /// @brief Scan a YAML version directive.
     /// @note Only 1.1 and 1.2 are supported. If not, throws an exception.
     /// @return lexical_token_t The lexical token type for YAML version directives.
-    lexical_token_t scan_yaml_version_directive()
-    {
+    lexical_token_t scan_yaml_version_directive() {
         m_value_buffer.clear();
         m_token_begin_itr = m_cur_itr;
 
         bool ends_loop = false;
-        while (!ends_loop && m_cur_itr != m_end_itr)
-        {
-            switch (*m_cur_itr)
-            {
+        while (!ends_loop && m_cur_itr != m_end_itr) {
+            switch (*m_cur_itr) {
             case ' ':
             case '\t':
             case '\r':
@@ -592,8 +518,7 @@ private:
 
         m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
 
-        if (m_value_buffer != "1.1" && m_value_buffer != "1.2")
-        {
+        if (m_value_buffer != "1.1" && m_value_buffer != "1.2") {
             emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
         }
 
@@ -601,18 +526,15 @@ private:
     }
 
     /// @brief Extracts an anchor name from the input and assigns the result to `m_value_buffer`.
-    void extract_anchor_name()
-    {
+    void extract_anchor_name() {
         FK_YAML_ASSERT(*m_cur_itr == '&' || *m_cur_itr == '*');
 
         m_value_buffer.clear();
         m_token_begin_itr = ++m_cur_itr;
 
         bool ends_loop = false;
-        for (; m_cur_itr != m_end_itr; ++m_cur_itr)
-        {
-            switch (*m_cur_itr)
-            {
+        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
+            switch (*m_cur_itr) {
             // anchor name must not contain white spaces, newline codes and flow indicators.
             // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
             case ' ':
@@ -628,14 +550,12 @@ private:
                 break;
             case ':': {
                 auto next_itr = m_cur_itr + 1;
-                if (next_itr == m_end_itr)
-                {
+                if (next_itr == m_end_itr) {
                     ++m_cur_itr;
                     ends_loop = true;
                     break;
                 }
-                switch (*next_itr)
-                {
+                switch (*next_itr) {
                 case ' ':
                 case '\t':
                 case '\r':
@@ -650,8 +570,7 @@ private:
                 break;
             }
 
-            if (ends_loop)
-            {
+            if (ends_loop) {
                 break;
             }
         }
@@ -660,14 +579,12 @@ private:
     }
 
     /// @brief Extracts a tag name from the input and assigns the result to `m_value_buffer`.
-    void extract_tag_name()
-    {
+    void extract_tag_name() {
         m_value_buffer.clear();
 
         FK_YAML_ASSERT(*m_cur_itr == '!');
 
-        if (++m_cur_itr == m_end_itr)
-        {
+        if (++m_cur_itr == m_end_itr) {
             // Just "!" is a non-specific tag.
             m_value_buffer = "!";
             return;
@@ -676,8 +593,7 @@ private:
         bool is_verbatim = false;
         bool allows_another_tag_prefix = false;
 
-        switch (*m_cur_itr)
-        {
+        switch (*m_cur_itr) {
         case ' ':
         case '\r':
         case '\n':
@@ -700,15 +616,12 @@ private:
 
         bool is_named_handle = false;
         bool ends_loop = false;
-        do
-        {
-            if (++m_cur_itr == m_end_itr)
-            {
+        do {
+            if (++m_cur_itr == m_end_itr) {
                 break;
             }
 
-            switch (*m_cur_itr)
-            {
+            switch (*m_cur_itr) {
             // Tag names must not contain spaces or newline codes.
             case ' ':
             case '\t':
@@ -717,8 +630,7 @@ private:
                 ends_loop = true;
                 break;
             case '!':
-                if (!allows_another_tag_prefix)
-                {
+                if (!allows_another_tag_prefix) {
                     emit_error("invalid tag prefix (!) is found.");
                 }
 
@@ -733,35 +645,29 @@ private:
 
         m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
 
-        if (is_verbatim)
-        {
+        if (is_verbatim) {
             char last = m_value_buffer.back();
-            if (last != '>')
-            {
+            if (last != '>') {
                 emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
             }
 
             auto tag_begin = m_value_buffer.begin() + 2;
             auto tag_end = m_value_buffer.end() - 1;
-            if (tag_begin == tag_end)
-            {
+            if (tag_begin == tag_end) {
                 emit_error("verbatim tag(!<TAG>) must not be empty.");
             }
 
             bool is_valid_uri = uri_encoding::validate(tag_begin, tag_end);
-            if (!is_valid_uri)
-            {
+            if (!is_valid_uri) {
                 emit_error("invalid URI character is found in a verbatim tag.");
             }
 
             return;
         }
 
-        if (is_named_handle)
-        {
+        if (is_named_handle) {
             char last = m_value_buffer.back();
-            if (last == '!')
-            {
+            if (last == '!') {
                 // Tag shorthand must be followed by a non-empty suffix.
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
                 emit_error("named handle has no suffix.");
@@ -770,8 +676,7 @@ private:
             std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
             bool is_valid_uri =
                 uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
-            if (!is_valid_uri)
-            {
+            if (!is_valid_uri) {
                 emit_error("Invalid URI character is found in a named tag handle.");
             }
         }
@@ -779,18 +684,15 @@ private:
 
     /// @brief Scan a string token, either plain, single-quoted or double-quoted.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_scalar()
-    {
+    lexical_token_t scan_scalar() {
         m_value_buffer.clear();
 
         bool needs_last_single_quote = false;
         bool needs_last_double_quote = false;
-        if (m_cur_itr == m_token_begin_itr)
-        {
+        if (m_cur_itr == m_token_begin_itr) {
             needs_last_single_quote = (*m_cur_itr == '\'');
             needs_last_double_quote = (*m_cur_itr == '\"');
-            if (needs_last_double_quote || needs_last_single_quote)
-            {
+            if (needs_last_double_quote || needs_last_single_quote) {
                 m_token_begin_itr = ++m_cur_itr;
             }
         }
@@ -798,8 +700,7 @@ private:
         lexical_token_t type = extract_string_token(needs_last_single_quote, needs_last_double_quote);
         FK_YAML_ASSERT(type == lexical_token_t::STRING_VALUE);
 
-        if (needs_last_single_quote || needs_last_double_quote)
-        {
+        if (needs_last_single_quote || needs_last_double_quote) {
             // just returned the extracted string value if quoted.
             return type;
         }
@@ -810,12 +711,10 @@ private:
     /// @brief Check if the given character is allowed in a single-quoted scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_single(char c)
-    {
+    bool is_allowed_single(char c) {
         bool ret = false;
 
-        switch (c)
-        {
+        switch (c) {
         case '\r':
         case '\n':
             // TODO: Support multi-line string scalars.
@@ -824,15 +723,13 @@ private:
         case '\'':
             // If single quotation marks are repeated twice in a single-quoted string token,
             // they are considered as an escaped single quotation mark.
-            if (m_cur_itr + 1 == m_end_itr)
-            {
+            if (m_cur_itr + 1 == m_end_itr) {
                 m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                 m_token_begin_itr = m_cur_itr;
                 break;
             }
 
-            if (*(m_cur_itr + 1) != '\'')
-            {
+            if (*(m_cur_itr + 1) != '\'') {
                 m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                 break;
             }
@@ -852,12 +749,10 @@ private:
     /// @brief Check if the given character is allowed in a double-quoted scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_double(char c)
-    {
+    bool is_allowed_double(char c) {
         bool ret = false;
 
-        switch (c)
-        {
+        switch (c) {
         case '\r':
         case '\n':
             // TODO: Support multi-line string scalars.
@@ -873,8 +768,7 @@ private:
             // Handle escaped characters.
             // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
             c = *++m_cur_itr;
-            switch (c)
-            {
+            switch (c) {
             case 'a':
                 m_value_buffer.push_back('\a');
                 break;
@@ -912,20 +806,20 @@ private:
                 m_value_buffer.push_back('\\');
                 break;
             case 'N': // next line
-                utf8_encoding::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case '_': // non-breaking space
-                utf8_encoding::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case 'L': // line separator
-                utf8_encoding::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case 'P': // paragraph separator
-                utf8_encoding::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+                utf8::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
+                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
                 break;
             case 'x':
                 handle_escaped_unicode(1);
@@ -951,12 +845,10 @@ private:
     /// @brief Check if the given character is allowed in a plain scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_plain(char c)
-    {
+    bool is_allowed_plain(char c) {
         bool ret = false;
 
-        switch (c)
-        {
+        switch (c) {
         case '\r':
         case '\n':
             m_value_buffer.append(m_token_begin_itr, m_cur_itr);
@@ -970,10 +862,8 @@ private:
 
             // These characters are permitted when not inside a flow collection, and not inside an implicit key.
             // TODO: Support detection of implicit key context for this check.
-            if (m_flow_context_depth > 0)
-            {
-                switch (next)
-                {
+            if (m_flow_context_depth > 0) {
+                switch (next) {
                 case '{':
                 case '}':
                 case '[':
@@ -984,30 +874,25 @@ private:
                     break;
                 }
 
-                if (is_appended)
-                {
+                if (is_appended) {
                     break;
                 }
             }
 
             // " :" is permitted in a plain style string token, but not when followed by a space.
-            if (next == ':')
-            {
+            if (next == ':') {
                 char peeked = *(m_cur_itr + 2);
-                if (peeked == ' ')
-                {
+                if (peeked == ' ') {
                     m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
                     is_appended = true;
                 }
 
-                if (is_appended)
-                {
+                if (is_appended) {
                     break;
                 }
             }
 
-            switch (next)
-            {
+            switch (next) {
             case ' ':
             case '\r':
             case '\n':
@@ -1028,8 +913,7 @@ private:
             // A colon as a key separator must be followed by
             // * a white space or
             // * a newline code.
-            switch (next)
-            {
+            switch (next) {
             case ' ':
             case '\t':
             case '\r':
@@ -1049,8 +933,7 @@ private:
         case ']':
         case ',':
             // just regard the flow indicators as a normal character if plain but not inside a flow context.
-            if (m_flow_context_depth == 0)
-            {
+            if (m_flow_context_depth == 0) {
                 ret = true;
                 break;
             }
@@ -1067,8 +950,7 @@ private:
 
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote)
-    {
+    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
         // change behaviors depending on the type of a comming string scalar token.
         // * single quoted
         // * double quoted
@@ -1077,13 +959,11 @@ private:
         std::string check_filters {"\r\n\\"};
         bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
 
-        if (needs_last_single_quote)
-        {
+        if (needs_last_single_quote) {
             check_filters.append("\'");
             pfn_is_allowed = &lexical_analyzer::is_allowed_single;
         }
-        else if (needs_last_double_quote)
-        {
+        else if (needs_last_double_quote) {
             check_filters.append("\"");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
@@ -1095,68 +975,45 @@ private:
 
         // scan the contents of a string scalar token.
 
-        for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr)
-        {
+        for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr) {
             char current = *m_cur_itr;
+            uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
+            if (num_bytes == 1) {
+                auto ret = check_filters.find(current);
+                if (ret != std::string::npos) {
+                    bool is_allowed = (this->*pfn_is_allowed)(current);
+                    if (!is_allowed) {
+                        return lexical_token_t::STRING_VALUE;
+                    }
 
-            auto ret = check_filters.find(current);
-            if (ret != std::string::npos)
-            {
-                bool is_allowed = (this->*pfn_is_allowed)(current);
-                if (!is_allowed)
-                {
-                    return lexical_token_t::STRING_VALUE;
+                    continue;
+                }
+
+                uint8_t byte = static_cast<uint8_t>(current);
+
+                // Handle unescaped control characters.
+                if (byte <= 0x1F) {
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+                    handle_unescaped_control_char(current);
+                    m_token_begin_itr = m_cur_itr + 1;
+                    continue;
                 }
 
                 continue;
             }
 
-            uint8_t byte = static_cast<uint8_t>(current);
-
-            // Handle unescaped control characters.
-            if (byte <= 0x1F)
-            {
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-                handle_unescaped_control_char(current);
-                m_token_begin_itr = m_cur_itr + 1;
-                continue;
-            }
-
-            // The other characters are already checked while creating an input handler.
-
-            // Handle ASCII characters except control characters.
-            if (byte <= 0x7E)
-            {
-                continue;
-            }
-
-            // Handle 2-byte characters encoded in UTF-8. (U+0080..U+07FF)
-            if (byte <= 0xDF)
-            {
-                ++m_cur_itr;
-                continue;
-            }
-
-            // Handle 3-byte characters encoded in UTF-8. (U+1000..U+D7FF,U+E000..U+FFFF)
-            if (byte <= 0xEF)
-            {
-                m_cur_itr += 2;
-                continue;
-            }
-
-            // Handle 4-byte characters encoded in UTF-8. (U+10000..U+FFFFF,U+100000..U+10FFFF)
-            m_cur_itr += 3;
+            // Multi-byte characters are already validated while creating an input handler.
+            // So just advance the iterator.
+            m_cur_itr += num_bytes - 1;
         }
 
         // Handle the end of input buffer.
 
-        if (needs_last_double_quote)
-        {
+        if (needs_last_double_quote) {
             emit_error("Invalid end of input buffer in a double-quoted string token.");
         }
 
-        if (needs_last_single_quote)
-        {
+        if (needs_last_single_quote) {
             emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
@@ -1170,26 +1027,21 @@ private:
     /// @param indent The indent size specified for the given token.
     /// @return The lexical token type for strings.
     lexical_token_t scan_block_style_string_token(
-        block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent)
-    {
+        block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent) {
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
-        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr)
-        {
+        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
             current = *m_cur_itr;
 
-            if (current == ' ')
-            {
+            if (current == ' ') {
                 continue;
             }
 
-            if (current == '\r')
-            {
+            if (current == '\r') {
                 current = *++m_cur_itr;
             }
-            if (current == '\n')
-            {
+            if (current == '\n') {
                 m_value_buffer.push_back('\n');
                 continue;
             }
@@ -1197,10 +1049,8 @@ private:
             break;
         }
 
-        if (m_cur_itr == m_end_itr)
-        {
-            if (chomp != chomping_indicator_t::KEEP)
-            {
+        if (m_cur_itr == m_end_itr) {
+            if (chomp != chomping_indicator_t::KEEP) {
                 m_value_buffer.clear();
             }
             return lexical_token_t::STRING_VALUE;
@@ -1210,22 +1060,18 @@ private:
         std::size_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
 
         // TODO: preserve and compare the last indentation with `cur_indent`
-        if (indent == 0)
-        {
+        if (indent == 0) {
             indent = cur_indent;
         }
-        else if (cur_indent < indent)
-        {
+        else if (cur_indent < indent) {
             emit_error("A block style scalar is less indented than the indicated level.");
         }
 
         int chars_in_line = 0;
         bool is_extra_indented = false;
-        if (cur_indent > indent)
-        {
+        if (cur_indent > indent) {
             std::size_t diff = cur_indent - indent;
-            if (style == block_style_indicator_t::FOLDED)
-            {
+            if (style == block_style_indicator_t::FOLDED) {
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
             }
@@ -1233,34 +1079,28 @@ private:
             chars_in_line += static_cast<int>(diff);
         }
 
-        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr)
-        {
+        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
             current = *m_cur_itr;
 
-            if (current == '\r')
-            {
+            if (current == '\r') {
                 // Ignore CR assuming the next character is LF.
                 continue;
             }
 
-            if (current == '\n')
-            {
-                if (style == block_style_indicator_t::LITERAL)
-                {
+            if (current == '\n') {
+                if (style == block_style_indicator_t::LITERAL) {
                     m_value_buffer.push_back(current);
                 }
                 else // block_style_indicator_t::FOLDED
                 {
-                    if (chars_in_line == 0)
-                    {
+                    if (chars_in_line == 0) {
                         // Just append a newline if the current line is empty.
                         m_value_buffer.push_back('\n');
                         is_extra_indented = false;
                         continue;
                     }
 
-                    if (is_extra_indented)
-                    {
+                    if (is_extra_indented) {
                         // A line being more indented is not folded.
                         m_value_buffer.push_back('\n');
                         chars_in_line = 0;
@@ -1271,26 +1111,21 @@ private:
                     // Append a newline if the next line is empty.
                     bool is_end_of_token = false;
                     bool is_next_empty = false;
-                    for (std::size_t i = 0; i < indent; i++)
-                    {
-                        if (++m_cur_itr == m_end_itr)
-                        {
+                    for (std::size_t i = 0; i < indent; i++) {
+                        if (++m_cur_itr == m_end_itr) {
                             is_end_of_token = true;
                             break;
                         }
 
                         current = *m_cur_itr;
-                        if (current == ' ')
-                        {
+                        if (current == ' ') {
                             continue;
                         }
 
-                        if (current == '\r')
-                        {
+                        if (current == '\r') {
                             current = *++m_cur_itr;
                         }
-                        if (current == '\n')
-                        {
+                        if (current == '\n') {
                             is_next_empty = true;
                             break;
                         }
@@ -1299,20 +1134,17 @@ private:
                         break;
                     }
 
-                    if (is_end_of_token)
-                    {
+                    if (is_end_of_token) {
                         m_value_buffer.push_back('\n');
                         break;
                     }
 
-                    if (is_next_empty)
-                    {
+                    if (is_next_empty) {
                         m_value_buffer.push_back('\n');
                         continue;
                     }
 
-                    switch (char next = *(m_cur_itr + 1))
-                    {
+                    switch (char next = *(m_cur_itr + 1)) {
                     case '\r': {
                         ++m_cur_itr;
                         next = *++m_cur_itr;
@@ -1343,10 +1175,8 @@ private:
             // Handle indentation
             m_pos_tracker.update_position(m_cur_itr);
             cur_indent = m_pos_tracker.get_cur_pos_in_line();
-            if (cur_indent < indent)
-            {
-                if (current != ' ')
-                {
+            if (cur_indent < indent) {
+                if (current != ' ') {
                     // Interpret less indented non-space characters as the start of the next token.
                     break;
                 }
@@ -1354,8 +1184,7 @@ private:
                 continue;
             }
 
-            if (style == block_style_indicator_t::FOLDED && chars_in_line == 0 && current == ' ')
-            {
+            if (style == block_style_indicator_t::FOLDED && chars_in_line == 0 && current == ' ') {
                 // A line being more indented is not folded.
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
@@ -1365,15 +1194,12 @@ private:
         }
 
         // Manipulate the trailing line endings chomping indicator type.
-        switch (chomp)
-        {
+        switch (chomp) {
         case chomping_indicator_t::STRIP:
-            while (!m_value_buffer.empty())
-            {
+            while (!m_value_buffer.empty()) {
                 // Empty strings are handled above, so no check for the case.
                 char last = m_value_buffer.back();
-                if (last != '\n')
-                {
+                if (last != '\n') {
                     break;
                 }
                 m_value_buffer.pop_back();
@@ -1381,17 +1207,14 @@ private:
             break;
         case chomping_indicator_t::CLIP: {
             char last = m_value_buffer.back();
-            if (last != '\n')
-            {
+            if (last != '\n') {
                 // No need to chomp the trailing newlines.
                 break;
             }
-            while (m_value_buffer.size() > 1)
-            {
+            while (m_value_buffer.size() > 1) {
                 // Strings with only newlines are handled above, so no check for the case.
                 char second_last = *(m_value_buffer.end() - 2);
-                if (second_last != '\n')
-                {
+                if (second_last != '\n') {
                     break;
                 }
                 m_value_buffer.pop_back();
@@ -1407,12 +1230,10 @@ private:
 
     /// @brief Handle unescaped control characters.
     /// @param c A target character.
-    void handle_unescaped_control_char(char c)
-    {
+    void handle_unescaped_control_char(char c) {
         FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
 
-        switch (c)
-        {
+        switch (c) {
         // 0x00(NULL) has already been handled above.
         case 0x01:
             emit_error("Control character U+0001 (SOH) must be escaped to \\u0001.");
@@ -1480,30 +1301,26 @@ private:
 
     /// @brief Unescape the given escaped unicode character.
     /// @param bytes_to_read The number of bytes to be read from the input buffer.
-    void handle_escaped_unicode(int bytes_to_read)
-    {
+    void handle_escaped_unicode(int bytes_to_read) {
         int read_size = bytes_to_read * 2;
         char32_t code_point = 0;
-        for (int i = read_size - 1; i >= 0; i--)
-        {
+        for (int i = read_size - 1; i >= 0; i--) {
             char four_bits = convert_hex_char_to_byte(*++m_cur_itr);
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
             code_point |= static_cast<char32_t>(four_bits << (4 * i));
         }
 
         // Treats the code point as a UTF-32 encoded character.
-        utf8_encoding::from_utf32(code_point, m_encode_buffer, m_encoded_size);
-        m_value_buffer.append(m_encode_buffer.data(), m_encoded_size);
+        utf8::from_utf32(code_point, m_encode_buffer, m_encoded_size);
+        m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
     }
 
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
-    void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent)
-    {
+    void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent) {
         chomp_type = chomping_indicator_t::CLIP;
-        switch (*++m_cur_itr)
-        {
+        switch (*++m_cur_itr) {
         case '-':
             chomp_type = chomping_indicator_t::STRIP;
             ++m_cur_itr;
@@ -1516,14 +1333,12 @@ private:
             break;
         }
 
-        if (*m_cur_itr == '0')
-        {
+        if (*m_cur_itr == '0') {
             emit_error("An indentation level for a block style scalar cannot be \'0\'");
         }
 
         indent = 0;
-        if (std::isdigit(*m_cur_itr))
-        {
+        if (std::isdigit(*m_cur_itr)) {
             indent = convert_hex_char_to_byte(*m_cur_itr++);
         }
 
@@ -1532,19 +1347,15 @@ private:
     }
 
     /// @brief Skip white spaces (half-width spaces and tabs) from the current position.
-    void skip_white_spaces()
-    {
+    void skip_white_spaces() {
         m_cur_itr = std::find_if_not(m_cur_itr, m_end_itr, [](char c) { return (c == ' ' || c == '\t'); });
     }
 
     /// @brief Skip white spaces and newline codes (CR/LF) from the current position.
-    void skip_white_spaces_and_newline_codes()
-    {
-        if (m_cur_itr != m_end_itr)
-        {
+    void skip_white_spaces_and_newline_codes() {
+        if (m_cur_itr != m_end_itr) {
             m_cur_itr = std::find_if_not(m_cur_itr, m_end_itr, [](char c) {
-                switch (c)
-                {
+                switch (c) {
                 case ' ':
                 case '\t':
                 case '\r':
@@ -1558,19 +1369,14 @@ private:
     }
 
     /// @brief Skip the rest in the current line.
-    void skip_until_line_end()
-    {
-        while (m_cur_itr != m_end_itr)
-        {
-            switch (*m_cur_itr)
-            {
+    void skip_until_line_end() {
+        while (m_cur_itr != m_end_itr) {
+            switch (*m_cur_itr) {
             case '\r':
-                if (++m_cur_itr == m_end_itr)
-                {
+                if (++m_cur_itr == m_end_itr) {
                     return;
                 }
-                if (*m_cur_itr == '\n')
-                {
+                if (*m_cur_itr == '\n') {
                     ++m_cur_itr;
                 }
                 return;
@@ -1586,8 +1392,7 @@ private:
 
     /// @brief Emits an error with the given message.
     /// @param msg A message for the resulting error.
-    [[noreturn]] void emit_error(const char* msg) const
-    {
+    [[noreturn]] void emit_error(const char* msg) const {
         m_pos_tracker.update_position(m_cur_itr);
         throw fkyaml::parse_error(msg, m_pos_tracker.get_lines_read(), m_pos_tracker.get_cur_pos_in_line());
     }
@@ -1610,7 +1415,7 @@ private:
     /// The last tag prefix
     std::string m_tag_prefix {};
     /// A temporal buffer to store a UTF-8 encoded char sequence.
-    std::array<char, 4> m_encode_buffer {};
+    std::array<uint8_t, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.
     std::size_t m_encoded_size {0};
     /// The beginning position of the last lexical token. (zero origin)
@@ -1629,8 +1434,6 @@ private:
     float_number_type m_float_val {0.0};
 };
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_ */

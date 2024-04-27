@@ -15,7 +15,7 @@ Check if the YAML node has an anchor name.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_has_anchor_name.cpp"
+    --8<-- "examples/ex_basic_node_has_anchor_name.cpp:9"
     ```
 
     output:

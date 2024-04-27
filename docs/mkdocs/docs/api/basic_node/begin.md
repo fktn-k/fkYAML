@@ -19,7 +19,7 @@ An iterator to the first element of a container node value (either sequence or m
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_begin.cpp"
+    --8<-- "examples/ex_basic_node_begin.cpp:9"
     ```
 
     output:

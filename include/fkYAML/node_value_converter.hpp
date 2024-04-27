@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -23,8 +23,7 @@ FK_YAML_NAMESPACE_BEGIN
 /// @tparam ValueType A default target data type.
 /// @sa https://fktn-k.github.io/fkYAML/api/node_value_converter/
 template <typename ValueType, typename>
-class node_value_converter
-{
+class node_value_converter {
 public:
     /// @brief Convert a YAML node value into compatible native data.
     /// @tparam BasicNodeType A basic_node template instance type.
@@ -35,8 +34,7 @@ public:
     template <typename BasicNodeType, typename TargetType = ValueType>
     static auto from_node(BasicNodeType&& n, TargetType& val) noexcept(
         noexcept(::fkyaml::from_node(std::forward<BasicNodeType>(n), val)))
-        -> decltype(::fkyaml::from_node(std::forward<BasicNodeType>(n), val), void())
-    {
+        -> decltype(::fkyaml::from_node(std::forward<BasicNodeType>(n), val), void()) {
         ::fkyaml::from_node(std::forward<BasicNodeType>(n), val);
     }
 
@@ -49,8 +47,7 @@ public:
     template <typename BasicNodeType, typename TargetType = ValueType>
     static auto to_node(BasicNodeType& n, TargetType&& val) noexcept(
         noexcept(::fkyaml::to_node(n, std::forward<TargetType>(val))))
-        -> decltype(::fkyaml::to_node(n, std::forward<TargetType>(val)))
-    {
+        -> decltype(::fkyaml::to_node(n, std::forward<TargetType>(val))) {
         ::fkyaml::to_node(n, std::forward<TargetType>(val));
     }
 };

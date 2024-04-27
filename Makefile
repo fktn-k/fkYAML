@@ -6,15 +6,15 @@
 
 # list of source files in the include directory.
 SRCS = $(shell find include -type f -name '*.hpp' | sort)
-# The single-header version
-SINGLE_SRC = 'single_include/fkYAML/node.hpp'
 # list of sources in the test directory.
-TEST_SRCS = $(shell find test -type f \( -name '*.hpp' -o -name '*.cpp' \) | sort)
+TEST_SRCS = $(shell find test -type f -name '*.hpp' -o -name '*.cpp' | sort)
+# list of sources in the examples directory.
+EXAMPLE_SRCS = $(shell find docs/examples -type f -name '*.cpp' | sort)
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 4
+TARGET_PATCH_VERSION := 5
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -42,9 +42,8 @@ all:
 #   Static Code Analyzers   #
 #############################
 
-# pre-requisites: clang-format
 clang-format:
-	for FILE in $(SRCS) $(TEST_SRCS); do echo $$FILE; clang-format -i $$FILE; done
+	./scripts/run_clang_format.sh
 
 # pre-requisites: clang-tidy
 clang-tidy:
@@ -64,27 +63,23 @@ iwyu:
 clang-sanitizers:
 	CXX=clang++ cmake -B build_clang_sanitizers -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_CLANG_SANITIZERS=ON
 	cmake --build build_clang_sanitizers --config Debug -j $(JOBS)
-	ctest -C Debug --output-on-failure --test-dir build_clang_sanitizers -j $(JOBS)
+	ctest -C Debug --test-dir build_clang_sanitizers --output-on-failure -j $(JOBS)
 
 # pre-requisites: valgrind
 valgrind:
 	cmake -B build_valgrind -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
 	cmake --build build_valgrind --config Debug -j $(JOBS)
-	ctest -C Debug -T memcheck --test-dir build_valgrind -j $(JOBS)
+	ctest -C Debug -T memcheck --test-dir build_valgrind --output-on-failure -j $(JOBS)
 
 ###########################
 #   Source Amalgamation   #
 ###########################
 
 amalgamate:
-	python3 ./tool/amalgamation/amalgamate.py -c ./tool/amalgamation/fkYAML.json -s . --verbose=yes
+	./scripts/run_amalgamation.sh
 
 check-amalgamate:
-	@cp $(SINGLE_SRC) $(SINGLE_SRC)~
-	@$(MAKE) amalgamate
-	@diff $(SINGLE_SRC) $(SINGLE_SRC)~ || (echo Amalgamation required. Please follow the guideline in the CONTRIBUTING.md file. ; mv $(SINGLE_SRC)~ $(SINGLE_SRC) ; false)
-	@mv $(SINGLE_SRC)~ $(SINGLE_SRC)
-	@echo Amalgamation check passed successfully.
+	./scripts/check_amalgamation.sh
 
 ##########################################
 #   Natvis Debugger Visualization File   #
@@ -108,7 +103,7 @@ build-docs: examples
 	@$(MAKE) -C ./docs/mkdocs build
 
 serve-docs: examples
-	@$(MAKE) -C serve
+	@$(MAKE) -C ./docs/mkdocs serve
 
 ###############
 #   Version   #
@@ -134,7 +129,7 @@ reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
 		--license MIT --year "2023-2024" --style c
-	pipx run reuse annotate $(TEST_SRCS) --template fkYAML_support \
+	pipx run reuse annotate $(TEST_SRCS) $(EXAMPLE_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
 		--license MIT --year "2023-2024" --style c
 	pipx run reuse lint

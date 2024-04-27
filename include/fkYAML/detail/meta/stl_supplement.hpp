@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -16,15 +16,7 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
-/**
- * @namespace fkyaml
- * @brief namespace for fkYAML library.
- */
-FK_YAML_NAMESPACE_BEGIN
-
-/// @brief namespace for internal implementations of fkYAML library.
-namespace detail
-{
+FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   For contributors:
@@ -57,9 +49,7 @@ using enable_if_t = typename std::enable_if<Condition, T>::type;
 /// @sa https://en.cppreference.com/w/cpp/types/is_null_pointer
 /// @tparam T The type to be checked if it's equal to std::nullptr_t.
 template <typename T>
-struct is_null_pointer : std::is_same<std::nullptr_t, typename std::remove_cv<T>::type>
-{
-};
+struct is_null_pointer : std::is_same<std::nullptr_t, typename std::remove_cv<T>::type> {};
 
 /// @brief An alias template for std::remove_cv::type with C++11.
 /// @note std::remove_cv_t is available since C++14.
@@ -107,24 +97,18 @@ using bool_constant = std::integral_constant<bool, Val>;
 /// @sa https://en.cppreference.com/w/cpp/types/conjunction
 /// @tparam Traits Type traits to be checked if their ::value are all true.
 template <typename... Traits>
-struct conjunction : std::true_type
-{
-};
+struct conjunction : std::true_type {};
 
 /// @brief A partial specialization of conjunction if only one Trait is given.
 /// @tparam Trait Type trait to be checked if its ::value is true.
 template <typename Trait>
-struct conjunction<Trait> : Trait
-{
-};
+struct conjunction<Trait> : Trait {};
 
 /// @brief A partial specialization of conjunction if more than one traits are given.
 /// @tparam First The first type trait to be checked if its ::value is true.
 /// @tparam Rest The rest of traits passed as another conjunction template arguments if First::value is true.
 template <typename First, typename... Rest>
-struct conjunction<First, Rest...> : std::conditional<First::value, conjunction<Rest...>, First>::type
-{
-};
+struct conjunction<First, Rest...> : std::conditional<First::value, conjunction<Rest...>, First>::type {};
 
 /// @brief A simple implementation to use std::disjunction with C++11/C++14.
 /// @note
@@ -133,39 +117,30 @@ struct conjunction<First, Rest...> : std::conditional<First::value, conjunction<
 /// @sa https://en.cppreference.com/w/cpp/types/disjunction
 /// @tparam Traits Type traits to be checked if at least one of their ::value is true.
 template <typename... Traits>
-struct disjunction : std::false_type
-{
-};
+struct disjunction : std::false_type {};
 
 /// @brief A partial specialization of disjunction if only one Trait is given.
 /// @tparam Trait Type trait to be checked if its ::value is true.
 template <typename Trait>
-struct disjunction<Trait> : Trait
-{
-};
+struct disjunction<Trait> : Trait {};
 
 /// @brief A partial specialization of disjunction if more than one traits are given.
 /// @tparam First The first type trait to be checked if its ::value is true.
 /// @tparam Rest The rest of traits passed as another conjunction template arguments if First::value is false.
 template <typename First, typename... Rest>
-struct disjunction<First, Rest...> : std::conditional<First::value, First, disjunction<Rest...>>::type
-{
-};
+struct disjunction<First, Rest...> : std::conditional<First::value, First, disjunction<Rest...>>::type {};
 
 /// @brief A simple implementation to use std::negation with C++11/C++14.
 /// @note std::negation is available since C++17.
 /// @sa https://en.cppreference.com/w/cpp/types/negation
 /// @tparam Trait Type trait whose ::value is negated.
 template <typename Trait>
-struct negation : std::integral_constant<bool, !Trait::value>
-{
-};
+struct negation : std::integral_constant<bool, !Trait::value> {};
 
 /// @brief A helper for void_t.
 /// @tparam Types Any types to be transformed to void type.
 template <typename... Types>
-struct make_void
-{
+struct make_void {
     using type = void;
 };
 
@@ -201,8 +176,6 @@ using std::remove_cvref_t;
 
 #endif
 
-} // namespace detail
-
-FK_YAML_NAMESPACE_END
+FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_ */

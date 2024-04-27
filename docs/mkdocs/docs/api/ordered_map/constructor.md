@@ -23,7 +23,7 @@ The content of a newly constructed ordered_map is an empty list of key-value pai
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_ordered_map_constructor_noarg.cpp"
+    --8<-- "examples/ex_ordered_map_constructor_noarg.cpp:9"
     ```
 
     output:
@@ -48,7 +48,7 @@ The resulting ordered_map object has the same list of key-value pairs as the giv
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_ordered_map_constructor_initializer_list.cpp"
+    --8<-- "examples/ex_ordered_map_constructor_initializer_list.cpp:9"
     ```
 
     output:

@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,8 +12,7 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("NodeRefStorage_CtorWithLvalueNode")
-{
+TEST_CASE("NodeRefStorage_CtorWithLvalueNode") {
     fkyaml::node node = true;
     fkyaml::detail::node_ref_storage<fkyaml::node> storage(node);
     REQUIRE(node.is_boolean());
@@ -23,8 +22,7 @@ TEST_CASE("NodeRefStorage_CtorWithLvalueNode")
     REQUIRE(retrieved_node.get_value<fkyaml::node::boolean_type>() == true);
 }
 
-TEST_CASE("NodeRefStorage_CtorWithRvalueNode")
-{
+TEST_CASE("NodeRefStorage_CtorWithRvalueNode") {
     fkyaml::node node = 3.14;
     fkyaml::detail::node_ref_storage<fkyaml::node> storage(std::move(node));
     REQUIRE(node.is_null());
@@ -34,8 +32,7 @@ TEST_CASE("NodeRefStorage_CtorWithRvalueNode")
     REQUIRE(retrieved_node.get_value<fkyaml::node::float_number_type>() == 3.14);
 }
 
-TEST_CASE("NodeRefStorage_ArrowOperator")
-{
+TEST_CASE("NodeRefStorage_ArrowOperator") {
     fkyaml::node node = 123;
     fkyaml::detail::node_ref_storage<fkyaml::node> storage(node);
     REQUIRE(storage->is_integer());
@@ -47,8 +44,7 @@ TEST_CASE("NodeRefStorage_ArrowOperator")
     REQUIRE(storage2->size() == 2);
 }
 
-TEST_CASE("NodeRefStorage_Release")
-{
+TEST_CASE("NodeRefStorage_Release") {
     fkyaml::node node = 123;
     fkyaml::detail::node_ref_storage<fkyaml::node> storage(node);
     fkyaml::node released_node = storage.release();

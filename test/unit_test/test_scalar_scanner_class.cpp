@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.4
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10,19 +10,16 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("ScalarScanner_Empty")
-{
+TEST_CASE("ScalarScanner_Empty") {
     REQUIRE(fkyaml::detail::scalar_scanner::scan("") == fkyaml::detail::lexical_token_t::STRING_VALUE);
 }
 
-TEST_CASE("ScalarScanner_NullValue")
-{
+TEST_CASE("ScalarScanner_NullValue") {
     auto token = GENERATE(std::string("~"), std::string("null"), std::string("Null"), std::string("NULL"));
     REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::NULL_VALUE);
 }
 
-TEST_CASE("ScalarScanner_BooleanValue")
-{
+TEST_CASE("ScalarScanner_BooleanValue") {
     auto token = GENERATE(
         std::string("true"),
         std::string("True"),
@@ -33,8 +30,7 @@ TEST_CASE("ScalarScanner_BooleanValue")
     REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
 }
 
-TEST_CASE("ScalarScanner_IntegerNumberValue")
-{
+TEST_CASE("ScalarScanner_IntegerNumberValue") {
     auto token = GENERATE(
         std::string("-1234"),
         std::string("-853259"),
@@ -52,8 +48,7 @@ TEST_CASE("ScalarScanner_IntegerNumberValue")
     REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::INTEGER_VALUE);
 }
 
-TEST_CASE("ScalarScanner_FloatNumberValue")
-{
+TEST_CASE("ScalarScanner_FloatNumberValue") {
     auto token = GENERATE(
         std::string(".inf"),
         std::string(".Inf"),
@@ -73,8 +68,7 @@ TEST_CASE("ScalarScanner_FloatNumberValue")
     REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
 }
 
-TEST_CASE("ScalarScanner_StringValue")
-{
+TEST_CASE("ScalarScanner_StringValue") {
     auto token = GENERATE(
         std::string("abc"),
         std::string("0th"),

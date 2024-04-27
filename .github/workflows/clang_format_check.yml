@@ -10,12 +10,14 @@ on:
       - include/**
       - test/unit_test/**
       - .clang-format
+      - scripts/run_clang_format.*
   pull_request:
     paths:
       - .github/workflows/clang_format_check.yml
       - include/**
       - test/unit_test/**
       - .clang-format
+      - scripts/run_clang_format.*
   workflow_dispatch:
 
 concurrency:

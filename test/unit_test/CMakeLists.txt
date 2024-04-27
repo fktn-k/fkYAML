@@ -209,7 +209,7 @@ add_executable(
   test_string_formatter.cpp
   test_tag_resolver_class.cpp
   test_uri_encoding_class.cpp
-  test_utf8_encoding_class.cpp
+  test_utf_encodings.cpp
   main.cpp
 )
 

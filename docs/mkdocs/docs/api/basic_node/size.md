@@ -16,7 +16,7 @@ The size of a node value.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_size.cpp"
+    --8<-- "examples/ex_basic_node_size.cpp:9"
     ```
 
     output:

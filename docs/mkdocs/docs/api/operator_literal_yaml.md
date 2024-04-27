@@ -36,7 +36,7 @@ The resulting basic_node object deserialized from the input string `s`.
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_operator_literal_yaml.cpp"
+    --8<-- "examples/ex_operator_literal_yaml.cpp:9"
     ```
 
     output:

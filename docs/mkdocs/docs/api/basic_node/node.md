@@ -11,7 +11,7 @@ This type is the default specialization of the [basic_node](index.md) class whic
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_node.cpp"
+    --8<-- "examples/ex_basic_node_node.cpp:9"
     ```
 
     output:
