@@ -19,7 +19,7 @@ fi
 
 # install the clang-format package if not installed yet.
 if [ ! -e "$SCRIPT_DIR"/venv_clang_format/"$VENV_BINARY_DIR"/clang-format ]; then
-    "PYTHON_EXE" -m venv "$SCRIPT_DIR/venv_clang_format"
+    "$PYTHON_EXE" -m venv "$SCRIPT_DIR/venv_clang_format"
     "$SCRIPT_DIR"/venv_clang_format/"$VENV_BINARY_DIR"/pip install clang-format==14.0.0
 fi
 
