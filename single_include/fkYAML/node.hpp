@@ -3937,18 +3937,20 @@ class basic_deserializer {
     /** A type for string node values. */
     using string_type = typename node_type::string_type;
 
-    struct indentation {
-        indentation() = default;
+    struct parse_context {
+        parse_context() = default;
 
-        indentation(std::size_t _line, std::size_t _indent, bool _is_explicit_key)
+        parse_context(std::size_t _line, std::size_t _indent, bool _is_explicit_key, node_type* _p_node)
             : line(_line),
               indent(_indent),
-              is_explicit_key(_is_explicit_key) {
+              is_explicit_key(_is_explicit_key),
+              p_node(_p_node) {
         }
 
         std::size_t line {0};
         std::size_t indent {0};
         bool is_explicit_key {false};
+        node_type* p_node {nullptr};
     };
 
 public:
@@ -3975,7 +3977,7 @@ public:
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
             root = node_type::sequence();
             apply_directive_set(root);
-            m_indent_stack.emplace_back(lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false);
+            m_context_stack.emplace_back(lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false, &root);
             break;
         default:
             break;
@@ -3989,8 +3991,7 @@ public:
         mp_directive_set.reset();
         m_needs_anchor_impl = false;
         m_anchor_table.clear();
-        m_node_stack.clear();
-        m_indent_stack.clear();
+        m_context_stack.clear();
 
         return root;
     }
@@ -4097,19 +4098,18 @@ private:
                 // This handles an empty input.
                 break;
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
-                bool needs_to_move_back = !m_indent_stack.empty() && indent < m_indent_stack.back().indent;
+                bool needs_to_move_back = !m_context_stack.empty() && indent < m_context_stack.back().indent;
                 if (needs_to_move_back) {
                     auto target_itr = std::find_if( // LCOV_EXCL_LINE
-                        m_indent_stack.rbegin(),
-                        m_indent_stack.rend(),
-                        [indent](const indentation& i) { return indent > i.indent; });
+                        m_context_stack.rbegin(),
+                        m_context_stack.rend(),
+                        [indent](const parse_context& c) { return indent > c.indent; });
 
-                    auto pop_num = std::distance(m_indent_stack.rbegin(), target_itr);
+                    auto pop_num = std::distance(m_context_stack.rbegin(), target_itr);
                     for (auto i = 0; i < pop_num; i++) {
                         // move back to the previous container node.
-                        mp_current_node = m_node_stack.back();
-                        m_node_stack.pop_back();
-                        m_indent_stack.pop_back();
+                        mp_current_node = m_context_stack.back().p_node;
+                        m_context_stack.pop_back();
                     }
                 }
 
@@ -4117,13 +4117,13 @@ private:
                     *mp_current_node = node_type::mapping();
                 }
 
-                m_node_stack.push_back(mp_current_node);
-                m_indent_stack.emplace_back(line, indent, true);
+                m_context_stack.emplace_back(line, indent, true, mp_current_node);
 
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                    m_indent_stack.emplace_back(lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false);
                     mp_current_node = new node_type(node_t::SEQUENCE);
+                    m_context_stack.emplace_back(
+                        lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false, mp_current_node);
                     apply_directive_set(*mp_current_node);
                     break;
                 }
@@ -4159,7 +4159,7 @@ private:
                 indent = lexer.get_last_token_begin_pos();
 
                 bool is_implicit_same_line =
-                    (line == old_line) && (m_indent_stack.empty() || old_indent > m_indent_stack.back().indent);
+                    (line == old_line) && (m_context_stack.empty() || old_indent > m_context_stack.back().indent);
                 if (is_implicit_same_line) {
                     // a key separator for an implicit key with its value on the same line.
                     continue;
@@ -4192,7 +4192,7 @@ private:
                         *mp_current_node = node_type::sequence();
                         apply_directive_set(*mp_current_node);
                         apply_node_properties(*mp_current_node);
-                        m_indent_stack.emplace_back(line, indent, false);
+                        m_context_stack.emplace_back(line, indent, false, mp_current_node);
                         do_continue = false;
                         break;
                     case lexical_token_t::EXPLICIT_KEY_PREFIX:
@@ -4223,39 +4223,38 @@ private:
 
                 // handle explicit mapping key separators.
 
-                while (!m_indent_stack.back().is_explicit_key) {
-                    mp_current_node = m_node_stack.back();
-                    m_node_stack.pop_back();
-                    m_indent_stack.pop_back();
+                while (!m_context_stack.back().is_explicit_key) {
+                    mp_current_node = m_context_stack.back().p_node;
+                    m_context_stack.pop_back();
                 }
 
-                if (m_node_stack.back()->is_sequence()) {
-                    mp_current_node = m_node_stack.back();
-                    m_node_stack.pop_back();
+                if (m_context_stack.back().p_node->is_sequence()) {
+                    mp_current_node = m_context_stack.back().p_node;
+                    m_context_stack.pop_back();
                 }
-                if (m_node_stack.back() == mp_current_node) {
+                if (m_context_stack.back().p_node == mp_current_node) {
                     // This path is for nested explicit mapping keys like:
                     // ```yaml
                     // ? ? foo
                     //   : bar
                     // : baz
                     // ```
-                    m_node_stack.pop_back();
+                    m_context_stack.pop_back();
                 }
 
                 node_type* key_node = mp_current_node;
-                m_node_stack.back()->template get_value_ref<mapping_type&>().emplace(*key_node, node_type());
-                mp_current_node = &(m_node_stack.back()->operator[](*key_node));
+                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(*key_node, node_type());
+                mp_current_node = &(m_context_stack.back().p_node->operator[](*key_node));
                 delete key_node;
                 key_node = nullptr;
-                m_node_stack.push_back(m_node_stack.back());
-                m_indent_stack.back().is_explicit_key = false;
+                m_context_stack.back().is_explicit_key = false;
+                m_context_stack.emplace_back(m_context_stack.back());
 
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     *mp_current_node = node_type::sequence();
                     apply_directive_set(*mp_current_node);
                     apply_node_properties(*mp_current_node);
-                    m_indent_stack.emplace_back(line, indent, false);
+                    m_context_stack.emplace_back(line, indent, false, mp_current_node);
                     break;
                 }
 
@@ -4284,36 +4283,35 @@ private:
                 if (mp_current_node->is_sequence()) {
                     bool is_empty = mp_current_node->empty();
                     if (is_empty) {
-                        bool is_further_nested = !m_indent_stack.empty() && m_indent_stack.back().indent < indent;
+                        bool is_further_nested = !m_context_stack.empty() && m_context_stack.back().indent < indent;
                         if (is_further_nested) {
                             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(
                                 node_type::sequence());
-                            m_node_stack.push_back(mp_current_node);
+                            m_context_stack.emplace_back(line, indent, false, mp_current_node);
                             mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                            break;
                         }
-                        m_indent_stack.emplace_back(line, indent, false);
+                        m_context_stack.emplace_back(line, indent, false, mp_current_node);
                         break;
                     }
 
                     // move back to the previous sequence if necessary.
-                    while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent) {
-                        mp_current_node = m_node_stack.back();
-                        m_node_stack.pop_back();
-                        m_indent_stack.pop_back();
+                    while (!mp_current_node->is_sequence() || indent != m_context_stack.back().indent) {
+                        mp_current_node = m_context_stack.back().p_node;
+                        m_context_stack.pop_back();
                     }
                     break;
                 }
 
                 // move back to the previous sequence if necessary.
-                while (!mp_current_node->is_sequence() || indent != m_indent_stack.back().indent) {
-                    mp_current_node = m_node_stack.back();
-                    m_node_stack.pop_back();
-                    m_indent_stack.pop_back();
+                while (!mp_current_node->is_sequence() || indent != m_context_stack.back().indent) {
+                    mp_current_node = m_context_stack.back().p_node;
+                    m_context_stack.pop_back();
                 }
 
                 // for mappings in a sequence.
                 mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
-                m_node_stack.push_back(mp_current_node);
+                m_context_stack.emplace_back(line, indent, false, mp_current_node);
                 mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                 apply_directive_set(*mp_current_node);
                 break;
@@ -4326,10 +4324,10 @@ private:
             case lexical_token_t::SEQUENCE_FLOW_END: {
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
                 --m_flow_context_depth;
-                bool is_stack_empty = m_node_stack.empty();
+                bool is_stack_empty = m_context_stack.empty();
                 if (!is_stack_empty) {
-                    mp_current_node = m_node_stack.back();
-                    m_node_stack.pop_back();
+                    mp_current_node = m_context_stack.back().p_node;
+                    m_context_stack.pop_back();
                 }
                 break;
             }
@@ -4342,10 +4340,10 @@ private:
             case lexical_token_t::MAPPING_FLOW_END: {
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
                 --m_flow_context_depth;
-                bool is_stack_empty = m_node_stack.empty();
+                bool is_stack_empty = m_context_stack.empty();
                 if (!is_stack_empty) {
-                    mp_current_node = m_node_stack.back();
-                    m_node_stack.pop_back();
+                    mp_current_node = m_context_stack.back().p_node;
+                    m_context_stack.pop_back();
                 }
                 break;
             }
@@ -4453,28 +4451,27 @@ private:
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
     void add_new_key(node_type&& key, const std::size_t indent, const std::size_t line) {
-        if (!m_indent_stack.empty() && indent < m_indent_stack.back().indent) {
+        if (!m_context_stack.empty() && indent < m_context_stack.back().indent) {
             auto target_itr =
-                std::find_if(m_indent_stack.rbegin(), m_indent_stack.rend(), [indent](const indentation& i) {
-                    return indent == i.indent;
+                std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
+                    return indent == c.indent;
                 });
-            bool is_indent_valid = (target_itr != m_indent_stack.rend());
+            bool is_indent_valid = (target_itr != m_context_stack.rend());
             if (!is_indent_valid) {
                 throw parse_error("Detected invalid indentaion.", line, indent);
             }
 
-            auto pop_num = std::distance(m_indent_stack.rbegin(), target_itr);
+            auto pop_num = std::distance(m_context_stack.rbegin(), target_itr);
             for (auto i = 0; i < pop_num; i++) {
                 // move back to the previous container node.
-                mp_current_node = m_node_stack.back();
-                m_node_stack.pop_back();
-                m_indent_stack.pop_back();
+                m_context_stack.pop_back();
+                mp_current_node = m_context_stack.back().p_node;
             }
         }
 
         if (mp_current_node->is_sequence()) {
             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
-            m_node_stack.push_back(mp_current_node);
+            m_context_stack.emplace_back(line, indent, false, mp_current_node);
             mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
         }
 
@@ -4482,7 +4479,7 @@ private:
         bool is_empty = map.empty();
         if (is_empty) {
             if (m_flow_context_depth == 0) {
-                m_indent_stack.emplace_back(line, indent, false);
+                m_context_stack.emplace_back(line, indent, false, mp_current_node);
             }
         }
         else {
@@ -4494,7 +4491,7 @@ private:
         }
 
         map.emplace(key, node_type());
-        m_node_stack.push_back(mp_current_node);
+        m_context_stack.emplace_back(line, indent, false, mp_current_node);
         mp_current_node = &(mp_current_node->operator[](key));
     }
 
@@ -4508,9 +4505,9 @@ private:
 
         // a scalar node
         *mp_current_node = std::move(node_value);
-        if (m_flow_context_depth > 0 || !m_indent_stack.back().is_explicit_key) {
-            mp_current_node = m_node_stack.back();
-            m_node_stack.pop_back();
+        if (m_flow_context_depth > 0 || !m_context_stack.back().is_explicit_key) {
+            mp_current_node = m_context_stack.back().p_node;
+            m_context_stack.pop_back();
         }
     }
 
@@ -4617,16 +4614,16 @@ private:
                 if (line != lexer.get_lines_processed()) {
                     // This path is for explicit mapping key separator(:)
                     assign_node_value(std::move(node));
-                    if (!m_indent_stack.back().is_explicit_key) {
-                        m_indent_stack.pop_back();
+                    if (!m_context_stack.back().is_explicit_key) {
+                        m_context_stack.pop_back();
                     }
                     indent = lexer.get_last_token_begin_pos();
                     line = lexer.get_lines_processed();
                     return true;
                 }
 
-                indentation& last_indent = m_indent_stack.back();
-                if (last_indent.line == line && !last_indent.is_explicit_key) {
+                parse_context& last_context = m_context_stack.back();
+                if (last_context.line == line && !last_context.is_explicit_key) {
                     throw parse_error("multiple mapping keys are specified on the same line.", line, indent);
                 }
 
@@ -4677,10 +4674,8 @@ private:
 private:
     /// The currently focused YAML node.
     node_type* mp_current_node {nullptr};
-    /// The stack of YAML nodes.
-    std::deque<node_type*> m_node_stack {};
-    /// The stack of indentation widths.
-    std::deque<indentation> m_indent_stack {};
+    /// The stack of parse contexts.
+    std::deque<parse_context> m_context_stack {};
     /// The current depth of flow contexts.
     std::size_t m_flow_context_depth {0};
     /// The set of YAML directives.
