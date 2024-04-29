@@ -32,7 +32,7 @@ TEST_CASE("Deserializer_KeySeparator") {
     }
 
     SECTION("error cases") {
-        auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"), std::string("- - : foo"));
+        auto input_str = GENERATE(std::string("- : foo"), std::string("- - : foo"));
         REQUIRE_THROWS_AS(
             root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
     }
@@ -302,6 +302,26 @@ TEST_CASE("Deserializer_BlockSequence") {
 
         REQUIRE(root[2].is_float_number());
         REQUIRE(root[2].get_value<double>() == 3.14);
+    }
+
+    SECTION("root sequence with nested child block sequence") {
+        std::string input = "- - foo\n"
+                            "  - 123\n"
+                            "- 3.14";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root[0].is_sequence());
+        REQUIRE(root[0].size() == 2);
+        REQUIRE(root[0][0].is_string());
+        REQUIRE(root[0][0].get_value_ref<std::string&>() == "foo");
+        REQUIRE(root[0][1].is_integer());
+        REQUIRE(root[0][1].get_value<int>() == 123);
+
+        REQUIRE(root[1].is_float_number());
+        REQUIRE(root[1].get_value<double>() == 3.14);
     }
 }
 
