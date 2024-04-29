@@ -2992,9 +2992,6 @@ private:
             m_token_begin_itr = m_cur_itr + 1;
             ret = true;
             break;
-
-        case '\\':
-            emit_error("Escaped characters are only available in a double-quoted string token.");
         }
 
         return ret;
@@ -3194,9 +3191,6 @@ private:
 
             m_value_buffer.append(m_token_begin_itr, m_cur_itr);
             break;
-
-        case '\\':
-            emit_error("Escaped characters are only available in a double-quoted string token.");
         }
 
         return ret;
@@ -3210,7 +3204,7 @@ private:
         // * double quoted
         // * plain
 
-        std::string check_filters {"\r\n\\"};
+        std::string check_filters {"\r\n"};
         bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
 
         if (needs_last_single_quote) {
@@ -3218,7 +3212,7 @@ private:
             pfn_is_allowed = &lexical_analyzer::is_allowed_single;
         }
         else if (needs_last_double_quote) {
-            check_filters.append("\"");
+            check_filters.append("\"\\");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
         else // plain scalars
