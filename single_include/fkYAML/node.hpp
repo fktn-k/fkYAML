@@ -4228,20 +4228,6 @@ private:
                     m_context_stack.pop_back();
                 }
 
-                if (m_context_stack.back().p_node->is_sequence()) {
-                    mp_current_node = m_context_stack.back().p_node;
-                    m_context_stack.pop_back();
-                }
-                if (m_context_stack.back().p_node == mp_current_node) {
-                    // This path is for nested explicit mapping keys like:
-                    // ```yaml
-                    // ? ? foo
-                    //   : bar
-                    // : baz
-                    // ```
-                    m_context_stack.pop_back();
-                }
-
                 node_type* key_node = mp_current_node;
                 m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(*key_node, node_type());
                 mp_current_node = &(m_context_stack.back().p_node->operator[](*key_node));
@@ -4324,11 +4310,8 @@ private:
             case lexical_token_t::SEQUENCE_FLOW_END: {
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
                 --m_flow_context_depth;
-                bool is_stack_empty = m_context_stack.empty();
-                if (!is_stack_empty) {
-                    mp_current_node = m_context_stack.back().p_node;
-                    m_context_stack.pop_back();
-                }
+                mp_current_node = m_context_stack.back().p_node;
+                m_context_stack.pop_back();
                 break;
             }
             case lexical_token_t::MAPPING_FLOW_BEGIN:
