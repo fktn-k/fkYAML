@@ -515,6 +515,7 @@ TEST_CASE("LexicalAnalyzer_String") {
         value_pair_t(std::string("foo bar"), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("foo\"bar"), fkyaml::node::string_type("foo\"bar")),
         value_pair_t(std::string("foo\'s bar"), fkyaml::node::string_type("foo\'s bar")),
+        value_pair_t(std::string("foo\\bar"), fkyaml::node::string_type("foo\\bar")),
         value_pair_t(std::string("nullValue"), fkyaml::node::string_type("nullValue")),
         value_pair_t(std::string("NullValue"), fkyaml::node::string_type("NullValue")),
         value_pair_t(std::string("NULL_VALUE"), fkyaml::node::string_type("NULL_VALUE")),
@@ -543,6 +544,7 @@ TEST_CASE("LexicalAnalyzer_String") {
         value_pair_t(std::string("\'foo}bar\'"), fkyaml::node::string_type("foo}bar")),
         value_pair_t(std::string("\'foo\"bar\'"), fkyaml::node::string_type("foo\"bar")),
         value_pair_t(std::string("\'foo:bar\'"), fkyaml::node::string_type("foo:bar")),
+        value_pair_t(std::string("\'foo\\bar\'"), fkyaml::node::string_type("foo\\bar")),
 
         value_pair_t(std::string("\"foo bar\""), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("\"foo's bar\""), fkyaml::node::string_type("foo's bar")),
@@ -736,7 +738,6 @@ TEST_CASE("LexicalAnalyzer_EscapedUnicodeCharacter") {
 TEST_CASE("LexicalAnalyzer_InvalidString") {
     SECTION("parse error") {
         auto buffer = GENERATE(
-            std::string("foo\\tbar"),
             std::string("\"test"),
             std::string("\'test"),
             std::string("\'test\n\'"),
@@ -746,7 +747,6 @@ TEST_CASE("LexicalAnalyzer_InvalidString") {
             std::string("\"\\x=\""),
             std::string("\"\\x^\""),
             std::string("\"\\x{\""),
-            std::string("\'\\t\'"),
             std::string("\"\\Q\""));
 
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
