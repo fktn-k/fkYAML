@@ -3975,6 +3975,7 @@ public:
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
             root = node_type::sequence();
             apply_directive_set(root);
+            m_indent_stack.emplace_back(lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false);
             break;
         default:
             break;
@@ -4135,9 +4136,9 @@ private:
                 continue;
             }
             case lexical_token_t::KEY_SEPARATOR: {
-                bool is_stack_empty = m_node_stack.empty();
-                if (is_stack_empty) {
-                    throw parse_error("A key separator found without key.", line, indent);
+                bool is_empty_seq = mp_current_node->is_sequence() && mp_current_node->empty();
+                if (is_empty_seq) {
+                    throw parse_error("sequence key should not be empty.", line, indent);
                 }
 
                 // hold the line count of the key separator for later use.
@@ -4184,12 +4185,15 @@ private:
                         }
                     }
 
+                    bool do_continue = true;
                     switch (type) {
                     case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
                         // a key separator preceeding block sequence entries
                         *mp_current_node = node_type::sequence();
                         apply_directive_set(*mp_current_node);
                         apply_node_properties(*mp_current_node);
+                        m_indent_stack.emplace_back(line, indent, false);
+                        do_continue = false;
                         break;
                     case lexical_token_t::EXPLICIT_KEY_PREFIX:
                         // a key separator for a explicit block mapping key.
@@ -4211,7 +4215,10 @@ private:
                         break; // LCOV_EXCL_LINE
                     }
 
-                    continue;
+                    if (do_continue) {
+                        continue;
+                    }
+                    break;
                 }
 
                 // handle explicit mapping key separators.
@@ -4248,9 +4255,10 @@ private:
                     *mp_current_node = node_type::sequence();
                     apply_directive_set(*mp_current_node);
                     apply_node_properties(*mp_current_node);
+                    m_indent_stack.emplace_back(line, indent, false);
+                    break;
                 }
-                indent = lexer.get_last_token_begin_pos();
-                line = lexer.get_lines_processed();
+
                 continue;
             }
             case lexical_token_t::VALUE_SEPARATOR:
@@ -4276,6 +4284,13 @@ private:
                 if (mp_current_node->is_sequence()) {
                     bool is_empty = mp_current_node->empty();
                     if (is_empty) {
+                        bool is_further_nested = !m_indent_stack.empty() && m_indent_stack.back().indent < indent;
+                        if (is_further_nested) {
+                            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(
+                                node_type::sequence());
+                            m_node_stack.push_back(mp_current_node);
+                            mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                        }
                         m_indent_stack.emplace_back(line, indent, false);
                         break;
                     }
