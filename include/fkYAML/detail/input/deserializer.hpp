@@ -99,15 +99,17 @@ public:
 
         switch (type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
-        case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+        case lexical_token_t::SEQUENCE_FLOW_BEGIN: {
             root = node_type::sequence();
             apply_directive_set(root);
-            m_context_stack.emplace_back(
+            parse_context context(
                 lexer.get_lines_processed(),
                 lexer.get_last_token_begin_pos(),
                 context_state_t::BLOCK_SEQUENCE_ENTRY,
                 &root);
+            m_context_stack.emplace_back(std::move(context));
             break;
+        }
         default:
             root = node_type::mapping();
             apply_directive_set(root);
@@ -257,11 +259,12 @@ private:
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     mp_current_node = new node_type(node_t::SEQUENCE);
-                    m_context_stack.emplace_back(
+                    parse_context context(
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos(),
                         context_state_t::BLOCK_SEQUENCE_ENTRY,
                         mp_current_node);
+                    m_context_stack.emplace_back(std::move(context));
                     apply_directive_set(*mp_current_node);
                     break;
                 }
