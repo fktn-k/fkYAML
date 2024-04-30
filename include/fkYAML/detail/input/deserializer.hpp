@@ -51,16 +51,23 @@ class basic_deserializer {
     /** A type for string node values. */
     using string_type = typename node_type::string_type;
 
+    /// @brief Definition of state types of parse contexts.
     enum class context_state_t {
-        BLOCK_MAPPING_KEY_IMPLICIT,
-        BLOCK_MAPPING_KEY_EXPLICIT,
-        BLOCK_MAPPING_VALUE,
-        BLOCK_SEQUENCE_ENTRY,
+        BLOCK_MAPPING_KEY_IMPLICIT, //!< The underlying node is an implicit block mapping key.
+        BLOCK_MAPPING_KEY_EXPLICIT, //!< The underlying node is an explicit block mapping key.
+        BLOCK_SEQUENCE_ENTRY,       //!< The underlying node is a sequence.
     };
 
+    /// @brief Context information set for parsing.
     struct parse_context {
+        /// @brief Construct a new parse_context object.
         parse_context() = default;
 
+        /// @brief Construct a new parse_context object with non-default values for each parameter.
+        /// @param _line The current line. (count from zero)
+        /// @param _indent The indentation width in the current line. (count from zero)
+        /// @param _state The parse context type.
+        /// @param _p_node The underlying node associated to this context.
         parse_context(std::size_t _line, std::size_t _indent, context_state_t _state, node_type* _p_node)
             : line(_line),
               indent(_indent),
@@ -68,9 +75,13 @@ class basic_deserializer {
               p_node(_p_node) {
         }
 
+        /// The current line. (count from zero)
         std::size_t line {0};
+        /// The indentation width in the current line. (count from zero)
         std::size_t indent {0};
+        /// The parse context type.
         context_state_t state {context_state_t::BLOCK_MAPPING_KEY_IMPLICIT};
+        /// The underlying node associated to this context.
         node_type* p_node {nullptr};
     };
 
@@ -80,8 +91,8 @@ public:
 
 public:
     /// @brief Deserialize a YAML-formatted source string into a YAML node.
-    /// @param source A YAML-formatted source string.
-    /// @return node_type A root YAML node deserialized from the source string.
+    /// @param input_adapter An adapter object for the input source buffer.
+    /// @return node_type A root YAML node object deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     node_type deserialize(InputAdapterType&& input_adapter) {
         lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
@@ -127,8 +138,7 @@ public:
 private:
     /// @brief Deserializes the YAML directives if specified.
     /// @param lexer The lexical analyzer to be used.
-    /// @param root The root YAML node.
-    /// @param type The variable to store the last lexical token type.
+    /// @param last_type The variable to store the last lexical token type.
     void deserialize_directives(lexer_type& lexer, lexical_token_t& last_type) {
         for (;;) {
             lexical_token_t type = lexer.get_next_token();
@@ -498,8 +508,7 @@ private:
     /// @return true if any property is found, false otherwise.
     bool deserialize_node_properties(
         lexer_type& lexer, lexical_token_t& last_type, std::size_t& line, std::size_t& indent) {
-        bool anchor_already_specified = false;
-        bool tag_already_specified = false;
+        m_needs_anchor_impl = m_needs_tag_impl = false;
 
         lexical_token_t type = last_type;
         bool ends_loop {false};
@@ -510,54 +519,50 @@ private:
 
             switch (type) {
             case lexical_token_t::ANCHOR_PREFIX:
-                if (anchor_already_specified) {
+                if (m_needs_anchor_impl) {
                     throw parse_error(
                         "anchor name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
-                anchor_already_specified = true;
 
                 m_anchor_name = lexer.get_string();
                 m_needs_anchor_impl = true;
 
-                if (!tag_already_specified) {
+                if (!m_needs_tag_impl) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
 
+                type = lexer.get_next_token();
                 break;
             case lexical_token_t::TAG_PREFIX: {
-                if (tag_already_specified) {
+                if (m_needs_tag_impl) {
                     throw parse_error(
                         "tag name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
-                tag_already_specified = true;
 
                 m_tag_name = lexer.get_string();
                 m_needs_tag_impl = true;
 
-                if (!anchor_already_specified) {
+                if (!m_needs_anchor_impl) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
 
+                type = lexer.get_next_token();
                 break;
             }
             default:
                 ends_loop = true;
                 break;
             }
-
-            if (!ends_loop) {
-                type = lexer.get_next_token();
-            }
         } while (!ends_loop);
 
         last_type = type;
-        bool prop_specified = anchor_already_specified || tag_already_specified;
+        bool prop_specified = m_needs_anchor_impl || m_needs_tag_impl;
         if (!prop_specified) {
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
@@ -568,6 +573,8 @@ private:
 
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
+    /// @param indent The indentation width in the current line where the key is found.
+    /// @param line The line where the key is found.
     void add_new_key(node_type&& key, const std::size_t indent, const std::size_t line) {
         if (!m_context_stack.empty() && indent < m_context_stack.back().indent) {
             auto target_itr =
@@ -715,6 +722,7 @@ private:
     }
 
     /// @brief Deserialize a detected scalar node.
+    /// @param lexer The lexical analyzer to be used.
     /// @param node A detected scalar node by a lexer.
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
