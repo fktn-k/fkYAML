@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <deque>
-#include <set>
 #include <unordered_map>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
@@ -52,19 +51,26 @@ class basic_deserializer {
     /** A type for string node values. */
     using string_type = typename node_type::string_type;
 
+    enum class context_state_t {
+        BLOCK_MAPPING_KEY_IMPLICIT,
+        BLOCK_MAPPING_KEY_EXPLICIT,
+        BLOCK_MAPPING_VALUE,
+        BLOCK_SEQUENCE_ENTRY,
+    };
+
     struct parse_context {
         parse_context() = default;
 
-        parse_context(std::size_t _line, std::size_t _indent, bool _is_explicit_key, node_type* _p_node)
+        parse_context(std::size_t _line, std::size_t _indent, context_state_t _state, node_type* _p_node)
             : line(_line),
               indent(_indent),
-              is_explicit_key(_is_explicit_key),
+              state(_state),
               p_node(_p_node) {
         }
 
         std::size_t line {0};
         std::size_t indent {0};
-        bool is_explicit_key {false};
+        context_state_t state {context_state_t::BLOCK_MAPPING_KEY_IMPLICIT};
         node_type* p_node {nullptr};
     };
 
@@ -81,22 +87,29 @@ public:
         lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
-        node_type root = node_type::mapping();
-        mp_current_node = &root;
+        node_type root;
 
         // parse directives first.
-        deserialize_directives(lexer, root, type);
+        deserialize_directives(lexer, type);
 
         switch (type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
             root = node_type::sequence();
             apply_directive_set(root);
-            m_context_stack.emplace_back(lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false, &root);
+            m_context_stack.emplace_back(
+                lexer.get_lines_processed(),
+                lexer.get_last_token_begin_pos(),
+                context_state_t::BLOCK_SEQUENCE_ENTRY,
+                &root);
             break;
         default:
+            root = node_type::mapping();
+            apply_directive_set(root);
             break;
         }
+
+        mp_current_node = &root;
 
         // parse YAML nodes recursively
         deserialize_node(lexer, type);
@@ -116,7 +129,7 @@ private:
     /// @param lexer The lexical analyzer to be used.
     /// @param root The root YAML node.
     /// @param type The variable to store the last lexical token type.
-    void deserialize_directives(lexer_type& lexer, node_type& root, lexical_token_t& last_type) {
+    void deserialize_directives(lexer_type& lexer, lexical_token_t& last_type) {
         for (;;) {
             lexical_token_t type = lexer.get_next_token();
 
@@ -124,9 +137,6 @@ private:
             case lexical_token_t::YAML_VER_DIRECTIVE:
                 if (!mp_directive_set) {
                     mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
-                }
-                if (!root.mp_directive_set) {
-                    root.mp_directive_set = mp_directive_set;
                 }
 
                 if (mp_directive_set->is_version_specified) {
@@ -142,9 +152,6 @@ private:
             case lexical_token_t::TAG_DIRECTIVE: {
                 if (!mp_directive_set) {
                     mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
-                }
-                if (!root.mp_directive_set) {
-                    root.mp_directive_set = mp_directive_set;
                 }
 
                 const std::string& tag_handle = lexer.get_tag_handle();
@@ -229,16 +236,28 @@ private:
                 }
 
                 if (mp_current_node->is_null()) {
+                    // This path is needed in case the input contains nested explicit keys like the following YAML
+                    // snippet:
+                    // ```yaml
+                    // ? ? foo
+                    //   : bar
+                    // : baz
+                    // ```
                     *mp_current_node = node_type::mapping();
+                    apply_directive_set(*mp_current_node);
                 }
 
-                m_context_stack.emplace_back(line, indent, true, mp_current_node);
+                m_context_stack.emplace_back(
+                    line, indent, context_state_t::BLOCK_MAPPING_KEY_EXPLICIT, mp_current_node);
 
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     mp_current_node = new node_type(node_t::SEQUENCE);
                     m_context_stack.emplace_back(
-                        lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), false, mp_current_node);
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos(),
+                        context_state_t::BLOCK_SEQUENCE_ENTRY,
+                        mp_current_node);
                     apply_directive_set(*mp_current_node);
                     break;
                 }
@@ -307,13 +326,13 @@ private:
                         *mp_current_node = node_type::sequence();
                         apply_directive_set(*mp_current_node);
                         apply_node_properties(*mp_current_node);
-                        m_context_stack.emplace_back(line, indent, false, mp_current_node);
+                        m_context_stack.emplace_back(
+                            line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
                         do_continue = false;
                         break;
                     case lexical_token_t::EXPLICIT_KEY_PREFIX:
                         // a key separator for a explicit block mapping key.
-                        *mp_current_node = node_type::mapping();
-                        apply_directive_set(*mp_current_node);
+                        // defer the handling of the explicit key prefix token until the next loop.
                         break;
                     // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
                     // call.
@@ -338,7 +357,7 @@ private:
 
                 // handle explicit mapping key separators.
 
-                while (!m_context_stack.back().is_explicit_key) {
+                while (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_KEY_EXPLICIT) {
                     mp_current_node = m_context_stack.back().p_node;
                     m_context_stack.pop_back();
                 }
@@ -348,14 +367,14 @@ private:
                 mp_current_node = &(m_context_stack.back().p_node->operator[](*key_node));
                 delete key_node;
                 key_node = nullptr;
-                m_context_stack.back().is_explicit_key = false;
+                m_context_stack.back().state = context_state_t::BLOCK_MAPPING_KEY_IMPLICIT;
                 m_context_stack.emplace_back(m_context_stack.back());
 
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     *mp_current_node = node_type::sequence();
                     apply_directive_set(*mp_current_node);
                     apply_node_properties(*mp_current_node);
-                    m_context_stack.emplace_back(line, indent, false, mp_current_node);
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
                     break;
                 }
 
@@ -388,11 +407,13 @@ private:
                         if (is_further_nested) {
                             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(
                                 node_type::sequence());
-                            m_context_stack.emplace_back(line, indent, false, mp_current_node);
+                            m_context_stack.emplace_back(
+                                line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
                             mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                             break;
                         }
-                        m_context_stack.emplace_back(line, indent, false, mp_current_node);
+                        m_context_stack.emplace_back(
+                            line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
                         break;
                     }
 
@@ -412,7 +433,7 @@ private:
 
                 // for mappings in a sequence.
                 mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
-                m_context_stack.emplace_back(line, indent, false, mp_current_node);
+                m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
                 mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                 apply_directive_set(*mp_current_node);
                 break;
@@ -477,7 +498,8 @@ private:
     /// @return true if any property is found, false otherwise.
     bool deserialize_node_properties(
         lexer_type& lexer, lexical_token_t& last_type, std::size_t& line, std::size_t& indent) {
-        std::set<lexical_token_t> prop_types {lexical_token_t::ANCHOR_PREFIX, lexical_token_t::TAG_PREFIX};
+        bool anchor_already_specified = false;
+        bool tag_already_specified = false;
 
         lexical_token_t type = last_type;
         bool ends_loop {false};
@@ -487,40 +509,37 @@ private:
             }
 
             switch (type) {
-            case lexical_token_t::ANCHOR_PREFIX: {
-                bool already_specified = prop_types.find(type) == prop_types.end();
-                if (already_specified) {
+            case lexical_token_t::ANCHOR_PREFIX:
+                if (anchor_already_specified) {
                     throw parse_error(
                         "anchor name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
+                anchor_already_specified = true;
 
-                prop_types.erase(type);
                 m_anchor_name = lexer.get_string();
                 m_needs_anchor_impl = true;
 
-                if (prop_types.size() == 1) {
+                if (!tag_already_specified) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
 
                 break;
-            }
             case lexical_token_t::TAG_PREFIX: {
-                bool already_specified = prop_types.find(type) == prop_types.end();
-                if (already_specified) {
+                if (tag_already_specified) {
                     throw parse_error(
                         "tag name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
+                tag_already_specified = true;
 
-                prop_types.erase(type);
                 m_tag_name = lexer.get_string();
                 m_needs_tag_impl = true;
 
-                if (prop_types.size() == 1) {
+                if (!anchor_already_specified) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
@@ -538,12 +557,13 @@ private:
         } while (!ends_loop);
 
         last_type = type;
-        if (prop_types.size() == 2) {
+        bool prop_specified = anchor_already_specified || tag_already_specified;
+        if (!prop_specified) {
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
         }
 
-        return prop_types.size() < 2;
+        return prop_specified;
     }
 
     /// @brief Add new key string to the current YAML node.
@@ -569,7 +589,7 @@ private:
 
         if (mp_current_node->is_sequence()) {
             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
-            m_context_stack.emplace_back(line, indent, false, mp_current_node);
+            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
             mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
         }
 
@@ -577,7 +597,8 @@ private:
         bool is_empty = map.empty();
         if (is_empty) {
             if (m_flow_context_depth == 0) {
-                m_context_stack.emplace_back(line, indent, false, mp_current_node);
+                m_context_stack.emplace_back(
+                    line, indent, context_state_t::BLOCK_MAPPING_KEY_IMPLICIT, mp_current_node);
             }
         }
         else {
@@ -589,8 +610,8 @@ private:
         }
 
         map.emplace(key, node_type());
-        m_context_stack.emplace_back(line, indent, false, mp_current_node);
-        mp_current_node = &(mp_current_node->operator[](key));
+        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_KEY_IMPLICIT, mp_current_node);
+        mp_current_node = &(mp_current_node->operator[](std::move(key)));
     }
 
     /// @brief Assign node value to the current node.
@@ -603,7 +624,7 @@ private:
 
         // a scalar node
         *mp_current_node = std::move(node_value);
-        if (m_flow_context_depth > 0 || !m_context_stack.back().is_explicit_key) {
+        if (m_flow_context_depth > 0 || m_context_stack.back().state != context_state_t::BLOCK_MAPPING_KEY_EXPLICIT) {
             mp_current_node = m_context_stack.back().p_node;
             m_context_stack.pop_back();
         }
@@ -712,7 +733,7 @@ private:
                 if (line != lexer.get_lines_processed()) {
                     // This path is for explicit mapping key separator(:)
                     assign_node_value(std::move(node));
-                    if (!m_context_stack.back().is_explicit_key) {
+                    if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_KEY_EXPLICIT) {
                         m_context_stack.pop_back();
                     }
                     indent = lexer.get_last_token_begin_pos();
@@ -721,7 +742,7 @@ private:
                 }
 
                 parse_context& last_context = m_context_stack.back();
-                if (last_context.line == line && !last_context.is_explicit_key) {
+                if (last_context.line == line && last_context.state != context_state_t::BLOCK_MAPPING_KEY_EXPLICIT) {
                     throw parse_error("multiple mapping keys are specified on the same line.", line, indent);
                 }
 
