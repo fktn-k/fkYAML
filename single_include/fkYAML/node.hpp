@@ -4298,7 +4298,7 @@ private:
                     }
 
                     // move back to the previous sequence if necessary.
-                    while (!mp_current_node->is_sequence() || indent != m_context_stack.back().indent) {
+                    while (!mp_current_node->is_sequence() || indent < m_context_stack.back().indent) {
                         mp_current_node = m_context_stack.back().p_node;
                         m_context_stack.pop_back();
                     }
@@ -4455,11 +4455,11 @@ private:
                 throw parse_error("Detected invalid indentaion.", line, indent);
             }
 
-            auto pop_num = std::distance(m_context_stack.rbegin(), target_itr);
+            auto pop_num = std::distance(m_context_stack.rbegin(), target_itr) + 1;
             for (auto i = 0; i < pop_num; i++) {
                 // move back to the previous container node.
-                m_context_stack.pop_back();
                 mp_current_node = m_context_stack.back().p_node;
+                m_context_stack.pop_back();
             }
         }
 
@@ -4611,6 +4611,7 @@ private:
                     // This path is for explicit mapping key separator(:)
                     assign_node_value(std::move(node));
                     if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_KEY_EXPLICIT) {
+                        mp_current_node = m_context_stack.back().p_node;
                         m_context_stack.pop_back();
                     }
                     indent = lexer.get_last_token_begin_pos();
