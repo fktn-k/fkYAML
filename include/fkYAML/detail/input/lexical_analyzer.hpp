@@ -80,25 +80,25 @@ public:
         m_last_token_begin_line = m_pos_tracker.get_lines_read();
 
         if (m_cur_itr == m_end_itr) {
-            return m_last_token_type = lexical_token_t::END_OF_BUFFER;
+            return lexical_token_t::END_OF_BUFFER;
         }
 
         switch (char current = *m_cur_itr) {
         case '?':
             if (++m_cur_itr == m_end_itr) {
                 m_value_buffer = "?";
-                return m_last_token_type = lexical_token_t::STRING_VALUE;
+                return lexical_token_t::STRING_VALUE;
             }
 
             switch (*m_cur_itr) {
             case ' ':
-                return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
+                return lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
-                return m_last_token_type = scan_scalar();
+                return scan_scalar();
             }
         case ':': { // key separater
             if (++m_cur_itr == m_end_itr) {
-                return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
+                return lexical_token_t::KEY_SEPARATOR;
             }
 
             switch (*m_cur_itr) {
@@ -122,18 +122,18 @@ public:
                 return scan_scalar();
             }
 
-            return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
+            return lexical_token_t::KEY_SEPARATOR;
         }
         case ',': // value separater
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
+            return lexical_token_t::VALUE_SEPARATOR;
         case '&': { // anchor prefix
             extract_anchor_name();
             bool is_empty = m_value_buffer.empty();
             if (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
-            return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
+            return lexical_token_t::ANCHOR_PREFIX;
         }
         case '*': { // alias prefix
             extract_anchor_name();
@@ -142,92 +142,90 @@ public:
                 emit_error("anchor name must not be empty.");
             }
 
-            return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
+            return lexical_token_t::ALIAS_PREFIX;
         }
         case '!':
             extract_tag_name();
-            return m_last_token_type = lexical_token_t::TAG_PREFIX;
+            return lexical_token_t::TAG_PREFIX;
         case '#': // comment prefix
             scan_comment();
             return get_next_token();
         case '%': // directive prefix
-            return m_last_token_type = scan_directive();
+            return scan_directive();
         case '-': {
             char next = *(m_cur_itr + 1);
             if (next == ' ') {
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
-                return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
             }
 
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
                 m_cur_itr += 3;
                 if (std::equal(m_token_begin_itr, m_cur_itr, "---")) {
-                    return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
+                    return lexical_token_t::END_OF_DIRECTIVES;
                 }
             }
 
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
+            return lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
             if (m_flow_context_depth == 0) {
                 emit_error("An invalid flow sequence ending.");
             }
             m_flow_context_depth--;
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_END;
+            return lexical_token_t::SEQUENCE_FLOW_END;
         case '{': // mapping flow begin
             m_flow_context_depth++;
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::MAPPING_FLOW_BEGIN;
+            return lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
             if (m_flow_context_depth == 0) {
                 emit_error("An invalid flow mapping ending.");
             }
             m_flow_context_depth--;
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::MAPPING_FLOW_END;
+            return lexical_token_t::MAPPING_FLOW_END;
         case '@':
             emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
         case '`':
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
         case '\'':
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         case '+':
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         case '.': {
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
                 if (std::equal(m_cur_itr, m_cur_itr + 3, "...")) {
                     m_cur_itr += 3;
-                    return m_last_token_type = lexical_token_t::END_OF_DOCUMENT;
+                    return lexical_token_t::END_OF_DOCUMENT;
                 }
             }
 
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         }
         case '|': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             std::size_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type =
-                       scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            return scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
         }
         case '>': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             std::size_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type =
-                       scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            return scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
         default:
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         }
     }
 
@@ -250,8 +248,8 @@ public:
     }
 
     /// @brief Convert from string to boolean and get the converted value.
-    /// @return true  A string token is one of the followings: "true", "True", "TRUE".
-    /// @return false A string token is one of the followings: "false", "False", "FALSE".
+    /// @retval true  A string token is one of the followings: "true", "True", "TRUE".
+    /// @retval false A string token is one of the followings: "false", "False", "FALSE".
     boolean_type get_boolean() const {
         return from_string(m_value_buffer, type_tag<bool> {});
     }
@@ -1418,14 +1416,6 @@ private:
     std::size_t m_last_token_begin_line {0};
     /// The current depth of flow context.
     uint32_t m_flow_context_depth {0};
-    /// The last found token type.
-    lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
-    /// A temporal bool holder.
-    boolean_type m_boolean_val {false};
-    /// A temporal integer holder.
-    integer_type m_integer_val {0};
-    /// A temporal floating point number holder.
-    float_number_type m_float_val {0.0};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

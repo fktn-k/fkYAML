@@ -42,12 +42,6 @@ class basic_deserializer {
     using sequence_type = typename node_type::sequence_type;
     /** A type for mapping node value containers. */
     using mapping_type = typename node_type::mapping_type;
-    /** A type for boolean node values. */
-    using boolean_type = typename node_type::boolean_type;
-    /** A type for integer node values. */
-    using integer_type = typename node_type::integer_type;
-    /** A type for float number node values. */
-    using float_number_type = typename node_type::float_number_type;
     /** A type for string node values. */
     using string_type = typename node_type::string_type;
 
