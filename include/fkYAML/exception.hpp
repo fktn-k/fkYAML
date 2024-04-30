@@ -113,13 +113,13 @@ private:
 /// @brief An exception class indicating an error in parsing.
 class parse_error : public exception {
 public:
-    explicit parse_error(const char* msg, std::size_t lines, std::size_t cols_in_line) noexcept
+    explicit parse_error(const char* msg, uint32_t lines, uint32_t cols_in_line) noexcept
         : exception(generate_error_message(msg, lines, cols_in_line).c_str()) {
     }
 
 private:
-    std::string generate_error_message(const char* msg, std::size_t lines, std::size_t cols_in_line) const noexcept {
-        return detail::format("parse_error: %s (at line %zu, column %zu)", msg, lines, cols_in_line);
+    std::string generate_error_message(const char* msg, uint32_t lines, uint32_t cols_in_line) const noexcept {
+        return detail::format("parse_error: %s (at line %u, column %u)", msg, lines, cols_in_line);
     }
 };
 

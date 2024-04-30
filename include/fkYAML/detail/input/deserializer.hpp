@@ -62,7 +62,7 @@ class basic_deserializer {
         /// @param _indent The indentation width in the current line. (count from zero)
         /// @param _state The parse context type.
         /// @param _p_node The underlying node associated to this context.
-        parse_context(std::size_t _line, std::size_t _indent, context_state_t _state, node_type* _p_node)
+        parse_context(uint32_t _line, uint32_t _indent, context_state_t _state, node_type* _p_node)
             : line(_line),
               indent(_indent),
               state(_state),
@@ -70,9 +70,9 @@ class basic_deserializer {
         }
 
         /// The current line. (count from zero)
-        std::size_t line {0};
+        uint32_t line {0};
         /// The indentation width in the current line. (count from zero)
-        std::size_t indent {0};
+        uint32_t indent {0};
         /// The parse context type.
         context_state_t state {context_state_t::BLOCK_MAPPING_KEY_IMPLICIT};
         /// The underlying node associated to this context.
@@ -215,8 +215,8 @@ private:
     /// @param first_type The first lexical token type.
     void deserialize_node(lexer_type& lexer, lexical_token_t first_type) {
         lexical_token_t type = first_type;
-        std::size_t line = lexer.get_lines_processed();
-        std::size_t indent = lexer.get_last_token_begin_pos();
+        uint32_t line = lexer.get_lines_processed();
+        uint32_t indent = lexer.get_last_token_begin_pos();
 
         do {
             switch (type) {
@@ -280,8 +280,8 @@ private:
                 }
 
                 // hold the line count of the key separator for later use.
-                std::size_t old_indent = indent;
-                std::size_t old_line = line;
+                uint32_t old_indent = indent;
+                uint32_t old_line = line;
 
                 type = lexer.get_next_token();
                 line = lexer.get_lines_processed();
@@ -500,8 +500,7 @@ private:
     /// @param line The variable to store the line of either the first property or the last non-property token.
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
-    bool deserialize_node_properties(
-        lexer_type& lexer, lexical_token_t& last_type, std::size_t& line, std::size_t& indent) {
+    bool deserialize_node_properties(lexer_type& lexer, lexical_token_t& last_type, uint32_t& line, uint32_t& indent) {
         m_needs_anchor_impl = m_needs_tag_impl = false;
 
         lexical_token_t type = last_type;
@@ -569,7 +568,7 @@ private:
     /// @param key a key string to be added to the current YAML node.
     /// @param indent The indentation width in the current line where the key is found.
     /// @param line The line where the key is found.
-    void add_new_key(node_type&& key, const std::size_t indent, const std::size_t line) {
+    void add_new_key(node_type&& key, const uint32_t indent, const uint32_t line) {
         if (!m_context_stack.empty() && indent < m_context_stack.back().indent) {
             auto target_itr =
                 std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
@@ -637,7 +636,7 @@ private:
     /// @param indent The last indent size.
     /// @param line The last line.
     /// @return The created YAML scalar node.
-    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, std::size_t indent, std::size_t line) {
+    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, uint32_t indent, uint32_t line) {
         FK_YAML_ASSERT(
             type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
             type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
@@ -721,7 +720,7 @@ private:
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
-    bool deserialize_scalar(lexer_type& lexer, std::size_t& indent, std::size_t& line, lexical_token_t& type) {
+    bool deserialize_scalar(lexer_type& lexer, uint32_t& indent, uint32_t& line, lexical_token_t& type) {
         node_type node = create_scalar_node(lexer, type, indent, line);
 
         if (mp_current_node->is_mapping()) {
@@ -798,7 +797,7 @@ private:
     /// The stack of parse contexts.
     std::deque<parse_context> m_context_stack {};
     /// The current depth of flow contexts.
-    std::size_t m_flow_context_depth {0};
+    uint32_t m_flow_context_depth {0};
     /// The set of YAML directives.
     std::shared_ptr<detail::directive_set> mp_directive_set {};
     /// A flag to determine the need for YAML anchor node implementation.

@@ -28,11 +28,11 @@ private:
     /// @brief A set of information on the current position in an input buffer.
     struct position {
         /// The current position from the beginning of an input buffer.
-        std::size_t cur_pos {0};
+        uint32_t cur_pos {0};
         /// The current position in the current line.
-        std::size_t cur_pos_in_line {0};
+        uint32_t cur_pos_in_line {0};
         /// The number of lines which have already been read.
-        std::size_t lines_read {0};
+        uint32_t lines_read {0};
     };
 
 public:
@@ -46,8 +46,8 @@ public:
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(std::string::const_iterator cur_pos) {
-        m_position.cur_pos = static_cast<std::size_t>(std::distance(m_begin, cur_pos));
-        m_position.lines_read += std::count(m_last, cur_pos, '\n');
+        m_position.cur_pos = static_cast<uint32_t>(std::distance(m_begin, cur_pos));
+        m_position.lines_read += static_cast<uint32_t>(std::count(m_last, cur_pos, '\n'));
         m_last = cur_pos;
 
         if (m_position.lines_read == 0) {
@@ -55,7 +55,7 @@ public:
             return;
         }
 
-        std::size_t count = 0;
+        uint32_t count = 0;
         while (--cur_pos != m_begin) {
             if (*cur_pos == '\n') {
                 break;
@@ -65,19 +65,19 @@ public:
         m_position.cur_pos_in_line = count;
     }
 
-    std::size_t get_cur_pos() const noexcept {
+    uint32_t get_cur_pos() const noexcept {
         return m_position.cur_pos;
     }
 
     /// @brief Get the current position in the current line.
-    /// @return std::size_t The current position in the current line.
-    std::size_t get_cur_pos_in_line() const noexcept {
+    /// @return uint32_t The current position in the current line.
+    uint32_t get_cur_pos_in_line() const noexcept {
         return m_position.cur_pos_in_line;
     }
 
     /// @brief Get the number of lines which have already been read.
-    /// @return std::size_t The number of lines which have already been read.
-    std::size_t get_lines_read() const noexcept {
+    /// @return uint32_t The number of lines which have already been read.
+    uint32_t get_lines_read() const noexcept {
         return m_position.lines_read;
     }
 

@@ -214,13 +214,13 @@ public:
         }
         case '|': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            std::size_t indent = 0;
+            uint32_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
             return scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
         }
         case '>': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            std::size_t indent = 0;
+            uint32_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
             return scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
@@ -230,14 +230,14 @@ public:
     }
 
     /// @brief Get the beginning position of a last token.
-    /// @return std::size_t The beginning position of a last token.
-    std::size_t get_last_token_begin_pos() const noexcept {
+    /// @return uint32_t The beginning position of a last token.
+    uint32_t get_last_token_begin_pos() const noexcept {
         return m_last_token_begin_pos;
     }
 
     /// @brief Get the number of lines already processed.
-    /// @return std::size_t The number of lines already processed.
-    std::size_t get_lines_processed() const noexcept {
+    /// @return uint32_t The number of lines already processed.
+    uint32_t get_lines_processed() const noexcept {
         return m_last_token_begin_line;
     }
 
@@ -672,6 +672,8 @@ private:
             }
 
             std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
+            FK_YAML_ASSERT(last_tag_prefix_pos != std::string::npos);
+
             bool is_valid_uri =
                 uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
             if (!is_valid_uri) {
@@ -1019,7 +1021,7 @@ private:
     /// @param indent The indent size specified for the given token.
     /// @return The lexical token type for strings.
     lexical_token_t scan_block_style_string_token(
-        block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent) {
+        block_style_indicator_t style, chomping_indicator_t chomp, uint32_t indent) {
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
@@ -1049,7 +1051,7 @@ private:
         }
 
         m_pos_tracker.update_position(m_cur_itr);
-        std::size_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
+        uint32_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
 
         // TODO: preserve and compare the last indentation with `cur_indent`
         if (indent == 0) {
@@ -1059,16 +1061,16 @@ private:
             emit_error("A block style scalar is less indented than the indicated level.");
         }
 
-        int chars_in_line = 0;
+        uint32_t chars_in_line = 0;
         bool is_extra_indented = false;
         if (cur_indent > indent) {
-            std::size_t diff = cur_indent - indent;
+            uint32_t diff = cur_indent - indent;
             if (style == block_style_indicator_t::FOLDED) {
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
             }
             m_value_buffer.append(diff, ' ');
-            chars_in_line += static_cast<int>(diff);
+            chars_in_line += diff;
         }
 
         for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
@@ -1103,7 +1105,7 @@ private:
                     // Append a newline if the next line is empty.
                     bool is_end_of_token = false;
                     bool is_next_empty = false;
-                    for (std::size_t i = 0; i < indent; i++) {
+                    for (uint32_t i = 0; i < indent; i++) {
                         if (++m_cur_itr == m_end_itr) {
                             is_end_of_token = true;
                             break;
@@ -1310,7 +1312,7 @@ private:
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
-    void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent) {
+    void get_block_style_metadata(chomping_indicator_t& chomp_type, uint32_t& indent) {
         chomp_type = chomping_indicator_t::CLIP;
         switch (*++m_cur_itr) {
         case '-':
@@ -1409,11 +1411,11 @@ private:
     /// A temporal buffer to store a UTF-8 encoded char sequence.
     std::array<uint8_t, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.
-    std::size_t m_encoded_size {0};
+    uint32_t m_encoded_size {0};
     /// The beginning position of the last lexical token. (zero origin)
-    std::size_t m_last_token_begin_pos {0};
+    uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)
-    std::size_t m_last_token_begin_line {0};
+    uint32_t m_last_token_begin_line {0};
     /// The current depth of flow context.
     uint32_t m_flow_context_depth {0};
 };

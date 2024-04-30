@@ -954,13 +954,13 @@ private:
 /// @brief An exception class indicating an error in parsing.
 class parse_error : public exception {
 public:
-    explicit parse_error(const char* msg, std::size_t lines, std::size_t cols_in_line) noexcept
+    explicit parse_error(const char* msg, uint32_t lines, uint32_t cols_in_line) noexcept
         : exception(generate_error_message(msg, lines, cols_in_line).c_str()) {
     }
 
 private:
-    std::string generate_error_message(const char* msg, std::size_t lines, std::size_t cols_in_line) const noexcept {
-        return detail::format("parse_error: %s (at line %zu, column %zu)", msg, lines, cols_in_line);
+    std::string generate_error_message(const char* msg, uint32_t lines, uint32_t cols_in_line) const noexcept {
+        return detail::format("parse_error: %s (at line %u, column %u)", msg, lines, cols_in_line);
     }
 };
 
@@ -1568,8 +1568,7 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
 /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
 /// @param[out] encoded_size The size of UTF-encoded bytes.
 inline void from_utf16(
-    std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, std::size_t& consumed_size,
-    std::size_t& encoded_size) {
+    std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size, uint32_t& encoded_size) {
     if (utf16[0] < char16_t(0x80u)) {
         utf8[0] = static_cast<uint8_t>(utf16[0] & 0x7Fu);
         consumed_size = 1;
@@ -1619,7 +1618,7 @@ inline void from_utf16(
 /// @param[in] utf32 A UTF-32 encoded character.
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[in] encoded_size The size of UTF-encoded bytes.
-inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, std::size_t& encoded_size) {
+inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint32_t& encoded_size) {
     if (utf32 < char32_t(0x80u)) {
         utf8[0] = static_cast<uint8_t>(utf32 & 0x007F);
         encoded_size = 1;
@@ -2039,11 +2038,11 @@ private:
     /// @brief A set of information on the current position in an input buffer.
     struct position {
         /// The current position from the beginning of an input buffer.
-        std::size_t cur_pos {0};
+        uint32_t cur_pos {0};
         /// The current position in the current line.
-        std::size_t cur_pos_in_line {0};
+        uint32_t cur_pos_in_line {0};
         /// The number of lines which have already been read.
-        std::size_t lines_read {0};
+        uint32_t lines_read {0};
     };
 
 public:
@@ -2057,8 +2056,8 @@ public:
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(std::string::const_iterator cur_pos) {
-        m_position.cur_pos = static_cast<std::size_t>(std::distance(m_begin, cur_pos));
-        m_position.lines_read += std::count(m_last, cur_pos, '\n');
+        m_position.cur_pos = static_cast<uint32_t>(std::distance(m_begin, cur_pos));
+        m_position.lines_read += static_cast<uint32_t>(std::count(m_last, cur_pos, '\n'));
         m_last = cur_pos;
 
         if (m_position.lines_read == 0) {
@@ -2066,7 +2065,7 @@ public:
             return;
         }
 
-        std::size_t count = 0;
+        uint32_t count = 0;
         while (--cur_pos != m_begin) {
             if (*cur_pos == '\n') {
                 break;
@@ -2076,19 +2075,19 @@ public:
         m_position.cur_pos_in_line = count;
     }
 
-    std::size_t get_cur_pos() const noexcept {
+    uint32_t get_cur_pos() const noexcept {
         return m_position.cur_pos;
     }
 
     /// @brief Get the current position in the current line.
-    /// @return std::size_t The current position in the current line.
-    std::size_t get_cur_pos_in_line() const noexcept {
+    /// @return uint32_t The current position in the current line.
+    uint32_t get_cur_pos_in_line() const noexcept {
         return m_position.cur_pos_in_line;
     }
 
     /// @brief Get the number of lines which have already been read.
-    /// @return std::size_t The number of lines which have already been read.
-    std::size_t get_lines_read() const noexcept {
+    /// @return uint32_t The number of lines which have already been read.
+    uint32_t get_lines_read() const noexcept {
         return m_position.lines_read;
     }
 
@@ -2467,13 +2466,13 @@ public:
         }
         case '|': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            std::size_t indent = 0;
+            uint32_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
             return scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
         }
         case '>': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            std::size_t indent = 0;
+            uint32_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
             return scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
@@ -2483,14 +2482,14 @@ public:
     }
 
     /// @brief Get the beginning position of a last token.
-    /// @return std::size_t The beginning position of a last token.
-    std::size_t get_last_token_begin_pos() const noexcept {
+    /// @return uint32_t The beginning position of a last token.
+    uint32_t get_last_token_begin_pos() const noexcept {
         return m_last_token_begin_pos;
     }
 
     /// @brief Get the number of lines already processed.
-    /// @return std::size_t The number of lines already processed.
-    std::size_t get_lines_processed() const noexcept {
+    /// @return uint32_t The number of lines already processed.
+    uint32_t get_lines_processed() const noexcept {
         return m_last_token_begin_line;
     }
 
@@ -2925,6 +2924,8 @@ private:
             }
 
             std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
+            FK_YAML_ASSERT(last_tag_prefix_pos != std::string::npos);
+
             bool is_valid_uri =
                 uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
             if (!is_valid_uri) {
@@ -3272,7 +3273,7 @@ private:
     /// @param indent The indent size specified for the given token.
     /// @return The lexical token type for strings.
     lexical_token_t scan_block_style_string_token(
-        block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent) {
+        block_style_indicator_t style, chomping_indicator_t chomp, uint32_t indent) {
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
@@ -3302,7 +3303,7 @@ private:
         }
 
         m_pos_tracker.update_position(m_cur_itr);
-        std::size_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
+        uint32_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
 
         // TODO: preserve and compare the last indentation with `cur_indent`
         if (indent == 0) {
@@ -3312,16 +3313,16 @@ private:
             emit_error("A block style scalar is less indented than the indicated level.");
         }
 
-        int chars_in_line = 0;
+        uint32_t chars_in_line = 0;
         bool is_extra_indented = false;
         if (cur_indent > indent) {
-            std::size_t diff = cur_indent - indent;
+            uint32_t diff = cur_indent - indent;
             if (style == block_style_indicator_t::FOLDED) {
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
             }
             m_value_buffer.append(diff, ' ');
-            chars_in_line += static_cast<int>(diff);
+            chars_in_line += diff;
         }
 
         for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
@@ -3356,7 +3357,7 @@ private:
                     // Append a newline if the next line is empty.
                     bool is_end_of_token = false;
                     bool is_next_empty = false;
-                    for (std::size_t i = 0; i < indent; i++) {
+                    for (uint32_t i = 0; i < indent; i++) {
                         if (++m_cur_itr == m_end_itr) {
                             is_end_of_token = true;
                             break;
@@ -3563,7 +3564,7 @@ private:
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
-    void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent) {
+    void get_block_style_metadata(chomping_indicator_t& chomp_type, uint32_t& indent) {
         chomp_type = chomping_indicator_t::CLIP;
         switch (*++m_cur_itr) {
         case '-':
@@ -3662,11 +3663,11 @@ private:
     /// A temporal buffer to store a UTF-8 encoded char sequence.
     std::array<uint8_t, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.
-    std::size_t m_encoded_size {0};
+    uint32_t m_encoded_size {0};
     /// The beginning position of the last lexical token. (zero origin)
-    std::size_t m_last_token_begin_pos {0};
+    uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)
-    std::size_t m_last_token_begin_line {0};
+    uint32_t m_last_token_begin_line {0};
     /// The current depth of flow context.
     uint32_t m_flow_context_depth {0};
 };
@@ -3937,7 +3938,7 @@ class basic_deserializer {
         /// @param _indent The indentation width in the current line. (count from zero)
         /// @param _state The parse context type.
         /// @param _p_node The underlying node associated to this context.
-        parse_context(std::size_t _line, std::size_t _indent, context_state_t _state, node_type* _p_node)
+        parse_context(uint32_t _line, uint32_t _indent, context_state_t _state, node_type* _p_node)
             : line(_line),
               indent(_indent),
               state(_state),
@@ -3945,9 +3946,9 @@ class basic_deserializer {
         }
 
         /// The current line. (count from zero)
-        std::size_t line {0};
+        uint32_t line {0};
         /// The indentation width in the current line. (count from zero)
-        std::size_t indent {0};
+        uint32_t indent {0};
         /// The parse context type.
         context_state_t state {context_state_t::BLOCK_MAPPING_KEY_IMPLICIT};
         /// The underlying node associated to this context.
@@ -4090,8 +4091,8 @@ private:
     /// @param first_type The first lexical token type.
     void deserialize_node(lexer_type& lexer, lexical_token_t first_type) {
         lexical_token_t type = first_type;
-        std::size_t line = lexer.get_lines_processed();
-        std::size_t indent = lexer.get_last_token_begin_pos();
+        uint32_t line = lexer.get_lines_processed();
+        uint32_t indent = lexer.get_last_token_begin_pos();
 
         do {
             switch (type) {
@@ -4155,8 +4156,8 @@ private:
                 }
 
                 // hold the line count of the key separator for later use.
-                std::size_t old_indent = indent;
-                std::size_t old_line = line;
+                uint32_t old_indent = indent;
+                uint32_t old_line = line;
 
                 type = lexer.get_next_token();
                 line = lexer.get_lines_processed();
@@ -4375,8 +4376,7 @@ private:
     /// @param line The variable to store the line of either the first property or the last non-property token.
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
-    bool deserialize_node_properties(
-        lexer_type& lexer, lexical_token_t& last_type, std::size_t& line, std::size_t& indent) {
+    bool deserialize_node_properties(lexer_type& lexer, lexical_token_t& last_type, uint32_t& line, uint32_t& indent) {
         m_needs_anchor_impl = m_needs_tag_impl = false;
 
         lexical_token_t type = last_type;
@@ -4444,7 +4444,7 @@ private:
     /// @param key a key string to be added to the current YAML node.
     /// @param indent The indentation width in the current line where the key is found.
     /// @param line The line where the key is found.
-    void add_new_key(node_type&& key, const std::size_t indent, const std::size_t line) {
+    void add_new_key(node_type&& key, const uint32_t indent, const uint32_t line) {
         if (!m_context_stack.empty() && indent < m_context_stack.back().indent) {
             auto target_itr =
                 std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
@@ -4512,7 +4512,7 @@ private:
     /// @param indent The last indent size.
     /// @param line The last line.
     /// @return The created YAML scalar node.
-    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, std::size_t indent, std::size_t line) {
+    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, uint32_t indent, uint32_t line) {
         FK_YAML_ASSERT(
             type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
             type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
@@ -4596,7 +4596,7 @@ private:
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
-    bool deserialize_scalar(lexer_type& lexer, std::size_t& indent, std::size_t& line, lexical_token_t& type) {
+    bool deserialize_scalar(lexer_type& lexer, uint32_t& indent, uint32_t& line, lexical_token_t& type) {
         node_type node = create_scalar_node(lexer, type, indent, line);
 
         if (mp_current_node->is_mapping()) {
@@ -4673,7 +4673,7 @@ private:
     /// The stack of parse contexts.
     std::deque<parse_context> m_context_stack {};
     /// The current depth of flow contexts.
-    std::size_t m_flow_context_depth {0};
+    uint32_t m_flow_context_depth {0};
     /// The set of YAML directives.
     std::shared_ptr<detail::directive_set> mp_directive_set {};
     /// A flag to determine the need for YAML anchor node implementation.
@@ -4841,7 +4841,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
     switch (ElemSize) {
     case sizeof(char): { // this case covers char8_t as well when compiled with C++20 or better.
-        for (std::size_t i = 0; i < 4 && begin + i != end; i++) {
+        for (int i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = uint8_t(begin[i]);
         }
 
@@ -4921,7 +4921,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
 
 inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept {
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (std::size_t i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
         char byte = 0;
         std::size_t size = std::fread(&byte, sizeof(char), 1, file);
         if (size != sizeof(char)) {
@@ -4957,7 +4957,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept {
 
 inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept {
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (std::size_t i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
         char ch = 0;
         is.read(&ch, 1);
         std::streamsize size = is.gcount();
@@ -5124,9 +5124,9 @@ private:
         }
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
-        std::size_t encoded_buf_size {0};
+        uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
@@ -5134,7 +5134,7 @@ private:
                 encoded_buffer[encoded_buf_size++] |= static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[1]);
             }
 
-            std::size_t consumed_size = 0;
+            uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1) {
@@ -5166,7 +5166,7 @@ private:
         }
 
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (m_current != m_end) {
             char32_t utf32 = static_cast<char32_t>(*m_current++ << shift_bits[0]);
@@ -5311,9 +5311,9 @@ public:
         int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
-        std::size_t encoded_buf_size {0};
+        uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
@@ -5323,7 +5323,7 @@ public:
                     static_cast<uint16_t>((tmp & 0xFF00u) >> shift_bits));
             }
 
-            std::size_t consumed_size = 0;
+            uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1) {
@@ -5385,7 +5385,7 @@ public:
         }
 
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (m_current != m_end) {
             char32_t tmp = *m_current++;
@@ -5519,9 +5519,9 @@ private:
 
         char chars[2] = {0, 0};
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
-        std::size_t encoded_buf_size {0};
+        uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (std::feof(m_file) == 0) {
             while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2) {
@@ -5530,7 +5530,7 @@ private:
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
             }
 
-            std::size_t consumed_size = 0;
+            uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1) {
@@ -5563,7 +5563,7 @@ private:
 
         char chars[4] = {0, 0, 0, 0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (std::feof(m_file) == 0) {
             std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
@@ -5696,9 +5696,9 @@ private:
 
         char chars[2] = {0, 0};
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
-        std::size_t encoded_buf_size {0};
+        uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         do {
             while (encoded_buf_size < 2) {
@@ -5713,7 +5713,7 @@ private:
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
             };
 
-            std::size_t consumed_size = 0;
+            uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1) {
@@ -5746,7 +5746,7 @@ private:
 
         char chars[4] = {0, 0, 0, 0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         do {
             m_istream->read(&chars[0], 4);
