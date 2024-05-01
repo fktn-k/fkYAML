@@ -392,6 +392,51 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(root_2_2_node.is_float_number());
         REQUIRE(root_2_2_node.get_value<double>() == 84.50);
     }
+
+    SECTION("root sequence with child flow mapping") {
+        std::string input = "- {foo: false, null: 123}\n"
+                            "- {true: 3.14, bar: [0x30,0o30]}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_mapping());
+        REQUIRE(root_0_node.size() == 2);
+        REQUIRE(root_0_node.contains("foo"));
+        REQUIRE(root_0_node.contains(nullptr));
+
+        fkyaml::node& root_0_foo_node = root_0_node["foo"];
+        REQUIRE(root_0_foo_node.is_boolean());
+        REQUIRE(root_0_foo_node.get_value<bool>() == false);
+
+        fkyaml::node& root_0_null_node = root_0_node[nullptr];
+        REQUIRE(root_0_null_node.is_integer());
+        REQUIRE(root_0_null_node.get_value<int>() == 123);
+
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_mapping());
+        REQUIRE(root_1_node.size() == 2);
+        REQUIRE(root_1_node.contains(true));
+        REQUIRE(root_1_node.contains("bar"));
+
+        fkyaml::node& root_1_true_node = root_1_node[true];
+        REQUIRE(root_1_true_node.is_float_number());
+        REQUIRE(root_1_true_node.get_value<double>() == 3.14);
+
+        fkyaml::node& root_1_bar_node = root_1_node["bar"];
+        REQUIRE(root_1_bar_node.is_sequence());
+        REQUIRE(root_1_bar_node.size() == 2);
+
+        fkyaml::node& root_1_bar_0_node = root_1_bar_node[0];
+        REQUIRE(root_1_bar_0_node.is_integer());
+        REQUIRE(root_1_bar_0_node.get_value<int>() == 0x30);
+
+        fkyaml::node& root_1_bar_1_node = root_1_bar_node[1];
+        REQUIRE(root_1_bar_1_node.is_integer());
+        REQUIRE(root_1_bar_1_node.get_value<int>() == 030);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMapping") {

@@ -4371,8 +4371,18 @@ private:
                 break;
             }
             case lexical_token_t::MAPPING_FLOW_BEGIN:
-                ++m_flow_context_depth;
-                *mp_current_node = node_type::mapping();
+                if (m_flow_context_depth++ == 0 && m_context_stack.back().indent < indent) {
+                    if (mp_current_node->is_sequence()) {
+                        mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
+                        mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    }
+                    else {
+                        *mp_current_node = node_type::mapping();
+                    }
+                }
+                else {
+                    *mp_current_node = node_type::mapping();
+                }
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
                 m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
