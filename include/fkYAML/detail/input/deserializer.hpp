@@ -437,22 +437,13 @@ private:
                 //   the correct indent width for the "bar" node key.
 
                 continue;
-            case lexical_token_t::SEQUENCE_BLOCK_PREFIX:
-                if (mp_current_node->is_sequence()) {
-                    bool is_empty = mp_current_node->empty();
-                    if (is_empty) {
-                        bool is_further_nested = m_context_stack.back().indent < indent;
-                        if (is_further_nested) {
-                            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(
-                                node_type::sequence());
-                            mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
-                            m_context_stack.emplace_back(
-                                line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
-                            break;
-                        }
-                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
-                        break;
-                    }
+            case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
+                bool is_further_nested = m_context_stack.back().indent < indent;
+                if (is_further_nested) {
+                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
+                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
+                    break;
                 }
 
                 // move back to the previous sequence if necessary.
@@ -462,6 +453,7 @@ private:
                 }
                 mp_current_node = m_context_stack.back().p_node;
                 break;
+            }
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
                 if (m_flow_context_depth++ == 0 && m_context_stack.back().indent < indent) {
                     if (mp_current_node->is_sequence()) {

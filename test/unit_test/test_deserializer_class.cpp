@@ -299,11 +299,13 @@ TEST_CASE("Deserializer_BlockSequence") {
     SECTION("root sequence with nested child block sequence") {
         std::string input = "- - foo\n"
                             "  - 123\n"
-                            "- 3.14";
+                            "- 3.14\n"
+                            "- - True\n"
+                            "  - null";
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
 
         REQUIRE(root.is_sequence());
-        REQUIRE(root.size() == 2);
+        REQUIRE(root.size() == 3);
 
         fkyaml::node& root_0_node = root[0];
         REQUIRE(root_0_node.is_sequence());
@@ -320,6 +322,17 @@ TEST_CASE("Deserializer_BlockSequence") {
         fkyaml::node& root_1_node = root[1];
         REQUIRE(root_1_node.is_float_number());
         REQUIRE(root_1_node.get_value<double>() == 3.14);
+
+        fkyaml::node& root_2_node = root[2];
+        REQUIRE(root_2_node.is_sequence());
+        REQUIRE(root_2_node.size() == 2);
+
+        fkyaml::node& root_2_0_node = root_2_node[0];
+        REQUIRE(root_2_0_node.is_boolean());
+        REQUIRE(root_2_0_node.get_value<bool>() == true);
+
+        fkyaml::node& root_2_1_node = root_2_node[1];
+        REQUIRE(root_2_1_node.is_null());
     }
 
     SECTION("root sequence with child flow sequence") {
