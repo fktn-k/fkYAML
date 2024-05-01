@@ -1025,7 +1025,7 @@ TEST_CASE("Deserializer_FlowSequence") {
     }
 
     SECTION("lack the beginning of a flow sequence") {
-        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: ]")), fkyaml::parse_error);
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: {]}")), fkyaml::parse_error);
     }
 
     SECTION("root flow sequence") {
@@ -1105,10 +1105,10 @@ TEST_CASE("Deserializer_FlowMapping") {
     }
 
     SECTION("lack the beginning of a flow mapping") {
-        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: }")), fkyaml::parse_error);
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: [}]")), fkyaml::parse_error);
     }
 
-    SECTION("flow mapping with a flow sequence") {
+    SECTION("flow mapping with child flow sequence") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test: {foo: [true,123]}")));
 
         REQUIRE(root.is_mapping());
@@ -1131,6 +1131,28 @@ TEST_CASE("Deserializer_FlowMapping") {
         fkyaml::node& test_foo_1_node = test_foo_node[1];
         REQUIRE(test_foo_1_node.is_integer());
         REQUIRE(test_foo_1_node.get_value<int>() == 123);
+    }
+
+    SECTION("flow mapping with child flow mapping") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test: {foo: {true: 123}}")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
+
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_mapping());
+        REQUIRE(test_node.size() == 1);
+        REQUIRE(test_node.contains("foo"));
+
+        fkyaml::node& test_foo_node = test_node["foo"];
+        REQUIRE(test_foo_node.is_mapping());
+        REQUIRE(test_foo_node.size() == 1);
+        REQUIRE(test_foo_node.contains(true));
+
+        fkyaml::node& test_foo_true_node = test_foo_node[true];
+        REQUIRE(test_foo_true_node.is_integer());
+        REQUIRE(test_foo_true_node.get_value<int>() == 123);
     }
 
     SECTION("root flow mapping") {

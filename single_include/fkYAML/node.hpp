@@ -2427,9 +2427,6 @@ public:
             ++m_cur_itr;
             return lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
-            if (m_flow_context_depth == 0) {
-                emit_error("An invalid flow sequence ending.");
-            }
             m_flow_context_depth--;
             ++m_cur_itr;
             return lexical_token_t::SEQUENCE_FLOW_END;
@@ -2438,9 +2435,6 @@ public:
             ++m_cur_itr;
             return lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
-            if (m_flow_context_depth == 0) {
-                emit_error("An invalid flow mapping ending.");
-            }
             m_flow_context_depth--;
             ++m_cur_itr;
             return lexical_token_t::MAPPING_FLOW_END;
@@ -4130,10 +4124,10 @@ private:
                 else {
                     bool needs_to_move_back = indent < m_context_stack.back().indent;
                     if (needs_to_move_back) {
-                        auto target_itr = std::find_if(
-                            m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
-                                return indent > c.indent;
-                            });
+                        auto target_itr = std::find_if( // LCOV_EXCL_LINE
+                            m_context_stack.rbegin(),
+                            m_context_stack.rend(),
+                            [indent](const parse_context& c) { return indent > c.indent; });
                         pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
                     }
                 }
@@ -4163,11 +4157,12 @@ private:
                         line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, new node_type(node_t::SEQUENCE));
                     mp_current_node = m_context_stack.back().p_node;
                     apply_directive_set(*mp_current_node);
-                    m_context_stack.emplace_back(
+                    parse_context context(
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos(),
                         context_state_t::BLOCK_SEQUENCE,
                         mp_current_node);
+                    m_context_stack.emplace_back(std::move(context));
                     break;
                 }
 
@@ -4330,8 +4325,9 @@ private:
                 mp_current_node = m_context_stack.back().p_node;
                 break;
             }
-            case lexical_token_t::SEQUENCE_FLOW_BEGIN:
-                if (m_flow_context_depth++ == 0 && m_context_stack.back().indent < indent) {
+            case lexical_token_t::SEQUENCE_FLOW_BEGIN: {
+                bool is_more_nested_in_block = m_flow_context_depth++ == 0 && m_context_stack.back().indent < indent;
+                if (is_more_nested_in_block) {
                     if (mp_current_node->is_sequence()) {
                         mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
                         mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
@@ -4347,15 +4343,18 @@ private:
                 apply_node_properties(*mp_current_node);
                 m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
                 break;
+            }
             case lexical_token_t::SEQUENCE_FLOW_END: {
-                FK_YAML_ASSERT(m_flow_context_depth > 0);
                 --m_flow_context_depth;
 
                 // find the corresponding flow sequence beginning.
-                auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [](const parse_context& c) {
-                    return c.state == context_state_t::FLOW_SEQUENCE;
-                });
-                if (itr == m_context_stack.rend()) {
+                auto itr = std::find_if( // LCOV_EXCL_LINE
+                    m_context_stack.rbegin(),
+                    m_context_stack.rend(),
+                    [](const parse_context& c) { return c.state == context_state_t::FLOW_SEQUENCE; });
+
+                bool is_valid = itr != m_context_stack.rend();
+                if (!is_valid) {
                     throw parse_error("invalid flow sequence ending is found.", line, indent);
                 }
 
@@ -4370,8 +4369,9 @@ private:
                 }
                 break;
             }
-            case lexical_token_t::MAPPING_FLOW_BEGIN:
-                if (m_flow_context_depth++ == 0 && m_context_stack.back().indent < indent) {
+            case lexical_token_t::MAPPING_FLOW_BEGIN: {
+                bool is_more_nested_in_block = m_flow_context_depth++ == 0 && m_context_stack.back().indent < indent;
+                if (is_more_nested_in_block) {
                     if (mp_current_node->is_sequence()) {
                         mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
                         mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
@@ -4387,15 +4387,18 @@ private:
                 apply_node_properties(*mp_current_node);
                 m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
                 break;
+            }
             case lexical_token_t::MAPPING_FLOW_END: {
-                FK_YAML_ASSERT(m_flow_context_depth > 0);
                 --m_flow_context_depth;
 
                 // find the corresponding flow mapping beginning.
-                auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [](const parse_context& c) {
-                    return c.state == context_state_t::FLOW_MAPPING;
-                });
-                if (itr == m_context_stack.rend()) {
+                auto itr = std::find_if( // LCOV_EXCL_LINE
+                    m_context_stack.rbegin(),
+                    m_context_stack.rend(),
+                    [](const parse_context& c) { return c.state == context_state_t::FLOW_MAPPING; });
+
+                bool is_valid = itr != m_context_stack.rend();
+                if (!is_valid) {
                     throw parse_error("invalid flow mapping ending is found.", line, indent);
                 }
 
@@ -4516,7 +4519,7 @@ private:
         else if (indent < m_context_stack.back().indent) {
             auto target_itr =
                 std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
-                    return indent == c.indent && c.state == context_state_t::BLOCK_MAPPING;
+                    return indent == c.indent;
                 });
             bool is_indent_valid = (target_itr != m_context_stack.rend());
             if (!is_indent_valid) {
@@ -4687,11 +4690,9 @@ private:
                     if (cur_context.line == line) {
                         throw parse_error("Multiple mapping keys are specified on the same line.", line, indent);
                     }
-                    if (cur_context.state != context_state_t::FLOW_MAPPING) {
-                        cur_context.line = line;
-                        cur_context.indent = indent;
-                        cur_context.state = context_state_t::BLOCK_MAPPING;
-                    }
+                    cur_context.line = line;
+                    cur_context.indent = indent;
+                    cur_context.state = context_state_t::BLOCK_MAPPING;
                     break;
                 }
 

@@ -175,9 +175,6 @@ public:
             ++m_cur_itr;
             return lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
-            if (m_flow_context_depth == 0) {
-                emit_error("An invalid flow sequence ending.");
-            }
             m_flow_context_depth--;
             ++m_cur_itr;
             return lexical_token_t::SEQUENCE_FLOW_END;
@@ -186,9 +183,6 @@ public:
             ++m_cur_itr;
             return lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
-            if (m_flow_context_depth == 0) {
-                emit_error("An invalid flow mapping ending.");
-            }
             m_flow_context_depth--;
             ++m_cur_itr;
             return lexical_token_t::MAPPING_FLOW_END;
