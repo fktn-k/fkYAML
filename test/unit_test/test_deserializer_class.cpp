@@ -321,6 +321,64 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(root_1_node.is_float_number());
         REQUIRE(root_1_node.get_value<double>() == 3.14);
     }
+
+    SECTION("root sequence with child flow sequence") {
+        std::string input = "- [username, identifier, score]\n"
+                            "- [booker12, 9012      , 61.25]\n"
+                            "- [grey07  , 2070      , 84.50]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 3);
+
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_sequence());
+        REQUIRE(root_0_node.size() == 3);
+
+        fkyaml::node& root_0_0_node = root_0_node[0];
+        REQUIRE(root_0_0_node.is_string());
+        REQUIRE(root_0_0_node.get_value_ref<std::string&>() == "username");
+
+        fkyaml::node& root_0_1_node = root_0_node[1];
+        REQUIRE(root_0_1_node.is_string());
+        REQUIRE(root_0_1_node.get_value_ref<std::string&>() == "identifier");
+
+        fkyaml::node& root_0_2_node = root_0_node[2];
+        REQUIRE(root_0_2_node.is_string());
+        REQUIRE(root_0_2_node.get_value_ref<std::string&>() == "score");
+
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_sequence());
+        REQUIRE(root_1_node.size() == 3);
+
+        fkyaml::node& root_1_0_node = root_1_node[0];
+        REQUIRE(root_1_0_node.is_string());
+        REQUIRE(root_1_0_node.get_value_ref<std::string&>() == "booker12");
+
+        fkyaml::node& root_1_1_node = root_1_node[1];
+        REQUIRE(root_1_1_node.is_integer());
+        REQUIRE(root_1_1_node.get_value<int>() == 9012);
+
+        fkyaml::node& root_1_2_node = root_1_node[2];
+        REQUIRE(root_1_2_node.is_float_number());
+        REQUIRE(root_1_2_node.get_value<double>() == 61.25);
+
+        fkyaml::node& root_2_node = root[2];
+        REQUIRE(root_2_node.is_sequence());
+        REQUIRE(root_2_node.size() == 3);
+
+        fkyaml::node& root_2_0_node = root_2_node[0];
+        REQUIRE(root_2_0_node.is_string());
+        REQUIRE(root_2_0_node.get_value_ref<std::string&>() == "grey07");
+
+        fkyaml::node& root_2_1_node = root_2_node[1];
+        REQUIRE(root_2_1_node.is_integer());
+        REQUIRE(root_2_1_node.get_value<int>() == 2070);
+
+        fkyaml::node& root_2_2_node = root_2_node[2];
+        REQUIRE(root_2_2_node.is_float_number());
+        REQUIRE(root_2_2_node.get_value<double>() == 84.50);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMapping") {
