@@ -75,6 +75,7 @@ TEST_CASE("FromNode_UserDefinedTypeVector") {
     fkyaml::node node = fkyaml::node::deserialize(input);
 
     auto novels = node["novels"].get_value<std::vector<test::novel>>();
+    REQUIRE(novels.size() == 2);
     REQUIRE(novels[0].title == "Robinson Crusoe");
     REQUIRE(novels[0].author == "Daniel Defoe");
     REQUIRE(novels[0].year == 1678);
