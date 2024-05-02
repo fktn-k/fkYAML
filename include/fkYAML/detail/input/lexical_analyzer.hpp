@@ -765,6 +765,7 @@ private:
                 m_value_buffer.push_back('\b');
                 break;
             case 't':
+            case char(0x09):
                 m_value_buffer.push_back('\t');
                 break;
             case 'n':
