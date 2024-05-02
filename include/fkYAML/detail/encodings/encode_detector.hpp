@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.6
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -87,7 +87,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
     switch (ElemSize) {
     case sizeof(char): { // this case covers char8_t as well when compiled with C++20 or better.
-        for (std::size_t i = 0; i < 4 && begin + i != end; i++) {
+        for (int i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = uint8_t(begin[i]);
         }
 
@@ -167,7 +167,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
 
 inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept {
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (std::size_t i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
         char byte = 0;
         std::size_t size = std::fread(&byte, sizeof(char), 1, file);
         if (size != sizeof(char)) {
@@ -203,7 +203,7 @@ inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept {
 
 inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept {
     std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (std::size_t i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
         char ch = 0;
         is.read(&ch, 1);
         std::streamsize size = is.gcount();

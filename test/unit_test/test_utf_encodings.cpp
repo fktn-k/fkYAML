@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.6
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -288,8 +288,8 @@ TEST_CASE("UTF8_FromUTF16") {
 
         std::array<uint8_t, 4> utf8_bytes;
         utf8_bytes.fill(0);
-        std::size_t consumed_size {0};
-        std::size_t encoded_size {0};
+        uint32_t consumed_size {0};
+        uint32_t encoded_size {0};
 
         fkyaml::detail::utf8::from_utf16(params.utf16, utf8_bytes, consumed_size, encoded_size);
 
@@ -305,8 +305,8 @@ TEST_CASE("UTF8_FromUTF16") {
             std::array<char16_t, 2> {{char16_t(0xDBFFu), char16_t(0xE000u)}});
 
         std::array<uint8_t, 4> utf8_bytes;
-        std::size_t consumed_size;
-        std::size_t encoded_size;
+        uint32_t consumed_size;
+        uint32_t encoded_size;
 
         REQUIRE_THROWS_AS(
             fkyaml::detail::utf8::from_utf16(utf16, utf8_bytes, consumed_size, encoded_size), fkyaml::invalid_encoding);
@@ -318,7 +318,7 @@ TEST_CASE("UTF8_FromUTF32") {
         struct test_params {
             char32_t utf32;
             std::array<uint8_t, 4> utf8_bytes;
-            std::size_t size;
+            uint32_t size;
         };
         auto params = GENERATE(
             test_params {0x00u, {{uint8_t(0x00u)}}, 1},
@@ -339,7 +339,7 @@ TEST_CASE("UTF8_FromUTF32") {
 
         std::array<uint8_t, 4> utf8_bytes;
         utf8_bytes.fill(0);
-        std::size_t size {0};
+        uint32_t size {0};
         fkyaml::detail::utf8::from_utf32(params.utf32, utf8_bytes, size);
 
         REQUIRE(utf8_bytes == params.utf8_bytes);
@@ -349,7 +349,7 @@ TEST_CASE("UTF8_FromUTF32") {
     SECTION("invalid UTF-32 character") {
         char32_t utf32 = 0x110000u;
         std::array<uint8_t, 4> utf8_bytes;
-        std::size_t encoded_size;
+        uint32_t encoded_size;
 
         REQUIRE_THROWS_AS(fkyaml::detail::utf8::from_utf32(utf32, utf8_bytes, encoded_size), fkyaml::invalid_encoding);
     }

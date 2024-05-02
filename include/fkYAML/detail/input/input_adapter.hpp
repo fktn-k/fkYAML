@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.6
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -143,9 +143,9 @@ private:
         }
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
-        std::size_t encoded_buf_size {0};
+        uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
@@ -153,7 +153,7 @@ private:
                 encoded_buffer[encoded_buf_size++] |= static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[1]);
             }
 
-            std::size_t consumed_size = 0;
+            uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1) {
@@ -185,7 +185,7 @@ private:
         }
 
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (m_current != m_end) {
             char32_t utf32 = static_cast<char32_t>(*m_current++ << shift_bits[0]);
@@ -330,9 +330,9 @@ public:
         int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
-        std::size_t encoded_buf_size {0};
+        uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
@@ -342,7 +342,7 @@ public:
                     static_cast<uint16_t>((tmp & 0xFF00u) >> shift_bits));
             }
 
-            std::size_t consumed_size = 0;
+            uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1) {
@@ -404,7 +404,7 @@ public:
         }
 
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (m_current != m_end) {
             char32_t tmp = *m_current++;
@@ -538,9 +538,9 @@ private:
 
         char chars[2] = {0, 0};
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
-        std::size_t encoded_buf_size {0};
+        uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (std::feof(m_file) == 0) {
             while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2) {
@@ -549,7 +549,7 @@ private:
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
             }
 
-            std::size_t consumed_size = 0;
+            uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1) {
@@ -582,7 +582,7 @@ private:
 
         char chars[4] = {0, 0, 0, 0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         while (std::feof(m_file) == 0) {
             std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
@@ -715,9 +715,9 @@ private:
 
         char chars[2] = {0, 0};
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
-        std::size_t encoded_buf_size {0};
+        uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         do {
             while (encoded_buf_size < 2) {
@@ -732,7 +732,7 @@ private:
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
             };
 
-            std::size_t consumed_size = 0;
+            uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
             if (consumed_size == 1) {
@@ -765,7 +765,7 @@ private:
 
         char chars[4] = {0, 0, 0, 0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
-        std::size_t utf8_buf_size {0};
+        uint32_t utf8_buf_size {0};
 
         do {
             m_istream->read(&chars[0], 4);

@@ -4,26 +4,26 @@
 <!-- Edit ./tools/natvis_generator/fkYAML.natvis.j2 -->
 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-    <!-- Namespace fkyaml::v0_3_5 -->
-    <Type Name="fkyaml::v0_3_5::basic_node&lt;*&gt;">
-        <DisplayString Condition="m_node_type == fkyaml::v0_3_5::detail::node_t::SEQUENCE">{*(m_node_value.p_sequence)}</DisplayString>
-        <DisplayString Condition="m_node_type == fkyaml::v0_3_5::detail::node_t::MAPPING">{*(m_node_value.p_mapping)}</DisplayString>
-        <DisplayString Condition="m_node_type == fkyaml::v0_3_5::detail::node_t::NULL_OBJECT">nullptr</DisplayString>
-        <DisplayString Condition="m_node_type == fkyaml::v0_3_5::detail::node_t::BOOLEAN">{m_node_value.boolean}</DisplayString>
-        <DisplayString Condition="m_node_type == fkyaml::v0_3_5::detail::node_t::INTEGER">{m_node_value.integer}</DisplayString>
-        <DisplayString Condition="m_node_type == fkyaml::v0_3_5::detail::node_t::FLOAT_NUMBER">{m_node_value.float_val}</DisplayString>
-        <DisplayString Condition="m_node_type == fkyaml::v0_3_5::detail::node_t::STRING">{*(m_node_value.p_string)}</DisplayString>
+    <!-- Namespace fkyaml::v0_3_6 -->
+    <Type Name="fkyaml::v0_3_6::basic_node&lt;*&gt;">
+        <DisplayString Condition="m_node_type == fkyaml::v0_3_6::detail::node_t::SEQUENCE">{*(m_node_value.p_sequence)}</DisplayString>
+        <DisplayString Condition="m_node_type == fkyaml::v0_3_6::detail::node_t::MAPPING">{*(m_node_value.p_mapping)}</DisplayString>
+        <DisplayString Condition="m_node_type == fkyaml::v0_3_6::detail::node_t::NULL_OBJECT">nullptr</DisplayString>
+        <DisplayString Condition="m_node_type == fkyaml::v0_3_6::detail::node_t::BOOLEAN">{m_node_value.boolean}</DisplayString>
+        <DisplayString Condition="m_node_type == fkyaml::v0_3_6::detail::node_t::INTEGER">{m_node_value.integer}</DisplayString>
+        <DisplayString Condition="m_node_type == fkyaml::v0_3_6::detail::node_t::FLOAT_NUMBER">{m_node_value.float_val}</DisplayString>
+        <DisplayString Condition="m_node_type == fkyaml::v0_3_6::detail::node_t::STRING">{*(m_node_value.p_string)}</DisplayString>
         <Expand>
-            <ExpandedItem Condition="m_node_type == fkyaml::v0_3_5::detail::node_t::SEQUENCE">
+            <ExpandedItem Condition="m_node_type == fkyaml::v0_3_6::detail::node_t::SEQUENCE">
                 *(m_node_value.p_sequence),view(simple)
             </ExpandedItem>
-            <ExpandedItem Condition="m_node_type == fkyaml::v0_3_5::detail::node_t::MAPPING">
+            <ExpandedItem Condition="m_node_type == fkyaml::v0_3_6::detail::node_t::MAPPING">
                 *(m_node_value.p_mapping),view(simple)
             </ExpandedItem>
         </Expand>
     </Type>
 
-    <Type Name="std::pair&lt;*, fkyaml::v0_3_5::basic_node&lt;*&gt;&gt;" IncludeView="MapHelper">
+    <Type Name="std::pair&lt;*, fkyaml::v0_3_6::basic_node&lt;*&gt;&gt;" IncludeView="MapHelper">
         <DisplayString>{second}</DisplayString>
         <Expand>
             <ExpandedItem>second</ExpandedItem>

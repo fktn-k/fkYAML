@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.6
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -32,7 +32,7 @@ TEST_CASE("Deserializer_KeySeparator") {
     }
 
     SECTION("error cases") {
-        auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"), std::string("- - : foo"));
+        auto input_str = GENERATE(std::string("- : foo"), std::string("- - : foo"));
         REQUIRE_THROWS_AS(
             root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
     }
@@ -179,28 +179,20 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
 
-        REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_sequence());
         REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 2);
 
-        REQUIRE_NOTHROW(test_node[0]);
         fkyaml::node& test_0_node = test_node[0];
         REQUIRE(test_0_node.is_string());
-        REQUIRE_NOTHROW(test_0_node.size());
-        REQUIRE(test_0_node.size() == 3);
-        REQUIRE_NOTHROW(test_0_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_0_node.get_value_ref<fkyaml::node::string_type&>().compare("foo") == 0);
+        REQUIRE(test_0_node.get_value_ref<std::string&>() == "foo");
 
-        REQUIRE_NOTHROW(test_node[1]);
         fkyaml::node& test_1_node = test_node[1];
         REQUIRE(test_1_node.is_string());
-        REQUIRE_NOTHROW(test_1_node.size());
-        REQUIRE(test_1_node.size() == 3);
-        REQUIRE_NOTHROW(test_1_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_1_node.get_value_ref<fkyaml::node::string_type&>().compare("bar") == 0);
+        REQUIRE(test_1_node.get_value_ref<std::string&>() == "bar");
     }
 
     SECTION("block sequence with nested mappings") {
@@ -215,44 +207,36 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_sequence());
-        REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 2);
 
-        REQUIRE_NOTHROW(test_node[0]);
         fkyaml::node& test_0_node = test_node[0];
         REQUIRE(test_0_node.is_mapping());
-        REQUIRE_NOTHROW(test_0_node.size());
         REQUIRE(test_0_node.size() == 2);
+        REQUIRE(test_0_node.contains("foo"));
+        REQUIRE(test_0_node.contains("bar"));
 
-        REQUIRE_NOTHROW(test_0_node["foo"]);
         fkyaml::node& test_0_foo_node = test_0_node["foo"];
         REQUIRE(test_0_foo_node.is_boolean());
-        REQUIRE_NOTHROW(test_0_foo_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(test_0_foo_node.get_value<fkyaml::node::boolean_type>() == true);
+        REQUIRE(test_0_foo_node.get_value<bool>() == true);
 
-        REQUIRE_NOTHROW(test_0_node["bar"]);
         fkyaml::node& test_0_bar_node = test_0_node["bar"];
         REQUIRE(test_0_bar_node.is_string());
-        REQUIRE_NOTHROW(test_0_bar_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_0_bar_node.get_value_ref<fkyaml::node::string_type&>().compare("one") == 0);
+        REQUIRE(test_0_bar_node.get_value_ref<std::string&>() == "one");
 
-        REQUIRE_NOTHROW(test_node[1]);
         fkyaml::node& test_1_node = test_node[1];
         REQUIRE(test_1_node.is_mapping());
         REQUIRE_NOTHROW(test_1_node.size());
         REQUIRE(test_1_node.size() == 2);
+        REQUIRE(test_1_node.contains("foo"));
+        REQUIRE(test_1_node.contains("bar"));
 
-        REQUIRE_NOTHROW(test_1_node["foo"]);
         fkyaml::node& test_1_foo_node = test_1_node["foo"];
         REQUIRE(test_1_foo_node.is_boolean());
-        REQUIRE_NOTHROW(test_1_foo_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(test_1_foo_node.get_value<fkyaml::node::boolean_type>() == false);
+        REQUIRE(test_1_foo_node.get_value<bool>() == false);
 
-        REQUIRE_NOTHROW(test_1_node["bar"]);
         fkyaml::node& test_1_bar_node = test_1_node["bar"];
         REQUIRE(test_1_bar_node.is_string());
-        REQUIRE_NOTHROW(test_1_bar_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_1_bar_node.get_value_ref<fkyaml::node::string_type&>().compare("two") == 0);
+        REQUIRE(test_1_bar_node.get_value_ref<std::string&>() == "two");
     }
 
     SECTION("block mapping with a comment in between") {
@@ -263,15 +247,18 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(root.size() == 1);
         REQUIRE(root.contains("test"));
 
-        REQUIRE(root["test"].is_sequence());
-        REQUIRE(root["test"].size() == 1);
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE(test_node.size() == 1);
 
-        REQUIRE(root["test"][0].is_mapping());
-        REQUIRE(root["test"][0].size() == 1);
-        REQUIRE(root["test"][0].contains("item"));
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_mapping());
+        REQUIRE(test_0_node.size() == 1);
+        REQUIRE(test_0_node.contains("item"));
 
-        REQUIRE(root["test"][0]["item"].is_integer());
-        REQUIRE(root["test"][0]["item"].get_value<int>() == 123);
+        fkyaml::node& test_0_item_node = test_0_node["item"];
+        REQUIRE(test_0_item_node.is_integer());
+        REQUIRE(test_0_item_node.get_value<int>() == 123);
     }
 
     SECTION("block mapping with a comment next to the key") {
@@ -281,11 +268,13 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(root.size() == 1);
         REQUIRE(root.contains("foo"));
 
-        REQUIRE(root["foo"].is_sequence());
-        REQUIRE(root["foo"].size() == 1);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_sequence());
+        REQUIRE(foo_node.size() == 1);
 
-        REQUIRE(root["foo"][0].is_string());
-        REQUIRE(root["foo"][0].get_value_ref<std::string&>() == "bar");
+        fkyaml::node& foo_0_node = foo_node[0];
+        REQUIRE(foo_0_node.is_string());
+        REQUIRE(foo_0_node.get_value_ref<std::string&>() == "bar");
     }
 
     SECTION("root sequence") {
@@ -294,14 +283,212 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(root.is_sequence());
         REQUIRE(root.size() == 3);
 
-        REQUIRE(root[0].is_string());
-        REQUIRE(root[0].get_value_ref<std::string&>() == "foo");
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_string());
+        REQUIRE(root_0_node.get_value_ref<std::string&>() == "foo");
 
-        REQUIRE(root[1].is_integer());
-        REQUIRE(root[1].get_value<int>() == 123);
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_integer());
+        REQUIRE(root_1_node.get_value<int>() == 123);
 
-        REQUIRE(root[2].is_float_number());
-        REQUIRE(root[2].get_value<double>() == 3.14);
+        fkyaml::node& root_2_node = root[2];
+        REQUIRE(root_2_node.is_float_number());
+        REQUIRE(root_2_node.get_value<double>() == 3.14);
+    }
+
+    SECTION("root sequence with nested child block sequence") {
+        std::string input = "- - foo\n"
+                            "  - 123\n"
+                            "- 3.14\n"
+                            "- - True\n"
+                            "  - null";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 3);
+
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_sequence());
+        REQUIRE(root_0_node.size() == 2);
+
+        fkyaml::node& root_0_0_node = root_0_node[0];
+        REQUIRE(root_0_0_node.is_string());
+        REQUIRE(root_0_0_node.get_value_ref<std::string&>() == "foo");
+
+        fkyaml::node& root_0_1_node = root_0_node[1];
+        REQUIRE(root_0_1_node.is_integer());
+        REQUIRE(root_0_1_node.get_value<int>() == 123);
+
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_float_number());
+        REQUIRE(root_1_node.get_value<double>() == 3.14);
+
+        fkyaml::node& root_2_node = root[2];
+        REQUIRE(root_2_node.is_sequence());
+        REQUIRE(root_2_node.size() == 2);
+
+        fkyaml::node& root_2_0_node = root_2_node[0];
+        REQUIRE(root_2_0_node.is_boolean());
+        REQUIRE(root_2_0_node.get_value<bool>() == true);
+
+        fkyaml::node& root_2_1_node = root_2_node[1];
+        REQUIRE(root_2_1_node.is_null());
+    }
+
+    SECTION("root sequence with child flow sequence") {
+        std::string input = "- [username, identifier, score]\n"
+                            "- [booker12, 9012      , 61.25]\n"
+                            "- [grey07  , 2070      , 84.50]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 3);
+
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_sequence());
+        REQUIRE(root_0_node.size() == 3);
+
+        fkyaml::node& root_0_0_node = root_0_node[0];
+        REQUIRE(root_0_0_node.is_string());
+        REQUIRE(root_0_0_node.get_value_ref<std::string&>() == "username");
+
+        fkyaml::node& root_0_1_node = root_0_node[1];
+        REQUIRE(root_0_1_node.is_string());
+        REQUIRE(root_0_1_node.get_value_ref<std::string&>() == "identifier");
+
+        fkyaml::node& root_0_2_node = root_0_node[2];
+        REQUIRE(root_0_2_node.is_string());
+        REQUIRE(root_0_2_node.get_value_ref<std::string&>() == "score");
+
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_sequence());
+        REQUIRE(root_1_node.size() == 3);
+
+        fkyaml::node& root_1_0_node = root_1_node[0];
+        REQUIRE(root_1_0_node.is_string());
+        REQUIRE(root_1_0_node.get_value_ref<std::string&>() == "booker12");
+
+        fkyaml::node& root_1_1_node = root_1_node[1];
+        REQUIRE(root_1_1_node.is_integer());
+        REQUIRE(root_1_1_node.get_value<int>() == 9012);
+
+        fkyaml::node& root_1_2_node = root_1_node[2];
+        REQUIRE(root_1_2_node.is_float_number());
+        REQUIRE(root_1_2_node.get_value<double>() == 61.25);
+
+        fkyaml::node& root_2_node = root[2];
+        REQUIRE(root_2_node.is_sequence());
+        REQUIRE(root_2_node.size() == 3);
+
+        fkyaml::node& root_2_0_node = root_2_node[0];
+        REQUIRE(root_2_0_node.is_string());
+        REQUIRE(root_2_0_node.get_value_ref<std::string&>() == "grey07");
+
+        fkyaml::node& root_2_1_node = root_2_node[1];
+        REQUIRE(root_2_1_node.is_integer());
+        REQUIRE(root_2_1_node.get_value<int>() == 2070);
+
+        fkyaml::node& root_2_2_node = root_2_node[2];
+        REQUIRE(root_2_2_node.is_float_number());
+        REQUIRE(root_2_2_node.get_value<double>() == 84.50);
+    }
+
+    SECTION("root sequence with child flow mapping") {
+        std::string input = "- {foo: false, null: 123}\n"
+                            "- {true: 3.14, bar: [0x30,0o30]}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_mapping());
+        REQUIRE(root_0_node.size() == 2);
+        REQUIRE(root_0_node.contains("foo"));
+        REQUIRE(root_0_node.contains(nullptr));
+
+        fkyaml::node& root_0_foo_node = root_0_node["foo"];
+        REQUIRE(root_0_foo_node.is_boolean());
+        REQUIRE(root_0_foo_node.get_value<bool>() == false);
+
+        fkyaml::node& root_0_null_node = root_0_node[nullptr];
+        REQUIRE(root_0_null_node.is_integer());
+        REQUIRE(root_0_null_node.get_value<int>() == 123);
+
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_mapping());
+        REQUIRE(root_1_node.size() == 2);
+        REQUIRE(root_1_node.contains(true));
+        REQUIRE(root_1_node.contains("bar"));
+
+        fkyaml::node& root_1_true_node = root_1_node[true];
+        REQUIRE(root_1_true_node.is_float_number());
+        REQUIRE(root_1_true_node.get_value<double>() == 3.14);
+
+        fkyaml::node& root_1_bar_node = root_1_node["bar"];
+        REQUIRE(root_1_bar_node.is_sequence());
+        REQUIRE(root_1_bar_node.size() == 2);
+
+        fkyaml::node& root_1_bar_0_node = root_1_bar_node[0];
+        REQUIRE(root_1_bar_0_node.is_integer());
+        REQUIRE(root_1_bar_0_node.get_value<int>() == 0x30);
+
+        fkyaml::node& root_1_bar_1_node = root_1_bar_node[1];
+        REQUIRE(root_1_bar_1_node.is_integer());
+        REQUIRE(root_1_bar_1_node.get_value<int>() == 030);
+    }
+
+    SECTION("block mapping with child block mapping (split by a newline code)") {
+        std::string input = "-\n"
+                            "  name: Mark McGwire\n"
+                            "  hr:   65\n"
+                            "  avg:  0.278\n"
+                            "-\n"
+                            "  name: Sammy Sosa\n"
+                            "  hr:   63\n"
+                            "  avg:  0.288";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_mapping());
+        REQUIRE(root_0_node.size() == 3);
+        REQUIRE(root_0_node.contains("name"));
+        REQUIRE(root_0_node.contains("hr"));
+        REQUIRE(root_0_node.contains("avg"));
+
+        fkyaml::node& root_0_name_node = root_0_node["name"];
+        REQUIRE(root_0_name_node.is_string());
+        REQUIRE(root_0_name_node.get_value_ref<std::string&>() == "Mark McGwire");
+
+        fkyaml::node& root_0_hr_node = root_0_node["hr"];
+        REQUIRE(root_0_hr_node.is_integer());
+        REQUIRE(root_0_hr_node.get_value<int>() == 65);
+
+        fkyaml::node& root_0_avg_node = root_0_node["avg"];
+        REQUIRE(root_0_avg_node.is_float_number());
+        REQUIRE(root_0_avg_node.get_value<double>() == 0.278);
+
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_mapping());
+        REQUIRE(root_1_node.size() == 3);
+        REQUIRE(root_1_node.contains("name"));
+        REQUIRE(root_1_node.contains("hr"));
+        REQUIRE(root_1_node.contains("avg"));
+
+        fkyaml::node& root_1_name_node = root_1_node["name"];
+        REQUIRE(root_1_name_node.is_string());
+        REQUIRE(root_1_name_node.get_value_ref<std::string&>() == "Sammy Sosa");
+
+        fkyaml::node& root_1_hr_node = root_1_node["hr"];
+        REQUIRE(root_1_hr_node.is_integer());
+        REQUIRE(root_1_hr_node.get_value<int>() == 63);
+
+        fkyaml::node& root_1_avg_node = root_1_node["avg"];
+        REQUIRE(root_1_avg_node.is_float_number());
+        REQUIRE(root_1_avg_node.get_value<double>() == 0.288);
     }
 }
 
@@ -315,24 +502,21 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 3);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("bar"));
+        REQUIRE(root.contains("pi"));
 
-        REQUIRE_NOTHROW(root["foo"]);
         fkyaml::node& foo_node = root["foo"];
         REQUIRE(foo_node.is_string());
-        REQUIRE_NOTHROW(foo_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(foo_node.get_value_ref<fkyaml::node::string_type&>().compare("one") == 0);
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
 
-        REQUIRE_NOTHROW(root["bar"]);
         fkyaml::node& bar_node = root["bar"];
         REQUIRE(bar_node.is_boolean());
-        REQUIRE_NOTHROW(bar_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(bar_node.get_value<fkyaml::node::boolean_type>() == true);
+        REQUIRE(bar_node.get_value<bool>() == true);
 
-        REQUIRE_NOTHROW(root["pi"]);
         fkyaml::node& pi_node = root["pi"];
         REQUIRE(pi_node.is_float_number());
-        REQUIRE_NOTHROW(pi_node.get_value<fkyaml::node::float_number_type>());
-        REQUIRE(pi_node.get_value<fkyaml::node::float_number_type>() == 3.14);
+        REQUIRE(pi_node.get_value<double>() == 3.14);
     }
 
     SECTION("nested block mapping") {
@@ -343,30 +527,27 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
 
-        REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_mapping());
         REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 3);
+        REQUIRE(test_node.contains("bool"));
+        REQUIRE(test_node.contains("foo"));
+        REQUIRE(test_node.contains("pi"));
 
-        REQUIRE_NOTHROW(test_node["bool"]);
         fkyaml::node& test_bool_node = test_node["bool"];
         REQUIRE(test_bool_node.is_boolean());
-        REQUIRE_NOTHROW(test_bool_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(test_bool_node.get_value<fkyaml::node::boolean_type>() == true);
+        REQUIRE(test_bool_node.get_value<bool>() == true);
 
-        REQUIRE_NOTHROW(test_node["foo"]);
         fkyaml::node& test_foo_node = test_node["foo"];
         REQUIRE(test_foo_node.is_string());
-        REQUIRE_NOTHROW(test_foo_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_foo_node.get_value_ref<fkyaml::node::string_type&>().compare("bar") == 0);
+        REQUIRE(test_foo_node.get_value_ref<std::string&>().compare("bar") == 0);
 
-        REQUIRE_NOTHROW(test_node["pi"]);
         fkyaml::node& test_pi_node = test_node["pi"];
         REQUIRE(test_pi_node.is_float_number());
-        REQUIRE_NOTHROW(test_pi_node.get_value<fkyaml::node::float_number_type>());
-        REQUIRE(test_pi_node.get_value<fkyaml::node::float_number_type>() == 3.14);
+        REQUIRE(test_pi_node.get_value<double>() == 3.14);
     }
 
     SECTION("block mapping with several nested children") {
@@ -376,24 +557,31 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 3);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_mapping());
-        REQUIRE(root["foo"].size() == 1);
-        REQUIRE(root["foo"].contains("bar"));
-        REQUIRE(root["foo"]["bar"].is_string());
-        REQUIRE(root["foo"]["bar"].get_value_ref<fkyaml::node::string_type&>() == "baz");
-
         REQUIRE(root.contains("qux"));
-        REQUIRE(root["qux"].is_integer());
-        REQUIRE(root["qux"].get_value<fkyaml::node::integer_type>() == 123);
-
         REQUIRE(root.contains("quux"));
-        REQUIRE(root["quux"].is_mapping());
-        REQUIRE(root["quux"].size() == 1);
-        REQUIRE(root["quux"].contains("corge"));
-        REQUIRE(root["quux"]["corge"].is_string());
-        REQUIRE(root["quux"]["corge"].get_value_ref<fkyaml::node::string_type&>() == "grault");
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.size() == 1);
+        REQUIRE(foo_node.contains("bar"));
+
+        fkyaml::node& foo_bar_node = foo_node["bar"];
+        REQUIRE(foo_bar_node.is_string());
+        REQUIRE(foo_bar_node.get_value_ref<std::string&>() == "baz");
+
+        fkyaml::node& qux_node = root["qux"];
+        REQUIRE(qux_node.is_integer());
+        REQUIRE(qux_node.get_value<int>() == 123);
+
+        fkyaml::node& quux_node = root["quux"];
+        REQUIRE(quux_node.is_mapping());
+        REQUIRE(quux_node.size() == 1);
+        REQUIRE(quux_node.contains("corge"));
+
+        fkyaml::node& quux_corge_node = quux_node["corge"];
+        REQUIRE(quux_corge_node.is_string());
+        REQUIRE(quux_corge_node.get_value_ref<std::string&>() == "grault");
     }
 
     SECTION("block mapping with a more nested child") {
@@ -402,22 +590,26 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_mapping());
-        REQUIRE(root["foo"].size() == 1);
-
-        REQUIRE(root["foo"].contains("bar"));
-        REQUIRE(root["foo"]["bar"].is_mapping());
-        REQUIRE(root["foo"]["bar"].size() == 1);
-
-        REQUIRE(root["foo"]["bar"].contains("baz"));
-        REQUIRE(root["foo"]["bar"]["baz"].is_integer());
-        REQUIRE(root["foo"]["bar"]["baz"].get_value<fkyaml::node::integer_type>() == 123);
-
         REQUIRE(root.contains("qux"));
-        REQUIRE(root["qux"].is_boolean());
-        REQUIRE(root["qux"].get_value<fkyaml::node::boolean_type>() == true);
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.size() == 1);
+        REQUIRE(foo_node.contains("bar"));
+
+        fkyaml::node& foo_bar_node = foo_node["bar"];
+        REQUIRE(foo_bar_node.is_mapping());
+        REQUIRE(foo_bar_node.size() == 1);
+        REQUIRE(foo_bar_node.contains("baz"));
+
+        fkyaml::node& foo_bar_baz_node = foo_bar_node["baz"];
+        REQUIRE(foo_bar_baz_node.is_integer());
+        REQUIRE(foo_bar_baz_node.get_value<int>() == 123);
+
+        fkyaml::node& qux_node = root["qux"];
+        REQUIRE(qux_node.is_boolean());
+        REQUIRE(qux_node.get_value<bool>() == true);
     }
 
     SECTION("block mapping with a child block sequence") {
@@ -426,20 +618,24 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_sequence());
-        REQUIRE(root["foo"].size() == 2);
-
-        REQUIRE(root["foo"][0].is_string());
-        REQUIRE(root["foo"][0].get_value_ref<std::string&>() == "bar");
-
-        REQUIRE(root["foo"][1].is_integer());
-        REQUIRE(root["foo"][1].get_value<int>() == 123);
-
         REQUIRE(root.contains("baz"));
-        REQUIRE(root["baz"].is_string());
-        REQUIRE(root["baz"].get_value_ref<std::string&>() == "qux");
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_sequence());
+        REQUIRE(foo_node.size() == 2);
+
+        fkyaml::node& foo_0_node = foo_node[0];
+        REQUIRE(foo_0_node.is_string());
+        REQUIRE(foo_0_node.get_value_ref<std::string&>() == "bar");
+
+        fkyaml::node& foo_1_node = foo_node[1];
+        REQUIRE(foo_1_node.is_integer());
+        REQUIRE(foo_1_node.get_value<int>() == 123);
+
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_string());
+        REQUIRE(baz_node.get_value_ref<std::string&>() == "qux");
     }
 
     SECTION("block mapping with a block sequence of a single nested mapping") {
@@ -448,21 +644,25 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_sequence());
-        REQUIRE(root["foo"].size() == 1);
-
-        REQUIRE(root["foo"][0].is_mapping());
-        REQUIRE(root["foo"][0].size() == 1);
-
-        REQUIRE(root["foo"][0].contains("bar"));
-        REQUIRE(root["foo"][0]["bar"].is_string());
-        REQUIRE(root["foo"][0]["bar"].get_value_ref<std::string&>() == "baz");
-
         REQUIRE(root.contains("qux"));
-        REQUIRE(root["qux"].is_string());
-        REQUIRE(root["qux"].get_value_ref<std::string&>() == "corge");
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_sequence());
+        REQUIRE(foo_node.size() == 1);
+
+        fkyaml::node& foo_0_node = foo_node[0];
+        REQUIRE(foo_0_node.is_mapping());
+        REQUIRE(foo_0_node.size() == 1);
+        REQUIRE(foo_0_node.contains("bar"));
+
+        fkyaml::node& foo_0_bar_node = foo_0_node["bar"];
+        REQUIRE(foo_0_bar_node.is_string());
+        REQUIRE(foo_0_bar_node.get_value_ref<std::string&>() == "baz");
+
+        fkyaml::node& qux_node = root["qux"];
+        REQUIRE(qux_node.is_string());
+        REQUIRE(qux_node.get_value_ref<std::string&>() == "corge");
     }
 
     SECTION("block mapping with a block sequence of a block mapping with several key-value pairs") {
@@ -472,25 +672,30 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_sequence());
-        REQUIRE(root["foo"].size() == 1);
-
-        REQUIRE(root["foo"][0].is_mapping());
-        REQUIRE(root["foo"][0].size() == 2);
-
-        REQUIRE(root["foo"][0].contains("bar"));
-        REQUIRE(root["foo"][0]["bar"].is_boolean());
-        REQUIRE(root["foo"][0]["bar"].get_value<bool>() == true);
-
-        REQUIRE(root["foo"][0].contains("baz"));
-        REQUIRE(root["foo"][0]["baz"].is_integer());
-        REQUIRE(root["foo"][0]["baz"].get_value<int>() == 123);
-
         REQUIRE(root.contains("qux"));
-        REQUIRE(root["qux"].is_string());
-        REQUIRE(root["qux"].get_value_ref<std::string&>() == "corge");
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_sequence());
+        REQUIRE(foo_node.size() == 1);
+
+        fkyaml::node& foo_0_node = foo_node[0];
+        REQUIRE(foo_0_node.is_mapping());
+        REQUIRE(foo_0_node.size() == 2);
+        REQUIRE(foo_0_node.contains("bar"));
+        REQUIRE(foo_0_node.contains("baz"));
+
+        fkyaml::node& foo_0_bar_node = foo_0_node["bar"];
+        REQUIRE(foo_0_bar_node.is_boolean());
+        REQUIRE(foo_0_bar_node.get_value<bool>() == true);
+
+        fkyaml::node& foo_0_baz_node = foo_0_node["baz"];
+        REQUIRE(foo_0_baz_node.is_integer());
+        REQUIRE(foo_0_baz_node.get_value<int>() == 123);
+
+        fkyaml::node& qux_node = root["qux"];
+        REQUIRE(qux_node.is_string());
+        REQUIRE(qux_node.get_value_ref<std::string&>() == "corge");
     }
 
     SECTION("block mapping with a block sequence of block mappings") {
@@ -508,47 +713,58 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
-
         REQUIRE(root.contains("stuff"));
-        REQUIRE(root["stuff"].is_sequence());
-        REQUIRE(root["stuff"].size() == 2);
 
-        REQUIRE(root["stuff"][0].is_mapping());
-        REQUIRE(root["stuff"][0].size() == 4);
+        fkyaml::node& stuff_node = root["stuff"];
+        REQUIRE(stuff_node.is_sequence());
+        REQUIRE(stuff_node.size() == 2);
 
-        REQUIRE(root["stuff"][0].contains("id"));
-        REQUIRE(root["stuff"][0]["id"].is_string());
-        REQUIRE(root["stuff"][0]["id"].get_value_ref<std::string&>() == "foo");
+        fkyaml::node& stuff_0_node = stuff_node[0];
+        REQUIRE(stuff_0_node.is_mapping());
+        REQUIRE(stuff_0_node.size() == 4);
+        REQUIRE(stuff_0_node.contains("id"));
+        REQUIRE(stuff_0_node.contains("name"));
+        REQUIRE(stuff_0_node.contains("tags"));
+        REQUIRE(stuff_0_node.contains("params"));
 
-        REQUIRE(root["stuff"][0].contains("name"));
-        REQUIRE(root["stuff"][0]["name"].is_string());
-        REQUIRE(root["stuff"][0]["name"].get_value_ref<std::string&>() == "Foo");
+        fkyaml::node& stuff_0_id_node = stuff_0_node["id"];
+        REQUIRE(stuff_0_id_node.is_string());
+        REQUIRE(stuff_0_id_node.get_value_ref<std::string&>() == "foo");
 
-        REQUIRE(root["stuff"][0].contains("tags"));
-        REQUIRE(root["stuff"][0]["tags"].is_sequence());
-        REQUIRE(root["stuff"][0]["tags"].size() == 1);
+        fkyaml::node& stuff_0_name_node = stuff_0_node["name"];
+        REQUIRE(stuff_0_name_node.is_string());
+        REQUIRE(stuff_0_name_node.get_value_ref<std::string&>() == "Foo");
 
-        REQUIRE(root["stuff"][0]["tags"][0].is_string());
-        REQUIRE(root["stuff"][0]["tags"][0].get_value_ref<std::string&>() == "baz");
+        fkyaml::node& stuff_0_tags_node = stuff_0_node["tags"];
+        REQUIRE(stuff_0_tags_node.is_sequence());
+        REQUIRE(stuff_0_tags_node.size() == 1);
 
-        REQUIRE(root["stuff"][0].contains("params"));
-        REQUIRE(root["stuff"][0]["params"].is_mapping());
-        REQUIRE(root["stuff"][0]["params"].size() == 1);
+        fkyaml::node& stuff_0_tags_0_node = stuff_0_tags_node[0];
+        REQUIRE(stuff_0_tags_0_node.is_string());
+        REQUIRE(stuff_0_tags_0_node.get_value_ref<std::string&>() == "baz");
 
-        REQUIRE(root["stuff"][0]["params"].contains("key"));
-        REQUIRE(root["stuff"][0]["params"]["key"].is_integer());
-        REQUIRE(root["stuff"][0]["params"]["key"].get_value<int>() == 1);
+        fkyaml::node& stuff_0_params_node = stuff_0_node["params"];
+        REQUIRE(stuff_0_params_node.is_mapping());
+        REQUIRE(stuff_0_params_node.size() == 1);
+        REQUIRE(stuff_0_params_node.contains("key"));
 
-        REQUIRE(root["stuff"][1].is_mapping());
-        REQUIRE(root["stuff"][1].size() == 2);
+        fkyaml::node& stuff_0_params_key_node = stuff_0_params_node["key"];
+        REQUIRE(stuff_0_params_key_node.is_integer());
+        REQUIRE(stuff_0_params_key_node.get_value<int>() == 1);
 
-        REQUIRE(root["stuff"][1].contains("id"));
-        REQUIRE(root["stuff"][1]["id"].is_string());
-        REQUIRE(root["stuff"][1]["id"].get_value_ref<std::string&>() == "bar");
+        fkyaml::node& stuff_1_node = stuff_node[1];
+        REQUIRE(stuff_1_node.is_mapping());
+        REQUIRE(stuff_1_node.size() == 2);
+        REQUIRE(stuff_1_node.contains("id"));
+        REQUIRE(stuff_1_node.contains("name"));
 
-        REQUIRE(root["stuff"][1].contains("name"));
-        REQUIRE(root["stuff"][1]["name"].is_string());
-        REQUIRE(root["stuff"][1]["name"].get_value_ref<std::string&>() == "Bar");
+        fkyaml::node& stuff_1_id_node = stuff_1_node["id"];
+        REQUIRE(stuff_1_id_node.is_string());
+        REQUIRE(stuff_1_id_node.get_value_ref<std::string&>() == "bar");
+
+        fkyaml::node& stuff_1_name_node = stuff_1_node["name"];
+        REQUIRE(stuff_1_name_node.is_string());
+        REQUIRE(stuff_1_name_node.get_value_ref<std::string&>() == "Bar");
     }
 
     SECTION("block mapping with a block sequence of more nested block mappings") {
@@ -566,47 +782,57 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
-
         REQUIRE(root.contains("stuff"));
-        REQUIRE(root["stuff"].is_sequence());
-        REQUIRE(root["stuff"].size() == 2);
 
-        REQUIRE(root["stuff"][0].is_mapping());
-        REQUIRE(root["stuff"][0].size() == 4);
+        fkyaml::node& stuff_node = root["stuff"];
+        REQUIRE(stuff_node.is_sequence());
+        REQUIRE(stuff_node.size() == 2);
 
-        REQUIRE(root["stuff"][0].contains("id"));
-        REQUIRE(root["stuff"][0]["id"].is_string());
-        REQUIRE(root["stuff"][0]["id"].get_value_ref<std::string&>() == "foo");
+        fkyaml::node& stuff_0_node = stuff_node[0];
+        REQUIRE(stuff_0_node.is_mapping());
+        REQUIRE(stuff_0_node.size() == 4);
+        REQUIRE(stuff_0_node.contains("id"));
+        REQUIRE(stuff_0_node.contains("name"));
+        REQUIRE(stuff_0_node.contains("tags"));
+        REQUIRE(stuff_0_node.contains("params"));
 
-        REQUIRE(root["stuff"][0].contains("name"));
-        REQUIRE(root["stuff"][0]["name"].is_string());
-        REQUIRE(root["stuff"][0]["name"].get_value_ref<std::string&>() == "Foo");
+        fkyaml::node& stuff_0_id_node = stuff_0_node["id"];
+        REQUIRE(stuff_0_id_node.is_string());
+        REQUIRE(stuff_0_id_node.get_value_ref<std::string&>() == "foo");
 
-        REQUIRE(root["stuff"][0].contains("tags"));
-        REQUIRE(root["stuff"][0]["tags"].is_sequence());
-        REQUIRE(root["stuff"][0]["tags"].size() == 1);
+        fkyaml::node& stuff_0_name_node = stuff_0_node["name"];
+        REQUIRE(stuff_0_name_node.is_string());
+        REQUIRE(stuff_0_name_node.get_value_ref<std::string&>() == "Foo");
 
-        REQUIRE(root["stuff"][0]["tags"][0].is_string());
-        REQUIRE(root["stuff"][0]["tags"][0].get_value_ref<std::string&>() == "baz");
+        fkyaml::node& stuff_0_tags_node = stuff_0_node["tags"];
+        REQUIRE(stuff_0_tags_node.is_sequence());
+        REQUIRE(stuff_0_tags_node.size() == 1);
 
-        REQUIRE(root["stuff"][0].contains("params"));
-        REQUIRE(root["stuff"][0]["params"].is_mapping());
-        REQUIRE(root["stuff"][0]["params"].size() == 1);
+        REQUIRE(stuff_0_tags_node[0].is_string());
+        REQUIRE(stuff_0_tags_node[0].get_value_ref<std::string&>() == "baz");
 
-        REQUIRE(root["stuff"][0]["params"].contains("key"));
-        REQUIRE(root["stuff"][0]["params"]["key"].is_integer());
-        REQUIRE(root["stuff"][0]["params"]["key"].get_value<int>() == 1);
+        fkyaml::node& stuff_0_params_node = stuff_0_node["params"];
+        REQUIRE(stuff_0_params_node.is_mapping());
+        REQUIRE(stuff_0_params_node.size() == 1);
+        REQUIRE(stuff_0_params_node.contains("key"));
 
-        REQUIRE(root["stuff"][1].is_mapping());
-        REQUIRE(root["stuff"][1].size() == 2);
+        fkyaml::node& stuff_0_params_key_node = stuff_0_params_node["key"];
+        REQUIRE(stuff_0_params_key_node.is_integer());
+        REQUIRE(stuff_0_params_key_node.get_value<int>() == 1);
 
-        REQUIRE(root["stuff"][1].contains("id"));
-        REQUIRE(root["stuff"][1]["id"].is_string());
-        REQUIRE(root["stuff"][1]["id"].get_value_ref<std::string&>() == "bar");
+        fkyaml::node& stuff_1_node = stuff_node[1];
+        REQUIRE(stuff_1_node.is_mapping());
+        REQUIRE(stuff_1_node.size() == 2);
+        REQUIRE(stuff_1_node.contains("id"));
+        REQUIRE(stuff_1_node.contains("name"));
 
-        REQUIRE(root["stuff"][1].contains("name"));
-        REQUIRE(root["stuff"][1]["name"].is_string());
-        REQUIRE(root["stuff"][1]["name"].get_value_ref<std::string&>() == "Bar");
+        fkyaml::node& stuff_1_id_node = stuff_1_node["id"];
+        REQUIRE(stuff_1_id_node.is_string());
+        REQUIRE(stuff_1_id_node.get_value_ref<std::string&>() == "bar");
+
+        fkyaml::node& stuff_1_name_node = stuff_1_node["name"];
+        REQUIRE(stuff_1_name_node.is_string());
+        REQUIRE(stuff_1_name_node.get_value_ref<std::string&>() == "Bar");
     }
 
     SECTION("block mapping with explicit block mappings") {
@@ -628,36 +854,46 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 4);
-
         REQUIRE(root.contains(nullptr));
-        REQUIRE(root[nullptr].is_float_number());
-        REQUIRE(root[nullptr].get_value<double>() == 3.14);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_mapping());
-        REQUIRE(root["foo"].size() == 1);
-
         REQUIRE(root["foo"].contains("bar"));
-        REQUIRE(root["foo"]["bar"].is_string());
-        REQUIRE(root["foo"]["bar"].get_value_ref<std::string&>() == "baz");
+        fkyaml::node key1 = {123, {{"foo", {{"bar", "baz"}}}}};
+        REQUIRE(root.contains(key1));
+        fkyaml::node key2 = {{"foo", "bar"}};
+        REQUIRE(root.contains(key2));
 
-        fkyaml::node key = {123, {{"foo", {{"bar", "baz"}}}}};
-        REQUIRE(root.contains(key));
-        REQUIRE(root[key].is_mapping());
-        REQUIRE(root[key].size() == 1);
+        fkyaml::node& null_node = root[nullptr];
+        REQUIRE(null_node.is_float_number());
+        REQUIRE(null_node.get_value<double>() == 3.14);
 
-        REQUIRE(root[key].contains("one"));
-        REQUIRE(root[key]["one"].is_boolean());
-        REQUIRE(root[key]["one"].get_value<bool>() == true);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.size() == 1);
 
-        key = {{"foo", "bar"}};
-        REQUIRE(root.contains(key));
-        REQUIRE(root[key].is_sequence());
-        REQUIRE(root[key].size() == 2);
-        REQUIRE(root[key][0].is_string());
-        REQUIRE(root[key][0].get_value_ref<std::string&>() == "baz");
-        REQUIRE(root[key][1].is_string());
-        REQUIRE(root[key][1].get_value_ref<std::string&>() == "qux");
+        fkyaml::node& foo_bar_node = foo_node["bar"];
+        REQUIRE(foo_bar_node.is_string());
+        REQUIRE(foo_bar_node.get_value_ref<std::string&>() == "baz");
+
+        fkyaml::node& key1_node = root[key1];
+        REQUIRE(key1_node.is_mapping());
+        REQUIRE(key1_node.size() == 1);
+        REQUIRE(key1_node.contains("one"));
+
+        fkyaml::node& key1_one_node = key1_node["one"];
+        REQUIRE(key1_one_node.is_boolean());
+        REQUIRE(key1_one_node.get_value<bool>() == true);
+
+        fkyaml::node& key2_node = root[key2];
+        REQUIRE(key2_node.is_sequence());
+        REQUIRE(key2_node.size() == 2);
+
+        fkyaml::node& key2_0_node = key2_node[0];
+        REQUIRE(key2_0_node.is_string());
+        REQUIRE(key2_0_node.get_value_ref<std::string&>() == "baz");
+
+        fkyaml::node& key2_1_node = key2_node[1];
+        REQUIRE(key2_1_node.is_string());
+        REQUIRE(key2_1_node.get_value_ref<std::string&>() == "qux");
     }
 
     SECTION("block mapping with keys containing flow indicators") {
@@ -666,52 +902,84 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
-
         REQUIRE(root.contains("Foo,Bar"));
-        REQUIRE(root["Foo,Bar"].get_value<bool>() == true);
-
         REQUIRE(root.contains("Baz[123]"));
-        REQUIRE(root["Baz[123]"].get_value<double>() == 3.14);
+
+        fkyaml::node& foobar_node = root["Foo,Bar"];
+        REQUIRE(foobar_node.is_boolean());
+        REQUIRE(foobar_node.get_value<bool>() == true);
+
+        fkyaml::node& baz123_node = root["Baz[123]"];
+        REQUIRE(baz123_node.is_float_number());
+        REQUIRE(baz123_node.get_value<double>() == 3.14);
     }
 
     SECTION("Flow indicators inside unquoted plain scalar values") {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc{abc")));
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 1);
-        REQUIRE(root.contains("Foo"));
-        REQUIRE(root["Foo"].is_string());
-        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, abc{abc");
+        SECTION("plain scalar contains \'{\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc{abc")));
 
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc}abc")));
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 1);
-        REQUIRE(root.contains("Foo"));
-        REQUIRE(root["Foo"].is_string());
-        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, abc}abc");
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
 
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc[abc")));
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 1);
-        REQUIRE(root.contains("Foo"));
-        REQUIRE(root["Foo"].is_string());
-        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, abc[abc");
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc{abc");
+        }
 
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc]abc")));
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 1);
-        REQUIRE(root.contains("Foo"));
-        REQUIRE(root["Foo"].is_string());
-        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, abc]abc");
+        SECTION("plain scalar contains \'}\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc}abc")));
 
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] :3.14}")));
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 1);
-        REQUIRE(root.contains("Foo"));
-        REQUIRE(root["Foo"].is_string());
-        REQUIRE(root["Foo"].get_value_ref<std::string&>() == "Bar, {[123] :3.14}");
-        REQUIRE_THROWS_AS(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] : 3.14}")),
-            fkyaml::parse_error);
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
+
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc}abc");
+        }
+
+        SECTION("plain scalar contains \'[\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc[abc")));
+
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
+
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc[abc");
+        }
+
+        SECTION("plain scalar contains \']\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc]abc")));
+
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
+
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc]abc");
+        }
+
+        SECTION("plain scalar contains \':\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] :3.14}")));
+
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
+
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, {[123] :3.14}");
+        }
+
+        SECTION("plain scalar contains \": \"") {
+            REQUIRE_THROWS_AS(
+                root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] : 3.14}")),
+                fkyaml::parse_error);
+        }
     }
 
     SECTION("a comment right after a block mapping key.") {
@@ -722,12 +990,14 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root.size() == 1);
         REQUIRE(root.contains("baz"));
 
-        REQUIRE(root["baz"].is_mapping());
-        REQUIRE(root["baz"].size() == 1);
-        REQUIRE(root["baz"].contains("qux"));
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_mapping());
+        REQUIRE(baz_node.size() == 1);
+        REQUIRE(baz_node.contains("qux"));
 
-        REQUIRE(root["baz"]["qux"].is_integer());
-        REQUIRE(root["baz"]["qux"].get_value<int>() == 123);
+        fkyaml::node& baz_qux_node = baz_node["qux"];
+        REQUIRE(baz_qux_node.is_integer());
+        REQUIRE(baz_qux_node.get_value<int>() == 123);
     }
 
     SECTION("mapping entries split across newlines") {
@@ -748,26 +1018,37 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root.contains(nullptr));
         REQUIRE(root.contains("qux"));
 
-        REQUIRE(root["foo"].is_string());
-        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
 
-        REQUIRE(root["baz"].is_integer());
-        REQUIRE(root["baz"].get_value<int>() == 123);
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_integer());
+        REQUIRE(baz_node.get_value<int>() == 123);
 
-        REQUIRE(root[nullptr].is_mapping());
-        REQUIRE(root[nullptr].contains(false));
-        REQUIRE(root[nullptr][false].is_float_number());
-        REQUIRE(root[nullptr][false].get_value<double>() == 3.14);
+        fkyaml::node& null_node = root[nullptr];
+        REQUIRE(null_node.is_mapping());
+        REQUIRE(null_node.contains(false));
 
-        REQUIRE(root["qux"].is_sequence());
-        REQUIRE(root["qux"].size() == 3);
+        fkyaml::node& null_false_node = null_node[false];
+        REQUIRE(null_false_node.is_float_number());
+        REQUIRE(null_false_node.get_value<double>() == 3.14);
 
-        REQUIRE(root["qux"][0].is_string());
-        REQUIRE(root["qux"][0].get_value_ref<std::string&>() == "r");
-        REQUIRE(root["qux"][1].is_string());
-        REQUIRE(root["qux"][1].get_value_ref<std::string&>() == "g");
-        REQUIRE(root["qux"][2].is_string());
-        REQUIRE(root["qux"][2].get_value_ref<std::string&>() == "b");
+        fkyaml::node& qux_node = root["qux"];
+        REQUIRE(qux_node.is_sequence());
+        REQUIRE(qux_node.size() == 3);
+
+        fkyaml::node& qux_0_node = qux_node[0];
+        REQUIRE(qux_0_node.is_string());
+        REQUIRE(qux_0_node.get_value_ref<std::string&>() == "r");
+
+        fkyaml::node& qux_1_node = qux_node[1];
+        REQUIRE(qux_1_node.is_string());
+        REQUIRE(qux_1_node.get_value_ref<std::string&>() == "g");
+
+        fkyaml::node& qux_2_node = qux_node[2];
+        REQUIRE(qux_2_node.is_string());
+        REQUIRE(qux_2_node.get_value_ref<std::string&>() == "b");
     }
 }
 
@@ -781,28 +1062,23 @@ TEST_CASE("Deserializer_FlowSequence") {
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
 
-        REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_sequence());
-        REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 2);
 
-        REQUIRE_NOTHROW(test_node[0]);
         fkyaml::node& test_0_node = test_node[0];
         REQUIRE(test_0_node.is_string());
-        REQUIRE_NOTHROW(test_0_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_0_node.get_value_ref<fkyaml::node::string_type&>().compare("foo") == 0);
+        REQUIRE(test_0_node.get_value_ref<std::string&>() == "foo");
 
-        REQUIRE_NOTHROW(test_node[1]);
         fkyaml::node& test_1_node = test_node[1];
         REQUIRE(test_1_node.is_string());
-        REQUIRE_NOTHROW(test_1_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_1_node.get_value_ref<fkyaml::node::string_type&>().compare("bar") == 0);
+        REQUIRE(test_1_node.get_value_ref<std::string&>() == "bar");
     }
 
     SECTION("lack the beginning of a flow sequence") {
-        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: ]")), fkyaml::parse_error);
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: {]}")), fkyaml::parse_error);
     }
 
     SECTION("root flow sequence") {
@@ -810,14 +1086,17 @@ TEST_CASE("Deserializer_FlowSequence") {
         REQUIRE(root.is_sequence());
         REQUIRE(root.size() == 3);
 
-        REQUIRE(root[0].is_string());
-        REQUIRE(root[0].get_value_ref<std::string&>() == "foo");
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_string());
+        REQUIRE(root_0_node.get_value_ref<std::string&>() == "foo");
 
-        REQUIRE(root[1].is_integer());
-        REQUIRE(root[1].get_value<int>() == 123);
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_integer());
+        REQUIRE(root_1_node.get_value<int>() == 123);
 
-        REQUIRE(root[2].is_float_number());
-        REQUIRE(root[2].get_value<double>() == 3.14);
+        fkyaml::node& root_2_node = root[2];
+        REQUIRE(root_2_node.is_float_number());
+        REQUIRE(root_2_node.get_value<double>() == 3.14);
     }
 }
 
@@ -832,30 +1111,26 @@ TEST_CASE("Deserializer_FlowMapping") {
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
 
-        REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_mapping());
-        REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 3);
+        REQUIRE(test_node.contains("bool"));
+        REQUIRE(test_node.contains("foo"));
+        REQUIRE(test_node.contains("pi"));
 
-        REQUIRE_NOTHROW(test_node["bool"]);
         fkyaml::node& test_bool_node = test_node["bool"];
         REQUIRE(test_bool_node.is_boolean());
-        REQUIRE_NOTHROW(test_bool_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(test_bool_node.get_value<fkyaml::node::boolean_type>() == true);
+        REQUIRE(test_bool_node.get_value<bool>() == true);
 
-        REQUIRE_NOTHROW(test_node["foo"]);
         fkyaml::node& test_foo_node = test_node["foo"];
         REQUIRE(test_foo_node.is_string());
-        REQUIRE_NOTHROW(test_foo_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_foo_node.get_value_ref<fkyaml::node::string_type&>().compare("bar") == 0);
+        REQUIRE(test_foo_node.get_value_ref<std::string&>() == "bar");
 
-        REQUIRE_NOTHROW(test_node["pi"]);
         fkyaml::node& test_pi_node = test_node["pi"];
         REQUIRE(test_pi_node.is_float_number());
-        REQUIRE_NOTHROW(test_pi_node.get_value<fkyaml::node::float_number_type>());
-        REQUIRE(test_pi_node.get_value<fkyaml::node::float_number_type>() == 3.14);
+        REQUIRE(test_pi_node.get_value<double>() == 3.14);
     }
 
     SECTION("Correct traversal after deserializing flow mapping value") {
@@ -865,31 +1140,28 @@ TEST_CASE("Deserializer_FlowMapping") {
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("test"));
+        REQUIRE(root.contains("sibling"));
 
-        REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_mapping());
-        REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 1);
+        REQUIRE(test_node.contains("foo"));
 
-        REQUIRE_NOTHROW(test_node["foo"]);
         fkyaml::node& test_foo_node = test_node["foo"];
         REQUIRE(test_foo_node.is_string());
-        REQUIRE_NOTHROW(test_foo_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_foo_node.get_value_ref<fkyaml::node::string_type&>().compare("bar") == 0);
+        REQUIRE(test_foo_node.get_value_ref<std::string&>() == "bar");
 
-        REQUIRE_NOTHROW(root["sibling"]);
         fkyaml::node& sibling_node = root["sibling"];
         REQUIRE(sibling_node.is_string());
-        REQUIRE_NOTHROW(sibling_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(sibling_node.get_value_ref<fkyaml::node::string_type&>().compare("a_string_val") == 0);
+        REQUIRE(sibling_node.get_value_ref<std::string&>() == "a_string_val");
     }
 
     SECTION("lack the beginning of a flow mapping") {
-        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: }")), fkyaml::parse_error);
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: [}]")), fkyaml::parse_error);
     }
 
-    SECTION("flow mapping with a flow sequence") {
+    SECTION("flow mapping with child flow sequence") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test: {foo: [true,123]}")));
 
         REQUIRE(root.is_mapping());
@@ -905,11 +1177,35 @@ TEST_CASE("Deserializer_FlowMapping") {
         REQUIRE(test_foo_node.is_sequence());
         REQUIRE(test_foo_node.size() == 2);
 
-        REQUIRE(test_foo_node[0].is_boolean());
-        REQUIRE(test_foo_node[0].get_value<bool>() == true);
+        fkyaml::node& test_foo_0_node = test_foo_node[0];
+        REQUIRE(test_foo_0_node.is_boolean());
+        REQUIRE(test_foo_0_node.get_value<bool>() == true);
 
-        REQUIRE(test_foo_node[1].is_integer());
-        REQUIRE(test_foo_node[1].get_value<int>() == 123);
+        fkyaml::node& test_foo_1_node = test_foo_node[1];
+        REQUIRE(test_foo_1_node.is_integer());
+        REQUIRE(test_foo_1_node.get_value<int>() == 123);
+    }
+
+    SECTION("flow mapping with child flow mapping") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test: {foo: {true: 123}}")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
+
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_mapping());
+        REQUIRE(test_node.size() == 1);
+        REQUIRE(test_node.contains("foo"));
+
+        fkyaml::node& test_foo_node = test_node["foo"];
+        REQUIRE(test_foo_node.is_mapping());
+        REQUIRE(test_foo_node.size() == 1);
+        REQUIRE(test_foo_node.contains(true));
+
+        fkyaml::node& test_foo_true_node = test_foo_node[true];
+        REQUIRE(test_foo_true_node.is_integer());
+        REQUIRE(test_foo_true_node.get_value<int>() == 123);
     }
 
     SECTION("root flow mapping") {
@@ -920,11 +1216,13 @@ TEST_CASE("Deserializer_FlowMapping") {
         REQUIRE(root.contains("foo"));
         REQUIRE(root.contains(true));
 
-        REQUIRE(root["foo"].is_integer());
-        REQUIRE(root["foo"].get_value<int>() == 123);
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_integer());
+        REQUIRE(foo_node.get_value<int>() == 123);
 
-        REQUIRE(root[true].is_float_number());
-        REQUIRE(root[true].get_value<double>() == 3.14);
+        fkyaml::node& true_node = root[true];
+        REQUIRE(true_node.is_float_number());
+        REQUIRE(true_node.get_value<double>() == 3.14);
     }
 }
 
@@ -937,24 +1235,21 @@ TEST_CASE("Deserializer_InputWithComment") {
 
     REQUIRE(root.is_mapping());
     REQUIRE(root.size() == 3);
+    REQUIRE(root.contains("foo"));
+    REQUIRE(root.contains("bar"));
+    REQUIRE(root.contains("pi"));
 
-    REQUIRE_NOTHROW(root["foo"]);
     fkyaml::node& foo_node = root["foo"];
     REQUIRE(foo_node.is_string());
-    REQUIRE_NOTHROW(foo_node.get_value_ref<fkyaml::node::string_type&>());
-    REQUIRE(foo_node.get_value_ref<fkyaml::node::string_type&>().compare("one") == 0);
+    REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
 
-    REQUIRE_NOTHROW(root["bar"]);
     fkyaml::node& bar_node = root["bar"];
     REQUIRE(bar_node.is_boolean());
-    REQUIRE_NOTHROW(bar_node.get_value<fkyaml::node::boolean_type>());
-    REQUIRE(bar_node.get_value<fkyaml::node::boolean_type>() == true);
+    REQUIRE(bar_node.get_value<bool>() == true);
 
-    REQUIRE_NOTHROW(root["pi"]);
     fkyaml::node& pi_node = root["pi"];
     REQUIRE(pi_node.is_float_number());
-    REQUIRE_NOTHROW(pi_node.get_value<fkyaml::node::float_number_type>());
-    REQUIRE(pi_node.get_value<fkyaml::node::float_number_type>() == 3.14);
+    REQUIRE(pi_node.get_value<double>() == 3.14);
 }
 
 TEST_CASE("Deserializer_YAMLVerDirective") {
@@ -967,13 +1262,12 @@ TEST_CASE("Deserializer_YAMLVerDirective") {
         REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
 
-        REQUIRE_NOTHROW(root["foo"]);
         fkyaml::node& foo_node = root["foo"];
         REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
         REQUIRE(foo_node.is_string());
-        REQUIRE_NOTHROW(foo_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(foo_node.get_value_ref<fkyaml::node::string_type&>().compare("one") == 0);
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
     }
 
     SECTION("YAML 1.2") {
@@ -982,13 +1276,12 @@ TEST_CASE("Deserializer_YAMLVerDirective") {
         REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
 
-        REQUIRE_NOTHROW(root["foo"]);
         fkyaml::node& foo_node = root["foo"];
         REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
         REQUIRE(foo_node.is_string());
-        REQUIRE_NOTHROW(foo_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(foo_node.get_value_ref<fkyaml::node::string_type&>().compare("one") == 0);
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
     }
 
     SECTION("YAML directive in the content to be ignored") {
@@ -998,14 +1291,16 @@ TEST_CASE("Deserializer_YAMLVerDirective") {
         REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_string());
-        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
-
         REQUIRE(root.contains(true));
-        REQUIRE(root[true].is_integer());
-        REQUIRE(root[true].get_value<int>() == 123);
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+
+        fkyaml::node& true_node = root[true];
+        REQUIRE(true_node.is_integer());
+        REQUIRE(true_node.get_value<int>() == 123);
     }
 
     SECTION("YAML directive more than once") {
@@ -1026,12 +1321,13 @@ TEST_CASE("Deserializer_TagDirective") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_string());
-        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
-        REQUIRE(root["foo"].has_tag_name());
-        REQUIRE(root["foo"].get_tag_name() == "!local");
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+        REQUIRE(foo_node.has_tag_name());
+        REQUIRE(foo_node.get_tag_name() == "!local");
     }
 
     SECTION("primary tag handle more than once") {
@@ -1050,12 +1346,13 @@ TEST_CASE("Deserializer_TagDirective") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_string());
-        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
-        REQUIRE(root["foo"].has_tag_name());
-        REQUIRE(root["foo"].get_tag_name() == "!!local");
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+        REQUIRE(foo_node.has_tag_name());
+        REQUIRE(foo_node.get_tag_name() == "!!local");
     }
 
     SECTION("secondary tag handle more than once") {
@@ -1076,18 +1373,20 @@ TEST_CASE("Deserializer_TagDirective") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_string());
-        REQUIRE(root["foo"].get_value_ref<std::string&>() == "bar");
-        REQUIRE(root["foo"].has_tag_name());
-        REQUIRE(root["foo"].get_tag_name() == "!e!global");
-
         REQUIRE(root.contains("baz"));
-        REQUIRE(root["baz"].is_string());
-        REQUIRE(root["baz"].get_value_ref<std::string&>() == "qux");
-        REQUIRE(root["baz"].has_tag_name());
-        REQUIRE(root["baz"].get_tag_name() == "!f!local");
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+        REQUIRE(foo_node.has_tag_name());
+        REQUIRE(foo_node.get_tag_name() == "!e!global");
+
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_string());
+        REQUIRE(baz_node.get_value_ref<std::string&>() == "qux");
+        REQUIRE(baz_node.has_tag_name());
+        REQUIRE(baz_node.get_tag_name() == "!f!local");
     }
 
     SECTION("named tag handle more than once") {
@@ -1119,27 +1418,25 @@ TEST_CASE("Deserializer_Anchor") {
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
 
-        REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_sequence());
-        REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 2);
 
-        REQUIRE_NOTHROW(test_node[0]);
         fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_anchor());
         REQUIRE(test_0_node.has_anchor_name());
-        REQUIRE(test_0_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(test_0_node.get_anchor_name() == "anchor");
         REQUIRE(test_0_node.is_boolean());
-        REQUIRE_NOTHROW(test_0_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(test_0_node.get_value<fkyaml::node::boolean_type>() == true);
+        REQUIRE(test_0_node.get_value<bool>() == true);
 
-        REQUIRE_NOTHROW(test_node[1]);
         fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_alias());
+        REQUIRE(test_1_node.has_anchor_name());
+        REQUIRE(test_1_node.get_anchor_name() == "anchor");
         REQUIRE(test_1_node.is_boolean());
-        REQUIRE_NOTHROW(test_1_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(
-            test_1_node.get_value<fkyaml::node::boolean_type>() == test_0_node.get_value<fkyaml::node::boolean_type>());
+        REQUIRE(test_1_node.get_value<bool>() == test_0_node.get_value<bool>());
     }
 
     SECTION("block sequence with anchored integer scalar") {
@@ -1147,29 +1444,25 @@ TEST_CASE("Deserializer_Anchor") {
             root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - &anchor -123\n  - *anchor")));
 
         REQUIRE(root.is_mapping());
-        REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
 
-        REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_sequence());
-        REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 2);
 
-        REQUIRE_NOTHROW(test_node[0]);
         fkyaml::node& test_0_node = test_node[0];
         REQUIRE(test_0_node.has_anchor_name());
         REQUIRE(test_0_node.get_anchor_name().compare("anchor") == 0);
         REQUIRE(test_0_node.is_integer());
-        REQUIRE_NOTHROW(test_0_node.get_value<fkyaml::node::integer_type>());
-        REQUIRE(test_0_node.get_value<fkyaml::node::integer_type>() == -123);
+        REQUIRE(test_0_node.get_value<int>() == -123);
 
-        REQUIRE_NOTHROW(test_node[1]);
         fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_alias());
+        REQUIRE(test_1_node.has_anchor_name());
+        REQUIRE(test_1_node.get_anchor_name() == "anchor");
         REQUIRE(test_1_node.is_integer());
-        REQUIRE_NOTHROW(test_1_node.get_value<fkyaml::node::integer_type>());
-        REQUIRE(
-            test_1_node.get_value<fkyaml::node::integer_type>() == test_0_node.get_value<fkyaml::node::integer_type>());
+        REQUIRE(test_1_node.get_value<int>() == test_0_node.get_value<int>());
     }
 
     SECTION("block sequence with anchored floating point number scalar") {
@@ -1177,30 +1470,26 @@ TEST_CASE("Deserializer_Anchor") {
             root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - &anchor 3.14\n  - *anchor")));
 
         REQUIRE(root.is_mapping());
-        REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
 
-        REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_sequence());
-        REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 2);
 
-        REQUIRE_NOTHROW(test_node[0]);
         fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_anchor());
         REQUIRE(test_0_node.has_anchor_name());
-        REQUIRE(test_0_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(test_0_node.get_anchor_name() == "anchor");
         REQUIRE(test_0_node.is_float_number());
-        REQUIRE_NOTHROW(test_0_node.get_value<fkyaml::node::float_number_type>());
-        REQUIRE(test_0_node.get_value<fkyaml::node::float_number_type>() == 3.14);
+        REQUIRE(test_0_node.get_value<double>() == 3.14);
 
-        REQUIRE_NOTHROW(test_node[1]);
         fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_alias());
+        REQUIRE(test_1_node.has_anchor_name());
+        REQUIRE(test_1_node.get_anchor_name() == "anchor");
         REQUIRE(test_1_node.is_float_number());
-        REQUIRE_NOTHROW(test_1_node.get_value<fkyaml::node::float_number_type>());
-        REQUIRE(
-            test_1_node.get_value<fkyaml::node::float_number_type>() ==
-            test_0_node.get_value<fkyaml::node::float_number_type>());
+        REQUIRE(test_1_node.get_value<double>() == test_0_node.get_value<double>());
     }
 
     SECTION("block sequence with anchored string scalar") {
@@ -1208,32 +1497,26 @@ TEST_CASE("Deserializer_Anchor") {
             root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - &anchor foo\n  - *anchor")));
 
         REQUIRE(root.is_mapping());
-        REQUIRE_NOTHROW(root.size());
         REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
 
-        REQUIRE_NOTHROW(root["test"]);
         fkyaml::node& test_node = root["test"];
         REQUIRE(test_node.is_sequence());
-        REQUIRE_NOTHROW(test_node.size());
         REQUIRE(test_node.size() == 2);
 
-        REQUIRE_NOTHROW(test_node[0]);
         fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_anchor());
         REQUIRE(test_0_node.has_anchor_name());
-        REQUIRE(test_0_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(test_0_node.get_anchor_name() == "anchor");
         REQUIRE(test_0_node.is_string());
-        REQUIRE_NOTHROW(test_0_node.size());
-        REQUIRE(test_0_node.size() == 3);
-        REQUIRE_NOTHROW(test_0_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_0_node.get_value_ref<fkyaml::node::string_type&>().compare("foo") == 0);
+        REQUIRE(test_0_node.get_value_ref<std::string&>() == "foo");
 
-        REQUIRE_NOTHROW(test_node[1]);
         fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_alias());
+        REQUIRE(test_1_node.has_anchor_name());
+        REQUIRE(test_1_node.get_anchor_name() == "anchor");
         REQUIRE(test_1_node.is_string());
-        REQUIRE_NOTHROW(test_1_node.size());
-        REQUIRE(test_1_node.size() == 3);
-        REQUIRE_NOTHROW(test_1_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(test_1_node.get_value_ref<fkyaml::node::string_type&>().compare("foo") == 0);
+        REQUIRE(test_1_node.get_value_ref<std::string&>() == test_0_node.get_value_ref<std::string&>());
     }
 
     SECTION("block mapping with anchored boolean scalar") {
@@ -1242,20 +1525,22 @@ TEST_CASE("Deserializer_Anchor") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("bar"));
 
-        REQUIRE_NOTHROW(root["foo"]);
         fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_anchor());
         REQUIRE(foo_node.has_anchor_name());
-        REQUIRE(foo_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(foo_node.get_anchor_name() == "anchor");
         REQUIRE(foo_node.is_boolean());
-        REQUIRE_NOTHROW(foo_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(foo_node.get_value<fkyaml::node::boolean_type>() == true);
+        REQUIRE(foo_node.get_value<bool>() == true);
 
-        REQUIRE_NOTHROW(root["bar"]);
         fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_alias());
+        REQUIRE(bar_node.has_anchor_name());
+        REQUIRE(bar_node.get_anchor_name() == "anchor");
         REQUIRE(bar_node.is_boolean());
-        REQUIRE_NOTHROW(bar_node.get_value<fkyaml::node::boolean_type>());
-        REQUIRE(bar_node.get_value<fkyaml::node::boolean_type>() == foo_node.get_value<fkyaml::node::boolean_type>());
+        REQUIRE(bar_node.get_value<bool>() == foo_node.get_value<bool>());
     }
 
     SECTION("block mapping with anchored integer scalar") {
@@ -1264,20 +1549,22 @@ TEST_CASE("Deserializer_Anchor") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("bar"));
 
-        REQUIRE_NOTHROW(root["foo"]);
         fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_anchor());
         REQUIRE(foo_node.has_anchor_name());
-        REQUIRE(foo_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(foo_node.get_anchor_name() == "anchor");
         REQUIRE(foo_node.is_integer());
-        REQUIRE_NOTHROW(foo_node.get_value<fkyaml::node::integer_type>());
-        REQUIRE(foo_node.get_value<fkyaml::node::integer_type>() == -123);
+        REQUIRE(foo_node.get_value<int>() == -123);
 
-        REQUIRE_NOTHROW(root["bar"]);
         fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_alias());
+        REQUIRE(bar_node.has_anchor_name());
+        REQUIRE(bar_node.get_anchor_name() == "anchor");
         REQUIRE(bar_node.is_integer());
-        REQUIRE_NOTHROW(bar_node.get_value<fkyaml::node::integer_type>());
-        REQUIRE(bar_node.get_value<fkyaml::node::integer_type>() == foo_node.get_value<fkyaml::node::integer_type>());
+        REQUIRE(bar_node.get_value<int>() == foo_node.get_value<int>());
     }
 
     SECTION("block mapping with anchored floating point number scalar") {
@@ -1286,22 +1573,22 @@ TEST_CASE("Deserializer_Anchor") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("bar"));
 
-        REQUIRE_NOTHROW(root["foo"]);
         fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_anchor());
         REQUIRE(foo_node.has_anchor_name());
-        REQUIRE(foo_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(foo_node.get_anchor_name() == "anchor");
         REQUIRE(foo_node.is_float_number());
-        REQUIRE_NOTHROW(foo_node.get_value<fkyaml::node::float_number_type>());
-        REQUIRE(foo_node.get_value<fkyaml::node::float_number_type>() == 3.14);
+        REQUIRE(foo_node.get_value<double>() == 3.14);
 
-        REQUIRE_NOTHROW(root["bar"]);
         fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_alias());
+        REQUIRE(bar_node.has_anchor_name());
+        REQUIRE(bar_node.get_anchor_name() == "anchor");
         REQUIRE(bar_node.is_float_number());
-        REQUIRE_NOTHROW(bar_node.get_value<fkyaml::node::float_number_type>());
-        REQUIRE(
-            bar_node.get_value<fkyaml::node::float_number_type>() ==
-            foo_node.get_value<fkyaml::node::float_number_type>());
+        REQUIRE(bar_node.get_value<double>() == foo_node.get_value<double>());
     }
 
     SECTION("block mapping with anchored string scalar") {
@@ -1310,22 +1597,22 @@ TEST_CASE("Deserializer_Anchor") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("bar"));
 
-        REQUIRE_NOTHROW(root["foo"]);
         fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_anchor());
         REQUIRE(foo_node.has_anchor_name());
-        REQUIRE(foo_node.get_anchor_name().compare("anchor") == 0);
+        REQUIRE(foo_node.get_anchor_name() == "anchor");
         REQUIRE(foo_node.is_string());
-        REQUIRE_NOTHROW(foo_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(foo_node.get_value_ref<fkyaml::node::string_type&>().compare("one") == 0);
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
 
-        REQUIRE_NOTHROW(root["bar"]);
         fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_alias());
+        REQUIRE(bar_node.has_anchor_name());
+        REQUIRE(bar_node.get_anchor_name() == "anchor");
         REQUIRE(bar_node.is_string());
-        REQUIRE_NOTHROW(bar_node.get_value_ref<fkyaml::node::string_type&>());
-        REQUIRE(
-            bar_node.get_value_ref<fkyaml::node::string_type&>() ==
-            foo_node.get_value_ref<fkyaml::node::string_type&>());
+        REQUIRE(bar_node.get_value_ref<std::string&>() == foo_node.get_value_ref<std::string&>());
     }
 
     SECTION("parse alias mapping key") {
@@ -1334,11 +1621,15 @@ TEST_CASE("Deserializer_Anchor") {
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_mapping());
-        REQUIRE(root["foo"].size() == 1);
-        REQUIRE(root["foo"].contains("foo"));
-        REQUIRE(root["foo"]["foo"].is_integer());
-        REQUIRE(root["foo"]["foo"].get_value<int>() == 123);
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.size() == 1);
+        REQUIRE(foo_node.contains("foo"));
+
+        fkyaml::node& foo_foo_node = foo_node["foo"];
+        REQUIRE(foo_foo_node.is_integer());
+        REQUIRE(foo_foo_node.get_value<int>() == 123);
     }
 
     SECTION("multiple anchors specified") {
@@ -1371,82 +1662,127 @@ TEST_CASE("Deserializer_Tag") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 11);
-
         REQUIRE(root.contains("str"));
-        REQUIRE(root["str"].has_tag_name());
-        REQUIRE(root["str"].get_tag_name() == "!!str");
-        REQUIRE(root["str"].is_string());
-        REQUIRE(root["str"].get_value_ref<std::string&>() == "true");
-
         REQUIRE(root.contains("int"));
-        REQUIRE(root["int"].has_tag_name());
-        REQUIRE(root["int"].get_tag_name() == "!<tag:yaml.org,2002:int>");
-        REQUIRE(root["int"].is_integer());
-        REQUIRE(root["int"].get_value<int>() == 123);
-
         REQUIRE(root.contains("nil"));
-        REQUIRE(root["nil"].has_tag_name());
-        REQUIRE(root["nil"].get_tag_name() == "!!null");
-        REQUIRE(root["nil"].is_null());
-        REQUIRE(root["nil"].get_value<std::nullptr_t>() == nullptr);
-
         REQUIRE(root.contains("bool"));
-        REQUIRE(root["bool"].has_tag_name());
-        REQUIRE(root["bool"].get_tag_name() == "!!bool");
-        REQUIRE(root["bool"].is_boolean());
-        REQUIRE(root["bool"].get_value<bool>() == false);
-
         REQUIRE(root.contains("float"));
-        REQUIRE(root["float"].has_tag_name());
-        REQUIRE(root["float"].get_tag_name() == "!!float");
-        REQUIRE(root["float"].is_float_number());
-        REQUIRE(root["float"].get_value<double>() == 3.14);
-
         REQUIRE(root.contains("non specific"));
-        REQUIRE(root["non specific"].has_tag_name());
-        REQUIRE(root["non specific"].get_tag_name() == "!");
-        REQUIRE(root["non specific"].is_string());
-        REQUIRE(root["non specific"].get_value_ref<std::string&>() == "non specific");
-
         REQUIRE(root.contains("custom"));
-        REQUIRE(root["custom"].has_tag_name());
-        REQUIRE(root["custom"].get_tag_name() == "!local");
-        REQUIRE(root["custom"].is_string());
-        REQUIRE(root["custom"].get_value_ref<std::string&>() == "value");
-
         REQUIRE(root.contains("map"));
-        REQUIRE(root["map"].has_tag_name());
-        REQUIRE(root["map"].get_tag_name() == "!!map");
-        REQUIRE(root["map"].is_mapping());
-        REQUIRE(root["map"].size() == 1);
-        REQUIRE(root["map"].begin().key().has_tag_name());
-        REQUIRE(root["map"].begin().key().get_tag_name() == "!!str");
-        REQUIRE(root["map"].contains("foo"));
-        REQUIRE(root["map"]["foo"].get_value_ref<std::string&>() == "bar");
-
         REQUIRE(root.contains("map_flow"));
-        REQUIRE(root["map_flow"].has_tag_name());
-        REQUIRE(root["map_flow"].get_tag_name() == "!<tag:yaml.org,2002:map>");
-        REQUIRE(root["map_flow"].is_mapping());
-        REQUIRE(root["map_flow"].size() == 1);
-        REQUIRE(root["map_flow"].contains("foo"));
-        REQUIRE(root["map_flow"]["foo"].get_value_ref<std::string&>() == "bar");
-
         REQUIRE(root.contains("seq"));
-        REQUIRE(root["seq"].has_tag_name());
-        REQUIRE(root["seq"].get_tag_name() == "!<tag:yaml.org,2002:seq>");
-        REQUIRE(root["seq"].is_sequence());
-        REQUIRE(root["seq"].size() == 2);
-        REQUIRE(root["seq"][0].get_value<int>() == 123);
-        REQUIRE(root["seq"][1].get_value<float>() == 3.14f);
-
         REQUIRE(root.contains("seq_flow"));
-        REQUIRE(root["seq_flow"].has_tag_name());
-        REQUIRE(root["seq_flow"].get_tag_name() == "!!seq");
-        REQUIRE(root["seq_flow"].is_sequence());
-        REQUIRE(root["seq_flow"].size() == 2);
-        REQUIRE(root["seq_flow"][0].get_value<int>() == 123);
-        REQUIRE(root["seq_flow"][1].get_value<float>() == 3.14f);
+
+        fkyaml::node& str_node = root["str"];
+        REQUIRE(str_node.has_tag_name());
+        REQUIRE(str_node.get_tag_name() == "!!str");
+        REQUIRE(str_node.is_string());
+        REQUIRE(str_node.get_value_ref<std::string&>() == "true");
+
+        fkyaml::node& int_node = root["int"];
+        REQUIRE(int_node.has_tag_name());
+        REQUIRE(int_node.get_tag_name() == "!<tag:yaml.org,2002:int>");
+        REQUIRE(int_node.is_integer());
+        REQUIRE(int_node.get_value<int>() == 123);
+
+        fkyaml::node& nil_node = root["nil"];
+        REQUIRE(nil_node.has_tag_name());
+        REQUIRE(nil_node.get_tag_name() == "!!null");
+        REQUIRE(nil_node.is_null());
+        REQUIRE(nil_node.get_value<std::nullptr_t>() == nullptr);
+
+        fkyaml::node& bool_node = root["bool"];
+        REQUIRE(bool_node.has_tag_name());
+        REQUIRE(bool_node.get_tag_name() == "!!bool");
+        REQUIRE(bool_node.is_boolean());
+        REQUIRE(bool_node.get_value<bool>() == false);
+
+        fkyaml::node& float_node = root["float"];
+        REQUIRE(float_node.has_tag_name());
+        REQUIRE(float_node.get_tag_name() == "!!float");
+        REQUIRE(float_node.is_float_number());
+        REQUIRE(float_node.get_value<double>() == 3.14);
+
+        fkyaml::node& non_specific_node = root["non specific"];
+        REQUIRE(non_specific_node.has_tag_name());
+        REQUIRE(non_specific_node.get_tag_name() == "!");
+        REQUIRE(non_specific_node.is_string());
+        REQUIRE(non_specific_node.get_value_ref<std::string&>() == "non specific");
+
+        fkyaml::node& custom_node = root["custom"];
+        REQUIRE(custom_node.has_tag_name());
+        REQUIRE(custom_node.get_tag_name() == "!local");
+        REQUIRE(custom_node.is_string());
+        REQUIRE(custom_node.get_value_ref<std::string&>() == "value");
+
+        fkyaml::node& map_node = root["map"];
+        REQUIRE(map_node.has_tag_name());
+        REQUIRE(map_node.get_tag_name() == "!!map");
+        REQUIRE(map_node.is_mapping());
+        REQUIRE(map_node.size() == 1);
+        REQUIRE(map_node.begin().key().has_tag_name());
+        REQUIRE(map_node.begin().key().get_tag_name() == "!!str");
+        REQUIRE(map_node.contains("foo"));
+
+        fkyaml::node& map_foo_node = map_node["foo"];
+        REQUIRE(map_foo_node.is_string());
+        REQUIRE(map_foo_node.get_value_ref<std::string&>() == "bar");
+
+        fkyaml::node& map_flow_node = root["map_flow"];
+        REQUIRE(map_flow_node.has_tag_name());
+        REQUIRE(map_flow_node.get_tag_name() == "!<tag:yaml.org,2002:map>");
+        REQUIRE(map_flow_node.is_mapping());
+        REQUIRE(map_flow_node.size() == 1);
+        REQUIRE(map_flow_node.contains("foo"));
+
+        fkyaml::node& map_flow_foo_node = map_flow_node["foo"];
+        REQUIRE(map_flow_foo_node.is_string());
+        REQUIRE(map_flow_foo_node.get_value_ref<std::string&>() == "bar");
+
+        fkyaml::node& seq_node = root["seq"];
+        REQUIRE(seq_node.has_tag_name());
+        REQUIRE(seq_node.get_tag_name() == "!<tag:yaml.org,2002:seq>");
+        REQUIRE(seq_node.is_sequence());
+        REQUIRE(seq_node.size() == 2);
+
+        fkyaml::node& seq_0_node = seq_node[0];
+        REQUIRE(seq_0_node.is_integer());
+        REQUIRE(seq_0_node.get_value<int>() == 123);
+
+        fkyaml::node& seq_1_node = seq_node[1];
+        REQUIRE(seq_1_node.is_float_number());
+        REQUIRE(seq_1_node.get_value<float>() == 3.14f);
+
+        fkyaml::node& seq_flow_node = root["seq_flow"];
+        REQUIRE(seq_flow_node.has_tag_name());
+        REQUIRE(seq_flow_node.get_tag_name() == "!!seq");
+        REQUIRE(seq_flow_node.is_sequence());
+        REQUIRE(seq_flow_node.size() == 2);
+
+        fkyaml::node& seq_flow_0_node = seq_flow_node[0];
+        REQUIRE(seq_flow_0_node.is_integer());
+        REQUIRE(seq_flow_0_node.get_value<int>() == 123);
+
+        fkyaml::node& seq_flow_1_node = seq_flow_node[1];
+        REQUIRE(seq_flow_1_node.is_float_number());
+        REQUIRE(seq_flow_1_node.get_value<float>() == 3.14f);
+    }
+
+    SECTION("specify tags using TAG directives") {
+        std::string input = "%TAG !e! tag:example.com,2000:app/\n"
+                            "---\n"
+                            "- !e!foo \"bar\"";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 1);
+
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.has_tag_name());
+        REQUIRE(root_0_node.get_tag_name() == "!e!foo");
+        REQUIRE(root_0_node.is_string());
+        REQUIRE(root_0_node.get_value_ref<std::string&>() == "bar");
     }
 
     SECTION("multiple tags specified") {
@@ -1468,18 +1804,20 @@ TEST_CASE("Deserializer_NodeProperties") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
-
         REQUIRE(root.contains("foo"));
-        REQUIRE(root["foo"].is_mapping());
-        REQUIRE(root["foo"].has_anchor_name());
-        REQUIRE(root["foo"].get_anchor_name() == "anchor");
-        REQUIRE(root["foo"].has_tag_name());
-        REQUIRE(root["foo"].get_tag_name() == "!!map");
-        REQUIRE(root["foo"].size() == 1);
 
-        REQUIRE(root["foo"].contains("bar"));
-        REQUIRE(root["foo"]["bar"].is_string());
-        REQUIRE(root["foo"]["bar"].get_value_ref<std::string&>() == "baz");
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.has_anchor_name());
+        REQUIRE(foo_node.get_anchor_name() == "anchor");
+        REQUIRE(foo_node.has_tag_name());
+        REQUIRE(foo_node.get_tag_name() == "!!map");
+        REQUIRE(foo_node.size() == 1);
+        REQUIRE(foo_node.contains("bar"));
+
+        fkyaml::node& foo_bar_node = foo_node["bar"];
+        REQUIRE(foo_bar_node.is_string());
+        REQUIRE(foo_bar_node.get_value_ref<std::string&>() == "baz");
     }
 
     SECTION("alias node with tag") {
@@ -1501,7 +1839,9 @@ TEST_CASE("Deserializer_DocumentWithMarkers") {
     REQUIRE(root.is_mapping());
     REQUIRE(root.size() == 1);
     REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
-
     REQUIRE(root.contains("foo"));
-    REQUIRE(root["foo"].get_value_ref<std::string&>() == "one");
+
+    fkyaml::node& foo_node = root["foo"];
+    REQUIRE(foo_node.is_string());
+    REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
 }

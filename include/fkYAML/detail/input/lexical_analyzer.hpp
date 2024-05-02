@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.5
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.6
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -80,25 +80,25 @@ public:
         m_last_token_begin_line = m_pos_tracker.get_lines_read();
 
         if (m_cur_itr == m_end_itr) {
-            return m_last_token_type = lexical_token_t::END_OF_BUFFER;
+            return lexical_token_t::END_OF_BUFFER;
         }
 
         switch (char current = *m_cur_itr) {
         case '?':
             if (++m_cur_itr == m_end_itr) {
                 m_value_buffer = "?";
-                return m_last_token_type = lexical_token_t::STRING_VALUE;
+                return lexical_token_t::STRING_VALUE;
             }
 
             switch (*m_cur_itr) {
             case ' ':
-                return m_last_token_type = lexical_token_t::EXPLICIT_KEY_PREFIX;
+                return lexical_token_t::EXPLICIT_KEY_PREFIX;
             default:
-                return m_last_token_type = scan_scalar();
+                return scan_scalar();
             }
         case ':': { // key separater
             if (++m_cur_itr == m_end_itr) {
-                return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
+                return lexical_token_t::KEY_SEPARATOR;
             }
 
             switch (*m_cur_itr) {
@@ -122,18 +122,18 @@ public:
                 return scan_scalar();
             }
 
-            return m_last_token_type = lexical_token_t::KEY_SEPARATOR;
+            return lexical_token_t::KEY_SEPARATOR;
         }
         case ',': // value separater
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::VALUE_SEPARATOR;
+            return lexical_token_t::VALUE_SEPARATOR;
         case '&': { // anchor prefix
             extract_anchor_name();
             bool is_empty = m_value_buffer.empty();
             if (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
-            return m_last_token_type = lexical_token_t::ANCHOR_PREFIX;
+            return lexical_token_t::ANCHOR_PREFIX;
         }
         case '*': { // alias prefix
             extract_anchor_name();
@@ -142,104 +142,112 @@ public:
                 emit_error("anchor name must not be empty.");
             }
 
-            return m_last_token_type = lexical_token_t::ALIAS_PREFIX;
+            return lexical_token_t::ALIAS_PREFIX;
         }
         case '!':
             extract_tag_name();
-            return m_last_token_type = lexical_token_t::TAG_PREFIX;
+            return lexical_token_t::TAG_PREFIX;
         case '#': // comment prefix
             scan_comment();
             return get_next_token();
         case '%': // directive prefix
-            return m_last_token_type = scan_directive();
+            return scan_directive();
         case '-': {
             char next = *(m_cur_itr + 1);
-            if (next == ' ') {
+            switch (next) {
+            case ' ':
+            case '\t':
+            case '\n':
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
-                return m_last_token_type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+            case '\r':
+                next = *(m_cur_itr + 2);
+                // Move a cursor to the beginning of the next token.
+                m_cur_itr += 2 + (next == '\n' ? 1 : 0);
+                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                break;
+            default:
+                break;
             }
+            // if (next == ' ') {
+            //     // Move a cursor to the beginning of the next token.
+            //     m_cur_itr += 2;
+            //     return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+            // }
 
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
                 m_cur_itr += 3;
                 if (std::equal(m_token_begin_itr, m_cur_itr, "---")) {
-                    return m_last_token_type = lexical_token_t::END_OF_DIRECTIVES;
+                    return lexical_token_t::END_OF_DIRECTIVES;
                 }
             }
 
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
+            return lexical_token_t::SEQUENCE_FLOW_BEGIN;
         case ']': // sequence flow end
-            if (m_flow_context_depth == 0) {
-                emit_error("An invalid flow sequence ending.");
-            }
             m_flow_context_depth--;
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::SEQUENCE_FLOW_END;
+            return lexical_token_t::SEQUENCE_FLOW_END;
         case '{': // mapping flow begin
             m_flow_context_depth++;
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::MAPPING_FLOW_BEGIN;
+            return lexical_token_t::MAPPING_FLOW_BEGIN;
         case '}': // mapping flow end
-            if (m_flow_context_depth == 0) {
-                emit_error("An invalid flow mapping ending.");
-            }
             m_flow_context_depth--;
             ++m_cur_itr;
-            return m_last_token_type = lexical_token_t::MAPPING_FLOW_END;
+            return lexical_token_t::MAPPING_FLOW_END;
         case '@':
             emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
         case '`':
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
         case '\'':
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         case '+':
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         case '.': {
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
                 if (std::equal(m_cur_itr, m_cur_itr + 3, "...")) {
                     m_cur_itr += 3;
-                    return m_last_token_type = lexical_token_t::END_OF_DOCUMENT;
+                    return lexical_token_t::END_OF_DOCUMENT;
                 }
             }
 
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         }
         case '|': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            std::size_t indent = 0;
+            uint32_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type =
-                       scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            return scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
         }
         case '>': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            std::size_t indent = 0;
+            uint32_t indent = 0;
             get_block_style_metadata(chomp_type, indent);
-            return m_last_token_type =
-                       scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            return scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
         default:
-            return m_last_token_type = scan_scalar();
+            return scan_scalar();
         }
     }
 
     /// @brief Get the beginning position of a last token.
-    /// @return std::size_t The beginning position of a last token.
-    std::size_t get_last_token_begin_pos() const noexcept {
+    /// @return uint32_t The beginning position of a last token.
+    uint32_t get_last_token_begin_pos() const noexcept {
         return m_last_token_begin_pos;
     }
 
     /// @brief Get the number of lines already processed.
-    /// @return std::size_t The number of lines already processed.
-    std::size_t get_lines_processed() const noexcept {
+    /// @return uint32_t The number of lines already processed.
+    uint32_t get_lines_processed() const noexcept {
         return m_last_token_begin_line;
     }
 
@@ -250,8 +258,8 @@ public:
     }
 
     /// @brief Convert from string to boolean and get the converted value.
-    /// @return true  A string token is one of the followings: "true", "True", "TRUE".
-    /// @return false A string token is one of the followings: "false", "False", "FALSE".
+    /// @retval true  A string token is one of the followings: "true", "True", "TRUE".
+    /// @retval false A string token is one of the followings: "false", "False", "FALSE".
     boolean_type get_boolean() const {
         return from_string(m_value_buffer, type_tag<bool> {});
     }
@@ -674,6 +682,8 @@ private:
             }
 
             std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
+            FK_YAML_ASSERT(last_tag_prefix_pos != std::string::npos);
+
             bool is_valid_uri =
                 uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
             if (!is_valid_uri) {
@@ -738,9 +748,6 @@ private:
             m_token_begin_itr = m_cur_itr + 1;
             ret = true;
             break;
-
-        case '\\':
-            emit_error("Escaped characters are only available in a double-quoted string token.");
         }
 
         return ret;
@@ -940,9 +947,6 @@ private:
 
             m_value_buffer.append(m_token_begin_itr, m_cur_itr);
             break;
-
-        case '\\':
-            emit_error("Escaped characters are only available in a double-quoted string token.");
         }
 
         return ret;
@@ -956,7 +960,7 @@ private:
         // * double quoted
         // * plain
 
-        std::string check_filters {"\r\n\\"};
+        std::string check_filters {"\r\n"};
         bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
 
         if (needs_last_single_quote) {
@@ -964,7 +968,7 @@ private:
             pfn_is_allowed = &lexical_analyzer::is_allowed_single;
         }
         else if (needs_last_double_quote) {
-            check_filters.append("\"");
+            check_filters.append("\"\\");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
         else // plain scalars
@@ -1027,7 +1031,7 @@ private:
     /// @param indent The indent size specified for the given token.
     /// @return The lexical token type for strings.
     lexical_token_t scan_block_style_string_token(
-        block_style_indicator_t style, chomping_indicator_t chomp, std::size_t indent) {
+        block_style_indicator_t style, chomping_indicator_t chomp, uint32_t indent) {
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
@@ -1057,7 +1061,7 @@ private:
         }
 
         m_pos_tracker.update_position(m_cur_itr);
-        std::size_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
+        uint32_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
 
         // TODO: preserve and compare the last indentation with `cur_indent`
         if (indent == 0) {
@@ -1067,16 +1071,16 @@ private:
             emit_error("A block style scalar is less indented than the indicated level.");
         }
 
-        int chars_in_line = 0;
+        uint32_t chars_in_line = 0;
         bool is_extra_indented = false;
         if (cur_indent > indent) {
-            std::size_t diff = cur_indent - indent;
+            uint32_t diff = cur_indent - indent;
             if (style == block_style_indicator_t::FOLDED) {
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
             }
             m_value_buffer.append(diff, ' ');
-            chars_in_line += static_cast<int>(diff);
+            chars_in_line += diff;
         }
 
         for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
@@ -1111,7 +1115,7 @@ private:
                     // Append a newline if the next line is empty.
                     bool is_end_of_token = false;
                     bool is_next_empty = false;
-                    for (std::size_t i = 0; i < indent; i++) {
+                    for (uint32_t i = 0; i < indent; i++) {
                         if (++m_cur_itr == m_end_itr) {
                             is_end_of_token = true;
                             break;
@@ -1318,7 +1322,7 @@ private:
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
-    void get_block_style_metadata(chomping_indicator_t& chomp_type, std::size_t& indent) {
+    void get_block_style_metadata(chomping_indicator_t& chomp_type, uint32_t& indent) {
         chomp_type = chomping_indicator_t::CLIP;
         switch (*++m_cur_itr) {
         case '-':
@@ -1417,21 +1421,13 @@ private:
     /// A temporal buffer to store a UTF-8 encoded char sequence.
     std::array<uint8_t, 4> m_encode_buffer {};
     /// The actual size of a UTF-8 encoded char sequence.
-    std::size_t m_encoded_size {0};
+    uint32_t m_encoded_size {0};
     /// The beginning position of the last lexical token. (zero origin)
-    std::size_t m_last_token_begin_pos {0};
+    uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)
-    std::size_t m_last_token_begin_line {0};
+    uint32_t m_last_token_begin_line {0};
     /// The current depth of flow context.
     uint32_t m_flow_context_depth {0};
-    /// The last found token type.
-    lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
-    /// A temporal bool holder.
-    boolean_type m_boolean_val {false};
-    /// A temporal integer holder.
-    integer_type m_integer_val {0};
-    /// A temporal floating point number holder.
-    float_number_type m_float_val {0.0};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
