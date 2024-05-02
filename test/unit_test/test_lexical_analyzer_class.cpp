@@ -309,6 +309,23 @@ TEST_CASE("LexicalAnalyzer_Colon") {
     }
 }
 
+TEST_CASE("LexicalAnalzer_BlockSequenceEntryPrefix") {
+    auto input = GENERATE(
+        std::string("- foo"),
+        std::string("-\tfoo"),
+        std::string("-\r  foo"),
+        std::string("-\r\n  foo"),
+        std::string("-\n  foo"));
+
+    fkyaml::detail::lexical_token_t token;
+    lexer_t lexer(fkyaml::detail::input_adapter(input));
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(lexer.get_string() == "foo");
+}
+
 TEST_CASE("LexicalAnalyzer_Null") {
     fkyaml::detail::lexical_token_t token;
 
