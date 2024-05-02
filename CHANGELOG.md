@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.6](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.6) (2024-05-02)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.5...v0.3.6)
+
+- Fixed parse error on block sequences with child block mappings split by a newline code [\#333](https://github.com/fktn-k/fkYAML/pull/333) ([fktn-k](https://github.com/fktn-k))
+- Fix parse error on block sequences with child flow style container nodes [\#332](https://github.com/fktn-k/fkYAML/pull/332) ([fktn-k](https://github.com/fktn-k))
+- Fixed parse error on root block sequence with child block sequences [\#330](https://github.com/fktn-k/fkYAML/pull/330) ([fktn-k](https://github.com/fktn-k))
+- Allow backslashes in plain/single-quoted scalars [\#329](https://github.com/fktn-k/fkYAML/pull/329) ([fktn-k](https://github.com/fktn-k))
+- Fixed parser crashes on a sequence right after the directives end marker [\#327](https://github.com/fktn-k/fkYAML/pull/327) ([fktn-k](https://github.com/fktn-k))
+
+- Refactor deserialization process [\#331](https://github.com/fktn-k/fkYAML/pull/331) ([fktn-k](https://github.com/fktn-k))
+- Fixed no such file/directory error when running Bash scripts on Windows [\#328](https://github.com/fktn-k/fkYAML/pull/328) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.5](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.5) (2024-04-27)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.4...v0.3.5)

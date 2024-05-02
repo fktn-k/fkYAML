@@ -1,5 +1,42 @@
 # Releases
 
+## **fkYAML version 0.3.6**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.6/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.6/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.6/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.6/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.6/node.hpp) (single header)
+
+### Summary
+
+This release includes enhancements to the deserializer, improving both performance and readability.  
+Furthermore, it resolves several issues identified in the deserializer and improves conformance to the YAML specification.  
+
+### What's Changed
+
+#### :zap: Improvements
+
+- Refactor deserialization process by [@fktn-k](https://github.com/fktn-k) in [\#331](https://github.com/fktn-k/fkYAML/pull/331)
+
+#### :bug: Bug Fixes
+
+- Fixed parser crashes on a sequence right after the directives end marker by [@fktn-k](https://github.com/fktn-k) in [\#327](https://github.com/fktn-k/fkYAML/pull/327)
+- Allow backslashes in plain/single-quoted scalars by [@fktn-k](https://github.com/fktn-k) in [\#329](https://github.com/fktn-k/fkYAML/pull/329)
+- Fixed parse error on root block sequence with child block sequences by [@fktn-k](https://github.com/fktn-k) in [\#330](https://github.com/fktn-k/fkYAML/pull/330)
+- Fix parse error on block sequences with child flow style container nodes by [@fktn-k](https://github.com/fktn-k) in [\#332](https://github.com/fktn-k/fkYAML/pull/332)
+- Fixed parse error on block sequences with child block mappings split by a newline code by [@fktn-k](https://github.com/fktn-k) in [\#333](https://github.com/fktn-k/fkYAML/pull/333)
+
+#### :people_holding_hands: Community
+
+- Fixed no such file/directory error when running Bash scripts on Windows by [@fktn-k](https://github.com/fktn-k) in [\#328](https://github.com/fktn-k/fkYAML/pull/328)
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.5...v0.3.6
+
+---
+
 ## **fkYAML version 0.3.5**
 
 !!! abstract "Release Packages"
@@ -48,7 +85,7 @@ For more information, see the latest CONTRIBUTING.md file.
 
 
 
-**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.3...v0.3.5
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.4...v0.3.5
 
 ---
 
