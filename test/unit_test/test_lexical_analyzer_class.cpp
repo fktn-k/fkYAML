@@ -572,6 +572,7 @@ TEST_CASE("LexicalAnalyzer_String") {
         value_pair_t(std::string("\"foo\\abar\""), fkyaml::node::string_type("foo\abar")),
         value_pair_t(std::string("\"foo\\bbar\""), fkyaml::node::string_type("foo\bbar")),
         value_pair_t(std::string("\"foo\\tbar\""), fkyaml::node::string_type("foo\tbar")),
+        value_pair_t(std::string("\"foo\\\u0009bar\""), fkyaml::node::string_type("foo\tbar")),
         value_pair_t(std::string("\"foo\tbar\""), fkyaml::node::string_type("foo\tbar")),
         value_pair_t(std::string("\"foo\\nbar\""), fkyaml::node::string_type("foo\nbar")),
         value_pair_t(std::string("\"foo\\vbar\""), fkyaml::node::string_type("foo\vbar")),
