@@ -2808,24 +2808,6 @@ private:
             case ',':
                 ends_loop = true;
                 break;
-            case ':': {
-                auto next_itr = m_cur_itr + 1;
-                if (next_itr == m_end_itr) {
-                    ++m_cur_itr;
-                    ends_loop = true;
-                    break;
-                }
-                switch (*next_itr) {
-                case ' ':
-                case '\t':
-                case '\r':
-                case '\n':
-                    // Stop the extraction at the key separator.
-                    ends_loop = true;
-                    break;
-                }
-                break;
-            }
             default:
                 break;
             }

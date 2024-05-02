@@ -1246,28 +1246,26 @@ TEST_CASE("LexicalAnalyzer_Anchor") {
     fkyaml::detail::lexical_token_t token;
 
     SECTION("valid anchor name") {
-        auto input = GENERATE(
-            std::string("&:anchor"),
-            std::string("&:anchor "),
-            std::string("&:anchor\t"),
-            std::string("&:anchor\r"),
-            std::string("&:anchor\n"),
-            std::string("&:anchor{"),
-            std::string("&:anchor}"),
-            std::string("&:anchor["),
-            std::string("&:anchor]"),
-            std::string("&:anchor,"),
-            std::string("&:anchor: "),
-            std::string("&:anchor:\t"),
-            std::string("&:anchor:\r"),
-            std::string("&:anchor:\n"),
-            std::string("&:anchor:"));
+        using test_data_t = std::pair<std::string, std::string>;
+        auto test_data = GENERATE(
+            test_data_t {"&anchor", "anchor"},
+            test_data_t {"&anchor name", "anchor"},
+            test_data_t {"&anchor\tname", "anchor"},
+            test_data_t {"&anchor\rname", "anchor"},
+            test_data_t {"&anchor\nname", "anchor"},
+            test_data_t {"&anchor{name", "anchor"},
+            test_data_t {"&anchor}name", "anchor"},
+            test_data_t {"&anchor[name", "anchor"},
+            test_data_t {"&anchor]name", "anchor"},
+            test_data_t {"&anchor,name", "anchor"},
+            test_data_t {"&anchor: ", "anchor:"},
+            test_data_t {"&anchor:", "anchor:"});
 
-        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        lexer_t lexer(fkyaml::detail::input_adapter(test_data.first));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::ANCHOR_PREFIX);
-        REQUIRE_NOTHROW(lexer.get_string() == ":anchor");
+        REQUIRE_NOTHROW(lexer.get_string() == test_data.second);
     }
 
     SECTION("invalid anchor name") {
@@ -1281,8 +1279,7 @@ TEST_CASE("LexicalAnalyzer_Anchor") {
             std::string("&}"),
             std::string("&["),
             std::string("&]"),
-            std::string("&,"),
-            std::string("&: "));
+            std::string("&,"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -1293,24 +1290,26 @@ TEST_CASE("LexicalAnalyzer_Alias") {
     fkyaml::detail::lexical_token_t token;
 
     SECTION("valid anchor name") {
-        auto input = GENERATE(
-            std::string("*:anchor"),
-            std::string("*:anchor "),
-            std::string("*:anchor\t"),
-            std::string("*:anchor\r"),
-            std::string("*:anchor\n"),
-            std::string("*:anchor{"),
-            std::string("*:anchor}"),
-            std::string("*:anchor["),
-            std::string("*:anchor]"),
-            std::string("*:anchor,"),
-            std::string("*:anchor: "));
+        using test_data_t = std::pair<std::string, std::string>;
+        auto test_data = GENERATE(
+            test_data_t {"*anchor", "anchor"},
+            test_data_t {"*anchor name", "anchor"},
+            test_data_t {"*anchor\tname", "anchor"},
+            test_data_t {"*anchor\rname", "anchor"},
+            test_data_t {"*anchor\nname", "anchor"},
+            test_data_t {"*anchor{name", "anchor"},
+            test_data_t {"*anchor}name", "anchor"},
+            test_data_t {"*anchor[name", "anchor"},
+            test_data_t {"*anchor]name", "anchor"},
+            test_data_t {"*anchor,name", "anchor"},
+            test_data_t {"*anchor: ", "anchor:"},
+            test_data_t {"*anchor:", "anchor:"});
 
-        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        lexer_t lexer(fkyaml::detail::input_adapter(test_data.first));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::ALIAS_PREFIX);
-        REQUIRE_NOTHROW(lexer.get_string() == ":anchor");
+        REQUIRE_NOTHROW(lexer.get_string() == test_data.second);
     }
 
     SECTION("invalid anchor name") {
@@ -1324,8 +1323,7 @@ TEST_CASE("LexicalAnalyzer_Alias") {
             std::string("*}"),
             std::string("*["),
             std::string("*]"),
-            std::string("*,"),
-            std::string("*: "));
+            std::string("*,"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);

@@ -1616,7 +1616,8 @@ TEST_CASE("Deserializer_Anchor") {
     }
 
     SECTION("parse alias mapping key") {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("&anchor foo:\n  *anchor: 123")));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("&anchor foo:\n  *anchor : 123")));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
