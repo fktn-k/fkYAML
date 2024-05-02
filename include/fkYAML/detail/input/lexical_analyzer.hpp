@@ -154,11 +154,27 @@ public:
             return scan_directive();
         case '-': {
             char next = *(m_cur_itr + 1);
-            if (next == ' ') {
+            switch (next) {
+            case ' ':
+            case '\t':
+            case '\n':
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
                 return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+            case '\r':
+                next = *(m_cur_itr + 2);
+                // Move a cursor to the beginning of the next token.
+                m_cur_itr += 2 + (next == '\n' ? 1 : 0);
+                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                break;
+            default:
+                break;
             }
+            // if (next == ' ') {
+            //     // Move a cursor to the beginning of the next token.
+            //     m_cur_itr += 2;
+            //     return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+            // }
 
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {

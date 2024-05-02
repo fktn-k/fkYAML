@@ -437,6 +437,59 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(root_1_bar_1_node.is_integer());
         REQUIRE(root_1_bar_1_node.get_value<int>() == 030);
     }
+
+    SECTION("block mapping with child block mapping (split by a newline code)") {
+        std::string input = "-\n"
+                            "  name: Mark McGwire\n"
+                            "  hr:   65\n"
+                            "  avg:  0.278\n"
+                            "-\n"
+                            "  name: Sammy Sosa\n"
+                            "  hr:   63\n"
+                            "  avg:  0.288";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_mapping());
+        REQUIRE(root_0_node.size() == 3);
+        REQUIRE(root_0_node.contains("name"));
+        REQUIRE(root_0_node.contains("hr"));
+        REQUIRE(root_0_node.contains("avg"));
+
+        fkyaml::node& root_0_name_node = root_0_node["name"];
+        REQUIRE(root_0_name_node.is_string());
+        REQUIRE(root_0_name_node.get_value_ref<std::string&>() == "Mark McGwire");
+
+        fkyaml::node& root_0_hr_node = root_0_node["hr"];
+        REQUIRE(root_0_hr_node.is_integer());
+        REQUIRE(root_0_hr_node.get_value<int>() == 65);
+
+        fkyaml::node& root_0_avg_node = root_0_node["avg"];
+        REQUIRE(root_0_avg_node.is_float_number());
+        REQUIRE(root_0_avg_node.get_value<double>() == 0.278);
+
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_mapping());
+        REQUIRE(root_1_node.size() == 3);
+        REQUIRE(root_1_node.contains("name"));
+        REQUIRE(root_1_node.contains("hr"));
+        REQUIRE(root_1_node.contains("avg"));
+
+        fkyaml::node& root_1_name_node = root_1_node["name"];
+        REQUIRE(root_1_name_node.is_string());
+        REQUIRE(root_1_name_node.get_value_ref<std::string&>() == "Sammy Sosa");
+
+        fkyaml::node& root_1_hr_node = root_1_node["hr"];
+        REQUIRE(root_1_hr_node.is_integer());
+        REQUIRE(root_1_hr_node.get_value<int>() == 63);
+
+        fkyaml::node& root_1_avg_node = root_1_node["avg"];
+        REQUIRE(root_1_avg_node.is_float_number());
+        REQUIRE(root_1_avg_node.get_value<double>() == 0.288);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMapping") {
