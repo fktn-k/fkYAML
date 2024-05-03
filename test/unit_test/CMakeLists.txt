@@ -210,6 +210,7 @@ add_executable(
   test_tag_resolver_class.cpp
   test_uri_encoding_class.cpp
   test_utf_encodings.cpp
+  test_yaml_escaper_class.cpp
   main.cpp
 )
 
