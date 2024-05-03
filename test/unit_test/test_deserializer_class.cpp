@@ -195,6 +195,26 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(test_1_node.get_value_ref<std::string&>() == "bar");
     }
 
+    SECTION("child block sequence whose prefixes are put as indentation") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n- foo\n- 123")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
+
+        fkyaml::node& root_test_node = root["test"];
+        REQUIRE(root_test_node.is_sequence());
+        REQUIRE(root_test_node.size() == 2);
+
+        fkyaml::node& root_test_0_node = root_test_node[0];
+        REQUIRE(root_test_0_node.is_string());
+        REQUIRE(root_test_0_node.get_value_ref<std::string&>() == "foo");
+
+        fkyaml::node& root_test_1_node = root_test_node[1];
+        REQUIRE(root_test_1_node.is_integer());
+        REQUIRE(root_test_1_node.get_value<int>() == 123);
+    }
+
     SECTION("block sequence with nested mappings") {
         REQUIRE_NOTHROW(
             root = deserializer.deserialize(
@@ -1633,6 +1653,32 @@ TEST_CASE("Deserializer_Anchor") {
         REQUIRE(foo_foo_node.get_value<int>() == 123);
     }
 
+    SECTION("parse anchored child block sequence") {
+        std::string input = "test: &anchor\n"
+                            "- foo\n"
+                            "- 123";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
+
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_anchor());
+        REQUIRE(test_node.has_anchor_name());
+        REQUIRE(test_node.get_anchor_name() == "anchor");
+        REQUIRE(test_node.is_sequence());
+        REQUIRE(test_node.size() == 2);
+
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_string());
+        REQUIRE(test_0_node.get_value_ref<std::string&>() == "foo");
+
+        fkyaml::node& test_1_node = test_node[1];
+        REQUIRE(test_1_node.is_integer());
+        REQUIRE(test_1_node.get_value<int>() == 123);
+    }
+
     SECTION("multiple anchors specified") {
         auto input =
             GENERATE(std::string("foo: &anchor &anchor2\n  bar: baz"), std::string("&anchor &anchor2 foo: bar"));
@@ -1768,6 +1814,59 @@ TEST_CASE("Deserializer_Tag") {
         fkyaml::node& seq_flow_1_node = seq_flow_node[1];
         REQUIRE(seq_flow_1_node.is_float_number());
         REQUIRE(seq_flow_1_node.get_value<float>() == 3.14f);
+    }
+
+    SECTION("valid tags for block sequence/mapping") {
+        std::string input = "seq: !!seq\n"
+                            "- !!bool true\n"
+                            "- !!seq\n"
+                            " - !!str true\n"
+                            "map: !!map\n"
+                            " foo: bar";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("seq"));
+        REQUIRE(root.contains("map"));
+
+        fkyaml::node& seq_node = root["seq"];
+        REQUIRE(seq_node.has_tag_name());
+        REQUIRE(seq_node.get_tag_name() == "!!seq");
+        REQUIRE(seq_node.is_sequence());
+        REQUIRE(seq_node.size() == 2);
+
+        fkyaml::node& seq_0_node = seq_node[0];
+        REQUIRE(seq_0_node.has_tag_name());
+        REQUIRE(seq_0_node.get_tag_name() == "!!bool");
+        REQUIRE(seq_0_node.is_boolean());
+        REQUIRE(seq_0_node.get_value<bool>() == true);
+
+        fkyaml::node& seq_1_node = seq_node[1];
+        REQUIRE(seq_1_node.has_tag_name());
+        REQUIRE(seq_1_node.get_tag_name() == "!!seq");
+        REQUIRE(seq_1_node.is_sequence());
+        REQUIRE(seq_1_node.size() == 1);
+
+        fkyaml::node& seq_1_0_node = seq_1_node[0];
+        REQUIRE(seq_1_0_node.has_tag_name());
+        REQUIRE(seq_1_0_node.get_tag_name() == "!!str");
+        REQUIRE(seq_1_0_node.is_string());
+        REQUIRE(seq_1_0_node.get_value_ref<std::string&>() == "true");
+
+        fkyaml::node& map_node = root["map"];
+        REQUIRE(map_node.has_tag_name());
+        REQUIRE(map_node.get_tag_name() == "!!map");
+        REQUIRE(map_node.is_mapping());
+        REQUIRE(map_node.size() == 1);
+        REQUIRE(map_node.contains("foo"));
+
+        // Make sure that the !!map tag is not applied to the child mapping key.
+        REQUIRE_FALSE(map_node.begin().value().has_tag_name());
+
+        fkyaml::node& map_foo_node = map_node["foo"];
+        REQUIRE(map_foo_node.is_string());
+        REQUIRE(map_foo_node.get_value_ref<std::string&>() == "bar");
     }
 
     SECTION("specify tags using TAG directives") {
