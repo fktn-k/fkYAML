@@ -685,10 +685,172 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(qux_node.get_value_ref<std::string&>() == "corge");
     }
 
-    SECTION("block mapping with a block sequence of a block mapping with several key-value pairs") {
+    SECTION("block mapping with keys containing flow indicators") {
         REQUIRE_NOTHROW(
-            root = deserializer.deserialize(
-                fkyaml::detail::input_adapter("foo:\n  - bar: true\n    baz: 123\nqux: corge")));
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo,Bar: true\nBaz[123]: 3.14")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("Foo,Bar"));
+        REQUIRE(root.contains("Baz[123]"));
+
+        fkyaml::node& foobar_node = root["Foo,Bar"];
+        REQUIRE(foobar_node.is_boolean());
+        REQUIRE(foobar_node.get_value<bool>() == true);
+
+        fkyaml::node& baz123_node = root["Baz[123]"];
+        REQUIRE(baz123_node.is_float_number());
+        REQUIRE(baz123_node.get_value<double>() == 3.14);
+    }
+
+    SECTION("Flow indicators inside unquoted plain scalar values") {
+        SECTION("plain scalar contains \'{\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc{abc")));
+
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
+
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc{abc");
+        }
+
+        SECTION("plain scalar contains \'}\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc}abc")));
+
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
+
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc}abc");
+        }
+
+        SECTION("plain scalar contains \'[\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc[abc")));
+
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
+
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc[abc");
+        }
+
+        SECTION("plain scalar contains \']\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc]abc")));
+
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
+
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc]abc");
+        }
+
+        SECTION("plain scalar contains \':\'") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] :3.14}")));
+
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("Foo"));
+
+            fkyaml::node& foo_node = root["Foo"];
+            REQUIRE(foo_node.is_string());
+            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, {[123] :3.14}");
+        }
+
+        SECTION("plain scalar contains \": \"") {
+            REQUIRE_THROWS_AS(
+                root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] : 3.14}")),
+                fkyaml::parse_error);
+        }
+    }
+
+    SECTION("a comment right after a block mapping key.") {
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("baz: # comment2\n  qux: 123\n")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("baz"));
+
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_mapping());
+        REQUIRE(baz_node.size() == 1);
+        REQUIRE(baz_node.contains("qux"));
+
+        fkyaml::node& baz_qux_node = baz_node["qux"];
+        REQUIRE(baz_qux_node.is_integer());
+        REQUIRE(baz_qux_node.get_value<int>() == 123);
+    }
+
+    SECTION("mapping entries split across newlines") {
+        std::string input = "foo:\n"
+                            "  bar\n"
+                            "baz:\n"
+                            "  123\n"
+                            "null:\n"
+                            "  {false: 3.14}\n"
+                            "qux:\n"
+                            "  [r, g, b]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 4);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("baz"));
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root.contains("qux"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_integer());
+        REQUIRE(baz_node.get_value<int>() == 123);
+
+        fkyaml::node& null_node = root[nullptr];
+        REQUIRE(null_node.is_mapping());
+        REQUIRE(null_node.contains(false));
+
+        fkyaml::node& null_false_node = null_node[false];
+        REQUIRE(null_false_node.is_float_number());
+        REQUIRE(null_false_node.get_value<double>() == 3.14);
+
+        fkyaml::node& qux_node = root["qux"];
+        REQUIRE(qux_node.is_sequence());
+        REQUIRE(qux_node.size() == 3);
+
+        fkyaml::node& qux_0_node = qux_node[0];
+        REQUIRE(qux_0_node.is_string());
+        REQUIRE(qux_0_node.get_value_ref<std::string&>() == "r");
+
+        fkyaml::node& qux_1_node = qux_node[1];
+        REQUIRE(qux_1_node.is_string());
+        REQUIRE(qux_1_node.get_value_ref<std::string&>() == "g");
+
+        fkyaml::node& qux_2_node = qux_node[2];
+        REQUIRE(qux_2_node.is_string());
+        REQUIRE(qux_2_node.get_value_ref<std::string&>() == "b");
+    }
+}
+
+TEST_CASE("Deserializer_BlockMappingAsBlockSequenceEntry") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SECTION("block mapping with a block sequence of a block mapping with several key-value pairs") {
+        std::string input = "foo:\n"
+                            "  - bar: true\n"
+                            "    baz: 123\n"
+                            "qux: corge";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
@@ -854,6 +1016,11 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(stuff_1_name_node.is_string());
         REQUIRE(stuff_1_name_node.get_value_ref<std::string&>() == "Bar");
     }
+}
+
+TEST_CASE("Deserializer_ExplicitBlockMapping") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
 
     SECTION("block mapping with explicit block mappings") {
         auto input_adapter = fkyaml::detail::input_adapter("null: 3.14\n"
@@ -914,161 +1081,6 @@ TEST_CASE("Deserializer_BlockMapping") {
         fkyaml::node& key2_1_node = key2_node[1];
         REQUIRE(key2_1_node.is_string());
         REQUIRE(key2_1_node.get_value_ref<std::string&>() == "qux");
-    }
-
-    SECTION("block mapping with keys containing flow indicators") {
-        REQUIRE_NOTHROW(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo,Bar: true\nBaz[123]: 3.14")));
-
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 2);
-        REQUIRE(root.contains("Foo,Bar"));
-        REQUIRE(root.contains("Baz[123]"));
-
-        fkyaml::node& foobar_node = root["Foo,Bar"];
-        REQUIRE(foobar_node.is_boolean());
-        REQUIRE(foobar_node.get_value<bool>() == true);
-
-        fkyaml::node& baz123_node = root["Baz[123]"];
-        REQUIRE(baz123_node.is_float_number());
-        REQUIRE(baz123_node.get_value<double>() == 3.14);
-    }
-
-    SECTION("Flow indicators inside unquoted plain scalar values") {
-        SECTION("plain scalar contains \'{\'") {
-            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc{abc")));
-
-            REQUIRE(root.is_mapping());
-            REQUIRE(root.size() == 1);
-            REQUIRE(root.contains("Foo"));
-
-            fkyaml::node& foo_node = root["Foo"];
-            REQUIRE(foo_node.is_string());
-            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc{abc");
-        }
-
-        SECTION("plain scalar contains \'}\'") {
-            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc}abc")));
-
-            REQUIRE(root.is_mapping());
-            REQUIRE(root.size() == 1);
-            REQUIRE(root.contains("Foo"));
-
-            fkyaml::node& foo_node = root["Foo"];
-            REQUIRE(foo_node.is_string());
-            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc}abc");
-        }
-
-        SECTION("plain scalar contains \'[\'") {
-            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc[abc")));
-
-            REQUIRE(root.is_mapping());
-            REQUIRE(root.size() == 1);
-            REQUIRE(root.contains("Foo"));
-
-            fkyaml::node& foo_node = root["Foo"];
-            REQUIRE(foo_node.is_string());
-            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc[abc");
-        }
-
-        SECTION("plain scalar contains \']\'") {
-            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, abc]abc")));
-
-            REQUIRE(root.is_mapping());
-            REQUIRE(root.size() == 1);
-            REQUIRE(root.contains("Foo"));
-
-            fkyaml::node& foo_node = root["Foo"];
-            REQUIRE(foo_node.is_string());
-            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, abc]abc");
-        }
-
-        SECTION("plain scalar contains \':\'") {
-            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] :3.14}")));
-
-            REQUIRE(root.is_mapping());
-            REQUIRE(root.size() == 1);
-            REQUIRE(root.contains("Foo"));
-
-            fkyaml::node& foo_node = root["Foo"];
-            REQUIRE(foo_node.is_string());
-            REQUIRE(foo_node.get_value_ref<std::string&>() == "Bar, {[123] :3.14}");
-        }
-
-        SECTION("plain scalar contains \": \"") {
-            REQUIRE_THROWS_AS(
-                root = deserializer.deserialize(fkyaml::detail::input_adapter("Foo: Bar, {[123] : 3.14}")),
-                fkyaml::parse_error);
-        }
-    }
-
-    SECTION("a comment right after a block mapping key.") {
-        REQUIRE_NOTHROW(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter("baz: # comment2\n  qux: 123\n")));
-
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 1);
-        REQUIRE(root.contains("baz"));
-
-        fkyaml::node& baz_node = root["baz"];
-        REQUIRE(baz_node.is_mapping());
-        REQUIRE(baz_node.size() == 1);
-        REQUIRE(baz_node.contains("qux"));
-
-        fkyaml::node& baz_qux_node = baz_node["qux"];
-        REQUIRE(baz_qux_node.is_integer());
-        REQUIRE(baz_qux_node.get_value<int>() == 123);
-    }
-
-    SECTION("mapping entries split across newlines") {
-        REQUIRE_NOTHROW(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n"
-                                                                          "  bar\n"
-                                                                          "baz:\n"
-                                                                          "  123\n"
-                                                                          "null:\n"
-                                                                          "  {false: 3.14}\n"
-                                                                          "qux:\n"
-                                                                          "  [r, g, b]")));
-
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 4);
-        REQUIRE(root.contains("foo"));
-        REQUIRE(root.contains("baz"));
-        REQUIRE(root.contains(nullptr));
-        REQUIRE(root.contains("qux"));
-
-        fkyaml::node& foo_node = root["foo"];
-        REQUIRE(foo_node.is_string());
-        REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
-
-        fkyaml::node& baz_node = root["baz"];
-        REQUIRE(baz_node.is_integer());
-        REQUIRE(baz_node.get_value<int>() == 123);
-
-        fkyaml::node& null_node = root[nullptr];
-        REQUIRE(null_node.is_mapping());
-        REQUIRE(null_node.contains(false));
-
-        fkyaml::node& null_false_node = null_node[false];
-        REQUIRE(null_false_node.is_float_number());
-        REQUIRE(null_false_node.get_value<double>() == 3.14);
-
-        fkyaml::node& qux_node = root["qux"];
-        REQUIRE(qux_node.is_sequence());
-        REQUIRE(qux_node.size() == 3);
-
-        fkyaml::node& qux_0_node = qux_node[0];
-        REQUIRE(qux_0_node.is_string());
-        REQUIRE(qux_0_node.get_value_ref<std::string&>() == "r");
-
-        fkyaml::node& qux_1_node = qux_node[1];
-        REQUIRE(qux_1_node.is_string());
-        REQUIRE(qux_1_node.get_value_ref<std::string&>() == "g");
-
-        fkyaml::node& qux_2_node = qux_node[2];
-        REQUIRE(qux_2_node.is_string());
-        REQUIRE(qux_2_node.get_value_ref<std::string&>() == "b");
     }
 }
 
