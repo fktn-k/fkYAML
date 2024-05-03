@@ -1663,6 +1663,357 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_ */
 
+// #include <fkYAML/detail/encodings/yaml_escaper.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.6
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_
+
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/assert.hpp>
+
+// #include <fkYAML/detail/encodings/utf_encodings.hpp>
+
+// #include <fkYAML/exception.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+class yaml_escaper {
+    using iterator = ::std::string::const_iterator;
+
+public:
+    static bool unescape(iterator& begin, iterator end, std::string& buff) {
+        FK_YAML_ASSERT(*begin == '\\' && std::distance(begin, end) > 0);
+        bool ret = true;
+
+        switch (*++begin) {
+        case 'a':
+            buff.push_back('\a');
+            break;
+        case 'b':
+            buff.push_back('\b');
+            break;
+        case 't':
+        case char(0x09):
+            buff.push_back('\t');
+            break;
+        case 'n':
+            buff.push_back('\n');
+            break;
+        case 'v':
+            buff.push_back('\v');
+            break;
+        case 'f':
+            buff.push_back('\f');
+            break;
+        case 'r':
+            buff.push_back('\r');
+            break;
+        case 'e':
+            buff.push_back(char(0x1B));
+            break;
+        case ' ':
+            buff.push_back(' ');
+            break;
+        case '\"':
+            buff.push_back('\"');
+            break;
+        case '/':
+            buff.push_back('/');
+            break;
+        case '\\':
+            buff.push_back('\\');
+            break;
+        case 'N': // next line
+            unescape_escaped_unicode(0x85u, buff);
+            break;
+        case '_': // non-breaking space
+            unescape_escaped_unicode(0xA0u, buff);
+            break;
+        case 'L': // line separator
+            unescape_escaped_unicode(0x2028u, buff);
+            break;
+        case 'P': // paragraph separator
+            unescape_escaped_unicode(0x2029u, buff);
+            break;
+        case 'x': {
+            char32_t codepoint {0};
+            ret = extract_codepoint(begin, end, 1, codepoint);
+            if (ret) {
+                unescape_escaped_unicode(codepoint, buff);
+            }
+            break;
+        }
+        case 'u': {
+            char32_t codepoint {0};
+            ret = extract_codepoint(begin, end, 2, codepoint);
+            if (ret) {
+                unescape_escaped_unicode(codepoint, buff);
+            }
+            break;
+        }
+        case 'U': {
+            char32_t codepoint {0};
+            ret = extract_codepoint(begin, end, 4, codepoint);
+            if (ret) {
+                unescape_escaped_unicode(codepoint, buff);
+            }
+            break;
+        }
+        default:
+            // Unsupported escape sequence is found in a string token.
+            ret = false;
+            break;
+        }
+
+        return ret;
+    }
+
+    static ::std::string escape(iterator begin, iterator end, bool& is_escaped) {
+        ::std::string escaped {};
+        escaped.reserve(std::distance(begin, end));
+        for (; begin != end; ++begin) {
+            switch (*begin) {
+            case 0x01:
+                escaped += "\\u0001";
+                is_escaped = true;
+                break;
+            case 0x02:
+                escaped += "\\u0002";
+                is_escaped = true;
+                break;
+            case 0x03:
+                escaped += "\\u0003";
+                is_escaped = true;
+                break;
+            case 0x04:
+                escaped += "\\u0004";
+                is_escaped = true;
+                break;
+            case 0x05:
+                escaped += "\\u0005";
+                is_escaped = true;
+                break;
+            case 0x06:
+                escaped += "\\u0006";
+                is_escaped = true;
+                break;
+            case '\a':
+                escaped += "\\a";
+                is_escaped = true;
+                break;
+            case '\b':
+                escaped += "\\b";
+                is_escaped = true;
+                break;
+            case '\t':
+                escaped += "\\t";
+                is_escaped = true;
+                break;
+            case '\n':
+                escaped += "\\n";
+                is_escaped = true;
+                break;
+            case '\v':
+                escaped += "\\v";
+                is_escaped = true;
+                break;
+            case '\f':
+                escaped += "\\f";
+                is_escaped = true;
+                break;
+            case '\r':
+                escaped += "\\r";
+                is_escaped = true;
+                break;
+            case 0x0E:
+                escaped += "\\u000E";
+                is_escaped = true;
+                break;
+            case 0x0F:
+                escaped += "\\u000F";
+                is_escaped = true;
+                break;
+            case 0x10:
+                escaped += "\\u0010";
+                is_escaped = true;
+                break;
+            case 0x11:
+                escaped += "\\u0011";
+                is_escaped = true;
+                break;
+            case 0x12:
+                escaped += "\\u0012";
+                is_escaped = true;
+                break;
+            case 0x13:
+                escaped += "\\u0013";
+                is_escaped = true;
+                break;
+            case 0x14:
+                escaped += "\\u0014";
+                is_escaped = true;
+                break;
+            case 0x15:
+                escaped += "\\u0015";
+                is_escaped = true;
+                break;
+            case 0x16:
+                escaped += "\\u0016";
+                is_escaped = true;
+                break;
+            case 0x17:
+                escaped += "\\u0017";
+                is_escaped = true;
+                break;
+            case 0x18:
+                escaped += "\\u0018";
+                is_escaped = true;
+                break;
+            case 0x19:
+                escaped += "\\u0019";
+                is_escaped = true;
+                break;
+            case 0x1A:
+                escaped += "\\u001A";
+                is_escaped = true;
+                break;
+            case 0x1B:
+                escaped += "\\e";
+                is_escaped = true;
+                break;
+            case 0x1C:
+                escaped += "\\u001C";
+                is_escaped = true;
+                break;
+            case 0x1D:
+                escaped += "\\u001D";
+                is_escaped = true;
+                break;
+            case 0x1E:
+                escaped += "\\u001E";
+                is_escaped = true;
+                break;
+            case 0x1F:
+                escaped += "\\u001F";
+                is_escaped = true;
+                break;
+            case '\"':
+                escaped += "\\\"";
+                is_escaped = true;
+                break;
+            case '\\':
+                escaped += "\\\\";
+                is_escaped = true;
+                break;
+            default:
+                int diff = static_cast<int>(std::distance(begin, end));
+                if (diff > 1) {
+                    if (*begin == char(0xC2u) && *(begin + 1) == char(0x85u)) {
+                        escaped += "\\N";
+                        std::advance(begin, 1);
+                        is_escaped = true;
+                        break;
+                    }
+                    else if (*begin == char(0xC2u) && *(begin + 1) == char(0xA0u)) {
+                        escaped += "\\_";
+                        std::advance(begin, 1);
+                        is_escaped = true;
+                        break;
+                    }
+
+                    if (diff > 2) {
+                        if (*begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA8u)) {
+                            escaped += "\\L";
+                            std::advance(begin, 2);
+                            is_escaped = true;
+                            break;
+                        }
+                        if (*begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA9u)) {
+                            escaped += "\\P";
+                            std::advance(begin, 2);
+                            is_escaped = true;
+                            break;
+                        }
+                    }
+                }
+                escaped += *begin;
+                break;
+            }
+        }
+        return escaped;
+    } // LCOV_EXCL_LINE
+
+private:
+    static bool convert_hexchar_to_byte(char source, uint8_t& byte) {
+        if ('0' <= source && source <= '9') {
+            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+            byte = static_cast<uint8_t>(source - char('0'));
+            return true;
+        }
+
+        if ('A' <= source && source <= 'F') {
+            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+            byte = static_cast<uint8_t>(source - 'A' + 10);
+            return true;
+        }
+
+        if ('a' <= source && source <= 'f') {
+            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+            byte = static_cast<uint8_t>(source - 'a' + 10);
+            return true;
+        }
+
+        // The given character is not hexadecimal.
+        return false;
+    }
+
+    static bool extract_codepoint(iterator& begin, iterator end, int bytes_to_read, char32_t& codepoint) {
+        bool has_enough_room = static_cast<int>(std::distance(begin, end)) >= (bytes_to_read - 1);
+        if (!has_enough_room) {
+            return false;
+        }
+
+        int read_size = bytes_to_read * 2;
+        uint8_t byte {0};
+        codepoint = 0;
+
+        for (int i = read_size - 1; i >= 0; i--) {
+            bool is_valid = convert_hexchar_to_byte(*++begin, byte);
+            if (!is_valid) {
+                return false;
+            }
+            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+            codepoint |= static_cast<char32_t>(byte << (4 * i));
+        }
+
+        return true;
+    }
+
+    static void unescape_escaped_unicode(char32_t codepoint, std::string& buff) {
+        std::array<uint8_t, 4> encode_buff {};
+        uint32_t encoded_size {0};
+        utf8::from_utf32(codepoint, encode_buff, encoded_size);
+        buff.append(reinterpret_cast<char*>(encode_buff.data()), encoded_size);
+    }
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_ */
+
 // #include <fkYAML/detail/input/scalar_scanner.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -2566,28 +2917,6 @@ public:
     }
 
 private:
-    /// @brief A utility function to convert a hexadecimal character to an integer.
-    /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
-    /// @return char A integer converted from @a source.
-    char convert_hex_char_to_byte(char source) const {
-        if ('0' <= source && source <= '9') {
-            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            return static_cast<char>(source - '0');
-        }
-
-        if ('A' <= source && source <= 'F') {
-            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            return static_cast<char>(source - 'A' + 10);
-        }
-
-        if ('a' <= source && source <= 'f') {
-            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            return static_cast<char>(source - 'a' + 10);
-        }
-
-        emit_error("Non-hexadecimal character has been given.");
-    }
-
     /// @brief Skip until a newline code or a null character is found.
     void scan_comment() {
         FK_YAML_ASSERT(*m_cur_itr == '#');
@@ -3008,71 +3337,9 @@ private:
 
             // Handle escaped characters.
             // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
-            c = *++m_cur_itr;
-            switch (c) {
-            case 'a':
-                m_value_buffer.push_back('\a');
-                break;
-            case 'b':
-                m_value_buffer.push_back('\b');
-                break;
-            case 't':
-            case char(0x09):
-                m_value_buffer.push_back('\t');
-                break;
-            case 'n':
-                m_value_buffer.push_back('\n');
-                break;
-            case 'v':
-                m_value_buffer.push_back('\v');
-                break;
-            case 'f':
-                m_value_buffer.push_back('\f');
-                break;
-            case 'r':
-                m_value_buffer.push_back('\r');
-                break;
-            case 'e':
-                m_value_buffer.push_back(char(0x1B));
-                break;
-            case ' ':
-                m_value_buffer.push_back(' ');
-                break;
-            case '\"':
-                m_value_buffer.push_back('\"');
-                break;
-            case '/':
-                m_value_buffer.push_back('/');
-                break;
-            case '\\':
-                m_value_buffer.push_back('\\');
-                break;
-            case 'N': // next line
-                utf8::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-                break;
-            case '_': // non-breaking space
-                utf8::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-                break;
-            case 'L': // line separator
-                utf8::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-                break;
-            case 'P': // paragraph separator
-                utf8::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-                break;
-            case 'x':
-                handle_escaped_unicode(1);
-                break;
-            case 'u':
-                handle_escaped_unicode(2);
-                break;
-            case 'U':
-                handle_escaped_unicode(4);
-                break;
-            default:
+
+            bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
+            if (!is_valid_escaping) {
                 emit_error("Unsupported escape sequence is found in a string token.");
             }
 
@@ -3538,22 +3805,6 @@ private:
         }
     }
 
-    /// @brief Unescape the given escaped unicode character.
-    /// @param bytes_to_read The number of bytes to be read from the input buffer.
-    void handle_escaped_unicode(int bytes_to_read) {
-        int read_size = bytes_to_read * 2;
-        char32_t code_point = 0;
-        for (int i = read_size - 1; i >= 0; i--) {
-            char four_bits = convert_hex_char_to_byte(*++m_cur_itr);
-            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            code_point |= static_cast<char32_t>(four_bits << (4 * i));
-        }
-
-        // Treats the code point as a UTF-32 encoded character.
-        utf8::from_utf32(code_point, m_encode_buffer, m_encoded_size);
-        m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-    }
-
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
@@ -3578,7 +3829,7 @@ private:
 
         indent = 0;
         if (std::isdigit(*m_cur_itr)) {
-            indent = convert_hex_char_to_byte(*m_cur_itr++);
+            indent = static_cast<char>(*m_cur_itr++ - '0');
         }
 
         // skip characters including comments.
@@ -3653,10 +3904,6 @@ private:
     std::string m_tag_handle {};
     /// The last tag prefix
     std::string m_tag_prefix {};
-    /// A temporal buffer to store a UTF-8 encoded char sequence.
-    std::array<uint8_t, 4> m_encode_buffer {};
-    /// The actual size of a UTF-8 encoded char sequence.
-    uint32_t m_encoded_size {0};
     /// The beginning position of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)
@@ -6581,6 +6828,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* TO__string_HPP_ */
 
+// #include <fkYAML/detail/encodings/yaml_escaper.hpp>
+
 // #include <fkYAML/detail/input/input_adapter.hpp>
 
 // #include <fkYAML/detail/input/lexical_analyzer.hpp>
@@ -6870,178 +7119,8 @@ private:
         FK_YAML_ASSERT(node.is_string());
 
         using string_type = typename BasicNodeType::string_type;
-
-        // Check if the string value contains a character needed to be escaped on output.
         const string_type& s = node.template get_value_ref<const string_type&>();
-        size_t size = s.size();
-        string_type escaped {};
-        escaped.reserve(size);
-
-        for (size_t i = 0; i < size; i++) {
-            switch (s[i]) {
-            case 0x01:
-                escaped += "\\u0001";
-                is_escaped = true;
-                break;
-            case 0x02:
-                escaped += "\\u0002";
-                is_escaped = true;
-                break;
-            case 0x03:
-                escaped += "\\u0003";
-                is_escaped = true;
-                break;
-            case 0x04:
-                escaped += "\\u0004";
-                is_escaped = true;
-                break;
-            case 0x05:
-                escaped += "\\u0005";
-                is_escaped = true;
-                break;
-            case 0x06:
-                escaped += "\\u0006";
-                is_escaped = true;
-                break;
-            case '\a':
-                escaped += "\\a";
-                is_escaped = true;
-                break;
-            case '\b':
-                escaped += "\\b";
-                is_escaped = true;
-                break;
-            case '\t':
-                escaped += "\\t";
-                is_escaped = true;
-                break;
-            case '\n':
-                escaped += "\\n";
-                is_escaped = true;
-                break;
-            case '\v':
-                escaped += "\\v";
-                is_escaped = true;
-                break;
-            case '\f':
-                escaped += "\\f";
-                is_escaped = true;
-                break;
-            case '\r':
-                escaped += "\\r";
-                is_escaped = true;
-                break;
-            case 0x0E:
-                escaped += "\\u000E";
-                is_escaped = true;
-                break;
-            case 0x0F:
-                escaped += "\\u000F";
-                is_escaped = true;
-                break;
-            case 0x10:
-                escaped += "\\u0010";
-                is_escaped = true;
-                break;
-            case 0x11:
-                escaped += "\\u0011";
-                is_escaped = true;
-                break;
-            case 0x12:
-                escaped += "\\u0012";
-                is_escaped = true;
-                break;
-            case 0x13:
-                escaped += "\\u0013";
-                is_escaped = true;
-                break;
-            case 0x14:
-                escaped += "\\u0014";
-                is_escaped = true;
-                break;
-            case 0x15:
-                escaped += "\\u0015";
-                is_escaped = true;
-                break;
-            case 0x16:
-                escaped += "\\u0016";
-                is_escaped = true;
-                break;
-            case 0x17:
-                escaped += "\\u0017";
-                is_escaped = true;
-                break;
-            case 0x18:
-                escaped += "\\u0018";
-                is_escaped = true;
-                break;
-            case 0x19:
-                escaped += "\\u0019";
-                is_escaped = true;
-                break;
-            case 0x1A:
-                escaped += "\\u001A";
-                is_escaped = true;
-                break;
-            case 0x1B:
-                escaped += "\\e";
-                is_escaped = true;
-                break;
-            case 0x1C:
-                escaped += "\\u001C";
-                is_escaped = true;
-                break;
-            case 0x1D:
-                escaped += "\\u001D";
-                is_escaped = true;
-                break;
-            case 0x1E:
-                escaped += "\\u001E";
-                is_escaped = true;
-                break;
-            case 0x1F:
-                escaped += "\\u001F";
-                is_escaped = true;
-                break;
-            case '\"':
-                escaped += "\\\"";
-                is_escaped = true;
-                break;
-            case '\\':
-                escaped += "\\\\";
-                is_escaped = true;
-                break;
-            default:
-                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u)) {
-                    escaped += "\\N";
-                    i++;
-                    is_escaped = true;
-                    break;
-                }
-                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u)) {
-                    escaped += "\\_";
-                    i++;
-                    is_escaped = true;
-                    break;
-                }
-                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u)) {
-                    escaped += "\\L";
-                    i += 2;
-                    is_escaped = true;
-                    break;
-                }
-                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u)) {
-                    escaped += "\\P";
-                    i += 2;
-                    is_escaped = true;
-                    break;
-                }
-                escaped += s[i];
-                break;
-            }
-        }
-
-        return escaped;
+        return yaml_escaper::escape(s.begin(), s.end(), is_escaped);
     } // LCOV_EXCL_LINE
 
 private:

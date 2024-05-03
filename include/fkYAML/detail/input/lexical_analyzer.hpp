@@ -24,6 +24,7 @@
 #include <fkYAML/detail/conversions/from_string.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
+#include <fkYAML/detail/encodings/yaml_escaper.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/input/position_tracker.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
@@ -314,28 +315,6 @@ public:
     }
 
 private:
-    /// @brief A utility function to convert a hexadecimal character to an integer.
-    /// @param source A hexadecimal character ('0'~'9', 'A'~'F', 'a'~'f')
-    /// @return char A integer converted from @a source.
-    char convert_hex_char_to_byte(char source) const {
-        if ('0' <= source && source <= '9') {
-            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            return static_cast<char>(source - '0');
-        }
-
-        if ('A' <= source && source <= 'F') {
-            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            return static_cast<char>(source - 'A' + 10);
-        }
-
-        if ('a' <= source && source <= 'f') {
-            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            return static_cast<char>(source - 'a' + 10);
-        }
-
-        emit_error("Non-hexadecimal character has been given.");
-    }
-
     /// @brief Skip until a newline code or a null character is found.
     void scan_comment() {
         FK_YAML_ASSERT(*m_cur_itr == '#');
@@ -756,71 +735,9 @@ private:
 
             // Handle escaped characters.
             // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
-            c = *++m_cur_itr;
-            switch (c) {
-            case 'a':
-                m_value_buffer.push_back('\a');
-                break;
-            case 'b':
-                m_value_buffer.push_back('\b');
-                break;
-            case 't':
-            case char(0x09):
-                m_value_buffer.push_back('\t');
-                break;
-            case 'n':
-                m_value_buffer.push_back('\n');
-                break;
-            case 'v':
-                m_value_buffer.push_back('\v');
-                break;
-            case 'f':
-                m_value_buffer.push_back('\f');
-                break;
-            case 'r':
-                m_value_buffer.push_back('\r');
-                break;
-            case 'e':
-                m_value_buffer.push_back(char(0x1B));
-                break;
-            case ' ':
-                m_value_buffer.push_back(' ');
-                break;
-            case '\"':
-                m_value_buffer.push_back('\"');
-                break;
-            case '/':
-                m_value_buffer.push_back('/');
-                break;
-            case '\\':
-                m_value_buffer.push_back('\\');
-                break;
-            case 'N': // next line
-                utf8::from_utf32(0x85u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-                break;
-            case '_': // non-breaking space
-                utf8::from_utf32(0xA0u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-                break;
-            case 'L': // line separator
-                utf8::from_utf32(0x2028u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-                break;
-            case 'P': // paragraph separator
-                utf8::from_utf32(0x2029u, m_encode_buffer, m_encoded_size);
-                m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-                break;
-            case 'x':
-                handle_escaped_unicode(1);
-                break;
-            case 'u':
-                handle_escaped_unicode(2);
-                break;
-            case 'U':
-                handle_escaped_unicode(4);
-                break;
-            default:
+
+            bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
+            if (!is_valid_escaping) {
                 emit_error("Unsupported escape sequence is found in a string token.");
             }
 
@@ -1286,22 +1203,6 @@ private:
         }
     }
 
-    /// @brief Unescape the given escaped unicode character.
-    /// @param bytes_to_read The number of bytes to be read from the input buffer.
-    void handle_escaped_unicode(int bytes_to_read) {
-        int read_size = bytes_to_read * 2;
-        char32_t code_point = 0;
-        for (int i = read_size - 1; i >= 0; i--) {
-            char four_bits = convert_hex_char_to_byte(*++m_cur_itr);
-            // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            code_point |= static_cast<char32_t>(four_bits << (4 * i));
-        }
-
-        // Treats the code point as a UTF-32 encoded character.
-        utf8::from_utf32(code_point, m_encode_buffer, m_encoded_size);
-        m_value_buffer.append(reinterpret_cast<char*>(m_encode_buffer.data()), m_encoded_size);
-    }
-
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
@@ -1326,7 +1227,7 @@ private:
 
         indent = 0;
         if (std::isdigit(*m_cur_itr)) {
-            indent = convert_hex_char_to_byte(*m_cur_itr++);
+            indent = static_cast<char>(*m_cur_itr++ - '0');
         }
 
         // skip characters including comments.
@@ -1401,10 +1302,6 @@ private:
     std::string m_tag_handle {};
     /// The last tag prefix
     std::string m_tag_prefix {};
-    /// A temporal buffer to store a UTF-8 encoded char sequence.
-    std::array<uint8_t, 4> m_encode_buffer {};
-    /// The actual size of a UTF-8 encoded char sequence.
-    uint32_t m_encoded_size {0};
     /// The beginning position of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)
