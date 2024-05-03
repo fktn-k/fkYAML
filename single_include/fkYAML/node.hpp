@@ -4560,6 +4560,8 @@ private:
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
+                    apply_directive_set(*mp_current_node);
+                    apply_node_properties(*mp_current_node);
                     break;
                 }
 
