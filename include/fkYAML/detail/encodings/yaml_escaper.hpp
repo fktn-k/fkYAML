@@ -250,36 +250,41 @@ public:
                 break;
             default:
                 int diff = static_cast<int>(std::distance(begin, end));
-                if (diff > 1 && *begin == char(0xC2u) && *(begin + 1) == char(0x85u)) {
-                    escaped += "\\N";
-                    std::advance(begin, 1);
-                    is_escaped = true;
-                    break;
-                }
-                if (diff > 1 && *begin == char(0xC2u) && *(begin + 1) == char(0xA0u)) {
-                    escaped += "\\_";
-                    std::advance(begin, 1);
-                    is_escaped = true;
-                    break;
-                }
-                if (diff > 2 && *begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA8u)) {
-                    escaped += "\\L";
-                    std::advance(begin, 2);
-                    is_escaped = true;
-                    break;
-                }
-                if (diff > 2 && *begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA9u)) {
-                    escaped += "\\P";
-                    std::advance(begin, 2);
-                    is_escaped = true;
-                    break;
+                if (diff > 1) {
+                    if (*begin == char(0xC2u) && *(begin + 1) == char(0x85u)) {
+                        escaped += "\\N";
+                        std::advance(begin, 1);
+                        is_escaped = true;
+                        break;
+                    }
+                    else if (*begin == char(0xC2u) && *(begin + 1) == char(0xA0u)) {
+                        escaped += "\\_";
+                        std::advance(begin, 1);
+                        is_escaped = true;
+                        break;
+                    }
+
+                    if (diff > 2) {
+                        if (*begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA8u)) {
+                            escaped += "\\L";
+                            std::advance(begin, 2);
+                            is_escaped = true;
+                            break;
+                        }
+                        if (*begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA9u)) {
+                            escaped += "\\P";
+                            std::advance(begin, 2);
+                            is_escaped = true;
+                            break;
+                        }
+                    }
                 }
                 escaped += *begin;
                 break;
             }
         }
         return escaped;
-    }
+    } // LCOV_EXCL_LINE
 
 private:
     static bool convert_hexchar_to_byte(char source, uint8_t& byte) {

@@ -55,8 +55,8 @@ TEST_CASE("YamlEscaper_Unescape") {
             std::string("\\Q"),
             std::string("\\xw"),
             std::string("\\x+"),
-            std::string("\\x="),
-            std::string("\\x^"),
+            std::string("\\u="),
+            std::string("\\U^"),
             std::string("\\x{"));
 
         std::string buff {};

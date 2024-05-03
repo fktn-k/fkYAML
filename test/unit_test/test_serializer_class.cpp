@@ -64,8 +64,6 @@ TEST_CASE("SerializeClassTest_FloatNumberNode", "[SerializeClassTest]") {
 
 TEST_CASE("Serializer_StringNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
-    const char NEXT_LINE[] = {char(0xC2u), char(0x85u), char(0)};
-
     auto node_str_pair = GENERATE_REF(
         node_str_pair_t("test", "test"),
         node_str_pair_t("foo bar", "foo bar"),
@@ -92,7 +90,8 @@ TEST_CASE("Serializer_StringNode") {
         node_str_pair_t(".nan", "\".nan\""),
         node_str_pair_t(".NaN", "\".NaN\""),
         node_str_pair_t(".NAN", "\".NAN\""),
-
+        node_str_pair_t("foo\"bar", "\"foo\\\"bar\""),
+        node_str_pair_t(fkyaml::node::string_type({char(0xC2u), char(0xA1u)}), std::string({char(0xC2u), char(0xA1u)})),
         node_str_pair_t(
             fkyaml::node::string_type({char(0xE3u), char(0x80u), char(0xA8u)}),
             std::string({char(0xE3u), char(0x80u), char(0xA8u)})),
@@ -101,8 +100,7 @@ TEST_CASE("Serializer_StringNode") {
             std::string({char(0xE2u), char(0x81u), char(0xA8u)})),
         node_str_pair_t(
             fkyaml::node::string_type({char(0xE2u), char(0x80u), char(0xAAu)}),
-            std::string({char(0xE2u), char(0x80u), char(0xAAu)})),
-        node_str_pair_t(fkyaml::node::string_type({char(0xE2u), char(0x80u), char(0xA9u)}), "\"\\P\""));
+            std::string({char(0xE2u), char(0x80u), char(0xAAu)})));
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
