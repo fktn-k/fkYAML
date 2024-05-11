@@ -52,10 +52,6 @@ private:
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
     void serialize_directives(const BasicNodeType& node, std::string& str) {
-        if (!node.mp_meta) {
-            return;
-        }
-
         const auto& p_meta = node.mp_meta;
         bool needs_directive_end = false;
 

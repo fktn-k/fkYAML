@@ -6887,10 +6887,6 @@ private:
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
     void serialize_directives(const BasicNodeType& node, std::string& str) {
-        if (!node.mp_meta) {
-            return;
-        }
-
         const auto& p_meta = node.mp_meta;
         bool needs_directive_end = false;
 
@@ -8283,11 +8279,9 @@ public:
             switch (m_node_type) {
             case node_t::SEQUENCE:
                 m_node_value.p_sequence = create_object<sequence_type>(*(rhs.m_node_value.p_sequence));
-                FK_YAML_ASSERT(m_node_value.p_sequence != nullptr);
                 break;
             case node_t::MAPPING:
                 m_node_value.p_mapping = create_object<mapping_type>(*(rhs.m_node_value.p_mapping));
-                FK_YAML_ASSERT(m_node_value.p_mapping != nullptr);
                 break;
             case node_t::NULL_OBJECT:
                 m_node_value.p_mapping = nullptr;
@@ -8303,7 +8297,6 @@ public:
                 break;
             case node_t::STRING:
                 m_node_value.p_string = create_object<string_type>(*(rhs.m_node_value.p_string));
-                FK_YAML_ASSERT(m_node_value.p_string != nullptr);
                 break;
             }
         }
@@ -8459,7 +8452,6 @@ public:
         basic_node node;
         node.m_node_type = node_t::SEQUENCE;
         node.m_node_value.p_sequence = create_object<sequence_type>();
-        FK_YAML_ASSERT(node.m_node_value.p_sequence != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -8471,7 +8463,6 @@ public:
         basic_node node;
         node.m_node_type = node_t::SEQUENCE;
         node.m_node_value.p_sequence = create_object<sequence_type>(seq);
-        FK_YAML_ASSERT(node.m_node_value.p_sequence != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -8483,7 +8474,6 @@ public:
         basic_node node;
         node.m_node_type = node_t::SEQUENCE;
         node.m_node_value.p_sequence = create_object<sequence_type>(std::move(seq));
-        FK_YAML_ASSERT(node.m_node_value.p_sequence != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -8494,7 +8484,6 @@ public:
         basic_node node;
         node.m_node_type = node_t::MAPPING;
         node.m_node_value.p_mapping = create_object<mapping_type>();
-        FK_YAML_ASSERT(node.m_node_value.p_mapping != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -8506,7 +8495,6 @@ public:
         basic_node node;
         node.m_node_type = node_t::MAPPING;
         node.m_node_value.p_mapping = create_object<mapping_type>(map);
-        FK_YAML_ASSERT(node.m_node_value.p_mapping != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -8518,7 +8506,6 @@ public:
         basic_node node;
         node.m_node_type = node_t::MAPPING;
         node.m_node_value.p_mapping = create_object<mapping_type>(std::move(map));
-        FK_YAML_ASSERT(node.m_node_value.p_mapping != nullptr);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -8534,9 +8521,6 @@ public:
 
         basic_node node = anchor_node;
         node.m_prop.anchor_status = detail::anchor_status_t::ALIAS;
-        node.m_prop.anchor = anchor_node.m_prop.anchor;
-        node.m_prop.anchor_offset = anchor_node.m_prop.anchor_offset;
-        node.mp_meta = anchor_node.mp_meta;
         return node;
     } // LCOV_EXCL_LINE
 
@@ -9142,10 +9126,6 @@ public:
     /// @param[in] A version of the YAML format.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     void set_yaml_version(const yaml_version_t version) noexcept {
-        if (!mp_meta) {
-            mp_meta =
-                std::shared_ptr<detail::document_metainfo<basic_node>>(new detail::document_metainfo<basic_node>());
-        }
         mp_meta->version = version;
         mp_meta->is_version_specified = true;
     }

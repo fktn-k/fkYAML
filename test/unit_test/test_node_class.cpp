@@ -359,6 +359,17 @@ TEST_CASE("Node_InitializerListCtor") {
     REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].get_value_ref<fkyaml::node::string_type&>() == "qux");
 }
 
+TEST_CASE("Node_CopyAssignmentOperator") {
+    fkyaml::node node(123);
+    fkyaml::node copied(true);
+
+    node = copied;
+    REQUIRE(node.is_boolean());
+    REQUIRE(node.get_value<bool>() == true);
+    REQUIRE(copied.is_boolean());
+    REQUIRE(copied.get_value<bool>() == true);
+}
+
 //
 // test cases for serialization/deserialization features
 //
