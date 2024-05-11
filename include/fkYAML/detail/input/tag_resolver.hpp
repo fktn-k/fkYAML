@@ -17,8 +17,9 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
-#include <fkYAML/detail/directive_set.hpp>
+#include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/tag_t.hpp>
+#include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/exception.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -31,18 +32,23 @@ const std::string default_secondary_handle_prefix = "tag:yaml.org,2002:";
 
 } // namespace
 
+template <typename BasicNodeType>
 class tag_resolver {
+    static_assert(is_basic_node<BasicNodeType>::value, "tag_resolver only accepts basic_node<...>.");
+    using doc_metainfo_type = document_metainfo<BasicNodeType>;
+
 public:
     /// @brief Resolve the input tag name into an expanded tag name prepended with a registered prefix.
     /// @param tag The input tag name.
     /// @return The type of a node deduced from the given tag name.
-    static tag_t resolve_tag(const std::string& tag, const std::shared_ptr<directive_set>& directives) {
+    static tag_t resolve_tag(const std::string& tag, const std::shared_ptr<doc_metainfo_type>& directives) {
         std::string normalized = normalize_tag_name(tag, directives);
         return convert_to_tag_type(normalized);
     }
 
 private:
-    static std::string normalize_tag_name(const std::string& tag, const std::shared_ptr<directive_set>& directives) {
+    static std::string normalize_tag_name(
+        const std::string& tag, const std::shared_ptr<doc_metainfo_type>& directives) {
         if (tag.empty()) {
             throw invalid_tag("tag must not be empty.", "");
         }

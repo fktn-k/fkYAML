@@ -17,12 +17,13 @@
 #include <unordered_map>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
-#include <fkYAML/detail/directive_set.hpp>
+#include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/input/tag_resolver.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/node_property.hpp>
 #include <fkYAML/detail/types/lexical_token_t.hpp>
 #include <fkYAML/exception.hpp>
 
@@ -38,6 +39,10 @@ class basic_deserializer {
     using node_type = BasicNodeType;
     /** A type for the lexical analyzer. */
     using lexer_type = lexical_analyzer<node_type>;
+    /** A type for the document metainfo. */
+    using doc_metainfo_type = document_metainfo<node_type>;
+    /** A type for the tag resolver. */
+    using tag_resolver_type = tag_resolver<node_type>;
     /** A type for sequence node value containers. */
     using sequence_type = typename node_type::sequence_type;
     /** A type for mapping node value containers. */
@@ -97,6 +102,7 @@ public:
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
         node_type root;
+        mp_meta = root.mp_meta;
 
         // parse directives first.
         deserialize_directives(lexer, type);
@@ -144,7 +150,7 @@ public:
 
         // reset parameters for the next call.
         mp_current_node = nullptr;
-        mp_directive_set.reset();
+        mp_meta.reset();
         m_needs_anchor_impl = false;
         m_anchor_table.clear();
         m_context_stack.clear();
@@ -162,52 +168,44 @@ private:
 
             switch (type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
-                if (!mp_directive_set) {
-                    mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
-                }
-
-                if (mp_directive_set->is_version_specified) {
+                if (mp_meta->is_version_specified) {
                     throw parse_error(
                         "YAML version cannot be specified more than once.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
 
-                mp_directive_set->version = convert_yaml_version(lexer.get_yaml_version());
-                mp_directive_set->is_version_specified = true;
+                mp_meta->version = convert_yaml_version(lexer.get_yaml_version());
+                mp_meta->is_version_specified = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
-                if (!mp_directive_set) {
-                    mp_directive_set = std::shared_ptr<directive_set>(new directive_set());
-                }
-
                 const std::string& tag_handle = lexer.get_tag_handle();
                 switch (tag_handle.size()) {
                 case 1: {
-                    bool is_already_specified = !mp_directive_set->primary_handle_prefix.empty();
+                    bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
                             "Primary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    mp_directive_set->primary_handle_prefix = lexer.get_tag_prefix();
+                    mp_meta->primary_handle_prefix = lexer.get_tag_prefix();
                     break;
                 }
                 case 2: {
-                    bool is_already_specified = !mp_directive_set->secondary_handle_prefix.empty();
+                    bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
                             "Secondary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    mp_directive_set->secondary_handle_prefix = lexer.get_tag_prefix();
+                    mp_meta->secondary_handle_prefix = lexer.get_tag_prefix();
                     break;
                 }
                 default: {
                     bool is_already_specified =
-                        !(mp_directive_set->named_handle_map.emplace(tag_handle, lexer.get_tag_prefix()).second);
+                        !(mp_meta->named_handle_map.emplace(tag_handle, lexer.get_tag_prefix()).second);
                     if (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
@@ -337,7 +335,7 @@ private:
 
                 if (line > old_line) {
                     if (m_needs_tag_impl) {
-                        tag_t tag_type = tag_resolver::resolve_tag(m_tag_name, mp_directive_set);
+                        tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
                         if (tag_type == tag_t::MAPPING) {
                             // set YAML node properties here to distinguish them from those for the first key node
                             // as shown in the following snippet:
@@ -716,7 +714,7 @@ private:
                 throw parse_error("Tag cannot be specified to alias nodes", line, indent);
             }
 
-            tag_t tag_type = tag_resolver::resolve_tag(m_tag_name, mp_directive_set);
+            tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
 
             FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
 
@@ -766,11 +764,13 @@ private:
             break;
         case lexical_token_t::ALIAS_PREFIX: {
             const string_type& alias_name = lexer.get_string();
-            auto itr = m_anchor_table.find(alias_name);
-            if (itr == m_anchor_table.end()) {
+            uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(alias_name));
+            if (anchor_counts == 0) {
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
-            node = node_type::alias_of(m_anchor_table[alias_name]);
+            node.m_prop.anchor_status = detail::anchor_status_t::ALIAS;
+            node.m_prop.anchor = alias_name;
+            node.m_prop.anchor_offset = anchor_counts - 1;
             break;
         }
         default:   // LCOV_EXCL_LINE
@@ -844,9 +844,7 @@ private:
     /// @brief Set YAML directive properties to the given node.
     /// @param node A node_type object to be set YAML directive properties.
     void apply_directive_set(node_type& node) noexcept {
-        if (mp_directive_set) {
-            node.mp_directive_set = mp_directive_set;
-        }
+        node.mp_meta = mp_meta;
     }
 
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
@@ -854,7 +852,6 @@ private:
     void apply_node_properties(node_type& node) {
         if (m_needs_anchor_impl) {
             node.add_anchor_name(m_anchor_name);
-            m_anchor_table[m_anchor_name] = node;
             m_needs_anchor_impl = false;
             m_anchor_name.clear();
         }
@@ -880,7 +877,7 @@ private:
     /// The current depth of flow contexts.
     uint32_t m_flow_context_depth {0};
     /// The set of YAML directives.
-    std::shared_ptr<detail::directive_set> mp_directive_set {};
+    std::shared_ptr<doc_metainfo_type> mp_meta {};
     /// A flag to determine the need for YAML anchor node implementation.
     bool m_needs_anchor_impl {false};
     /// A flag to determine the need for a corresponding node with the last YAML tag.

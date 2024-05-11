@@ -52,15 +52,16 @@ private:
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
     void serialize_directives(const BasicNodeType& node, std::string& str) {
-        if (!node.mp_directive_set) {
+        if (!node.mp_meta) {
             return;
         }
 
-        const auto& directives = node.mp_directive_set;
+        const auto& p_meta = node.mp_meta;
+        bool needs_directive_end = false;
 
-        if (directives->is_version_specified) {
+        if (p_meta->is_version_specified) {
             str += "%YAML ";
-            switch (directives->version) {
+            switch (p_meta->version) {
             case yaml_version_t::VER_1_1:
                 str += "1.1\n";
                 break;
@@ -68,31 +69,37 @@ private:
                 str += "1.2\n";
                 break;
             }
+            needs_directive_end = true;
         }
 
-        if (!directives->primary_handle_prefix.empty()) {
+        if (!p_meta->primary_handle_prefix.empty()) {
             str += "%TAG ! ";
-            str += directives->primary_handle_prefix;
+            str += p_meta->primary_handle_prefix;
             str += "\n";
+            needs_directive_end = true;
         }
 
-        if (!directives->secondary_handle_prefix.empty()) {
+        if (!p_meta->secondary_handle_prefix.empty()) {
             str += "%TAG !! ";
-            str += directives->secondary_handle_prefix;
+            str += p_meta->secondary_handle_prefix;
             str += "\n";
+            needs_directive_end = true;
         }
 
-        if (!directives->named_handle_map.empty()) {
-            for (const auto& itr : directives->named_handle_map) {
+        if (!p_meta->named_handle_map.empty()) {
+            for (const auto& itr : p_meta->named_handle_map) {
                 str += "%TAG ";
                 str += itr.first;
                 str += " ";
                 str += itr.second;
                 str += "\n";
             }
+            needs_directive_end = true;
         }
 
-        str += "---\n";
+        if (needs_directive_end) {
+            str += "---\n";
+        }
     }
 
     /// @brief Recursively serialize each Node object.
