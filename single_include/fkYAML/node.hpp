@@ -4320,8 +4320,8 @@ public:
         // reset parameters for the next call.
         mp_current_node = nullptr;
         mp_meta.reset();
+        m_needs_tag_impl = false;
         m_needs_anchor_impl = false;
-        m_anchor_table.clear();
         m_context_stack.clear();
 
         return root;
@@ -5053,8 +5053,6 @@ private:
     bool m_needs_tag_impl {false};
     /// The last YAML anchor name.
     string_type m_anchor_name {};
-    /// The table of YAML anchor nodes.
-    std::unordered_map<std::string, node_type> m_anchor_table {};
     /// The last tag name.
     string_type m_tag_name {};
 };
