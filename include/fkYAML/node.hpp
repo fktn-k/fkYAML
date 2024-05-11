@@ -171,7 +171,14 @@ private:
                     basic_node current_node(std::move(stack.back()));
                     stack.pop_back();
 
-                    if (current_node.has_anchor_name()) {
+                    if (current_node.is_alias()) {
+                        continue;
+                    }
+
+                    if (current_node.is_anchor()) {
+                        auto itr = current_node.mp_meta->anchor_table.equal_range(current_node.m_prop.anchor).first;
+                        std::advance(itr, current_node.m_prop.anchor_offset);
+                        stack.emplace_back(std::move(itr->second));
                         continue;
                     }
 
@@ -411,8 +418,20 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/destructor/
     ~basic_node() noexcept // NOLINT(bugprone-exception-escape)
     {
-        if (!has_anchor_name()) {
+        switch (m_prop.anchor_status) {
+        case detail::anchor_status_t::NONE:
             m_node_value.destroy(m_node_type);
+            break;
+        case detail::anchor_status_t::ANCHOR: {
+            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            std::advance(itr, m_prop.anchor_offset);
+            itr->second.m_node_value.destroy(itr->second.m_node_type);
+            itr->second.m_node_type = node_t::NULL_OBJECT;
+            itr->second.mp_meta.reset();
+            break;
+        }
+        case detail::anchor_status_t::ALIAS:
+            break;
         }
         m_node_type = node_t::NULL_OBJECT;
         mp_meta.reset();
@@ -1158,6 +1177,15 @@ public:
     /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name) {
+        if (is_anchor()) {
+            m_prop.anchor_status = detail::anchor_status_t::NONE;
+            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            std::advance(itr, m_prop.anchor_offset);
+            mp_meta.reset();
+            itr->second.swap(*this);
+            mp_meta->anchor_table.erase(itr);
+        }
+
         auto p_meta = mp_meta;
         uint32_t anchor_counts = static_cast<uint32_t>(p_meta->anchor_table.count(anchor_name));
 
@@ -1176,6 +1204,15 @@ public:
     /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name) {
+        if (is_anchor()) {
+            m_prop.anchor_status = detail::anchor_status_t::NONE;
+            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            std::advance(itr, m_prop.anchor_offset);
+            mp_meta.reset();
+            itr->second.swap(*this);
+            mp_meta->anchor_table.erase(itr);
+        }
+
         auto p_meta = mp_meta;
         uint32_t anchor_counts = static_cast<uint32_t>(p_meta->anchor_table.count(anchor_name));
 
@@ -1299,6 +1336,7 @@ public:
         swap(m_prop.tag, rhs.m_prop.tag);
         swap(m_prop.anchor_status, rhs.m_prop.anchor_status);
         swap(m_prop.anchor, rhs.m_prop.anchor);
+        swap(m_prop.anchor_offset, rhs.m_prop.anchor_offset);
     }
 
     /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const

@@ -2146,7 +2146,16 @@ TEST_CASE("Node_AddAnchorName") {
         REQUIRE(node.get_anchor_name().compare("anchor_name") == 0);
     }
 
-    SECTION("overwrite an existing anchor name") {
+    SECTION("overwrite an existing anchor name with lvalue anchor name") {
+        node.add_anchor_name(anchor_name);
+        std::string overwritten_name = "overwritten_name";
+        node.add_anchor_name(overwritten_name);
+        REQUIRE_NOTHROW(node.get_anchor_name());
+        REQUIRE_FALSE(node.get_anchor_name().compare("anchor_name") == 0);
+        REQUIRE(node.get_anchor_name().compare("overwritten_name") == 0);
+    }
+
+    SECTION("overwrite an existing anchor name with rvalue anchor name") {
         node.add_anchor_name(anchor_name);
         node.add_anchor_name("overwritten_name");
         REQUIRE_NOTHROW(node.get_anchor_name());
