@@ -1,0 +1,63 @@
+name: Format_Check
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - .github/workflows/format_check.yml
+      - include/**
+      - scripts/**
+      - single_include/**
+      - test/**
+      - tool/amalgamation/**
+      - CMakeLists.txt
+      - .clang-format
+  pull_request:
+    paths:
+      - .github/workflows/format_check.yml
+      - include/**
+      - scripts/**
+      - single_include/**
+      - test/**
+      - tool/amalgamation/**
+      - CMakeLists.txt
+      - .clang-format
+  workflow_dispatch:
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref || github.run_id}}
+  cancel-in-progress: true
+
+jobs:
+  clang-format-check:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Run clang-format style check
+      run: ${{github.workspace}}/scripts/run_clang_format.sh
+
+    - name: Run amalgamation check
+      run: ${{github.workspace}}/scripts/run_amalgamation.sh
+
+    - name: Detect diffs caused by formatting scripts
+      id: format_diff
+      run: git diff --name-only --exit-code
+
+    - name: Commit and push the diffs
+      if: failure() && steps.format_diff.outcome == 'failure'
+      run: |
+        set -x
+        git config user.name github-actions[bot]
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+        git add ${{github.workspace}}
+        git commit --author="$(git log --pretty=format:"%an <%ae>")" -m "applied the result of clang-format & amalgamation"
+        git push
