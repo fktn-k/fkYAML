@@ -118,7 +118,7 @@ private:
     /// default.
     union node_value {
         /// @brief Constructs a new basic_node Value object for null types.
-        node_value()                                            = default;
+        node_value() = default;
 
         /// @brief Constructs a new basic_node value object with a node type. The default value for the specified
         /// type will be assigned.
