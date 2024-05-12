@@ -241,7 +241,7 @@ private:
         using AllocType = std::allocator<ObjType>;
         using AllocTraitsType = std::allocator_traits<AllocType>;
 
-        AllocType alloc;
+        AllocType alloc {};
         auto deleter = [&](ObjType* obj) {
             AllocTraitsType::destroy(alloc, obj);
             AllocTraitsType::deallocate(alloc, obj, 1);
@@ -410,7 +410,11 @@ public:
         }
         else {
             m_node_type = node_t::SEQUENCE;
-            m_node_value.p_sequence = create_object<sequence_type>(init.begin(), init.end());
+            m_node_value.p_sequence = create_object<sequence_type>();
+            m_node_value.p_sequence->reserve(std::distance(init.begin(), init.end()));
+            for (auto& elem_ref : init) {
+                m_node_value.p_sequence->emplace_back(std::move(elem_ref.release()));
+            }
         }
     }
 
