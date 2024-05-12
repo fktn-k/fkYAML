@@ -24,9 +24,14 @@ enum class anchor_status_t {
 };
 
 struct node_property {
+    /// The tag name property.
     std::string tag {};
+    /// The status regarding node anchoring/aliasing.
     anchor_status_t anchor_status {anchor_status_t::NONE};
+    /// The anchor name property.
     std::string anchor {};
+    /// The offset index value used to reference the anchor node implementation.
+    uint32_t anchor_offset {0};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

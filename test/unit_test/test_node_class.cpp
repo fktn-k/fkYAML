@@ -359,6 +359,17 @@ TEST_CASE("Node_InitializerListCtor") {
     REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].get_value_ref<fkyaml::node::string_type&>() == "qux");
 }
 
+TEST_CASE("Node_CopyAssignmentOperator") {
+    fkyaml::node node(123);
+    fkyaml::node copied(true);
+
+    node = copied;
+    REQUIRE(node.is_boolean());
+    REQUIRE(node.get_value<bool>() == true);
+    REQUIRE(copied.is_boolean());
+    REQUIRE(copied.get_value<bool>() == true);
+}
+
 //
 // test cases for serialization/deserialization features
 //
@@ -2135,7 +2146,16 @@ TEST_CASE("Node_AddAnchorName") {
         REQUIRE(node.get_anchor_name().compare("anchor_name") == 0);
     }
 
-    SECTION("overwrite an existing anchor name") {
+    SECTION("overwrite an existing anchor name with lvalue anchor name") {
+        node.add_anchor_name(anchor_name);
+        std::string overwritten_name = "overwritten_name";
+        node.add_anchor_name(overwritten_name);
+        REQUIRE_NOTHROW(node.get_anchor_name());
+        REQUIRE_FALSE(node.get_anchor_name().compare("anchor_name") == 0);
+        REQUIRE(node.get_anchor_name().compare("overwritten_name") == 0);
+    }
+
+    SECTION("overwrite an existing anchor name with rvalue anchor name") {
         node.add_anchor_name(anchor_name);
         node.add_anchor_name("overwritten_name");
         REQUIRE_NOTHROW(node.get_anchor_name());
