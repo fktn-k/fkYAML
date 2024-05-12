@@ -110,7 +110,7 @@ private:
     /// @brief A type for YAML docs serializers.
     using serializer_type = detail::basic_serializer<basic_node>;
     /// @brief A helper type alias for std::initializer_list.
-    using initializer_list_t = std::initializer_list<detail::node_ref_storage<basic_node>>;
+    using initializer_list_t                   = std::initializer_list<detail::node_ref_storage<basic_node>>;
 
     /// @brief The actual storage for a YAML node value of the @ref basic_node class.
     /// @details This union combines the different sotrage types for the YAML value types defined in @ref node_t.
