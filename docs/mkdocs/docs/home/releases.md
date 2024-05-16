@@ -1,5 +1,46 @@
 # Releases
 
+## **fkYAML version 0.3.7**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.7/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.7/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.7/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.7/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.7/node.hpp) (single header)
+
+### Summary
+
+This release includes refactoring of YAML escaping and improvement of the way of managing anchor/alias nodes.  
+Furthermore, several bugs found in the deserializer are resolved.  
+
+For contributors, the results of executing clang-format and amalgamation in the GitHub Actions workflows are now automatically applied to the source files.  
+You can, of course, still run those tools locally but that's not required from this release on.  
+For more details, see the CONTRIBUTING.md file.  
+
+### What's Changed
+
+#### :zap: Improvements
+
+- Separate YAML escaping/unescaping functionalities by [@fktn-k](https://github.com/fktn-k) in [\#337](https://github.com/fktn-k/fkYAML/pull/337)
+- Improve anchor alias node management by [@fktn-k](https://github.com/fktn-k) in [\#340](https://github.com/fktn-k/fkYAML/pull/340)
+
+#### :bug: Bug Fixes
+
+- Fix false error on anchor names containing colons \(:\) by [@fktn-k](https://github.com/fktn-k) in [\#335](https://github.com/fktn-k/fkYAML/pull/335)
+- Escape backslash\(\\) + 0x09 to a horizontal tab \(\t\) by [@fktn-k](https://github.com/fktn-k) in [\#336](https://github.com/fktn-k/fkYAML/pull/336)
+- Fixed error on node properties for child block sequences by [@fktn-k](https://github.com/fktn-k) in [\#338](https://github.com/fktn-k/fkYAML/pull/338)
+- Fix the C6262 warning on Windows by [@fktn-k](https://github.com/fktn-k) in [\#339](https://github.com/fktn-k/fkYAML/pull/339)
+
+#### :robot: CI
+
+- Run and apply the result of clang-format & amalagamation in GA workflows by [@fktn-k](https://github.com/fktn-k) in [\#341](https://github.com/fktn-k/fkYAML/pull/341)
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.6...v0.3.7
+
+---
+
 ## **fkYAML version 0.3.6**
 
 !!! abstract "Release Packages"
