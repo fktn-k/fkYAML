@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.6
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.7
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -17,6 +17,7 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/conversions/to_string.hpp>
+#include <fkYAML/detail/encodings/yaml_escaper.hpp>
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
@@ -51,15 +52,12 @@ private:
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
     void serialize_directives(const BasicNodeType& node, std::string& str) {
-        if (!node.mp_directive_set) {
-            return;
-        }
+        const auto& p_meta = node.mp_meta;
+        bool needs_directive_end = false;
 
-        const auto& directives = node.mp_directive_set;
-
-        if (directives->is_version_specified) {
+        if (p_meta->is_version_specified) {
             str += "%YAML ";
-            switch (directives->version) {
+            switch (p_meta->version) {
             case yaml_version_t::VER_1_1:
                 str += "1.1\n";
                 break;
@@ -67,31 +65,37 @@ private:
                 str += "1.2\n";
                 break;
             }
+            needs_directive_end = true;
         }
 
-        if (!directives->primary_handle_prefix.empty()) {
+        if (!p_meta->primary_handle_prefix.empty()) {
             str += "%TAG ! ";
-            str += directives->primary_handle_prefix;
+            str += p_meta->primary_handle_prefix;
             str += "\n";
+            needs_directive_end = true;
         }
 
-        if (!directives->secondary_handle_prefix.empty()) {
+        if (!p_meta->secondary_handle_prefix.empty()) {
             str += "%TAG !! ";
-            str += directives->secondary_handle_prefix;
+            str += p_meta->secondary_handle_prefix;
             str += "\n";
+            needs_directive_end = true;
         }
 
-        if (!directives->named_handle_map.empty()) {
-            for (const auto& itr : directives->named_handle_map) {
+        if (!p_meta->named_handle_map.empty()) {
+            for (const auto& itr : p_meta->named_handle_map) {
                 str += "%TAG ";
                 str += itr.first;
                 str += " ";
                 str += itr.second;
                 str += "\n";
             }
+            needs_directive_end = true;
         }
 
-        str += "---\n";
+        if (needs_directive_end) {
+            str += "---\n";
+        }
     }
 
     /// @brief Recursively serialize each Node object.
@@ -300,178 +304,8 @@ private:
         FK_YAML_ASSERT(node.is_string());
 
         using string_type = typename BasicNodeType::string_type;
-
-        // Check if the string value contains a character needed to be escaped on output.
         const string_type& s = node.template get_value_ref<const string_type&>();
-        size_t size = s.size();
-        string_type escaped {};
-        escaped.reserve(size);
-
-        for (size_t i = 0; i < size; i++) {
-            switch (s[i]) {
-            case 0x01:
-                escaped += "\\u0001";
-                is_escaped = true;
-                break;
-            case 0x02:
-                escaped += "\\u0002";
-                is_escaped = true;
-                break;
-            case 0x03:
-                escaped += "\\u0003";
-                is_escaped = true;
-                break;
-            case 0x04:
-                escaped += "\\u0004";
-                is_escaped = true;
-                break;
-            case 0x05:
-                escaped += "\\u0005";
-                is_escaped = true;
-                break;
-            case 0x06:
-                escaped += "\\u0006";
-                is_escaped = true;
-                break;
-            case '\a':
-                escaped += "\\a";
-                is_escaped = true;
-                break;
-            case '\b':
-                escaped += "\\b";
-                is_escaped = true;
-                break;
-            case '\t':
-                escaped += "\\t";
-                is_escaped = true;
-                break;
-            case '\n':
-                escaped += "\\n";
-                is_escaped = true;
-                break;
-            case '\v':
-                escaped += "\\v";
-                is_escaped = true;
-                break;
-            case '\f':
-                escaped += "\\f";
-                is_escaped = true;
-                break;
-            case '\r':
-                escaped += "\\r";
-                is_escaped = true;
-                break;
-            case 0x0E:
-                escaped += "\\u000E";
-                is_escaped = true;
-                break;
-            case 0x0F:
-                escaped += "\\u000F";
-                is_escaped = true;
-                break;
-            case 0x10:
-                escaped += "\\u0010";
-                is_escaped = true;
-                break;
-            case 0x11:
-                escaped += "\\u0011";
-                is_escaped = true;
-                break;
-            case 0x12:
-                escaped += "\\u0012";
-                is_escaped = true;
-                break;
-            case 0x13:
-                escaped += "\\u0013";
-                is_escaped = true;
-                break;
-            case 0x14:
-                escaped += "\\u0014";
-                is_escaped = true;
-                break;
-            case 0x15:
-                escaped += "\\u0015";
-                is_escaped = true;
-                break;
-            case 0x16:
-                escaped += "\\u0016";
-                is_escaped = true;
-                break;
-            case 0x17:
-                escaped += "\\u0017";
-                is_escaped = true;
-                break;
-            case 0x18:
-                escaped += "\\u0018";
-                is_escaped = true;
-                break;
-            case 0x19:
-                escaped += "\\u0019";
-                is_escaped = true;
-                break;
-            case 0x1A:
-                escaped += "\\u001A";
-                is_escaped = true;
-                break;
-            case 0x1B:
-                escaped += "\\e";
-                is_escaped = true;
-                break;
-            case 0x1C:
-                escaped += "\\u001C";
-                is_escaped = true;
-                break;
-            case 0x1D:
-                escaped += "\\u001D";
-                is_escaped = true;
-                break;
-            case 0x1E:
-                escaped += "\\u001E";
-                is_escaped = true;
-                break;
-            case 0x1F:
-                escaped += "\\u001F";
-                is_escaped = true;
-                break;
-            case '\"':
-                escaped += "\\\"";
-                is_escaped = true;
-                break;
-            case '\\':
-                escaped += "\\\\";
-                is_escaped = true;
-                break;
-            default:
-                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0x85u)) {
-                    escaped += "\\N";
-                    i++;
-                    is_escaped = true;
-                    break;
-                }
-                if (i + 1 < size && s[i] == char(0xC2u) && s[i + 1] == char(0xA0u)) {
-                    escaped += "\\_";
-                    i++;
-                    is_escaped = true;
-                    break;
-                }
-                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA8u)) {
-                    escaped += "\\L";
-                    i += 2;
-                    is_escaped = true;
-                    break;
-                }
-                if (i + 2 < size && s[i] == char(0xE2u) && s[i + 1] == char(0x80u) && s[i + 2] == char(0xA9u)) {
-                    escaped += "\\P";
-                    i += 2;
-                    is_escaped = true;
-                    break;
-                }
-                escaped += s[i];
-                break;
-            }
-        }
-
-        return escaped;
+        return yaml_escaper::escape(s.begin(), s.end(), is_escaped);
     } // LCOV_EXCL_LINE
 
 private:

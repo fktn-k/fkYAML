@@ -27,9 +27,9 @@ To make changes to the fkYAML project, you need to edit the following files:
 
 ### 1. [`include/fkYAML/**.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/include/fkYAML)
 
-These files are the sources of the fkYAML library. After making changes in those files, please run the script ([`run_amalgamation.bat`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.bat) for Windows, [`run_amalgamation.sh`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.sh) otherwise) to regenerate [`single_include/fkYAML/node.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/single_include/fkYAML/node.hpp) at least before making a PR, with the following commands:  
+These files are the sources of the fkYAML library and **DO NOT** directly change the single header version under the [`single_include`](https://github.com/fktn-k/fkYAML/tree/develop/single_include/) directory. Alghough amalgamation is automatically executed in the GitHub Actions workflows, you can run the script ([`run_amalgamation.bat`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.bat) for Windows, [`run_amalgamation.sh`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.sh) otherwise) to regenerate [`single_include/fkYAML/node.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/single_include/fkYAML/node.hpp) locally, which will save you from waiting unnecessarily long for the workflow results.  
 
-**Windows**
+**Windows (Command Prompt)**
 ```batch
 cd path\to\fkYAML
 scripts\run_amalgamation.bat
@@ -41,9 +41,9 @@ cd path/to/fkYAML
 scripts/run_amalgamation.sh
 ```
 
-If you just want to check if amalgamation is needed, run the script ([`run_amalgamation.bat`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.bat) for Windows, [`run_amalgamation.sh`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.sh) otherwise) with the following commands:  
+If you just want to check if amalgamation is needed locally, run the script ([`run_amalgamation.bat`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.bat) for Windows, [`run_amalgamation.sh`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.sh) otherwise) with the following commands:  
 
-**Windows**
+**Windows (Command Prompt)**
 ```batch
 cd path\to\fkYAML
 scripts\check_amalgamation.bat
@@ -105,14 +105,13 @@ The commands above will automatically install all the dependencies using [Python
 
 ### 4. Format source files
 
-[GitHub Actions](https://github.com/fktn-k/fkYAML/actions) will test the updated project with the [Clang-Format](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormat.html) tool (14.0.0) when you push commits which include changes in the source files in either `include` or `test` directories.  
-So, it would be more efficient to check if your changes follow the rules defined in the [`.clang-format`](https://github.com/fktn-k/fkYAML/tree/develop/.clang-format) file on your local environment in advance.  
-Since the Clang-Format tool does not seem to gurantee backward compatibility and its behaviors vary from version to version, the script files ([`run_clang_format.bat`](https://github.com/fktn-k/fkYAML/scripts/run_clang_format.bat) for Windows, [`run_clang_format.sh`](https://github.com/fktn-k/fkYAML/scripts/run_clang_format.sh) otherwise) are available to avoid unnecessary confusion for that kind of reason.  
-The scripts uses [the Clang-Format Python distribution](https://pypi.org/project/clang-format/14.0.0/) and installs it using [the Python venv module](https://docs.python.org/3/library/venv.html) if it's not installed yet.  
-So, all you need to run the script is only Python 3.3 or better.  
-You can run it with the following commands:  
+[GitHub Actions](https://github.com/fktn-k/fkYAML/actions) will test the updated project with the [Clang-Format](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormat.html) tool (14.0.0) once you open a PR or push commits afterwards which include changes in the source files under either [`include`](https://github.com/fktn-k/fkYAML/tree/develop/include) or [`test`](https://github.com/fktn-k/fkYAML/tree/develop/test) directories.  
+Although code formatting is automatically executed in the GitHub Actions workflows, you can run the script files ([`run_clang_format.bat`](https://github.com/fktn-k/fkYAML/scripts/run_clang_format.bat) for Windows, [`run_clang_format.sh`](https://github.com/fktn-k/fkYAML/scripts/run_clang_format.sh) otherwise) to check if your changes follow the rules defined in the [`.clang-format`](https://github.com/fktn-k/fkYAML/tree/develop/.clang-format) file on your local environment in advance.  
+Note that, since the Clang-Format tool does not gurantee backward compatibility especially in its edge cases and its behaviors might therefore vary from version to version, it's highly recommended that you use the above script files to avoid unnecessary confusion for that kind of reason.  
+The scripts uses [the Clang-Format Python distribution](https://pypi.org/project/clang-format/14.0.0/) and installs it using [the Python venv module](https://docs.python.org/3/library/venv.html) if it's not been installed yet.  
+You can run the scripts with the following commands:  
 
-**Windows**
+**Windows (Command Prompt)**
 ```batch
 cd path\to\fkYAML
 scripts\run_clang_format.bat

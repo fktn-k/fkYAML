@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.6
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.7
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -357,6 +357,17 @@ TEST_CASE("Node_InitializerListCtor") {
     REQUIRE(node[fkyaml::node {{"bar", nullptr}}].contains("baz"));
     REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].is_string());
     REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].get_value_ref<fkyaml::node::string_type&>() == "qux");
+}
+
+TEST_CASE("Node_CopyAssignmentOperator") {
+    fkyaml::node node(123);
+    fkyaml::node copied(true);
+
+    node = copied;
+    REQUIRE(node.is_boolean());
+    REQUIRE(node.get_value<bool>() == true);
+    REQUIRE(copied.is_boolean());
+    REQUIRE(copied.get_value<bool>() == true);
 }
 
 //
@@ -2135,7 +2146,16 @@ TEST_CASE("Node_AddAnchorName") {
         REQUIRE(node.get_anchor_name().compare("anchor_name") == 0);
     }
 
-    SECTION("overwrite an existing anchor name") {
+    SECTION("overwrite an existing anchor name with lvalue anchor name") {
+        node.add_anchor_name(anchor_name);
+        std::string overwritten_name = "overwritten_name";
+        node.add_anchor_name(overwritten_name);
+        REQUIRE_NOTHROW(node.get_anchor_name());
+        REQUIRE_FALSE(node.get_anchor_name().compare("anchor_name") == 0);
+        REQUIRE(node.get_anchor_name().compare("overwritten_name") == 0);
+    }
+
+    SECTION("overwrite an existing anchor name with rvalue anchor name") {
         node.add_anchor_name(anchor_name);
         node.add_anchor_name("overwritten_name");
         REQUIRE_NOTHROW(node.get_anchor_name());

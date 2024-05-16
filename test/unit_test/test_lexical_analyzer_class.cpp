@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.6
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.7
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -564,28 +564,12 @@ TEST_CASE("LexicalAnalyzer_String") {
         value_pair_t(std::string("\'foo\\bar\'"), fkyaml::node::string_type("foo\\bar")),
 
         value_pair_t(std::string("\"foo bar\""), fkyaml::node::string_type("foo bar")),
+        value_pair_t(std::string("\"foo\tbar\""), fkyaml::node::string_type("foo\tbar")),
         value_pair_t(std::string("\"foo's bar\""), fkyaml::node::string_type("foo's bar")),
         value_pair_t(std::string("\"foo:bar\""), fkyaml::node::string_type("foo:bar")),
         value_pair_t(std::string("\"foo,bar\""), fkyaml::node::string_type("foo,bar")),
         value_pair_t(std::string("\"foo]bar\""), fkyaml::node::string_type("foo]bar")),
         value_pair_t(std::string("\"foo}bar\""), fkyaml::node::string_type("foo}bar")),
-        value_pair_t(std::string("\"foo\\abar\""), fkyaml::node::string_type("foo\abar")),
-        value_pair_t(std::string("\"foo\\bbar\""), fkyaml::node::string_type("foo\bbar")),
-        value_pair_t(std::string("\"foo\\tbar\""), fkyaml::node::string_type("foo\tbar")),
-        value_pair_t(std::string("\"foo\tbar\""), fkyaml::node::string_type("foo\tbar")),
-        value_pair_t(std::string("\"foo\\nbar\""), fkyaml::node::string_type("foo\nbar")),
-        value_pair_t(std::string("\"foo\\vbar\""), fkyaml::node::string_type("foo\vbar")),
-        value_pair_t(std::string("\"foo\\fbar\""), fkyaml::node::string_type("foo\fbar")),
-        value_pair_t(std::string("\"foo\\rbar\""), fkyaml::node::string_type("foo\rbar")),
-        value_pair_t(std::string("\"foo\\ebar\""), fkyaml::node::string_type("foo\u001Bbar")),
-        value_pair_t(std::string("\"foo\\ bar\""), fkyaml::node::string_type("foo bar")),
-        value_pair_t(std::string("\"foo\\\"bar\""), fkyaml::node::string_type("foo\"bar")),
-        value_pair_t(std::string("\"foo\\/bar\""), fkyaml::node::string_type("foo/bar")),
-        value_pair_t(std::string("\"foo\\\\bar\""), fkyaml::node::string_type("foo\\bar")),
-        value_pair_t(std::string("\"foo\\Nbar\""), fkyaml::node::string_type("foo\u0085bar")),
-        value_pair_t(std::string("\"foo\\_bar\""), fkyaml::node::string_type("foo\u00A0bar")),
-        value_pair_t(std::string("\"foo\\Lbar\""), fkyaml::node::string_type("foo\u2028bar")),
-        value_pair_t(std::string("\"foo\\Pbar\""), fkyaml::node::string_type("foo\u2029bar")),
         value_pair_t(std::string("\"\\x30\\x2B\\x6d\""), fkyaml::node::string_type("0+m")));
 
     lexer_t lexer(fkyaml::detail::input_adapter(value_pair.first));
@@ -1246,28 +1230,26 @@ TEST_CASE("LexicalAnalyzer_Anchor") {
     fkyaml::detail::lexical_token_t token;
 
     SECTION("valid anchor name") {
-        auto input = GENERATE(
-            std::string("&:anchor"),
-            std::string("&:anchor "),
-            std::string("&:anchor\t"),
-            std::string("&:anchor\r"),
-            std::string("&:anchor\n"),
-            std::string("&:anchor{"),
-            std::string("&:anchor}"),
-            std::string("&:anchor["),
-            std::string("&:anchor]"),
-            std::string("&:anchor,"),
-            std::string("&:anchor: "),
-            std::string("&:anchor:\t"),
-            std::string("&:anchor:\r"),
-            std::string("&:anchor:\n"),
-            std::string("&:anchor:"));
+        using test_data_t = std::pair<std::string, std::string>;
+        auto test_data = GENERATE(
+            test_data_t {"&anchor", "anchor"},
+            test_data_t {"&anchor name", "anchor"},
+            test_data_t {"&anchor\tname", "anchor"},
+            test_data_t {"&anchor\rname", "anchor"},
+            test_data_t {"&anchor\nname", "anchor"},
+            test_data_t {"&anchor{name", "anchor"},
+            test_data_t {"&anchor}name", "anchor"},
+            test_data_t {"&anchor[name", "anchor"},
+            test_data_t {"&anchor]name", "anchor"},
+            test_data_t {"&anchor,name", "anchor"},
+            test_data_t {"&anchor: ", "anchor:"},
+            test_data_t {"&anchor:", "anchor:"});
 
-        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        lexer_t lexer(fkyaml::detail::input_adapter(test_data.first));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::ANCHOR_PREFIX);
-        REQUIRE_NOTHROW(lexer.get_string() == ":anchor");
+        REQUIRE_NOTHROW(lexer.get_string() == test_data.second);
     }
 
     SECTION("invalid anchor name") {
@@ -1281,8 +1263,7 @@ TEST_CASE("LexicalAnalyzer_Anchor") {
             std::string("&}"),
             std::string("&["),
             std::string("&]"),
-            std::string("&,"),
-            std::string("&: "));
+            std::string("&,"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -1293,24 +1274,26 @@ TEST_CASE("LexicalAnalyzer_Alias") {
     fkyaml::detail::lexical_token_t token;
 
     SECTION("valid anchor name") {
-        auto input = GENERATE(
-            std::string("*:anchor"),
-            std::string("*:anchor "),
-            std::string("*:anchor\t"),
-            std::string("*:anchor\r"),
-            std::string("*:anchor\n"),
-            std::string("*:anchor{"),
-            std::string("*:anchor}"),
-            std::string("*:anchor["),
-            std::string("*:anchor]"),
-            std::string("*:anchor,"),
-            std::string("*:anchor: "));
+        using test_data_t = std::pair<std::string, std::string>;
+        auto test_data = GENERATE(
+            test_data_t {"*anchor", "anchor"},
+            test_data_t {"*anchor name", "anchor"},
+            test_data_t {"*anchor\tname", "anchor"},
+            test_data_t {"*anchor\rname", "anchor"},
+            test_data_t {"*anchor\nname", "anchor"},
+            test_data_t {"*anchor{name", "anchor"},
+            test_data_t {"*anchor}name", "anchor"},
+            test_data_t {"*anchor[name", "anchor"},
+            test_data_t {"*anchor]name", "anchor"},
+            test_data_t {"*anchor,name", "anchor"},
+            test_data_t {"*anchor: ", "anchor:"},
+            test_data_t {"*anchor:", "anchor:"});
 
-        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        lexer_t lexer(fkyaml::detail::input_adapter(test_data.first));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::ALIAS_PREFIX);
-        REQUIRE_NOTHROW(lexer.get_string() == ":anchor");
+        REQUIRE_NOTHROW(lexer.get_string() == test_data.second);
     }
 
     SECTION("invalid anchor name") {
@@ -1324,8 +1307,7 @@ TEST_CASE("LexicalAnalyzer_Alias") {
             std::string("*}"),
             std::string("*["),
             std::string("*]"),
-            std::string("*,"),
-            std::string("*: "));
+            std::string("*,"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
