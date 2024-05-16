@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.7](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.7) (2024-05-16)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.6...v0.3.7)
+
+- Fixed error on node properties for child block sequences [\#338](https://github.com/fktn-k/fkYAML/pull/338) ([fktn-k](https://github.com/fktn-k))
+- Escape backslash\(\\) + 0x09 to a horizontal tab \(\t\) [\#336](https://github.com/fktn-k/fkYAML/pull/336) ([fktn-k](https://github.com/fktn-k))
+- Fix false error on anchor names containing colons \(:\) [\#335](https://github.com/fktn-k/fkYAML/pull/335) ([fktn-k](https://github.com/fktn-k))
+
+- Run and apply the result of clang-format & amalagamation in GA workflows [\#341](https://github.com/fktn-k/fkYAML/pull/341) ([fktn-k](https://github.com/fktn-k))
+- Improve anchor alias node management [\#340](https://github.com/fktn-k/fkYAML/pull/340) ([fktn-k](https://github.com/fktn-k))
+- Fix the C6262 warning on Windows [\#339](https://github.com/fktn-k/fkYAML/pull/339) ([fktn-k](https://github.com/fktn-k))
+- Separate YAML escaping/unescaping functionalities [\#337](https://github.com/fktn-k/fkYAML/pull/337) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.6](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.6) (2024-05-02)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.5...v0.3.6)
