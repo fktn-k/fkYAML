@@ -1320,7 +1320,6 @@ TEST_CASE("LexicalAnalyzer_Tag") {
     SECTION("valid tag names") {
         auto input = GENERATE(
             std::string("! tag"),
-            std::string("!\rtag"),
             std::string("!\ntag"),
             std::string("!local tag"),
             std::string("!local%2A%7C tag"),

@@ -125,7 +125,11 @@ private:
             }
         }
 
-        buffer.assign(m_current, m_end);
+        do {
+            IterType cr_or_end_itr = std::find(m_current, m_end, '\r');
+            buffer.append(m_current, cr_or_end_itr);
+            m_current = (cr_or_end_itr == m_end) ? cr_or_end_itr : std::next(cr_or_end_itr);
+        } while (m_current != m_end);
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
@@ -162,7 +166,11 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            for (uint32_t i = 0; i < utf8_buf_size; i++) {
+                if (utf8_buffer[i] != '\r') {
+                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
+                }
+            }
         }
     }
 
@@ -195,7 +203,11 @@ private:
 
             utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            for (uint32_t i = 0; i < utf8_buf_size; i++) {
+                if (utf8_buffer[i] != '\r') {
+                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
+                }
+            }
         }
     }
 
@@ -281,7 +293,9 @@ public:
         }
 
         while (m_current != m_end) {
-            buffer.push_back(char(*m_current++));
+            if (*m_current != '\r') {
+                buffer.push_back(char(*m_current++));
+            }
         }
     }
 
@@ -351,7 +365,11 @@ public:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            for (uint32_t i = 0; i < utf8_buf_size; i++) {
+                if (utf8_buffer[i] != '\r') {
+                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
+                }
+            }
         }
     }
 
@@ -416,7 +434,11 @@ public:
 
             utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            for (uint32_t i = 0; i < utf8_buf_size; i++) {
+                if (utf8_buffer[i] != '\r') {
+                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
+                }
+            }
         }
     }
 
@@ -480,7 +502,20 @@ private:
         char tmp_buf[256] {};
         std::size_t read_size = 0;
         while ((read_size = std::fread(&tmp_buf[0], sizeof(char), sizeof(tmp_buf) / sizeof(tmp_buf[0]), m_file)) > 0) {
-            buffer.append(tmp_buf, read_size);
+            char* p_current = &tmp_buf[0];
+            char* p_end = p_current + read_size;
+            do {
+                // find CR in `tmp_buf`.
+                char* p_cr_or_end = p_end;
+                for (uint32_t i = 0; p_current + i != p_end; i++) {
+                    if (*(p_current + i) == '\r') {
+                        p_cr_or_end = p_current + i;
+                    }
+                }
+
+                buffer.append(p_current, p_cr_or_end);
+                p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
+            } while (p_current != p_end);
         }
 
         auto current = buffer.begin();
@@ -558,7 +593,11 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            for (uint32_t i = 0; i < utf8_buf_size; i++) {
+                if (utf8_buffer[i] != '\r') {
+                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
+                }
+            }
         }
     }
 
@@ -598,7 +637,11 @@ private:
 
             utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            for (uint32_t i = 0; i < utf8_buf_size; i++) {
+                if (utf8_buffer[i] != '\r') {
+                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
+                }
+            }
         }
     }
 
@@ -657,7 +700,21 @@ private:
         do {
             m_istream->read(&tmp_buf[0], 256);
             std::size_t read_size = static_cast<std::size_t>(m_istream->gcount());
-            buffer.append(tmp_buf, read_size);
+
+            char* p_current = &tmp_buf[0];
+            char* p_end = p_current + read_size;
+            do {
+                // find CR in `tmp_buf`.
+                char* p_cr_or_end = p_end;
+                for (uint32_t i = 0; p_current + i != p_end; i++) {
+                    if (*(p_current + i) == '\r') {
+                        p_cr_or_end = p_current + i;
+                    }
+                }
+
+                buffer.append(p_current, p_cr_or_end);
+                p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
+            } while (p_current != p_end);
         } while (!m_istream->eof());
 
         auto current = buffer.begin();
@@ -708,8 +765,7 @@ private:
         if (m_encode_type == utf_encode_t::UTF_16BE) {
             shift_bits[0] = 8;
         }
-        else // m_encode_type == utf_encode_t::UTF_16LE
-        {
+        else { // m_encode_type == utf_encode_t::UTF_16LE
             shift_bits[1] = 8;
         }
 
@@ -741,7 +797,11 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            for (uint32_t i = 0; i < utf8_buf_size; i++) {
+                if (utf8_buffer[i] != '\r') {
+                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
+                }
+            }
         } while (!m_istream->eof());
     }
 
@@ -782,7 +842,11 @@ private:
 
             utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            for (uint32_t i = 0; i < utf8_buf_size; i++) {
+                if (utf8_buffer[i] != '\r') {
+                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
+                }
+            }
         } while (!m_istream->eof());
     }
 

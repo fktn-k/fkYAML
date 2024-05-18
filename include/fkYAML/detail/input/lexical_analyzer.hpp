@@ -105,7 +105,6 @@ public:
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 break;
             case ',':
@@ -162,12 +161,6 @@ public:
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
                 return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
-            case '\r':
-                next = *(m_cur_itr + 2);
-                // Move a cursor to the beginning of the next token.
-                m_cur_itr += 2 + (next == '\n' ? 1 : 0);
-                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
-                break;
             default:
                 break;
             }
@@ -337,7 +330,6 @@ private:
             case '\t':
                 ends_loop = true;
                 break;
-            case '\r':
             case '\n':
                 skip_until_line_end();
                 return lexical_token_t::INVALID_DIRECTIVE;
@@ -464,7 +456,6 @@ private:
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 ends_loop = true;
                 break;
@@ -493,7 +484,6 @@ private:
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 ends_loop = true;
                 break;
@@ -526,7 +516,6 @@ private:
             // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
             case '{':
             case '}':
@@ -564,7 +553,6 @@ private:
 
         switch (*m_cur_itr) {
         case ' ':
-        case '\r':
         case '\n':
             // Just "!" is a non-specific tag.
             m_value_buffer = "!";
@@ -594,7 +582,6 @@ private:
             // Tag names must not contain spaces or newline codes.
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 ends_loop = true;
                 break;
@@ -686,7 +673,6 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\r':
         case '\n':
             // TODO: Support multi-line string scalars.
             emit_error("multi-line string scalars are unsupported.");
@@ -721,7 +707,6 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\r':
         case '\n':
             // TODO: Support multi-line string scalars.
             emit_error("multi-line string scalars are unsupported.");
@@ -756,7 +741,6 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\r':
         case '\n':
             m_value_buffer.append(m_token_begin_itr, m_cur_itr);
             break;
@@ -801,7 +785,6 @@ private:
 
             switch (next) {
             case ' ':
-            case '\r':
             case '\n':
             case '#':
             case '\\':
@@ -823,7 +806,6 @@ private:
             switch (next) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 m_value_buffer.append(m_token_begin_itr, m_cur_itr);
                 break;
@@ -860,7 +842,7 @@ private:
         // * double quoted
         // * plain
 
-        std::string check_filters {"\r\n"};
+        std::string check_filters {"\n"};
         bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
 
         if (needs_last_single_quote) {
@@ -942,9 +924,6 @@ private:
                 continue;
             }
 
-            if (current == '\r') {
-                current = *++m_cur_itr;
-            }
             if (current == '\n') {
                 m_value_buffer.push_back('\n');
                 continue;
@@ -986,11 +965,6 @@ private:
         for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
             current = *m_cur_itr;
 
-            if (current == '\r') {
-                // Ignore CR assuming the next character is LF.
-                continue;
-            }
-
             if (current == '\n') {
                 if (style == block_style_indicator_t::LITERAL) {
                     m_value_buffer.push_back(current);
@@ -1026,9 +1000,6 @@ private:
                             continue;
                         }
 
-                        if (current == '\r') {
-                            current = *++m_cur_itr;
-                        }
                         if (current == '\n') {
                             is_next_empty = true;
                             break;
@@ -1049,13 +1020,6 @@ private:
                     }
 
                     switch (char next = *(m_cur_itr + 1)) {
-                    case '\r': {
-                        ++m_cur_itr;
-                        next = *++m_cur_itr;
-                        FK_YAML_ASSERT(next == '\n');
-                        m_value_buffer.push_back(next);
-                        break;
-                    }
                     case '\n':
                         ++m_cur_itr;
                         m_value_buffer.push_back(next);
@@ -1246,7 +1210,6 @@ private:
                 switch (c) {
                 case ' ':
                 case '\t':
-                case '\r':
                 case '\n':
                     return true;
                 default:
@@ -1260,14 +1223,6 @@ private:
     void skip_until_line_end() {
         while (m_cur_itr != m_end_itr) {
             switch (*m_cur_itr) {
-            case '\r':
-                if (++m_cur_itr == m_end_itr) {
-                    return;
-                }
-                if (*m_cur_itr == '\n') {
-                    ++m_cur_itr;
-                }
-                return;
             case '\n':
                 ++m_cur_itr;
                 return;
