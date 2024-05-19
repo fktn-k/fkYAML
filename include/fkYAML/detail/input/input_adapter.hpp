@@ -153,8 +153,11 @@ private:
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
-                encoded_buffer[encoded_buf_size] = static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[0]);
-                encoded_buffer[encoded_buf_size++] |= static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[1]);
+                char16_t utf16 = static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[0]);
+                utf16 |= static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[1]);
+                if (utf16 != char16_t(0x000Du)) {
+                    encoded_buffer[encoded_buf_size++] = utf16;
+                }
             }
 
             uint32_t consumed_size = 0;
@@ -166,11 +169,7 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            for (uint32_t i = 0; i < utf8_buf_size; i++) {
-                if (utf8_buffer[i] != '\r') {
-                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
-                }
-            }
+            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -201,12 +200,9 @@ private:
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[2]);
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[3]);
 
-            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-
-            for (uint32_t i = 0; i < utf8_buf_size; i++) {
-                if (utf8_buffer[i] != '\r') {
-                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
-                }
+            if (utf32 != char32_t(0x0000000Du)) {
+                utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
     }
@@ -350,10 +346,14 @@ public:
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
-                char16_t tmp = *m_current++;
-                encoded_buffer[encoded_buf_size++] = char16_t(
-                    static_cast<uint16_t>((tmp & 0x00FFu) << shift_bits) |
-                    static_cast<uint16_t>((tmp & 0xFF00u) >> shift_bits));
+                char16_t utf16 = *m_current++;
+                utf16 = char16_t(
+                    static_cast<uint16_t>((utf16 & 0x00FFu) << shift_bits) |
+                    static_cast<uint16_t>((utf16 & 0xFF00u) >> shift_bits));
+
+                if (utf16 != char16_t(0x000Du)) {
+                    encoded_buffer[encoded_buf_size++] = utf16;
+                }
             }
 
             uint32_t consumed_size = 0;
@@ -365,11 +365,7 @@ public:
             }
             encoded_buf_size -= consumed_size;
 
-            for (uint32_t i = 0; i < utf8_buf_size; i++) {
-                if (utf8_buffer[i] != '\r') {
-                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
-                }
-            }
+            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -432,12 +428,9 @@ public:
                 static_cast<uint32_t>((tmp & 0x0000FF00u) << shift_bits[2]) |
                 static_cast<uint32_t>((tmp & 0x000000FFu) << shift_bits[3]));
 
-            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-
-            for (uint32_t i = 0; i < utf8_buf_size; i++) {
-                if (utf8_buffer[i] != '\r') {
-                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
-                }
+            if (utf32 != char32_t(0x0000000Du)) {
+                utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
     }
@@ -579,9 +572,12 @@ private:
 
         while (std::feof(m_file) == 0) {
             while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2) {
-                encoded_buffer[encoded_buf_size++] = char16_t(
+                char16_t utf16 = char16_t(
                     static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
+                if (utf16 != char16_t(0x000Du)) {
+                    encoded_buffer[encoded_buf_size++] = utf16;
+                }
             }
 
             uint32_t consumed_size = 0;
@@ -593,11 +589,7 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            for (uint32_t i = 0; i < utf8_buf_size; i++) {
-                if (utf8_buffer[i] != '\r') {
-                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
-                }
-            }
+            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -635,12 +627,9 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-
-            for (uint32_t i = 0; i < utf8_buf_size; i++) {
-                if (utf8_buffer[i] != '\r') {
-                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
-                }
+            if (utf32 != char32_t(0x0000000Du)) {
+                utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
     }
@@ -783,9 +772,13 @@ private:
                     break;
                 }
 
-                encoded_buffer[encoded_buf_size++] = char16_t(
+                char16_t utf16 = char16_t(
                     static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
+
+                if (utf16 != char16_t(0x000Du)) {
+                    encoded_buffer[encoded_buf_size++] = utf16;
+                }
             };
 
             uint32_t consumed_size = 0;
@@ -797,11 +790,7 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            for (uint32_t i = 0; i < utf8_buf_size; i++) {
-                if (utf8_buffer[i] != '\r') {
-                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
-                }
-            }
+            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
@@ -840,12 +829,9 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-
-            for (uint32_t i = 0; i < utf8_buf_size; i++) {
-                if (utf8_buffer[i] != '\r') {
-                    buffer.push_back(static_cast<char>(utf8_buffer[i]));
-                }
+            if (utf32 != char32_t(0x0000000Du)) {
+                utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         } while (!m_istream->eof());
     }
