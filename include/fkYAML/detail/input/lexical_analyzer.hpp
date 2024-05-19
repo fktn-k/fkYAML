@@ -673,9 +673,47 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\n':
-            // TODO: Support multi-line string scalars.
-            emit_error("multi-line string scalars are unsupported.");
+        case '\n': {
+            // discard trailing white spaces which preceeds the line break in the current line.
+            auto before_trailing_spaces_itr = m_cur_itr - 1;
+            bool ends_loop = false;
+            while (before_trailing_spaces_itr != m_token_begin_itr) {
+                switch (*before_trailing_spaces_itr) {
+                case ' ':
+                case '\t':
+                    --before_trailing_spaces_itr;
+                    break;
+                default:
+                    ends_loop = true;
+                    break;
+                }
+
+                if (ends_loop) {
+                    break;
+                }
+            }
+            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
+
+            // move to the beginning of the next line.
+            ++m_cur_itr;
+
+            // apply line folding according to the number of following empty lines.
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
+            skip_white_spaces_and_newline_codes();
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
+            if (trailing_empty_lines > 0) {
+                m_value_buffer.append(trailing_empty_lines, '\n');
+            }
+            else {
+                m_value_buffer.push_back(' ');
+            }
+
+            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\'') ? m_cur_itr-- : m_cur_itr;
+            ret = true;
+            break;
+        }
 
         case '\'':
             // If single quotation marks are repeated twice in a single-quoted string token,
@@ -707,9 +745,47 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\n':
-            // TODO: Support multi-line string scalars.
-            emit_error("multi-line string scalars are unsupported.");
+        case '\n': {
+            // discard trailing white spaces which preceeds the line break in the current line.
+            auto before_trailing_spaces_itr = m_cur_itr - 1;
+            bool ends_loop = false;
+            while (before_trailing_spaces_itr != m_token_begin_itr) {
+                switch (*before_trailing_spaces_itr) {
+                case ' ':
+                case '\t':
+                    --before_trailing_spaces_itr;
+                    break;
+                default:
+                    ends_loop = true;
+                    break;
+                }
+
+                if (ends_loop) {
+                    break;
+                }
+            }
+            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
+
+            // move to the beginning of the next line.
+            ++m_cur_itr;
+
+            // apply line folding according to the number of following empty lines.
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
+            skip_white_spaces_and_newline_codes();
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
+            if (trailing_empty_lines > 0) {
+                m_value_buffer.append(trailing_empty_lines, '\n');
+            }
+            else {
+                m_value_buffer.push_back(' ');
+            }
+
+            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
+            ret = true;
+            break;
+        }
 
         case '\"':
             m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
@@ -721,12 +797,23 @@ private:
             // Handle escaped characters.
             // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
 
-            bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
-            if (!is_valid_escaping) {
-                emit_error("Unsupported escape sequence is found in a string token.");
+            c = *(m_cur_itr + 1);
+            if (c != '\n') {
+                bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
+                if (!is_valid_escaping) {
+                    emit_error("Unsupported escape sequence is found in a string token.");
+                }
+
+                m_token_begin_itr = m_cur_itr + 1;
+                ret = true;
+                break;
             }
 
-            m_token_begin_itr = m_cur_itr + 1;
+            // move until the next non-space character is found.
+            m_cur_itr += 2;
+            skip_white_spaces();
+
+            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
             ret = true;
             break;
         }
@@ -879,9 +966,7 @@ private:
 
                 // Handle unescaped control characters.
                 if (byte <= 0x1F) {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
                     handle_unescaped_control_char(current);
-                    m_token_begin_itr = m_cur_itr + 1;
                     continue;
                 }
 
@@ -1120,7 +1205,7 @@ private:
         case 0x08:
             emit_error("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
         case 0x09: // HT
-            m_value_buffer.push_back(c);
+            // horizontal tabs (\t) are safe to use without escaping.
             break;
         // 0x0A(LF) has already been handled above.
         case 0x0B:
