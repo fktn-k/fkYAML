@@ -455,25 +455,21 @@ private:
                 mp_current_node = m_context_stack.back().p_node;
                 break;
             }
-            case lexical_token_t::SEQUENCE_FLOW_BEGIN: {
-                bool is_more_nested_in_block = m_flow_context_depth++ == 0 && m_context_stack.back().indent < indent;
-                if (is_more_nested_in_block) {
-                    if (mp_current_node->is_sequence()) {
-                        mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
-                        mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
-                    }
-                    else {
-                        *mp_current_node = node_type::sequence();
-                    }
+            case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+                ++m_flow_context_depth;
+                if (mp_current_node->is_sequence()) {
+                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
+                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
                 }
                 else {
                     *mp_current_node = node_type::sequence();
+                    parse_context& last_context = m_context_stack.back();
+                    last_context.state = context_state_t::FLOW_SEQUENCE;
                 }
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
-                m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
                 break;
-            }
             case lexical_token_t::SEQUENCE_FLOW_END: {
                 --m_flow_context_depth;
 
@@ -499,25 +495,21 @@ private:
                 }
                 break;
             }
-            case lexical_token_t::MAPPING_FLOW_BEGIN: {
-                bool is_more_nested_in_block = m_flow_context_depth++ == 0 && m_context_stack.back().indent < indent;
-                if (is_more_nested_in_block) {
-                    if (mp_current_node->is_sequence()) {
-                        mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
-                        mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
-                    }
-                    else {
-                        *mp_current_node = node_type::mapping();
-                    }
+            case lexical_token_t::MAPPING_FLOW_BEGIN:
+                ++m_flow_context_depth;
+                if (mp_current_node->is_sequence()) {
+                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
+                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
                 }
                 else {
                     *mp_current_node = node_type::mapping();
+                    parse_context& last_context = m_context_stack.back();
+                    last_context.state = context_state_t::FLOW_MAPPING;
                 }
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
-                m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
                 break;
-            }
             case lexical_token_t::MAPPING_FLOW_END: {
                 --m_flow_context_depth;
 
