@@ -469,12 +469,9 @@ TEST_CASE("LexicalAnalyzer_NaN") {
     REQUIRE(std::isnan(lexer.get_float_number()) == true);
 }
 
-TEST_CASE("LexicalAnalyzer_String") {
+TEST_CASE("LexicalAnalyzer_PlainString") {
     using value_pair_t = std::pair<std::string, fkyaml::node::string_type>;
     auto value_pair = GENERATE(
-        value_pair_t(std::string("\"\""), fkyaml::node::string_type("")),
-        value_pair_t(std::string("\'\'"), fkyaml::node::string_type("")),
-
         value_pair_t(std::string("test"), fkyaml::node::string_type("test")),
         value_pair_t(std::string("nop"), fkyaml::node::string_type("nop")),
         value_pair_t(std::string("none"), fkyaml::node::string_type("none")),
@@ -515,8 +512,21 @@ TEST_CASE("LexicalAnalyzer_String") {
         value_pair_t(std::string("-.INF_VALUE"), fkyaml::node::string_type("-.INF_VALUE")),
         value_pair_t(std::string(".nanValue"), fkyaml::node::string_type(".nanValue")),
         value_pair_t(std::string(".NaNValue"), fkyaml::node::string_type(".NaNValue")),
-        value_pair_t(std::string(".NAN_VALUE"), fkyaml::node::string_type(".NAN_VALUE")),
+        value_pair_t(std::string(".NAN_VALUE"), fkyaml::node::string_type(".NAN_VALUE")));
 
+    lexer_t lexer(fkyaml::detail::input_adapter(value_pair.first));
+    fkyaml::detail::lexical_token_t token;
+
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE_NOTHROW(lexer.get_string());
+    REQUIRE(lexer.get_string() == value_pair.second);
+}
+
+TEST_CASE("LexicalAnalyzer_SingleQuotedString") {
+    using value_pair_t = std::pair<std::string, fkyaml::node::string_type>;
+    auto value_pair = GENERATE(
+        value_pair_t(std::string("\'\'"), fkyaml::node::string_type("")),
         value_pair_t(std::string("\'foo\"bar\'"), fkyaml::node::string_type("foo\"bar")),
         value_pair_t(std::string("\'foo bar\'"), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("\'foo\'\'bar\'"), fkyaml::node::string_type("foo\'bar")),
@@ -525,8 +535,21 @@ TEST_CASE("LexicalAnalyzer_String") {
         value_pair_t(std::string("\'foo}bar\'"), fkyaml::node::string_type("foo}bar")),
         value_pair_t(std::string("\'foo\"bar\'"), fkyaml::node::string_type("foo\"bar")),
         value_pair_t(std::string("\'foo:bar\'"), fkyaml::node::string_type("foo:bar")),
-        value_pair_t(std::string("\'foo\\bar\'"), fkyaml::node::string_type("foo\\bar")),
+        value_pair_t(std::string("\'foo\\bar\'"), fkyaml::node::string_type("foo\\bar")));
 
+    lexer_t lexer(fkyaml::detail::input_adapter(value_pair.first));
+    fkyaml::detail::lexical_token_t token;
+
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE_NOTHROW(lexer.get_string());
+    REQUIRE(lexer.get_string() == value_pair.second);
+}
+
+TEST_CASE("LexicalAnalyzer_DoubleQuotedString") {
+    using value_pair_t = std::pair<std::string, fkyaml::node::string_type>;
+    auto value_pair = GENERATE(
+        value_pair_t(std::string("\"\""), fkyaml::node::string_type("")),
         value_pair_t(std::string("\"foo bar\""), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("\"foo\tbar\""), fkyaml::node::string_type("foo\tbar")),
         value_pair_t(std::string("\"foo's bar\""), fkyaml::node::string_type("foo's bar")),
@@ -534,7 +557,16 @@ TEST_CASE("LexicalAnalyzer_String") {
         value_pair_t(std::string("\"foo,bar\""), fkyaml::node::string_type("foo,bar")),
         value_pair_t(std::string("\"foo]bar\""), fkyaml::node::string_type("foo]bar")),
         value_pair_t(std::string("\"foo}bar\""), fkyaml::node::string_type("foo}bar")),
-        value_pair_t(std::string("\"\\x30\\x2B\\x6d\""), fkyaml::node::string_type("0+m")));
+        value_pair_t(std::string("\"\\x30\\x2B\\x6d\""), fkyaml::node::string_type("0+m")),
+
+        value_pair_t(std::string("\"foo\nbar\""), fkyaml::node::string_type("foo bar")),
+        value_pair_t(std::string("\"foo \t\n \tbar\""), fkyaml::node::string_type("foo bar")),
+        value_pair_t(std::string("\"foo\n\n \t\nbar\""), fkyaml::node::string_type("foo\n\nbar")),
+        value_pair_t(std::string("\"\nfoo\n\n \t\nbar\""), fkyaml::node::string_type(" foo\n\nbar")),
+        value_pair_t(std::string("\"foo\nbar\n\""), fkyaml::node::string_type("foo bar ")),
+        value_pair_t(std::string("\"foo\\\nbar\""), fkyaml::node::string_type("foobar")),
+        value_pair_t(std::string("\"foo \t\\\nbar\""), fkyaml::node::string_type("foo \tbar")),
+        value_pair_t(std::string("\"\\\n  foo \t\\\n\tbar\t  \t\\\n\""), fkyaml::node::string_type("foo \tbar\t  \t")));
 
     lexer_t lexer(fkyaml::detail::input_adapter(value_pair.first));
     fkyaml::detail::lexical_token_t token;
@@ -706,7 +738,6 @@ TEST_CASE("LexicalAnalyzer_InvalidString") {
             std::string("\"test"),
             std::string("\'test"),
             std::string("\'test\n\'"),
-            std::string("\"test\n\""),
             std::string("\"\\xw\""),
             std::string("\"\\x+\""),
             std::string("\"\\x=\""),
