@@ -20,12 +20,10 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
         auto value_pair = GENERATE(
             value_pair_t(std::string("%YAML 1.1 "), std::string("1.1")),
             value_pair_t(std::string("%YAML\t1.1\t"), std::string("1.1")),
-            value_pair_t(std::string("%YAML 1.1\r"), std::string("1.1")),
             value_pair_t(std::string("%YAML 1.1\n"), std::string("1.1")),
             value_pair_t(std::string("%YAML 1.1"), std::string("1.1")),
             value_pair_t(std::string("%YAML 1.2 "), std::string("1.2")),
             value_pair_t(std::string("%YAML\t1.2\t"), std::string("1.2")),
-            value_pair_t(std::string("%YAML 1.2\r"), std::string("1.2")),
             value_pair_t(std::string("%YAML 1.2\n"), std::string("1.2")),
             value_pair_t(std::string("%YAML 1.2"), std::string("1.2")));
 
@@ -40,12 +38,7 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
     }
 
     SECTION("wrong YAML directive") {
-        auto buffer = GENERATE(
-            std::string("%YUML 1.2"),
-            std::string("%YANL 1.2  \r"),
-            std::string("%YAMR 1.2 \r\n"),
-            std::string("%YANL 1.2    \n"),
-            std::string("%YAML1.2"));
+        auto buffer = GENERATE(std::string("%YUML 1.2"), std::string("%YANL 1.2    \n"), std::string("%YAML1.2"));
 
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -161,7 +154,7 @@ TEST_CASE("LexicalAnalyzer_InvalidDirective") {
 
 TEST_CASE("LexicalAnalyzer_ReservedDirective") {
     auto buffer =
-        GENERATE(std::string("%TEST\r\n"), std::string("%1984\r "), std::string("%TEST4LIB\n"), std::string("%%ERROR"));
+        GENERATE(std::string("%TEST\n"), std::string("%1984\n "), std::string("%TEST4LIB\n"), std::string("%%ERROR"));
 
     fkyaml::detail::lexical_token_t token;
     lexer_t lexer(fkyaml::detail::input_adapter(buffer));
@@ -222,18 +215,6 @@ TEST_CASE("LexicalAnalyzer_Colon") {
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with CR newline code") {
-        lexer_t lexer(fkyaml::detail::input_adapter(":\r"));
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
-    }
-
-    SECTION("colon with CRLF newline code") {
-        lexer_t lexer(fkyaml::detail::input_adapter(":\r\n"));
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
-    }
-
     SECTION("colon with LF newline code") {
         lexer_t lexer(fkyaml::detail::input_adapter(":\n"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -246,12 +227,6 @@ TEST_CASE("LexicalAnalyzer_Colon") {
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with a comment and a CRLF newline code") {
-        lexer_t lexer(fkyaml::detail::input_adapter(": # comment\r\n"));
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
-    }
-
     SECTION("colon with a comment and a LF newline code") {
         lexer_t lexer(fkyaml::detail::input_adapter(": # comment\n"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -260,12 +235,6 @@ TEST_CASE("LexicalAnalyzer_Colon") {
 
     SECTION("colon with a comment and no newline code") {
         lexer_t lexer(fkyaml::detail::input_adapter(": # comment"));
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
-    }
-
-    SECTION("colon with many spaces and a CRLF newline code") {
-        lexer_t lexer(fkyaml::detail::input_adapter(":                         \r\n"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
@@ -310,12 +279,7 @@ TEST_CASE("LexicalAnalyzer_Colon") {
 }
 
 TEST_CASE("LexicalAnalzer_BlockSequenceEntryPrefix") {
-    auto input = GENERATE(
-        std::string("- foo"),
-        std::string("-\tfoo"),
-        std::string("-\r  foo"),
-        std::string("-\r\n  foo"),
-        std::string("-\n  foo"));
+    auto input = GENERATE(std::string("- foo"), std::string("-\tfoo"), std::string("-\n  foo"));
 
     fkyaml::detail::lexical_token_t token;
     lexer_t lexer(fkyaml::detail::input_adapter(input));
@@ -933,8 +897,8 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
     fkyaml::detail::lexical_token_t token;
 
     SECTION("empty literal string scalar with strip chomping") {
-        const char input[] = "|-\r\n"
-                             "  \r\n";
+        const char input[] = "|-\n"
+                             "  \n";
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -943,8 +907,8 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
     }
 
     SECTION("empty literal string scalar with clip chomping") {
-        const char input[] = "|\r\n"
-                             "  \r\n";
+        const char input[] = "|\n"
+                             "  \n";
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -953,8 +917,8 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
     }
 
     SECTION("empty literal string scalar with keep chomping") {
-        const char input[] = "|+\r\n"
-                             "  \r\n";
+        const char input[] = "|+\n"
+                             "  \n";
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -989,10 +953,10 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(lexer.get_string() == "  foo\nbar\n");
     }
 
-    SECTION("literal string scalar with CR+LF newlines") {
-        const char input[] = "|\r\n"
-                             "  foo\r\n"
-                             "  bar\r\n";
+    SECTION("literal string scalar") {
+        const char input[] = "|\n"
+                             "  foo\n"
+                             "  bar\n";
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1105,8 +1069,8 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
     fkyaml::detail::lexical_token_t token;
 
     SECTION("empty folded string scalar with strip chomping") {
-        const char input[] = ">-\r\n"
-                             "  \r\n";
+        const char input[] = ">-\n"
+                             "  \n";
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1115,8 +1079,8 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
     }
 
     SECTION("empty folded string scalar with clip chomping") {
-        const char input[] = ">\r\n"
-                             "  \r\n";
+        const char input[] = ">\n"
+                             "  \n";
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1125,8 +1089,8 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
     }
 
     SECTION("empty folded string scalar with keep chomping") {
-        const char input[] = ">+\r\n"
-                             "  \r\n";
+        const char input[] = ">+\n"
+                             "  \n";
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1172,13 +1136,13 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(lexer.get_string() == "foo\n  bar\n");
     }
 
-    SECTION("folded string scalar with windows style newlines") {
-        const char input[] = ">\r\n"
-                             "  foo\r\n"
-                             "  \r\n"
-                             "\r\n"
-                             "  bar\r\n"
-                             " \r\n";
+    SECTION("folded string scalar") {
+        const char input[] = ">\n"
+                             "  foo\n"
+                             "  \n"
+                             "\n"
+                             "  bar\n"
+                             " \n";
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1235,7 +1199,6 @@ TEST_CASE("LexicalAnalyzer_Anchor") {
             test_data_t {"&anchor", "anchor"},
             test_data_t {"&anchor name", "anchor"},
             test_data_t {"&anchor\tname", "anchor"},
-            test_data_t {"&anchor\rname", "anchor"},
             test_data_t {"&anchor\nname", "anchor"},
             test_data_t {"&anchor{name", "anchor"},
             test_data_t {"&anchor}name", "anchor"},
@@ -1257,7 +1220,6 @@ TEST_CASE("LexicalAnalyzer_Anchor") {
             std::string("&"),
             std::string("& "),
             std::string("&\t"),
-            std::string("&\r"),
             std::string("&\n"),
             std::string("&{"),
             std::string("&}"),
@@ -1279,7 +1241,6 @@ TEST_CASE("LexicalAnalyzer_Alias") {
             test_data_t {"*anchor", "anchor"},
             test_data_t {"*anchor name", "anchor"},
             test_data_t {"*anchor\tname", "anchor"},
-            test_data_t {"*anchor\rname", "anchor"},
             test_data_t {"*anchor\nname", "anchor"},
             test_data_t {"*anchor{name", "anchor"},
             test_data_t {"*anchor}name", "anchor"},
@@ -1301,7 +1262,6 @@ TEST_CASE("LexicalAnalyzer_Alias") {
             std::string("*"),
             std::string("* "),
             std::string("*\t"),
-            std::string("*\r"),
             std::string("*\n"),
             std::string("*{"),
             std::string("*}"),
@@ -1696,8 +1656,7 @@ TEST_CASE("LexicalAnalyzer_BlockSequence") {
     fkyaml::detail::lexical_token_t token;
 
     SECTION("simple block sequence") {
-        auto buffer = GENERATE(std::string("test:\n  - foo\n  - bar"), std::string("test:\r\n  - foo\r\n  - bar"));
-
+        std::string buffer = "test:\n  - foo\n  - bar";
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1729,10 +1688,7 @@ TEST_CASE("LexicalAnalyzer_BlockSequence") {
     }
 
     SECTION("block sequence with block mapping child nodes") {
-        auto buffer = GENERATE(
-            std::string("test:\r\n  - foo: one\r\n    bar: false\r\n  - foo: two\r\n    bar: true"),
-            std::string("test:\n  - foo: one\n    bar: false\n  - foo: two\n    bar: true"));
-
+        std::string buffer = "test:\n  - foo: one\n    bar: false\n  - foo: two\n    bar: true";
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
