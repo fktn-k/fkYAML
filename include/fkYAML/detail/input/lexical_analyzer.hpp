@@ -673,9 +673,47 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\n':
-            // TODO: Support multi-line string scalars.
-            emit_error("multi-line string scalars are unsupported.");
+        case '\n': {
+            // discard trailing white spaces which preceeds the line break in the current line.
+            auto before_trailing_spaces_itr = m_cur_itr - 1;
+            bool ends_loop = false;
+            while (before_trailing_spaces_itr != m_token_begin_itr) {
+                switch (*before_trailing_spaces_itr) {
+                case ' ':
+                case '\t':
+                    --before_trailing_spaces_itr;
+                    break;
+                default:
+                    ends_loop = true;
+                    break;
+                }
+
+                if (ends_loop) {
+                    break;
+                }
+            }
+            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
+
+            // move to the beginning of the next line.
+            ++m_cur_itr;
+
+            // apply line folding according to the number of following empty lines.
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
+            skip_white_spaces_and_newline_codes();
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
+            if (trailing_empty_lines > 0) {
+                m_value_buffer.append(trailing_empty_lines, '\n');
+            }
+            else {
+                m_value_buffer.push_back(' ');
+            }
+
+            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\'') ? m_cur_itr-- : m_cur_itr;
+            ret = true;
+            break;
+        }
 
         case '\'':
             // If single quotation marks are repeated twice in a single-quoted string token,
