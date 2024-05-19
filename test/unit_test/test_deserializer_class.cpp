@@ -842,8 +842,7 @@ TEST_CASE("Deserializer_BlockMapping") {
 
     SECTION("mapping with flow mapping keys") {
         std::string input = "{foo: bar}:\n"
-                            "  baz: # some comment\n"
-                            "    123\n"
+                            "  {baz: null}: 123\n"
                             "{true: 123}: \n"
                             "  3.14";
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
@@ -858,11 +857,12 @@ TEST_CASE("Deserializer_BlockMapping") {
         fkyaml::node& root_foobar_mapkey_node = root[std::move(foobar_mapkey)];
         REQUIRE(root_foobar_mapkey_node.is_mapping());
         REQUIRE(root_foobar_mapkey_node.size() == 1);
-        REQUIRE(root_foobar_mapkey_node.contains("baz"));
+        fkyaml::node baznull_mapkey = {{"baz", nullptr}};
+        REQUIRE(root_foobar_mapkey_node.contains(baznull_mapkey));
 
-        fkyaml::node& root_foobar_mapkey_baz_node = root_foobar_mapkey_node["baz"];
-        REQUIRE(root_foobar_mapkey_baz_node.is_integer());
-        REQUIRE(root_foobar_mapkey_baz_node.get_value<int>() == 123);
+        fkyaml::node& root_foobar_mapkey_baznull_mapkey_node = root_foobar_mapkey_node[std::move(baznull_mapkey)];
+        REQUIRE(root_foobar_mapkey_baznull_mapkey_node.is_integer());
+        REQUIRE(root_foobar_mapkey_baznull_mapkey_node.get_value<int>() == 123);
 
         fkyaml::node& root_true123_mapkey_node = root[std::move(true123_mapkey)];
         REQUIRE(root_true123_mapkey_node.is_float_number());
@@ -871,8 +871,7 @@ TEST_CASE("Deserializer_BlockMapping") {
 
     SECTION("mapping with flow sequence keys") {
         std::string input = "[foo,bar]:\n"
-                            "  baz: # some comment\n"
-                            "    123\n"
+                            "  [baz,null]: 123\n"
                             "[true,123]: \n"
                             "  3.14";
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
@@ -887,11 +886,12 @@ TEST_CASE("Deserializer_BlockMapping") {
         fkyaml::node& root_foobar_seqkey_node = root[std::move(foobar_seqkey)];
         REQUIRE(root_foobar_seqkey_node.is_mapping());
         REQUIRE(root_foobar_seqkey_node.size() == 1);
-        REQUIRE(root_foobar_seqkey_node.contains("baz"));
+        fkyaml::node baznull_seqkey = {"baz", nullptr};
+        REQUIRE(root_foobar_seqkey_node.contains(baznull_seqkey));
 
-        fkyaml::node& root_foobar_seqkey_baz_node = root_foobar_seqkey_node["baz"];
-        REQUIRE(root_foobar_seqkey_baz_node.is_integer());
-        REQUIRE(root_foobar_seqkey_baz_node.get_value<int>() == 123);
+        fkyaml::node& root_foobar_seqkey_baznull_seqkey_node = root_foobar_seqkey_node[baznull_seqkey];
+        REQUIRE(root_foobar_seqkey_baznull_seqkey_node.is_integer());
+        REQUIRE(root_foobar_seqkey_baznull_seqkey_node.get_value<int>() == 123);
 
         fkyaml::node& root_true123_seqkey_node = root[std::move(true123_seqkey)];
         REQUIRE(root_true123_seqkey_node.is_float_number());

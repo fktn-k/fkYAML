@@ -4703,6 +4703,8 @@ private:
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
+                    apply_directive_set(*mp_current_node);
+                    apply_node_properties(*mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
                 case context_state_t::FLOW_MAPPING:
@@ -4710,9 +4712,13 @@ private:
                     m_context_stack.emplace_back(
                         line, indent, context_state_t::FLOW_SEQUENCE_KEY, new node_type(node_t::SEQUENCE));
                     mp_current_node = m_context_stack.back().p_node;
+                    apply_directive_set(*mp_current_node);
+                    apply_node_properties(*mp_current_node);
                     break;
                 default:
                     *mp_current_node = node_type::sequence();
+                    apply_directive_set(*mp_current_node);
+                    apply_node_properties(*mp_current_node);
                     m_context_stack.back().state = context_state_t::FLOW_SEQUENCE;
                     break;
                 }
@@ -4818,6 +4824,8 @@ private:
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
+                    apply_directive_set(*mp_current_node);
+                    apply_node_properties(*mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
                 case context_state_t::FLOW_MAPPING:
@@ -4825,9 +4833,13 @@ private:
                     m_context_stack.emplace_back(
                         line, indent, context_state_t::FLOW_MAPPING_KEY, new node_type(node_t::MAPPING));
                     mp_current_node = m_context_stack.back().p_node;
+                    apply_directive_set(*mp_current_node);
+                    apply_node_properties(*mp_current_node);
                     break;
                 default:
                     *mp_current_node = node_type::mapping();
+                    apply_directive_set(*mp_current_node);
+                    apply_node_properties(*mp_current_node);
                     m_context_stack.back().state = context_state_t::FLOW_MAPPING;
                     break;
                 }
