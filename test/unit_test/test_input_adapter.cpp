@@ -1688,7 +1688,9 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
 
 TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
     SECTION("iterator_input_adapter (char)") {
-        char input[] = {0, char(0x74), 0, char(0x65), 0, char(0x73), 0, char(0x74), 0, char(0x0D), 0, char(0x0A), 0, char(0x64), 0, char(0x61), 0, char(0x74), 0, char(0x61), 0, char(0x0D), 0, char(0x0A), 0};
+        char input[] = {0, char(0x74), 0, char(0x65), 0, char(0x73), 0, char(0x74), 0, char(0x0D),
+                        0, char(0x0A), 0, char(0x64), 0, char(0x61), 0, char(0x74), 0, char(0x61),
+                        0, char(0x0D), 0, char(0x0A), 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
@@ -1709,7 +1711,20 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
     }
 
     SECTION("iterator_input_adapter (char16_t)") {
-        char16_t input[] = {0x0074u, 0x0065u, 0x0073u, 0x0074u, 0x000Du, 0x000Au, 0x0064u, 0x0061u, 0x0074u, 0x0061u, 0x000Du, 0x000Au, 0x0000};
+        char16_t input[] = {
+            0x0074u,
+            0x0065u,
+            0x0073u,
+            0x0074u,
+            0x000Du,
+            0x000Au,
+            0x0064u,
+            0x0061u,
+            0x0074u,
+            0x0061u,
+            0x000Du,
+            0x000Au,
+            0x0000};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
@@ -1777,7 +1792,10 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
 
 TEST_CASE("InputAdapter_FillBuffer_UTF32BENewlineCodeNormalization") {
     SECTION("iterator_input_adapter (char)") {
-        char input[] = {0, 0, 0, char(0x74), 0, 0, 0, char(0x65), 0, 0, 0, char(0x73), 0, 0, 0, char(0x74), 0, 0, 0, char(0x0D), 0, 0, 0, char(0x0A), 0, 0, 0, char(0x64), 0, 0, 0, char(0x61), 0, 0, 0, char(0x74), 0, 0, 0, char(0x61), 0, 0, 0, char(0x0D), 0, 0, 0, char(0x0A), 0};
+        char input[] = {0, 0, 0, char(0x74), 0, 0, 0, char(0x65), 0, 0, 0, char(0x73), 0, 0, 0, char(0x74),
+                        0, 0, 0, char(0x0D), 0, 0, 0, char(0x0A), 0, 0, 0, char(0x64), 0, 0, 0, char(0x61),
+                        0, 0, 0, char(0x74), 0, 0, 0, char(0x61), 0, 0, 0, char(0x0D), 0, 0, 0, char(0x0A),
+                        0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
@@ -1798,7 +1816,20 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BENewlineCodeNormalization") {
     }
 
     SECTION("iterator_input_adapter (char32_t)") {
-        char32_t input[] = {0x00000074u, 0x00000065u, 0x00000073u, 0x00000074u, 0x0000000Du, 0x0000000Au, 0x00000064u, 0x00000061u, 0x00000074u, 0x00000061u, 0x0000000Du, 0x0000000Au, 0x00000000};
+        char32_t input[] = {
+            0x00000074u,
+            0x00000065u,
+            0x00000073u,
+            0x00000074u,
+            0x0000000Du,
+            0x0000000Au,
+            0x00000064u,
+            0x00000061u,
+            0x00000074u,
+            0x00000061u,
+            0x0000000Du,
+            0x0000000Au,
+            0x00000000};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
