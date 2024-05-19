@@ -4267,6 +4267,7 @@ class basic_deserializer {
         MAPPING_VALUE,                //!< The underlying node is a block mapping value.
         BLOCK_SEQUENCE,               //!< The underlying node is a block sequence.
         FLOW_SEQUENCE,                //!< The underlying node is a flow sequence.
+        FLOW_SEQUENCE_KEY,            //!< The underlying node is a flow sequence as a key.
         FLOW_MAPPING,                 //!< The underlying node is a flow mapping.
         FLOW_MAPPING_KEY,             //!< The underlying node is a flow mapping as a key.
     };
@@ -4668,6 +4669,32 @@ private:
                 break;
             }
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
+                if (m_flow_context_depth == 0) {
+                    uint32_t pop_num = 0;
+                    if (indent == 0) {
+                        pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
+                    }
+                    else if (indent < m_context_stack.back().indent) {
+                        auto target_itr = std::find_if(
+                            m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
+                                return indent == c.indent;
+                            });
+                        bool is_indent_valid = (target_itr != m_context_stack.rend());
+                        if (!is_indent_valid) {
+                            throw parse_error("Detected invalid indentaion.", line, indent);
+                        }
+
+                        pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
+                    }
+                    if (pop_num > 0) {
+                        for (uint32_t i = 0; i < pop_num; i++) {
+                            // move back to the previous container node.
+                            m_context_stack.pop_back();
+                        }
+                        mp_current_node = m_context_stack.back().p_node;
+                    }
+                }
+
                 ++m_flow_context_depth;
 
                 switch (m_context_stack.back().state) {
@@ -4676,6 +4703,13 @@ private:
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
+                    break;
+                case context_state_t::BLOCK_MAPPING:
+                case context_state_t::FLOW_MAPPING:
+                    // heap-allocated node will be freed in handling the corresponding SEQUENCE_FLOW_END event.
+                    m_context_stack.emplace_back(
+                        line, indent, context_state_t::FLOW_SEQUENCE_KEY, new node_type(node_t::SEQUENCE));
+                    mp_current_node = m_context_stack.back().p_node;
                     break;
                 default:
                     *mp_current_node = node_type::sequence();
@@ -4693,7 +4727,15 @@ private:
                 auto itr = std::find_if( // LCOV_EXCL_LINE
                     m_context_stack.rbegin(),
                     m_context_stack.rend(),
-                    [](const parse_context& c) { return c.state == context_state_t::FLOW_SEQUENCE; });
+                    [](const parse_context& c) {
+                        switch (c.state) {
+                        case context_state_t::FLOW_SEQUENCE_KEY:
+                        case context_state_t::FLOW_SEQUENCE:
+                            return true;
+                        default:
+                            return false;
+                        }
+                    });
 
                 bool is_valid = itr != m_context_stack.rend();
                 if (!is_valid) {
@@ -4701,15 +4743,45 @@ private:
                 }
 
                 // move back to the context before the flow sequence.
-                auto pop_num = std::distance(m_context_stack.rbegin(), itr) + 1;
-                for (auto i = 0; i < pop_num; i++) {
+                uint32_t pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr) + 1);
+                uint32_t stack_size = static_cast<uint32_t>(m_context_stack.size());
+
+                if (pop_num == stack_size) {
+                    indent = m_context_stack.front().indent;
+                    line = m_context_stack.front().line;
+                }
+
+                context_state_t state = context_state_t::FLOW_SEQUENCE;
+                for (uint32_t i = 0; i < pop_num; i++) {
                     mp_current_node = m_context_stack.back().p_node;
+                    state = m_context_stack.back().state;
                     m_context_stack.pop_back();
                 }
+
                 if (!m_context_stack.empty()) {
+                    if (state == context_state_t::FLOW_SEQUENCE_KEY) {
+                        node_type key_node = std::move(*mp_current_node);
+                        delete mp_current_node;
+                        mp_current_node = m_context_stack.back().p_node;
+
+                        add_new_key(std::move(key_node), indent, line);
+                        break;
+                    }
+
                     mp_current_node = m_context_stack.back().p_node;
+                    break;
                 }
-                break;
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::KEY_SEPARATOR) {
+                    node_type key_node = node_type::mapping();
+                    mp_current_node->swap(key_node);
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    add_new_key(std::move(key_node), indent, line);
+                }
+                indent = lexer.get_last_token_begin_pos();
+                line = lexer.get_lines_processed();
+                continue;
             }
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 if (m_flow_context_depth == 0) {
