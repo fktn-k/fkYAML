@@ -2712,7 +2712,6 @@ public:
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 break;
             case ',':
@@ -2769,12 +2768,6 @@ public:
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
                 return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
-            case '\r':
-                next = *(m_cur_itr + 2);
-                // Move a cursor to the beginning of the next token.
-                m_cur_itr += 2 + (next == '\n' ? 1 : 0);
-                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
-                break;
             default:
                 break;
             }
@@ -2944,7 +2937,6 @@ private:
             case '\t':
                 ends_loop = true;
                 break;
-            case '\r':
             case '\n':
                 skip_until_line_end();
                 return lexical_token_t::INVALID_DIRECTIVE;
@@ -3071,7 +3063,6 @@ private:
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 ends_loop = true;
                 break;
@@ -3100,7 +3091,6 @@ private:
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 ends_loop = true;
                 break;
@@ -3133,7 +3123,6 @@ private:
             // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
             case '{':
             case '}':
@@ -3171,7 +3160,6 @@ private:
 
         switch (*m_cur_itr) {
         case ' ':
-        case '\r':
         case '\n':
             // Just "!" is a non-specific tag.
             m_value_buffer = "!";
@@ -3201,7 +3189,6 @@ private:
             // Tag names must not contain spaces or newline codes.
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 ends_loop = true;
                 break;
@@ -3293,7 +3280,6 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\r':
         case '\n':
             // TODO: Support multi-line string scalars.
             emit_error("multi-line string scalars are unsupported.");
@@ -3328,7 +3314,6 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\r':
         case '\n':
             // TODO: Support multi-line string scalars.
             emit_error("multi-line string scalars are unsupported.");
@@ -3363,7 +3348,6 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\r':
         case '\n':
             m_value_buffer.append(m_token_begin_itr, m_cur_itr);
             break;
@@ -3408,7 +3392,6 @@ private:
 
             switch (next) {
             case ' ':
-            case '\r':
             case '\n':
             case '#':
             case '\\':
@@ -3430,7 +3413,6 @@ private:
             switch (next) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 m_value_buffer.append(m_token_begin_itr, m_cur_itr);
                 break;
@@ -3467,7 +3449,7 @@ private:
         // * double quoted
         // * plain
 
-        std::string check_filters {"\r\n"};
+        std::string check_filters {"\n"};
         bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
 
         if (needs_last_single_quote) {
@@ -3549,9 +3531,6 @@ private:
                 continue;
             }
 
-            if (current == '\r') {
-                current = *++m_cur_itr;
-            }
             if (current == '\n') {
                 m_value_buffer.push_back('\n');
                 continue;
@@ -3593,11 +3572,6 @@ private:
         for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
             current = *m_cur_itr;
 
-            if (current == '\r') {
-                // Ignore CR assuming the next character is LF.
-                continue;
-            }
-
             if (current == '\n') {
                 if (style == block_style_indicator_t::LITERAL) {
                     m_value_buffer.push_back(current);
@@ -3633,9 +3607,6 @@ private:
                             continue;
                         }
 
-                        if (current == '\r') {
-                            current = *++m_cur_itr;
-                        }
                         if (current == '\n') {
                             is_next_empty = true;
                             break;
@@ -3656,13 +3627,6 @@ private:
                     }
 
                     switch (char next = *(m_cur_itr + 1)) {
-                    case '\r': {
-                        ++m_cur_itr;
-                        next = *++m_cur_itr;
-                        FK_YAML_ASSERT(next == '\n');
-                        m_value_buffer.push_back(next);
-                        break;
-                    }
                     case '\n':
                         ++m_cur_itr;
                         m_value_buffer.push_back(next);
@@ -3853,7 +3817,6 @@ private:
                 switch (c) {
                 case ' ':
                 case '\t':
-                case '\r':
                 case '\n':
                     return true;
                 default:
@@ -3867,14 +3830,6 @@ private:
     void skip_until_line_end() {
         while (m_cur_itr != m_end_itr) {
             switch (*m_cur_itr) {
-            case '\r':
-                if (++m_cur_itr == m_end_itr) {
-                    return;
-                }
-                if (*m_cur_itr == '\n') {
-                    ++m_cur_itr;
-                }
-                return;
             case '\n':
                 ++m_cur_itr;
                 return;
@@ -5475,7 +5430,11 @@ private:
             }
         }
 
-        buffer.assign(m_current, m_end);
+        do {
+            IterType cr_or_end_itr = std::find(m_current, m_end, '\r');
+            buffer.append(m_current, cr_or_end_itr);
+            m_current = (cr_or_end_itr == m_end) ? cr_or_end_itr : std::next(cr_or_end_itr);
+        } while (m_current != m_end);
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
@@ -5499,8 +5458,11 @@ private:
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
-                encoded_buffer[encoded_buf_size] = static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[0]);
-                encoded_buffer[encoded_buf_size++] |= static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[1]);
+                char16_t utf16 = static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[0]);
+                utf16 |= static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[1]);
+                if (utf16 != char16_t(0x000Du)) {
+                    encoded_buffer[encoded_buf_size++] = utf16;
+                }
             }
 
             uint32_t consumed_size = 0;
@@ -5512,7 +5474,7 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -5543,9 +5505,10 @@ private:
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[2]);
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[3]);
 
-            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            if (utf32 != char32_t(0x0000000Du)) {
+                utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            }
         }
     }
 
@@ -5631,7 +5594,10 @@ public:
         }
 
         while (m_current != m_end) {
-            buffer.push_back(char(*m_current++));
+            char c = char(*m_current++);
+            if (c != '\r') {
+                buffer.push_back(c);
+            }
         }
     }
 
@@ -5686,10 +5652,14 @@ public:
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
-                char16_t tmp = *m_current++;
-                encoded_buffer[encoded_buf_size++] = char16_t(
-                    static_cast<uint16_t>((tmp & 0x00FFu) << shift_bits) |
-                    static_cast<uint16_t>((tmp & 0xFF00u) >> shift_bits));
+                char16_t utf16 = *m_current++;
+                utf16 = char16_t(
+                    static_cast<uint16_t>((utf16 & 0x00FFu) << shift_bits) |
+                    static_cast<uint16_t>((utf16 & 0xFF00u) >> shift_bits));
+
+                if (utf16 != char16_t(0x000Du)) {
+                    encoded_buffer[encoded_buf_size++] = utf16;
+                }
             }
 
             uint32_t consumed_size = 0;
@@ -5701,7 +5671,7 @@ public:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -5764,9 +5734,10 @@ public:
                 static_cast<uint32_t>((tmp & 0x0000FF00u) << shift_bits[2]) |
                 static_cast<uint32_t>((tmp & 0x000000FFu) << shift_bits[3]));
 
-            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            if (utf32 != char32_t(0x0000000Du)) {
+                utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            }
         }
     }
 
@@ -5830,7 +5801,20 @@ private:
         char tmp_buf[256] {};
         std::size_t read_size = 0;
         while ((read_size = std::fread(&tmp_buf[0], sizeof(char), sizeof(tmp_buf) / sizeof(tmp_buf[0]), m_file)) > 0) {
-            buffer.append(tmp_buf, read_size);
+            char* p_current = &tmp_buf[0];
+            char* p_end = p_current + read_size;
+            do {
+                // find CR in `tmp_buf`.
+                char* p_cr_or_end = p_end;
+                for (uint32_t i = 0; p_current + i != p_end; i++) {
+                    if (*(p_current + i) == '\r') {
+                        p_cr_or_end = p_current + i;
+                    }
+                }
+
+                buffer.append(p_current, p_cr_or_end);
+                p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
+            } while (p_current != p_end);
         }
 
         auto current = buffer.begin();
@@ -5894,9 +5878,12 @@ private:
 
         while (std::feof(m_file) == 0) {
             while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2) {
-                encoded_buffer[encoded_buf_size++] = char16_t(
+                char16_t utf16 = char16_t(
                     static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
+                if (utf16 != char16_t(0x000Du)) {
+                    encoded_buffer[encoded_buf_size++] = utf16;
+                }
             }
 
             uint32_t consumed_size = 0;
@@ -5908,7 +5895,7 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
@@ -5946,9 +5933,10 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            if (utf32 != char32_t(0x0000000Du)) {
+                utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            }
         }
     }
 
@@ -6007,7 +5995,21 @@ private:
         do {
             m_istream->read(&tmp_buf[0], 256);
             std::size_t read_size = static_cast<std::size_t>(m_istream->gcount());
-            buffer.append(tmp_buf, read_size);
+
+            char* p_current = &tmp_buf[0];
+            char* p_end = p_current + read_size;
+            do {
+                // find CR in `tmp_buf`.
+                char* p_cr_or_end = p_end;
+                for (uint32_t i = 0; p_current + i != p_end; i++) {
+                    if (*(p_current + i) == '\r') {
+                        p_cr_or_end = p_current + i;
+                    }
+                }
+
+                buffer.append(p_current, p_cr_or_end);
+                p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
+            } while (p_current != p_end);
         } while (!m_istream->eof());
 
         auto current = buffer.begin();
@@ -6058,8 +6060,7 @@ private:
         if (m_encode_type == utf_encode_t::UTF_16BE) {
             shift_bits[0] = 8;
         }
-        else // m_encode_type == utf_encode_t::UTF_16LE
-        {
+        else { // m_encode_type == utf_encode_t::UTF_16LE
             shift_bits[1] = 8;
         }
 
@@ -6077,9 +6078,13 @@ private:
                     break;
                 }
 
-                encoded_buffer[encoded_buf_size++] = char16_t(
+                char16_t utf16 = char16_t(
                     static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
+
+                if (utf16 != char16_t(0x000Du)) {
+                    encoded_buffer[encoded_buf_size++] = utf16;
+                }
             };
 
             uint32_t consumed_size = 0;
@@ -6091,7 +6096,7 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
@@ -6130,9 +6135,10 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-
-            buffer.append(reinterpret_cast<char*>(utf8_buffer.data()), utf8_buf_size);
+            if (utf32 != char32_t(0x0000000Du)) {
+                utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
+                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            }
         } while (!m_istream->eof());
     }
 
