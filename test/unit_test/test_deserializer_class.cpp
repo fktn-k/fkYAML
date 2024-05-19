@@ -839,6 +839,35 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(qux_2_node.is_string());
         REQUIRE(qux_2_node.get_value_ref<std::string&>() == "b");
     }
+
+    SECTION("mapping with flow mapping keys") {
+        std::string input = "{foo: bar}:\n"
+                            "  baz: # some comment\n"
+                            "    123\n"
+                            "{true: 123}: \n"
+                            "  3.14";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        fkyaml::node foobar_mapkey = {{"foo", "bar"}};
+        REQUIRE(root.contains(foobar_mapkey));
+        fkyaml::node true123_mapkey = {{true, 123}};
+        REQUIRE(root.contains(true123_mapkey));
+
+        fkyaml::node& root_foobar_mapkey_node = root[std::move(foobar_mapkey)];
+        REQUIRE(root_foobar_mapkey_node.is_mapping());
+        REQUIRE(root_foobar_mapkey_node.size() == 1);
+        REQUIRE(root_foobar_mapkey_node.contains("baz"));
+
+        fkyaml::node& root_foobar_mapkey_baz_node = root_foobar_mapkey_node["baz"];
+        REQUIRE(root_foobar_mapkey_baz_node.is_integer());
+        REQUIRE(root_foobar_mapkey_baz_node.get_value<int>() == 123);
+
+        fkyaml::node& root_true123_mapkey_node = root[std::move(true123_mapkey)];
+        REQUIRE(root_true123_mapkey_node.is_float_number());
+        REQUIRE(root_true123_mapkey_node.get_value<double>() == 3.14);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMappingAsBlockSequenceEntry") {
@@ -1508,6 +1537,38 @@ TEST_CASE("Deserializer_FlowMapping") {
         fkyaml::node& root_b_b_node = root_b_node["b"];
         REQUIRE(root_b_b_node.is_string());
         REQUIRE(root_b_b_node.get_value_ref<std::string&>() == "bar");
+    }
+
+    SECTION("flow mapping key of a flow mapping (compact)") {
+        std::string input = "{{\"foo\": true}: \"bar\"}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        fkyaml::node mapkey = {{"foo", true}};
+        REQUIRE(root.contains(mapkey));
+
+        fkyaml::node& root_mapkey_node = root[mapkey];
+        REQUIRE(root_mapkey_node.is_string());
+        REQUIRE(root_mapkey_node.get_value_ref<std::string&>() == "bar");
+    }
+
+    SECTION("flow mapping key of a flow mapping (not compact)") {
+        std::string input = "{\n"
+                            "  {\n"
+                            "    \"foo\": true\n"
+                            "  }: \"bar\"\n"
+                            "}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        fkyaml::node mapkey = {{"foo", true}};
+        REQUIRE(root.contains(mapkey));
+
+        fkyaml::node& root_mapkey_node = root[mapkey];
+        REQUIRE(root_mapkey_node.is_string());
+        REQUIRE(root_mapkey_node.get_value_ref<std::string&>() == "bar");
     }
 }
 
