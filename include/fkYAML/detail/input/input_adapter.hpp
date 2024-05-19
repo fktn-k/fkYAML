@@ -289,8 +289,9 @@ public:
         }
 
         while (m_current != m_end) {
-            if (*m_current != '\r') {
-                buffer.push_back(char(*m_current++));
+            char c = char(*m_current++);
+            if (c != '\r') {
+                buffer.push_back(c);
             }
         }
     }

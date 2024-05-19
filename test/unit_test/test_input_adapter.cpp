@@ -49,6 +49,14 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
     }
 
+#ifdef FK_YAML_HAS_CXX_20
+    SECTION("C-style char8_t array") {
+        char8_t input8[] = u8"test";
+        auto input_adapter = fkyaml::detail::input_adapter(input8);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char8_t*>>::value);
+    }
+#endif
+
     SECTION("C-style char16_t array") {
         char16_t input16[] = u"test";
         auto input_adapter = fkyaml::detail::input_adapter(input16);
@@ -108,7 +116,7 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
 #endif
 
 #ifdef FK_YAML_HAS_CXX_20
-    SECTION("std::u32string") {
+    SECTION("std::u8string") {
         std::u8string input_str(u8"test");
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
         using iterator_type = typename std::u8string::iterator;
