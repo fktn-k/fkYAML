@@ -494,8 +494,6 @@ private:
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
-                    apply_directive_set(*mp_current_node);
-                    apply_node_properties(*mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
                 case context_state_t::FLOW_MAPPING:
@@ -503,15 +501,15 @@ private:
                     m_context_stack.emplace_back(
                         line, indent, context_state_t::FLOW_SEQUENCE_KEY, new node_type(node_t::SEQUENCE));
                     mp_current_node = m_context_stack.back().p_node;
-                    apply_directive_set(*mp_current_node);
-                    apply_node_properties(*mp_current_node);
                     break;
-                default:
+                default: {
                     *mp_current_node = node_type::sequence();
-                    apply_directive_set(*mp_current_node);
-                    apply_node_properties(*mp_current_node);
-                    m_context_stack.back().state = context_state_t::FLOW_SEQUENCE;
+                    parse_context& last_context = m_context_stack.back();
+                    last_context.line = line;
+                    last_context.indent = indent;
+                    last_context.state = context_state_t::FLOW_SEQUENCE;
                     break;
+                }
                 }
 
                 apply_directive_set(*mp_current_node);
@@ -540,42 +538,41 @@ private:
                 }
 
                 // move back to the context before the flow sequence.
-                uint32_t pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr) + 1);
-                uint32_t stack_size = static_cast<uint32_t>(m_context_stack.size());
-
-                if (pop_num == stack_size) {
-                    indent = m_context_stack.front().indent;
-                    line = m_context_stack.front().line;
-                }
-
-                context_state_t state = context_state_t::FLOW_SEQUENCE;
+                uint32_t pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
                 for (uint32_t i = 0; i < pop_num; i++) {
-                    mp_current_node = m_context_stack.back().p_node;
-                    state = m_context_stack.back().state;
                     m_context_stack.pop_back();
                 }
 
-                if (!m_context_stack.empty()) {
-                    if (state == context_state_t::FLOW_SEQUENCE_KEY) {
-                        node_type key_node = std::move(*mp_current_node);
-                        delete mp_current_node;
-                        mp_current_node = m_context_stack.back().p_node;
+                // keep the last state for later processing.
+                parse_context& last_context = m_context_stack.back();
+                mp_current_node = last_context.p_node;
+                indent = last_context.indent;
+                context_state_t state = last_context.state;
+                m_context_stack.pop_back();
 
-                        add_new_key(std::move(key_node), indent, line);
-                        break;
-                    }
+                // handle cases where the flow sequence is a mapping key node.
 
+                if (!m_context_stack.empty() && state == context_state_t::FLOW_SEQUENCE_KEY) {
+                    node_type key_node = std::move(*mp_current_node);
+                    delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
+
+                    add_new_key(std::move(key_node), indent, line);
                     break;
                 }
 
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::KEY_SEPARATOR) {
                     node_type key_node = node_type::mapping();
+                    apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     add_new_key(std::move(key_node), indent, line);
                 }
+                else if (!m_context_stack.empty()) {
+                    mp_current_node = m_context_stack.back().p_node;
+                }
+
                 indent = lexer.get_last_token_begin_pos();
                 line = lexer.get_lines_processed();
                 continue;
@@ -615,8 +612,6 @@ private:
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
-                    apply_directive_set(*mp_current_node);
-                    apply_node_properties(*mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
                 case context_state_t::FLOW_MAPPING:
@@ -624,15 +619,15 @@ private:
                     m_context_stack.emplace_back(
                         line, indent, context_state_t::FLOW_MAPPING_KEY, new node_type(node_t::MAPPING));
                     mp_current_node = m_context_stack.back().p_node;
-                    apply_directive_set(*mp_current_node);
-                    apply_node_properties(*mp_current_node);
                     break;
-                default:
+                default: {
                     *mp_current_node = node_type::mapping();
-                    apply_directive_set(*mp_current_node);
-                    apply_node_properties(*mp_current_node);
-                    m_context_stack.back().state = context_state_t::FLOW_MAPPING;
+                    parse_context& last_context = m_context_stack.back();
+                    last_context.line = line;
+                    last_context.indent = indent;
+                    last_context.state = context_state_t::FLOW_MAPPING;
                     break;
+                }
                 }
 
                 apply_directive_set(*mp_current_node);
@@ -661,32 +656,26 @@ private:
                 }
 
                 // move back to the context before the flow sequence.
-                uint32_t pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr) + 1);
-                uint32_t stack_size = static_cast<uint32_t>(m_context_stack.size());
-
-                if (pop_num == stack_size) {
-                    indent = m_context_stack.front().indent;
-                    line = m_context_stack.front().line;
-                }
-
-                context_state_t state = context_state_t::FLOW_MAPPING;
+                uint32_t pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
                 for (uint32_t i = 0; i < pop_num; i++) {
-                    mp_current_node = m_context_stack.back().p_node;
-                    state = m_context_stack.back().state;
                     m_context_stack.pop_back();
                 }
 
-                if (!m_context_stack.empty()) {
-                    if (state == context_state_t::FLOW_MAPPING_KEY) {
-                        node_type key_node = std::move(*mp_current_node);
-                        delete mp_current_node;
-                        mp_current_node = m_context_stack.back().p_node;
+                // keep the last state for later processing.
+                parse_context& last_context = m_context_stack.back();
+                mp_current_node = last_context.p_node;
+                indent = last_context.indent;
+                context_state_t state = last_context.state;
+                m_context_stack.pop_back();
 
-                        add_new_key(std::move(key_node), indent, line);
-                        break;
-                    }
+                // handle cases where the flow mapping is a mapping key node.
 
+                if (!m_context_stack.empty() && state == context_state_t::FLOW_MAPPING_KEY) {
+                    node_type key_node = std::move(*mp_current_node);
+                    delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
+
+                    add_new_key(std::move(key_node), indent, line);
                     break;
                 }
 
@@ -697,6 +686,10 @@ private:
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     add_new_key(std::move(key_node), indent, line);
                 }
+                else if (!m_context_stack.empty()) {
+                    mp_current_node = m_context_stack.back().p_node;
+                }
+
                 indent = lexer.get_last_token_begin_pos();
                 line = lexer.get_lines_processed();
                 continue;
