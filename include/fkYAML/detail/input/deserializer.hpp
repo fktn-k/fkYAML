@@ -641,7 +641,17 @@ private:
         else if (indent < m_context_stack.back().indent) {
             auto target_itr =
                 std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
-                    return indent == c.indent;
+                    if (indent != c.indent) {
+                        return false;
+                    }
+
+                    switch (c.state) {
+                    case context_state_t::BLOCK_MAPPING:
+                    case context_state_t::MAPPING_VALUE:
+                        return true;
+                    default:
+                        return false;
+                    }
                 });
             bool is_indent_valid = (target_itr != m_context_stack.rend());
             if (!is_indent_valid) {
