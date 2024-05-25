@@ -1016,6 +1016,83 @@ TEST_CASE("Deserializer_BlockMappingAsBlockSequenceEntry") {
         REQUIRE(stuff_1_name_node.is_string());
         REQUIRE(stuff_1_name_node.get_value_ref<std::string&>() == "Bar");
     }
+
+    SECTION("block mapping entry with child block sequence of block mapping entries") {
+        std::string input = "contexts:\n"
+                            "- context:\n"
+                            "    cluster: abcdef\n"
+                            "    extension:\n"
+                            "    - extension:\n"
+                            "        last-update: blah\n"
+                            "        version: 0.1.0\n"
+                            "      name: blah\n"
+                            "    bug: default\n"
+                            "  ctx: ctx";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("contexts"));
+
+        fkyaml::node& contexts_node = root["contexts"];
+        REQUIRE(contexts_node.is_sequence());
+        REQUIRE(contexts_node.size() == 1);
+
+        fkyaml::node& contexts_0_node = contexts_node[0];
+        REQUIRE(contexts_0_node.is_mapping());
+        REQUIRE(contexts_0_node.size() == 2);
+        REQUIRE(contexts_0_node.contains("context"));
+        REQUIRE(contexts_0_node.contains("ctx"));
+
+        fkyaml::node& contexts_0_context_node = contexts_0_node["context"];
+        REQUIRE(contexts_0_context_node.is_mapping());
+        REQUIRE(contexts_0_context_node.size() == 3);
+        REQUIRE(contexts_0_context_node.contains("cluster"));
+        REQUIRE(contexts_0_context_node.contains("extension"));
+        REQUIRE(contexts_0_context_node.contains("bug"));
+
+        fkyaml::node& contexts_0_context_cluster_node = contexts_0_context_node["cluster"];
+        REQUIRE(contexts_0_context_cluster_node.is_string());
+        REQUIRE(contexts_0_context_cluster_node.get_value_ref<std::string&>() == "abcdef");
+
+        fkyaml::node& contexts_0_context_extension_node = contexts_0_context_node["extension"];
+        REQUIRE(contexts_0_context_extension_node.is_sequence());
+        REQUIRE(contexts_0_context_extension_node.size() == 1);
+
+        fkyaml::node& contexts_0_context_extension_0_node = contexts_0_context_extension_node[0];
+        REQUIRE(contexts_0_context_extension_0_node.is_mapping());
+        REQUIRE(contexts_0_context_extension_0_node.size() == 2);
+        REQUIRE(contexts_0_context_extension_0_node.contains("extension"));
+        REQUIRE(contexts_0_context_extension_0_node.contains("name"));
+
+        fkyaml::node& contexts_0_context_extension_0_extension_node = contexts_0_context_extension_0_node["extension"];
+        REQUIRE(contexts_0_context_extension_0_extension_node.is_mapping());
+        REQUIRE(contexts_0_context_extension_0_extension_node.size() == 2);
+        REQUIRE(contexts_0_context_extension_0_extension_node.contains("last-update"));
+        REQUIRE(contexts_0_context_extension_0_extension_node.contains("version"));
+
+        fkyaml::node& contexts_0_context_extension_0_extension_lastupdate_node =
+            contexts_0_context_extension_0_extension_node["last-update"];
+        REQUIRE(contexts_0_context_extension_0_extension_lastupdate_node.is_string());
+        REQUIRE(contexts_0_context_extension_0_extension_lastupdate_node.get_value_ref<std::string&>() == "blah");
+
+        fkyaml::node& contexts_0_context_extension_0_extension_version_node =
+            contexts_0_context_extension_0_extension_node["version"];
+        REQUIRE(contexts_0_context_extension_0_extension_version_node.is_string());
+        REQUIRE(contexts_0_context_extension_0_extension_version_node.get_value_ref<std::string&>() == "0.1.0");
+
+        fkyaml::node& contexts_0_context_extension_0_name_node = contexts_0_context_extension_0_node["name"];
+        REQUIRE(contexts_0_context_extension_0_name_node.is_string());
+        REQUIRE(contexts_0_context_extension_0_name_node.get_value_ref<std::string&>() == "blah");
+
+        fkyaml::node& contexts_0_context_bug_node = contexts_0_context_node["bug"];
+        REQUIRE(contexts_0_context_bug_node.is_string());
+        REQUIRE(contexts_0_context_bug_node.get_value_ref<std::string&>() == "default");
+
+        fkyaml::node& contexts_0_ctx_node = contexts_0_node["ctx"];
+        REQUIRE(contexts_0_ctx_node.is_string());
+        REQUIRE(contexts_0_ctx_node.get_value_ref<std::string&>() == "ctx");
+    }
 }
 
 TEST_CASE("Deserializer_ExplicitBlockMapping") {
