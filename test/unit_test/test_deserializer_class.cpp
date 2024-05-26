@@ -1318,7 +1318,8 @@ TEST_CASE("Deserializer_FlowSequence") {
     }
 
     SECTION("lack the beginning of a flow sequence") {
-        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: {]}")), fkyaml::parse_error);
+        auto input = GENERATE(std::string("test: {]}"), std::string("test: {foo: bar]}"));
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 
     SECTION("root flow sequence") {
@@ -1435,6 +1436,11 @@ TEST_CASE("Deserializer_FlowSequence") {
             std::string("[123, {foo: true  bar: 3.14}]"));
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SECTION("too many value separators") {
+        std::string input = "[123,,true]";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_FlowMapping") {
@@ -1495,7 +1501,8 @@ TEST_CASE("Deserializer_FlowMapping") {
     }
 
     SECTION("lack the beginning of a flow mapping") {
-        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter("test: [}]")), fkyaml::parse_error);
+        auto input = GENERATE(std::string("test: [}]"), std::string("test: [true}]"));
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 
     SECTION("flow mapping with child flow sequence") {
@@ -1725,6 +1732,11 @@ TEST_CASE("Deserializer_FlowMapping") {
             std::string("{foo: 123, child: {bar: true  baz: 3.14}}"),
             std::string("{foo: 123  child: [bar: true, baz: 3.14]}"),
             std::string("{foo: 123, child: [bar: true  baz: 3.14]}"));
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("too many value separators") {
+        std::string input = "{foo: 123,,bar: true}";
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 }

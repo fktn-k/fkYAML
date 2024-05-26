@@ -4570,9 +4570,7 @@ private:
                         }
                     }
 
-                    bool do_continue = true;
-                    switch (type) {
-                    case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
+                    if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                         // a key separator preceeding block sequence entries
                         *mp_current_node = node_type::sequence();
                         apply_directive_set(*mp_current_node);
@@ -4581,32 +4579,12 @@ private:
                         cur_context.line = line;
                         cur_context.indent = indent;
                         cur_context.state = context_state_t::BLOCK_SEQUENCE;
-                        do_continue = false;
                         break;
-                    }
-                    case lexical_token_t::EXPLICIT_KEY_PREFIX:
-                        // a key separator for a explicit block mapping key.
-                        // defer the handling of the explicit key prefix token until the next loop.
-                        break;
-                    // defer checking the existence of a key separator after the scalar until a deserialize_scalar()
-                    // call.
-                    case lexical_token_t::NULL_VALUE:
-                    case lexical_token_t::BOOLEAN_VALUE:
-                    case lexical_token_t::INTEGER_VALUE:
-                    case lexical_token_t::FLOAT_NUMBER_VALUE:
-                    case lexical_token_t::STRING_VALUE:
-                    // defer handling these tokens until the next loop.
-                    case lexical_token_t::MAPPING_FLOW_BEGIN:
-                    case lexical_token_t::SEQUENCE_FLOW_BEGIN:
-                        break;
-                    default:   // LCOV_EXCL_LINE
-                        break; // LCOV_EXCL_LINE
                     }
 
-                    if (do_continue) {
-                        continue;
-                    }
-                    break;
+                    // defer checking the existence of a key separator after the following scalar until the next
+                    // deserialize_scalar() call.
+                    continue;
                 }
 
                 // handle explicit mapping key separators.
