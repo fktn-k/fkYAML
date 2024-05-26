@@ -839,6 +839,132 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(qux_2_node.is_string());
         REQUIRE(qux_2_node.get_value_ref<std::string&>() == "b");
     }
+
+    SECTION("mapping with flow mapping keys") {
+        std::string input = "{foo: bar}:\n"
+                            "  true:\n"
+                            "  - false\n"
+                            "  {123: 456}:\n"
+                            "    {qux: 789}: true\n"
+                            "  {baz: null}: 123\n"
+                            "{true: 123}: \n"
+                            "  3.14";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        fkyaml::node foobar_mapkey = {{"foo", "bar"}};
+        REQUIRE(root.contains(foobar_mapkey));
+        fkyaml::node true123_mapkey = {{true, 123}};
+        REQUIRE(root.contains(true123_mapkey));
+
+        fkyaml::node& root_foobar_mapkey_node = root[std::move(foobar_mapkey)];
+        REQUIRE(root_foobar_mapkey_node.is_mapping());
+        REQUIRE(root_foobar_mapkey_node.size() == 3);
+        REQUIRE(root_foobar_mapkey_node.contains(true));
+        fkyaml::node _123_456_mapkey = {{123, 456}};
+        REQUIRE(root_foobar_mapkey_node.contains(_123_456_mapkey));
+        fkyaml::node baznull_mapkey = {{"baz", nullptr}};
+        REQUIRE(root_foobar_mapkey_node.contains(baznull_mapkey));
+
+        fkyaml::node& root_foobar_mapkey_true_node = root_foobar_mapkey_node[true];
+        REQUIRE(root_foobar_mapkey_true_node.is_sequence());
+        REQUIRE(root_foobar_mapkey_true_node.size() == 1);
+
+        fkyaml::node& root_foobar_mapkey_true_0_node = root_foobar_mapkey_true_node[0];
+        REQUIRE(root_foobar_mapkey_true_0_node.is_boolean());
+        REQUIRE(root_foobar_mapkey_true_0_node.get_value<bool>() == false);
+
+        fkyaml::node& root_foobar_mapkey_123_456_mapkey_node = root_foobar_mapkey_node[std::move(_123_456_mapkey)];
+        REQUIRE(root_foobar_mapkey_123_456_mapkey_node.is_mapping());
+        REQUIRE(root_foobar_mapkey_123_456_mapkey_node.size() == 1);
+        fkyaml::node qux789_mapkey = {{"qux", 789}};
+        REQUIRE(root_foobar_mapkey_123_456_mapkey_node.contains(qux789_mapkey));
+
+        fkyaml::node& root_foobar_mapkey_123_456_mapkey_qux789_mapkey_node =
+            root_foobar_mapkey_123_456_mapkey_node[std::move(qux789_mapkey)];
+        REQUIRE(root_foobar_mapkey_123_456_mapkey_qux789_mapkey_node.is_boolean());
+        REQUIRE(root_foobar_mapkey_123_456_mapkey_qux789_mapkey_node.get_value<bool>() == true);
+
+        fkyaml::node& root_foobar_mapkey_baznull_mapkey_node = root_foobar_mapkey_node[std::move(baznull_mapkey)];
+        REQUIRE(root_foobar_mapkey_baznull_mapkey_node.is_integer());
+        REQUIRE(root_foobar_mapkey_baznull_mapkey_node.get_value<int>() == 123);
+
+        fkyaml::node& root_true123_mapkey_node = root[std::move(true123_mapkey)];
+        REQUIRE(root_true123_mapkey_node.is_float_number());
+        REQUIRE(root_true123_mapkey_node.get_value<double>() == 3.14);
+    }
+
+    SECTION("invalid indentation of a flow mapping key") {
+        std::string input = "{foo: bar}:\n"
+                            "  {123: 456}:\n"
+                            "    {qux: 789}: true\n"
+                            "   {baz: null}: 123";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("mapping with flow sequence keys") {
+        std::string input = "[foo,bar]:\n"
+                            "  true:\n"
+                            "  - false\n"
+                            "  [123]:\n"
+                            "    [qux]: true\n"
+                            "  [baz,null]: 123\n"
+                            "[true,123]: \n"
+                            "  3.14";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        fkyaml::node foobar_seqkey = {"foo", "bar"};
+        REQUIRE(root.contains(foobar_seqkey));
+        fkyaml::node true123_seqkey = {true, 123};
+        REQUIRE(root.contains(true123_seqkey));
+
+        fkyaml::node& root_foobar_seqkey_node = root[std::move(foobar_seqkey)];
+        REQUIRE(root_foobar_seqkey_node.is_mapping());
+        REQUIRE(root_foobar_seqkey_node.size() == 3);
+        REQUIRE(root_foobar_seqkey_node.contains(true));
+        fkyaml::node baznull_seqkey = {"baz", nullptr};
+        REQUIRE(root_foobar_seqkey_node.contains(baznull_seqkey));
+        fkyaml::node _123_seqkey = {123};
+        REQUIRE(root_foobar_seqkey_node.contains(_123_seqkey));
+
+        fkyaml::node& root_foobar_seqkey_true_node = root_foobar_seqkey_node[true];
+        REQUIRE(root_foobar_seqkey_true_node.is_sequence());
+        REQUIRE(root_foobar_seqkey_true_node.size() == 1);
+
+        fkyaml::node& root_foobar_seqkey_true_0_node = root_foobar_seqkey_true_node[0];
+        REQUIRE(root_foobar_seqkey_true_0_node.is_boolean());
+        REQUIRE(root_foobar_seqkey_true_0_node.get_value<bool>() == false);
+
+        fkyaml::node& root_foobar_seqkey_123_seqkey_node = root_foobar_seqkey_node[std::move(_123_seqkey)];
+        REQUIRE(root_foobar_seqkey_123_seqkey_node.is_mapping());
+        REQUIRE(root_foobar_seqkey_123_seqkey_node.size() == 1);
+        fkyaml::node qux_seqkey = {"qux"};
+        REQUIRE(root_foobar_seqkey_123_seqkey_node.contains(qux_seqkey));
+
+        fkyaml::node& root_foobar_seqkey_123_seqkey_qux_seqkey_node =
+            root_foobar_seqkey_123_seqkey_node[std::move(qux_seqkey)];
+        REQUIRE(root_foobar_seqkey_123_seqkey_qux_seqkey_node.is_boolean());
+        REQUIRE(root_foobar_seqkey_123_seqkey_qux_seqkey_node.get_value<bool>() == true);
+
+        fkyaml::node& root_foobar_seqkey_baznull_seqkey_node = root_foobar_seqkey_node[std::move(baznull_seqkey)];
+        REQUIRE(root_foobar_seqkey_baznull_seqkey_node.is_integer());
+        REQUIRE(root_foobar_seqkey_baznull_seqkey_node.get_value<int>() == 123);
+
+        fkyaml::node& root_true123_seqkey_node = root[std::move(true123_seqkey)];
+        REQUIRE(root_true123_seqkey_node.is_float_number());
+        REQUIRE(root_true123_seqkey_node.get_value<double>() == 3.14);
+    }
+
+    SECTION("invalid indentation of a flow sequence key") {
+        std::string input = "[foo,bar]:\n"
+                            "  [123]:\n"
+                            "    [qux]: true\n"
+                            "   [baz,null]: 123";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMappingAsBlockSequenceEntry") {
@@ -1508,6 +1634,71 @@ TEST_CASE("Deserializer_FlowMapping") {
         fkyaml::node& root_b_b_node = root_b_node["b"];
         REQUIRE(root_b_b_node.is_string());
         REQUIRE(root_b_b_node.get_value_ref<std::string&>() == "bar");
+    }
+
+    SECTION("flow mapping key of a flow mapping (compact)") {
+        std::string input = "{{\"foo\": true}: \"bar\"}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        fkyaml::node mapkey = {{"foo", true}};
+        REQUIRE(root.contains(mapkey));
+
+        fkyaml::node& root_mapkey_node = root[std::move(mapkey)];
+        REQUIRE(root_mapkey_node.is_string());
+        REQUIRE(root_mapkey_node.get_value_ref<std::string&>() == "bar");
+    }
+
+    SECTION("flow mapping key of a flow mapping (not compact)") {
+        std::string input = "{\n"
+                            "  {\n"
+                            "    \"foo\": true\n"
+                            "  }: \"bar\"\n"
+                            "}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        fkyaml::node mapkey = {{"foo", true}};
+        REQUIRE(root.contains(mapkey));
+
+        fkyaml::node& root_mapkey_node = root[std::move(mapkey)];
+        REQUIRE(root_mapkey_node.is_string());
+        REQUIRE(root_mapkey_node.get_value_ref<std::string&>() == "bar");
+    }
+
+    SECTION("flow sequence key of a flow mapping (compact)") {
+        std::string input = "{[\"foo\",true]: \"bar\"}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        fkyaml::node seqkey = {"foo", true};
+        REQUIRE(root.contains(seqkey));
+
+        fkyaml::node& root_seqkey_node = root[std::move(seqkey)];
+        REQUIRE(root_seqkey_node.is_string());
+        REQUIRE(root_seqkey_node.get_value_ref<std::string&>() == "bar");
+    }
+
+    SECTION("flow sequence key of a flow mapping (not compact)") {
+        std::string input = "{\n"
+                            "  [\n"
+                            "    \"foo\",\n"
+                            "    true\n"
+                            "  ]: \"bar\"\n"
+                            "}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        fkyaml::node seqkey = {"foo", true};
+        REQUIRE(root.contains(seqkey));
+
+        fkyaml::node& root_seqkey_node = root[std::move(seqkey)];
+        REQUIRE(root_seqkey_node.is_string());
+        REQUIRE(root_seqkey_node.get_value_ref<std::string&>() == "bar");
     }
 }
 
