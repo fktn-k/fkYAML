@@ -4539,6 +4539,10 @@ private:
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
 
+                if (m_flow_context_depth > 0) {
+                    continue;
+                }
+
                 bool is_implicit_same_line =
                     (line == old_line) && (m_context_stack.empty() || old_indent > m_context_stack.back().indent);
                 if (is_implicit_same_line) {
@@ -4674,10 +4678,22 @@ private:
                     if (indent == 0) {
                         pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
                     }
-                    else if (indent < m_context_stack.back().indent) {
-                        auto target_itr = std::find_if(
-                            m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
-                                return indent == c.indent;
+                    else if (indent <= m_context_stack.back().indent) {
+                        auto target_itr = std::find_if( // LCOV_EXCL_LINE
+                            m_context_stack.rbegin(),
+                            m_context_stack.rend(),
+                            [indent](const parse_context& c) {
+                                if (indent != c.indent) {
+                                    return false;
+                                }
+
+                                switch (c.state) {
+                                case context_state_t::BLOCK_MAPPING:
+                                case context_state_t::MAPPING_VALUE:
+                                    return true;
+                                default:
+                                    return false;
+                                }
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if (!is_indent_valid) {
@@ -4746,12 +4762,6 @@ private:
                     throw parse_error("invalid flow sequence ending is found.", line, indent);
                 }
 
-                // move back to the context before the flow sequence.
-                uint32_t pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
-                for (uint32_t i = 0; i < pop_num; i++) {
-                    m_context_stack.pop_back();
-                }
-
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
@@ -4792,10 +4802,22 @@ private:
                     if (indent == 0) {
                         pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
                     }
-                    else if (indent < m_context_stack.back().indent) {
-                        auto target_itr = std::find_if(
-                            m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
-                                return indent == c.indent;
+                    else if (indent <= m_context_stack.back().indent) {
+                        auto target_itr = std::find_if( // LCOV_EXCL_LINE
+                            m_context_stack.rbegin(),
+                            m_context_stack.rend(),
+                            [indent](const parse_context& c) {
+                                if (indent != c.indent) {
+                                    return false;
+                                }
+
+                                switch (c.state) {
+                                case context_state_t::BLOCK_MAPPING:
+                                case context_state_t::MAPPING_VALUE:
+                                    return true;
+                                default:
+                                    return false;
+                                }
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if (!is_indent_valid) {
@@ -4862,12 +4884,6 @@ private:
                 bool is_valid = itr != m_context_stack.rend();
                 if (!is_valid) {
                     throw parse_error("invalid flow mapping ending is found.", line, indent);
-                }
-
-                // move back to the context before the flow sequence.
-                uint32_t pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
-                for (uint32_t i = 0; i < pop_num; i++) {
-                    m_context_stack.pop_back();
                 }
 
                 // keep the last state for later processing.
@@ -5050,7 +5066,9 @@ private:
         }
 
         mp_current_node = &(itr.first->second);
-        m_context_stack.emplace_back(line, indent, context_state_t::MAPPING_VALUE, mp_current_node);
+        parse_context& key_context = m_context_stack.back();
+        m_context_stack.emplace_back(
+            key_context.line, key_context.indent, context_state_t::MAPPING_VALUE, mp_current_node);
     }
 
     /// @brief Assign node value to the current node.
