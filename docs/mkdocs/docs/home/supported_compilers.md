@@ -37,13 +37,15 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 | Clang 15.0.7               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | Clang 16.0.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | Clang 17.0.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 18.1.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | GCC 7.5.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | GCC 8.5.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | GCC 9.5.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | GCC 10.5.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | GCC 11.4.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | GCC 12.3.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 13.2.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 13.3.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 14.1.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | MinGW-64 8.1.0             | [Windows Server 2019](https://github.com/actions/runner-images/blob/main/images/windows/Windows2019-Readme.md) |
 | MinGW-64 12.2.0            | [Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md) |
 | Visual Studio 16 2019      | [Windows Server 2019](https://github.com/actions/runner-images/blob/main/images/windows/Windows2019-Readme.md) |
