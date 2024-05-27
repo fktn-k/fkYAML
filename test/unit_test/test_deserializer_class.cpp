@@ -1441,6 +1441,19 @@ TEST_CASE("Deserializer_FlowSequence") {
         std::string input = "[123,,true]";
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SECTION("empty flow sequence") {
+        std::string input = "foo: []";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_sequence());
+        REQUIRE(foo_node.empty());
+    }
 }
 
 TEST_CASE("Deserializer_FlowMapping") {
@@ -1738,6 +1751,19 @@ TEST_CASE("Deserializer_FlowMapping") {
     SECTION("too many value separators") {
         std::string input = "{foo: 123,,bar: true}";
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("empty flow mapping") {
+        std::string input = "foo: {}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.empty());
     }
 }
 

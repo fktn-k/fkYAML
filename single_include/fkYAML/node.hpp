@@ -4714,7 +4714,15 @@ private:
 
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
-                break;
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::SEQUENCE_FLOW_END) {
+                    // enable the flag for the next loop for the empty flow sequence.
+                    m_needs_value_separator_or_suffix = true;
+                }
+                line = lexer.get_lines_processed();
+                indent = lexer.get_last_token_begin_pos();
+                continue;
             case lexical_token_t::SEQUENCE_FLOW_END: {
                 if (!m_needs_value_separator_or_suffix) {
                     throw parse_error("invalid flow sequence ending is found.", line, indent);
@@ -4848,7 +4856,15 @@ private:
 
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
-                break;
+
+                type = lexer.get_next_token();
+                if (type == lexical_token_t::MAPPING_FLOW_END) {
+                    // enable the flag for the next loop for the empty flow mapping.
+                    m_needs_value_separator_or_suffix = true;
+                }
+                line = lexer.get_lines_processed();
+                indent = lexer.get_last_token_begin_pos();
+                continue;
             case lexical_token_t::MAPPING_FLOW_END: {
                 if (!m_needs_value_separator_or_suffix) {
                     throw parse_error("invalid flow mapping ending is found.", line, indent);
