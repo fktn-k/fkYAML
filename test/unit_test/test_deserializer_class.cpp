@@ -1290,6 +1290,74 @@ TEST_CASE("Deserializer_ExplicitBlockMapping") {
         REQUIRE(key2_1_node.is_string());
         REQUIRE(key2_1_node.get_value_ref<std::string&>() == "qux");
     }
+
+    SECTION("Explicit block mapping as block sequence entry") {
+        std::string input = "- ? foo: 123\n"
+                            "  : true: 3.14\n"
+                            "- ? - bar\n"
+                            "  : - null\n"
+                            "- ? - ? baz: false\n"
+                            "      : 456\n"
+                            "  : - ? qux: 789\n"
+                            "      : 1.41";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 3);
+
+        fkyaml::node& root_0_node = root[0];
+        REQUIRE(root_0_node.is_mapping());
+        REQUIRE(root_0_node.size() == 1);
+        fkyaml::node foo123_mapkey = {{"foo", 123}};
+        REQUIRE(root_0_node.contains(foo123_mapkey));
+
+        fkyaml::node& root_0_foo123_mapkey_node = root_0_node[std::move(foo123_mapkey)];
+        REQUIRE(root_0_foo123_mapkey_node.is_mapping());
+        REQUIRE(root_0_foo123_mapkey_node.size() == 1);
+        REQUIRE(root_0_foo123_mapkey_node.contains(true));
+
+        fkyaml::node& root_0_foo123_mapkey_true_node = root_0_foo123_mapkey_node[true];
+        REQUIRE(root_0_foo123_mapkey_true_node.is_float_number());
+        REQUIRE(root_0_foo123_mapkey_true_node.get_value<double>() == 3.14);
+
+        fkyaml::node& root_1_node = root[1];
+        REQUIRE(root_1_node.is_mapping());
+        REQUIRE(root_1_node.size() == 1);
+        fkyaml::node bar_seqkey = {"bar"};
+        REQUIRE(root_1_node.contains(bar_seqkey));
+
+        fkyaml::node& root_1_bar_seqkey_node = root_1_node[std::move(bar_seqkey)];
+        REQUIRE(root_1_bar_seqkey_node.is_sequence());
+        REQUIRE(root_1_bar_seqkey_node.size() == 1);
+
+        fkyaml::node& root_1_bar_seqkey_0_node = root_1_bar_seqkey_node[0];
+        REQUIRE(root_1_bar_seqkey_0_node.is_null());
+        REQUIRE(root_1_bar_seqkey_0_node.get_value<std::nullptr_t>() == nullptr);
+
+        fkyaml::node& root_2_node = root[2];
+        REQUIRE(root_2_node.is_mapping());
+        REQUIRE(root_2_node.size() == 1);
+        fkyaml::node bazfalse_map = {{"baz", false}};
+        fkyaml::node bazfalse_456_map = {{std::move(bazfalse_map), 456}};
+        fkyaml::node bazfalse_456_seqmapkey = fkyaml::node::sequence();
+        bazfalse_456_seqmapkey.get_value_ref<fkyaml::node::sequence_type&>().emplace_back(std::move(bazfalse_456_map));
+        REQUIRE(root_2_node.contains(bazfalse_456_seqmapkey));
+
+        fkyaml::node& root_2_bazfalse_456_seqmapkey_node = root_2_node[std::move(bazfalse_456_seqmapkey)];
+        REQUIRE(root_2_bazfalse_456_seqmapkey_node.is_sequence());
+        REQUIRE(root_2_bazfalse_456_seqmapkey_node.size() == 1);
+
+        fkyaml::node& root_2_bazfalse_456_seqmapkey_0_node = root_2_bazfalse_456_seqmapkey_node[0];
+        REQUIRE(root_2_bazfalse_456_seqmapkey_0_node.is_mapping());
+        REQUIRE(root_2_bazfalse_456_seqmapkey_0_node.size() == 1);
+        fkyaml::node qux789_mapkey = {{"qux", 789}};
+        REQUIRE(root_2_bazfalse_456_seqmapkey_0_node.contains(qux789_mapkey));
+
+        fkyaml::node& root_2_bazfalse_456_seqmapkey_0_qux789_mapkey_node =
+            root_2_bazfalse_456_seqmapkey_0_node[std::move(qux789_mapkey)];
+        REQUIRE(root_2_bazfalse_456_seqmapkey_0_qux789_mapkey_node.is_float_number());
+        REQUIRE(root_2_bazfalse_456_seqmapkey_0_qux789_mapkey_node.get_value<double>() == 1.41);
+    }
 }
 
 TEST_CASE("Deserializer_FlowSequence") {
