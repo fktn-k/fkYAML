@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.8](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.8) (2024-06-01)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.7...v0.3.8)
+
+- Fix parse error on empty flow containers [\#351](https://github.com/fktn-k/fkYAML/pull/351) ([fktn-k](https://github.com/fktn-k))
+- Detect errors on missing flow value separators [\#350](https://github.com/fktn-k/fkYAML/pull/350) ([fktn-k](https://github.com/fktn-k))
+- Fix wrong parse result from mappings containing the non-first block sequence [\#348](https://github.com/fktn-k/fkYAML/pull/348) ([fktn-k](https://github.com/fktn-k))
+- Fix parse error on flow container keys [\#346](https://github.com/fktn-k/fkYAML/pull/346) ([fktn-k](https://github.com/fktn-k))
+- Fix parse error on flow containers containing child flow containers [\#345](https://github.com/fktn-k/fkYAML/pull/345) ([fktn-k](https://github.com/fktn-k))
+
+- added gcc14 & clang18 to the compiler version list for testing [\#349](https://github.com/fktn-k/fkYAML/pull/349) ([fktn-k](https://github.com/fktn-k))
+- support flow line folding for single/double quoted scalars [\#344](https://github.com/fktn-k/fkYAML/pull/344) ([fktn-k](https://github.com/fktn-k))
+- Normalize newline codes in the input buffer [\#343](https://github.com/fktn-k/fkYAML/pull/343) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.7](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.7) (2024-05-16)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.6...v0.3.7)
