@@ -14,7 +14,7 @@ EXAMPLE_SRCS = $(shell find docs/examples -type f -name '*.cpp' | sort)
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 7
+TARGET_PATCH_VERSION := 8
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
