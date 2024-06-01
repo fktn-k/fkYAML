@@ -1,5 +1,49 @@
 # Releases
 
+## **fkYAML version 0.3.8**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.8/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.8/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.8/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.8/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.8/node.hpp) (single header)
+
+### Summary
+
+This release contains the new support of multiline scalars in the deserialization feature.  
+As described in the PR [\#344](https://github.com/fktn-k/fkYAML/pull/344), the support is limited to single/double quoted styles and multiline scalar keys are being permitted as opposed to the YAML specification.  
+The above limitations will, of course, be resolved in future releases.  
+Furthermore, a number of bugs in the deserialization feature have been resolved as shown in the Bug Fixes section down below.  
+Last but not least, gcc14 and clang18 have been added to the supported compilers list and are now used in the GitHub Actions workflows for testing.
+
+### What's Changed
+
+#### :sparkles: New Features
+
+- support flow line folding for single/double quoted scalars by [fktn-k](https://github.com/fktn-k) in [\#344](https://github.com/fktn-k/fkYAML/pull/344)
+
+#### :zap: Improvements
+
+- Normalize newline codes in the input buffer by [fktn-k](https://github.com/fktn-k) in [\#343](https://github.com/fktn-k/fkYAML/pull/343)
+
+#### :bug: Bug Fixes
+
+- Fix parse error on flow containers containing child flow containers by [fktn-k](https://github.com/fktn-k) in [\#345](https://github.com/fktn-k/fkYAML/pull/345)
+- Fix parse error on flow container keys by [fktn-k](https://github.com/fktn-k) in [\#346](https://github.com/fktn-k/fkYAML/pull/346)
+- Fix wrong parse result from mappings containing the non-first block sequence by [fktn-k](https://github.com/fktn-k) in [\#348](https://github.com/fktn-k/fkYAML/pull/348)
+- Detect errors on missing flow value separators by [fktn-k](https://github.com/fktn-k) in [\#350](https://github.com/fktn-k/fkYAML/pull/350)
+- Fix parse error on empty flow containers by [fktn-k](https://github.com/fktn-k) in [\#351](https://github.com/fktn-k/fkYAML/pull/351)
+
+#### :robot: CI
+
+- added gcc14 & clang18 to the compiler version list for testing by [fktn-k](https://github.com/fktn-k) in [\#349](https://github.com/fktn-k/fkYAML/pull/349)
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.7...v0.3.8
+
+---
+
 ## **fkYAML version 0.3.7**
 
 !!! abstract "Release Packages"

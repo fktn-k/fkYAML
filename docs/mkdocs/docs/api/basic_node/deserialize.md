@@ -22,6 +22,12 @@ Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization pro
     Furthermore, a byte order mark (BOM) can be put only at the beginning of an input sequence.  
     The deserialization process internally converts input characters into the UTF-8 encoded ones if they are encoded in the UTF-16 or UTF-32 format.  
 
+!!! note "Supported newline codes"
+
+    fkYAML supports LF (Unix style) and CR+LF (Windows style) as line break formats.  
+    Inside the deserialization processes, however, fkYAML normalizes them into line feeds (LF, `0x0A`) just as described in the YAML specification (see the ["5.4. Line Break Characters"](https://yaml.org/spec/1.2.2/#54-line-break-characters) section).  
+    Currently, there is no way to restore the original line break style in the serialization processes.  
+
 ## Overload (1)
 
 ```cpp

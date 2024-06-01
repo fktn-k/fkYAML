@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.7
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.8
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -105,7 +105,6 @@ public:
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 break;
             case ',':
@@ -162,12 +161,6 @@ public:
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
                 return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
-            case '\r':
-                next = *(m_cur_itr + 2);
-                // Move a cursor to the beginning of the next token.
-                m_cur_itr += 2 + (next == '\n' ? 1 : 0);
-                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
-                break;
             default:
                 break;
             }
@@ -337,7 +330,6 @@ private:
             case '\t':
                 ends_loop = true;
                 break;
-            case '\r':
             case '\n':
                 skip_until_line_end();
                 return lexical_token_t::INVALID_DIRECTIVE;
@@ -464,7 +456,6 @@ private:
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 ends_loop = true;
                 break;
@@ -493,7 +484,6 @@ private:
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 ends_loop = true;
                 break;
@@ -526,7 +516,6 @@ private:
             // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
             case '{':
             case '}':
@@ -564,7 +553,6 @@ private:
 
         switch (*m_cur_itr) {
         case ' ':
-        case '\r':
         case '\n':
             // Just "!" is a non-specific tag.
             m_value_buffer = "!";
@@ -594,7 +582,6 @@ private:
             // Tag names must not contain spaces or newline codes.
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 ends_loop = true;
                 break;
@@ -686,10 +673,47 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\r':
-        case '\n':
-            // TODO: Support multi-line string scalars.
-            emit_error("multi-line string scalars are unsupported.");
+        case '\n': {
+            // discard trailing white spaces which preceeds the line break in the current line.
+            auto before_trailing_spaces_itr = m_cur_itr - 1;
+            bool ends_loop = false;
+            while (before_trailing_spaces_itr != m_token_begin_itr) {
+                switch (*before_trailing_spaces_itr) {
+                case ' ':
+                case '\t':
+                    --before_trailing_spaces_itr;
+                    break;
+                default:
+                    ends_loop = true;
+                    break;
+                }
+
+                if (ends_loop) {
+                    break;
+                }
+            }
+            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
+
+            // move to the beginning of the next line.
+            ++m_cur_itr;
+
+            // apply line folding according to the number of following empty lines.
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
+            skip_white_spaces_and_newline_codes();
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
+            if (trailing_empty_lines > 0) {
+                m_value_buffer.append(trailing_empty_lines, '\n');
+            }
+            else {
+                m_value_buffer.push_back(' ');
+            }
+
+            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\'') ? m_cur_itr-- : m_cur_itr;
+            ret = true;
+            break;
+        }
 
         case '\'':
             // If single quotation marks are repeated twice in a single-quoted string token,
@@ -721,10 +745,47 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\r':
-        case '\n':
-            // TODO: Support multi-line string scalars.
-            emit_error("multi-line string scalars are unsupported.");
+        case '\n': {
+            // discard trailing white spaces which preceeds the line break in the current line.
+            auto before_trailing_spaces_itr = m_cur_itr - 1;
+            bool ends_loop = false;
+            while (before_trailing_spaces_itr != m_token_begin_itr) {
+                switch (*before_trailing_spaces_itr) {
+                case ' ':
+                case '\t':
+                    --before_trailing_spaces_itr;
+                    break;
+                default:
+                    ends_loop = true;
+                    break;
+                }
+
+                if (ends_loop) {
+                    break;
+                }
+            }
+            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
+
+            // move to the beginning of the next line.
+            ++m_cur_itr;
+
+            // apply line folding according to the number of following empty lines.
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
+            skip_white_spaces_and_newline_codes();
+            m_pos_tracker.update_position(m_cur_itr);
+            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
+            if (trailing_empty_lines > 0) {
+                m_value_buffer.append(trailing_empty_lines, '\n');
+            }
+            else {
+                m_value_buffer.push_back(' ');
+            }
+
+            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
+            ret = true;
+            break;
+        }
 
         case '\"':
             m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
@@ -736,12 +797,23 @@ private:
             // Handle escaped characters.
             // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
 
-            bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
-            if (!is_valid_escaping) {
-                emit_error("Unsupported escape sequence is found in a string token.");
+            c = *(m_cur_itr + 1);
+            if (c != '\n') {
+                bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
+                if (!is_valid_escaping) {
+                    emit_error("Unsupported escape sequence is found in a string token.");
+                }
+
+                m_token_begin_itr = m_cur_itr + 1;
+                ret = true;
+                break;
             }
 
-            m_token_begin_itr = m_cur_itr + 1;
+            // move until the next non-space character is found.
+            m_cur_itr += 2;
+            skip_white_spaces();
+
+            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
             ret = true;
             break;
         }
@@ -756,7 +828,6 @@ private:
         bool ret = false;
 
         switch (c) {
-        case '\r':
         case '\n':
             m_value_buffer.append(m_token_begin_itr, m_cur_itr);
             break;
@@ -801,7 +872,6 @@ private:
 
             switch (next) {
             case ' ':
-            case '\r':
             case '\n':
             case '#':
             case '\\':
@@ -823,7 +893,6 @@ private:
             switch (next) {
             case ' ':
             case '\t':
-            case '\r':
             case '\n':
                 m_value_buffer.append(m_token_begin_itr, m_cur_itr);
                 break;
@@ -860,7 +929,7 @@ private:
         // * double quoted
         // * plain
 
-        std::string check_filters {"\r\n"};
+        std::string check_filters {"\n"};
         bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
 
         if (needs_last_single_quote) {
@@ -897,9 +966,7 @@ private:
 
                 // Handle unescaped control characters.
                 if (byte <= 0x1F) {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
                     handle_unescaped_control_char(current);
-                    m_token_begin_itr = m_cur_itr + 1;
                     continue;
                 }
 
@@ -942,9 +1009,6 @@ private:
                 continue;
             }
 
-            if (current == '\r') {
-                current = *++m_cur_itr;
-            }
             if (current == '\n') {
                 m_value_buffer.push_back('\n');
                 continue;
@@ -986,11 +1050,6 @@ private:
         for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
             current = *m_cur_itr;
 
-            if (current == '\r') {
-                // Ignore CR assuming the next character is LF.
-                continue;
-            }
-
             if (current == '\n') {
                 if (style == block_style_indicator_t::LITERAL) {
                     m_value_buffer.push_back(current);
@@ -1026,9 +1085,6 @@ private:
                             continue;
                         }
 
-                        if (current == '\r') {
-                            current = *++m_cur_itr;
-                        }
                         if (current == '\n') {
                             is_next_empty = true;
                             break;
@@ -1049,13 +1105,6 @@ private:
                     }
 
                     switch (char next = *(m_cur_itr + 1)) {
-                    case '\r': {
-                        ++m_cur_itr;
-                        next = *++m_cur_itr;
-                        FK_YAML_ASSERT(next == '\n');
-                        m_value_buffer.push_back(next);
-                        break;
-                    }
                     case '\n':
                         ++m_cur_itr;
                         m_value_buffer.push_back(next);
@@ -1156,7 +1205,7 @@ private:
         case 0x08:
             emit_error("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
         case 0x09: // HT
-            m_value_buffer.push_back(c);
+            // horizontal tabs (\t) are safe to use without escaping.
             break;
         // 0x0A(LF) has already been handled above.
         case 0x0B:
@@ -1246,7 +1295,6 @@ private:
                 switch (c) {
                 case ' ':
                 case '\t':
-                case '\r':
                 case '\n':
                     return true;
                 default:
@@ -1260,14 +1308,6 @@ private:
     void skip_until_line_end() {
         while (m_cur_itr != m_end_itr) {
             switch (*m_cur_itr) {
-            case '\r':
-                if (++m_cur_itr == m_end_itr) {
-                    return;
-                }
-                if (*m_cur_itr == '\n') {
-                    ++m_cur_itr;
-                }
-                return;
             case '\n':
                 ++m_cur_itr;
                 return;
