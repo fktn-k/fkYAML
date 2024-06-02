@@ -2771,16 +2771,11 @@ public:
             default:
                 break;
             }
-            // if (next == ' ') {
-            //     // Move a cursor to the beginning of the next token.
-            //     m_cur_itr += 2;
-            //     return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
-            // }
 
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
-                m_cur_itr += 3;
-                if (std::equal(m_token_begin_itr, m_cur_itr, "---")) {
+                if (std::equal(m_token_begin_itr, m_cur_itr + 3, "---")) {
+                    m_cur_itr += 3;
                     return lexical_token_t::END_OF_DIRECTIVES;
                 }
             }
