@@ -68,12 +68,12 @@ void bm_yamlcpp_parse(benchmark::State& st) {
 #ifdef FK_YAML_BM_HAS_LIBFYAML
 // libfyaml
 void bm_libfyaml_parse(benchmark::State& st) {
-    fy_document* p_fyd = nullptr;
     const char* p_test_src = test_src.c_str();
     std::size_t test_src_size = std::distance(test_src.begin(), test_src.end());
 
     for (auto _ : st) {
-        p_fyd = fy_document_build_from_string(nullptr, p_test_src, test_src_size);
+        fy_document* p_fyd = fy_document_build_from_string(nullptr, p_test_src, test_src_size);
+        (void)p_fyd;
     }
 
     st.SetItemsProcessed(st.iterations());
