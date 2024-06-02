@@ -167,6 +167,20 @@ html-coverage: lcov-coverage
 		--title "fkYAML: A C++ header-only YAML library" \
 		--legend --demangle-cpp --show-details --branch-coverage
 
+#################
+#   Benchmark   #
+#################
+
+bm-debug:
+	cmake -B build_bm_debug -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RUN_BENCHMARK=ON
+	cmake --build build_bm_debug --config Debug
+	./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/macos.yml > ./tool/benchmark/result_debug.log
+
+bm-release:
+	cmake -B build_bm_release -S . -DCMAKE_BUILD_TYPE=Release -DFK_YAML_RUN_BENCHMARK=ON
+	cmake --build build_bm_release --config Release
+	./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/macos.yml > ./tool/benchmark/result_release.log
+
 ###################
 #   Maintenance   #
 ###################
@@ -174,6 +188,8 @@ html-coverage: lcov-coverage
 clean:
 	rm -rf \
 		build \
+		build_bm_debug \
+		build_bm_release \
 		build_clang_format \
 		build_clang_sanitizers \
 		build_clang_tidy \

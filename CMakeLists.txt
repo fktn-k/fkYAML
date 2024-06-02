@@ -127,6 +127,10 @@ if(FK_YAML_RUN_IWYU)
   add_subdirectory(tool/iwyu)
 endif()
 
+if(FK_YAML_RUN_BENCHMARK)
+  add_subdirectory(tool/benchmark)
+endif()
+
 #################################
 #   Install a pkg-config file   #
 #################################

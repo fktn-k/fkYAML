@@ -25,4 +25,8 @@ for /r %ROOT_PATH%\docs\examples %%f in (*.cpp) do (
     .\venv_clang_format\Scripts\clang-format.exe %%f -i
 )
 
+for /r %ROOT_PATH%\tool\benchmark %%f in (*.cpp) do (
+    .\venv_clang_format\Scripts\clang-format.exe %%f -i
+)
+
 cd %CALLER_DIR%
