@@ -1,0 +1,12 @@
+{
+  map0: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE},
+  map1: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE},
+  map2: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE},
+  map3: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE},
+  map4: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE},
+  map5: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE},
+  map6: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE},
+  map7: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE},
+  map8: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE},
+  map9: {null: true,0: 1.23,foo: Null,-4: false,.inf: 'bar',True: NULL,056: -.Inf,"baz": ~,False: .NAN,0x78: TRUE,9.0e-1: FALSE}
+}
