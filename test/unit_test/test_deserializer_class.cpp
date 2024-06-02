@@ -1634,16 +1634,21 @@ TEST_CASE("Deserializer_FlowMapping") {
     }
 
     SECTION("root flow mapping") {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("{foo: 123, true: 3.14}")));
+        REQUIRE_NOTHROW(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("{foo: 123,-4: null,true: 3.14}")));
 
         REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 2);
+        REQUIRE(root.size() == 3);
         REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains(-4));
         REQUIRE(root.contains(true));
 
         fkyaml::node& foo_node = root["foo"];
         REQUIRE(foo_node.is_integer());
         REQUIRE(foo_node.get_value<int>() == 123);
+
+        fkyaml::node& minus4_node = root[-4];
+        REQUIRE(minus4_node.is_null());
 
         fkyaml::node& true_node = root[true];
         REQUIRE(true_node.is_float_number());
