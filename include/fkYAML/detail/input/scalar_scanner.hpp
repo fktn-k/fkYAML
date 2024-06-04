@@ -30,6 +30,10 @@ inline bool is_digit(char c) {
     return ('0' <= c && c <= '9');
 }
 
+/// @brief Check if the given character is a hex-digit.
+/// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with MSVC.
+/// @param c A character to be checked.
+/// @return true if the given character is a hex-digit, false otherwise.
 inline bool is_xdigit(char c) {
     return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
 }
@@ -47,23 +51,40 @@ public:
             }
             break;
         case 4:
-            if (token == "null" || token == "Null" || token == "NULL") {
-                return lexical_token_t::NULL_VALUE;
-            }
-            if (token == "true" || token == "True" || token == "TRUE") {
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-            if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
-                token == ".NAN") {
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            switch (token[0]) {
+            case 'n':
+            case 'N':
+                if (token == "null" || token == "Null" || token == "NULL") {
+                    return lexical_token_t::NULL_VALUE;
+                }
+                break;
+            case 't':
+            case 'T':
+                if (token == "true" || token == "True" || token == "TRUE") {
+                    return lexical_token_t::BOOLEAN_VALUE;
+                }
+                break;
+            case '.':
+                if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
+                    token == ".NAN") {
+                    return lexical_token_t::FLOAT_NUMBER_VALUE;
+                }
+                break;
             }
             break;
         case 5:
-            if (token == "false" || token == "False" || token == "FALSE") {
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-            if (token == "-.inf" || token == "-.Inf" || token == "-.INF") {
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            switch (token[0]) {
+            case 'f':
+            case 'F':
+                if (token == "false" || token == "False" || token == "FALSE") {
+                    return lexical_token_t::BOOLEAN_VALUE;
+                }
+                break;
+            case '-':
+                if (token[1] == '.' && (token == "-.inf" || token == "-.Inf" || token == "-.INF")) {
+                    return lexical_token_t::FLOAT_NUMBER_VALUE;
+                }
+                break;
             }
             break;
         }
