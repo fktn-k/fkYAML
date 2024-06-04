@@ -1100,7 +1100,6 @@ private:
                         continue;
                     }
                     else {
-
                     }
 
                     switch (char next = *(m_cur_itr + 1)) {
