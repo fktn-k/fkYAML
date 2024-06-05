@@ -74,6 +74,7 @@ TEST_CASE("ScalarScanner_StringValue") {
         std::string("0th"),
         std::string("0123"),
         std::string("1.non-digit"),
+        std::string("-.foo"),
         std::string("1exe"),
         std::string("0oabc"),
         std::string("0xyz"));
