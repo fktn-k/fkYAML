@@ -59,8 +59,20 @@ add_executable(
 target_compile_options(
   benchmarker
   PRIVATE
-    $<$<CONFIG:Debug>:-O1>
-    $<$<CONFIG:Release>:-O2>
+    $<$<CXX_COMPILER_ID:MSVC>:
+      $<$<CONFIG:Debug>:/O1>
+      $<$<CONFIG:Release>:/O2>
+    >
+
+    $<$<CXX_COMPILER_ID:GNU>:
+      $<$<CONFIG:Debug>:-O1>
+      $<$<CONFIG:Release>:-O2>
+    >
+
+    $<$<CXX_COMPILER_ID:Clang>:
+      $<$<CONFIG:Debug>:-O1>
+      $<$<CONFIG:Release>:-O2>
+    >
 )
 
 target_link_libraries(
