@@ -2269,6 +2269,10 @@ inline bool is_digit(char c) {
     return ('0' <= c && c <= '9');
 }
 
+/// @brief Check if the given character is a hex-digit.
+/// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with MSVC.
+/// @param c A character to be checked.
+/// @return true if the given character is a hex-digit, false otherwise.
 inline bool is_xdigit(char c) {
     return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
 }
@@ -2286,23 +2290,40 @@ public:
             }
             break;
         case 4:
-            if (token == "null" || token == "Null" || token == "NULL") {
-                return lexical_token_t::NULL_VALUE;
-            }
-            if (token == "true" || token == "True" || token == "TRUE") {
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-            if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
-                token == ".NAN") {
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            switch (token[0]) {
+            case 'n':
+            case 'N':
+                if (token == "null" || token == "Null" || token == "NULL") {
+                    return lexical_token_t::NULL_VALUE;
+                }
+                break;
+            case 't':
+            case 'T':
+                if (token == "true" || token == "True" || token == "TRUE") {
+                    return lexical_token_t::BOOLEAN_VALUE;
+                }
+                break;
+            case '.':
+                if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
+                    token == ".NAN") {
+                    return lexical_token_t::FLOAT_NUMBER_VALUE;
+                }
+                break;
             }
             break;
         case 5:
-            if (token == "false" || token == "False" || token == "FALSE") {
-                return lexical_token_t::BOOLEAN_VALUE;
-            }
-            if (token == "-.inf" || token == "-.Inf" || token == "-.INF") {
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
+            switch (token[0]) {
+            case 'f':
+            case 'F':
+                if (token == "false" || token == "False" || token == "FALSE") {
+                    return lexical_token_t::BOOLEAN_VALUE;
+                }
+                break;
+            case '-':
+                if (token[1] == '.' && (token == "-.inf" || token == "-.Inf" || token == "-.INF")) {
+                    return lexical_token_t::FLOAT_NUMBER_VALUE;
+                }
+                break;
             }
             break;
         }
@@ -2557,34 +2578,22 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A position tracker of the target buffer.
 class position_tracker {
-private:
-    /// @brief A set of information on the current position in an input buffer.
-    struct position {
-        /// The current position from the beginning of an input buffer.
-        uint32_t cur_pos {0};
-        /// The current position in the current line.
-        uint32_t cur_pos_in_line {0};
-        /// The number of lines which have already been read.
-        uint32_t lines_read {0};
-    };
-
 public:
     void set_target_buffer(const std::string& buffer) {
         m_begin = m_last = buffer.begin();
         m_end = buffer.end();
-        m_position = position {};
     }
 
     /// @brief Update the set of the current position informations.
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(std::string::const_iterator cur_pos) {
-        m_position.cur_pos = static_cast<uint32_t>(std::distance(m_begin, cur_pos));
-        m_position.lines_read += static_cast<uint32_t>(std::count(m_last, cur_pos, '\n'));
+        m_cur_pos = static_cast<uint32_t>(std::distance(m_begin, cur_pos));
+        m_lines_read += static_cast<uint32_t>(std::count(m_last, cur_pos, '\n'));
         m_last = cur_pos;
 
-        if (m_position.lines_read == 0) {
-            m_position.cur_pos_in_line = m_position.cur_pos;
+        if (m_lines_read == 0) {
+            m_cur_pos_in_line = m_cur_pos;
             return;
         }
 
@@ -2595,23 +2604,23 @@ public:
             }
             count++;
         }
-        m_position.cur_pos_in_line = count;
+        m_cur_pos_in_line = count;
     }
 
     uint32_t get_cur_pos() const noexcept {
-        return m_position.cur_pos;
+        return m_cur_pos;
     }
 
     /// @brief Get the current position in the current line.
     /// @return uint32_t The current position in the current line.
     uint32_t get_cur_pos_in_line() const noexcept {
-        return m_position.cur_pos_in_line;
+        return m_cur_pos_in_line;
     }
 
     /// @brief Get the number of lines which have already been read.
     /// @return uint32_t The number of lines which have already been read.
     uint32_t get_lines_read() const noexcept {
-        return m_position.lines_read;
+        return m_lines_read;
     }
 
 private:
@@ -2621,8 +2630,12 @@ private:
     std::string::const_iterator m_end {};
     /// The iterator to the last updated element in the target buffer.
     std::string::const_iterator m_last {};
-    /// The current position in the target buffer.
-    position m_position {};
+    /// The current position from the beginning of an input buffer.
+    uint32_t m_cur_pos {0};
+    /// The current position in the current line.
+    uint32_t m_cur_pos_in_line {0};
+    /// The number of lines which have already been read.
+    uint32_t m_lines_read {0};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -3564,10 +3577,8 @@ private:
                     continue;
                 }
 
-                uint8_t byte = static_cast<uint8_t>(current);
-
                 // Handle unescaped control characters.
-                if (byte <= 0x1F) {
+                if (static_cast<uint8_t>(current) <= 0x1F) {
                     handle_unescaped_control_char(current);
                     continue;
                 }
@@ -3639,39 +3650,40 @@ private:
 
         uint32_t chars_in_line = 0;
         bool is_extra_indented = false;
+        m_token_begin_itr = m_cur_itr;
         if (cur_indent > indent) {
-            uint32_t diff = cur_indent - indent;
             if (style == block_style_indicator_t::FOLDED) {
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
             }
-            m_value_buffer.append(diff, ' ');
+
+            uint32_t diff = cur_indent - indent;
+            // m_value_buffer.append(diff, ' ');
+            m_token_begin_itr -= diff;
             chars_in_line += diff;
         }
 
-        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
-            current = *m_cur_itr;
-
-            if (current == '\n') {
+        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
+            if (*m_cur_itr == '\n') {
                 if (style == block_style_indicator_t::LITERAL) {
-                    m_value_buffer.push_back(current);
-                }
-                else // block_style_indicator_t::FOLDED
-                {
                     if (chars_in_line == 0) {
-                        // Just append a newline if the current line is empty.
                         m_value_buffer.push_back('\n');
-                        is_extra_indented = false;
-                        continue;
                     }
-
-                    if (is_extra_indented) {
-                        // A line being more indented is not folded.
-                        m_value_buffer.push_back('\n');
-                        chars_in_line = 0;
-                        is_extra_indented = false;
-                        continue;
+                    else {
+                        m_value_buffer.append(m_token_begin_itr, m_cur_itr + 1);
                     }
+                }
+                // block_style_indicator_t::FOLDED
+                else if (chars_in_line == 0) {
+                    // Just append a newline if the current line is empty.
+                    m_value_buffer.push_back('\n');
+                }
+                else if (is_extra_indented) {
+                    // A line being more indented is not folded.
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr + 1);
+                }
+                else {
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
 
                     // Append a newline if the next line is empty.
                     bool is_end_of_token = false;
@@ -3682,7 +3694,7 @@ private:
                             break;
                         }
 
-                        current = *m_cur_itr;
+                        char current = *m_cur_itr;
                         if (current == ' ') {
                             continue;
                         }
@@ -3698,12 +3710,16 @@ private:
 
                     if (is_end_of_token) {
                         m_value_buffer.push_back('\n');
+                        chars_in_line = 0;
                         break;
                     }
 
                     if (is_next_empty) {
                         m_value_buffer.push_back('\n');
+                        chars_in_line = 0;
                         continue;
+                    }
+                    else {
                     }
 
                     switch (char next = *(m_cur_itr + 1)) {
@@ -3721,6 +3737,7 @@ private:
                 }
 
                 // Reset the values for the next line.
+                m_token_begin_itr = m_cur_itr + 1;
                 chars_in_line = 0;
                 is_extra_indented = false;
 
@@ -3728,24 +3745,32 @@ private:
             }
 
             // Handle indentation
-            m_pos_tracker.update_position(m_cur_itr);
-            cur_indent = m_pos_tracker.get_cur_pos_in_line();
-            if (cur_indent < indent) {
-                if (current != ' ') {
-                    // Interpret less indented non-space characters as the start of the next token.
-                    break;
+            if (chars_in_line == 0) {
+                m_pos_tracker.update_position(m_cur_itr);
+                cur_indent = m_pos_tracker.get_cur_pos_in_line();
+                if (cur_indent < indent) {
+                    if (*m_cur_itr != ' ') {
+                        // Interpret less indented non-space characters as the start of the next token.
+                        break;
+                    }
+                    // skip a space if not yet indented enough
+                    continue;
                 }
-                // skip a space if not yet indented enough
-                continue;
+
+                if (*m_cur_itr == ' ' && style == block_style_indicator_t::FOLDED) {
+                    // A line being more indented is not folded.
+                    m_value_buffer.push_back('\n');
+                    is_extra_indented = true;
+                }
+                m_token_begin_itr = m_cur_itr;
             }
 
-            if (style == block_style_indicator_t::FOLDED && chars_in_line == 0 && current == ' ') {
-                // A line being more indented is not folded.
-                m_value_buffer.push_back('\n');
-                is_extra_indented = true;
-            }
-            m_value_buffer.push_back(current);
+            // m_value_buffer.push_back(current);
             ++chars_in_line;
+        }
+
+        if (chars_in_line > 0) {
+            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
         }
 
         // Manipulate the trailing line endings chomping indicator type.
@@ -5678,6 +5703,7 @@ public:
     /// @return std::char_traits<char_type>::int_type A character or EOF.
     void fill_buffer(std::string& buffer) {
         buffer.clear();
+        buffer.reserve(std::distance(m_current, m_end));
 
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
@@ -5777,7 +5803,6 @@ private:
 
             if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
-                encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
@@ -5900,6 +5925,7 @@ public:
             }
         }
 
+        buffer.reserve(std::distance(m_current, m_end));
         while (m_current != m_end) {
             char c = char(*m_current++);
             if (c != '\r') {
@@ -5956,6 +5982,8 @@ public:
         uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
+
+        buffer.reserve(std::distance(m_current, m_end) * 2);
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
@@ -6033,6 +6061,8 @@ public:
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
 
+        buffer.reserve(std::distance(m_current, m_end) * 4);
+
         while (m_current != m_end) {
             char32_t tmp = *m_current++;
             char32_t utf32 = char32_t(
@@ -6106,16 +6136,17 @@ private:
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
+        std::size_t buf_size = sizeof(tmp_buf) / sizeof(tmp_buf[0]);
         std::size_t read_size = 0;
-        while ((read_size = std::fread(&tmp_buf[0], sizeof(char), sizeof(tmp_buf) / sizeof(tmp_buf[0]), m_file)) > 0) {
+        while ((read_size = std::fread(&tmp_buf[0], sizeof(char), buf_size, m_file)) > 0) {
             char* p_current = &tmp_buf[0];
             char* p_end = p_current + read_size;
             do {
                 // find CR in `tmp_buf`.
-                char* p_cr_or_end = p_end;
-                for (uint32_t i = 0; p_current + i != p_end; i++) {
-                    if (*(p_current + i) == '\r') {
-                        p_cr_or_end = p_current + i;
+                char* p_cr_or_end = p_current;
+                while (p_cr_or_end != p_end) {
+                    if (*p_cr_or_end++ == '\r') {
+                        break;
                     }
                 }
 
@@ -6172,8 +6203,7 @@ private:
         if (m_encode_type == utf_encode_t::UTF_16BE) {
             shift_bits[0] = 8;
         }
-        else // m_encode_type == utf_encode_t::UTF_16LE
-        {
+        else { // m_encode_type == utf_encode_t::UTF_16LE
             shift_bits[1] = 8;
         }
 
@@ -6198,7 +6228,6 @@ private:
 
             if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
-                encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
@@ -6217,8 +6246,7 @@ private:
             shift_bits[1] = 16;
             shift_bits[2] = 8;
         }
-        else // m_encode_type == utf_encode_t::UTF_32LE
-        {
+        else { // m_encode_type == utf_encode_t::UTF_32LE
             shift_bits[1] = 8;
             shift_bits[2] = 16;
             shift_bits[3] = 24;
@@ -6307,10 +6335,10 @@ private:
             char* p_end = p_current + read_size;
             do {
                 // find CR in `tmp_buf`.
-                char* p_cr_or_end = p_end;
-                for (uint32_t i = 0; p_current + i != p_end; i++) {
-                    if (*(p_current + i) == '\r') {
-                        p_cr_or_end = p_current + i;
+                char* p_cr_or_end = p_current;
+                while (p_cr_or_end != p_end) {
+                    if (*p_cr_or_end++ == '\r') {
+                        break;
                     }
                 }
 
@@ -6399,7 +6427,6 @@ private:
 
             if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
-                encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
@@ -6418,8 +6445,7 @@ private:
             shift_bits[1] = 16;
             shift_bits[2] = 8;
         }
-        else // m_encode_type == utf_encode_t::UTF_32LE
-        {
+        else { // m_encode_type == utf_encode_t::UTF_32LE
             shift_bits[1] = 8;
             shift_bits[2] = 16;
             shift_bits[3] = 24;
@@ -8460,57 +8486,14 @@ private:
         /// containers.
         /// @param[in] type A Node type to determine the value to be destroyed.
         void destroy(node_t type) {
-            if (type == node_t::SEQUENCE || type == node_t::MAPPING) {
-                std::vector<basic_node> stack;
-
-                if (type == node_t::SEQUENCE) {
-                    stack.reserve(p_sequence->size());
-                    std::move(p_sequence->begin(), p_sequence->end(), std::back_inserter(stack));
-                }
-                else {
-                    stack.reserve(p_mapping->size());
-                    for (auto&& it : *p_mapping) {
-                        stack.push_back(std::move(it.second));
-                    }
-                }
-
-                while (!stack.empty()) {
-                    basic_node current_node(std::move(stack.back()));
-                    stack.pop_back();
-
-                    if (current_node.is_alias()) {
-                        continue;
-                    }
-
-                    if (current_node.is_anchor()) {
-                        auto itr = current_node.mp_meta->anchor_table.equal_range(current_node.m_prop.anchor).first;
-                        std::advance(itr, current_node.m_prop.anchor_offset);
-                        stack.emplace_back(std::move(itr->second));
-                        continue;
-                    }
-
-                    if (current_node.is_sequence()) {
-                        std::move(
-                            current_node.m_node_value.p_sequence->begin(),
-                            current_node.m_node_value.p_sequence->end(),
-                            std::back_inserter(stack));
-                        current_node.m_node_value.p_sequence->clear();
-                    }
-                    else if (current_node.is_mapping()) {
-                        for (auto&& it : *current_node.m_node_value.p_mapping) {
-                            stack.push_back(std::move(it.second));
-                        }
-                        current_node.m_node_value.p_mapping->clear();
-                    }
-                }
-            }
-
             switch (type) {
             case node_t::SEQUENCE:
+                p_sequence->clear();
                 destroy_object<sequence_type>(p_sequence);
                 p_sequence = nullptr;
                 break;
             case node_t::MAPPING:
+                p_mapping->clear();
                 destroy_object<mapping_type>(p_mapping);
                 p_mapping = nullptr;
                 break;
@@ -8549,7 +8532,7 @@ private:
         using AllocTraitsType = std::allocator_traits<AllocType>;
 
         AllocType alloc {};
-        auto deleter = [&](ObjType* obj) {
+        auto deleter = [&alloc](ObjType* obj) {
             AllocTraitsType::destroy(alloc, obj);
             AllocTraitsType::deallocate(alloc, obj, 1);
         };
@@ -8731,7 +8714,9 @@ public:
     {
         switch (m_prop.anchor_status) {
         case detail::anchor_status_t::NONE:
-            m_node_value.destroy(m_node_type);
+            if (m_node_type != node_t::NULL_OBJECT) {
+                m_node_value.destroy(m_node_type);
+            }
             break;
         case detail::anchor_status_t::ANCHOR: {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
@@ -9266,7 +9251,7 @@ public:
 
             mapping_type& map = *p_node_value->p_mapping;
             basic_node node_key = std::forward<KeyType>(key);
-            return map.find(node_key) != map.end();
+            return map.find(std::move(node_key)) != map.end();
         }
         default:
             return false;
@@ -9452,7 +9437,7 @@ public:
     /// @return The YAML version if any is applied to the basic_node object, `yaml_version_t::VER_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
     yaml_version_t get_yaml_version() const noexcept {
-        return (mp_meta && mp_meta->is_version_specified) ? mp_meta->version : yaml_version_t::VER_1_2;
+        return mp_meta->is_version_specified ? mp_meta->version : yaml_version_t::VER_1_2;
     }
 
     /// @brief Set the YAML version specification for this basic_node object.
@@ -9498,7 +9483,6 @@ public:
         }
 
         auto p_meta = mp_meta;
-        uint32_t anchor_counts = static_cast<uint32_t>(p_meta->anchor_table.count(anchor_name));
 
         basic_node node;
         node.swap(*this);
@@ -9506,8 +9490,8 @@ public:
 
         mp_meta = p_meta;
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor_offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         m_prop.anchor = anchor_name;
-        m_prop.anchor_offset = anchor_counts;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -9525,7 +9509,6 @@ public:
         }
 
         auto p_meta = mp_meta;
-        uint32_t anchor_counts = static_cast<uint32_t>(p_meta->anchor_table.count(anchor_name));
 
         basic_node node;
         node.swap(*this);
@@ -9533,8 +9516,8 @@ public:
 
         mp_meta = p_meta;
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor_offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         m_prop.anchor = std::move(anchor_name);
-        m_prop.anchor_offset = anchor_counts;
     }
 
     /// @brief Check whether or not this basic_node object has already had any tag name.

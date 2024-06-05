@@ -174,7 +174,7 @@ html-coverage: lcov-coverage
 bm-debug:
 	cmake -B build_bm_debug -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RUN_BENCHMARK=ON
 	cmake --build build_bm_debug --config Debug
-	./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/macos.yml > ./tool/benchmark/result_debug.log
+	./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/macos.yml > ./tool/benchmark/result_debug.log
 
 bm-release:
 	cmake -B build_bm_release -S . -DCMAKE_BUILD_TYPE=Release -DFK_YAML_RUN_BENCHMARK=ON

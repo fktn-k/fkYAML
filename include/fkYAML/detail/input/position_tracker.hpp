@@ -24,34 +24,22 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A position tracker of the target buffer.
 class position_tracker {
-private:
-    /// @brief A set of information on the current position in an input buffer.
-    struct position {
-        /// The current position from the beginning of an input buffer.
-        uint32_t cur_pos {0};
-        /// The current position in the current line.
-        uint32_t cur_pos_in_line {0};
-        /// The number of lines which have already been read.
-        uint32_t lines_read {0};
-    };
-
 public:
     void set_target_buffer(const std::string& buffer) {
         m_begin = m_last = buffer.begin();
         m_end = buffer.end();
-        m_position = position {};
     }
 
     /// @brief Update the set of the current position informations.
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(std::string::const_iterator cur_pos) {
-        m_position.cur_pos = static_cast<uint32_t>(std::distance(m_begin, cur_pos));
-        m_position.lines_read += static_cast<uint32_t>(std::count(m_last, cur_pos, '\n'));
+        m_cur_pos = static_cast<uint32_t>(std::distance(m_begin, cur_pos));
+        m_lines_read += static_cast<uint32_t>(std::count(m_last, cur_pos, '\n'));
         m_last = cur_pos;
 
-        if (m_position.lines_read == 0) {
-            m_position.cur_pos_in_line = m_position.cur_pos;
+        if (m_lines_read == 0) {
+            m_cur_pos_in_line = m_cur_pos;
             return;
         }
 
@@ -62,23 +50,23 @@ public:
             }
             count++;
         }
-        m_position.cur_pos_in_line = count;
+        m_cur_pos_in_line = count;
     }
 
     uint32_t get_cur_pos() const noexcept {
-        return m_position.cur_pos;
+        return m_cur_pos;
     }
 
     /// @brief Get the current position in the current line.
     /// @return uint32_t The current position in the current line.
     uint32_t get_cur_pos_in_line() const noexcept {
-        return m_position.cur_pos_in_line;
+        return m_cur_pos_in_line;
     }
 
     /// @brief Get the number of lines which have already been read.
     /// @return uint32_t The number of lines which have already been read.
     uint32_t get_lines_read() const noexcept {
-        return m_position.lines_read;
+        return m_lines_read;
     }
 
 private:
@@ -88,8 +76,12 @@ private:
     std::string::const_iterator m_end {};
     /// The iterator to the last updated element in the target buffer.
     std::string::const_iterator m_last {};
-    /// The current position in the target buffer.
-    position m_position {};
+    /// The current position from the beginning of an input buffer.
+    uint32_t m_cur_pos {0};
+    /// The current position in the current line.
+    uint32_t m_cur_pos_in_line {0};
+    /// The number of lines which have already been read.
+    uint32_t m_lines_read {0};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

@@ -153,57 +153,14 @@ private:
         /// containers.
         /// @param[in] type A Node type to determine the value to be destroyed.
         void destroy(node_t type) {
-            if (type == node_t::SEQUENCE || type == node_t::MAPPING) {
-                std::vector<basic_node> stack;
-
-                if (type == node_t::SEQUENCE) {
-                    stack.reserve(p_sequence->size());
-                    std::move(p_sequence->begin(), p_sequence->end(), std::back_inserter(stack));
-                }
-                else {
-                    stack.reserve(p_mapping->size());
-                    for (auto&& it : *p_mapping) {
-                        stack.push_back(std::move(it.second));
-                    }
-                }
-
-                while (!stack.empty()) {
-                    basic_node current_node(std::move(stack.back()));
-                    stack.pop_back();
-
-                    if (current_node.is_alias()) {
-                        continue;
-                    }
-
-                    if (current_node.is_anchor()) {
-                        auto itr = current_node.mp_meta->anchor_table.equal_range(current_node.m_prop.anchor).first;
-                        std::advance(itr, current_node.m_prop.anchor_offset);
-                        stack.emplace_back(std::move(itr->second));
-                        continue;
-                    }
-
-                    if (current_node.is_sequence()) {
-                        std::move(
-                            current_node.m_node_value.p_sequence->begin(),
-                            current_node.m_node_value.p_sequence->end(),
-                            std::back_inserter(stack));
-                        current_node.m_node_value.p_sequence->clear();
-                    }
-                    else if (current_node.is_mapping()) {
-                        for (auto&& it : *current_node.m_node_value.p_mapping) {
-                            stack.push_back(std::move(it.second));
-                        }
-                        current_node.m_node_value.p_mapping->clear();
-                    }
-                }
-            }
-
             switch (type) {
             case node_t::SEQUENCE:
+                p_sequence->clear();
                 destroy_object<sequence_type>(p_sequence);
                 p_sequence = nullptr;
                 break;
             case node_t::MAPPING:
+                p_mapping->clear();
                 destroy_object<mapping_type>(p_mapping);
                 p_mapping = nullptr;
                 break;
@@ -242,7 +199,7 @@ private:
         using AllocTraitsType = std::allocator_traits<AllocType>;
 
         AllocType alloc {};
-        auto deleter = [&](ObjType* obj) {
+        auto deleter = [&alloc](ObjType* obj) {
             AllocTraitsType::destroy(alloc, obj);
             AllocTraitsType::deallocate(alloc, obj, 1);
         };
@@ -424,7 +381,9 @@ public:
     {
         switch (m_prop.anchor_status) {
         case detail::anchor_status_t::NONE:
-            m_node_value.destroy(m_node_type);
+            if (m_node_type != node_t::NULL_OBJECT) {
+                m_node_value.destroy(m_node_type);
+            }
             break;
         case detail::anchor_status_t::ANCHOR: {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
@@ -959,7 +918,7 @@ public:
 
             mapping_type& map = *p_node_value->p_mapping;
             basic_node node_key = std::forward<KeyType>(key);
-            return map.find(node_key) != map.end();
+            return map.find(std::move(node_key)) != map.end();
         }
         default:
             return false;
@@ -1145,7 +1104,7 @@ public:
     /// @return The YAML version if any is applied to the basic_node object, `yaml_version_t::VER_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
     yaml_version_t get_yaml_version() const noexcept {
-        return (mp_meta && mp_meta->is_version_specified) ? mp_meta->version : yaml_version_t::VER_1_2;
+        return mp_meta->is_version_specified ? mp_meta->version : yaml_version_t::VER_1_2;
     }
 
     /// @brief Set the YAML version specification for this basic_node object.
@@ -1191,7 +1150,6 @@ public:
         }
 
         auto p_meta = mp_meta;
-        uint32_t anchor_counts = static_cast<uint32_t>(p_meta->anchor_table.count(anchor_name));
 
         basic_node node;
         node.swap(*this);
@@ -1199,8 +1157,8 @@ public:
 
         mp_meta = p_meta;
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor_offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         m_prop.anchor = anchor_name;
-        m_prop.anchor_offset = anchor_counts;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -1218,7 +1176,6 @@ public:
         }
 
         auto p_meta = mp_meta;
-        uint32_t anchor_counts = static_cast<uint32_t>(p_meta->anchor_table.count(anchor_name));
 
         basic_node node;
         node.swap(*this);
@@ -1226,8 +1183,8 @@ public:
 
         mp_meta = p_meta;
         m_prop.anchor_status = detail::anchor_status_t::ANCHOR;
+        m_prop.anchor_offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         m_prop.anchor = std::move(anchor_name);
-        m_prop.anchor_offset = anchor_counts;
     }
 
     /// @brief Check whether or not this basic_node object has already had any tag name.

@@ -957,10 +957,8 @@ private:
                     continue;
                 }
 
-                uint8_t byte = static_cast<uint8_t>(current);
-
                 // Handle unescaped control characters.
-                if (byte <= 0x1F) {
+                if (static_cast<uint8_t>(current) <= 0x1F) {
                     handle_unescaped_control_char(current);
                     continue;
                 }
@@ -1032,39 +1030,40 @@ private:
 
         uint32_t chars_in_line = 0;
         bool is_extra_indented = false;
+        m_token_begin_itr = m_cur_itr;
         if (cur_indent > indent) {
-            uint32_t diff = cur_indent - indent;
             if (style == block_style_indicator_t::FOLDED) {
                 m_value_buffer.push_back('\n');
                 is_extra_indented = true;
             }
-            m_value_buffer.append(diff, ' ');
+
+            uint32_t diff = cur_indent - indent;
+            // m_value_buffer.append(diff, ' ');
+            m_token_begin_itr -= diff;
             chars_in_line += diff;
         }
 
-        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
-            current = *m_cur_itr;
-
-            if (current == '\n') {
+        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
+            if (*m_cur_itr == '\n') {
                 if (style == block_style_indicator_t::LITERAL) {
-                    m_value_buffer.push_back(current);
-                }
-                else // block_style_indicator_t::FOLDED
-                {
                     if (chars_in_line == 0) {
-                        // Just append a newline if the current line is empty.
                         m_value_buffer.push_back('\n');
-                        is_extra_indented = false;
-                        continue;
                     }
-
-                    if (is_extra_indented) {
-                        // A line being more indented is not folded.
-                        m_value_buffer.push_back('\n');
-                        chars_in_line = 0;
-                        is_extra_indented = false;
-                        continue;
+                    else {
+                        m_value_buffer.append(m_token_begin_itr, m_cur_itr + 1);
                     }
+                }
+                // block_style_indicator_t::FOLDED
+                else if (chars_in_line == 0) {
+                    // Just append a newline if the current line is empty.
+                    m_value_buffer.push_back('\n');
+                }
+                else if (is_extra_indented) {
+                    // A line being more indented is not folded.
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr + 1);
+                }
+                else {
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
 
                     // Append a newline if the next line is empty.
                     bool is_end_of_token = false;
@@ -1075,7 +1074,7 @@ private:
                             break;
                         }
 
-                        current = *m_cur_itr;
+                        char current = *m_cur_itr;
                         if (current == ' ') {
                             continue;
                         }
@@ -1091,12 +1090,16 @@ private:
 
                     if (is_end_of_token) {
                         m_value_buffer.push_back('\n');
+                        chars_in_line = 0;
                         break;
                     }
 
                     if (is_next_empty) {
                         m_value_buffer.push_back('\n');
+                        chars_in_line = 0;
                         continue;
+                    }
+                    else {
                     }
 
                     switch (char next = *(m_cur_itr + 1)) {
@@ -1114,6 +1117,7 @@ private:
                 }
 
                 // Reset the values for the next line.
+                m_token_begin_itr = m_cur_itr + 1;
                 chars_in_line = 0;
                 is_extra_indented = false;
 
@@ -1121,24 +1125,32 @@ private:
             }
 
             // Handle indentation
-            m_pos_tracker.update_position(m_cur_itr);
-            cur_indent = m_pos_tracker.get_cur_pos_in_line();
-            if (cur_indent < indent) {
-                if (current != ' ') {
-                    // Interpret less indented non-space characters as the start of the next token.
-                    break;
+            if (chars_in_line == 0) {
+                m_pos_tracker.update_position(m_cur_itr);
+                cur_indent = m_pos_tracker.get_cur_pos_in_line();
+                if (cur_indent < indent) {
+                    if (*m_cur_itr != ' ') {
+                        // Interpret less indented non-space characters as the start of the next token.
+                        break;
+                    }
+                    // skip a space if not yet indented enough
+                    continue;
                 }
-                // skip a space if not yet indented enough
-                continue;
+
+                if (*m_cur_itr == ' ' && style == block_style_indicator_t::FOLDED) {
+                    // A line being more indented is not folded.
+                    m_value_buffer.push_back('\n');
+                    is_extra_indented = true;
+                }
+                m_token_begin_itr = m_cur_itr;
             }
 
-            if (style == block_style_indicator_t::FOLDED && chars_in_line == 0 && current == ' ') {
-                // A line being more indented is not folded.
-                m_value_buffer.push_back('\n');
-                is_extra_indented = true;
-            }
-            m_value_buffer.push_back(current);
+            // m_value_buffer.push_back(current);
             ++chars_in_line;
+        }
+
+        if (chars_in_line > 0) {
+            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
         }
 
         // Manipulate the trailing line endings chomping indicator type.

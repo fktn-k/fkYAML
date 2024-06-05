@@ -88,17 +88,17 @@ $ ctest -C Debug --test-dir build --output-on-failure
 ## Benchmarking
 
 Though experimental, benchmarking scores are now available with [the dedicated benchmarking tool](./tool/benchmark/README.md) for the parsing.  
-On an AMD Ryzen 7 5800H @3.20GHz with g++11.4.0 in Ubuntu22.04 (WSL2), fkYAML processes [the YAML source](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/macos.yml) at a competitive speed compared against other existing YAML libraries for C/C++:
+On an AMD Ryzen 7 5800H @3.20GHz with g++11.4.0 in Ubuntu22.04 (WSL2), fkYAML parses [the YAML source](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/macos.yml) at a competitive speed compared against other existing YAML libraries for C/C++:
 
-| Benchmark                          | Release (MB/s) | Debug (MB/s) |
-| ---------------------------------- | -------------- | ------------ |
-| fkYAML                             | 35.072         | 34.521       |
-| libfyaml                           | 30.601         | 29.784       |
-| rapidyaml<br>(with mutable buff)   | 142.444        | 144.956      |
-| rapidyaml<br>(with immutable buff) | 144.194        | 142.680      |
-| yaml-cpp                           | 7.228          | 7.278        |
+| Benchmark                          | Release (MB/s) |
+| ---------------------------------- | -------------- |
+| fkYAML                             | 40.491         |
+| libfyaml                           | 31.110         |
+| rapidyaml<br>(with mutable buff)   | 147.221        |
+| rapidyaml<br>(with immutable buff) | 144.904        |
+| yaml-cpp                           | 7.397          |
 
-Although [rapidyaml](https://github.com/biojppm/rapidyaml) is in general 4x faster than fkYAML as it focuses on high performance, fkYAML is 14% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also 4.8x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) is in general 4x faster than fkYAML as it focuses on high performance, fkYAML is 30% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also 5.4x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
 Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some real use cases.  
 
 ## Supported compilers
