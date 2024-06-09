@@ -34,7 +34,10 @@ void prepare_test_source(char* filename) {
 int main(int argc, char** argv) {
     prepare_test_source(argv[1]);
 
-    benchmark::Initialize(&argc, argv);
+    std::vector<char*> benchmark_configs {argv[0]};
+    int config_size = static_cast<int>(benchmark_configs.size());
+
+    benchmark::Initialize(&config_size, benchmark_configs.data());
     benchmark::RunSpecifiedBenchmarks();
     benchmark::Shutdown();
 
