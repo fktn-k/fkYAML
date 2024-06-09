@@ -8664,8 +8664,8 @@ public:
                 detail::disjunction<detail::is_node_compatible_type<basic_node, U>>>::value,
             int> = 0>
     basic_node(CompatibleType&& val) noexcept(
-        noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>()))) {
-        ConverterType<U>::to_node(*this, std::forward<CompatibleType>(val));
+        noexcept(ConverterType<U, void>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>()))) {
+        ConverterType<U, void>::to_node(*this, std::forward<CompatibleType>(val));
     }
 
     /// @brief Construct a new basic node object with a node_ref_storage object.
@@ -9567,16 +9567,16 @@ public:
             detail::conjunction<
                 std::is_default_constructible<ValueType>, detail::has_from_node<basic_node, ValueType>>::value,
             int> = 0>
-    T get_value() const noexcept(
-        noexcept(ConverterType<ValueType>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>()))) {
+    T get_value() const noexcept(noexcept(
+        ConverterType<ValueType, void>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>()))) {
         auto ret = ValueType();
         if (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, m_prop.anchor_offset);
-            ConverterType<ValueType>::from_node(itr->second, ret);
+            ConverterType<ValueType, void>::from_node(itr->second, ret);
         }
         else {
-            ConverterType<ValueType>::from_node(*this, ret);
+            ConverterType<ValueType, void>::from_node(*this, ret);
         }
         return ret;
     }
@@ -9926,7 +9926,7 @@ inline namespace yaml_literals {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char* s, std::size_t n) {
-    return fkyaml::node::deserialize((const char*)s, (const char*)s + n);
+    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
 }
 
 /// @brief The user-defined string literal which deserializes a `char16_t` array into a `node` object.
@@ -9935,7 +9935,7 @@ inline fkyaml::node operator"" _yaml(const char* s, std::size_t n) {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n) {
-    return fkyaml::node::deserialize((const char16_t*)s, (const char16_t*)s + n);
+    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
 }
 
 /// @brief The user-defined string literal which deserializes a `char32_t` array into a `node` object.
@@ -9944,7 +9944,7 @@ inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n) {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n) {
-    return fkyaml::node::deserialize((const char32_t*)s, (const char32_t*)s + n);
+    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
 }
 
 #ifdef FK_YAML_HAS_CHAR8_T
