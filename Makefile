@@ -10,11 +10,13 @@ SRCS = $(shell find include -type f -name '*.hpp' | sort)
 TEST_SRCS = $(shell find test -type f -name '*.hpp' -o -name '*.cpp' | sort)
 # list of sources in the examples directory.
 EXAMPLE_SRCS = $(shell find docs/examples -type f -name '*.cpp' | sort)
+# list of sources in the tool directory.
+TOOL_SRCS = $(shell find tool -type f -name '*.cpp' | sort)
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 8
+TARGET_PATCH_VERSION := 9
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -129,7 +131,7 @@ reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
 		--license MIT --year "2023-2024" --style c
-	pipx run reuse annotate $(TEST_SRCS) $(EXAMPLE_SRCS) --template fkYAML_support \
+	pipx run reuse annotate $(TEST_SRCS) $(EXAMPLE_SRCS) $(TOOL_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
 		--license MIT --year "2023-2024" --style c
 	pipx run reuse lint
@@ -167,6 +169,20 @@ html-coverage: lcov-coverage
 		--title "fkYAML: A C++ header-only YAML library" \
 		--legend --demangle-cpp --show-details --branch-coverage
 
+#################
+#   Benchmark   #
+#################
+
+bm-debug:
+	cmake -B build_bm_debug -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RUN_BENCHMARK=ON
+	cmake --build build_bm_debug --config Debug
+	./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/macos.yml > ./tool/benchmark/result_debug.log
+
+bm-release:
+	cmake -B build_bm_release -S . -DCMAKE_BUILD_TYPE=Release -DFK_YAML_RUN_BENCHMARK=ON
+	cmake --build build_bm_release --config Release
+	./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/macos.yml > ./tool/benchmark/result_release.log
+
 ###################
 #   Maintenance   #
 ###################
@@ -174,6 +190,8 @@ html-coverage: lcov-coverage
 clean:
 	rm -rf \
 		build \
+		build_bm_debug \
+		build_bm_release \
 		build_clang_format \
 		build_clang_sanitizers \
 		build_clang_tidy \

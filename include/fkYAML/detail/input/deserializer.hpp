@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.8
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -279,6 +279,12 @@ private:
                     // ```
                     *mp_current_node = node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                }
+
+                if (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE) {
+                    sequence_type& seq = mp_current_node->template get_value_ref<sequence_type&>();
+                    seq.emplace_back(node_type::mapping());
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, &(seq.back()));
                 }
 
                 type = lexer.get_next_token();
@@ -1012,19 +1018,25 @@ private:
 
         type = lexer.get_next_token();
         if (type == lexical_token_t::KEY_SEPARATOR) {
-            if (mp_current_node->is_scalar()) {
-                if (line != lexer.get_lines_processed()) {
-                    // This path is for explicit mapping key separator(:)
-                    assign_node_value(std::move(node), line, indent);
-                    if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-                        mp_current_node = m_context_stack.back().p_node;
-                        m_context_stack.pop_back();
-                    }
-                    indent = lexer.get_last_token_begin_pos();
-                    line = lexer.get_lines_processed();
-                    return true;
+            if (line != lexer.get_lines_processed()) {
+                // This path is for explicit mapping key separator like:
+                //
+                // ```yaml
+                //   ? foo
+                //   : bar
+                // # ^ this separator
+                // ```
+                assign_node_value(std::move(node), line, indent);
+                if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                    mp_current_node = m_context_stack.back().p_node;
+                    m_context_stack.pop_back();
                 }
+                indent = lexer.get_last_token_begin_pos();
+                line = lexer.get_lines_processed();
+                return true;
+            }
 
+            if (mp_current_node->is_scalar()) {
                 parse_context& cur_context = m_context_stack.back();
                 switch (cur_context.state) {
                 case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:

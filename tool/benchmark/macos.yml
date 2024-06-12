@@ -1,0 +1,157 @@
+name: macOS
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - .github/workflows/macos.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - test/**
+      - CMakeLists.txt
+  pull_request:
+    paths:
+      - .github/workflows/macos.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - test/**
+      - CMakeLists.txt
+  workflow_dispatch:
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
+jobs:
+  macos-latest:
+    timeout-minutes: 10
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        build_type: [ Debug, Release ]
+        single_header: ["ON", "OFF"]
+    env:
+      JOBS: 2
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_USE_SINGLE_HEADER=${{matrix.single_header}}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  xcode_for_macos11:
+    timeout-minutes: 10
+    runs-on: macos-11
+    strategy:
+      matrix:
+        xcode: [ '11.7', '12.4', '12.5.1', '13.0', '13.1', '13.2.1' ]
+        build_type: [ Debug, Release ]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
+      JOBS: 2
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  xcode_for_macos12:
+    timeout-minutes: 10
+    runs-on: macos-12
+    strategy:
+      matrix:
+        xcode: [ '13.1', '13.2.1', '13.3.1', '13.4.1', '14.0.1', '14.1', '14.2' ]
+        build_type: [ Debug, Release ]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
+      JOBS: 2
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  xcode_for_macos13:
+    timeout-minutes: 10
+    runs-on: macos-13
+    strategy:
+      matrix:
+        xcode: [ '14.1', '14.2', '14.3.1', '15.0.1', '15.1', '15.2' ]
+        build_type: [ Debug, Release ]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
+      JOBS: 3
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  xcode_for_macos14:
+    timeout-minutes: 10
+    runs-on: macos-14
+    strategy:
+      matrix:
+        xcode: [ '14.3.1', '15.0.1', '15.1', '15.2', '15.3' ]
+        build_type: [ Debug, Release ]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
+      JOBS: 2
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}

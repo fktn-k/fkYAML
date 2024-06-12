@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project(
   fkYAML
-  VERSION 0.3.8
+  VERSION 0.3.9
   LANGUAGES CXX)
 
 #############################################################
@@ -125,6 +125,10 @@ endif()
 # Configure include-what-you-use if enabled.
 if(FK_YAML_RUN_IWYU)
   add_subdirectory(tool/iwyu)
+endif()
+
+if(FK_YAML_RUN_BENCHMARK)
+  add_subdirectory(tool/benchmark)
 endif()
 
 #################################

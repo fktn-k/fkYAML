@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.8
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -66,6 +66,7 @@ public:
     /// @return std::char_traits<char_type>::int_type A character or EOF.
     void fill_buffer(std::string& buffer) {
         buffer.clear();
+        buffer.reserve(std::distance(m_current, m_end));
 
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
@@ -165,7 +166,6 @@ private:
 
             if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
-                encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
@@ -288,6 +288,7 @@ public:
             }
         }
 
+        buffer.reserve(std::distance(m_current, m_end));
         while (m_current != m_end) {
             char c = char(*m_current++);
             if (c != '\r') {
@@ -344,6 +345,8 @@ public:
         uint32_t encoded_buf_size {0};
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
+
+        buffer.reserve(std::distance(m_current, m_end) * 2);
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
@@ -421,6 +424,8 @@ public:
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
 
+        buffer.reserve(std::distance(m_current, m_end) * 4);
+
         while (m_current != m_end) {
             char32_t tmp = *m_current++;
             char32_t utf32 = char32_t(
@@ -494,16 +499,17 @@ private:
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
+        std::size_t buf_size = sizeof(tmp_buf) / sizeof(tmp_buf[0]);
         std::size_t read_size = 0;
-        while ((read_size = std::fread(&tmp_buf[0], sizeof(char), sizeof(tmp_buf) / sizeof(tmp_buf[0]), m_file)) > 0) {
+        while ((read_size = std::fread(&tmp_buf[0], sizeof(char), buf_size, m_file)) > 0) {
             char* p_current = &tmp_buf[0];
             char* p_end = p_current + read_size;
             do {
                 // find CR in `tmp_buf`.
-                char* p_cr_or_end = p_end;
-                for (uint32_t i = 0; p_current + i != p_end; i++) {
-                    if (*(p_current + i) == '\r') {
-                        p_cr_or_end = p_current + i;
+                char* p_cr_or_end = p_current;
+                while (p_cr_or_end != p_end) {
+                    if (*p_cr_or_end++ == '\r') {
+                        break;
                     }
                 }
 
@@ -560,8 +566,7 @@ private:
         if (m_encode_type == utf_encode_t::UTF_16BE) {
             shift_bits[0] = 8;
         }
-        else // m_encode_type == utf_encode_t::UTF_16LE
-        {
+        else { // m_encode_type == utf_encode_t::UTF_16LE
             shift_bits[1] = 8;
         }
 
@@ -586,7 +591,6 @@ private:
 
             if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
-                encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
@@ -605,8 +609,7 @@ private:
             shift_bits[1] = 16;
             shift_bits[2] = 8;
         }
-        else // m_encode_type == utf_encode_t::UTF_32LE
-        {
+        else { // m_encode_type == utf_encode_t::UTF_32LE
             shift_bits[1] = 8;
             shift_bits[2] = 16;
             shift_bits[3] = 24;
@@ -695,10 +698,10 @@ private:
             char* p_end = p_current + read_size;
             do {
                 // find CR in `tmp_buf`.
-                char* p_cr_or_end = p_end;
-                for (uint32_t i = 0; p_current + i != p_end; i++) {
-                    if (*(p_current + i) == '\r') {
-                        p_cr_or_end = p_current + i;
+                char* p_cr_or_end = p_current;
+                while (p_cr_or_end != p_end) {
+                    if (*p_cr_or_end++ == '\r') {
+                        break;
                     }
                 }
 
@@ -787,7 +790,6 @@ private:
 
             if (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
-                encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
@@ -806,8 +808,7 @@ private:
             shift_bits[1] = 16;
             shift_bits[2] = 8;
         }
-        else // m_encode_type == utf_encode_t::UTF_32LE
-        {
+        else { // m_encode_type == utf_encode_t::UTF_32LE
             shift_bits[1] = 8;
             shift_bits[2] = 16;
             shift_bits[3] = 24;

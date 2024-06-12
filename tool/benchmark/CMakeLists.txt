@@ -1,0 +1,85 @@
+
+################################
+#   Set up benchmarking tool   #
+################################
+
+# disable building unit tests for Google Benchmark.
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
+
+include(FetchContent)
+FetchContent_Declare(
+  gbench
+  URL https://github.com/google/benchmark/archive/refs/tags/v1.8.4.zip
+)
+FetchContent_MakeAvailable(gbench)
+
+###########################
+#   Set up YAML parsers   #
+###########################
+
+# libfyaml (not implemented for Windows)
+if(NOT WIN32)
+  FetchContent_Declare(
+    libfyaml
+    GIT_REPOSITORY https://github.com/pantoniou/libfyaml
+    GIT_TAG v0.9
+  )
+  FetchContent_MakeAvailable(libfyaml)
+endif()
+
+# rapidyaml
+FetchContent_Declare(
+  rapidyaml
+  GIT_REPOSITORY https://github.com/biojppm/rapidyaml
+  GIT_TAG v0.6.0
+  GIT_SUBMODULES "ext/c4core"
+)
+FetchContent_MakeAvailable(rapidyaml)
+
+# yaml-cpp
+set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+  yaml_cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp
+  GIT_TAG 0.8.0
+)
+FetchContent_MakeAvailable(yaml_cpp)
+
+###############################
+#   Set up benchmarking app   #
+###############################
+
+add_executable(
+  benchmarker
+  main.cpp
+)
+
+target_compile_options(
+  benchmarker
+  PRIVATE
+    $<$<CONFIG:Debug>:-O1>
+    $<$<CONFIG:Release>:-O2>
+)
+
+target_link_libraries(
+  benchmarker
+  PRIVATE
+    fkYAML::fkYAML
+    ryml::ryml
+    yaml-cpp::yaml-cpp
+    benchmark::benchmark
+)
+if(NOT WIN32)
+  target_link_libraries(
+    benchmarker
+    PRIVATE
+      fyaml
+  )
+  target_compile_definitions(
+    benchmarker
+    PRIVATE
+      FK_YAML_BM_HAS_LIBFYAML
+  )
+endif()

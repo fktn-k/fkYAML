@@ -21,6 +21,7 @@ You can add YAML support into your projects by just including header files where
 - [Community Support](#community-support)
 - [How to use fkYAML](#how-to-use-fkyaml)
 - [How to test fkYAML](#how-to-test-fkYAML)
+- [Benchmarking](#benchmarking)
 - [Supported compilers](#supported-compilers)
 - [License](#license)
 - [Used third-party tools](#used-third-party-tools)
@@ -83,6 +84,22 @@ $ cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON
 $ cmake --build build --config Debug
 $ ctest -C Debug --test-dir build --output-on-failure
 ```
+
+## Benchmarking
+
+Though experimental, benchmarking scores are now available with [the dedicated benchmarking tool](./tool/benchmark/README.md) for the parsing.  
+On an AMD Ryzen 7 5800H @3.20GHz with g++11.4.0 in Ubuntu22.04 (WSL2), fkYAML parses [the YAML source](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/macos.yml) at a competitive speed compared against other existing YAML libraries for C/C++:
+
+| Benchmark                          | Release (MB/s) |
+| ---------------------------------- | -------------- |
+| fkYAML                             | 40.491         |
+| libfyaml                           | 31.110         |
+| rapidyaml<br>(with mutable buff)   | 147.221        |
+| rapidyaml<br>(with immutable buff) | 144.904        |
+| yaml-cpp                           | 7.397          |
+
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) is in general 4x faster than fkYAML as it focuses on high performance, fkYAML is 30% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also 5.4x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some real use cases.  
 
 ## Supported compilers
 Currently, the following compilers are known to work and used in GitHub Actions workflows:
@@ -179,6 +196,7 @@ Thanks a lot!
 - [**Codacy**](https://www.codacy.com/) for further [code analysis](https://app.codacy.com/gh/fktn-k/fkYAML/).
 - [**Coveralls**](https://coveralls.io/) to measure [code coverage](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).
 - [**Catch2**](https://github.com/catchorg/Catch2) as a unit-test framework.
+- [**Google Benchmark**](https://github.com/google/benchmark) as a benchmarking framework.
 - [**github-changelog-generator**](https://github.com/github-changelog-generator/github-changelog-generator) to generate the [CHANGELOG.md](https://github.com/fktn-k/fkYAML/tree/develop/CHANGELOG.md) file.
 - [**include-what-you-use**](https://github.com/include-what-you-use/include-what-you-use) to check the fkYAML library source files are each self-contained.
 - [**lcov**](https://github.com/linux-test-project/lcov) to process coverage information and generate an HTML view.
