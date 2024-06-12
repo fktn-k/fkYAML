@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.3.9](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.9) (2024-06-12)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.8...v0.3.9)
+
+- Fix compile errors on Windows [\#358](https://github.com/fktn-k/fkYAML/pull/358) ([fktn-k](https://github.com/fktn-k))
+- Fix parse error on smal negative integer keys [\#355](https://github.com/fktn-k/fkYAML/pull/355) ([fktn-k](https://github.com/fktn-k))
+- fixed parse error on explicit mappings as a block sequence entry [\#353](https://github.com/fktn-k/fkYAML/pull/353) ([fktn-k](https://github.com/fktn-k))
+
+- Refactor for optimization [\#356](https://github.com/fktn-k/fkYAML/pull/356) ([fktn-k](https://github.com/fktn-k))
+- Add benchmarking tool [\#354](https://github.com/fktn-k/fkYAML/pull/354) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.8](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.8) (2024-06-01)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.7...v0.3.8)

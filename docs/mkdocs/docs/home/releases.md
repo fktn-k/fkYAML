@@ -1,5 +1,42 @@
 # Releases
 
+## **fkYAML version 0.3.9**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.9/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.9/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.9/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.9/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.9/node.hpp) (single header)
+
+### Summary
+
+This release adds the benchmarking tool for fkYAML and other C++ libraries for YAML.  
+The tool is quite experimental and will be modified and expanded in future releases.  
+See the benchmarking section of the README.md file for the current benchmarking scores.  
+Moreover, several bugs in deserialization and Windows builds have been fixed.  
+
+### What's Changed
+
+#### :sparkles: New Features
+
+- Add benchmarking tool by [fktn-k](https://github.com/fktn-k) in [\#354](https://github.com/fktn-k/fkYAML/pull/354)
+
+#### :zap: Improvements
+
+- Refactor for optimization by [fktn-k](https://github.com/fktn-k) in [\#356](https://github.com/fktn-k/fkYAML/pull/356)
+
+#### :bug: Bug Fixes
+
+- fixed parse error on explicit mappings as a block sequence entry by [fktn-k](https://github.com/fktn-k) in [\#353](https://github.com/fktn-k/fkYAML/pull/353)
+- Fix parse error on smal negative integer keys by [fktn-k](https://github.com/fktn-k) in [\#355](https://github.com/fktn-k/fkYAML/pull/355)
+- Fix compile errors on Windows by [fktn-k](https://github.com/fktn-k) in [\#358](https://github.com/fktn-k/fkYAML/pull/358), reported by [Michael-Lafreniere](https://github.com/Michael-Lafreniere) in [\#357](https://github.com/fktn-k/fkYAML/issues/357)
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.8...v0.3.9
+
+---
+
 ## **fkYAML version 0.3.8**
 
 !!! abstract "Release Packages"
