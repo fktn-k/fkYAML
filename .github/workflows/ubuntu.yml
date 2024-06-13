@@ -269,3 +269,37 @@ jobs:
         cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
         cd ${{github.workspace}}/build
         ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  ci_test_icpx:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [ Debug, Release ]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install wget and gnupg
+      run: |
+        sudo apt update
+        sudo apt install -y wget gnupg
+
+    - name: Install Intel oneAPI Base Toolkit
+      run: | # from the official document: https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2024-1/apt.html
+        wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+        echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt update
+        sudo apt install -y intel-basekit
+
+    - name: Configure CMake
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx -DFK_YAML_BUILD_TEST=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      run: ctest --test-dir ${{github.workspace}}/build -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
