@@ -540,9 +540,11 @@ TEST_CASE("Deserializer_BlockMapping") {
     }
 
     SECTION("nested block mapping") {
-        REQUIRE_NOTHROW(
-            root =
-                deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  bool: true\n  foo: bar\n  pi: 3.14")));
+        std::string input = "test:\n"
+                            "  bool: true\n"
+                            "  foo: bar\n"
+                            "  pi: 3.14";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -1529,8 +1531,8 @@ TEST_CASE("Deserializer_FlowMapping") {
     fkyaml::node root;
 
     SECTION("simple flow mapping") {
-        REQUIRE_NOTHROW(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter("test: { bool: true, foo: bar, pi: 3.14 }")));
+        std::string input = "test: { bool: true, foo: bar, pi: 3.14 }";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
 
         REQUIRE(root.is_mapping());
         REQUIRE_NOTHROW(root.size());
@@ -2526,8 +2528,8 @@ TEST_CASE("Deserializer_NodeProperties") {
     }
 
     SECTION("alias node with tag") {
-        REQUIRE_THROWS_AS(
-            deserializer.deserialize(fkyaml::detail::input_adapter("&anchor foo: !!str *anchor")), fkyaml::parse_error);
+        std::string input = "&anchor foo: !!str *anchor";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 }
 
@@ -2540,15 +2542,29 @@ TEST_CASE("Deserializer_DocumentWithMarkers") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
-    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.2\n---\nfoo: one\n...")));
-    REQUIRE(root.is_mapping());
-    REQUIRE(root.size() == 1);
-    REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
-    REQUIRE(root.contains("foo"));
+    SECTION("valid YAML document") {
+        std::string input = "%YAML 1.2\n"
+                            "---\n"
+                            "foo: one\n"
+                            "...";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
+        REQUIRE(root.contains("foo"));
 
-    fkyaml::node& foo_node = root["foo"];
-    REQUIRE(foo_node.is_string());
-    REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
+    }
+
+    SECTION("invalid end-of-directives marker") {
+        std::string input = "foo: bar\n"
+                            "---\n"
+                            "123: false\n"
+                            "...";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_MultipleDocuments") {
