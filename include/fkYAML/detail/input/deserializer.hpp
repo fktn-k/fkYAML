@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <deque>
 #include <unordered_map>
+#include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
@@ -95,12 +96,40 @@ public:
     basic_deserializer() = default;
 
 public:
-    /// @brief Deserialize a YAML-formatted source string into a YAML node.
-    /// @param input_adapter An adapter object for the input source buffer.
+    /// @brief Deserialize a single YAML document into a YAML node.
+    /// @note
+    /// If the input consists of multiple YAML documents, this function only parses the first.
+    /// If the input may have multiple YAML documents all of which must be parsed into nodes,
+    /// prefer the `deserialize_docs()` function.
+    /// @tparam InputAdapterType The type of an input adapter object.
+    /// @param input_adapter An input adapter object for the input source buffer.
     /// @return node_type A root YAML node object deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     node_type deserialize(InputAdapterType&& input_adapter) {
+        lexical_token_t type {lexical_token_t::END_OF_BUFFER};
         lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
+        return deserialize_document(lexer, type);
+    }
+
+    /// @brief Deserialize multiple YAML documents into YAML nodes.
+    /// @tparam InputAdapterType The type of an adapter object.
+    /// @param input_adapter An input adapter object for the input source buffer.
+    /// @return
+    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
+    std::vector<node_type> deserialize_docs(InputAdapterType&& input_adapter) {
+        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
+        std::vector<node_type> nodes {};
+        lexical_token_t type {lexical_token_t::END_OF_BUFFER};
+
+        do {
+            nodes.emplace_back(deserialize_document(lexer, type));
+        } while (type != lexical_token_t::END_OF_BUFFER);
+
+        return nodes;
+    }
+
+private:
+    node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
         node_type root;
@@ -148,7 +177,8 @@ public:
         mp_current_node = &root;
 
         // parse YAML nodes recursively
-        deserialize_node(lexer, type);
+        deserialize_node(lexer, type, last_type);
+        FK_YAML_ASSERT(last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DOCUMENT);
 
         // reset parameters for the next call.
         mp_current_node = nullptr;
@@ -160,7 +190,6 @@ public:
         return root;
     }
 
-private:
     /// @brief Deserializes the YAML directives if specified.
     /// @param lexer The lexical analyzer to be used.
     /// @param last_type The variable to store the last lexical token type.
@@ -248,16 +277,13 @@ private:
     /// @brief Deserializes the YAML nodes recursively.
     /// @param lexer The lexical analyzer to be used.
     /// @param first_type The first lexical token type.
-    void deserialize_node(lexer_type& lexer, lexical_token_t first_type) {
+    void deserialize_node(lexer_type& lexer, lexical_token_t first_type, lexical_token_t& last_type) {
         lexical_token_t type = first_type;
         uint32_t line = lexer.get_lines_processed();
         uint32_t indent = lexer.get_last_token_begin_pos();
 
         do {
             switch (type) {
-            case lexical_token_t::END_OF_BUFFER:
-                // This handles an empty input.
-                break;
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
                 uint32_t pop_num = 0;
                 if (indent == 0) {
@@ -759,15 +785,21 @@ private:
                 break;
             }
             case lexical_token_t::END_OF_DIRECTIVES:
+                throw parse_error("invalid end-of-directives marker (---) found in the contents.", line, indent);
+            case lexical_token_t::END_OF_BUFFER:
+                // This handles an empty input.
             case lexical_token_t::END_OF_DOCUMENT:
                 // TODO: This token should be handled to support multiple documents.
-                break;
+                last_type = type;
+                return;
             }
 
             type = lexer.get_next_token();
             indent = lexer.get_last_token_begin_pos();
             line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
+
+        last_type = type;
     }
 
     /// @brief Deserializes YAML node properties (anchor and/or tag names) if they exist

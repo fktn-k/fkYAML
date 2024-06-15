@@ -393,6 +393,48 @@ TEST_CASE("Node_Deserialize") {
     REQUIRE(node["foo"].get_value_ref<std::string&>() == "bar");
 }
 
+TEST_CASE("Node_DeserializeDocs") {
+    char source[] = "foo: bar\n"
+                    "...\n"
+                    "- true\n"
+                    "- 3.14\n"
+                    "- Null";
+    std::stringstream ss;
+    ss << source;
+
+    std::vector<fkyaml::node> docs = GENERATE_REF(
+        fkyaml::node::deserialize_docs("foo: bar\n"
+                                       "...\n"
+                                       "- true\n"
+                                       "- 3.14\n"
+                                       "- Null"),
+        fkyaml::node::deserialize_docs(source),
+        fkyaml::node::deserialize_docs(&source[0], &source[33]),
+        fkyaml::node::deserialize_docs(std::string(source)),
+        fkyaml::node::deserialize_docs(ss));
+
+    REQUIRE(docs.size() == 2);
+    fkyaml::node& root0 = docs[0];
+    REQUIRE(root0.is_mapping());
+    REQUIRE(root0.size() == 1);
+    REQUIRE(root0.contains("foo"));
+    fkyaml::node& foo_node = root0["foo"];
+    REQUIRE(foo_node.is_string());
+    REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+
+    fkyaml::node& root1 = docs[1];
+    REQUIRE(root1.is_sequence());
+    REQUIRE(root1.size() == 3);
+    fkyaml::node& seq0 = root1[0];
+    REQUIRE(seq0.is_boolean());
+    REQUIRE(seq0.get_value<bool>() == true);
+    fkyaml::node& seq1 = root1[1];
+    REQUIRE(seq1.is_float_number());
+    REQUIRE(seq1.get_value<double>() == 3.14);
+    fkyaml::node& seq2 = root1[2];
+    REQUIRE(seq2.is_null());
+}
+
 TEST_CASE("Node_Serialize") {
     fkyaml::node node = fkyaml::node::deserialize("foo: bar");
     REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");

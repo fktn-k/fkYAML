@@ -2550,3 +2550,61 @@ TEST_CASE("Deserializer_DocumentWithMarkers") {
     REQUIRE(foo_node.is_string());
     REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
 }
+
+TEST_CASE("Deserializer_MultipleDocuments") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+    std::vector<fkyaml::node> docs;
+
+    std::string input = "%YAML 1.1\n"
+                        "---\n"
+                        "foo: 123\n"
+                        "...\n"
+                        "%TAG ! tag:com.example,2024:\n"
+                        "---\n"
+                        "- !foo bar\n"
+                        "- 3.14\n"
+                        "- Null";
+
+    SECTION("parse only the first document") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_integer());
+        REQUIRE(foo_node.get_value<int>() == 123);
+    }
+
+    SECTION("parse all documents") {
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
+        REQUIRE(docs.size() == 2);
+
+        fkyaml::node& root0 = docs[0];
+        REQUIRE(root0.is_mapping());
+        REQUIRE(root0.size() == 1);
+        REQUIRE(root0.contains("foo"));
+
+        fkyaml::node& foo_node = root0["foo"];
+        REQUIRE(foo_node.is_integer());
+        REQUIRE(foo_node.get_value<int>() == 123);
+
+        fkyaml::node& root1 = docs[1];
+        REQUIRE(root1.is_sequence());
+        REQUIRE(root1.size() == 3);
+
+        fkyaml::node& seq0 = root1[0];
+        REQUIRE(seq0.has_tag_name());
+        REQUIRE(seq0.get_tag_name() == "!foo");
+        REQUIRE(seq0.is_string());
+        REQUIRE(seq0.get_value_ref<std::string&>() == "bar");
+
+        fkyaml::node& seq1 = root1[1];
+        REQUIRE(seq1.is_float_number());
+        REQUIRE(seq1.get_value<double>() == 3.14);
+
+        fkyaml::node& seq2 = root1[2];
+        REQUIRE(seq2.is_null());
+    }
+}
