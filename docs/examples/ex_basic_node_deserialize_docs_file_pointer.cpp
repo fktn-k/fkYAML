@@ -14,19 +14,25 @@
 
 int main() {
     // deserialize a YAML string.
-    FILE* p_file = std::fopen("input.yaml", "r");
+    FILE* p_file = std::fopen("input_multi.yaml", "r");
     if (!p_file) {
         // You must not pass a null FILE pointer.
         return -1;
     }
-    fkyaml::node n = fkyaml::node::deserialize(p_file);
+    std::vector<fkyaml::node> docs = fkyaml::node::deserialize_docs(p_file);
 
     std::fclose(p_file);
 
     // check the deserialization result.
-    std::cout << n["foo"].get_value<bool>() << std::endl;
-    std::cout << n["bar"].get_value<std::int64_t>() << std::endl;
-    std::cout << std::setprecision(3) << n["baz"].get_value<double>() << std::endl;
+    std::cout << docs[0]["foo"].get_value<bool>() << std::endl;
+    std::cout << docs[0]["bar"].get_value<std::int64_t>() << std::endl;
+    std::cout << std::setprecision(3) << docs[0]["baz"].get_value<double>() << std::endl;
+
+    std::cout << std::endl;
+
+    std::cout << docs[1][nullptr].get_value_ref<std::string&>() << std::endl;
+    std::cout << docs[1][false].get_value<std::int64_t>() << std::endl;
+    std::cout << std::setprecision(4) << docs[1][true].get_value<double>() << std::endl;
 
     return 0;
 }

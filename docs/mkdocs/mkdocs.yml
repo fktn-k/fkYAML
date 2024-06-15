@@ -114,6 +114,7 @@ nav:
           - const_iterator: api/basic_node/const_iterator.md
           - contains: api/basic_node/contains.md
           - deserialize: api/basic_node/deserialize.md
+          - deserialize_docs: api/basic_node/deserialize_docs.md
           - empty: api/basic_node/empty.md
           - end: api/basic_node/end.md
           - float_number_type: api/basic_node/float_number_type.md
