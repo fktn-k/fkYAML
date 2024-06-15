@@ -4394,6 +4394,8 @@ private:
     /// @param lexer The lexical analyzer to be used.
     /// @param last_type The variable to store the last lexical token type.
     void deserialize_directives(lexer_type& lexer, lexical_token_t& last_type) {
+        bool lacks_end_of_directives_marker = false;
+
         for (;;) {
             lexical_token_t type = lexer.get_next_token();
 
@@ -4408,6 +4410,7 @@ private:
 
                 mp_meta->version = convert_yaml_version(lexer.get_yaml_version());
                 mp_meta->is_version_specified = true;
+                lacks_end_of_directives_marker = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
                 const std::string& tag_handle = lexer.get_tag_handle();
@@ -4421,6 +4424,7 @@ private:
                             lexer.get_last_token_begin_pos());
                     }
                     mp_meta->primary_handle_prefix = lexer.get_tag_prefix();
+                    lacks_end_of_directives_marker = true;
                     break;
                 }
                 case 2: {
@@ -4432,6 +4436,7 @@ private:
                             lexer.get_last_token_begin_pos());
                     }
                     mp_meta->secondary_handle_prefix = lexer.get_tag_prefix();
+                    lacks_end_of_directives_marker = true;
                     break;
                 }
                 default: {
@@ -4443,6 +4448,7 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
+                    lacks_end_of_directives_marker = true;
                     break;
                 }
                 }
@@ -4452,9 +4458,15 @@ private:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case lexical_token_t::END_OF_DIRECTIVES:
-                // Ignore this directives end marker so the caller will get the beginning token of the contents.
+                lacks_end_of_directives_marker = false;
                 break;
             default:
+                if (lacks_end_of_directives_marker) {
+                    throw parse_error(
+                        "The end of directives marker (---) is missing after directives.",
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos());
+                }
                 // end the parsing of directives if the other tokens are found.
                 last_type = type;
                 return;

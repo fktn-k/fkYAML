@@ -1921,6 +1921,11 @@ TEST_CASE("Deserializer_YAMLVerDirective") {
         REQUIRE_THROWS_AS(
             deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.1\n%YAML 1.2\n")), fkyaml::parse_error);
     }
+
+    SECTION("lacks the end of directives marker after YAML directive") {
+        REQUIRE_THROWS_AS(
+            deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.2\nfoo: bar")), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_TagDirective") {
@@ -2007,6 +2012,12 @@ TEST_CASE("Deserializer_TagDirective") {
         std::string input = "%TAG !e! tag:test.com,2000:\n"
                             "%TAG !e! !foo-\n"
                             "---\n"
+                            "foo: bar";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("lacks the end of directives marker after TAG directive") {
+        std::string input = "%TAG ! tag:test.com,2000:\n"
                             "foo: bar";
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
