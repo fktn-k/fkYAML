@@ -401,7 +401,7 @@ public:
     }
 
 public:
-    /// @brief Deserialize an input source into a basic_node object.
+    /// @brief Deserialize the first YAML document in the input into a basic_node object.
     /// @tparam InputType Type of a compatible input.
     /// @param[in] input An input source in the YAML format.
     /// @return The resulting basic_node object deserialized from the input source.
@@ -411,7 +411,7 @@ public:
         return deserializer_type().deserialize(detail::input_adapter(std::forward<InputType>(input)));
     }
 
-    /// @brief Deserialize input iterators into a basic_node object.
+    /// @brief Deserialize the first YAML document in the input ranged by the iterators into a basic_node object.
     /// @tparam ItrType Type of a compatible iterator.
     /// @param[in] begin An iterator to the first element of an input sequence.
     /// @param[in] end An iterator to the past-the-last element of an input sequence.
@@ -420,6 +420,28 @@ public:
     template <typename ItrType>
     static basic_node deserialize(ItrType&& begin, ItrType&& end) {
         return deserializer_type().deserialize(
+            detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
+    }
+
+    /// @brief Deserialize all YAML documents in the input into basic_node objects.
+    /// @tparam InputType Type of a compatible input.
+    /// @param[in] input An input source in the YAML format.
+    /// @return The resulting basic_node objects deserialized from the input.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize_docs/
+    template <typename InputType>
+    static std::vector<basic_node> deserialize_docs(InputType&& input) {
+        return deserializer_type().deserialize_docs(detail::input_adapter(std::forward<InputType>(input)));
+    }
+
+    /// @brief Deserialize all YAML documents in the input ranged by the iterators into basic_node objects.
+    /// @tparam ItrType Type of a compatible iterator.
+    /// @param[in] begin An iterator to the first element of an input sequence.
+    /// @param[in] end An iterator to the past-the-last element of an input sequence.
+    /// @return The resulting basic_node objects deserialized from the pair of iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize_docs/
+    template <typename ItrType>
+    static std::vector<basic_node> deserialize_docs(ItrType&& begin, ItrType&& end) {
+        return deserializer_type().deserialize_docs(
             detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
 

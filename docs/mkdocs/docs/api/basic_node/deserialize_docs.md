@@ -1,19 +1,20 @@
 <small>Defined in header [`<fkYAML/node.hpp>`](https://github.com/fktn-k/fkYAML/blob/develop/include/fkYAML/node.hpp)</small>
 
-# <small>fkyaml::basic_node::</small>deserialize
+# <small>fkyaml::basic_node::</small>deserialize_docs
 
 ```cpp
 template <typename InputType>
-static basic_node deserialize(InputType&& input); // (1)
+static std::vector<basic_node> deserialize_docs(InputType&& input); // (1)
 
 template <typename ItrType>
-static basic_node deserialize(ItrType&& begin, ItrType&& end); // (2)
+static std::vector<basic_node> deserialize_docs(ItrType&& begin, ItrType&& end); // (2)
 ```
 
 Deserializes from compatible inputs.  
-Note that this function deserializes only the first YAML document in the given input and ignore the rest.  
-Use this function when the input consists of a single YAML document or only the first one needs to be deserialized.  
-Otherwise, use the [`deserialize_docs()`](deserialize_docs.md) function instead.
+Unlike the [`deserialize()`](deserialize.md) function, this function deserializes all YAML documents in the input into [`fkyaml::basic_node`](index.md) objects.  
+Prefer this function when your input may contain more than one YAML documents and all of them must be processed.  
+Otherwise, use the [`deserialize()`](deserialize.md) function which is optimized for processing single YAML documents.  
+
 Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization process detects an error from the input.  
 
 !!! note "Supported Unicode Encodings"
@@ -35,7 +36,7 @@ Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization pro
 
 ```cpp
 template <typename InputType>
-static basic_node deserialize(InputType&& input);
+static std::vector<basic_node> deserialize_docs(InputType&& input);
 ```
 
 ### **Template Parameters**
@@ -57,13 +58,13 @@ static basic_node deserialize(InputType&& input);
 
 ### **Return Value**
 
-The resulting `basic_node` object deserialized from the input source.  
+The resulting `basic_node` objects deserialized from the input source.  
 
 ## Overload (2)
 
 ```cpp
 template <typename ItrType>
-static basic_node deserialize(ItrType&& begin, ItrType&& end);
+static std::vector<basic_node> deserialize_docs(ItrType&& begin, ItrType&& end);
 ```
 
 ### **Template Parameters**
@@ -84,60 +85,60 @@ static basic_node deserialize(ItrType&& begin, ItrType&& end);
 
 ### **Return Value**
 
-The resulting `basic_node` object deserialized from the pair of iterators.
+The resulting `basic_node` objects deserialized from the pair of iterators.
 
 ## Examples
 
 ???+ Example "Example (a character array)"
 
     ```cpp
-    --8<-- "examples/ex_basic_node_deserialize_char_array.cpp:9"
+    --8<-- "examples/ex_basic_node_deserialize_docs_char_array.cpp:9"
     ```
 
     output:
     ```bash
-    --8<-- "examples/ex_basic_node_deserialize_char_array.output"
+    --8<-- "examples/ex_basic_node_deserialize_docs_char_array.output"
     ```
 
 ???+ Example "Example (a std::string object)"
 
     ```cpp
-    --8<-- "examples/ex_basic_node_deserialize_string.cpp:9"
+    --8<-- "examples/ex_basic_node_deserialize_docs_string.cpp:9"
     ```
 
     output:
     ```bash
-    --8<-- "examples/ex_basic_node_deserialize_string.output"
+    --8<-- "examples/ex_basic_node_deserialize_docs_string.output"
     ```
 
 ???+ Example "Example (a FILE pointer)"
 
-    ```yaml title="input.yaml"
-    --8<-- "examples/input.yaml"
+    ```yaml title="input_multi.yaml"
+    --8<-- "examples/input_multi.yaml"
     ```
 
     ```cpp
-    --8<-- "examples/ex_basic_node_deserialize_file_pointer.cpp:9"
+    --8<-- "examples/ex_basic_node_deserialize_docs_file_pointer.cpp:9"
     ```
 
     output:
     ```bash
-    --8<-- "examples/ex_basic_node_deserialize_file_pointer.output"
+    --8<-- "examples/ex_basic_node_deserialize_docs_file_pointer.output"
     ```
 
 ???+ Example "Example (a pair of iterators)"
 
     ```cpp
-    --8<-- "examples/ex_basic_node_deserialize_iterators.cpp:9"
+    --8<-- "examples/ex_basic_node_deserialize_docs_iterators.cpp:9"
     ```
 
     output:
     ```bash
-    --8<-- "examples/ex_basic_node_deserialize_iterators.output"
+    --8<-- "examples/ex_basic_node_deserialize_docs_iterators.output"
     ```
 
 ### **See Also**
 
 * [basic_node](index.md)
-* [deserialize_docs](deserialize_docs.md)
+* [deserialize](deserialize.md)
 * [get_value](get_value.md)
