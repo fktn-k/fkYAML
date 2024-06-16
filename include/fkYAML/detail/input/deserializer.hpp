@@ -104,9 +104,10 @@ class basic_deserializer {
         node_type* p_node {nullptr};
     };
 
+    /// @brief Definitions of state types for expected flow token hints.
     enum class flow_token_state_t {
-        NEEDS_VALUE_OR_SUFFIX,
-        NEEDS_SEPARATOR_OR_SUFFIX,
+        NEEDS_VALUE_OR_SUFFIX,     //!< Either value or flow suffix (`]` or `}`)
+        NEEDS_SEPARATOR_OR_SUFFIX, //!< Either separator (`,`) or flow suffix (`]` or `}`)
     };
 
 public:
@@ -121,7 +122,7 @@ public:
     /// prefer the `deserialize_docs()` function.
     /// @tparam InputAdapterType The type of an input adapter object.
     /// @param input_adapter An input adapter object for the input source buffer.
-    /// @return node_type A root YAML node object deserialized from the source string.
+    /// @return node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     node_type deserialize(InputAdapterType&& input_adapter) {
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
@@ -132,7 +133,7 @@ public:
     /// @brief Deserialize multiple YAML documents into YAML nodes.
     /// @tparam InputAdapterType The type of an adapter object.
     /// @param input_adapter An input adapter object for the input source buffer.
-    /// @return
+    /// @return std::vector<node_type> Root YAML nodes for deserialized YAML documents.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     std::vector<node_type> deserialize_docs(InputAdapterType&& input_adapter) {
         lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
@@ -147,6 +148,10 @@ public:
     }
 
 private:
+    /// @brief Deserialize a YAML document into a YAML node.
+    /// @param lexer The lexical analyzer to be used.
+    /// @param last_type The variable to store the last lexical token type.
+    /// @return node_type A root YAML node deserialized from the YAML document.
     node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
