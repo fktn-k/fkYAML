@@ -59,7 +59,7 @@ public:
         }
 
         return str;
-    }
+    } // LCOV_EXCL_LINE
 
 private:
     void serialize_document(const BasicNodeType& node, std::string& str) {
