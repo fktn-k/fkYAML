@@ -156,7 +156,7 @@ TEST_CASE("Serializer_AliasNode") {
                            "  - bar\n"
                            "  - *A\n"
                            "true: *A\n"
-                           "*A: 3.14\n"
+                           "*A : 3.14\n"
                            "foo: &A 123\n";
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;

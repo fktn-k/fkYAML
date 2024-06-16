@@ -7370,7 +7370,11 @@ private:
                 insert_indentation(cur_indent, str);
 
                 bool is_appended = try_append_alias(itr.key(), false, str);
-                if (!is_appended) {
+                if (is_appended) {
+                    // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
+                    str += " ";
+                }
+                else {
                     bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
                     bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
                     if (is_anchor_appended || is_tag_appended) {
