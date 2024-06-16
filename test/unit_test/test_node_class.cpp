@@ -371,7 +371,7 @@ TEST_CASE("Node_CopyAssignmentOperator") {
 }
 
 //
-// test cases for serialization/deserialization features
+// test cases for deserialization
 //
 
 TEST_CASE("Node_Deserialize") {
@@ -433,26 +433,6 @@ TEST_CASE("Node_DeserializeDocs") {
     REQUIRE(seq1.get_value<double>() == 3.14);
     fkyaml::node& seq2 = root1[2];
     REQUIRE(seq2.is_null());
-}
-
-TEST_CASE("Node_Serialize") {
-    fkyaml::node node = fkyaml::node::deserialize("foo: bar");
-    REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");
-}
-
-TEST_CASE("Node_SerializeDocs") {
-    std::vector<fkyaml::node> docs = fkyaml::node::deserialize_docs("foo: bar\n"
-                                                                    "...\n"
-                                                                    "123: true");
-    REQUIRE(fkyaml::node::serialize_docs(docs) == "foo: bar\n...\n123: true\n");
-}
-
-TEST_CASE("Node_InsertionOperator") {
-    fkyaml::node node = {{"foo", 123}, {"bar", nullptr}, {"baz", true}};
-    std::stringstream ss;
-    ss << node;
-
-    REQUIRE(ss.str() == "bar: null\nbaz: true\nfoo: 123\n");
 }
 
 TEST_CASE("Node_ExtractionOperator") {
@@ -587,6 +567,30 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
         REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
         REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
+}
+
+//
+// test cases for serialization
+//
+
+TEST_CASE("Node_Serialize") {
+    fkyaml::node node = fkyaml::node::deserialize("foo: bar");
+    REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");
+}
+
+TEST_CASE("Node_SerializeDocs") {
+    std::vector<fkyaml::node> docs = fkyaml::node::deserialize_docs("foo: bar\n"
+                                                                    "...\n"
+                                                                    "123: true");
+    REQUIRE(fkyaml::node::serialize_docs(docs) == "foo: bar\n...\n123: true\n");
+}
+
+TEST_CASE("Node_InsertionOperator") {
+    fkyaml::node node = {{"foo", 123}, {"bar", nullptr}, {"baz", true}};
+    std::stringstream ss;
+    ss << node;
+
+    REQUIRE(ss.str() == "bar: null\nbaz: true\nfoo: 123\n");
 }
 
 //
