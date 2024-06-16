@@ -4310,6 +4310,19 @@ class basic_deserializer {
               p_node(_p_node) {
         }
 
+        ~parse_context() {
+            switch (state) {
+            case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
+            case context_state_t::FLOW_SEQUENCE_KEY:
+            case context_state_t::FLOW_MAPPING_KEY:
+                delete p_node;
+                p_node = nullptr;
+                break;
+            default:
+                break;
+            }
+        }
+
         /// The current line. (count from zero)
         uint32_t line {0};
         /// The indentation width in the current line. (count from zero)
@@ -4664,14 +4677,12 @@ private:
                     m_context_stack.pop_back();
                 }
 
-                node_type* key_node = m_context_stack.back().p_node;
+                node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
-                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(*key_node, node_type());
-                mp_current_node = &(m_context_stack.back().p_node->operator[](*key_node));
+                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(key_node, node_type());
+                mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
                     line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
-                delete key_node;
-                key_node = nullptr;
 
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     *mp_current_node = node_type::sequence();
@@ -4819,6 +4830,7 @@ private:
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
+                last_context.p_node = nullptr;
                 indent = last_context.indent;
                 context_state_t state = last_context.state;
                 m_context_stack.pop_back();
@@ -4963,6 +4975,7 @@ private:
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
+                last_context.p_node = nullptr;
                 indent = last_context.indent;
                 context_state_t state = last_context.state;
                 m_context_stack.pop_back();
