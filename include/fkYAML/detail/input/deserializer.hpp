@@ -81,6 +81,19 @@ class basic_deserializer {
               p_node(_p_node) {
         }
 
+        ~parse_context() {
+            switch (state) {
+            case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
+            case context_state_t::FLOW_SEQUENCE_KEY:
+            case context_state_t::FLOW_MAPPING_KEY:
+                delete p_node;
+                p_node = nullptr;
+                break;
+            default:
+                break;
+            }
+        }
+
         /// The current line. (count from zero)
         uint32_t line {0};
         /// The indentation width in the current line. (count from zero)
@@ -89,6 +102,12 @@ class basic_deserializer {
         context_state_t state {context_state_t::BLOCK_MAPPING};
         /// The pointer to the associated node to this context.
         node_type* p_node {nullptr};
+    };
+
+    /// @brief Definitions of state types for expected flow token hints.
+    enum class flow_token_state_t {
+        NEEDS_VALUE_OR_SUFFIX,     //!< Either value or flow suffix (`]` or `}`)
+        NEEDS_SEPARATOR_OR_SUFFIX, //!< Either separator (`,`) or flow suffix (`]` or `}`)
     };
 
 public:
@@ -103,7 +122,7 @@ public:
     /// prefer the `deserialize_docs()` function.
     /// @tparam InputAdapterType The type of an input adapter object.
     /// @param input_adapter An input adapter object for the input source buffer.
-    /// @return node_type A root YAML node object deserialized from the source string.
+    /// @return node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     node_type deserialize(InputAdapterType&& input_adapter) {
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
@@ -114,7 +133,7 @@ public:
     /// @brief Deserialize multiple YAML documents into YAML nodes.
     /// @tparam InputAdapterType The type of an adapter object.
     /// @param input_adapter An input adapter object for the input source buffer.
-    /// @return
+    /// @return std::vector<node_type> Root YAML nodes for deserialized YAML documents.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     std::vector<node_type> deserialize_docs(InputAdapterType&& input_adapter) {
         lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
@@ -129,6 +148,10 @@ public:
     }
 
 private:
+    /// @brief Deserialize a YAML document into a YAML node.
+    /// @param lexer The lexical analyzer to be used.
+    /// @param last_type The variable to store the last lexical token type.
+    /// @return node_type A root YAML node deserialized from the YAML document.
     node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
@@ -185,6 +208,8 @@ private:
         mp_meta.reset();
         m_needs_tag_impl = false;
         m_needs_anchor_impl = false;
+        m_flow_context_depth = 0;
+        m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
         m_context_stack.clear();
 
         return root;
@@ -428,14 +453,12 @@ private:
                     m_context_stack.pop_back();
                 }
 
-                node_type* key_node = m_context_stack.back().p_node;
+                node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
-                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(*key_node, node_type());
-                mp_current_node = &(m_context_stack.back().p_node->operator[](*key_node));
+                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(key_node, node_type());
+                mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
                     line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
-                delete key_node;
-                key_node = nullptr;
 
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     *mp_current_node = node_type::sequence();
@@ -520,6 +543,9 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                 }
+                else if (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                    throw parse_error("Flow sequence begininng is found without separated with a comma.", line, indent);
+                }
 
                 ++m_flow_context_depth;
 
@@ -550,20 +576,12 @@ private:
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
-                type = lexer.get_next_token();
-                if (type == lexical_token_t::SEQUENCE_FLOW_END) {
-                    // enable the flag for the next loop for the empty flow sequence.
-                    m_needs_value_separator_or_suffix = true;
-                }
-                line = lexer.get_lines_processed();
-                indent = lexer.get_last_token_begin_pos();
-                continue;
+                m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                break;
             case lexical_token_t::SEQUENCE_FLOW_END: {
-                if (!m_needs_value_separator_or_suffix) {
-                    throw parse_error("invalid flow sequence ending is found.", line, indent);
+                if (m_flow_context_depth == 0) {
+                    throw parse_error("Flow sequence ending is found outside the flow context.", line, indent);
                 }
-                m_needs_value_separator_or_suffix = false;
-
                 --m_flow_context_depth;
 
                 // find the corresponding flow sequence beginning.
@@ -582,12 +600,13 @@ private:
 
                 bool is_valid = itr != m_context_stack.rend();
                 if (!is_valid) {
-                    throw parse_error("invalid flow sequence ending is found.", line, indent);
+                    throw parse_error("No corresponding flow sequence beginning is found.", line, indent);
                 }
 
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
+                last_context.p_node = nullptr;
                 indent = last_context.indent;
                 context_state_t state = last_context.state;
                 m_context_stack.pop_back();
@@ -598,6 +617,7 @@ private:
                     node_type key_node = std::move(*mp_current_node);
                     delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
+                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
                     add_new_key(std::move(key_node), line, indent);
                     break;
@@ -608,7 +628,10 @@ private:
                     node_type key_node = node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
+
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+
                     add_new_key(std::move(key_node), line, indent);
                 }
                 else {
@@ -616,7 +639,7 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                     if (m_flow_context_depth > 0) {
-                        m_needs_value_separator_or_suffix = true;
+                        m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
                     }
                 }
 
@@ -662,6 +685,9 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                 }
+                else if (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                    throw parse_error("Flow mapping begininng is found without separated with a comma.", line, indent);
+                }
 
                 ++m_flow_context_depth;
 
@@ -692,20 +718,15 @@ private:
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
-                type = lexer.get_next_token();
-                if (type == lexical_token_t::MAPPING_FLOW_END) {
-                    // enable the flag for the next loop for the empty flow mapping.
-                    m_needs_value_separator_or_suffix = true;
-                }
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
-                continue;
-            case lexical_token_t::MAPPING_FLOW_END: {
-                if (!m_needs_value_separator_or_suffix) {
-                    throw parse_error("invalid flow mapping ending is found.", line, indent);
-                }
-                m_needs_value_separator_or_suffix = false;
 
+                m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                break;
+            case lexical_token_t::MAPPING_FLOW_END: {
+                if (m_flow_context_depth == 0) {
+                    throw parse_error("Flow mapping ending is found outside the flow context.", line, indent);
+                }
                 --m_flow_context_depth;
 
                 // find the corresponding flow mapping beginning.
@@ -724,12 +745,13 @@ private:
 
                 bool is_valid = itr != m_context_stack.rend();
                 if (!is_valid) {
-                    throw parse_error("invalid flow mapping ending is found.", line, indent);
+                    throw parse_error("No corresponding flow mapping beginning is found.", line, indent);
                 }
 
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
+                last_context.p_node = nullptr;
                 indent = last_context.indent;
                 context_state_t state = last_context.state;
                 m_context_stack.pop_back();
@@ -740,6 +762,7 @@ private:
                     node_type key_node = std::move(*mp_current_node);
                     delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
+                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
                     add_new_key(std::move(key_node), line, indent);
                     break;
@@ -748,8 +771,12 @@ private:
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::KEY_SEPARATOR) {
                     node_type key_node = node_type::mapping();
+                    apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
+
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+
                     add_new_key(std::move(key_node), line, indent);
                 }
                 else {
@@ -757,7 +784,7 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                     if (m_flow_context_depth > 0) {
-                        m_needs_value_separator_or_suffix = true;
+                        m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
                     }
                 }
 
@@ -767,10 +794,10 @@ private:
             }
             case lexical_token_t::VALUE_SEPARATOR:
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
-                if (!m_needs_value_separator_or_suffix) {
+                if (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
-                m_needs_value_separator_or_suffix = false;
+                m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX:
             case lexical_token_t::NULL_VALUE:
@@ -912,8 +939,8 @@ private:
                 mp_current_node = m_context_stack.back().p_node;
             }
         }
-        else if (m_needs_value_separator_or_suffix) {
-            throw parse_error("flow mapping entry is found without separated with a comma.", line, indent);
+        else if (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+            throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
         }
 
         if (mp_current_node->is_sequence()) {
@@ -938,10 +965,10 @@ private:
     void assign_node_value(node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
             if (m_flow_context_depth > 0) {
-                if (m_needs_value_separator_or_suffix) {
+                if (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
                     throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
                 }
-                m_needs_value_separator_or_suffix = true;
+                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             }
 
             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
@@ -955,7 +982,7 @@ private:
             mp_current_node = m_context_stack.back().p_node;
 
             if (m_flow_context_depth > 0) {
-                m_needs_value_separator_or_suffix = true;
+                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             }
         }
     }
@@ -1151,8 +1178,8 @@ private:
     bool m_needs_anchor_impl {false};
     /// A flag to determine the need for a corresponding node with the last YAML tag.
     bool m_needs_tag_impl {false};
-    /// A flag to determine the need for a value separator or a flow suffix to be follow.
-    bool m_needs_value_separator_or_suffix {false};
+    /// A flag to determine the need for a value separator or a flow suffix to follow.
+    flow_token_state_t m_flow_token_state {flow_token_state_t::NEEDS_VALUE_OR_SUFFIX};
     /// The last YAML anchor name.
     string_type m_anchor_name {};
     /// The last tag name.

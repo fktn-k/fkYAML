@@ -1682,6 +1682,8 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
 
         std::string buffer {};
         input_adapter.fill_buffer(buffer);
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter") {
@@ -1774,6 +1776,8 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
         REQUIRE(buffer[7] == 't');
         REQUIRE(buffer[8] == 'a');
         REQUIRE(buffer[9] == '\n');
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter") {
@@ -1879,6 +1883,8 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BENewlineCodeNormalization") {
         REQUIRE(buffer[7] == 't');
         REQUIRE(buffer[8] == 'a');
         REQUIRE(buffer[9] == '\n');
+
+        std::fclose(p_file);
     }
 
     SECTION("stream_input_adapter") {
