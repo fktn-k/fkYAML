@@ -447,10 +447,18 @@ public:
 
     /// @brief Serialize a basic_node object into a string.
     /// @param[in] node A basic_node object to be serialized.
-    /// @return The resulting string object from the serialization of the node object.
+    /// @return The resulting string object from the serialization of the given node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
     static std::string serialize(const basic_node& node) {
         return serializer_type().serialize(node);
+    }
+
+    /// @brief Serialize basic_node objects into a string.
+    /// @param docs basic_node objects to be serialized.
+    /// @return The resulting string object from the serialization of the given nodes.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/
+    static std::string serialize_docs(const std::vector<basic_node>& docs) {
+        return serializer_type().serialize_docs(docs);
     }
 
     /// @brief A factory method for sequence basic_node objects without sequence_type objects.

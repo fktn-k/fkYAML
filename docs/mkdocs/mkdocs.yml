@@ -140,6 +140,7 @@ nav:
           - sequence_type: api/basic_node/sequence_type.md
           - sequence: api/basic_node/sequence.md
           - serialize: api/basic_node/serialize.md
+          - serialize_docs: api/basic_node/serialize_docs.md
           - set_yaml_version: api/basic_node/set_yaml_version.md
           - size: api/basic_node/size.md
           - string_type: api/basic_node/string_type.md

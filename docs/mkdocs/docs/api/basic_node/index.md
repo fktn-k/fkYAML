@@ -80,6 +80,7 @@ This class provides features to handle YAML nodes.
 | [deserialize_docs](deserialize_docs.md) | (static) | deserializes all YAML documents into basic_node objects.           |
 | [operator>>](extraction_operator.md)    |          | deserializes an input stream into a basic_node.                    |
 | [serialize](serialize.md)               | (static) | serializes a basic_node into a YAML formatted string.              |
+| [serialize_docs](serialize_docs.md)     | (static) | serializes basic_node objects into a YAML formatted string.        |
 | [operator<<](insertion_operator.md)     |          | serializes a basic_node into an output stream.                     |
 | [get_value](get_value.md)               |          | converts a basic_node into a target native data type.              |
 | [get_value_ref](get_value_ref.md)       |          | converts a basic_node into reference to a target native data type. |

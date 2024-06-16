@@ -7258,12 +7258,31 @@ public:
     /// @return std::string A serialization result of the given Node value.
     std::string serialize(const BasicNodeType& node) {
         std::string str {};
-        serialize_directives(node, str);
-        serialize_node(node, 0, str);
+        serialize_document(node, str);
+        return str;
+    } // LCOV_EXCL_LINE
+
+    std::string serialize_docs(const std::vector<BasicNodeType>& docs) {
+        std::string str {};
+
+        uint32_t size = static_cast<uint32_t>(docs.size());
+        for (uint32_t i = 0; i < size; i++) {
+            serialize_document(docs[i], str);
+            if (i + 1 < size) {
+                // Append the end-of-document marker for the next document.
+                str += "...\n";
+            }
+        }
+
         return str;
     } // LCOV_EXCL_LINE
 
 private:
+    void serialize_document(const BasicNodeType& node, std::string& str) {
+        serialize_directives(node, str);
+        serialize_node(node, 0, str);
+    }
+
     /// @brief Serialize the directives if any is applied to the node.
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
@@ -8824,10 +8843,18 @@ public:
 
     /// @brief Serialize a basic_node object into a string.
     /// @param[in] node A basic_node object to be serialized.
-    /// @return The resulting string object from the serialization of the node object.
+    /// @return The resulting string object from the serialization of the given node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
     static std::string serialize(const basic_node& node) {
         return serializer_type().serialize(node);
+    }
+
+    /// @brief Serialize basic_node objects into a string.
+    /// @param docs basic_node objects to be serialized.
+    /// @return The resulting string object from the serialization of the given nodes.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/
+    static std::string serialize_docs(const std::vector<basic_node>& docs) {
+        return serializer_type().serialize_docs(docs);
     }
 
     /// @brief A factory method for sequence basic_node objects without sequence_type objects.

@@ -251,3 +251,31 @@ TEST_CASE("Serializer_NodesWithDirectives") {
         REQUIRE(serializer.serialize(root) == expected);
     }
 }
+
+TEST_CASE("Serializer_MultipleDocuments") {
+    std::vector<fkyaml::node> docs;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+
+    SECTION("bare documents") {
+        std::string expected = "foo: bar\n"
+                               "...\n"
+                               "123: true\n";
+
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(expected)));
+        REQUIRE(serializer.serialize_docs(docs) == expected);
+    }
+
+    SECTION("with directives") {
+        std::string expected = "%YAML 1.2\n"
+                               "---\n"
+                               "foo: !!str bar\n"
+                               "...\n"
+                               "%TAG !t! !test-\n"
+                               "---\n"
+                               "test: !t!result success\n";
+
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(expected)));
+        REQUIRE(serializer.serialize_docs(docs) == expected);
+    }
+}
