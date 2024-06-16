@@ -440,6 +440,13 @@ TEST_CASE("Node_Serialize") {
     REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");
 }
 
+TEST_CASE("Node_SerializeDocs") {
+    std::vector<fkyaml::node> docs = fkyaml::node::deserialize_docs("foo: bar\n"
+                                                                    "...\n"
+                                                                    "123: true");
+    REQUIRE(fkyaml::node::serialize_docs(docs) == "foo: bar\n...\n123: true\n");
+}
+
 TEST_CASE("Node_InsertionOperator") {
     fkyaml::node node = {{"foo", 123}, {"bar", nullptr}, {"baz", true}};
     std::stringstream ss;

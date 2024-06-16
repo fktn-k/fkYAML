@@ -42,12 +42,31 @@ public:
     /// @return std::string A serialization result of the given Node value.
     std::string serialize(const BasicNodeType& node) {
         std::string str {};
-        serialize_directives(node, str);
-        serialize_node(node, 0, str);
+        serialize_document(node, str);
         return str;
     } // LCOV_EXCL_LINE
 
+    std::string serialize_docs(const std::vector<BasicNodeType>& docs) {
+        std::string str {};
+
+        uint32_t size = static_cast<uint32_t>(docs.size());
+        for (uint32_t i = 0; i < size; i++) {
+            serialize_document(docs[i], str);
+            if (i + 1 < size) {
+                // Append the end-of-document marker for the next document.
+                str += "...\n";
+            }
+        }
+
+        return str;
+    }
+
 private:
+    void serialize_document(const BasicNodeType& node, std::string& str) {
+        serialize_directives(node, str);
+        serialize_node(node, 0, str);
+    }
+
     /// @brief Serialize the directives if any is applied to the node.
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
