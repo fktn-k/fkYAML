@@ -159,6 +159,10 @@ private:
                 }
             }
 
+            if (!utf16::validate(encoded_buffer)) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
+
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
@@ -197,6 +201,10 @@ private:
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[1]);
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[2]);
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[3]);
+
+            if (!utf32::validate(utf32)) {
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+            }
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
@@ -578,6 +586,10 @@ private:
                 }
             }
 
+            if (!utf16::validate(encoded_buffer)) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
+
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
@@ -622,6 +634,10 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
+
+            if (!utf32::validate(utf32)) {
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+            }
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
@@ -777,6 +793,10 @@ private:
                 }
             };
 
+            if (!utf16::validate(encoded_buffer)) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
+
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
@@ -822,6 +842,10 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
+
+            if (!utf32::validate(utf32)) {
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+            }
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);

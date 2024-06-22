@@ -16,6 +16,8 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/encodings/utf_encode_t.hpp>
+#include <fkYAML/detail/meta/input_adapter_traits.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/exception.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -28,51 +30,46 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept {
     has_bom = false;
 
-    // Check if a BOM exists.
-
-    if (bytes[0] == uint8_t(0xEFu) && bytes[1] == uint8_t(0xBBu) && bytes[2] == uint8_t(0xBFu)) {
-        has_bom = true;
-        return utf_encode_t::UTF_8;
+    switch (bytes[0]) {
+    case uint8_t(0):
+        if (bytes[1] == 0) {
+            if (bytes[2] == uint8_t(0xFEu)) {
+                if (bytes[3] == uint8_t(0xFFu)) {
+                    has_bom = true;
+                    return utf_encode_t::UTF_32BE;
+                }
+            }
+            else if (bytes[2] == 0 && 0 < bytes[3] && bytes[3] < uint8_t(0x80u)) {
+                return utf_encode_t::UTF_32BE;
+            }
+        }
+        else if (bytes[1] < uint8_t(0x80u)) {
+            return utf_encode_t::UTF_16BE;
+        }
+        break;
+    case uint8_t(0xEFu):
+        has_bom = (bytes[1] == uint8_t(0xBBu) && bytes[2] == uint8_t(0xBFu));
+        break;
+    case uint8_t(0xFEu):
+        if (bytes[1] == uint8_t(0xFFu)) {
+            has_bom = true;
+            return utf_encode_t::UTF_16BE;
+        }
+        break;
+    case uint8_t(0xFFu):
+        if (bytes[1] == uint8_t(0xFEu)) {
+            has_bom = true;
+            return (bytes[2] == 0 && bytes[3] == 0) ? utf_encode_t::UTF_32LE : utf_encode_t::UTF_16LE;
+        }
+        break;
+    default:
+        if (bytes[0] < uint8_t(0x80u)) {
+            if (bytes[1] == 0) {
+                return (bytes[2] == 0 && bytes[3] == 0) ? utf_encode_t::UTF_32LE : utf_encode_t::UTF_16LE;
+            }
+        }
+        break;
     }
-
-    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == uint8_t(0xFEu) && bytes[3] == uint8_t(0xFFu)) {
-        has_bom = true;
-        return utf_encode_t::UTF_32BE;
-    }
-
-    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu) && bytes[2] == 0 && bytes[3] == 0) {
-        has_bom = true;
-        return utf_encode_t::UTF_32LE;
-    }
-
-    if (bytes[0] == uint8_t(0xFEu) && bytes[1] == uint8_t(0xFFu)) {
-        has_bom = true;
-        return utf_encode_t::UTF_16BE;
-    }
-
-    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu)) {
-        has_bom = true;
-        return utf_encode_t::UTF_16LE;
-    }
-
-    // Test the first character assuming it's an ASCII character.
-
-    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && 0 < bytes[3] && bytes[3] < uint8_t(0x80u)) {
-        return utf_encode_t::UTF_32BE;
-    }
-
-    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0) {
-        return utf_encode_t::UTF_32LE;
-    }
-
-    if (bytes[0] == 0 && 0 < bytes[1] && bytes[1] < uint8_t(0x80u)) {
-        return utf_encode_t::UTF_16BE;
-    }
-
-    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0) {
-        return utf_encode_t::UTF_16LE;
-    }
-
     return utf_encode_t::UTF_8;
 }
 
@@ -86,10 +83,15 @@ struct encode_detector {};
 template <typename ItrType>
 struct encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::value>> {
     /// @brief Detects UTF encoding type and the existence of a BOM.
+    /// @note The detection is based on the list at https://yaml.org/spec/1.2.2/#52-character-encodings.
     /// @param begin The beginning of input iterators.
     /// @param end The end of input iterators.
     /// @return The detected UTF encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) noexcept {
+        if (begin == end) {
+            return utf_encode_t::UTF_8;
+        }
+
         std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
         for (int i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = uint8_t(begin[i]);

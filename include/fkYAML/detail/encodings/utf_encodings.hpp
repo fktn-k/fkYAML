@@ -193,7 +193,8 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
 /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
 /// @param[out] encoded_size The size of UTF-encoded bytes.
 inline void from_utf16(
-    std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size, uint32_t& encoded_size) {
+    std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size,
+    uint32_t& encoded_size) noexcept {
     if (utf16[0] < char16_t(0x80u)) {
         utf8[0] = static_cast<uint8_t>(utf16[0] & 0x7Fu);
         consumed_size = 1;
@@ -220,30 +221,26 @@ inline void from_utf16(
         encoded_size = 3;
         return;
     }
-    else if (utf16[0] <= char16_t(0xDBFFu) && char16_t(0xDC00u) <= utf16[1] && utf16[1] <= char16_t(0xDFFFu)) {
-        // for surrogate pairs
-        uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
-        uint32_t utf8_chunk =
-            static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((code_point & 0x1C0000u) << 6) |
-            static_cast<uint32_t>((code_point & 0x03F000u) << 4) |
-            static_cast<uint32_t>((code_point & 0x000FC0u) << 2) | static_cast<uint32_t>(code_point & 0x00003Fu);
-        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
-        utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
-        utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
-        utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
-        consumed_size = 2;
-        encoded_size = 4;
-        return;
-    }
 
-    throw invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
+    // for surrogate pairs
+    uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
+    uint32_t utf8_chunk = static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((code_point & 0x1C0000u) << 6) |
+                          static_cast<uint32_t>((code_point & 0x03F000u) << 4) |
+                          static_cast<uint32_t>((code_point & 0x000FC0u) << 2) |
+                          static_cast<uint32_t>(code_point & 0x00003Fu);
+    utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
+    utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
+    utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
+    utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
+    consumed_size = 2;
+    encoded_size = 4;
 }
 
 /// @brief Converts a UTF-32 encoded character to UTF-8 encoded bytes.
 /// @param[in] utf32 A UTF-32 encoded character.
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[in] encoded_size The size of UTF-encoded bytes.
-inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint32_t& encoded_size) {
+inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint32_t& encoded_size) noexcept {
     if (utf32 < char32_t(0x80u)) {
         utf8[0] = static_cast<uint8_t>(utf32 & 0x007F);
         encoded_size = 1;
@@ -266,23 +263,41 @@ inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint3
         encoded_size = 3;
         return;
     }
-    else if (utf32 <= char32_t(0x10FFFFu)) {
-        uint32_t utf8_chunk = static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((utf32 & 0x1C0000u) << 6) |
-                              static_cast<uint32_t>((utf32 & 0x03F000u) << 4) |
-                              static_cast<uint32_t>((utf32 & 0x000FC0u) << 2) |
-                              static_cast<uint32_t>(utf32 & 0x00003Fu);
-        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
-        utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
-        utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
-        utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
-        encoded_size = 4;
-        return;
-    }
 
-    throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+    uint32_t utf8_chunk = static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((utf32 & 0x1C0000u) << 6) |
+                          static_cast<uint32_t>((utf32 & 0x03F000u) << 4) |
+                          static_cast<uint32_t>((utf32 & 0x000FC0u) << 2) | static_cast<uint32_t>(utf32 & 0x00003Fu);
+    utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
+    utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
+    utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
+    utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
+    encoded_size = 4;
 }
 
 } // namespace utf8
+
+namespace utf16 {
+
+inline bool validate(std::array<char16_t, 2> utf16) noexcept {
+    if (utf16[0] < char16_t(0xD800u) || char16_t(0xE000u) <= utf16[0]) {
+        return true;
+    }
+    else if (utf16[0] <= char16_t(0xDBFFu) && char16_t(0xDC00u) <= utf16[1] && utf16[1] <= char16_t(0xDFFFu)) {
+        return true;
+    }
+
+    return false;
+}
+
+} // namespace utf16
+
+namespace utf32 {
+
+inline bool validate(char32_t utf32) noexcept {
+    return utf32 <= char32_t(0x10FFFFu);
+}
+
+} // namespace utf32
 
 FK_YAML_DETAIL_NAMESPACE_END
 

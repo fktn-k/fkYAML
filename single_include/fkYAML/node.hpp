@@ -1741,7 +1741,8 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
 /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
 /// @param[out] encoded_size The size of UTF-encoded bytes.
 inline void from_utf16(
-    std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size, uint32_t& encoded_size) {
+    std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size,
+    uint32_t& encoded_size) noexcept {
     if (utf16[0] < char16_t(0x80u)) {
         utf8[0] = static_cast<uint8_t>(utf16[0] & 0x7Fu);
         consumed_size = 1;
@@ -1768,30 +1769,26 @@ inline void from_utf16(
         encoded_size = 3;
         return;
     }
-    else if (utf16[0] <= char16_t(0xDBFFu) && char16_t(0xDC00u) <= utf16[1] && utf16[1] <= char16_t(0xDFFFu)) {
-        // for surrogate pairs
-        uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
-        uint32_t utf8_chunk =
-            static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((code_point & 0x1C0000u) << 6) |
-            static_cast<uint32_t>((code_point & 0x03F000u) << 4) |
-            static_cast<uint32_t>((code_point & 0x000FC0u) << 2) | static_cast<uint32_t>(code_point & 0x00003Fu);
-        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
-        utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
-        utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
-        utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
-        consumed_size = 2;
-        encoded_size = 4;
-        return;
-    }
 
-    throw invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
+    // for surrogate pairs
+    uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
+    uint32_t utf8_chunk = static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((code_point & 0x1C0000u) << 6) |
+                          static_cast<uint32_t>((code_point & 0x03F000u) << 4) |
+                          static_cast<uint32_t>((code_point & 0x000FC0u) << 2) |
+                          static_cast<uint32_t>(code_point & 0x00003Fu);
+    utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
+    utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
+    utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
+    utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
+    consumed_size = 2;
+    encoded_size = 4;
 }
 
 /// @brief Converts a UTF-32 encoded character to UTF-8 encoded bytes.
 /// @param[in] utf32 A UTF-32 encoded character.
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[in] encoded_size The size of UTF-encoded bytes.
-inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint32_t& encoded_size) {
+inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint32_t& encoded_size) noexcept {
     if (utf32 < char32_t(0x80u)) {
         utf8[0] = static_cast<uint8_t>(utf32 & 0x007F);
         encoded_size = 1;
@@ -1814,23 +1811,41 @@ inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint3
         encoded_size = 3;
         return;
     }
-    else if (utf32 <= char32_t(0x10FFFFu)) {
-        uint32_t utf8_chunk = static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((utf32 & 0x1C0000u) << 6) |
-                              static_cast<uint32_t>((utf32 & 0x03F000u) << 4) |
-                              static_cast<uint32_t>((utf32 & 0x000FC0u) << 2) |
-                              static_cast<uint32_t>(utf32 & 0x00003Fu);
-        utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
-        utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
-        utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
-        utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
-        encoded_size = 4;
-        return;
-    }
 
-    throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+    uint32_t utf8_chunk = static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((utf32 & 0x1C0000u) << 6) |
+                          static_cast<uint32_t>((utf32 & 0x03F000u) << 4) |
+                          static_cast<uint32_t>((utf32 & 0x000FC0u) << 2) | static_cast<uint32_t>(utf32 & 0x00003Fu);
+    utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
+    utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
+    utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
+    utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
+    encoded_size = 4;
 }
 
 } // namespace utf8
+
+namespace utf16 {
+
+inline bool validate(std::array<char16_t, 2> utf16) noexcept {
+    if (utf16[0] < char16_t(0xD800u) || char16_t(0xE000u) <= utf16[0]) {
+        return true;
+    }
+    else if (utf16[0] <= char16_t(0xDBFFu) && char16_t(0xDC00u) <= utf16[1] && utf16[1] <= char16_t(0xDFFFu)) {
+        return true;
+    }
+
+    return false;
+}
+
+} // namespace utf16
+
+namespace utf32 {
+
+inline bool validate(char32_t utf32) noexcept {
+    return utf32 <= char32_t(0x10FFFFu);
+}
+
+} // namespace utf32
 
 FK_YAML_DETAIL_NAMESPACE_END
 
@@ -2176,6 +2191,10 @@ private:
     }
 
     static void unescape_escaped_unicode(char32_t codepoint, std::string& buff) {
+        if (!utf32::validate(codepoint)) {
+            throw invalid_encoding("Invalid escaped unicode is detected.", codepoint);
+        }
+
         std::array<uint8_t, 4> encode_buff {};
         uint32_t encoded_size {0};
         utf8::from_utf32(codepoint, encode_buff, encoded_size);
@@ -5499,6 +5518,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_ */
 
+// #include <fkYAML/detail/meta/input_adapter_traits.hpp>
+
+// #include <fkYAML/detail/meta/stl_supplement.hpp>
+
 // #include <fkYAML/exception.hpp>
 
 
@@ -5512,51 +5535,46 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept {
     has_bom = false;
 
-    // Check if a BOM exists.
-
-    if (bytes[0] == uint8_t(0xEFu) && bytes[1] == uint8_t(0xBBu) && bytes[2] == uint8_t(0xBFu)) {
-        has_bom = true;
-        return utf_encode_t::UTF_8;
+    switch (bytes[0]) {
+    case uint8_t(0):
+        if (bytes[1] == 0) {
+            if (bytes[2] == uint8_t(0xFEu)) {
+                if (bytes[3] == uint8_t(0xFFu)) {
+                    has_bom = true;
+                    return utf_encode_t::UTF_32BE;
+                }
+            }
+            else if (bytes[2] == 0 && 0 < bytes[3] && bytes[3] < uint8_t(0x80u)) {
+                return utf_encode_t::UTF_32BE;
+            }
+        }
+        else if (bytes[1] < uint8_t(0x80u)) {
+            return utf_encode_t::UTF_16BE;
+        }
+        break;
+    case uint8_t(0xEFu):
+        has_bom = (bytes[1] == uint8_t(0xBBu) && bytes[2] == uint8_t(0xBFu));
+        break;
+    case uint8_t(0xFEu):
+        if (bytes[1] == uint8_t(0xFFu)) {
+            has_bom = true;
+            return utf_encode_t::UTF_16BE;
+        }
+        break;
+    case uint8_t(0xFFu):
+        if (bytes[1] == uint8_t(0xFEu)) {
+            has_bom = true;
+            return (bytes[2] == 0 && bytes[3] == 0) ? utf_encode_t::UTF_32LE : utf_encode_t::UTF_16LE;
+        }
+        break;
+    default:
+        if (bytes[0] < uint8_t(0x80u)) {
+            if (bytes[1] == 0) {
+                return (bytes[2] == 0 && bytes[3] == 0) ? utf_encode_t::UTF_32LE : utf_encode_t::UTF_16LE;
+            }
+        }
+        break;
     }
-
-    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == uint8_t(0xFEu) && bytes[3] == uint8_t(0xFFu)) {
-        has_bom = true;
-        return utf_encode_t::UTF_32BE;
-    }
-
-    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu) && bytes[2] == 0 && bytes[3] == 0) {
-        has_bom = true;
-        return utf_encode_t::UTF_32LE;
-    }
-
-    if (bytes[0] == uint8_t(0xFEu) && bytes[1] == uint8_t(0xFFu)) {
-        has_bom = true;
-        return utf_encode_t::UTF_16BE;
-    }
-
-    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu)) {
-        has_bom = true;
-        return utf_encode_t::UTF_16LE;
-    }
-
-    // Test the first character assuming it's an ASCII character.
-
-    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && 0 < bytes[3] && bytes[3] < uint8_t(0x80u)) {
-        return utf_encode_t::UTF_32BE;
-    }
-
-    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0) {
-        return utf_encode_t::UTF_32LE;
-    }
-
-    if (bytes[0] == 0 && 0 < bytes[1] && bytes[1] < uint8_t(0x80u)) {
-        return utf_encode_t::UTF_16BE;
-    }
-
-    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0) {
-        return utf_encode_t::UTF_16LE;
-    }
-
     return utf_encode_t::UTF_8;
 }
 
@@ -5570,10 +5588,15 @@ struct encode_detector {};
 template <typename ItrType>
 struct encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::value>> {
     /// @brief Detects UTF encoding type and the existence of a BOM.
+    /// @note The detection is based on the list at https://yaml.org/spec/1.2.2/#52-character-encodings.
     /// @param begin The beginning of input iterators.
     /// @param end The end of input iterators.
     /// @return The detected UTF encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) noexcept {
+        if (begin == end) {
+            return utf_encode_t::UTF_8;
+        }
+
         std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
         for (int i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = uint8_t(begin[i]);
@@ -5935,6 +5958,10 @@ private:
                 }
             }
 
+            if (!utf16::validate(encoded_buffer)) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
+
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
@@ -5973,6 +6000,10 @@ private:
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[1]);
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[2]);
             utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[3]);
+
+            if (!utf32::validate(utf32)) {
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+            }
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
@@ -6354,6 +6385,10 @@ private:
                 }
             }
 
+            if (!utf16::validate(encoded_buffer)) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
+
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
@@ -6398,6 +6433,10 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
+
+            if (!utf32::validate(utf32)) {
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+            }
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
@@ -6553,6 +6592,10 @@ private:
                 }
             };
 
+            if (!utf16::validate(encoded_buffer)) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
+
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
@@ -6598,6 +6641,10 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
+
+            if (!utf32::validate(utf32)) {
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+            }
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
