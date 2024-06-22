@@ -2568,6 +2568,9 @@ struct is_input_adapter : std::false_type {};
 template <typename InputAdapterType>
 struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type {};
 
+template <typename ItrType, typename T>
+using is_iterator_of = std::is_same<remove_cv_t<typename std::iterator_traits<ItrType>::value_type>, T>;
+
 FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */
@@ -5557,17 +5560,21 @@ inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bo
     return utf_encode_t::UTF_8;
 }
 
-/// @brief Detects the encoding type of the input, and consumes a BOM if it exists.
-/// @tparam ItrType Type of iterators for the input.
-/// @tparam ElemSize The size of one input element.
-/// @param begin The beginning of input iterators.
-/// @param end The end of input iterators.
-/// @return A detected encoding type.
-template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
-inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end) {
-    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    switch (ElemSize) {
-    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 or better.
+/// @brief A class which detects UTF encoding and the existence of a BOM from iterators.
+/// @tparam ItrType An iterator type.
+template <typename ItrType, typename = void>
+struct encode_detector {};
+
+/// @brief The partial specialization of encode_detector for char iterators.
+/// @tparam ItrType An iterator type.
+template <typename ItrType>
+struct encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::value>> {
+    /// @brief Detects UTF encoding type and the existence of a BOM.
+    /// @param begin The beginning of input iterators.
+    /// @param end The end of input iterators.
+    /// @return The detected UTF encoding type.
+    static utf_encode_t detect(ItrType& begin, const ItrType& end) noexcept {
+        std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
         for (int i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = uint8_t(begin[i]);
         }
@@ -5594,10 +5601,51 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
 
         return encode_type;
     }
-    case sizeof(char16_t): {
+};
+
+#ifdef FK_YAML_HAS_CHAR8_T
+
+/// @brief The partial specialization of encode_detector for char8_t iterators.
+/// @tparam ItrType An iterator type.
+template <typename ItrType>
+struct encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>::value>> {
+    static utf_encode_t detect(ItrType& begin, const ItrType& end) {
+        std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
+        for (int i = 0; i < 4 && begin + i != end; i++) {
+            bytes[i] = uint8_t(begin[i]);
+        }
+
+        bool has_bom = false;
+        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+
+        if (encode_type != utf_encode_t::UTF_8) {
+            throw exception("char16_t characters must be encoded in the UTF-16 format.");
+        }
+
+        if (has_bom) {
+            std::advance(begin, 3);
+        }
+
+        return encode_type;
+    }
+};
+
+#endif // defined(FK_YAML_HAS_CHAR8_T)
+
+/// @brief The partial specialization of encode_detector for char16_t iterators.
+/// @tparam ItrType An iterator type.
+template <typename ItrType>
+struct encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t>::value>> {
+    /// @brief Detects UTF encoding type and the existence of a BOM.
+    /// @param begin The beginning of input iterators.
+    /// @param end The end of input iterators.
+    /// @return The detected UTF encoding type.
+    static utf_encode_t detect(ItrType& begin, const ItrType& end) {
         if (begin == end) {
             return utf_encode_t::UTF_16BE;
         }
+
+        std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
         for (int i = 0; i < 2 && begin + i != end; i++) {
             bytes[i * 2] = uint8_t((begin[i] & 0xFF00u) >> 8);
             bytes[i * 2 + 1] = uint8_t(begin[i] & 0xFFu);
@@ -5617,11 +5665,22 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
 
         return encode_type;
     }
-    case sizeof(char32_t): {
+};
+
+/// @brief The partial specialization of encode_detector for char32_t iterators.
+/// @tparam ItrType An iterator type.
+template <typename ItrType>
+struct encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t>::value>> {
+    /// @brief Detects UTF encoding type and the existence of a BOM.
+    /// @param begin The beginning of input iterators.
+    /// @param end The end of input iterators.
+    /// @return The detected UTF encoding type.
+    static utf_encode_t detect(ItrType& begin, const ItrType& end) {
         if (begin == end) {
             return utf_encode_t::UTF_32BE;
         }
 
+        std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
         bytes[0] = uint8_t((*begin & 0xFF000000u) >> 24);
         bytes[1] = uint8_t((*begin & 0x00FF0000u) >> 16);
         bytes[2] = uint8_t((*begin & 0x0000FF00u) >> 8);
@@ -5641,85 +5700,94 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
 
         return encode_type;
     }
-    default:
-        throw exception("Unknown char size.");
-    }
-}
+};
 
-inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept {
-    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (int i = 0; i < 4; i++) {
-        char byte = 0;
-        std::size_t size = std::fread(&byte, sizeof(char), 1, file);
-        if (size != sizeof(char)) {
-            break;
+/// @brief A class which detects UTF encoding and the existence of a BOM from a C-style file handle.
+struct file_encode_detector {
+    /// @brief Detects UTF encoding type and the existence of a BOM.
+    /// @param file The file handle.
+    /// @return The detected UTF encoding type.
+    static utf_encode_t detect(std::FILE* file) noexcept {
+        std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
+        for (int i = 0; i < 4; i++) {
+            char byte = 0;
+            std::size_t size = std::fread(&byte, sizeof(char), 1, file);
+            if (size != sizeof(char)) {
+                break;
+            }
+            bytes[i] = uint8_t(byte & 0xFF);
         }
-        bytes[i] = uint8_t(byte & 0xFF);
-    }
 
-    bool has_bom = false;
-    utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        bool has_bom = false;
+        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-    // move back to the beginning if a BOM doesn't exist.
-    long offset = 0;
-    if (has_bom) {
-        switch (encode_type) {
-        case utf_encode_t::UTF_8:
-            offset = 3;
-            break;
-        case utf_encode_t::UTF_16BE:
-        case utf_encode_t::UTF_16LE:
-            offset = 2;
-            break;
-        case utf_encode_t::UTF_32BE:
-        case utf_encode_t::UTF_32LE:
-            offset = 4;
-            break;
+        // move back to the beginning if a BOM doesn't exist.
+        long offset = 0;
+        if (has_bom) {
+            switch (encode_type) {
+            case utf_encode_t::UTF_8:
+                offset = 3;
+                break;
+            case utf_encode_t::UTF_16BE:
+            case utf_encode_t::UTF_16LE:
+                offset = 2;
+                break;
+            case utf_encode_t::UTF_32BE:
+            case utf_encode_t::UTF_32LE:
+                offset = 4;
+                break;
+            }
         }
+        fseek(file, offset, SEEK_SET);
+
+        return encode_type;
     }
-    fseek(file, offset, SEEK_SET);
+};
 
-    return encode_type;
-}
-
-inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept {
-    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (int i = 0; i < 4; i++) {
-        char ch = 0;
-        is.read(&ch, 1);
-        std::streamsize size = is.gcount();
-        if (size != 1) {
-            // without this, seekg() fails in the switch-case statement below.
-            is.clear();
-            break;
+/// @brief A class which detects UTF encoding and the existence of a BOM from an input stream.
+struct stream_encode_detector {
+    /// @brief Detects UTF encoding type and the existence of a BOM.
+    /// @param is The input stream.
+    /// @return The detected UTF encoding type.
+    static utf_encode_t detect(std::istream& is) noexcept {
+        std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
+        for (int i = 0; i < 4; i++) {
+            char ch = 0;
+            is.read(&ch, 1);
+            std::streamsize size = is.gcount();
+            if (size != 1) {
+                // without this, seekg() fails in the switch-case statement below.
+                is.clear();
+                break;
+            }
+            bytes[i] = uint8_t(ch & 0xFF);
         }
-        bytes[i] = uint8_t(ch & 0xFF);
-    }
 
-    bool has_bom = false;
-    utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        bool has_bom = false;
+        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-    // move back to the beginning if a BOM doesn't exist.
-    std::streamoff offset = 0;
-    if (has_bom) {
-        switch (encode_type) {
-        case utf_encode_t::UTF_8:
-            offset = 3;
-            break;
-        case utf_encode_t::UTF_16BE:
-        case utf_encode_t::UTF_16LE:
-            offset = 2;
-            break;
-        case utf_encode_t::UTF_32BE:
-        case utf_encode_t::UTF_32LE:
-            offset = 4;
-            break;
+        // move back to the beginning if a BOM doesn't exist.
+        std::streamoff offset = 0;
+        if (has_bom) {
+            switch (encode_type) {
+            case utf_encode_t::UTF_8:
+                offset = 3;
+                break;
+            case utf_encode_t::UTF_16BE:
+            case utf_encode_t::UTF_16LE:
+                offset = 2;
+                break;
+            case utf_encode_t::UTF_32BE:
+            case utf_encode_t::UTF_32LE:
+                offset = 4;
+                break;
+            }
         }
-    }
-    is.seekg(offset, std::ios_base::beg);
+        is.seekg(offset, std::ios_base::beg);
 
-    return encode_type;
-}
+        return encode_type;
+    }
+};
 
 FK_YAML_DETAIL_NAMESPACE_END
 
@@ -5746,9 +5814,7 @@ class iterator_input_adapter;
 /// @brief An input adapter for iterators of type char.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -5929,9 +5995,7 @@ private:
 /// @brief An input adapter for iterators of type char8_t.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char8_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -6019,9 +6083,7 @@ private:
 /// @brief An input adapter for iterators of type char16_t.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char16_t>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char16_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -6093,9 +6155,7 @@ private:
 /// @brief An input adapter for iterators of type char32_t.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char32_t>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char32_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -6562,9 +6622,9 @@ private:
 /// @param begin The beginning of iterators.
 /// @param end The end of iterators.
 /// @return iterator_input_adapter<ItrType> An iterator_input_adapter object for the target iterator type.
-template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
+template <typename ItrType>
 inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end) {
-    utf_encode_t encode_type = detect_encoding_and_skip_bom(begin, end);
+    utf_encode_t encode_type = encode_detector<ItrType>::detect(begin, end);
     return iterator_input_adapter<ItrType>(begin, end, encode_type);
 }
 
@@ -6577,19 +6637,19 @@ inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array 
     return input_adapter(array, array + (N - 1));
 }
 
-/// @brief A namespace to implement container_input_adapter_factory for internal use.
-namespace input_adapter_factory {
+/// @brief Anonymous namespace to implement container_input_adapter_factory helper class for internal use.
+namespace /* input_adapter_factory */ {
 
 using std::begin;
 using std::end;
 
-/// @brief A factory of input adapters for containers.
+/// @brief A helper factory class of input adapters for containers.
 /// @tparam ContainerType A container type.
 /// @tparam typename N/A
 template <typename ContainerType, typename = void>
 struct container_input_adapter_factory {};
 
-/// @brief A partial specialization of container_input_adapter_factory if begin()/end() are available for ContainerType.
+/// @brief A partial specialization of container_input_adapter_factory if begin()/end() are available.
 /// @tparam ContainerType A container type.
 template <typename ContainerType>
 struct container_input_adapter_factory<
@@ -6606,16 +6666,15 @@ struct container_input_adapter_factory<
     }
 };
 
-} // namespace input_adapter_factory
+} // namespace
 
 /// @brief A factory method for iterator_input_adapter objects with containers.
 /// @tparam ContainerType A container type.
 /// @param container A container object.
-/// @return input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type
+/// @return container_input_adapter_factory<ContainerType>::adapter_type
 template <typename ContainerType>
-inline typename input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type input_adapter(
-    ContainerType&& container) {
-    return input_adapter_factory::container_input_adapter_factory<ContainerType>::create(container);
+inline typename container_input_adapter_factory<ContainerType>::adapter_type input_adapter(ContainerType&& container) {
+    return container_input_adapter_factory<ContainerType>::create(container);
 }
 
 /// @brief A factory method for file_input_adapter objects with C-style file handles.
@@ -6625,7 +6684,7 @@ inline file_input_adapter input_adapter(std::FILE* file) {
     if (!file) {
         throw fkyaml::exception("Invalid FILE object pointer.");
     }
-    utf_encode_t encode_type = detect_encoding_and_skip_bom(file);
+    utf_encode_t encode_type = file_encode_detector::detect(file);
     return file_input_adapter(file, encode_type);
 }
 
@@ -6633,7 +6692,7 @@ inline file_input_adapter input_adapter(std::FILE* file) {
 /// @param stream An input stream.
 /// @return stream_input_adapter A stream_input_adapter object.
 inline stream_input_adapter input_adapter(std::istream& stream) noexcept {
-    utf_encode_t encode_type = detect_encoding_and_skip_bom(stream);
+    utf_encode_t encode_type = stream_encode_detector::detect(stream);
     return stream_input_adapter(stream, encode_type);
 }
 

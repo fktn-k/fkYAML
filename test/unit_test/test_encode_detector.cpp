@@ -94,7 +94,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {char(0x60u), char(0x61u), char(0x62u), char(0x63u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(begin == std::begin(input));
     }
@@ -103,7 +104,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {char(0xEFu), char(0xBBu), char(0xBFu), char(0x60u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(begin == std::begin(input) + 3);
     }
@@ -112,7 +114,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {0, char(0x60u), 0, char(0x61u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(begin == std::begin(input));
     }
@@ -121,7 +124,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {char(0xFEu), char(0xFFu), 0, char(0x60u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(begin == std::begin(input) + 2);
     }
@@ -130,7 +134,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {char(0x60u), 0, char(0x61u), 0};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(begin == std::begin(input));
     }
@@ -139,7 +144,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {char(0xFFu), char(0xFEu), char(0x60u), 0};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(begin == std::begin(input) + 2);
     }
@@ -148,7 +154,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {0, 0, 0, char(0x60u), 0, 0, 0, char(0x61u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(begin == std::begin(input));
     }
@@ -157,7 +164,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {0, 0, char(0xFEu), char(0xFFu), 0, 0, 0, char(0x60u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(begin == std::begin(input) + 4);
     }
@@ -166,7 +174,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {char(0x60u), 0, 0, 0, char(0x61u), 0, 0, 0};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(begin == std::begin(input));
     }
@@ -175,7 +184,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::string input {char(0xFFu), char(0xFEu), 0, 0, char(0x60u), 0, 0, 0};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(begin == std::begin(input) + 4);
     }
@@ -188,7 +198,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u16string input {char16_t(0x0060u), char16_t(0x0061u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(begin == std::begin(input));
     }
@@ -197,7 +208,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u16string input {char16_t(0xFEFFu), char16_t(0x0060u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(begin == std::begin(input) + 1);
     }
@@ -206,7 +218,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u16string input {char16_t(0x6000u), char16_t(0x6100u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(begin == std::begin(input));
     }
@@ -215,7 +228,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u16string input {char16_t(0xFFFEu), char16_t(0x6000u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(begin == std::begin(input) + 1);
     }
@@ -224,7 +238,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u16string input = u"";
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(begin == std::begin(input));
     }
@@ -233,7 +248,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u16string input {char16_t(0x0000u), char16_t(0xFEFFu)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        REQUIRE_THROWS_AS(fkyaml::detail::detect_encoding_and_skip_bom(begin, end), fkyaml::exception);
+        using iterator_type = decltype(begin);
+        REQUIRE_THROWS_AS(fkyaml::detail::encode_detector<iterator_type>::detect(begin, end), fkyaml::exception);
     }
 
     ////////////////////////////
@@ -244,7 +260,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u32string input {char32_t(0x00000060u), char32_t(0x00000061u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(begin == std::begin(input));
     }
@@ -253,7 +270,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u32string input {char32_t(0x0000FEFFu), char32_t(0x00000060u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(begin == std::begin(input) + 1);
     }
@@ -262,7 +280,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u32string input {char32_t(0x60000000u), char32_t(0x61000000u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(begin == std::begin(input));
     }
@@ -271,7 +290,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u32string input {char32_t(0xFFFE0000u), char32_t(0x60000000u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(begin == std::begin(input) + 1);
     }
@@ -280,7 +300,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u32string input = U"";
         auto begin = std::begin(input);
         auto end = std::end(input);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(begin, end);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::encode_detector<iterator_type>::detect(begin, end);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(begin == std::begin(input));
     }
@@ -289,7 +310,8 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         std::u32string input {char32_t(0xFEFF0060u), char32_t(0x00610062u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
-        REQUIRE_THROWS_AS(fkyaml::detail::detect_encoding_and_skip_bom(begin, end), fkyaml::exception);
+        using iterator_type = decltype(begin);
+        REQUIRE_THROWS_AS(fkyaml::detail::encode_detector<iterator_type>::detect(begin, end), fkyaml::exception);
     }
 
     //////////////////////
@@ -302,7 +324,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(std::ftell(p_file) == 0);
 
@@ -315,7 +337,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(std::ftell(p_file) == 3);
 
@@ -328,7 +350,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(std::ftell(p_file) == 0);
 
@@ -341,7 +363,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(std::ftell(p_file) == 2);
 
@@ -354,7 +376,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(std::ftell(p_file) == 0);
 
@@ -367,7 +389,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(std::ftell(p_file) == 2);
 
@@ -380,7 +402,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(std::ftell(p_file) == 0);
 
@@ -393,7 +415,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(std::ftell(p_file) == 4);
 
@@ -406,7 +428,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(std::ftell(p_file) == 0);
 
@@ -419,7 +441,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(std::ftell(p_file) == 4);
 
@@ -432,7 +454,7 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(p_file);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::file_encode_detector::detect(p_file);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(std::ftell(p_file) == 0);
 
@@ -445,77 +467,77 @@ TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
 
     SECTION("std::istream with UTF-8 encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(ifs.tellg() == 0);
     }
 
     SECTION("std::istream with UTF-8(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8bom.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(ifs.tellg() == 3);
     }
 
     SECTION("std::istream with UTF-16BE encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16ben.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(ifs.tellg() == 0);
     }
 
     SECTION("std::istream with UTF-16BE(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16bebom.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(ifs.tellg() == 2);
     }
 
     SECTION("std::istream with UTF-16LE encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16len.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(ifs.tellg() == 0);
     }
 
     SECTION("std::istream with UTF-16LE(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16lebom.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(ifs.tellg() == 2);
     }
 
     SECTION("std::istream with UTF-32BE encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32ben.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(ifs.tellg() == 0);
     }
 
     SECTION("std::istream with UTF-32BE(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32bebom.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(ifs.tellg() == 4);
     }
 
     SECTION("std::istream with UTF-32LE encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32len.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(ifs.tellg() == 0);
     }
 
     SECTION("std::istream with UTF-32LE(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32lebom.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(ifs.tellg() == 4);
     }
 
     SECTION("std::istream with an empty input file") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/single_char_byte_input.txt");
-        fkyaml::detail::utf_encode_t ret = fkyaml::detail::detect_encoding_and_skip_bom(ifs);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(ifs.tellg() == 0);
     }

@@ -38,9 +38,7 @@ class iterator_input_adapter;
 /// @brief An input adapter for iterators of type char.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -221,9 +219,7 @@ private:
 /// @brief An input adapter for iterators of type char8_t.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char8_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -311,9 +307,7 @@ private:
 /// @brief An input adapter for iterators of type char16_t.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char16_t>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char16_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -385,9 +379,7 @@ private:
 /// @brief An input adapter for iterators of type char32_t.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char32_t>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char32_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -854,9 +846,9 @@ private:
 /// @param begin The beginning of iterators.
 /// @param end The end of iterators.
 /// @return iterator_input_adapter<ItrType> An iterator_input_adapter object for the target iterator type.
-template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
+template <typename ItrType>
 inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end) {
-    utf_encode_t encode_type = detect_encoding_and_skip_bom(begin, end);
+    utf_encode_t encode_type = encode_detector<ItrType>::detect(begin, end);
     return iterator_input_adapter<ItrType>(begin, end, encode_type);
 }
 
@@ -869,19 +861,19 @@ inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array 
     return input_adapter(array, array + (N - 1));
 }
 
-/// @brief A namespace to implement container_input_adapter_factory for internal use.
-namespace input_adapter_factory {
+/// @brief Anonymous namespace to implement container_input_adapter_factory helper class for internal use.
+namespace /* input_adapter_factory */ {
 
 using std::begin;
 using std::end;
 
-/// @brief A factory of input adapters for containers.
+/// @brief A helper factory class of input adapters for containers.
 /// @tparam ContainerType A container type.
 /// @tparam typename N/A
 template <typename ContainerType, typename = void>
 struct container_input_adapter_factory {};
 
-/// @brief A partial specialization of container_input_adapter_factory if begin()/end() are available for ContainerType.
+/// @brief A partial specialization of container_input_adapter_factory if begin()/end() are available.
 /// @tparam ContainerType A container type.
 template <typename ContainerType>
 struct container_input_adapter_factory<
@@ -898,16 +890,15 @@ struct container_input_adapter_factory<
     }
 };
 
-} // namespace input_adapter_factory
+} // namespace
 
 /// @brief A factory method for iterator_input_adapter objects with containers.
 /// @tparam ContainerType A container type.
 /// @param container A container object.
-/// @return input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type
+/// @return container_input_adapter_factory<ContainerType>::adapter_type
 template <typename ContainerType>
-inline typename input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type input_adapter(
-    ContainerType&& container) {
-    return input_adapter_factory::container_input_adapter_factory<ContainerType>::create(container);
+inline typename container_input_adapter_factory<ContainerType>::adapter_type input_adapter(ContainerType&& container) {
+    return container_input_adapter_factory<ContainerType>::create(container);
 }
 
 /// @brief A factory method for file_input_adapter objects with C-style file handles.
@@ -917,7 +908,7 @@ inline file_input_adapter input_adapter(std::FILE* file) {
     if (!file) {
         throw fkyaml::exception("Invalid FILE object pointer.");
     }
-    utf_encode_t encode_type = detect_encoding_and_skip_bom(file);
+    utf_encode_t encode_type = file_encode_detector::detect(file);
     return file_input_adapter(file, encode_type);
 }
 
@@ -925,7 +916,7 @@ inline file_input_adapter input_adapter(std::FILE* file) {
 /// @param stream An input stream.
 /// @return stream_input_adapter A stream_input_adapter object.
 inline stream_input_adapter input_adapter(std::istream& stream) noexcept {
-    utf_encode_t encode_type = detect_encoding_and_skip_bom(stream);
+    utf_encode_t encode_type = stream_encode_detector::detect(stream);
     return stream_input_adapter(stream, encode_type);
 }
 

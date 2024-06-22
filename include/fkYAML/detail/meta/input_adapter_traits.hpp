@@ -56,6 +56,9 @@ struct is_input_adapter : std::false_type {};
 template <typename InputAdapterType>
 struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type {};
 
+template <typename ItrType, typename T>
+using is_iterator_of = std::is_same<remove_cv_t<typename std::iterator_traits<ItrType>::value_type>, T>;
+
 FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */
