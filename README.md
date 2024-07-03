@@ -106,10 +106,6 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 
 | Compiler                   | Operating System                                                                                               |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| AppleClang 11.0.3.11030032 | [macOS 11](https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md)                 |
-| AppleClang 12.0.0.12000032 | [macOS 11](https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md)                 |
-| AppleClang 12.0.5.12050022 | [macOS 11](https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md)                 |
-| AppleClang 13.0.0.13000029 | [macOS 11](https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md)                 |
 | AppleClang 13.0.0.13000029 | [macOS 12](https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md)                 |
 | AppleClang 13.1.6.13160021 | [macOS 12](https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md)                 |
 | AppleClang 14.0.0.14000029 | [macOS 12](https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md)                 |
