@@ -17,28 +17,25 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of lexical token types.
 enum class lexical_token_t {
-    END_OF_BUFFER,         //!< the end of input buffer.
-    EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
-    KEY_SEPARATOR,         //!< the key separater `:`
-    VALUE_SEPARATOR,       //!< the value separater `,`
-    ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
-    ALIAS_PREFIX,          //!< the character for alias prefix `*`
-    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
-    TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
-    TAG_PREFIX,            //!< the character for tag prefix `!`
-    INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
-    SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
-    SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
-    SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
-    MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
-    MAPPING_FLOW_END,      //!< the character for mapping end `}`
-    NULL_VALUE,            //!< a null value found. use get_null() to get a value.
-    BOOLEAN_VALUE,         //!< a boolean value found. use get_boolean() to get a value.
-    INTEGER_VALUE,         //!< an integer value found. use get_integer() to get a value.
-    FLOAT_NUMBER_VALUE,    //!< a float number value found. use get_float_number() to get a value.
-    STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
-    END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
-    END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
+    END_OF_BUFFER,              //!< the end of an input buffer.
+    END_OF_DIRECTIVES,          //!< the end of directives, specified by `---`.
+    END_OF_DOCUMENT,            //!< the end of a YAML document, specified by `...`.
+    BLOCK_SEQUENCE_ITEM_PREFIX, //!< the beginning of a block sequence item, specified by `- `.
+    FLOW_SEQUENCE_BEGIN,        //!< the beginning of a flow sequence, specified by `[`.
+    FLOW_SEQUENCE_END,          //!< the end of a flow sequence, specified by `]`.
+    FLOW_MAPPING_BEGIN,         //!< the beginning of a flow mapping, specified by `{`.
+    FLOW_MAPPING_END,           //!< the end of a flow mapping, specified by `}`.
+    FLOW_SINGLE_QUOTED_SCALAR,  //!< a flow single quoted scalar.
+    FLOW_DOUBLE_QUOTED_SCALAR,  //!< a flow double quoted scalar.
+    FLOW_PLAIN_SCALAR,          //!< a flow plain scalar.
+    BLOCK_SCALAR,               //!< a block scalar (either literal or folded).
+    EXPLICIT_KEY_PREFIX,        //!< the prefix of an explicit mapping key, specified by `?`.
+    KEY_SEPARATOR,              //!< the key separater, specified by `: `.
+    VALUE_SEPARATOR,            //!< the value separater, specified by `,`.
+    ANCHOR,                     //!< an anchor, beginning with the prefix `&`.
+    ALIAS,                      //!< an alias, beginning with the prefix `*`.
+    TAG,                        //!< a tag, beginning with the prefix `!`.
+    DIRECTIVE,                  //!< a directive line, beginning with the prefix `%`.
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

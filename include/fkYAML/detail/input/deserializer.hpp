@@ -38,8 +38,8 @@ class basic_deserializer {
 
     /** A type for the target basic_node. */
     using node_type = BasicNodeType;
-    /** A type for the lexical analyzer. */
-    using lexer_type = lexical_analyzer<node_type>;
+    /** An alias type for lexical tokens. */
+    using lextoken_type = typename lexical_analyzer::lexical_token;
     /** A type for the document metainfo. */
     using doc_metainfo_type = document_metainfo<node_type>;
     /** A type for the tag resolver. */
@@ -125,8 +125,11 @@ public:
     /// @return node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     node_type deserialize(InputAdapterType&& input_adapter) {
+        std::string input_buffer {};
+        std::forward<InputAdapterType>(input_adapter).fill_buffer(input_buffer);
+        lexical_analyzer lexer(input_buffer);
+
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
-        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
         return deserialize_document(lexer, type);
     }
 
@@ -136,7 +139,10 @@ public:
     /// @return std::vector<node_type> Root YAML nodes for deserialized YAML documents.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     std::vector<node_type> deserialize_docs(InputAdapterType&& input_adapter) {
-        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
+        std::string input_buffer {};
+        std::forward<InputAdapterType>(input_adapter).fill_buffer(input_buffer);
+        lexical_analyzer lexer(input_buffer);
+
         std::vector<node_type> nodes {};
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
@@ -152,46 +158,42 @@ private:
     /// @param lexer The lexical analyzer to be used.
     /// @param last_type The variable to store the last lexical token type.
     /// @return node_type A root YAML node deserialized from the YAML document.
-    node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
-        lexical_token_t type {lexical_token_t::END_OF_BUFFER};
+    node_type deserialize_document(lexical_analyzer& lexer, lexical_token_t& last_type) {
+        lextoken_type token {};
 
         node_type root;
         mp_meta = root.mp_meta;
 
         // parse directives first.
-        deserialize_directives(lexer, type);
+        deserialize_directives(lexer, token);
 
-        switch (type) {
+        switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
             root = node_type::sequence();
             apply_directive_set(root);
-            parse_context context(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
+            parse_context context(token.start_line, token.start_pos, context_state_t::BLOCK_SEQUENCE, &root);
             m_context_stack.emplace_back(std::move(context));
-            type = lexer.get_next_token();
+            token = lexer.get_tokens().at(0);
             break;
         }
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
             ++m_flow_context_depth;
             root = node_type::sequence();
             apply_directive_set(root);
-            m_context_stack.emplace_back(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_SEQUENCE, &root);
-            type = lexer.get_next_token();
+            m_context_stack.emplace_back(token.start_line, token.start_pos, context_state_t::FLOW_SEQUENCE, &root);
+            token = lexer.get_tokens().at(0);
             break;
         case lexical_token_t::MAPPING_FLOW_BEGIN:
             ++m_flow_context_depth;
             root = node_type::mapping();
             apply_directive_set(root);
-            m_context_stack.emplace_back(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
-            type = lexer.get_next_token();
+            m_context_stack.emplace_back(token.start_line, token.start_pos, context_state_t::FLOW_MAPPING, &root);
+            token = lexer.get_tokens().at(0);
             break;
         default: {
             root = node_type::mapping();
             apply_directive_set(root);
-            parse_context context(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
+            parse_context context(token.start_line, token.start_pos, context_state_t::BLOCK_MAPPING, &root);
             m_context_stack.emplace_back(std::move(context));
             break;
         }
@@ -200,7 +202,7 @@ private:
         mp_current_node = &root;
 
         // parse YAML nodes recursively
-        deserialize_node(lexer, type, last_type);
+        deserialize_node(lexer, token, last_type);
         FK_YAML_ASSERT(last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DOCUMENT);
 
         // reset parameters for the next call.
@@ -218,19 +220,17 @@ private:
     /// @brief Deserializes the YAML directives if specified.
     /// @param lexer The lexical analyzer to be used.
     /// @param last_type The variable to store the last lexical token type.
-    void deserialize_directives(lexer_type& lexer, lexical_token_t& last_type) {
+    void deserialize_directives(lexical_analyzer& lexer, lextoken_type& last_token) {
         bool lacks_end_of_directives_marker = false;
 
         for (;;) {
-            lexical_token_t type = lexer.get_next_token();
+            auto token = lexer.get_tokens().at(0);
 
-            switch (type) {
+            switch (token.type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
                 if (mp_meta->is_version_specified) {
                     throw parse_error(
-                        "YAML version cannot be specified more than once.",
-                        lexer.get_lines_processed(),
-                        lexer.get_last_token_begin_pos());
+                        "YAML version cannot be specified more than once.", token.start_line, token.start_pos);
                 }
 
                 mp_meta->version = convert_yaml_version(lexer.get_yaml_version());
@@ -244,9 +244,7 @@ private:
                     bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
-                            "Primary handle cannot be specified more than once.",
-                            lexer.get_lines_processed(),
-                            lexer.get_last_token_begin_pos());
+                            "Primary handle cannot be specified more than once.", token.start_line, token.start_pos);
                     }
                     mp_meta->primary_handle_prefix = lexer.get_tag_prefix();
                     lacks_end_of_directives_marker = true;
@@ -256,9 +254,7 @@ private:
                     bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
-                            "Secondary handle cannot be specified more than once.",
-                            lexer.get_lines_processed(),
-                            lexer.get_last_token_begin_pos());
+                            "Secondary handle cannot be specified more than once.", token.start_line, token.start_pos);
                     }
                     mp_meta->secondary_handle_prefix = lexer.get_tag_prefix();
                     lacks_end_of_directives_marker = true;
@@ -270,8 +266,8 @@ private:
                     if (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
-                            lexer.get_lines_processed(),
-                            lexer.get_last_token_begin_pos());
+                            token.start_line,
+                            token.start_pos);
                     }
                     lacks_end_of_directives_marker = true;
                     break;
@@ -289,11 +285,11 @@ private:
                 if (lacks_end_of_directives_marker) {
                     throw parse_error(
                         "The end of directives marker (---) is missing after directives.",
-                        lexer.get_lines_processed(),
-                        lexer.get_last_token_begin_pos());
+                        token.start_line,
+                        token.start_pos);
                 }
                 // end the parsing of directives if the other tokens are found.
-                last_type = type;
+                last_token = std::move(token);
                 return;
             }
         }
@@ -302,10 +298,10 @@ private:
     /// @brief Deserializes the YAML nodes recursively.
     /// @param lexer The lexical analyzer to be used.
     /// @param first_type The first lexical token type.
-    void deserialize_node(lexer_type& lexer, lexical_token_t first_type, lexical_token_t& last_type) {
-        lexical_token_t type = first_type;
-        uint32_t line = lexer.get_lines_processed();
-        uint32_t indent = lexer.get_last_token_begin_pos();
+    void deserialize_node(lexical_analyzer& lexer, const lextoken_type& first_token, lexical_token_t& last_type) {
+        lexical_token_t type = first_token.type;
+        uint32_t line = first_token.start_line;
+        uint32_t indent = first_token.start_pos;
 
         do {
             switch (type) {
@@ -835,7 +831,8 @@ private:
     /// @param line The variable to store the line of either the first property or the last non-property token.
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
-    bool deserialize_node_properties(lexer_type& lexer, lexical_token_t& last_type, uint32_t& line, uint32_t& indent) {
+    bool deserialize_node_properties(
+        lexical_analyzer& lexer, lexical_token_t& last_type, uint32_t& line, uint32_t& indent) {
         m_needs_anchor_impl = m_needs_tag_impl = false;
 
         lexical_token_t type = last_type;
@@ -993,7 +990,7 @@ private:
     /// @param indent The last indent size.
     /// @param line The last line.
     /// @return The created YAML scalar node.
-    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, uint32_t indent, uint32_t line) {
+    node_type create_scalar_node(lexical_analyzer& lexer, lexical_token_t type, uint32_t indent, uint32_t line) {
         FK_YAML_ASSERT(
             type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
             type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
@@ -1079,7 +1076,7 @@ private:
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
-    bool deserialize_scalar(lexer_type& lexer, uint32_t& indent, uint32_t& line, lexical_token_t& type) {
+    bool deserialize_scalar(lexical_analyzer& lexer, uint32_t& indent, uint32_t& line, lexical_token_t& type) {
         node_type node = create_scalar_node(lexer, type, indent, line);
 
         if (mp_current_node->is_mapping()) {

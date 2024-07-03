@@ -16,7 +16,6 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
-#include <fkYAML/detail/types/lexical_token_t.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -39,15 +38,24 @@ inline bool is_xdigit(char c) {
 }
 
 } // namespace
+
+enum class scalar_t {
+    NULL_VALUE,
+    BOOLEAN,
+    INTEGER,
+    FLOATING_POINT,
+    STRING,
+};
+
 class scalar_scanner {
 public:
-    static lexical_token_t scan(const std::string& token) {
+    static scalar_t scan(const std::string& token) {
         switch (token.size()) {
         case 0:
-            return lexical_token_t::STRING_VALUE;
+            return scalar_t::STRING;
         case 1:
             if (token[0] == '~') {
-                return lexical_token_t::NULL_VALUE;
+                return scalar_t::NULL_VALUE;
             }
             break;
         case 4:
@@ -55,19 +63,19 @@ public:
             case 'n':
             case 'N':
                 if (token == "null" || token == "Null" || token == "NULL") {
-                    return lexical_token_t::NULL_VALUE;
+                    return scalar_t::NULL_VALUE;
                 }
                 break;
             case 't':
             case 'T':
                 if (token == "true" || token == "True" || token == "TRUE") {
-                    return lexical_token_t::BOOLEAN_VALUE;
+                    return scalar_t::BOOLEAN;
                 }
                 break;
             case '.':
                 if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
                     token == ".NAN") {
-                    return lexical_token_t::FLOAT_NUMBER_VALUE;
+                    return scalar_t::FLOATING_POINT;
                 }
                 break;
             }
@@ -77,12 +85,12 @@ public:
             case 'f':
             case 'F':
                 if (token == "false" || token == "False" || token == "FALSE") {
-                    return lexical_token_t::BOOLEAN_VALUE;
+                    return scalar_t::BOOLEAN;
                 }
                 break;
             case '-':
                 if (token[1] == '.' && (token == "-.inf" || token == "-.Inf" || token == "-.INF")) {
-                    return lexical_token_t::FLOAT_NUMBER_VALUE;
+                    return scalar_t::FLOATING_POINT;
                 }
                 break;
             }
@@ -93,18 +101,18 @@ public:
     }
 
 private:
-    static lexical_token_t scan_possible_number_token(const std::string& token) {
+    static scalar_t scan_possible_number_token(const std::string& token) {
         std::string::const_iterator itr = token.begin();
         std::size_t size = token.size();
         FK_YAML_ASSERT(size > 0);
 
         switch (*itr) {
         case '-':
-            return (size > 1) ? scan_negative_number(++itr, --size) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_negative_number(++itr, --size) : scalar_t::STRING;
         case '+':
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, false) : scalar_t::STRING;
         case '0':
-            return (size > 1) ? scan_after_zero_at_first(++itr, --size) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_after_zero_at_first(++itr, --size) : scalar_t::INTEGER;
         case '1':
         case '2':
         case '3':
@@ -114,106 +122,100 @@ private:
         case '7':
         case '8':
         case '9':
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, false) : scalar_t::INTEGER;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return scalar_t::STRING;
         }
     }
 
-    static lexical_token_t scan_negative_number(std::string::const_iterator itr, std::size_t size) {
+    static scalar_t scan_negative_number(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, false) : scalar_t::INTEGER;
         }
 
-        return lexical_token_t::STRING_VALUE;
+        return scalar_t::STRING;
     }
 
-    static lexical_token_t scan_after_zero_at_first(std::string::const_iterator itr, std::size_t size) {
+    static scalar_t scan_after_zero_at_first(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
             // a token consisting of the beginning '0' and some following numbers, e.g., `0123`, is not an integer
             // according to https://yaml.org/spec/1.2.2/#10213-integer.
-            return lexical_token_t::STRING_VALUE;
+            return scalar_t::STRING;
         }
 
         switch (*itr) {
         case '.': {
             if (size == 1) {
-                return lexical_token_t::STRING_VALUE;
+                return scalar_t::STRING;
             }
-            lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
-            return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
-                                                          : lexical_token_t::FLOAT_NUMBER_VALUE;
+            scalar_t ret = scan_after_decimal_point(++itr, --size, true);
+            return (ret == scalar_t::STRING) ? scalar_t::STRING : scalar_t::FLOATING_POINT;
         }
         case 'o':
-            return (size > 1) ? scan_octal_number(++itr, --size) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_octal_number(++itr, --size) : scalar_t::STRING;
         case 'x':
-            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : scalar_t::STRING;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return scalar_t::STRING;
         }
     }
 
-    static lexical_token_t scan_decimal_number(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
+    static scalar_t scan_decimal_number(std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : scalar_t::INTEGER;
         }
 
         switch (*itr) {
         case '.': {
             if (has_decimal_point) {
                 // the token has more than one period, e.g., a semantic version `1.2.3`.
-                return lexical_token_t::STRING_VALUE;
+                return scalar_t::STRING;
             }
-            lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
-            return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
-                                                          : lexical_token_t::FLOAT_NUMBER_VALUE;
+            scalar_t ret = scan_after_decimal_point(++itr, --size, true);
+            return (ret == scalar_t::STRING) ? scalar_t::STRING : scalar_t::FLOATING_POINT;
         }
         case 'e':
         case 'E':
-            return (size > 1) ? scan_after_exponent(++itr, --size, has_decimal_point) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_after_exponent(++itr, --size, has_decimal_point) : scalar_t::STRING;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return scalar_t::STRING;
         }
     }
 
-    static lexical_token_t scan_after_decimal_point(
+    static scalar_t scan_after_decimal_point(
         std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
-                              : lexical_token_t::FLOAT_NUMBER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : scalar_t::FLOATING_POINT;
         }
 
-        return lexical_token_t::STRING_VALUE;
+        return scalar_t::STRING;
     }
 
-    static lexical_token_t scan_after_exponent(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
+    static scalar_t scan_after_exponent(std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
-                              : lexical_token_t::FLOAT_NUMBER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : scalar_t::FLOATING_POINT;
         }
 
         switch (*itr) {
         case '+':
         case '-':
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : scalar_t::STRING;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return scalar_t::STRING;
         }
     }
 
-    static lexical_token_t scan_octal_number(std::string::const_iterator itr, std::size_t size) {
+    static scalar_t scan_octal_number(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
         switch (*itr) {
@@ -225,19 +227,19 @@ private:
         case '5':
         case '6':
         case '7':
-            return (size > 1) ? scan_octal_number(++itr, --size) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_octal_number(++itr, --size) : scalar_t::INTEGER;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return scalar_t::STRING;
         }
     }
 
-    static lexical_token_t scan_hexadecimal_number(std::string::const_iterator itr, std::size_t size) {
+    static scalar_t scan_hexadecimal_number(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_xdigit(*itr)) {
-            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : scalar_t::INTEGER;
         }
-        return lexical_token_t::STRING_VALUE;
+        return scalar_t::STRING;
     }
 };
 

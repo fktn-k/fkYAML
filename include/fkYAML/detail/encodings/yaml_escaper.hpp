@@ -24,6 +24,59 @@ class yaml_escaper {
     using iterator = ::std::string::const_iterator;
 
 public:
+    static bool check_escape_sequence(iterator begin, iterator end, uint32_t& escape_seq_size) {
+        FK_YAML_ASSERT(*begin == '\\' && std::distance(begin, end) > 1);
+
+        switch (*++begin) {
+        case 'a':
+        case 'b':
+        case 't':
+        case char(0x09):
+        case 'n':
+        case 'v':
+        case 'f':
+        case 'r':
+        case 'e':
+        case ' ':
+        case '\"':
+        case '/':
+        case '\\':
+        case 'N': // next line
+        case '_': // non-breaking space
+        case 'L': // line separator
+        case 'P': // paragraph separator
+            escape_seq_size = 2;
+            return true;
+        case 'x': {
+            char32_t codepoint {0};
+            bool ret = extract_codepoint(begin, end, 1, codepoint);
+            if (ret) {
+                escape_seq_size = 4; // "\xXX"
+            }
+            return ret;
+        }
+        case 'u': {
+            char32_t codepoint {0};
+            bool ret = extract_codepoint(begin, end, 2, codepoint);
+            if (ret) {
+                escape_seq_size = 6; // "\uXXXX"
+            }
+            return ret;
+        }
+        case 'U': {
+            char32_t codepoint {0};
+            bool ret = extract_codepoint(begin, end, 4, codepoint);
+            if (ret) {
+                escape_seq_size = 10; // "\UXXXXXXXX"
+            }
+            return ret;
+        }
+        default:
+            // Unsupported escape sequence is found in a string token.
+            return false;
+        }
+    }
+
     static bool unescape(iterator& begin, iterator end, std::string& buff) {
         FK_YAML_ASSERT(*begin == '\\' && std::distance(begin, end) > 0);
         bool ret = true;

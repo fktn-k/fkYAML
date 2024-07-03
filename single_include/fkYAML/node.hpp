@@ -879,7 +879,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/assert.hpp>
 
-// #include <fkYAML/detail/conversions/from_string.hpp>
+// #include <fkYAML/detail/encodings/utf_encodings.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
 /// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
@@ -890,20 +890,13 @@ FK_YAML_DETAIL_NAMESPACE_END
 ///
 /// @file
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
 
-#include <cmath>
-#include <cstdlib>
-#include <limits>
-#include <string>
-#include <type_traits>
+#include <array>
+#include <cstdint>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/detail/meta/stl_supplement.hpp>
-
-// #include <fkYAML/detail/meta/type_traits.hpp>
 
 // #include <fkYAML/exception.hpp>
 ///  _______   __ __   __  _____   __  __  __
@@ -1193,376 +1186,6 @@ private:
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_EXCEPTION_HPP_ */
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief Convert a string YAML token to a ValueType object.
-/// @tparam ValueType A target value type.
-/// @tparam CharType The type of characters in a source string.
-template <typename ValueType, typename CharType>
-inline ValueType from_string(const std::basic_string<CharType>& s, type_tag<ValueType> /*unused*/);
-
-/// @brief Specialization of from_string() for null values with std::string
-/// @tparam  N/A
-template <>
-inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t> /*unused*/) {
-    if (s == "null" || s == "Null" || s == "NULL" || s == "~") {
-        return nullptr;
-    }
-
-    throw exception("Cannot convert a string into a null value.");
-}
-
-/// @brief Specialization of from_string() for boolean values with std::string.
-/// @tparam  N/A
-template <>
-inline bool from_string(const std::string& s, type_tag<bool> /*unused*/) {
-    if (s == "true" || s == "True" || s == "TRUE") {
-        return true;
-    }
-
-    if (s == "false" || s == "False" || s == "FALSE") {
-        return false;
-    }
-
-    throw exception("Cannot convert a string into a boolean value.");
-}
-
-/// @brief Specialization of from_string() for int values with std::string.
-/// @tparam  N/A
-template <>
-inline int from_string(const std::string& s, type_tag<int> /*unused*/) {
-    std::size_t idx = 0;
-    long ret = 0;
-
-    try {
-        ret = std::stoi(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into an int value.");
-    }
-
-    return ret;
-}
-
-/// @brief Specialization of from_string() for long values with std::string.
-/// @tparam  N/A
-template <>
-inline long from_string(const std::string& s, type_tag<long> /*unused*/) {
-    std::size_t idx = 0;
-    long ret = 0;
-
-    try {
-        ret = std::stol(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into a long value.");
-    }
-
-    return ret;
-}
-
-/// @brief Specialization of from_string() for long long values with std::string.
-/// @tparam  N/A
-template <>
-inline long long from_string(const std::string& s, type_tag<long long> /*unused*/) {
-    std::size_t idx = 0;
-    long long ret = 0;
-
-    try {
-        ret = std::stoll(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into a long long value.");
-    }
-
-    return ret;
-}
-
-/// @brief Partial specialization of from_string() for other signed integer types with std::string.
-/// @tparam SignedIntType A signed integer type other than long long.
-template <typename SignedIntType>
-inline enable_if_t<
-    conjunction<
-        is_non_bool_integral<SignedIntType>, std::is_signed<SignedIntType>, negation<std::is_same<SignedIntType, int>>,
-        negation<std::is_same<SignedIntType, long>>, negation<std::is_same<SignedIntType, long long>>>::value,
-    SignedIntType>
-from_string(const std::string& s, type_tag<SignedIntType> /*unused*/) {
-    const auto tmp_ret = from_string(s, type_tag<int> {});
-    if (static_cast<long long>(std::numeric_limits<SignedIntType>::max()) < tmp_ret) {
-        throw exception("Failed to convert a long long value into a SignedIntegerType value.");
-    }
-
-    return static_cast<SignedIntType>(tmp_ret);
-}
-
-/// @brief Specialization of from_string() for unsigned long values with std::string.
-/// @tparam  N/A
-template <>
-inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /*unused*/) {
-    std::size_t idx = 0;
-    unsigned long ret = 0;
-
-    try {
-        ret = std::stoul(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into an unsigned long value.");
-    }
-
-    return ret;
-}
-
-/// @brief Specialization of from_string() for unsigned long long values with std::string.
-/// @tparam  N/A
-template <>
-inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/) {
-    std::size_t idx = 0;
-    unsigned long long ret = 0;
-
-    try {
-        ret = std::stoull(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into an unsigned long long value.");
-    }
-
-    return ret;
-}
-
-/// @brief Partial specialization of from_string() for other unsigned integer types with std::string.
-/// @tparam UnsignedIntType An unsigned integer type other than unsigned long long.
-template <typename UnsignedIntType>
-inline enable_if_t<
-    conjunction<
-        is_non_bool_integral<UnsignedIntType>, std::is_unsigned<UnsignedIntType>,
-        negation<std::is_same<UnsignedIntType, unsigned long>>,
-        negation<std::is_same<UnsignedIntType, unsigned long long>>>::value,
-    UnsignedIntType>
-from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/) {
-    const auto tmp_ret = from_string(s, type_tag<unsigned long> {});
-    if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret) {
-        throw exception("Failed to convert an unsigned long long into an unsigned integer value.");
-    }
-
-    return static_cast<UnsignedIntType>(tmp_ret);
-}
-
-/// @brief Specialization of from_string() for float values with std::string.
-/// @tparam  N/A
-template <>
-inline float from_string(const std::string& s, type_tag<float> /*unused*/) {
-    if (s == ".inf" || s == ".Inf" || s == ".INF") {
-        return std::numeric_limits<float>::infinity();
-    }
-
-    if (s == "-.inf" || s == "-.Inf" || s == "-.INF") {
-        static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required.");
-        return -1 * std::numeric_limits<float>::infinity();
-    }
-
-    if (s == ".nan" || s == ".NaN" || s == ".NAN") {
-        return std::nanf("");
-    }
-
-    std::size_t idx = 0;
-    float ret = 0.0f;
-
-    try {
-        ret = std::stof(s, &idx);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into a float value.");
-    }
-
-    return ret;
-}
-
-/// @brief Specialization of from_string() for double values with std::string.
-/// @tparam  N/A
-template <>
-inline double from_string(const std::string& s, type_tag<double> /*unused*/) {
-    if (s == ".inf" || s == ".Inf" || s == ".INF") {
-        return std::numeric_limits<double>::infinity();
-    }
-
-    if (s == "-.inf" || s == "-.Inf" || s == "-.INF") {
-        static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 required.");
-        return -1 * std::numeric_limits<double>::infinity();
-    }
-
-    if (s == ".nan" || s == ".NaN" || s == ".NAN") {
-        return std::nan("");
-    }
-
-    std::size_t idx = 0;
-    double ret = 0.0;
-
-    try {
-        ret = std::stod(s, &idx);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into a double value.");
-    }
-
-    return ret;
-}
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_ */
-
-// #include <fkYAML/detail/encodings/uri_encoding.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
-
-#include <cctype>
-#include <string>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief A class which handles URI encodings.
-class uri_encoding {
-public:
-    /// @brief Validates the encoding of the given character sequence.
-    /// @param begin An iterator to the first element of the character sequence.
-    /// @param end An iterator to the past-the-end element of the character sequence.
-    /// @return true if all the characters are valid, false otherwise.
-    static bool validate(std::string::const_iterator begin, std::string::const_iterator end) noexcept {
-        if (begin == end) {
-            return true;
-        }
-
-        std::string::const_iterator current = begin;
-
-        for (; current != end; ++current) {
-            if (*current == '%') {
-                bool are_valid_octets = validate_octets(++current, end);
-                if (!are_valid_octets) {
-                    return false;
-                }
-
-                continue;
-            }
-
-            bool is_allowed_character = validate_character(*current);
-            if (!is_allowed_character) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-private:
-    /// @brief Validates the given octets.
-    /// @param begin An iterator to the first octet.
-    /// @param end An iterator to the past-the-end element of the whole character sequence.
-    /// @return true if the octets are valid, false otherwise.
-    static bool validate_octets(std::string::const_iterator& begin, std::string::const_iterator& end) {
-        for (int i = 0; i < 2; i++, ++begin) {
-            if (begin == end) {
-                return false;
-            }
-
-            // Normalize a character for a-f/A-F comparison
-            int octet = std::tolower(*begin);
-
-            if ('0' <= octet && octet <= '9') {
-                continue;
-            }
-
-            if ('a' <= octet && octet <= 'f') {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /// @brief Verify if the given character is allowed as a URI character.
-    /// @param c The target character.
-    /// @return true if the given character is allowed as a URI character, false otherwise.
-    static bool validate_character(char c) {
-        // Check if the current character is one of reserved/unreserved characters which are allowed for
-        // use. See the following links for details:
-        // * reserved characters:   https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
-        // * unreserved characters: https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
-
-        switch (c) {
-        // reserved characters (gen-delims)
-        case ':':
-        case '/':
-        case '?':
-        case '#':
-        case '[':
-        case ']':
-        case '@':
-        // reserved characters (sub-delims)
-        case '!':
-        case '$':
-        case '&':
-        case '\'':
-        case '(':
-        case ')':
-        case '*':
-        case '+':
-        case ',':
-        case ';':
-        case '=':
-        // unreserved characters
-        case '-':
-        case '.':
-        case '_':
-        case '~':
-            return true;
-        default:
-            // alphabets and numbers are also allowed.
-            return std::isalnum(c);
-        }
-    }
-};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_ */
-
-// #include <fkYAML/detail/encodings/utf_encodings.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
-
-#include <array>
-#include <cstdint>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/exception.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -1882,6 +1505,59 @@ class yaml_escaper {
     using iterator = ::std::string::const_iterator;
 
 public:
+    static bool check_escape_sequence(iterator begin, iterator end, uint32_t& escape_seq_size) {
+        FK_YAML_ASSERT(*begin == '\\' && std::distance(begin, end) > 1);
+
+        switch (*++begin) {
+        case 'a':
+        case 'b':
+        case 't':
+        case char(0x09):
+        case 'n':
+        case 'v':
+        case 'f':
+        case 'r':
+        case 'e':
+        case ' ':
+        case '\"':
+        case '/':
+        case '\\':
+        case 'N': // next line
+        case '_': // non-breaking space
+        case 'L': // line separator
+        case 'P': // paragraph separator
+            escape_seq_size = 2;
+            return true;
+        case 'x': {
+            char32_t codepoint {0};
+            bool ret = extract_codepoint(begin, end, 1, codepoint);
+            if (ret) {
+                escape_seq_size = 4; // "\xXX"
+            }
+            return ret;
+        }
+        case 'u': {
+            char32_t codepoint {0};
+            bool ret = extract_codepoint(begin, end, 2, codepoint);
+            if (ret) {
+                escape_seq_size = 6; // "\uXXXX"
+            }
+            return ret;
+        }
+        case 'U': {
+            char32_t codepoint {0};
+            bool ret = extract_codepoint(begin, end, 4, codepoint);
+            if (ret) {
+                escape_seq_size = 10; // "\UXXXXXXXX"
+            }
+            return ret;
+        }
+        default:
+            // Unsupported escape sequence is found in a string token.
+            return false;
+        }
+    }
+
     static bool unescape(iterator& begin, iterator end, std::string& buff) {
         FK_YAML_ASSERT(*begin == '\\' && std::distance(begin, end) > 0);
         bool ret = true;
@@ -2206,304 +1882,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_ */
 
-// #include <fkYAML/detail/input/scalar_scanner.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
-#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
-
-#include <algorithm>
-#include <string>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/detail/assert.hpp>
-
-// #include <fkYAML/detail/types/lexical_token_t.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief Definition of lexical token types.
-enum class lexical_token_t {
-    END_OF_BUFFER,         //!< the end of input buffer.
-    EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
-    KEY_SEPARATOR,         //!< the key separater `:`
-    VALUE_SEPARATOR,       //!< the value separater `,`
-    ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
-    ALIAS_PREFIX,          //!< the character for alias prefix `*`
-    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
-    TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
-    TAG_PREFIX,            //!< the character for tag prefix `!`
-    INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
-    SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
-    SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
-    SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
-    MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
-    MAPPING_FLOW_END,      //!< the character for mapping end `}`
-    NULL_VALUE,            //!< a null value found. use get_null() to get a value.
-    BOOLEAN_VALUE,         //!< a boolean value found. use get_boolean() to get a value.
-    INTEGER_VALUE,         //!< an integer value found. use get_integer() to get a value.
-    FLOAT_NUMBER_VALUE,    //!< a float number value found. use get_float_number() to get a value.
-    STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
-    END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
-    END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
-};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-namespace {
-
-/// @brief Check if the given character is a digit.
-/// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a digit, false otherwise.
-inline bool is_digit(char c) {
-    return ('0' <= c && c <= '9');
-}
-
-/// @brief Check if the given character is a hex-digit.
-/// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a hex-digit, false otherwise.
-inline bool is_xdigit(char c) {
-    return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
-}
-
-} // namespace
-class scalar_scanner {
-public:
-    static lexical_token_t scan(const std::string& token) {
-        switch (token.size()) {
-        case 0:
-            return lexical_token_t::STRING_VALUE;
-        case 1:
-            if (token[0] == '~') {
-                return lexical_token_t::NULL_VALUE;
-            }
-            break;
-        case 4:
-            switch (token[0]) {
-            case 'n':
-            case 'N':
-                if (token == "null" || token == "Null" || token == "NULL") {
-                    return lexical_token_t::NULL_VALUE;
-                }
-                break;
-            case 't':
-            case 'T':
-                if (token == "true" || token == "True" || token == "TRUE") {
-                    return lexical_token_t::BOOLEAN_VALUE;
-                }
-                break;
-            case '.':
-                if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
-                    token == ".NAN") {
-                    return lexical_token_t::FLOAT_NUMBER_VALUE;
-                }
-                break;
-            }
-            break;
-        case 5:
-            switch (token[0]) {
-            case 'f':
-            case 'F':
-                if (token == "false" || token == "False" || token == "FALSE") {
-                    return lexical_token_t::BOOLEAN_VALUE;
-                }
-                break;
-            case '-':
-                if (token[1] == '.' && (token == "-.inf" || token == "-.Inf" || token == "-.INF")) {
-                    return lexical_token_t::FLOAT_NUMBER_VALUE;
-                }
-                break;
-            }
-            break;
-        }
-
-        return scan_possible_number_token(token);
-    }
-
-private:
-    static lexical_token_t scan_possible_number_token(const std::string& token) {
-        std::string::const_iterator itr = token.begin();
-        std::size_t size = token.size();
-        FK_YAML_ASSERT(size > 0);
-
-        switch (*itr) {
-        case '-':
-            return (size > 1) ? scan_negative_number(++itr, --size) : lexical_token_t::STRING_VALUE;
-        case '+':
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::STRING_VALUE;
-        case '0':
-            return (size > 1) ? scan_after_zero_at_first(++itr, --size) : lexical_token_t::INTEGER_VALUE;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::INTEGER_VALUE;
-        default:
-            return lexical_token_t::STRING_VALUE;
-        }
-    }
-
-    static lexical_token_t scan_negative_number(std::string::const_iterator itr, std::size_t size) {
-        FK_YAML_ASSERT(size > 0);
-
-        if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::INTEGER_VALUE;
-        }
-
-        return lexical_token_t::STRING_VALUE;
-    }
-
-    static lexical_token_t scan_after_zero_at_first(std::string::const_iterator itr, std::size_t size) {
-        FK_YAML_ASSERT(size > 0);
-
-        if (is_digit(*itr)) {
-            // a token consisting of the beginning '0' and some following numbers, e.g., `0123`, is not an integer
-            // according to https://yaml.org/spec/1.2.2/#10213-integer.
-            return lexical_token_t::STRING_VALUE;
-        }
-
-        switch (*itr) {
-        case '.': {
-            if (size == 1) {
-                return lexical_token_t::STRING_VALUE;
-            }
-            lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
-            return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
-                                                          : lexical_token_t::FLOAT_NUMBER_VALUE;
-        }
-        case 'o':
-            return (size > 1) ? scan_octal_number(++itr, --size) : lexical_token_t::STRING_VALUE;
-        case 'x':
-            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : lexical_token_t::STRING_VALUE;
-        default:
-            return lexical_token_t::STRING_VALUE;
-        }
-    }
-
-    static lexical_token_t scan_decimal_number(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
-        FK_YAML_ASSERT(size > 0);
-
-        if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::INTEGER_VALUE;
-        }
-
-        switch (*itr) {
-        case '.': {
-            if (has_decimal_point) {
-                // the token has more than one period, e.g., a semantic version `1.2.3`.
-                return lexical_token_t::STRING_VALUE;
-            }
-            lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
-            return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
-                                                          : lexical_token_t::FLOAT_NUMBER_VALUE;
-        }
-        case 'e':
-        case 'E':
-            return (size > 1) ? scan_after_exponent(++itr, --size, has_decimal_point) : lexical_token_t::STRING_VALUE;
-        default:
-            return lexical_token_t::STRING_VALUE;
-        }
-    }
-
-    static lexical_token_t scan_after_decimal_point(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
-        FK_YAML_ASSERT(size > 0);
-
-        if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
-                              : lexical_token_t::FLOAT_NUMBER_VALUE;
-        }
-
-        return lexical_token_t::STRING_VALUE;
-    }
-
-    static lexical_token_t scan_after_exponent(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
-        FK_YAML_ASSERT(size > 0);
-
-        if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
-                              : lexical_token_t::FLOAT_NUMBER_VALUE;
-        }
-
-        switch (*itr) {
-        case '+':
-        case '-':
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::STRING_VALUE;
-        default:
-            return lexical_token_t::STRING_VALUE;
-        }
-    }
-
-    static lexical_token_t scan_octal_number(std::string::const_iterator itr, std::size_t size) {
-        FK_YAML_ASSERT(size > 0);
-
-        switch (*itr) {
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-            return (size > 1) ? scan_octal_number(++itr, --size) : lexical_token_t::INTEGER_VALUE;
-        default:
-            return lexical_token_t::STRING_VALUE;
-        }
-    }
-
-    static lexical_token_t scan_hexadecimal_number(std::string::const_iterator itr, std::size_t size) {
-        FK_YAML_ASSERT(size > 0);
-
-        if (is_xdigit(*itr)) {
-            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : lexical_token_t::INTEGER_VALUE;
-        }
-        return lexical_token_t::STRING_VALUE;
-    }
-};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_ */
-
 // #include <fkYAML/detail/input/position_tracker.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -2667,11 +2045,53 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 
-// #include <fkYAML/detail/meta/node_traits.hpp>
-
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief Definition of lexical token types.
+enum class lexical_token_t {
+    END_OF_BUFFER,              //!< the end of an input buffer.
+    END_OF_DIRECTIVES,          //!< the end of directives, specified by `---`.
+    END_OF_DOCUMENT,            //!< the end of a YAML document, specified by `...`.
+    BLOCK_SEQUENCE_ITEM_PREFIX, //!< the beginning of a block sequence item, specified by `- `.
+    FLOW_SEQUENCE_BEGIN,        //!< the beginning of a flow sequence, specified by `[`.
+    FLOW_SEQUENCE_END,          //!< the end of a flow sequence, specified by `]`.
+    FLOW_MAPPING_BEGIN,         //!< the beginning of a flow mapping, specified by `{`.
+    FLOW_MAPPING_END,           //!< the end of a flow mapping, specified by `}`.
+    FLOW_SINGLE_QUOTED_SCALAR,  //!< a flow single quoted scalar.
+    FLOW_DOUBLE_QUOTED_SCALAR,  //!< a flow double quoted scalar.
+    FLOW_PLAIN_SCALAR,          //!< a flow plain scalar.
+    BLOCK_SCALAR,               //!< a block scalar (either literal or folded).
+    EXPLICIT_KEY_PREFIX,        //!< the prefix of an explicit mapping key, specified by `?`.
+    KEY_SEPARATOR,              //!< the key separater, specified by `: `.
+    VALUE_SEPARATOR,            //!< the value separater, specified by `,`.
+    ANCHOR,                     //!< an anchor, beginning with the prefix `&`.
+    ALIAS,                      //!< an alias, beginning with the prefix `*`.
+    TAG,                        //!< a tag, beginning with the prefix `!`.
+    DIRECTIVE,                  //!< a directive line, beginning with the prefix `%`.
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
 
 // #include <fkYAML/exception.hpp>
 
@@ -2679,12 +2099,11 @@ FK_YAML_DETAIL_NAMESPACE_END
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A class which lexically analizes YAML formatted inputs.
-/// @tparam BasicNodeType A type of the container for YAML values.
-template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 class lexical_analyzer {
 private:
-    using char_traits_type = typename std::char_traits<char>;
+    using iterator_type = typename std::string::const_iterator;
 
+public:
     enum class block_style_indicator_t {
         LITERAL, //!< keeps newlines inside the block as they are indicated by a pipe `|`.
         FOLDED,  //!< replaces newlines inside the block with spaces indicated by a right angle bracket `>`.
@@ -2696,59 +2115,96 @@ private:
         CLIP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
     };
 
-public:
-    using boolean_type = typename BasicNodeType::boolean_type;
-    using integer_type = typename BasicNodeType::integer_type;
-    using float_number_type = typename BasicNodeType::float_number_type;
-    using string_type = typename BasicNodeType::string_type;
+    struct block_scalar_header {
+        block_style_indicator_t style_type {block_style_indicator_t::LITERAL};
+        chomping_indicator_t chomping_type {chomping_indicator_t::KEEP};
+        uint32_t indent {0};
+    };
+
+    struct lexical_token {
+        lexical_token() = default;
+        ~lexical_token() {
+            if (type == lexical_token_t::BLOCK_SCALAR) {
+                delete reinterpret_cast<block_scalar_header*>(p_extra_info);
+                p_extra_info = nullptr;
+            }
+        }
+
+        lexical_token_t type {lexical_token_t::END_OF_BUFFER};
+        uint32_t begin_line {0};
+        uint32_t begin_pos {0};
+        iterator_type begin_itr {};
+        iterator_type end_itr {};
+        void* p_extra_info {nullptr};
+    };
 
     /// @brief Construct a new lexical_analyzer object.
-    /// @tparam InputAdapterType The type of the input adapter.
-    /// @param input_adapter An input adapter object.
-    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    explicit lexical_analyzer(InputAdapterType&& input_adapter) {
-        std::forward<InputAdapterType>(input_adapter).fill_buffer(m_input_buffer);
-        m_cur_itr = m_token_begin_itr = m_input_buffer.cbegin();
-        m_end_itr = m_input_buffer.cend();
-        m_pos_tracker.set_target_buffer(m_input_buffer);
+    /// @param input_buffer An input buffer which must be alive during this lexical_analyzer's lifetime.
+    explicit lexical_analyzer(const std::string& input_buffer) {
+        m_cur_itr = input_buffer.cbegin();
+        m_end_itr = input_buffer.cend();
+        m_pos_tracker.set_target_buffer(input_buffer);
+    }
+
+    std::vector<lexical_token> get_tokens() {
+        std::vector<lexical_token> tokens {};
+
+        bool reaches_end_of_buffer = false;
+        do {
+            lexical_token token = get_next_token();
+            reaches_end_of_buffer = token.type == lexical_token_t::END_OF_BUFFER;
+            tokens.emplace_back(std::move(token));
+        } while (!reaches_end_of_buffer);
+
+        return tokens;
     }
 
     /// @brief Get the next lexical token type by scanning the left of the input buffer.
     /// @return lexical_token_t The next lexical token type.
-    lexical_token_t get_next_token() {
+    lexical_token get_next_token() {
         skip_white_spaces_and_newline_codes();
-
-        m_token_begin_itr = m_cur_itr;
         m_pos_tracker.update_position(m_cur_itr);
-        m_last_token_begin_pos = m_pos_tracker.get_cur_pos_in_line();
-        m_last_token_begin_line = m_pos_tracker.get_lines_read();
+
+        lexical_token token {};
+        token.begin_line = m_pos_tracker.get_lines_read();
+        token.begin_pos = m_pos_tracker.get_cur_pos_in_line();
+        token.begin_itr = m_cur_itr;
 
         if (m_cur_itr == m_end_itr) {
-            return lexical_token_t::END_OF_BUFFER;
+            // token.type is already initialized with lexical_token_t::END_OF_BUFFER.
+            token.end_itr = m_end_itr;
+            return token;
         }
 
-        switch (char current = *m_cur_itr) {
+        switch (*m_cur_itr) {
         case '?':
             if (++m_cur_itr == m_end_itr) {
-                m_value_buffer = "?";
-                return lexical_token_t::STRING_VALUE;
+                token.type = lexical_token_t::FLOW_PLAIN_SCALAR;
+                token.end_itr = m_cur_itr;
+                break;
             }
 
-            switch (*m_cur_itr) {
-            case ' ':
-                return lexical_token_t::EXPLICIT_KEY_PREFIX;
-            default:
-                return scan_scalar();
+            if (*m_cur_itr == ' ') {
+                token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
+                token.end_itr = m_cur_itr;
+                break;
             }
+
+            token.type = scan_scalar(token.end_itr);
+            break;
         case ':': { // key separater
             if (++m_cur_itr == m_end_itr) {
-                return lexical_token_t::KEY_SEPARATOR;
+                token.type = lexical_token_t::KEY_SEPARATOR;
+                token.end_itr = m_end_itr;
+                break;
             }
 
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
             case '\n':
+                token.type = lexical_token_t::KEY_SEPARATOR;
+                token.end_itr = m_cur_itr + 1;
                 break;
             case ',':
             case '[':
@@ -2758,191 +2214,145 @@ public:
                 if (m_flow_context_depth > 0) {
                     // the above characters are not "safe" to be followed in a flow context.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                    token.type = lexical_token_t::KEY_SEPARATOR;
+                    token.end_itr = m_cur_itr;
                     break;
                 }
-                return scan_scalar();
+                token.type = scan_scalar(token.end_itr);
+                break;
             default:
-                return scan_scalar();
+                token.type = scan_scalar(token.end_itr);
+                break;
             }
 
-            return lexical_token_t::KEY_SEPARATOR;
+            break;
         }
         case ',': // value separater
-            ++m_cur_itr;
-            return lexical_token_t::VALUE_SEPARATOR;
+            token.type = lexical_token_t::VALUE_SEPARATOR;
+            token.end_itr = ++m_cur_itr;
+            break;
         case '&': { // anchor prefix
-            extract_anchor_name();
-            bool is_empty = m_value_buffer.empty();
-            if (is_empty) {
+            extract_anchor_name(token.end_itr);
+            if (token.begin_itr + 1 == token.end_itr) {
                 emit_error("anchor name must not be empty.");
             }
-            return lexical_token_t::ANCHOR_PREFIX;
+            token.type = lexical_token_t::ANCHOR;
+            break;
         }
         case '*': { // alias prefix
-            extract_anchor_name();
-            bool is_empty = m_value_buffer.empty();
-            if (is_empty) {
+            extract_anchor_name(token.end_itr);
+            if (token.begin_itr + 1 == token.end_itr) {
                 emit_error("anchor name must not be empty.");
             }
-
-            return lexical_token_t::ALIAS_PREFIX;
+            token.type = lexical_token_t::ALIAS;
+            break;
         }
         case '!':
-            extract_tag_name();
-            return lexical_token_t::TAG_PREFIX;
+            extract_tag_name(token.end_itr);
+            token.type = lexical_token_t::TAG;
+            break;
         case '#': // comment prefix
             scan_comment();
             return get_next_token();
         case '%': // directive prefix
-            return scan_directive();
+            token.type = scan_directive(token.end_itr);
+            break;
         case '-': {
-            char next = *(m_cur_itr + 1);
-            switch (next) {
+            switch (*(m_cur_itr + 1)) {
             case ' ':
             case '\t':
             case '\n':
                 // Move a cursor to the beginning of the next token.
+                token.type = lexical_token_t::BLOCK_SEQUENCE_ITEM_PREFIX;
                 m_cur_itr += 2;
-                return lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                token.end_itr = m_cur_itr;
+                return token;
             default:
                 break;
             }
 
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
-                if (std::equal(m_token_begin_itr, m_cur_itr + 3, "---")) {
+                if (std::equal(token.begin_itr, m_cur_itr + 3, "---")) {
+                    token.type = lexical_token_t::END_OF_DIRECTIVES;
                     m_cur_itr += 3;
-                    return lexical_token_t::END_OF_DIRECTIVES;
+                    token.end_itr = m_cur_itr;
+                    return token;
                 }
             }
 
-            return scan_scalar();
+            token.type = scan_scalar(token.end_itr);
+            break;
         }
         case '[': // sequence flow begin
             m_flow_context_depth++;
-            ++m_cur_itr;
-            return lexical_token_t::SEQUENCE_FLOW_BEGIN;
+            token.type = lexical_token_t::FLOW_SEQUENCE_BEGIN;
+            token.end_itr = ++m_cur_itr;
+            return token;
         case ']': // sequence flow end
             m_flow_context_depth--;
-            ++m_cur_itr;
-            return lexical_token_t::SEQUENCE_FLOW_END;
+            token.type = lexical_token_t::FLOW_SEQUENCE_END;
+            token.end_itr = ++m_cur_itr;
+            return token;
         case '{': // mapping flow begin
             m_flow_context_depth++;
-            ++m_cur_itr;
-            return lexical_token_t::MAPPING_FLOW_BEGIN;
+            token.type = lexical_token_t::FLOW_MAPPING_BEGIN;
+            token.end_itr = ++m_cur_itr;
+            return token;
         case '}': // mapping flow end
             m_flow_context_depth--;
-            ++m_cur_itr;
-            return lexical_token_t::MAPPING_FLOW_END;
+            token.type = lexical_token_t::FLOW_MAPPING_END;
+            token.end_itr = ++m_cur_itr;
+            return token;
         case '@':
             emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
         case '`':
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
         case '\'':
-            return scan_scalar();
+            token.type = scan_scalar(token.end_itr);
+            return token;
         case '+':
-            return scan_scalar();
+            token.type = scan_scalar(token.end_itr);
+            return token;
         case '.': {
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
                 if (std::equal(m_cur_itr, m_cur_itr + 3, "...")) {
                     m_cur_itr += 3;
-                    return lexical_token_t::END_OF_DOCUMENT;
+                    token.type = lexical_token_t::END_OF_DOCUMENT;
+                    token.end_itr = m_cur_itr;
+                    return token;
                 }
             }
 
-            return scan_scalar();
+            token.type = scan_scalar(token.end_itr);
+            return token;
         }
         case '|': {
-            chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            uint32_t indent = 0;
-            get_block_style_metadata(chomp_type, indent);
-            return scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            block_scalar_header* p_header = reinterpret_cast<block_scalar_header*>(token.p_extra_info);
+            p_header = new block_scalar_header();
+            p_header->style_type = block_style_indicator_t::LITERAL;
+
+            get_block_style_metadata(*p_header);
+            token.begin_itr = m_cur_itr;
+            token.type = determine_block_scalar_range(*p_header, token.end_itr);
+            return token;
         }
         case '>': {
-            chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            uint32_t indent = 0;
-            get_block_style_metadata(chomp_type, indent);
-            return scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            block_scalar_header* p_header = reinterpret_cast<block_scalar_header*>(token.p_extra_info);
+            p_header = new block_scalar_header();
+            p_header->style_type = block_style_indicator_t::FOLDED;
+
+            get_block_style_metadata(*p_header);
+            token.begin_itr = m_cur_itr;
+            token.type = determine_block_scalar_range(*p_header, token.end_itr);
+            return token;
         }
         default:
-            return scan_scalar();
+            token.type = scan_scalar(token.end_itr);
+            return token;
         }
-    }
-
-    /// @brief Get the beginning position of a last token.
-    /// @return uint32_t The beginning position of a last token.
-    uint32_t get_last_token_begin_pos() const noexcept {
-        return m_last_token_begin_pos;
-    }
-
-    /// @brief Get the number of lines already processed.
-    /// @return uint32_t The number of lines already processed.
-    uint32_t get_lines_processed() const noexcept {
-        return m_last_token_begin_line;
-    }
-
-    /// @brief Convert from string to null and get the converted value.
-    /// @return std::nullptr_t A null value converted from one of the followings: "null", "Null", "NULL", "~".
-    std::nullptr_t get_null() const {
-        return from_string(m_value_buffer, type_tag<std::nullptr_t> {});
-    }
-
-    /// @brief Convert from string to boolean and get the converted value.
-    /// @retval true  A string token is one of the followings: "true", "True", "TRUE".
-    /// @retval false A string token is one of the followings: "false", "False", "FALSE".
-    boolean_type get_boolean() const {
-        return from_string(m_value_buffer, type_tag<bool> {});
-    }
-
-    /// @brief Convert from string to integer and get the converted value.
-    /// @return integer_type An integer value converted from the source string.
-    integer_type get_integer() const {
-        if (m_value_buffer.size() > 2 && m_value_buffer.rfind("0o", 0) != std::string::npos) {
-            // Replace the prefix "0o" with "0" since STL functions can detect octal chars.
-            // Note that the YAML specifies octal values start with the prefix "0o", not "0".
-            // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
-            return from_string("0" + m_value_buffer.substr(2), type_tag<integer_type> {});
-        }
-        return from_string(m_value_buffer, type_tag<integer_type> {});
-    }
-
-    /// @brief Convert from string to float number and get the converted value.
-    /// @return float_number_type A float number value converted from the source string.
-    float_number_type get_float_number() const {
-        return from_string(m_value_buffer, type_tag<float_number_type> {});
-    }
-
-    /// @brief Get a scanned string value.
-    /// @return const string_type& Constant reference to a scanned string.
-    const string_type& get_string() const noexcept {
-        // TODO: Provide support for different string types between nodes & inputs.
-        static_assert(std::is_same<string_type, std::string>::value, "Unsupported, different string types.");
-        return m_value_buffer;
-    }
-
-    /// @brief Get the YAML version specification.
-    /// @return const string_type& A YAML version specification.
-    const string_type& get_yaml_version() const {
-        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
-        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
-
-        return m_value_buffer;
-    }
-
-    /// @brief Get the YAML tag handle defined in the TAG directive.
-    /// @return const std::string& A tag handle.
-    const std::string& get_tag_handle() const {
-        FK_YAML_ASSERT(!m_tag_handle.empty());
-        return m_tag_handle;
-    }
-
-    /// @brief Get the YAML tag prefix defined in the TAG directive.
-    /// @return const std::string A tag prefix.
-    const std::string& get_tag_prefix() const {
-        FK_YAML_ASSERT(!m_tag_prefix.empty());
-        return m_tag_prefix;
     }
 
 private:
@@ -2955,200 +2365,28 @@ private:
     /// @brief Scan directives starting with the prefix '%'
     /// @note Currently, only %YAML directive is supported. If not, returns invalid or throws an exception.
     /// @return lexical_token_t The lexical token type for directives.
-    lexical_token_t scan_directive() {
+    lexical_token_t scan_directive(iterator_type& end_itr) {
         FK_YAML_ASSERT(*m_cur_itr == '%');
-
-        m_value_buffer.clear();
-        m_token_begin_itr = ++m_cur_itr;
+        ++m_cur_itr;
 
         bool ends_loop = false;
         while (!ends_loop && m_cur_itr != m_end_itr) {
-            switch (*m_cur_itr) {
-            case ' ':
-            case '\t':
-                ends_loop = true;
-                break;
-            case '\n':
-                skip_until_line_end();
-                return lexical_token_t::INVALID_DIRECTIVE;
-            default:
-                ++m_cur_itr;
+            if (*m_cur_itr == '\n') {
                 break;
             }
+            ++m_cur_itr;
         }
 
-        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
-
-        if (m_value_buffer == "TAG") {
-            if (!ends_loop) {
-                emit_error("There must be at least one white space between \"%TAG\" and tag info.");
-            }
-            skip_white_spaces();
-            return scan_tag_directive();
-        }
-
-        if (m_value_buffer == "YAML") {
-            if (!ends_loop) {
-                emit_error("There must be at least one white space between \"%YAML\" and tag info.");
-            }
-            skip_white_spaces();
-            return scan_yaml_version_directive();
-        }
-
-        skip_until_line_end();
-        return lexical_token_t::INVALID_DIRECTIVE;
+        end_itr = m_cur_itr;
+        return lexical_token_t::DIRECTIVE;
     }
 
-    /// @brief Scan a YAML tag directive.
-    /// @return lexical_token_t The lexical token type for YAML tag directives.
-    lexical_token_t scan_tag_directive() {
-        m_tag_handle.clear();
-        m_tag_prefix.clear();
-        m_token_begin_itr = m_cur_itr;
-
-        //
-        // extract a tag handle
-        //
-
-        if (*m_cur_itr != '!') {
-            emit_error("Tag handle must start with \'!\'.");
-        }
-
-        if (++m_cur_itr == m_end_itr) {
-            emit_error("invalid TAG directive is found.");
-        }
-
-        switch (*m_cur_itr) {
-        case ' ':
-        case '\t':
-            // primary handle (!)
-            break;
-        case '!':
-            if (++m_cur_itr == m_end_itr) {
-                emit_error("invalid TAG directive is found.");
-            }
-            if (*m_cur_itr != ' ' && *m_cur_itr != '\t') {
-                emit_error("invalid tag handle is found.");
-            }
-            break;
-        default: {
-            bool ends_loop = false;
-            do {
-                switch (*m_cur_itr) {
-                case ' ':
-                case '\t':
-                    emit_error("invalid tag handle is found.");
-                case '!': {
-                    if (m_cur_itr + 1 == m_end_itr) {
-                        ends_loop = true;
-                        break;
-                    }
-                    char next = *(m_cur_itr + 1);
-                    if (next != ' ' && next != '\t') {
-                        emit_error("invalid tag handle is found.");
-                    }
-                    ends_loop = true;
-                    break;
-                }
-                case '-':
-                    break;
-                default:
-                    if (!isalnum(*m_cur_itr)) {
-                        // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
-                        emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
-                    }
-                    break;
-                }
-
-                if (++m_cur_itr == m_end_itr) {
-                    emit_error("invalid TAG directive is found.");
-                }
-            } while (!ends_loop);
-            break;
-        }
-        }
-
-        m_tag_handle.assign(m_token_begin_itr, m_cur_itr);
-
-        skip_white_spaces();
-
-        //
-        // extract a tag prefix.
-        //
-
-        m_token_begin_itr = m_cur_itr;
-        switch (*m_cur_itr) {
-        // a tag prefix must not start with flow indicators to avoid ambiguity.
-        // See https://yaml.org/spec/1.2.2/#rule-ns-global-tag-prefix for more details.
-        case ',':
-        case '[':
-        case ']':
-        case '{':
-        case '}':
-            emit_error("tag prefix must not start with flow indicators (\',\', [], {}).");
-        }
-
-        // extract the rest of a tag prefix.
-        bool ends_loop = false;
-        do {
-            switch (*m_cur_itr) {
-            case ' ':
-            case '\t':
-            case '\n':
-                ends_loop = true;
-                break;
-            }
-        } while (!ends_loop && ++m_cur_itr != m_end_itr);
-
-        m_tag_prefix.assign(m_token_begin_itr, m_cur_itr);
-
-        bool is_valid = uri_encoding::validate(m_tag_prefix.begin(), m_tag_prefix.end());
-        if (!is_valid) {
-            emit_error("invalid URI character is found in a tag prefix.");
-        }
-
-        return lexical_token_t::TAG_DIRECTIVE;
-    }
-
-    /// @brief Scan a YAML version directive.
-    /// @note Only 1.1 and 1.2 are supported. If not, throws an exception.
-    /// @return lexical_token_t The lexical token type for YAML version directives.
-    lexical_token_t scan_yaml_version_directive() {
-        m_value_buffer.clear();
-        m_token_begin_itr = m_cur_itr;
-
-        bool ends_loop = false;
-        while (!ends_loop && m_cur_itr != m_end_itr) {
-            switch (*m_cur_itr) {
-            case ' ':
-            case '\t':
-            case '\n':
-                ends_loop = true;
-                break;
-            default:
-                ++m_cur_itr;
-                break;
-            }
-        }
-
-        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
-
-        if (m_value_buffer != "1.1" && m_value_buffer != "1.2") {
-            emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
-        }
-
-        return lexical_token_t::YAML_VER_DIRECTIVE;
-    }
-
-    /// @brief Extracts an anchor name from the input and assigns the result to `m_value_buffer`.
-    void extract_anchor_name() {
+    /// @brief Extracts an anchor name from the input.
+    void extract_anchor_name(iterator_type& end_itr) {
         FK_YAML_ASSERT(*m_cur_itr == '&' || *m_cur_itr == '*');
 
-        m_value_buffer.clear();
-        m_token_begin_itr = ++m_cur_itr;
-
-        bool ends_loop = false;
-        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
+        for (++m_cur_itr; m_cur_itr != m_end_itr; ++m_cur_itr) {
+            bool ends_loop = false;
             switch (*m_cur_itr) {
             // anchor name must not contain white spaces, newline codes and flow indicators.
             // See https://yaml.org/spec/1.2.2/#692-node-anchors for more details.
@@ -3167,49 +2405,24 @@ private:
             }
 
             if (ends_loop) {
+                ++m_cur_itr;
                 break;
             }
         }
 
-        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
+        end_itr = m_cur_itr;
     }
 
-    /// @brief Extracts a tag name from the input and assigns the result to `m_value_buffer`.
-    void extract_tag_name() {
-        m_value_buffer.clear();
-
+    /// @brief Extracts a tag name from the input.
+    void extract_tag_name(iterator_type& end_itr) {
         FK_YAML_ASSERT(*m_cur_itr == '!');
 
         if (++m_cur_itr == m_end_itr) {
             // Just "!" is a non-specific tag.
-            m_value_buffer = "!";
+            end_itr = m_cur_itr;
             return;
         }
 
-        bool is_verbatim = false;
-        bool allows_another_tag_prefix = false;
-
-        switch (*m_cur_itr) {
-        case ' ':
-        case '\n':
-            // Just "!" is a non-specific tag.
-            m_value_buffer = "!";
-            return;
-        case '!':
-            // Secondary tag handles (!!suffix)
-            break;
-        case '<':
-            // Verbatim tags (!<TAG>)
-            is_verbatim = true;
-            ++m_cur_itr;
-            break;
-        default:
-            // Either local tags (!suffix) or named handles (!tag!suffix)
-            allows_another_tag_prefix = true;
-            break;
-        }
-
-        bool is_named_handle = false;
         bool ends_loop = false;
         do {
             if (++m_cur_itr == m_end_itr) {
@@ -3223,322 +2436,135 @@ private:
             case '\n':
                 ends_loop = true;
                 break;
-            case '!':
-                if (!allows_another_tag_prefix) {
-                    emit_error("invalid tag prefix (!) is found.");
-                }
-
-                is_named_handle = true;
-                // tag prefix must not appear three times.
-                allows_another_tag_prefix = false;
-                break;
             default:
                 break;
             }
         } while (!ends_loop);
 
-        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
-
-        if (is_verbatim) {
-            char last = m_value_buffer.back();
-            if (last != '>') {
-                emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
-            }
-
-            auto tag_begin = m_value_buffer.begin() + 2;
-            auto tag_end = m_value_buffer.end() - 1;
-            if (tag_begin == tag_end) {
-                emit_error("verbatim tag(!<TAG>) must not be empty.");
-            }
-
-            bool is_valid_uri = uri_encoding::validate(tag_begin, tag_end);
-            if (!is_valid_uri) {
-                emit_error("invalid URI character is found in a verbatim tag.");
-            }
-
-            return;
-        }
-
-        if (is_named_handle) {
-            char last = m_value_buffer.back();
-            if (last == '!') {
-                // Tag shorthand must be followed by a non-empty suffix.
-                // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
-                emit_error("named handle has no suffix.");
-            }
-
-            std::size_t last_tag_prefix_pos = m_value_buffer.find_last_of('!');
-            FK_YAML_ASSERT(last_tag_prefix_pos != std::string::npos);
-
-            bool is_valid_uri =
-                uri_encoding::validate(m_value_buffer.begin() + last_tag_prefix_pos + 1, m_value_buffer.end());
-            if (!is_valid_uri) {
-                emit_error("Invalid URI character is found in a named tag handle.");
-            }
-        }
+        end_itr = m_cur_itr;
     }
 
     /// @brief Scan a string token, either plain, single-quoted or double-quoted.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t scan_scalar() {
-        m_value_buffer.clear();
-
+    lexical_token_t scan_scalar(iterator_type& end_itr) {
         bool needs_last_single_quote = false;
         bool needs_last_double_quote = false;
         if (m_cur_itr == m_token_begin_itr) {
             needs_last_single_quote = (*m_cur_itr == '\'');
             needs_last_double_quote = (*m_cur_itr == '\"');
             if (needs_last_double_quote || needs_last_single_quote) {
-                m_token_begin_itr = ++m_cur_itr;
+                ++m_cur_itr;
             }
         }
 
-        lexical_token_t type = extract_string_token(needs_last_single_quote, needs_last_double_quote);
-        FK_YAML_ASSERT(type == lexical_token_t::STRING_VALUE);
+        lexical_token_t type = extract_string_token(needs_last_single_quote, needs_last_double_quote, end_itr);
+        FK_YAML_ASSERT(
+            (needs_last_single_quote && type == lexical_token_t::FLOW_SINGLE_QUOTED_SCALAR) ||
+            (needs_last_double_quote && type == lexical_token_t::FLOW_DOUBLE_QUOTED_SCALAR) ||
+            type == lexical_token_t::FLOW_PLAIN_SCALAR);
 
-        if (needs_last_single_quote || needs_last_double_quote) {
-            // just returned the extracted string value if quoted.
-            return type;
-        }
-
-        return scalar_scanner::scan(m_value_buffer);
+        return type;
     }
 
     /// @brief Check if the given character is allowed in a single-quoted scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
     bool is_allowed_single(char c) {
-        bool ret = false;
-
         switch (c) {
-        case '\n': {
-            // discard trailing white spaces which preceeds the line break in the current line.
-            auto before_trailing_spaces_itr = m_cur_itr - 1;
-            bool ends_loop = false;
-            while (before_trailing_spaces_itr != m_token_begin_itr) {
-                switch (*before_trailing_spaces_itr) {
-                case ' ':
-                case '\t':
-                    --before_trailing_spaces_itr;
-                    break;
-                default:
-                    ends_loop = true;
-                    break;
-                }
-
-                if (ends_loop) {
-                    break;
-                }
-            }
-            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
-
-            // move to the beginning of the next line.
-            ++m_cur_itr;
-
-            // apply line folding according to the number of following empty lines.
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
-            skip_white_spaces_and_newline_codes();
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
-            if (trailing_empty_lines > 0) {
-                m_value_buffer.append(trailing_empty_lines, '\n');
-            }
-            else {
-                m_value_buffer.push_back(' ');
-            }
-
-            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\'') ? m_cur_itr-- : m_cur_itr;
-            ret = true;
-            break;
-        }
-
         case '\'':
             // If single quotation marks are repeated twice in a single-quoted string token,
             // they are considered as an escaped single quotation mark.
-            if (m_cur_itr + 1 == m_end_itr) {
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                m_token_begin_itr = m_cur_itr;
-                break;
+            if (++m_cur_itr == m_end_itr) {
+                return false;
             }
 
-            if (*(m_cur_itr + 1) != '\'') {
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                break;
+            if (*m_cur_itr != '\'') {
+                return false;
             }
 
-            m_value_buffer.append(m_token_begin_itr, ++m_cur_itr);
-            m_token_begin_itr = m_cur_itr + 1;
-            ret = true;
-            break;
+            return true;
+        default:
+            return true;
         }
-
-        return ret;
     }
 
     /// @brief Check if the given character is allowed in a double-quoted scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
     bool is_allowed_double(char c) {
-        bool ret = false;
-
         switch (c) {
-        case '\n': {
-            // discard trailing white spaces which preceeds the line break in the current line.
-            auto before_trailing_spaces_itr = m_cur_itr - 1;
-            bool ends_loop = false;
-            while (before_trailing_spaces_itr != m_token_begin_itr) {
-                switch (*before_trailing_spaces_itr) {
-                case ' ':
-                case '\t':
-                    --before_trailing_spaces_itr;
-                    break;
-                default:
-                    ends_loop = true;
-                    break;
-                }
-
-                if (ends_loop) {
-                    break;
-                }
-            }
-            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
-
-            // move to the beginning of the next line.
-            ++m_cur_itr;
-
-            // apply line folding according to the number of following empty lines.
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
-            skip_white_spaces_and_newline_codes();
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
-            if (trailing_empty_lines > 0) {
-                m_value_buffer.append(trailing_empty_lines, '\n');
-            }
-            else {
-                m_value_buffer.push_back(' ');
-            }
-
-            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
-            ret = true;
-            break;
-        }
-
         case '\"':
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-            break;
+            return false;
 
         case '\\':
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-
             // Handle escaped characters.
-            // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
+            // See https://yaml.org/spec/1.2.2/#57-escaped-characters for details.
 
             c = *(m_cur_itr + 1);
+
             if (c != '\n') {
-                bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
+                uint32_t size = 0;
+                bool is_valid_escaping = yaml_escaper::check_escape_sequence(m_cur_itr, m_end_itr, size);
                 if (!is_valid_escaping) {
                     emit_error("Unsupported escape sequence is found in a string token.");
                 }
 
-                m_token_begin_itr = m_cur_itr + 1;
-                ret = true;
-                break;
+                std::advance(m_cur_itr, size - 1);
             }
 
-            // move until the next non-space character is found.
-            m_cur_itr += 2;
-            skip_white_spaces();
+            return true;
 
-            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
-            ret = true;
-            break;
+        default:
+            return true;
         }
-
-        return ret;
     }
 
     /// @brief Check if the given character is allowed in a plain scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
     bool is_allowed_plain(char c) {
-        bool ret = false;
-
         switch (c) {
         case '\n':
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-            break;
+            return false;
 
         case ' ': {
             // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
             // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-            char next = *(m_cur_itr + 1);
-            bool is_appended = false;
 
-            // These characters are permitted when not inside a flow collection, and not inside an implicit key.
-            // TODO: Support detection of implicit key context for this check.
-            if (m_flow_context_depth > 0) {
-                switch (next) {
-                case '{':
-                case '}':
-                case '[':
-                case ']':
-                case ',':
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                    is_appended = true;
-                    break;
-                }
-
-                if (is_appended) {
-                    break;
-                }
-            }
-
-            // " :" is permitted in a plain style string token, but not when followed by a space.
-            if (next == ':') {
-                char peeked = *(m_cur_itr + 2);
-                if (peeked == ' ') {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                    is_appended = true;
-                }
-
-                if (is_appended) {
-                    break;
-                }
-            }
-
-            switch (next) {
+            switch (*(m_cur_itr + 1)) {
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+                // These characters are permitted when not inside a flow collection, and not inside an implicit key.
+                // TODO: Support detection of implicit key context for this check.
+                return (m_flow_context_depth == 0);
+            case ':':
+                // " :" is permitted in a plain style string token, but not when followed by a space.
+                return (*(m_cur_itr + 2) == ' ');
             case ' ':
             case '\n':
             case '#':
             case '\\':
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                is_appended = true;
-                break;
+                return false;
+            default:
+                return true;
             }
-
-            ret = !is_appended;
-            break;
         }
 
         case ':': {
-            char next = *(m_cur_itr + 1);
-
             // A colon as a key separator must be followed by
             // * a white space or
             // * a newline code.
-            switch (next) {
+            switch (*(m_cur_itr + 1)) {
             case ' ':
             case '\t':
             case '\n':
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-                break;
+                return false;
             default:
-                ret = true;
-                break;
+                return true;
             }
-            break;
         }
 
         case '{':
@@ -3547,46 +2573,44 @@ private:
         case ']':
         case ',':
             // just regard the flow indicators as a normal character if plain but not inside a flow context.
-            if (m_flow_context_depth == 0) {
-                ret = true;
-                break;
-            }
-
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-            break;
+            return (m_flow_context_depth == 0);
         }
 
-        return ret;
+        return true;
     }
 
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
     /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
+    lexical_token_t extract_string_token(
+        bool needs_last_single_quote, bool needs_last_double_quote, iterator_type& end_itr) {
         // change behaviors depending on the type of a comming string scalar token.
         // * single quoted
         // * double quoted
         // * plain
 
-        std::string check_filters {"\n"};
+        lexical_token_t ret_type {lexical_token_t::FLOW_PLAIN_SCALAR};
+        std::string check_filters {};
         bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
 
         if (needs_last_single_quote) {
+            ret_type = lexical_token_t::FLOW_SINGLE_QUOTED_SCALAR;
             check_filters.append("\'");
             pfn_is_allowed = &lexical_analyzer::is_allowed_single;
         }
         else if (needs_last_double_quote) {
+            ret_type = lexical_token_t::FLOW_DOUBLE_QUOTED_SCALAR;
             check_filters.append("\"\\");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
         else // plain scalars
         {
-            check_filters.append(" :{}[],");
+            check_filters.append(" :\n{}[],");
             pfn_is_allowed = &lexical_analyzer::is_allowed_plain;
         }
 
         // scan the contents of a string scalar token.
 
-        for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr) {
+        while (m_cur_itr != m_end_itr) {
             char current = *m_cur_itr;
             uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
             if (num_bytes == 1) {
@@ -3594,38 +2618,34 @@ private:
                 if (ret != std::string::npos) {
                     bool is_allowed = (this->*pfn_is_allowed)(current);
                     if (!is_allowed) {
-                        return lexical_token_t::STRING_VALUE;
+                        end_itr = m_cur_itr;
+                        break;
                     }
-
-                    continue;
                 }
 
                 // Handle unescaped control characters.
                 if (static_cast<uint8_t>(current) <= 0x1F) {
                     handle_unescaped_control_char(current);
-                    continue;
                 }
-
-                continue;
             }
 
-            // Multi-byte characters are already validated while creating an input handler.
-            // So just advance the iterator.
-            m_cur_itr += num_bytes - 1;
+            // Advance the iterator based on the byte size for the current character.
+            // Note multi-byte characters are already validated while creating an input handler.
+            m_cur_itr += num_bytes;
         }
 
         // Handle the end of input buffer.
 
-        if (needs_last_double_quote) {
-            emit_error("Invalid end of input buffer in a double-quoted string token.");
+        if (needs_last_double_quote && *(m_cur_itr - 1) != '\"') {
+            emit_error("Invalid end of a double-quoted string token.");
         }
 
-        if (needs_last_single_quote) {
-            emit_error("Invalid end of input buffer in a single-quoted string token.");
+        if (needs_last_single_quote && *(m_cur_itr - 1) != '\'') {
+            emit_error("Invalid end of a single-quoted string token.");
         }
 
-        m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-        return lexical_token_t::STRING_VALUE;
+        end_itr = m_cur_itr;
+        return ret_type;
     }
 
     /// @brief Scan a block style string token either in the literal or folded style.
@@ -3633,202 +2653,46 @@ private:
     /// @param chomp The chomping indicator type of the given token, either strip, keep or clip.
     /// @param indent The indent size specified for the given token.
     /// @return The lexical token type for strings.
-    lexical_token_t scan_block_style_string_token(
-        block_style_indicator_t style, chomping_indicator_t chomp, uint32_t indent) {
-        m_value_buffer.clear();
-
+    lexical_token_t determine_block_scalar_range(block_scalar_header& header, iterator_type& end_itr) {
         // Handle leading all-space lines.
-        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
-            current = *m_cur_itr;
-
-            if (current == ' ') {
-                continue;
-            }
-
-            if (current == '\n') {
-                m_value_buffer.push_back('\n');
-                continue;
-            }
-
-            break;
-        }
+        skip_white_spaces_and_newline_codes();
 
         if (m_cur_itr == m_end_itr) {
-            if (chomp != chomping_indicator_t::KEEP) {
-                m_value_buffer.clear();
-            }
-            return lexical_token_t::STRING_VALUE;
+            end_itr = m_cur_itr;
+            return lexical_token_t::BLOCK_SCALAR;
         }
 
         m_pos_tracker.update_position(m_cur_itr);
         uint32_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
 
         // TODO: preserve and compare the last indentation with `cur_indent`
-        if (indent == 0) {
-            indent = cur_indent;
+        if (header.indent == 0) {
+            header.indent = cur_indent;
         }
-        else if (cur_indent < indent) {
+        else if (cur_indent < header.indent) {
             emit_error("A block style scalar is less indented than the indicated level.");
         }
 
-        uint32_t chars_in_line = 0;
-        bool is_extra_indented = false;
-        m_token_begin_itr = m_cur_itr;
-        if (cur_indent > indent) {
-            if (style == block_style_indicator_t::FOLDED) {
-                m_value_buffer.push_back('\n');
-                is_extra_indented = true;
-            }
+        // Skip reading the first content line which is known as part of the block scalar contents.
+        skip_until_line_end();
 
-            uint32_t diff = cur_indent - indent;
-            // m_value_buffer.append(diff, ' ');
-            m_token_begin_itr -= diff;
-            chars_in_line += diff;
+        while (m_cur_itr != m_end_itr) {
+            end_itr = m_cur_itr;
+            for (uint32_t i = cur_indent; i < header.indent && m_cur_itr != m_end_itr; i++, ++m_cur_itr) {
+                switch (*m_cur_itr) {
+                case ' ':
+                case '\t':
+                case '\n':
+                    // Interpret less indented non-space characters as the start of the next token.
+                    return lexical_token_t::BLOCK_SCALAR;
+                }
+            }
+            skip_until_line_end();
         }
 
-        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
-            if (*m_cur_itr == '\n') {
-                if (style == block_style_indicator_t::LITERAL) {
-                    if (chars_in_line == 0) {
-                        m_value_buffer.push_back('\n');
-                    }
-                    else {
-                        m_value_buffer.append(m_token_begin_itr, m_cur_itr + 1);
-                    }
-                }
-                // block_style_indicator_t::FOLDED
-                else if (chars_in_line == 0) {
-                    // Just append a newline if the current line is empty.
-                    m_value_buffer.push_back('\n');
-                }
-                else if (is_extra_indented) {
-                    // A line being more indented is not folded.
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr + 1);
-                }
-                else {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-
-                    // Append a newline if the next line is empty.
-                    bool is_end_of_token = false;
-                    bool is_next_empty = false;
-                    for (uint32_t i = 0; i < indent; i++) {
-                        if (++m_cur_itr == m_end_itr) {
-                            is_end_of_token = true;
-                            break;
-                        }
-
-                        char current = *m_cur_itr;
-                        if (current == ' ') {
-                            continue;
-                        }
-
-                        if (current == '\n') {
-                            is_next_empty = true;
-                            break;
-                        }
-
-                        is_end_of_token = true;
-                        break;
-                    }
-
-                    if (is_end_of_token) {
-                        m_value_buffer.push_back('\n');
-                        chars_in_line = 0;
-                        break;
-                    }
-
-                    if (is_next_empty) {
-                        m_value_buffer.push_back('\n');
-                        chars_in_line = 0;
-                        continue;
-                    }
-                    else {
-                    }
-
-                    switch (char next = *(m_cur_itr + 1)) {
-                    case '\n':
-                        ++m_cur_itr;
-                        m_value_buffer.push_back(next);
-                        break;
-                    case ' ':
-                        // The next line is more indented, so a newline will be appended in the coming loops.
-                        break;
-                    default:
-                        m_value_buffer.push_back(' ');
-                        break;
-                    }
-                }
-
-                // Reset the values for the next line.
-                m_token_begin_itr = m_cur_itr + 1;
-                chars_in_line = 0;
-                is_extra_indented = false;
-
-                continue;
-            }
-
-            // Handle indentation
-            if (chars_in_line == 0) {
-                m_pos_tracker.update_position(m_cur_itr);
-                cur_indent = m_pos_tracker.get_cur_pos_in_line();
-                if (cur_indent < indent) {
-                    if (*m_cur_itr != ' ') {
-                        // Interpret less indented non-space characters as the start of the next token.
-                        break;
-                    }
-                    // skip a space if not yet indented enough
-                    continue;
-                }
-
-                if (*m_cur_itr == ' ' && style == block_style_indicator_t::FOLDED) {
-                    // A line being more indented is not folded.
-                    m_value_buffer.push_back('\n');
-                    is_extra_indented = true;
-                }
-                m_token_begin_itr = m_cur_itr;
-            }
-
-            // m_value_buffer.push_back(current);
-            ++chars_in_line;
-        }
-
-        if (chars_in_line > 0) {
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-        }
-
-        // Manipulate the trailing line endings chomping indicator type.
-        switch (chomp) {
-        case chomping_indicator_t::STRIP:
-            while (!m_value_buffer.empty()) {
-                // Empty strings are handled above, so no check for the case.
-                char last = m_value_buffer.back();
-                if (last != '\n') {
-                    break;
-                }
-                m_value_buffer.pop_back();
-            }
-            break;
-        case chomping_indicator_t::CLIP: {
-            char last = m_value_buffer.back();
-            if (last != '\n') {
-                // No need to chomp the trailing newlines.
-                break;
-            }
-            while (m_value_buffer.size() > 1) {
-                // Strings with only newlines are handled above, so no check for the case.
-                char second_last = *(m_value_buffer.end() - 2);
-                if (second_last != '\n') {
-                    break;
-                }
-                m_value_buffer.pop_back();
-            }
-            break;
-        }
-        case chomping_indicator_t::KEEP:
-            break;
-        }
-
-        return lexical_token_t::STRING_VALUE;
+        // Reach here when the end of the block scalar is also the end of the input.
+        end_itr = m_end_itr;
+        return lexical_token_t::BLOCK_SCALAR;
     }
 
     /// @brief Handle unescaped control characters.
@@ -3905,15 +2769,15 @@ private:
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
-    void get_block_style_metadata(chomping_indicator_t& chomp_type, uint32_t& indent) {
-        chomp_type = chomping_indicator_t::CLIP;
+    void get_block_style_metadata(block_scalar_header& header) {
+        header.chomping_type = chomping_indicator_t::CLIP;
         switch (*++m_cur_itr) {
         case '-':
-            chomp_type = chomping_indicator_t::STRIP;
+            header.chomping_type = chomping_indicator_t::STRIP;
             ++m_cur_itr;
             break;
         case '+':
-            chomp_type = chomping_indicator_t::KEEP;
+            header.chomping_type = chomping_indicator_t::KEEP;
             ++m_cur_itr;
             break;
         default:
@@ -3924,9 +2788,9 @@ private:
             emit_error("An indentation level for a block style scalar cannot be \'0\'");
         }
 
-        indent = 0;
+        header.indent = 0;
         if (std::isdigit(*m_cur_itr)) {
-            indent = static_cast<char>(*m_cur_itr++ - '0');
+            header.indent = static_cast<uint32_t>(*m_cur_itr++ - '0');
         }
 
         // skip characters including comments.
@@ -3979,23 +2843,15 @@ private:
     /// An input buffer adapter to be analyzed.
     std::string m_input_buffer {};
     /// The iterator to the current character in the input buffer.
-    std::string::const_iterator m_cur_itr {};
-    /// The iterator to the beginning of the current token.
-    std::string::const_iterator m_token_begin_itr {};
+    iterator_type m_cur_itr {};
     /// The iterator to the past-the-end element in the input buffer.
-    std::string::const_iterator m_end_itr {};
+    iterator_type m_end_itr {};
+    /// The beginning iterator of the current token.
+    iterator_type m_token_begin_itr {};
+    /// The past-the-end iterator of the current token.
+    iterator_type m_token_end_itr {};
     /// The current position tracker of the input buffer.
     mutable position_tracker m_pos_tracker {};
-    /// A temporal buffer to store a string to be parsed to an actual token value.
-    std::string m_value_buffer {};
-    /// The last tag handle.
-    std::string m_tag_handle {};
-    /// The last tag prefix
-    std::string m_tag_prefix {};
-    /// The beginning position of the last lexical token. (zero origin)
-    uint32_t m_last_token_begin_pos {0};
-    /// The beginning line of the last lexical token. (zero origin)
-    uint32_t m_last_token_begin_line {0};
     /// The current depth of flow context.
     uint32_t m_flow_context_depth {0};
 };
@@ -4289,8 +3145,8 @@ class basic_deserializer {
 
     /** A type for the target basic_node. */
     using node_type = BasicNodeType;
-    /** A type for the lexical analyzer. */
-    using lexer_type = lexical_analyzer<node_type>;
+    /** An alias type for lexical tokens. */
+    using lextoken_type = typename lexical_analyzer::lexical_token;
     /** A type for the document metainfo. */
     using doc_metainfo_type = document_metainfo<node_type>;
     /** A type for the tag resolver. */
@@ -4376,8 +3232,11 @@ public:
     /// @return node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     node_type deserialize(InputAdapterType&& input_adapter) {
+        std::string input_buffer {};
+        std::forward<InputAdapterType>(input_adapter).fill_buffer(input_buffer);
+        lexical_analyzer lexer(input_buffer);
+
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
-        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
         return deserialize_document(lexer, type);
     }
 
@@ -4387,7 +3246,10 @@ public:
     /// @return std::vector<node_type> Root YAML nodes for deserialized YAML documents.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     std::vector<node_type> deserialize_docs(InputAdapterType&& input_adapter) {
-        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
+        std::string input_buffer {};
+        std::forward<InputAdapterType>(input_adapter).fill_buffer(input_buffer);
+        lexical_analyzer lexer(input_buffer);
+
         std::vector<node_type> nodes {};
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
@@ -4403,46 +3265,42 @@ private:
     /// @param lexer The lexical analyzer to be used.
     /// @param last_type The variable to store the last lexical token type.
     /// @return node_type A root YAML node deserialized from the YAML document.
-    node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
-        lexical_token_t type {lexical_token_t::END_OF_BUFFER};
+    node_type deserialize_document(lexical_analyzer& lexer, lexical_token_t& last_type) {
+        lextoken_type token {};
 
         node_type root;
         mp_meta = root.mp_meta;
 
         // parse directives first.
-        deserialize_directives(lexer, type);
+        deserialize_directives(lexer, token);
 
-        switch (type) {
+        switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
             root = node_type::sequence();
             apply_directive_set(root);
-            parse_context context(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
+            parse_context context(token.start_line, token.start_pos, context_state_t::BLOCK_SEQUENCE, &root);
             m_context_stack.emplace_back(std::move(context));
-            type = lexer.get_next_token();
+            token = lexer.get_tokens().at(0);
             break;
         }
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
             ++m_flow_context_depth;
             root = node_type::sequence();
             apply_directive_set(root);
-            m_context_stack.emplace_back(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_SEQUENCE, &root);
-            type = lexer.get_next_token();
+            m_context_stack.emplace_back(token.start_line, token.start_pos, context_state_t::FLOW_SEQUENCE, &root);
+            token = lexer.get_tokens().at(0);
             break;
         case lexical_token_t::MAPPING_FLOW_BEGIN:
             ++m_flow_context_depth;
             root = node_type::mapping();
             apply_directive_set(root);
-            m_context_stack.emplace_back(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
-            type = lexer.get_next_token();
+            m_context_stack.emplace_back(token.start_line, token.start_pos, context_state_t::FLOW_MAPPING, &root);
+            token = lexer.get_tokens().at(0);
             break;
         default: {
             root = node_type::mapping();
             apply_directive_set(root);
-            parse_context context(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
+            parse_context context(token.start_line, token.start_pos, context_state_t::BLOCK_MAPPING, &root);
             m_context_stack.emplace_back(std::move(context));
             break;
         }
@@ -4451,7 +3309,7 @@ private:
         mp_current_node = &root;
 
         // parse YAML nodes recursively
-        deserialize_node(lexer, type, last_type);
+        deserialize_node(lexer, token, last_type);
         FK_YAML_ASSERT(last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DOCUMENT);
 
         // reset parameters for the next call.
@@ -4469,19 +3327,17 @@ private:
     /// @brief Deserializes the YAML directives if specified.
     /// @param lexer The lexical analyzer to be used.
     /// @param last_type The variable to store the last lexical token type.
-    void deserialize_directives(lexer_type& lexer, lexical_token_t& last_type) {
+    void deserialize_directives(lexical_analyzer& lexer, lextoken_type& last_token) {
         bool lacks_end_of_directives_marker = false;
 
         for (;;) {
-            lexical_token_t type = lexer.get_next_token();
+            auto token = lexer.get_tokens().at(0);
 
-            switch (type) {
+            switch (token.type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
                 if (mp_meta->is_version_specified) {
                     throw parse_error(
-                        "YAML version cannot be specified more than once.",
-                        lexer.get_lines_processed(),
-                        lexer.get_last_token_begin_pos());
+                        "YAML version cannot be specified more than once.", token.start_line, token.start_pos);
                 }
 
                 mp_meta->version = convert_yaml_version(lexer.get_yaml_version());
@@ -4495,9 +3351,7 @@ private:
                     bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
-                            "Primary handle cannot be specified more than once.",
-                            lexer.get_lines_processed(),
-                            lexer.get_last_token_begin_pos());
+                            "Primary handle cannot be specified more than once.", token.start_line, token.start_pos);
                     }
                     mp_meta->primary_handle_prefix = lexer.get_tag_prefix();
                     lacks_end_of_directives_marker = true;
@@ -4507,9 +3361,7 @@ private:
                     bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
-                            "Secondary handle cannot be specified more than once.",
-                            lexer.get_lines_processed(),
-                            lexer.get_last_token_begin_pos());
+                            "Secondary handle cannot be specified more than once.", token.start_line, token.start_pos);
                     }
                     mp_meta->secondary_handle_prefix = lexer.get_tag_prefix();
                     lacks_end_of_directives_marker = true;
@@ -4521,8 +3373,8 @@ private:
                     if (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
-                            lexer.get_lines_processed(),
-                            lexer.get_last_token_begin_pos());
+                            token.start_line,
+                            token.start_pos);
                     }
                     lacks_end_of_directives_marker = true;
                     break;
@@ -4540,11 +3392,11 @@ private:
                 if (lacks_end_of_directives_marker) {
                     throw parse_error(
                         "The end of directives marker (---) is missing after directives.",
-                        lexer.get_lines_processed(),
-                        lexer.get_last_token_begin_pos());
+                        token.start_line,
+                        token.start_pos);
                 }
                 // end the parsing of directives if the other tokens are found.
-                last_type = type;
+                last_token = std::move(token);
                 return;
             }
         }
@@ -4553,10 +3405,10 @@ private:
     /// @brief Deserializes the YAML nodes recursively.
     /// @param lexer The lexical analyzer to be used.
     /// @param first_type The first lexical token type.
-    void deserialize_node(lexer_type& lexer, lexical_token_t first_type, lexical_token_t& last_type) {
-        lexical_token_t type = first_type;
-        uint32_t line = lexer.get_lines_processed();
-        uint32_t indent = lexer.get_last_token_begin_pos();
+    void deserialize_node(lexical_analyzer& lexer, const lextoken_type& first_token, lexical_token_t& last_type) {
+        lexical_token_t type = first_token.type;
+        uint32_t line = first_token.start_line;
+        uint32_t indent = first_token.start_pos;
 
         do {
             switch (type) {
@@ -5086,7 +3938,8 @@ private:
     /// @param line The variable to store the line of either the first property or the last non-property token.
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
-    bool deserialize_node_properties(lexer_type& lexer, lexical_token_t& last_type, uint32_t& line, uint32_t& indent) {
+    bool deserialize_node_properties(
+        lexical_analyzer& lexer, lexical_token_t& last_type, uint32_t& line, uint32_t& indent) {
         m_needs_anchor_impl = m_needs_tag_impl = false;
 
         lexical_token_t type = last_type;
@@ -5244,7 +4097,7 @@ private:
     /// @param indent The last indent size.
     /// @param line The last line.
     /// @return The created YAML scalar node.
-    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, uint32_t indent, uint32_t line) {
+    node_type create_scalar_node(lexical_analyzer& lexer, lexical_token_t type, uint32_t indent, uint32_t line) {
         FK_YAML_ASSERT(
             type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
             type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
@@ -5330,7 +4183,7 @@ private:
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
-    bool deserialize_scalar(lexer_type& lexer, uint32_t& indent, uint32_t& line, lexical_token_t& type) {
+    bool deserialize_scalar(lexical_analyzer& lexer, uint32_t& indent, uint32_t& line, lexical_token_t& type) {
         node_type node = create_scalar_node(lexer, type, indent, line);
 
         if (mp_current_node->is_mapping()) {
