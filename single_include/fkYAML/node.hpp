@@ -5178,17 +5178,8 @@ private:
             else if (indent < m_context_stack.back().indent) {
                 auto target_itr =
                     std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
-                        if (indent != c.indent) {
-                            return false;
-                        }
-
-                        switch (c.state) {
-                        case context_state_t::BLOCK_MAPPING:
-                            // case context_state_t::MAPPING_VALUE:
-                            return true;
-                        default:
-                            return false;
-                        }
+                        // the target node is a block mapping key node with the same indentation.
+                        return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
                     });
                 bool is_indent_valid = (target_itr != m_context_stack.rend());
                 if (!is_indent_valid) {
