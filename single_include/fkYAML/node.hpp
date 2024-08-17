@@ -4390,10 +4390,20 @@ private:
         // parse directives first.
         deserialize_directives(lexer, type);
 
+        // parse node properties for root node if any
+        uint32_t line = lexer.get_lines_processed();
+        uint32_t indent = lexer.get_last_token_begin_pos();
+        bool found_props = deserialize_node_properties(lexer, type, line, indent);
+
         switch (type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
             root = node_type::sequence();
             apply_directive_set(root);
+            if (found_props && line < lexer.get_lines_processed()) {
+                // If node properties and a followed node are on the different line, the properties belong to the root
+                // sequence node.
+                apply_node_properties(root);
+            }
             parse_context context(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
             m_context_stack.emplace_back(std::move(context));
@@ -4404,6 +4414,7 @@ private:
             ++m_flow_context_depth;
             root = node_type::sequence();
             apply_directive_set(root);
+            apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_SEQUENCE, &root);
             type = lexer.get_next_token();
@@ -4412,6 +4423,7 @@ private:
             ++m_flow_context_depth;
             root = node_type::mapping();
             apply_directive_set(root);
+            apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
             type = lexer.get_next_token();
@@ -4419,6 +4431,11 @@ private:
         default: {
             root = node_type::mapping();
             apply_directive_set(root);
+            if (found_props && line < lexer.get_lines_processed()) {
+                // If node properties and a followed node are on the different line, the properties belong to the root
+                // node.
+                apply_node_properties(root);
+            }
             parse_context context(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
             m_context_stack.emplace_back(std::move(context));
