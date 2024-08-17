@@ -2531,6 +2531,48 @@ TEST_CASE("Deserializer_NodeProperties") {
         std::string input = "&anchor foo: !!str *anchor";
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SECTION("parse anchored child block mapping as a block sequence entry") {
+        std::string input = "values:\n"
+                            "- &anchor !XXX\n"
+                            "  source: !YYY\n"
+                            "    name: foo\n"
+                            "  include: false";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("values"));
+
+        fkyaml::node& values_node = root["values"];
+        REQUIRE(values_node.is_sequence());
+        REQUIRE(values_node.size() == 1);
+
+        fkyaml::node& values_0_node = values_node[0];
+        REQUIRE(values_0_node.is_mapping());
+        REQUIRE(values_0_node.size() == 2);
+        REQUIRE(values_0_node.contains("source"));
+        REQUIRE(values_0_node.contains("include"));
+        REQUIRE(values_0_node.has_anchor_name());
+        REQUIRE(values_0_node.get_anchor_name() == "anchor");
+        REQUIRE(values_0_node.has_tag_name());
+        REQUIRE(values_0_node.get_tag_name() == "!XXX");
+
+        fkyaml::node& values_0_source_node = values_0_node["source"];
+        REQUIRE(values_0_source_node.is_mapping());
+        REQUIRE(values_0_source_node.size() == 1);
+        REQUIRE(values_0_source_node.contains("name"));
+        REQUIRE(values_0_source_node.has_tag_name());
+        REQUIRE(values_0_source_node.get_tag_name() == "!YYY");
+
+        fkyaml::node& values_0_source_name_node = values_0_source_node["name"];
+        REQUIRE(values_0_source_name_node.is_string());
+        REQUIRE(values_0_source_name_node.get_value_ref<std::string&>() == "foo");
+
+        fkyaml::node& values_0_include_node = values_0_node["include"];
+        REQUIRE(values_0_include_node.is_boolean());
+        REQUIRE(values_0_include_node.get_value<bool>() == false);
+    }
 }
 
 TEST_CASE("Deserializer_NoMachingAnchor") {
