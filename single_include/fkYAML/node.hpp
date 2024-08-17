@@ -4642,7 +4642,7 @@ private:
                 if (line > old_line) {
                     if (m_needs_tag_impl) {
                         tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-                        if (tag_type == tag_t::MAPPING) {
+                        if (tag_type == tag_t::MAPPING || tag_type == tag_t::CUSTOM_TAG) {
                             // set YAML node properties here to distinguish them from those for the first key node
                             // as shown in the following snippet:
                             //
@@ -4655,6 +4655,7 @@ private:
                             *mp_current_node = node_type::mapping();
                             apply_directive_set(*mp_current_node);
                             apply_node_properties(*mp_current_node);
+                            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                             continue;
                         }
                     }
@@ -4668,7 +4669,40 @@ private:
                         cur_context.line = line;
                         cur_context.indent = indent;
                         cur_context.state = context_state_t::BLOCK_SEQUENCE;
-                        break;
+
+                        type = lexer.get_next_token();
+                        line = lexer.get_lines_processed();
+                        indent = lexer.get_last_token_begin_pos();
+
+                        bool has_props = deserialize_node_properties(lexer, type, line, indent);
+                        if (has_props) {
+                            uint32_t line_after_props = lexer.get_lines_processed();
+                            if (line == line_after_props) {
+                                // Skip updating the current indent to avoid stacking a wrong indentation.
+                                //
+                                // ```yaml
+                                // &foo bar: baz
+                                // ^
+                                // the correct indent width for the "bar" node key.
+                                // ```
+                                continue;
+                            }
+
+                            // if node properties and the followed node are on different lines (i.e., the properties are
+                            // for a container node), the application and the line advancement must happen here.
+                            // Otherwise, a false indent error will be emitted. See
+                            // https://github.com/fktn-k/fkYAML/issues/368 for more details.
+                            line = line_after_props;
+                            indent = lexer.get_last_token_begin_pos();
+                            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(
+                                node_type::mapping());
+                            mp_current_node = &mp_current_node->template get_value_ref<sequence_type&>().back();
+                            m_context_stack.emplace_back(
+                                line_after_props, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                            apply_node_properties(*mp_current_node);
+                        }
+
+                        continue;
                     }
 
                     // defer checking the existence of a key separator after the following scalar until the next
@@ -4705,16 +4739,19 @@ private:
             case lexical_token_t::INVALID_DIRECTIVE:
                 break;
             case lexical_token_t::ANCHOR_PREFIX:
-            case lexical_token_t::TAG_PREFIX:
+            case lexical_token_t::TAG_PREFIX: {
                 deserialize_node_properties(lexer, type, line, indent);
-
                 // Skip updating the current indent to avoid stacking a wrong indentation.
+                // (Node properties for block sequences as a mapping value are processed when a
+                // `lexical_token_t::KEY_SEPARATOR` token is processed.)
                 //
-                //   &foo bar: baz
-                //   ^
-                //   the correct indent width for the "bar" node key.
-
+                // ```yaml
+                // &foo bar: baz
+                // ^
+                // the correct indent width for the "bar" node key.
+                // ```
                 continue;
+            }
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
                 bool is_further_nested = m_context_stack.back().indent < indent;
                 if (is_further_nested) {
@@ -5147,7 +5184,7 @@ private:
 
                         switch (c.state) {
                         case context_state_t::BLOCK_MAPPING:
-                        case context_state_t::MAPPING_VALUE:
+                            // case context_state_t::MAPPING_VALUE:
                             return true;
                         default:
                             return false;
