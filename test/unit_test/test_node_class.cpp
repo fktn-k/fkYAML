@@ -2416,10 +2416,24 @@ TEST_CASE("Node_GetValue") {
     SECTION("float number node value") {
         fkyaml::node node(3.14);
 
-        SECTION("float number values") {
+        SECTION("positive float number values") {
             REQUIRE(std::abs(node.get_value<float>() - 3.14) < std::numeric_limits<float>::epsilon());
             REQUIRE(std::abs(node.get_value<double>() - 3.14) < std::numeric_limits<double>::epsilon());
             REQUIRE(std::abs(node.get_value<long double>() - 3.14) < std::numeric_limits<long double>::epsilon());
+        }
+
+        SECTION("zero float number values") {
+            node = 0.0;
+            REQUIRE(std::abs(node.get_value<float>() - 0.0) < std::numeric_limits<float>::epsilon());
+            REQUIRE(std::abs(node.get_value<double>() - 0.0) < std::numeric_limits<double>::epsilon());
+            REQUIRE(std::abs(node.get_value<long double>() - 0.0) < std::numeric_limits<long double>::epsilon());
+        }
+
+        SECTION("negative float number values") {
+            node = -3.14;
+            REQUIRE(std::abs(node.get_value<float>() - (-3.14)) < std::numeric_limits<float>::epsilon());
+            REQUIRE(std::abs(node.get_value<double>() - (-3.14)) < std::numeric_limits<double>::epsilon());
+            REQUIRE(std::abs(node.get_value<long double>() - (-3.14)) < std::numeric_limits<long double>::epsilon());
         }
 
         SECTION("non-float-number values") {
@@ -2438,7 +2452,7 @@ TEST_CASE("Node_GetValue") {
         }
 
         SECTION("underflowable float number type") {
-            fkyaml::node negative_float_node(std::numeric_limits<fkyaml::node::float_number_type>::min());
+            fkyaml::node negative_float_node(std::numeric_limits<fkyaml::node::float_number_type>::lowest());
             REQUIRE_THROWS_AS(negative_float_node.get_value<float>(), fkyaml::exception);
         }
 
