@@ -8,8 +8,8 @@ static std::string serialize(const basic_node& node);
 
 Serializes YAML node values recursively.  
 Currently, the serialization of mappings and sequences only supports block styles.  
-That means that, even if a deserialized source input contains container nodes written in flow styles, the serialization processes force them to be emitted in block styles.  
-Moreover, fkYAML unconditionally uses LFs as the line break format in serialization outputs and there is currently no way to change it to use CR+LFs.  
+That means that, even if a deserialized source input contains container nodes written in flow styles, this function forces them to be emitted in block styles.  
+Moreover, fkYAML unconditionally uses LFs as the line break format in serialization outputs, and there is currently no way to change it to use CR+LFs instead.  
 This function serializes the given `node` parameter in the following format.  
 
 ```yaml

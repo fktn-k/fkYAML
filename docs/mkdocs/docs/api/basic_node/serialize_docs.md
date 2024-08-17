@@ -9,13 +9,13 @@ static std::string serialize_docs(const std::vector<basic_node>& docs);
 Serializes YAML documents into a string.  
 This function serializes the given `docs` parameter with the separation line (...) between YAML documents.  
 Regarding the serialization of each document, see the documentation for the [`serialize()`](serialize.md) function which this function calls internally.  
-Just as the [`serialize()`](serialize.md) function does, fkYAML unconditionally uses LFs as the line break format in serialization outputs and there is currently no way to change it to use CR+LFs.  
+Just as the [`serialize()`](serialize.md) function does, fkYAML unconditionally uses LFs as the line break format in serialization outputs, and there is currently no way to change it to use CR+LFs instead.  
 
 ```yaml
 <YAML Document 1>
 ...
 <YAML Document 2>
-# the last separation line will be omitted since it's redundant.
+# the last document end marker (...) is omitted since it's redundant.
 ```
 
 ### **Parameters**
