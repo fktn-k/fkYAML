@@ -510,11 +510,11 @@ private:
             case lexical_token_t::INVALID_DIRECTIVE:
                 break;
             case lexical_token_t::ANCHOR_PREFIX:
-            case lexical_token_t::TAG_PREFIX: {
+            case lexical_token_t::TAG_PREFIX:
                 deserialize_node_properties(lexer, type, line, indent);
                 // Skip updating the current indent to avoid stacking a wrong indentation.
-                // (Node properties for block sequences as a mapping value are processed when a
-                // `lexical_token_t::KEY_SEPARATOR` token is processed.)
+                // Note that node properties for block sequences as a mapping value are processed when a
+                // `lexical_token_t::KEY_SEPARATOR` token is processed.
                 //
                 // ```yaml
                 // &foo bar: baz
@@ -522,7 +522,6 @@ private:
                 // the correct indent width for the "bar" node key.
                 // ```
                 continue;
-            }
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
                 bool is_further_nested = m_context_stack.back().indent < indent;
                 if (is_further_nested) {
