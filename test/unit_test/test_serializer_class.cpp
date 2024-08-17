@@ -127,8 +127,10 @@ TEST_CASE("Serializer_AnchorNode") {
     fkyaml::node key = "baz";
     key.add_anchor_name("C");
     node.get_value_ref<fkyaml::node::mapping_type&>().emplace(key, "qux");
+    node.add_anchor_name("anchor");
 
-    std::string expected = "null: &A\n"
+    std::string expected = "&anchor\n"
+                           "null: &A\n"
                            "  - true\n"
                            "  - bar\n"
                            "  - &B 3.14\n"
@@ -187,7 +189,10 @@ TEST_CASE("Serializer_TaggedNode") {
     mapping.emplace("map", map_node);
     mapping.emplace("seq", seq_node);
 
-    std::string expected = "!!null null: !<tag:yaml.org,2002:float> 3.14\n"
+    root.add_tag_name("!!map");
+
+    std::string expected = "!!map\n"
+                           "!!null null: !<tag:yaml.org,2002:float> 3.14\n"
                            "!<tag:yaml.org,2002:bool> true: !!int 123\n"
                            "!!str foo: !!null null\n"
                            "map: !!map\n"
@@ -195,6 +200,20 @@ TEST_CASE("Serializer_TaggedNode") {
                            "seq: !!seq\n"
                            "  - null\n"
                            "  - 456\n";
+
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(serializer.serialize(root) == expected);
+}
+
+TEST_CASE("Serializer_RootNodeWithDirectivesAndNodeProperties") {
+    fkyaml::node root;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+
+    std::string expected = "%YAML 1.2\n"
+                           "--- &anchor !!map\n"
+                           "foo: bar\n";
+
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(expected)));
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(root) == expected);

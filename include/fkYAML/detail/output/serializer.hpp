@@ -63,14 +63,27 @@ public:
 
 private:
     void serialize_document(const BasicNodeType& node, std::string& str) {
-        serialize_directives(node, str);
+        bool dirs_serialized = serialize_directives(node, str);
+
+        // the root node cannot be an alias node.
+        bool root_has_props = node.is_anchor() || node.has_tag_name();
+
+        if (root_has_props) {
+            if (dirs_serialized) {
+                str.back() = ' '; // replace the last LF with a white space
+            }
+            bool is_anchor_appended = try_append_anchor(node, false, str);
+            try_append_tag(node, is_anchor_appended, str);
+            str += "\n";
+        }
         serialize_node(node, 0, str);
     }
 
     /// @brief Serialize the directives if any is applied to the node.
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
-    void serialize_directives(const BasicNodeType& node, std::string& str) {
+    /// @return bool true if any directive is serialized, false otherwise.
+    bool serialize_directives(const BasicNodeType& node, std::string& str) {
         const auto& p_meta = node.mp_meta;
         bool needs_directive_end = false;
 
@@ -115,6 +128,8 @@ private:
         if (needs_directive_end) {
             str += "---\n";
         }
+
+        return needs_directive_end;
     }
 
     /// @brief Recursively serialize each Node object.
