@@ -56,10 +56,6 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.magiclink
   - pymdownx.superfences:
-      # custom_fences:
-      #   - name: mermaid
-      #     class: mermaid
-      #     format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tilde
@@ -114,6 +110,7 @@ nav:
           - const_iterator: api/basic_node/const_iterator.md
           - contains: api/basic_node/contains.md
           - deserialize: api/basic_node/deserialize.md
+          - deserialize_docs: api/basic_node/deserialize_docs.md
           - empty: api/basic_node/empty.md
           - end: api/basic_node/end.md
           - float_number_type: api/basic_node/float_number_type.md
@@ -143,6 +140,7 @@ nav:
           - sequence_type: api/basic_node/sequence_type.md
           - sequence: api/basic_node/sequence.md
           - serialize: api/basic_node/serialize.md
+          - serialize_docs: api/basic_node/serialize_docs.md
           - set_yaml_version: api/basic_node/set_yaml_version.md
           - size: api/basic_node/size.md
           - string_type: api/basic_node/string_type.md

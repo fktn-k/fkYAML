@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -20,6 +20,8 @@ int main() {
         return -1;
     }
     fkyaml::node n = fkyaml::node::deserialize(p_file);
+
+    std::fclose(p_file);
 
     // check the deserialization result.
     std::cout << n["foo"].get_value<bool>() << std::endl;

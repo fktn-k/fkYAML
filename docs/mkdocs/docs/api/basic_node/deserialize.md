@@ -10,8 +10,11 @@ template <typename ItrType>
 static basic_node deserialize(ItrType&& begin, ItrType&& end); // (2)
 ```
 
-Deserializes from compatible input sources.  
-Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization process detects an error from the input sources.  
+Deserializes from compatible inputs.  
+Note that this function deserializes only the first YAML document in the given input and ignore the rest.  
+Use this function when the input consists of a single YAML document or only the first one needs to be deserialized.  
+Otherwise, use the [`deserialize_docs()`](deserialize_docs.md) function instead.
+Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization process detects an error from the input.  
 
 !!! note "Supported Unicode Encodings"
 
@@ -136,4 +139,5 @@ The resulting `basic_node` object deserialized from the pair of iterators.
 ### **See Also**
 
 * [basic_node](index.md)
+* [deserialize_docs](deserialize_docs.md)
 * [get_value](get_value.md)

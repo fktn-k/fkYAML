@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -127,8 +127,10 @@ TEST_CASE("Serializer_AnchorNode") {
     fkyaml::node key = "baz";
     key.add_anchor_name("C");
     node.get_value_ref<fkyaml::node::mapping_type&>().emplace(key, "qux");
+    node.add_anchor_name("anchor");
 
-    std::string expected = "null: &A\n"
+    std::string expected = "&anchor\n"
+                           "null: &A\n"
                            "  - true\n"
                            "  - bar\n"
                            "  - &B 3.14\n"
@@ -156,7 +158,7 @@ TEST_CASE("Serializer_AliasNode") {
                            "  - bar\n"
                            "  - *A\n"
                            "true: *A\n"
-                           "*A: 3.14\n"
+                           "*A : 3.14\n"
                            "foo: &A 123\n";
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
@@ -187,7 +189,10 @@ TEST_CASE("Serializer_TaggedNode") {
     mapping.emplace("map", map_node);
     mapping.emplace("seq", seq_node);
 
-    std::string expected = "!!null null: !<tag:yaml.org,2002:float> 3.14\n"
+    root.add_tag_name("!!map");
+
+    std::string expected = "!!map\n"
+                           "!!null null: !<tag:yaml.org,2002:float> 3.14\n"
                            "!<tag:yaml.org,2002:bool> true: !!int 123\n"
                            "!!str foo: !!null null\n"
                            "map: !!map\n"
@@ -195,6 +200,20 @@ TEST_CASE("Serializer_TaggedNode") {
                            "seq: !!seq\n"
                            "  - null\n"
                            "  - 456\n";
+
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(serializer.serialize(root) == expected);
+}
+
+TEST_CASE("Serializer_RootNodeWithDirectivesAndNodeProperties") {
+    fkyaml::node root;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+
+    std::string expected = "%YAML 1.2\n"
+                           "--- &anchor !!map\n"
+                           "foo: bar\n";
+
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(expected)));
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(root) == expected);
@@ -249,5 +268,33 @@ TEST_CASE("Serializer_NodesWithDirectives") {
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(expected)));
         REQUIRE(serializer.serialize(root) == expected);
+    }
+}
+
+TEST_CASE("Serializer_MultipleDocuments") {
+    std::vector<fkyaml::node> docs;
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+
+    SECTION("bare documents") {
+        std::string expected = "foo: bar\n"
+                               "...\n"
+                               "123: true\n";
+
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(expected)));
+        REQUIRE(serializer.serialize_docs(docs) == expected);
+    }
+
+    SECTION("with directives") {
+        std::string expected = "%YAML 1.2\n"
+                               "---\n"
+                               "foo: !!str bar\n"
+                               "...\n"
+                               "%TAG !t! !test-\n"
+                               "---\n"
+                               "test: !t!result success\n";
+
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(expected)));
+        REQUIRE(serializer.serialize_docs(docs) == expected);
     }
 }

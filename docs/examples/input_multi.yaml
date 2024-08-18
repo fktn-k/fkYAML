@@ -1,0 +1,11 @@
+%YAML 1.2
+---
+foo: true
+bar: 123
+baz: 3.14
+...
+%TAG ! tag:test.com,2000:
+---
+null: one
+false: 456
+TRUE: 1.414

@@ -123,6 +123,24 @@ target_compile_options(
       -Wall -Wextra -Werror -pedantic
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
     >
+    # IntelLLVM
+    $<$<CXX_COMPILER_ID:IntelLLVM>:
+      # IntelLLVM warns the usage of nans and infinities due to its over-estimation.
+      # fkYAML, however, uses them as YAML node values, not as calculation.
+      # To disable too aggressive warnings, `-fp-model=precise` is used in the test as a workaround.
+      -fp-model=precise
+      $<$<CONFIG:Debug>:-O0 -g>
+      $<$<CONFIG:Release>:-O2>
+    >
+)
+
+target_link_options(
+  unit_test_config
+  INTERFACE
+    $<$<CXX_COMPILER_ID:IntelLLVM>:
+      $<$<CONFIG:Debug>:-O0 -g>
+      $<$<CONFIG:Release>:-O2>
+    >
 )
 
 # additional compile options for Clang Sanitizers.

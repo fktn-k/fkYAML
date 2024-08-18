@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -198,7 +198,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
     }
 
     auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
-    if (tmp_float < std::numeric_limits<FloatType>::min()) {
+    if (tmp_float < std::numeric_limits<FloatType>::lowest()) {
         throw exception("Floating point value underflow detected.");
     }
     if (std::numeric_limits<FloatType>::max() < tmp_float) {

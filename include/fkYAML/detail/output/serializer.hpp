@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -42,16 +42,48 @@ public:
     /// @return std::string A serialization result of the given Node value.
     std::string serialize(const BasicNodeType& node) {
         std::string str {};
-        serialize_directives(node, str);
-        serialize_node(node, 0, str);
+        serialize_document(node, str);
+        return str;
+    } // LCOV_EXCL_LINE
+
+    std::string serialize_docs(const std::vector<BasicNodeType>& docs) {
+        std::string str {};
+
+        uint32_t size = static_cast<uint32_t>(docs.size());
+        for (uint32_t i = 0; i < size; i++) {
+            serialize_document(docs[i], str);
+            if (i + 1 < size) {
+                // Append the end-of-document marker for the next document.
+                str += "...\n";
+            }
+        }
+
         return str;
     } // LCOV_EXCL_LINE
 
 private:
+    void serialize_document(const BasicNodeType& node, std::string& str) {
+        bool dirs_serialized = serialize_directives(node, str);
+
+        // the root node cannot be an alias node.
+        bool root_has_props = node.is_anchor() || node.has_tag_name();
+
+        if (root_has_props) {
+            if (dirs_serialized) {
+                str.back() = ' '; // replace the last LF with a white space
+            }
+            bool is_anchor_appended = try_append_anchor(node, false, str);
+            try_append_tag(node, is_anchor_appended, str);
+            str += "\n";
+        }
+        serialize_node(node, 0, str);
+    }
+
     /// @brief Serialize the directives if any is applied to the node.
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
-    void serialize_directives(const BasicNodeType& node, std::string& str) {
+    /// @return bool true if any directive is serialized, false otherwise.
+    bool serialize_directives(const BasicNodeType& node, std::string& str) {
         const auto& p_meta = node.mp_meta;
         bool needs_directive_end = false;
 
@@ -96,6 +128,8 @@ private:
         if (needs_directive_end) {
             str += "---\n";
         }
+
+        return needs_directive_end;
     }
 
     /// @brief Recursively serialize each Node object.
@@ -135,7 +169,11 @@ private:
                 insert_indentation(cur_indent, str);
 
                 bool is_appended = try_append_alias(itr.key(), false, str);
-                if (!is_appended) {
+                if (is_appended) {
+                    // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
+                    str += " ";
+                }
+                else {
                     bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
                     bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
                     if (is_anchor_appended || is_tag_appended) {

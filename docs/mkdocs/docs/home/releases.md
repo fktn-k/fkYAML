@@ -1,5 +1,52 @@
 # Releases
 
+## [v0.3.10](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.10) (2024-08-18)
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.10/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.10/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.10/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.10/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.10/node.hpp) (single header)
+
+### Summary
+
+This release adds the new support for deserializing/serializing multiple YAML documents by adding new APIs ([`fkyaml::node::deserialize_docs()`](https://fktn-k.github.io/fkYAML/api/basic_node/deserialize_docs/) and [`fkyaml::node::serialize_docs()`](https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/) respectively). You can still call the existing APIs for deserializing/serializing a single YAML document. See the linked API document pages for details.  
+In addition, from this version on, Intel icpx compiler is supported and used in the CI processes. Some compiler flags are added in building the unit testing app, but no compiler specific swiches are required for the library itself.  
+Moreover, because the GitHub Actions runner image for macOS11 has been deprecated, the CI jobs which uses the runner image and some compiler support which depend on the runner image have been removed.  
+For other changes like bug fixes, see descriptions in each related issues and PRs.  
+
+### What's Changed
+
+#### :sparkles: New Features
+
+- Support Intel icpx compiler by [fktn-k](https://github.com/fktn-k) in [\#360](https://github.com/fktn-k/fkYAML/pull/360)
+- Support parssing multiple YAML documents by [fktn-k](https://github.com/fktn-k) in [\#362](https://github.com/fktn-k/fkYAML/pull/362)
+- Support serializing multiple YAML docs by [fktn-k](https://github.com/fktn-k) in [\#363](https://github.com/fktn-k/fkYAML/pull/363)
+
+#### :bug: Bug Fixes
+
+- Detect missing the end of directives markers (---) by [fktn-k](https://github.com/fktn-k) in [\#361](https://github.com/fktn-k/fkYAML/pull/361)
+- Fix bug in serializing alias keys by [fktn-k](https://github.com/fktn-k) in [\#364](https://github.com/fktn-k/fkYAML/pull/364)
+- Allow trailing comma in flow mapping/sequence by [fktn-k](https://github.com/fktn-k) in [\#365](https://github.com/fktn-k/fkYAML/pull/365)
+- \#368 Fix line advancement after node props by [fktn-k](https://github.com/fktn-k) in [\#369](https://github.com/fktn-k/fkYAML/pull/369), reported by [alienczf](https://github.com/alienczf) in [\#368](https://github.com/fktn-k/fkYAML/issues/368)
+- Apply node properties for the root node by [fktn-k](https://github.com/fktn-k) in [\#370](https://github.com/fktn-k/fkYAML/pull/370)
+- \#366 Fix node-to-float conversion error if node's value is \<= 0 by [fktn-k](https://github.com/fktn-k) in [\#371](https://github.com/fktn-k/fkYAML/pull/371), reported by [ARessegetesStery](https://github.com/ARessegetesStery) in [\#366](https://github.com/fktn-k/fkYAML/issues/366)
+
+#### :robot: CI
+
+- Remove CI jobs running with macOS 11 by [fktn-k](https://github.com/fktn-k) in [\#367](https://github.com/fktn-k/fkYAML/pull/367)
+
+
+
+- update configs for reuse v4 by [fktn-k](https://github.com/fktn-k) in [\#372](https://github.com/fktn-k/fkYAML/pull/372)
+
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.9...v0.3.10
+
+---
+
 ## **fkYAML version 0.3.9**
 
 !!! abstract "Release Packages"

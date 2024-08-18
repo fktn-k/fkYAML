@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -371,7 +371,7 @@ TEST_CASE("Node_CopyAssignmentOperator") {
 }
 
 //
-// test cases for serialization/deserialization features
+// test cases for deserialization
 //
 
 TEST_CASE("Node_Deserialize") {
@@ -393,17 +393,46 @@ TEST_CASE("Node_Deserialize") {
     REQUIRE(node["foo"].get_value_ref<std::string&>() == "bar");
 }
 
-TEST_CASE("Node_Serialize") {
-    fkyaml::node node = fkyaml::node::deserialize("foo: bar");
-    REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");
-}
-
-TEST_CASE("Node_InsertionOperator") {
-    fkyaml::node node = {{"foo", 123}, {"bar", nullptr}, {"baz", true}};
+TEST_CASE("Node_DeserializeDocs") {
+    char source[] = "foo: bar\n"
+                    "...\n"
+                    "- true\n"
+                    "- 3.14\n"
+                    "- Null";
     std::stringstream ss;
-    ss << node;
+    ss << source;
 
-    REQUIRE(ss.str() == "bar: null\nbaz: true\nfoo: 123\n");
+    std::vector<fkyaml::node> docs = GENERATE_REF(
+        fkyaml::node::deserialize_docs("foo: bar\n"
+                                       "...\n"
+                                       "- true\n"
+                                       "- 3.14\n"
+                                       "- Null"),
+        fkyaml::node::deserialize_docs(source),
+        fkyaml::node::deserialize_docs(&source[0], &source[33]),
+        fkyaml::node::deserialize_docs(std::string(source)),
+        fkyaml::node::deserialize_docs(ss));
+
+    REQUIRE(docs.size() == 2);
+    fkyaml::node& root0 = docs[0];
+    REQUIRE(root0.is_mapping());
+    REQUIRE(root0.size() == 1);
+    REQUIRE(root0.contains("foo"));
+    fkyaml::node& foo_node = root0["foo"];
+    REQUIRE(foo_node.is_string());
+    REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+
+    fkyaml::node& root1 = docs[1];
+    REQUIRE(root1.is_sequence());
+    REQUIRE(root1.size() == 3);
+    fkyaml::node& seq0 = root1[0];
+    REQUIRE(seq0.is_boolean());
+    REQUIRE(seq0.get_value<bool>() == true);
+    fkyaml::node& seq1 = root1[1];
+    REQUIRE(seq1.is_float_number());
+    REQUIRE(seq1.get_value<double>() == 3.14);
+    fkyaml::node& seq2 = root1[2];
+    REQUIRE(seq2.is_null());
 }
 
 TEST_CASE("Node_ExtractionOperator") {
@@ -538,6 +567,30 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
         REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
         REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
+}
+
+//
+// test cases for serialization
+//
+
+TEST_CASE("Node_Serialize") {
+    fkyaml::node node = fkyaml::node::deserialize("foo: bar");
+    REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");
+}
+
+TEST_CASE("Node_SerializeDocs") {
+    std::vector<fkyaml::node> docs = fkyaml::node::deserialize_docs("foo: bar\n"
+                                                                    "...\n"
+                                                                    "123: true");
+    REQUIRE(fkyaml::node::serialize_docs(docs) == "foo: bar\n...\n123: true\n");
+}
+
+TEST_CASE("Node_InsertionOperator") {
+    fkyaml::node node = {{"foo", 123}, {"bar", nullptr}, {"baz", true}};
+    std::stringstream ss;
+    ss << node;
+
+    REQUIRE(ss.str() == "bar: null\nbaz: true\nfoo: 123\n");
 }
 
 //
@@ -2363,10 +2416,24 @@ TEST_CASE("Node_GetValue") {
     SECTION("float number node value") {
         fkyaml::node node(3.14);
 
-        SECTION("float number values") {
+        SECTION("positive float number values") {
             REQUIRE(std::abs(node.get_value<float>() - 3.14) < std::numeric_limits<float>::epsilon());
             REQUIRE(std::abs(node.get_value<double>() - 3.14) < std::numeric_limits<double>::epsilon());
             REQUIRE(std::abs(node.get_value<long double>() - 3.14) < std::numeric_limits<long double>::epsilon());
+        }
+
+        SECTION("zero float number values") {
+            node = 0.0;
+            REQUIRE(std::abs(node.get_value<float>() - 0.0) < std::numeric_limits<float>::epsilon());
+            REQUIRE(std::abs(node.get_value<double>() - 0.0) < std::numeric_limits<double>::epsilon());
+            REQUIRE(std::abs(node.get_value<long double>() - 0.0) < std::numeric_limits<long double>::epsilon());
+        }
+
+        SECTION("negative float number values") {
+            node = -3.14;
+            REQUIRE(std::abs(node.get_value<float>() - (-3.14)) < std::numeric_limits<float>::epsilon());
+            REQUIRE(std::abs(node.get_value<double>() - (-3.14)) < std::numeric_limits<double>::epsilon());
+            REQUIRE(std::abs(node.get_value<long double>() - (-3.14)) < std::numeric_limits<long double>::epsilon());
         }
 
         SECTION("non-float-number values") {
@@ -2385,7 +2452,7 @@ TEST_CASE("Node_GetValue") {
         }
 
         SECTION("underflowable float number type") {
-            fkyaml::node negative_float_node(std::numeric_limits<fkyaml::node::float_number_type>::min());
+            fkyaml::node negative_float_node(std::numeric_limits<fkyaml::node::float_number_type>::lowest());
             REQUIRE_THROWS_AS(negative_float_node.get_value<float>(), fkyaml::exception);
         }
 

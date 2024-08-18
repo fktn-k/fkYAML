@@ -106,10 +106,6 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 
 | Compiler                   | Operating System                                                                                               |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| AppleClang 11.0.3.11030032 | [macOS 11](https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md)                 |
-| AppleClang 12.0.0.12000032 | [macOS 11](https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md)                 |
-| AppleClang 12.0.5.12050022 | [macOS 11](https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md)                 |
-| AppleClang 13.0.0.13000029 | [macOS 11](https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md)                 |
 | AppleClang 13.0.0.13000029 | [macOS 12](https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md)                 |
 | AppleClang 13.1.6.13160021 | [macOS 12](https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md)                 |
 | AppleClang 14.0.0.14000029 | [macOS 12](https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md)                 |
@@ -148,6 +144,7 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 | GCC 12.3.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | GCC 13.3.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | GCC 14.1.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| IntelLLVM 2024.1.2         | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | MinGW-64 8.1.0             | [Windows Server 2019](https://github.com/actions/runner-images/blob/main/images/windows/Windows2019-Readme.md) |
 | MinGW-64 12.2.0            | [Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md) |
 | Visual Studio 16 2019      | [Windows Server 2019](https://github.com/actions/runner-images/blob/main/images/windows/Windows2019-Readme.md) |

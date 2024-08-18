@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -24,7 +24,7 @@
 // #include <fkYAML/detail/macros/version_macros.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -34,7 +34,7 @@
 
 // Check version definitions if already defined.
 #if defined(FK_YAML_MAJOR_VERSION) && defined(FK_YAML_MINOR_VERSION) && defined(FK_YAML_PATCH_VERSION)
-#if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 3 || FK_YAML_PATCH_VERSION != 9
+#if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 3 || FK_YAML_PATCH_VERSION != 10
 #warning Already included a different version of the fkYAML library!
 #else
 // define macros to skip defining macros down below.
@@ -46,7 +46,7 @@
 
 #define FK_YAML_MAJOR_VERSION 0
 #define FK_YAML_MINOR_VERSION 3
-#define FK_YAML_PATCH_VERSION 9
+#define FK_YAML_PATCH_VERSION 10
 
 #define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
 
@@ -74,7 +74,7 @@
 // #include <fkYAML/detail/macros/cpp_config_macros.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -138,7 +138,7 @@
 // #include <fkYAML/detail/assert.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -164,7 +164,7 @@
 // #include <fkYAML/detail/document_metainfo.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -183,7 +183,7 @@
 // #include <fkYAML/detail/meta/node_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -199,7 +199,7 @@
 // #include <fkYAML/detail/meta/detect.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -217,7 +217,7 @@
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -465,7 +465,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/type_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -777,7 +777,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/types/yaml_version_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -832,7 +832,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/deserializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -847,6 +847,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <cstdint>
 #include <deque>
 #include <unordered_map>
+#include <vector>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -855,7 +856,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/lexical_analyzer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -881,7 +882,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/conversions/from_string.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -907,7 +908,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -928,7 +929,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/string_formatter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -977,7 +978,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/types/node_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1415,7 +1416,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/uri_encoding.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1545,7 +1546,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf_encodings.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1838,7 +1839,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2189,7 +2190,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/scalar_scanner.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2210,7 +2211,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2487,7 +2488,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/position_tracker.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2508,7 +2509,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -3984,7 +3985,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/tag_resolver.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -4008,7 +4009,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/tag_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -4212,7 +4213,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/node_property.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -4309,6 +4310,19 @@ class basic_deserializer {
               p_node(_p_node) {
         }
 
+        ~parse_context() {
+            switch (state) {
+            case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
+            case context_state_t::FLOW_SEQUENCE_KEY:
+            case context_state_t::FLOW_MAPPING_KEY:
+                delete p_node;
+                p_node = nullptr;
+                break;
+            default:
+                break;
+            }
+        }
+
         /// The current line. (count from zero)
         uint32_t line {0};
         /// The indentation width in the current line. (count from zero)
@@ -4319,17 +4333,55 @@ class basic_deserializer {
         node_type* p_node {nullptr};
     };
 
+    /// @brief Definitions of state types for expected flow token hints.
+    enum class flow_token_state_t {
+        NEEDS_VALUE_OR_SUFFIX,     //!< Either value or flow suffix (`]` or `}`)
+        NEEDS_SEPARATOR_OR_SUFFIX, //!< Either separator (`,`) or flow suffix (`]` or `}`)
+    };
+
 public:
     /// @brief Construct a new basic_deserializer object.
     basic_deserializer() = default;
 
 public:
-    /// @brief Deserialize a YAML-formatted source string into a YAML node.
-    /// @param input_adapter An adapter object for the input source buffer.
-    /// @return node_type A root YAML node object deserialized from the source string.
+    /// @brief Deserialize a single YAML document into a YAML node.
+    /// @note
+    /// If the input consists of multiple YAML documents, this function only parses the first.
+    /// If the input may have multiple YAML documents all of which must be parsed into nodes,
+    /// prefer the `deserialize_docs()` function.
+    /// @tparam InputAdapterType The type of an input adapter object.
+    /// @param input_adapter An input adapter object for the input source buffer.
+    /// @return node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     node_type deserialize(InputAdapterType&& input_adapter) {
+        lexical_token_t type {lexical_token_t::END_OF_BUFFER};
         lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
+        return deserialize_document(lexer, type);
+    }
+
+    /// @brief Deserialize multiple YAML documents into YAML nodes.
+    /// @tparam InputAdapterType The type of an adapter object.
+    /// @param input_adapter An input adapter object for the input source buffer.
+    /// @return std::vector<node_type> Root YAML nodes for deserialized YAML documents.
+    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
+    std::vector<node_type> deserialize_docs(InputAdapterType&& input_adapter) {
+        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
+        std::vector<node_type> nodes {};
+        lexical_token_t type {lexical_token_t::END_OF_BUFFER};
+
+        do {
+            nodes.emplace_back(deserialize_document(lexer, type));
+        } while (type != lexical_token_t::END_OF_BUFFER);
+
+        return nodes;
+    }
+
+private:
+    /// @brief Deserialize a YAML document into a YAML node.
+    /// @param lexer The lexical analyzer to be used.
+    /// @param last_type The variable to store the last lexical token type.
+    /// @return node_type A root YAML node deserialized from the YAML document.
+    node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
         node_type root;
@@ -4338,10 +4390,20 @@ public:
         // parse directives first.
         deserialize_directives(lexer, type);
 
+        // parse node properties for root node if any
+        uint32_t line = lexer.get_lines_processed();
+        uint32_t indent = lexer.get_last_token_begin_pos();
+        bool found_props = deserialize_node_properties(lexer, type, line, indent);
+
         switch (type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
             root = node_type::sequence();
             apply_directive_set(root);
+            if (found_props) {
+                // If node properties are found before the block sequence entry prefix, the properties belong to the
+                // root sequence node.
+                apply_node_properties(root);
+            }
             parse_context context(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
             m_context_stack.emplace_back(std::move(context));
@@ -4352,6 +4414,7 @@ public:
             ++m_flow_context_depth;
             root = node_type::sequence();
             apply_directive_set(root);
+            apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_SEQUENCE, &root);
             type = lexer.get_next_token();
@@ -4360,6 +4423,7 @@ public:
             ++m_flow_context_depth;
             root = node_type::mapping();
             apply_directive_set(root);
+            apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
             type = lexer.get_next_token();
@@ -4367,6 +4431,11 @@ public:
         default: {
             root = node_type::mapping();
             apply_directive_set(root);
+            if (found_props && line < lexer.get_lines_processed()) {
+                // If node properties and a followed node are on the different line, the properties belong to the root
+                // node.
+                apply_node_properties(root);
+            }
             parse_context context(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
             m_context_stack.emplace_back(std::move(context));
@@ -4377,23 +4446,27 @@ public:
         mp_current_node = &root;
 
         // parse YAML nodes recursively
-        deserialize_node(lexer, type);
+        deserialize_node(lexer, type, last_type);
+        FK_YAML_ASSERT(last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DOCUMENT);
 
         // reset parameters for the next call.
         mp_current_node = nullptr;
         mp_meta.reset();
         m_needs_tag_impl = false;
         m_needs_anchor_impl = false;
+        m_flow_context_depth = 0;
+        m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
         m_context_stack.clear();
 
         return root;
     }
 
-private:
     /// @brief Deserializes the YAML directives if specified.
     /// @param lexer The lexical analyzer to be used.
     /// @param last_type The variable to store the last lexical token type.
     void deserialize_directives(lexer_type& lexer, lexical_token_t& last_type) {
+        bool lacks_end_of_directives_marker = false;
+
         for (;;) {
             lexical_token_t type = lexer.get_next_token();
 
@@ -4408,6 +4481,7 @@ private:
 
                 mp_meta->version = convert_yaml_version(lexer.get_yaml_version());
                 mp_meta->is_version_specified = true;
+                lacks_end_of_directives_marker = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
                 const std::string& tag_handle = lexer.get_tag_handle();
@@ -4421,6 +4495,7 @@ private:
                             lexer.get_last_token_begin_pos());
                     }
                     mp_meta->primary_handle_prefix = lexer.get_tag_prefix();
+                    lacks_end_of_directives_marker = true;
                     break;
                 }
                 case 2: {
@@ -4432,6 +4507,7 @@ private:
                             lexer.get_last_token_begin_pos());
                     }
                     mp_meta->secondary_handle_prefix = lexer.get_tag_prefix();
+                    lacks_end_of_directives_marker = true;
                     break;
                 }
                 default: {
@@ -4443,6 +4519,7 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
+                    lacks_end_of_directives_marker = true;
                     break;
                 }
                 }
@@ -4452,9 +4529,15 @@ private:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case lexical_token_t::END_OF_DIRECTIVES:
-                // Ignore this directives end marker so the caller will get the beginning token of the contents.
+                lacks_end_of_directives_marker = false;
                 break;
             default:
+                if (lacks_end_of_directives_marker) {
+                    throw parse_error(
+                        "The end of directives marker (---) is missing after directives.",
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos());
+                }
                 // end the parsing of directives if the other tokens are found.
                 last_type = type;
                 return;
@@ -4465,16 +4548,13 @@ private:
     /// @brief Deserializes the YAML nodes recursively.
     /// @param lexer The lexical analyzer to be used.
     /// @param first_type The first lexical token type.
-    void deserialize_node(lexer_type& lexer, lexical_token_t first_type) {
+    void deserialize_node(lexer_type& lexer, lexical_token_t first_type, lexical_token_t& last_type) {
         lexical_token_t type = first_type;
         uint32_t line = lexer.get_lines_processed();
         uint32_t indent = lexer.get_last_token_begin_pos();
 
         do {
             switch (type) {
-            case lexical_token_t::END_OF_BUFFER:
-                // This handles an empty input.
-                break;
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
                 uint32_t pop_num = 0;
                 if (indent == 0) {
@@ -4579,7 +4659,7 @@ private:
                 if (line > old_line) {
                     if (m_needs_tag_impl) {
                         tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-                        if (tag_type == tag_t::MAPPING) {
+                        if (tag_type == tag_t::MAPPING || tag_type == tag_t::CUSTOM_TAG) {
                             // set YAML node properties here to distinguish them from those for the first key node
                             // as shown in the following snippet:
                             //
@@ -4592,6 +4672,7 @@ private:
                             *mp_current_node = node_type::mapping();
                             apply_directive_set(*mp_current_node);
                             apply_node_properties(*mp_current_node);
+                            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                             continue;
                         }
                     }
@@ -4605,7 +4686,40 @@ private:
                         cur_context.line = line;
                         cur_context.indent = indent;
                         cur_context.state = context_state_t::BLOCK_SEQUENCE;
-                        break;
+
+                        type = lexer.get_next_token();
+                        line = lexer.get_lines_processed();
+                        indent = lexer.get_last_token_begin_pos();
+
+                        bool has_props = deserialize_node_properties(lexer, type, line, indent);
+                        if (has_props) {
+                            uint32_t line_after_props = lexer.get_lines_processed();
+                            if (line == line_after_props) {
+                                // Skip updating the current indent to avoid stacking a wrong indentation.
+                                //
+                                // ```yaml
+                                // &foo bar: baz
+                                // ^
+                                // the correct indent width for the "bar" node key.
+                                // ```
+                                continue;
+                            }
+
+                            // if node properties and the followed node are on different lines (i.e., the properties are
+                            // for a container node), the application and the line advancement must happen here.
+                            // Otherwise, a false indent error will be emitted. See
+                            // https://github.com/fktn-k/fkYAML/issues/368 for more details.
+                            line = line_after_props;
+                            indent = lexer.get_last_token_begin_pos();
+                            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(
+                                node_type::mapping());
+                            mp_current_node = &mp_current_node->template get_value_ref<sequence_type&>().back();
+                            m_context_stack.emplace_back(
+                                line_after_props, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                            apply_node_properties(*mp_current_node);
+                        }
+
+                        continue;
                     }
 
                     // defer checking the existence of a key separator after the following scalar until the next
@@ -4619,14 +4733,12 @@ private:
                     m_context_stack.pop_back();
                 }
 
-                node_type* key_node = m_context_stack.back().p_node;
+                node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
-                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(*key_node, node_type());
-                mp_current_node = &(m_context_stack.back().p_node->operator[](*key_node));
+                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(key_node, node_type());
+                mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
                     line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
-                delete key_node;
-                key_node = nullptr;
 
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     *mp_current_node = node_type::sequence();
@@ -4646,13 +4758,15 @@ private:
             case lexical_token_t::ANCHOR_PREFIX:
             case lexical_token_t::TAG_PREFIX:
                 deserialize_node_properties(lexer, type, line, indent);
-
                 // Skip updating the current indent to avoid stacking a wrong indentation.
+                // Note that node properties for block sequences as a mapping value are processed when a
+                // `lexical_token_t::KEY_SEPARATOR` token is processed.
                 //
-                //   &foo bar: baz
-                //   ^
-                //   the correct indent width for the "bar" node key.
-
+                // ```yaml
+                // &foo bar: baz
+                // ^
+                // the correct indent width for the "bar" node key.
+                // ```
                 continue;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
                 bool is_further_nested = m_context_stack.back().indent < indent;
@@ -4711,6 +4825,9 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                 }
+                else if (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                    throw parse_error("Flow sequence begininng is found without separated with a comma.", line, indent);
+                }
 
                 ++m_flow_context_depth;
 
@@ -4741,20 +4858,12 @@ private:
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
-                type = lexer.get_next_token();
-                if (type == lexical_token_t::SEQUENCE_FLOW_END) {
-                    // enable the flag for the next loop for the empty flow sequence.
-                    m_needs_value_separator_or_suffix = true;
-                }
-                line = lexer.get_lines_processed();
-                indent = lexer.get_last_token_begin_pos();
-                continue;
+                m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                break;
             case lexical_token_t::SEQUENCE_FLOW_END: {
-                if (!m_needs_value_separator_or_suffix) {
-                    throw parse_error("invalid flow sequence ending is found.", line, indent);
+                if (m_flow_context_depth == 0) {
+                    throw parse_error("Flow sequence ending is found outside the flow context.", line, indent);
                 }
-                m_needs_value_separator_or_suffix = false;
-
                 --m_flow_context_depth;
 
                 // find the corresponding flow sequence beginning.
@@ -4773,12 +4882,13 @@ private:
 
                 bool is_valid = itr != m_context_stack.rend();
                 if (!is_valid) {
-                    throw parse_error("invalid flow sequence ending is found.", line, indent);
+                    throw parse_error("No corresponding flow sequence beginning is found.", line, indent);
                 }
 
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
+                last_context.p_node = nullptr;
                 indent = last_context.indent;
                 context_state_t state = last_context.state;
                 m_context_stack.pop_back();
@@ -4789,6 +4899,7 @@ private:
                     node_type key_node = std::move(*mp_current_node);
                     delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
+                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
                     add_new_key(std::move(key_node), line, indent);
                     break;
@@ -4799,7 +4910,10 @@ private:
                     node_type key_node = node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
+
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+
                     add_new_key(std::move(key_node), line, indent);
                 }
                 else {
@@ -4807,7 +4921,7 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                     if (m_flow_context_depth > 0) {
-                        m_needs_value_separator_or_suffix = true;
+                        m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
                     }
                 }
 
@@ -4853,6 +4967,9 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                 }
+                else if (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                    throw parse_error("Flow mapping begininng is found without separated with a comma.", line, indent);
+                }
 
                 ++m_flow_context_depth;
 
@@ -4883,20 +5000,15 @@ private:
                 apply_directive_set(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
-                type = lexer.get_next_token();
-                if (type == lexical_token_t::MAPPING_FLOW_END) {
-                    // enable the flag for the next loop for the empty flow mapping.
-                    m_needs_value_separator_or_suffix = true;
-                }
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
-                continue;
-            case lexical_token_t::MAPPING_FLOW_END: {
-                if (!m_needs_value_separator_or_suffix) {
-                    throw parse_error("invalid flow mapping ending is found.", line, indent);
-                }
-                m_needs_value_separator_or_suffix = false;
 
+                m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                break;
+            case lexical_token_t::MAPPING_FLOW_END: {
+                if (m_flow_context_depth == 0) {
+                    throw parse_error("Flow mapping ending is found outside the flow context.", line, indent);
+                }
                 --m_flow_context_depth;
 
                 // find the corresponding flow mapping beginning.
@@ -4915,12 +5027,13 @@ private:
 
                 bool is_valid = itr != m_context_stack.rend();
                 if (!is_valid) {
-                    throw parse_error("invalid flow mapping ending is found.", line, indent);
+                    throw parse_error("No corresponding flow mapping beginning is found.", line, indent);
                 }
 
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
+                last_context.p_node = nullptr;
                 indent = last_context.indent;
                 context_state_t state = last_context.state;
                 m_context_stack.pop_back();
@@ -4931,6 +5044,7 @@ private:
                     node_type key_node = std::move(*mp_current_node);
                     delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
+                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
                     add_new_key(std::move(key_node), line, indent);
                     break;
@@ -4939,8 +5053,12 @@ private:
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::KEY_SEPARATOR) {
                     node_type key_node = node_type::mapping();
+                    apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
+
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+
                     add_new_key(std::move(key_node), line, indent);
                 }
                 else {
@@ -4948,7 +5066,7 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                     if (m_flow_context_depth > 0) {
-                        m_needs_value_separator_or_suffix = true;
+                        m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
                     }
                 }
 
@@ -4958,10 +5076,10 @@ private:
             }
             case lexical_token_t::VALUE_SEPARATOR:
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
-                if (!m_needs_value_separator_or_suffix) {
+                if (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
-                m_needs_value_separator_or_suffix = false;
+                m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX:
             case lexical_token_t::NULL_VALUE:
@@ -4976,15 +5094,21 @@ private:
                 break;
             }
             case lexical_token_t::END_OF_DIRECTIVES:
+                throw parse_error("invalid end-of-directives marker (---) found in the contents.", line, indent);
+            case lexical_token_t::END_OF_BUFFER:
+                // This handles an empty input.
             case lexical_token_t::END_OF_DOCUMENT:
                 // TODO: This token should be handled to support multiple documents.
-                break;
+                last_type = type;
+                return;
             }
 
             type = lexer.get_next_token();
             indent = lexer.get_last_token_begin_pos();
             line = lexer.get_lines_processed();
         } while (type != lexical_token_t::END_OF_BUFFER);
+
+        last_type = type;
     }
 
     /// @brief Deserializes YAML node properties (anchor and/or tag names) if they exist
@@ -5070,17 +5194,8 @@ private:
             else if (indent < m_context_stack.back().indent) {
                 auto target_itr =
                     std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
-                        if (indent != c.indent) {
-                            return false;
-                        }
-
-                        switch (c.state) {
-                        case context_state_t::BLOCK_MAPPING:
-                        case context_state_t::MAPPING_VALUE:
-                            return true;
-                        default:
-                            return false;
-                        }
+                        // the target node is a block mapping key node with the same indentation.
+                        return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
                     });
                 bool is_indent_valid = (target_itr != m_context_stack.rend());
                 if (!is_indent_valid) {
@@ -5097,8 +5212,8 @@ private:
                 mp_current_node = m_context_stack.back().p_node;
             }
         }
-        else if (m_needs_value_separator_or_suffix) {
-            throw parse_error("flow mapping entry is found without separated with a comma.", line, indent);
+        else if (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+            throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
         }
 
         if (mp_current_node->is_sequence()) {
@@ -5123,10 +5238,10 @@ private:
     void assign_node_value(node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
             if (m_flow_context_depth > 0) {
-                if (m_needs_value_separator_or_suffix) {
+                if (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
                     throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
                 }
-                m_needs_value_separator_or_suffix = true;
+                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             }
 
             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
@@ -5140,7 +5255,7 @@ private:
             mp_current_node = m_context_stack.back().p_node;
 
             if (m_flow_context_depth > 0) {
-                m_needs_value_separator_or_suffix = true;
+                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             }
         }
     }
@@ -5336,8 +5451,8 @@ private:
     bool m_needs_anchor_impl {false};
     /// A flag to determine the need for a corresponding node with the last YAML tag.
     bool m_needs_tag_impl {false};
-    /// A flag to determine the need for a value separator or a flow suffix to be follow.
-    bool m_needs_value_separator_or_suffix {false};
+    /// A flag to determine the need for a value separator or a flow suffix to follow.
+    flow_token_state_t m_flow_token_state {flow_token_state_t::NEEDS_VALUE_OR_SUFFIX};
     /// The last YAML anchor name.
     string_type m_anchor_name {};
     /// The last tag name.
@@ -5351,7 +5466,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/input_adapter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5376,7 +5491,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/encode_detector.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5395,7 +5510,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6573,7 +6688,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/iterator.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6980,7 +7095,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/node_ref_storage.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7073,7 +7188,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/output/serializer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7093,7 +7208,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_string.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7214,16 +7329,48 @@ public:
     /// @return std::string A serialization result of the given Node value.
     std::string serialize(const BasicNodeType& node) {
         std::string str {};
-        serialize_directives(node, str);
-        serialize_node(node, 0, str);
+        serialize_document(node, str);
+        return str;
+    } // LCOV_EXCL_LINE
+
+    std::string serialize_docs(const std::vector<BasicNodeType>& docs) {
+        std::string str {};
+
+        uint32_t size = static_cast<uint32_t>(docs.size());
+        for (uint32_t i = 0; i < size; i++) {
+            serialize_document(docs[i], str);
+            if (i + 1 < size) {
+                // Append the end-of-document marker for the next document.
+                str += "...\n";
+            }
+        }
+
         return str;
     } // LCOV_EXCL_LINE
 
 private:
+    void serialize_document(const BasicNodeType& node, std::string& str) {
+        bool dirs_serialized = serialize_directives(node, str);
+
+        // the root node cannot be an alias node.
+        bool root_has_props = node.is_anchor() || node.has_tag_name();
+
+        if (root_has_props) {
+            if (dirs_serialized) {
+                str.back() = ' '; // replace the last LF with a white space
+            }
+            bool is_anchor_appended = try_append_anchor(node, false, str);
+            try_append_tag(node, is_anchor_appended, str);
+            str += "\n";
+        }
+        serialize_node(node, 0, str);
+    }
+
     /// @brief Serialize the directives if any is applied to the node.
     /// @param node The targe node.
     /// @param str A string to hold serialization result.
-    void serialize_directives(const BasicNodeType& node, std::string& str) {
+    /// @return bool true if any directive is serialized, false otherwise.
+    bool serialize_directives(const BasicNodeType& node, std::string& str) {
         const auto& p_meta = node.mp_meta;
         bool needs_directive_end = false;
 
@@ -7268,6 +7415,8 @@ private:
         if (needs_directive_end) {
             str += "---\n";
         }
+
+        return needs_directive_end;
     }
 
     /// @brief Recursively serialize each Node object.
@@ -7307,7 +7456,11 @@ private:
                 insert_indentation(cur_indent, str);
 
                 bool is_appended = try_append_alias(itr.key(), false, str);
-                if (!is_appended) {
+                if (is_appended) {
+                    // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
+                    str += " ";
+                }
+                else {
                     bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
                     bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
                     if (is_anchor_appended || is_tag_appended) {
@@ -7496,7 +7649,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/node_value_converter.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7514,7 +7667,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/conversions/from_node.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -7718,7 +7871,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
     }
 
     auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
-    if (tmp_float < std::numeric_limits<FloatType>::min()) {
+    if (tmp_float < std::numeric_limits<FloatType>::lowest()) {
         throw exception("Floating point value underflow detected.");
     }
     if (std::numeric_limits<FloatType>::max() < tmp_float) {
@@ -7804,7 +7957,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_node.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8192,7 +8345,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/ordered_map.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.9
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8734,7 +8887,7 @@ public:
     }
 
 public:
-    /// @brief Deserialize an input source into a basic_node object.
+    /// @brief Deserialize the first YAML document in the input into a basic_node object.
     /// @tparam InputType Type of a compatible input.
     /// @param[in] input An input source in the YAML format.
     /// @return The resulting basic_node object deserialized from the input source.
@@ -8744,7 +8897,7 @@ public:
         return deserializer_type().deserialize(detail::input_adapter(std::forward<InputType>(input)));
     }
 
-    /// @brief Deserialize input iterators into a basic_node object.
+    /// @brief Deserialize the first YAML document in the input ranged by the iterators into a basic_node object.
     /// @tparam ItrType Type of a compatible iterator.
     /// @param[in] begin An iterator to the first element of an input sequence.
     /// @param[in] end An iterator to the past-the-last element of an input sequence.
@@ -8756,12 +8909,42 @@ public:
             detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
 
+    /// @brief Deserialize all YAML documents in the input into basic_node objects.
+    /// @tparam InputType Type of a compatible input.
+    /// @param[in] input An input source in the YAML format.
+    /// @return The resulting basic_node objects deserialized from the input.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize_docs/
+    template <typename InputType>
+    static std::vector<basic_node> deserialize_docs(InputType&& input) {
+        return deserializer_type().deserialize_docs(detail::input_adapter(std::forward<InputType>(input)));
+    }
+
+    /// @brief Deserialize all YAML documents in the input ranged by the iterators into basic_node objects.
+    /// @tparam ItrType Type of a compatible iterator.
+    /// @param[in] begin An iterator to the first element of an input sequence.
+    /// @param[in] end An iterator to the past-the-last element of an input sequence.
+    /// @return The resulting basic_node objects deserialized from the pair of iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize_docs/
+    template <typename ItrType>
+    static std::vector<basic_node> deserialize_docs(ItrType&& begin, ItrType&& end) {
+        return deserializer_type().deserialize_docs(
+            detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
+    }
+
     /// @brief Serialize a basic_node object into a string.
     /// @param[in] node A basic_node object to be serialized.
-    /// @return The resulting string object from the serialization of the node object.
+    /// @return The resulting string object from the serialization of the given node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
     static std::string serialize(const basic_node& node) {
         return serializer_type().serialize(node);
+    }
+
+    /// @brief Serialize basic_node objects into a string.
+    /// @param docs basic_node objects to be serialized.
+    /// @return The resulting string object from the serialization of the given nodes.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/
+    static std::string serialize_docs(const std::vector<basic_node>& docs) {
+        return serializer_type().serialize_docs(docs);
     }
 
     /// @brief A factory method for sequence basic_node objects without sequence_type objects.
