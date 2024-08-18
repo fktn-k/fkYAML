@@ -4447,7 +4447,9 @@ private:
 
         // parse YAML nodes recursively
         deserialize_node(lexer, type, last_type);
-        FK_YAML_ASSERT(last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DOCUMENT);
+        FK_YAML_ASSERT(
+            last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
+            last_type == lexical_token_t::END_OF_DOCUMENT);
 
         // reset parameters for the next call.
         mp_current_node = nullptr;
@@ -5093,12 +5095,10 @@ private:
                 }
                 break;
             }
+            // these tokens end parsing the current YAML document.
+            case lexical_token_t::END_OF_BUFFER: // This handles an empty input.
             case lexical_token_t::END_OF_DIRECTIVES:
-                throw parse_error("invalid end-of-directives marker (---) found in the contents.", line, indent);
-            case lexical_token_t::END_OF_BUFFER:
-                // This handles an empty input.
             case lexical_token_t::END_OF_DOCUMENT:
-                // TODO: This token should be handled to support multiple documents.
                 last_type = type;
                 return;
             }
