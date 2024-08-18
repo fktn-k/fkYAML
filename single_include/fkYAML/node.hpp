@@ -7871,7 +7871,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
     }
 
     auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
-    if (tmp_float < std::numeric_limits<FloatType>::min()) {
+    if (tmp_float < std::numeric_limits<FloatType>::lowest()) {
         throw exception("Floating point value underflow detected.");
     }
     if (std::numeric_limits<FloatType>::max() < tmp_float) {
