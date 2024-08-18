@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.3.10](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.10) (2024-08-18)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.9...v0.3.10)
+
+- \#366 Fix node-to-float conversion error if node's value is \<= 0 [\#371](https://github.com/fktn-k/fkYAML/pull/371) ([fktn-k](https://github.com/fktn-k))
+- Apply node properties for the root node [\#370](https://github.com/fktn-k/fkYAML/pull/370) ([fktn-k](https://github.com/fktn-k))
+- \#368 Fix line advancement after node props [\#369](https://github.com/fktn-k/fkYAML/pull/369) ([fktn-k](https://github.com/fktn-k))
+- Allow trailing comma in flow mapping/sequence [\#365](https://github.com/fktn-k/fkYAML/pull/365) ([fktn-k](https://github.com/fktn-k))
+- Fix bug in serializing alias keys [\#364](https://github.com/fktn-k/fkYAML/pull/364) ([fktn-k](https://github.com/fktn-k))
+- Detect missing the end of directives markers \(---\) [\#361](https://github.com/fktn-k/fkYAML/pull/361) ([fktn-k](https://github.com/fktn-k))
+
+- update configs for reuse v4 [\#372](https://github.com/fktn-k/fkYAML/pull/372) ([fktn-k](https://github.com/fktn-k))
+- Remove CI jobs running with macOS 11 [\#367](https://github.com/fktn-k/fkYAML/pull/367) ([fktn-k](https://github.com/fktn-k))
+- Support serializing multiple YAML docs [\#363](https://github.com/fktn-k/fkYAML/pull/363) ([fktn-k](https://github.com/fktn-k))
+- Support parssing multiple YAML documents [\#362](https://github.com/fktn-k/fkYAML/pull/362) ([fktn-k](https://github.com/fktn-k))
+- Support Intel icpx compiler [\#360](https://github.com/fktn-k/fkYAML/pull/360) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.9](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.9) (2024-06-12)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.8...v0.3.9)
