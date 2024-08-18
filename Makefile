@@ -126,14 +126,14 @@ update-version-macros:
 update-project-version:
 	$(shell sed -i 's/VERSION [0-9]\+\.[0-9]\+\.[0-9]\+/VERSION $(TARGET_VERSION_FULL)/' CMakeLists.txt)
 
-# pre-requisites: pipx, reuse
+# pre-requisites: pipx, reuse(>=v4.0.0, confirmed with v4.0.3)
 reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year "2023-2024" --style c
+		--license MIT --year "2023-2024" --style cppsingle
 	pipx run reuse annotate $(TEST_SRCS) $(EXAMPLE_SRCS) $(TOOL_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year "2023-2024" --style c
+		--license MIT --year "2023-2024" --style cppsingle
 	pipx run reuse lint
 
 update-sources: reuse update-version-macros
