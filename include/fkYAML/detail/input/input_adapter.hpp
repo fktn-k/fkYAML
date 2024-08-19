@@ -508,9 +508,10 @@ private:
                 // find CR in `tmp_buf`.
                 char* p_cr_or_end = p_current;
                 while (p_cr_or_end != p_end) {
-                    if (*p_cr_or_end++ == '\r') {
+                    if (*p_cr_or_end == '\r') {
                         break;
                     }
+                    ++p_cr_or_end;
                 }
 
                 buffer.append(p_current, p_cr_or_end);
@@ -700,9 +701,10 @@ private:
                 // find CR in `tmp_buf`.
                 char* p_cr_or_end = p_current;
                 while (p_cr_or_end != p_end) {
-                    if (*p_cr_or_end++ == '\r') {
+                    if (*p_cr_or_end == '\r') {
                         break;
                     }
+                    ++p_cr_or_end;
                 }
 
                 buffer.append(p_current, p_cr_or_end);
