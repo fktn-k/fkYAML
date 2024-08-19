@@ -510,6 +510,36 @@ TEST_CASE("Deserializer_BlockSequence") {
         REQUIRE(root_1_avg_node.is_float_number());
         REQUIRE(root_1_avg_node.get_value<double>() == 0.288);
     }
+
+    SECTION("block sequence as a nested block mapping value in the middle") {
+        std::string input = "foo:\n"
+                            "  bar:\n"
+                            "  - 123\n"
+                            "  baz: true\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.size() == 2);
+        REQUIRE(foo_node.contains("bar"));
+        REQUIRE(foo_node.contains("baz"));
+
+        fkyaml::node& foo_bar_node = foo_node["bar"];
+        REQUIRE(foo_bar_node.is_sequence());
+        REQUIRE(foo_bar_node.size() == 1);
+
+        fkyaml::node& foo_bar_0_node = foo_bar_node[0];
+        REQUIRE(foo_bar_0_node.is_integer());
+        REQUIRE(foo_bar_0_node.get_value<int>() == 123);
+
+        fkyaml::node& foo_baz_node = foo_node["baz"];
+        REQUIRE(foo_baz_node.is_boolean());
+        REQUIRE(foo_baz_node.get_value<bool>() == true);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMapping") {

@@ -962,7 +962,7 @@ private:
             if (indent == 0) {
                 pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
             }
-            else if (indent < m_context_stack.back().indent) {
+            else if (indent <= m_context_stack.back().indent) {
                 auto target_itr =
                     std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
                         // the target node is a block mapping key node with the same indentation.
