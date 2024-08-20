@@ -153,10 +153,17 @@ TEST_CASE("InputAdapter_FileInputAdapterProvider") {
 }
 
 TEST_CASE("InputAdapter_StreamInputAdapterProvider") {
-    std::ifstream ifs(input_file_path);
-    REQUIRE(ifs);
-    auto input_adapter = fkyaml::detail::input_adapter(ifs);
-    REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+    SECTION("invalid stream") {
+        std::ifstream ifs("");
+        REQUIRE_THROWS_AS(fkyaml::detail::input_adapter(ifs), fkyaml::exception);
+    }
+
+    SECTION("valid stream") {
+        std::ifstream ifs(input_file_path);
+        REQUIRE(ifs);
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+    }
 }
 
 TEST_CASE("InputAdapter_FillBuffer_UTF8N") {
