@@ -2382,7 +2382,8 @@ private:
         switch (*itr) {
         case '.': {
             if (size == 1) {
-                return lexical_token_t::STRING_VALUE;
+                // 0 is omitted after `0.`.
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
             }
             lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
             return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
@@ -2410,6 +2411,10 @@ private:
             if (has_decimal_point) {
                 // the token has more than one period, e.g., a semantic version `1.2.3`.
                 return lexical_token_t::STRING_VALUE;
+            }
+            if (size == 1) {
+                // 0 is omitted after the decimal point
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
             }
             lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
             return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
