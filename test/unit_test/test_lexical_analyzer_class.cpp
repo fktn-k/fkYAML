@@ -418,6 +418,9 @@ TEST_CASE("LexicalAnalyzer_FloatingPointNumber") {
         using value_pair_t = std::pair<std::string, fkyaml::node::float_number_type>;
         auto value_pair = GENERATE(
             value_pair_t(std::string("-1.234"), -1.234),
+            value_pair_t(std::string("-21."), -21.),
+            value_pair_t(std::string("0."), 0.),
+            value_pair_t(std::string("12."), 12.),
             value_pair_t(std::string("567.8"), 567.8),
             value_pair_t(std::string("0.24"), 0.24),
             value_pair_t(std::string("9.8e-3"), 9.8e-3),
@@ -433,7 +436,7 @@ TEST_CASE("LexicalAnalyzer_FloatingPointNumber") {
     }
 
     SECTION("valid floating point number scalar token edge cases") {
-        auto input = GENERATE(std::string("0."), std::string("1.23e"), std::string("1.2e-z"));
+        auto input = GENERATE(std::string("1.23e"), std::string("1.2e-z"));
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_FALSE(lexer.get_next_token() == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
     }
