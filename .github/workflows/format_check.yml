@@ -14,6 +14,7 @@ on:
       - tool/amalgamation/**
       - CMakeLists.txt
       - .clang-format
+  # to grant contents write permission to fork repos as well
   pull_request_target:
     paths:
       - .github/workflows/format_check.yml

@@ -12,6 +12,7 @@ on:
       - test/**
       - CMakeLists.txt
       - Makefile
+  # to grant pull-requests write permission to fork repos as well
   pull_request_target:
     paths:
       - .github/workflows/coverage.yml
@@ -32,6 +33,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
+        ref: ${{github.head_ref}}
         submodules: recursive
 
     - name: Install lcov
@@ -52,7 +54,7 @@ jobs:
 
     - name: Decide the artifact name
       id: create_zip
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request_target'
       env:
         PR_NUMBER: ${{github.event.number}}
       run: |
