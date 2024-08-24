@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -218,7 +218,9 @@ private:
 
         // parse YAML nodes recursively
         deserialize_node(lexer, type, last_type);
-        FK_YAML_ASSERT(last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DOCUMENT);
+        FK_YAML_ASSERT(
+            last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
+            last_type == lexical_token_t::END_OF_DOCUMENT);
 
         // reset parameters for the next call.
         mp_current_node = nullptr;
@@ -864,12 +866,10 @@ private:
                 }
                 break;
             }
+            // these tokens end parsing the current YAML document.
+            case lexical_token_t::END_OF_BUFFER: // This handles an empty input.
             case lexical_token_t::END_OF_DIRECTIVES:
-                throw parse_error("invalid end-of-directives marker (---) found in the contents.", line, indent);
-            case lexical_token_t::END_OF_BUFFER:
-                // This handles an empty input.
             case lexical_token_t::END_OF_DOCUMENT:
-                // TODO: This token should be handled to support multiple documents.
                 last_type = type;
                 return;
             }
@@ -962,7 +962,7 @@ private:
             if (indent == 0) {
                 pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
             }
-            else if (indent < m_context_stack.back().indent) {
+            else if (indent <= m_context_stack.back().indent) {
                 auto target_itr =
                     std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
                         // the target node is a block mapping key node with the same indentation.

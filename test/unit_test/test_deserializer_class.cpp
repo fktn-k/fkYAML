@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -509,6 +509,36 @@ TEST_CASE("Deserializer_BlockSequence") {
         fkyaml::node& root_1_avg_node = root_1_node["avg"];
         REQUIRE(root_1_avg_node.is_float_number());
         REQUIRE(root_1_avg_node.get_value<double>() == 0.288);
+    }
+
+    SECTION("block sequence as a nested block mapping value in the middle") {
+        std::string input = "foo:\n"
+                            "  bar:\n"
+                            "  - 123\n"
+                            "  baz: true\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.size() == 2);
+        REQUIRE(foo_node.contains("bar"));
+        REQUIRE(foo_node.contains("baz"));
+
+        fkyaml::node& foo_bar_node = foo_node["bar"];
+        REQUIRE(foo_bar_node.is_sequence());
+        REQUIRE(foo_bar_node.size() == 1);
+
+        fkyaml::node& foo_bar_0_node = foo_bar_node[0];
+        REQUIRE(foo_bar_0_node.is_integer());
+        REQUIRE(foo_bar_0_node.get_value<int>() == 123);
+
+        fkyaml::node& foo_baz_node = foo_node["baz"];
+        REQUIRE(foo_baz_node.is_boolean());
+        REQUIRE(foo_baz_node.get_value<bool>() == true);
     }
 }
 
@@ -2844,14 +2874,6 @@ TEST_CASE("Deserializer_DocumentWithMarkers") {
         REQUIRE(foo_node.is_string());
         REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
     }
-
-    SECTION("invalid end-of-directives marker") {
-        std::string input = "foo: bar\n"
-                            "---\n"
-                            "123: false\n"
-                            "...";
-        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
-    }
 }
 
 TEST_CASE("Deserializer_MultipleDocuments") {
@@ -2859,55 +2881,119 @@ TEST_CASE("Deserializer_MultipleDocuments") {
     fkyaml::node root;
     std::vector<fkyaml::node> docs;
 
-    std::string input = "%YAML 1.1\n"
-                        "---\n"
-                        "foo: 123\n"
-                        "...\n"
-                        "%TAG ! tag:com.example,2024:\n"
-                        "---\n"
-                        "- !foo bar\n"
-                        "- 3.14\n"
-                        "- Null";
+    SECTION("both directives/document end markers") {
+        std::string input = "%YAML 1.1\n"
+                            "---\n"
+                            "foo: 123\n"
+                            "...\n"
+                            "%TAG ! tag:com.example,2024:\n"
+                            "---\n"
+                            "- !foo bar\n"
+                            "- 3.14\n"
+                            "- Null";
 
-    SECTION("parse only the first document") {
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 1);
-        REQUIRE(root.contains("foo"));
+        SECTION("parse only the first document") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("foo"));
 
-        fkyaml::node& foo_node = root["foo"];
-        REQUIRE(foo_node.is_integer());
-        REQUIRE(foo_node.get_value<int>() == 123);
+            fkyaml::node& foo_node = root["foo"];
+            REQUIRE(foo_node.is_integer());
+            REQUIRE(foo_node.get_value<int>() == 123);
+        }
+
+        SECTION("parse all documents") {
+            REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
+            REQUIRE(docs.size() == 2);
+
+            fkyaml::node& root0 = docs[0];
+            REQUIRE(root0.is_mapping());
+            REQUIRE(root0.size() == 1);
+            REQUIRE(root0.contains("foo"));
+
+            fkyaml::node& foo_node = root0["foo"];
+            REQUIRE(foo_node.is_integer());
+            REQUIRE(foo_node.get_value<int>() == 123);
+
+            fkyaml::node& root1 = docs[1];
+            REQUIRE(root1.is_sequence());
+            REQUIRE(root1.size() == 3);
+
+            fkyaml::node& seq0 = root1[0];
+            REQUIRE(seq0.has_tag_name());
+            REQUIRE(seq0.get_tag_name() == "!foo");
+            REQUIRE(seq0.is_string());
+            REQUIRE(seq0.get_value_ref<std::string&>() == "bar");
+
+            fkyaml::node& seq1 = root1[1];
+            REQUIRE(seq1.is_float_number());
+            REQUIRE(seq1.get_value<double>() == 3.14);
+
+            fkyaml::node& seq2 = root1[2];
+            REQUIRE(seq2.is_null());
+        }
     }
 
-    SECTION("parse all documents") {
-        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
-        REQUIRE(docs.size() == 2);
+    SECTION("document end marker omitted") {
+        std::string input = "--- !!map\n"
+                            "? a\n"
+                            ": b\n"
+                            "--- !!seq\n"
+                            "- !!str c\n"
+                            "--- !!map\n"
+                            "d: e";
 
-        fkyaml::node& root0 = docs[0];
-        REQUIRE(root0.is_mapping());
-        REQUIRE(root0.size() == 1);
-        REQUIRE(root0.contains("foo"));
+        SECTION("parse only the first document") {
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root.is_mapping());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root.contains("a"));
+            REQUIRE(root.has_tag_name());
+            REQUIRE(root.get_tag_name() == "!!map");
 
-        fkyaml::node& foo_node = root0["foo"];
-        REQUIRE(foo_node.is_integer());
-        REQUIRE(foo_node.get_value<int>() == 123);
+            fkyaml::node& a_node = root["a"];
+            REQUIRE(a_node.is_string());
+            REQUIRE(a_node.get_value_ref<std::string&>() == "b");
+        }
 
-        fkyaml::node& root1 = docs[1];
-        REQUIRE(root1.is_sequence());
-        REQUIRE(root1.size() == 3);
+        SECTION("parse all documents") {
+            REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
+            REQUIRE(docs.size() == 3);
 
-        fkyaml::node& seq0 = root1[0];
-        REQUIRE(seq0.has_tag_name());
-        REQUIRE(seq0.get_tag_name() == "!foo");
-        REQUIRE(seq0.is_string());
-        REQUIRE(seq0.get_value_ref<std::string&>() == "bar");
+            fkyaml::node& root0 = docs[0];
+            REQUIRE(root0.is_mapping());
+            REQUIRE(root0.size() == 1);
+            REQUIRE(root0.contains("a"));
+            REQUIRE(root0.has_tag_name());
+            REQUIRE(root0.get_tag_name() == "!!map");
 
-        fkyaml::node& seq1 = root1[1];
-        REQUIRE(seq1.is_float_number());
-        REQUIRE(seq1.get_value<double>() == 3.14);
+            fkyaml::node& a_node = root0["a"];
+            REQUIRE(a_node.is_string());
+            REQUIRE(a_node.get_value_ref<std::string&>() == "b");
 
-        fkyaml::node& seq2 = root1[2];
-        REQUIRE(seq2.is_null());
+            fkyaml::node& root1 = docs[1];
+            REQUIRE(root1.is_sequence());
+            REQUIRE(root1.size() == 1);
+            REQUIRE(root1.has_tag_name());
+            REQUIRE(root1.get_tag_name() == "!!seq");
+
+            fkyaml::node& seq0_node = root1[0];
+            REQUIRE(seq0_node.is_string());
+            REQUIRE(seq0_node.get_value_ref<std::string&>() == "c");
+            REQUIRE(seq0_node.has_tag_name());
+            REQUIRE(seq0_node.get_tag_name() == "!!str");
+
+            fkyaml::node& root2 = docs[2];
+            REQUIRE(root2.is_mapping());
+            REQUIRE(root2.size() == 1);
+            REQUIRE(root2.contains("d"));
+            REQUIRE(root2.has_tag_name());
+            REQUIRE(root2.get_tag_name() == "!!map");
+
+            fkyaml::node& d_node = root2["d"];
+            REQUIRE(d_node.is_string());
+            REQUIRE(d_node.get_value_ref<std::string&>() == "e");
+        }
     }
 }

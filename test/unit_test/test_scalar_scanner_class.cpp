@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -61,7 +61,9 @@ TEST_CASE("ScalarScanner_FloatNumberValue") {
         std::string("-.INF"),
         std::string("-1.234"),
         std::string("567.8"),
+        std::string("123."),
         std::string("0.24"),
+        std::string("0."),
         std::string("9.8e-3"),
         std::string("3.95E3"),
         std::string("1.863e+3"));
@@ -73,6 +75,7 @@ TEST_CASE("ScalarScanner_StringValue") {
         std::string("abc"),
         std::string("0th"),
         std::string("0123"),
+        std::string("1.2.3"),
         std::string("1.non-digit"),
         std::string("-.foo"),
         std::string("1exe"),

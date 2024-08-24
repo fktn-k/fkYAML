@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -142,7 +142,8 @@ private:
         switch (*itr) {
         case '.': {
             if (size == 1) {
-                return lexical_token_t::STRING_VALUE;
+                // 0 is omitted after `0.`.
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
             }
             lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
             return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
@@ -170,6 +171,10 @@ private:
             if (has_decimal_point) {
                 // the token has more than one period, e.g., a semantic version `1.2.3`.
                 return lexical_token_t::STRING_VALUE;
+            }
+            if (size == 1) {
+                // 0 is omitted after the decimal point
+                return lexical_token_t::FLOAT_NUMBER_VALUE;
             }
             lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
             return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE

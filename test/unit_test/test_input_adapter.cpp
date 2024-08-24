@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -153,10 +153,17 @@ TEST_CASE("InputAdapter_FileInputAdapterProvider") {
 }
 
 TEST_CASE("InputAdapter_StreamInputAdapterProvider") {
-    std::ifstream ifs(input_file_path);
-    REQUIRE(ifs);
-    auto input_adapter = fkyaml::detail::input_adapter(ifs);
-    REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+    SECTION("invalid stream") {
+        std::ifstream ifs("");
+        REQUIRE_THROWS_AS(fkyaml::detail::input_adapter(ifs), fkyaml::exception);
+    }
+
+    SECTION("valid stream") {
+        std::ifstream ifs(input_file_path);
+        REQUIRE(ifs);
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+    }
 }
 
 TEST_CASE("InputAdapter_FillBuffer_UTF8N") {
@@ -1683,6 +1690,18 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
         std::string buffer {};
         input_adapter.fill_buffer(buffer);
 
+        REQUIRE(buffer.size() == 10);
+        REQUIRE(buffer[0] == 't');
+        REQUIRE(buffer[1] == 'e');
+        REQUIRE(buffer[2] == 's');
+        REQUIRE(buffer[3] == 't');
+        REQUIRE(buffer[4] == '\n');
+        REQUIRE(buffer[5] == 'd');
+        REQUIRE(buffer[6] == 'a');
+        REQUIRE(buffer[7] == 't');
+        REQUIRE(buffer[8] == 'a');
+        REQUIRE(buffer[9] == '\n');
+
         std::fclose(p_file);
     }
 
@@ -1693,6 +1712,18 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
 
         std::string buffer {};
         input_adapter.fill_buffer(buffer);
+
+        REQUIRE(buffer.size() == 10);
+        REQUIRE(buffer[0] == 't');
+        REQUIRE(buffer[1] == 'e');
+        REQUIRE(buffer[2] == 's');
+        REQUIRE(buffer[3] == 't');
+        REQUIRE(buffer[4] == '\n');
+        REQUIRE(buffer[5] == 'd');
+        REQUIRE(buffer[6] == 'a');
+        REQUIRE(buffer[7] == 't');
+        REQUIRE(buffer[8] == 'a');
+        REQUIRE(buffer[9] == '\n');
     }
 }
 

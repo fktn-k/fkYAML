@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.10
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -508,9 +508,10 @@ private:
                 // find CR in `tmp_buf`.
                 char* p_cr_or_end = p_current;
                 while (p_cr_or_end != p_end) {
-                    if (*p_cr_or_end++ == '\r') {
+                    if (*p_cr_or_end == '\r') {
                         break;
                     }
+                    ++p_cr_or_end;
                 }
 
                 buffer.append(p_current, p_cr_or_end);
@@ -700,9 +701,10 @@ private:
                 // find CR in `tmp_buf`.
                 char* p_cr_or_end = p_current;
                 while (p_cr_or_end != p_end) {
-                    if (*p_cr_or_end++ == '\r') {
+                    if (*p_cr_or_end == '\r') {
                         break;
                     }
+                    ++p_cr_or_end;
                 }
 
                 buffer.append(p_current, p_cr_or_end);
@@ -924,7 +926,10 @@ inline file_input_adapter input_adapter(std::FILE* file) {
 /// @brief A factory method for stream_input_adapter objects with std::istream objects.
 /// @param stream An input stream.
 /// @return stream_input_adapter A stream_input_adapter object.
-inline stream_input_adapter input_adapter(std::istream& stream) noexcept {
+inline stream_input_adapter input_adapter(std::istream& stream) {
+    if (!stream.good()) {
+        throw fkyaml::exception("Invalid stream.");
+    }
     utf_encode_t encode_type = detect_encoding_and_skip_bom(stream);
     return stream_input_adapter(stream, encode_type);
 }
