@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.11](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.11) (2024-08-24)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.10...v0.3.11)
+
+- Fix error on parsing a floating point value which ends with a dot [\#382](https://github.com/fktn-k/fkYAML/pull/382) ([fktn-k](https://github.com/fktn-k))
+- Throw exception when loading a nonexistent stream [\#379](https://github.com/fktn-k/fkYAML/pull/379) ([sndth](https://github.com/sndth))
+- Fix wrong parse result from a block sequence as a nested block mapping value [\#377](https://github.com/fktn-k/fkYAML/pull/377) ([fktn-k](https://github.com/fktn-k))
+- \#375 Fix newline code normalization in UTF-8 encoded file input [\#376](https://github.com/fktn-k/fkYAML/pull/376) ([fktn-k](https://github.com/fktn-k))
+- Allow the document end marker omitted [\#374](https://github.com/fktn-k/fkYAML/pull/374) ([fktn-k](https://github.com/fktn-k))
+
+- Fix conditional branching for pull\_request\_target events [\#384](https://github.com/fktn-k/fkYAML/pull/384) ([fktn-k](https://github.com/fktn-k))
+- Fix workflow errors on PRs from fork repos [\#383](https://github.com/fktn-k/fkYAML/pull/383) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.10](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.10) (2024-08-18)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.9...v0.3.10)

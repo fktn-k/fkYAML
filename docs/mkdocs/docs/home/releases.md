@@ -1,6 +1,40 @@
 # Releases
 
-## [v0.3.10](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.10) (2024-08-18)
+## **fkYAML version 0.3.11**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.11/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.11/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.11/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.11/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.11/node.hpp) (single header)
+
+### Summary
+
+This release fixes bugs in the deserialization feature including input handling.  
+Furthermore, CI workflow errors when a PR from fork repository tries to acquire write permission/secrets access are also resolved, which was introduced when code formatting & coverage report sharing were made executed during the GitHub Actions workflows running for PR reviews.  
+
+### What's Changed
+
+#### :bug: Bug Fixes
+
+- Allow the document end marker omitted by [fktn-k](https://github.com/fktn-k) in [\#374](https://github.com/fktn-k/fkYAML/pull/374)
+- \#375 Fix newline code normalization in UTF-8 encoded file input by [fktn-k](https://github.com/fktn-k) in [\#376](https://github.com/fktn-k/fkYAML/pull/376), reported by [sndth](https://github.com/sndth) in [\#375](https://github.com/fktn-k/fkYAML/issues/375)
+- Fix wrong parse result from a block sequence as a nested block mapping value by [fktn-k](https://github.com/fktn-k) in [\#377](https://github.com/fktn-k/fkYAML/pull/377)
+- Throw exception when loading a nonexistent stream by [sndth](https://github.com/sndth) in [\#379](https://github.com/fktn-k/fkYAML/pull/379), reported by [sndth](https://github.com/sndth) in [\#378](https://github.com/fktn-k/fkYAML/issues/378)
+- Fix error on parsing a floating point value which ends with a dot by [fktn-k](https://github.com/fktn-k) in [\#382](https://github.com/fktn-k/fkYAML/pull/382), reported by [realysy](https://github.com/realysy) in [\#380](https://github.com/fktn-k/fkYAML/issues/380)
+
+#### :robot: CI
+
+- Fix workflow errors on PRs from fork repos by [fktn-k](https://github.com/fktn-k) in [\#383](https://github.com/fktn-k/fkYAML/pull/383)
+- Fix conditional branching for pull\_request\_target events by [fktn-k](https://github.com/fktn-k) in [\#384](https://github.com/fktn-k/fkYAML/pull/384)
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.10...v0.3.11
+
+---
+
+## **fkYAML version 0.3.10**
 
 !!! abstract "Release Packages"
 
@@ -37,11 +71,7 @@ For other changes like bug fixes, see descriptions in each related issues and PR
 #### :robot: CI
 
 - Remove CI jobs running with macOS 11 by [fktn-k](https://github.com/fktn-k) in [\#367](https://github.com/fktn-k/fkYAML/pull/367)
-
-
-
 - update configs for reuse v4 by [fktn-k](https://github.com/fktn-k) in [\#372](https://github.com/fktn-k/fkYAML/pull/372)
-
 
 **Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.9...v0.3.10
 
@@ -157,7 +187,7 @@ For more details, see the CONTRIBUTING.md file.
 #### :bug: Bug Fixes
 
 - Fix false error on anchor names containing colons \(:\) by [@fktn-k](https://github.com/fktn-k) in [\#335](https://github.com/fktn-k/fkYAML/pull/335)
-- Escape backslash\(\\) + 0x09 to a horizontal tab \(\t\) by [@fktn-k](https://github.com/fktn-k) in [\#336](https://github.com/fktn-k/fkYAML/pull/336)
+- Escape backslash(\\) + 0x09 to a horizontal tab (\t) by [@fktn-k](https://github.com/fktn-k) in [\#336](https://github.com/fktn-k/fkYAML/pull/336)
 - Fixed error on node properties for child block sequences by [@fktn-k](https://github.com/fktn-k) in [\#338](https://github.com/fktn-k/fkYAML/pull/338)
 - Fix the C6262 warning on Windows by [@fktn-k](https://github.com/fktn-k) in [\#339](https://github.com/fktn-k/fkYAML/pull/339)
 
