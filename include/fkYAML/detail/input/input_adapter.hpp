@@ -20,7 +20,7 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
-#include <fkYAML/detail/encodings/encode_detector.hpp>
+#include <fkYAML/detail/encodings/utf_encode_detector.hpp>
 #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>

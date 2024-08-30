@@ -23,7 +23,7 @@
 #define ENABLE_C4996
 #endif
 
-TEST_CASE("EncodeDetector_DetectEncodingType") {
+TEST_CASE("UTFEncodeDetector_DetectEncodingType") {
     struct test_data_t {
         test_data_t(std::array<uint8_t, 4> input_, fkyaml::detail::utf_encode_t encode_type_, bool has_bom_)
             : input(input_),
@@ -85,7 +85,7 @@ TEST_CASE("EncodeDetector_DetectEncodingType") {
     REQUIRE(has_bom == d.has_bom);
 }
 
-TEST_CASE("EncodeDetector_DetectEncodingAndSkipBom") {
+TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
     ////////////////////////
     //   char iterators   //
     ////////////////////////

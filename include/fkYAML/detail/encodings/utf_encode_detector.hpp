@@ -8,8 +8,8 @@
 ///
 /// @file
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_ENCODE_DETECTOR_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_ENCODE_DETECTOR_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_
 
 #include <cstdint>
 #include <istream>
@@ -242,4 +242,4 @@ inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_ENCODE_DETECTOR_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_ */

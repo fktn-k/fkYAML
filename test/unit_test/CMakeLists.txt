@@ -212,7 +212,6 @@ add_executable(
   ${TEST_TARGET}
   test_custom_from_node.cpp
   test_deserializer_class.cpp
-  test_encode_detector.cpp
   test_exception_class.cpp
   test_from_string.cpp
   test_input_adapter.cpp
@@ -227,6 +226,7 @@ add_executable(
   test_string_formatter.cpp
   test_tag_resolver_class.cpp
   test_uri_encoding_class.cpp
+  test_utf_encode_detector.cpp
   test_utf_encodings.cpp
   test_yaml_escaper_class.cpp
   main.cpp
