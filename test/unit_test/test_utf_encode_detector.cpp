@@ -190,6 +190,16 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 4);
     }
 
+    SECTION("empty char iterators") {
+        std::string input = "";
+        auto begin = std::begin(input);
+        auto end = std::end(input);
+        using iterator_type = decltype(begin);
+        fkyaml::detail::utf_encode_t ret = fkyaml::detail::utf_encode_detector<iterator_type>::detect(begin, end);
+        REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
+        REQUIRE(begin == std::begin(input));
+    }
+
     ///////////////////////////
     //   char8_t iterators   //
     ///////////////////////////
