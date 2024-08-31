@@ -856,9 +856,9 @@ private:
 /// @param begin The beginning of iterators.
 /// @param end The end of iterators.
 /// @return iterator_input_adapter<ItrType> An iterator_input_adapter object for the target iterator type.
-template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
+template <typename ItrType>
 inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end) {
-    utf_encode_t encode_type = detect_encoding_and_skip_bom(begin, end);
+    utf_encode_t encode_type = utf_encode_detector<ItrType>::detect(begin, end);
     return iterator_input_adapter<ItrType>(begin, end, encode_type);
 }
 
@@ -919,7 +919,7 @@ inline file_input_adapter input_adapter(std::FILE* file) {
     if (!file) {
         throw fkyaml::exception("Invalid FILE object pointer.");
     }
-    utf_encode_t encode_type = detect_encoding_and_skip_bom(file);
+    utf_encode_t encode_type = file_utf_encode_detector::detect(file);
     return file_input_adapter(file, encode_type);
 }
 
@@ -930,7 +930,7 @@ inline stream_input_adapter input_adapter(std::istream& stream) {
     if (!stream.good()) {
         throw fkyaml::exception("Invalid stream.");
     }
-    utf_encode_t encode_type = detect_encoding_and_skip_bom(stream);
+    utf_encode_t encode_type = stream_utf_encode_detector::detect(stream);
     return stream_input_adapter(stream, encode_type);
 }
 

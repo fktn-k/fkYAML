@@ -16,6 +16,8 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/encodings/utf_encode_t.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/meta/type_traits.hpp>
 #include <fkYAML/exception.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -76,17 +78,26 @@ inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bo
     return utf_encode_t::UTF_8;
 }
 
-/// @brief Detects the encoding type of the input, and consumes a BOM if it exists.
+/// @brief A class which detects UTF encoding type and the existence of a BOM at the beginning.
 /// @tparam ItrType Type of iterators for the input.
-/// @tparam ElemSize The size of one input element.
-/// @param begin The beginning of input iterators.
-/// @param end The end of input iterators.
-/// @return A detected encoding type.
-template <typename ItrType, size_t ElemSize = sizeof(decltype(*(std::declval<ItrType>())))>
-inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& end) {
-    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    switch (ElemSize) {
-    case sizeof(char): { // this case covers char8_t as well when compiled with C++20 or better.
+template <typename ItrType, typename = void>
+struct utf_encode_detector {};
+
+/// @brief The partial specialization of utf_encode_detector for char iterators.
+/// @tparam ItrType An iterator type.
+template <typename ItrType>
+struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::value>> {
+    /// @brief Detects the encoding type of the input, and consumes a BOM if it exists.
+    /// @param begin The iterator to the first element of an input.
+    /// @param end The iterator to the past-the end element of an input.
+    /// @return A detected encoding type.
+    static utf_encode_t detect(ItrType& begin, const ItrType& end) noexcept {
+        if (begin == end) {
+            return utf_encode_t::UTF_8;
+        }
+
+        std::array<uint8_t, 4> bytes {};
+        bytes.fill(0xFFu);
         for (int i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = uint8_t(begin[i]);
         }
@@ -113,13 +124,66 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
 
         return encode_type;
     }
-    case sizeof(char16_t): {
+};
+
+#ifdef FK_YAML_HAS_CHAR8_T
+
+/// @brief The partial specialization of utf_encode_detector for char8_t iterators.
+/// @tparam ItrType An iterator type.
+template <typename ItrType>
+struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>::value>> {
+    /// @brief Detects the encoding type of the input, and consumes a BOM if it exists.
+    /// @param begin The iterator to the first element of an input.
+    /// @param end The iterator to the past-the end element of an input.
+    /// @return A detected encoding type.
+    static utf_encode_t detect(ItrType& begin, const ItrType& end) {
+        if (begin == end) {
+            return utf_encode_t::UTF_8;
+        }
+
+        std::array<uint8_t, 4> bytes {};
+        bytes.fill(0xFFu);
+        for (int i = 0; i < 4 && begin + i != end; i++) {
+            bytes[i] = uint8_t(begin[i]);
+        }
+
+        bool has_bom = false;
+        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+
+        if (encode_type != utf_encode_t::UTF_8) {
+            throw exception("char8_t characters must be encoded in the UTF-8 format.");
+        }
+
+        if (has_bom) {
+            // skip reading the BOM.
+            std::advance(begin, 3);
+        }
+
+        return encode_type;
+    }
+};
+
+#endif // defined(FK_YAML_HAS_CHAR8_T)
+
+/// @brief The partial specialization of utf_encode_detector for char16_t iterators.
+/// @tparam ItrType An iterator type.
+template <typename ItrType>
+struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t>::value>> {
+    /// @brief Detects the encoding type of the input, and consumes a BOM if it exists.
+    /// @param begin The iterator to the first element of an input.
+    /// @param end The iterator to the past-the end element of an input.
+    /// @return A detected encoding type.
+    static utf_encode_t detect(ItrType& begin, const ItrType& end) {
         if (begin == end) {
             return utf_encode_t::UTF_16BE;
         }
+
+        std::array<uint8_t, 4> bytes {};
+        bytes.fill(0xFFu);
         for (int i = 0; i < 2 && begin + i != end; i++) {
-            bytes[i * 2] = uint8_t((begin[i] & 0xFF00u) >> 8);
-            bytes[i * 2 + 1] = uint8_t(begin[i] & 0xFFu);
+            char16_t elem = begin[i];
+            bytes[i * 2] = uint8_t((elem & 0xFF00u) >> 8);
+            bytes[i * 2 + 1] = uint8_t(elem & 0xFFu);
         }
 
         bool has_bom = false;
@@ -136,15 +200,27 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
 
         return encode_type;
     }
-    case sizeof(char32_t): {
+};
+
+/// @brief The partial specialization of utf_encode_detector for char32_t iterators.
+/// @tparam ItrType An iterator type.
+template <typename ItrType>
+struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t>::value>> {
+    /// @brief Detects the encoding type of the input, and consumes a BOM if it exists.
+    /// @param begin The iterator to the first element of an input.
+    /// @param end The iterator to the past-the end element of an input.
+    /// @return A detected encoding type.
+    static utf_encode_t detect(ItrType& begin, const ItrType& end) {
         if (begin == end) {
             return utf_encode_t::UTF_32BE;
         }
 
-        bytes[0] = uint8_t((*begin & 0xFF000000u) >> 24);
-        bytes[1] = uint8_t((*begin & 0x00FF0000u) >> 16);
-        bytes[2] = uint8_t((*begin & 0x0000FF00u) >> 8);
-        bytes[3] = uint8_t(*begin & 0x000000FFu);
+        std::array<uint8_t, 4> bytes {};
+        char32_t elem = *begin;
+        bytes[0] = uint8_t((elem & 0xFF000000u) >> 24);
+        bytes[1] = uint8_t((elem & 0x00FF0000u) >> 16);
+        bytes[2] = uint8_t((elem & 0x0000FF00u) >> 8);
+        bytes[3] = uint8_t(elem & 0x000000FFu);
 
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
@@ -160,85 +236,96 @@ inline utf_encode_t detect_encoding_and_skip_bom(ItrType& begin, const ItrType& 
 
         return encode_type;
     }
-    default:
-        throw exception("Unknown char size.");
-    }
-}
+};
 
-inline utf_encode_t detect_encoding_and_skip_bom(std::FILE* file) noexcept {
-    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (int i = 0; i < 4; i++) {
-        char byte = 0;
-        std::size_t size = std::fread(&byte, sizeof(char), 1, file);
-        if (size != sizeof(char)) {
-            break;
+/// @brief A class which detects UTF encoding type and the existence of a BOM from the input file.
+struct file_utf_encode_detector {
+    /// @brief Detects the encoding type of the input, and consumes a BOM if it exists.
+    /// @param p_file The input file handle.
+    /// @return A detected encoding type.
+    static utf_encode_t detect(std::FILE* p_file) noexcept {
+        std::array<uint8_t, 4> bytes {};
+        bytes.fill(0xFFu);
+        for (int i = 0; i < 4; i++) {
+            char byte = 0;
+            std::size_t size = std::fread(&byte, sizeof(char), 1, p_file);
+            if (size != sizeof(char)) {
+                break;
+            }
+            bytes[i] = uint8_t(byte & 0xFF);
         }
-        bytes[i] = uint8_t(byte & 0xFF);
-    }
 
-    bool has_bom = false;
-    utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        bool has_bom = false;
+        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-    // move back to the beginning if a BOM doesn't exist.
-    long offset = 0;
-    if (has_bom) {
-        switch (encode_type) {
-        case utf_encode_t::UTF_8:
-            offset = 3;
-            break;
-        case utf_encode_t::UTF_16BE:
-        case utf_encode_t::UTF_16LE:
-            offset = 2;
-            break;
-        case utf_encode_t::UTF_32BE:
-        case utf_encode_t::UTF_32LE:
-            offset = 4;
-            break;
+        // move back to the beginning if a BOM doesn't exist.
+        long offset = 0;
+        if (has_bom) {
+            switch (encode_type) {
+            case utf_encode_t::UTF_8:
+                offset = 3;
+                break;
+            case utf_encode_t::UTF_16BE:
+            case utf_encode_t::UTF_16LE:
+                offset = 2;
+                break;
+            case utf_encode_t::UTF_32BE:
+            case utf_encode_t::UTF_32LE:
+                offset = 4;
+                break;
+            }
         }
+        std::fseek(p_file, offset, SEEK_SET);
+
+        return encode_type;
     }
-    fseek(file, offset, SEEK_SET);
+};
 
-    return encode_type;
-}
-
-inline utf_encode_t detect_encoding_and_skip_bom(std::istream& is) noexcept {
-    std::array<uint8_t, 4> bytes = {{0xFFu, 0xFFu, 0xFFu, 0xFFu}};
-    for (int i = 0; i < 4; i++) {
-        char ch = 0;
-        is.read(&ch, 1);
-        std::streamsize size = is.gcount();
-        if (size != 1) {
-            // without this, seekg() fails in the switch-case statement below.
-            is.clear();
-            break;
+/// @brief A class which detects UTF encoding type and the existence of a BOM from the input file.
+struct stream_utf_encode_detector {
+    /// @brief Detects the encoding type of the input, and consumes a BOM if it exists.
+    /// @param p_file The input file handle.
+    /// @return A detected encoding type.
+    static utf_encode_t detect(std::istream& is) noexcept {
+        std::array<uint8_t, 4> bytes {};
+        bytes.fill(0xFFu);
+        for (int i = 0; i < 4; i++) {
+            char ch = 0;
+            is.read(&ch, 1);
+            std::streamsize size = is.gcount();
+            if (size != 1) {
+                // without this, seekg() will fail in the switch-case statement below.
+                is.clear();
+                break;
+            }
+            bytes[i] = uint8_t(ch & 0xFF);
         }
-        bytes[i] = uint8_t(ch & 0xFF);
-    }
 
-    bool has_bom = false;
-    utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        bool has_bom = false;
+        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-    // move back to the beginning if a BOM doesn't exist.
-    std::streamoff offset = 0;
-    if (has_bom) {
-        switch (encode_type) {
-        case utf_encode_t::UTF_8:
-            offset = 3;
-            break;
-        case utf_encode_t::UTF_16BE:
-        case utf_encode_t::UTF_16LE:
-            offset = 2;
-            break;
-        case utf_encode_t::UTF_32BE:
-        case utf_encode_t::UTF_32LE:
-            offset = 4;
-            break;
+        // move back to the beginning if a BOM doesn't exist.
+        std::streamoff offset = 0;
+        if (has_bom) {
+            switch (encode_type) {
+            case utf_encode_t::UTF_8:
+                offset = 3;
+                break;
+            case utf_encode_t::UTF_16BE:
+            case utf_encode_t::UTF_16LE:
+                offset = 2;
+                break;
+            case utf_encode_t::UTF_32BE:
+            case utf_encode_t::UTF_32LE:
+                offset = 4;
+                break;
+            }
         }
-    }
-    is.seekg(offset, std::ios_base::beg);
+        is.seekg(offset, std::ios_base::beg);
 
-    return encode_type;
-}
+        return encode_type;
+    }
+};
 
 FK_YAML_DETAIL_NAMESPACE_END
 
