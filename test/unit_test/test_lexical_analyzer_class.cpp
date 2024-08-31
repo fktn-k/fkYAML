@@ -1102,6 +1102,30 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE(lexer.get_string() == "foo\n  bar\n\nbaz\n\n");
     }
+
+    SECTION("literal string scalar with trailing spaces/tabs after the block scalar header.") {
+        auto input = GENERATE(
+            std::string("|2  \n  foo\n"), std::string("|2\t\t\n  foo\n"), std::string("|2 # comment\n  foo\n"));
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo\n");
+    }
+
+    SECTION("literal string scalar with invalid block scalar headers") {
+        auto input = GENERATE(
+            std::string("|++2\n  foo"),
+            std::string("|--2\n  foo"),
+            std::string("|+-2\n  foo"),
+            std::string("|-+2\n  foo"),
+            std::string("|+0\n  foo"),
+            std::string("|+11\n           foo"),
+            std::string("|invalid\n  foo"));
+
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("LexicalAnalyzer_FoldedString") {
@@ -1226,6 +1250,30 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
         REQUIRE(lexer.get_string() == "foo bar\n\n");
+    }
+
+    SECTION("folded string scalar with trailing spaces/tabs/comments after the block scalar header.") {
+        auto input = GENERATE(
+            std::string(">2  \n  foo\n"), std::string(">2\t\t\n  foo\n"), std::string(">2 # comment\n  foo\n"));
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(lexer.get_string() == "foo\n");
+    }
+
+    SECTION("folded string scalar with invalid block scalar headers") {
+        auto input = GENERATE(
+            std::string(">++2\n  foo"),
+            std::string(">--2\n  foo"),
+            std::string(">+-2\n  foo"),
+            std::string(">-+2\n  foo"),
+            std::string(">+0\n  foo"),
+            std::string(">+11\n           foo"),
+            std::string(">invalid\n  foo"));
+
+        lexer_t lexer(fkyaml::detail::input_adapter(input));
+        REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
     }
 }
 

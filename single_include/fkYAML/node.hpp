@@ -2847,12 +2847,14 @@ public:
         case '|': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             uint32_t indent = 0;
+            ++m_cur_itr;
             get_block_style_metadata(chomp_type, indent);
             return scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
         }
         case '>': {
             chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
             uint32_t indent = 0;
+            ++m_cur_itr;
             get_block_style_metadata(chomp_type, indent);
             return scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
         }
@@ -3897,30 +3899,53 @@ private:
     /// @param indent A variable to store the retrieved indent size.
     void get_block_style_metadata(chomping_indicator_t& chomp_type, uint32_t& indent) {
         chomp_type = chomping_indicator_t::CLIP;
-        switch (*++m_cur_itr) {
-        case '-':
-            chomp_type = chomping_indicator_t::STRIP;
-            ++m_cur_itr;
-            break;
-        case '+':
-            chomp_type = chomping_indicator_t::KEEP;
-            ++m_cur_itr;
-            break;
-        default:
-            break;
-        }
-
-        if (*m_cur_itr == '0') {
-            emit_error("An indentation level for a block style scalar cannot be \'0\'");
-        }
-
         indent = 0;
-        if (std::isdigit(*m_cur_itr)) {
-            indent = static_cast<char>(*m_cur_itr++ - '0');
-        }
 
-        // skip characters including comments.
-        skip_until_line_end();
+        while (m_cur_itr != m_end_itr) {
+            switch (*m_cur_itr) {
+            case '-':
+                if (chomp_type != chomping_indicator_t::CLIP) {
+                    emit_error("Too many block chomping indicators specified.");
+                }
+                chomp_type = chomping_indicator_t::STRIP;
+                break;
+            case '+':
+                if (chomp_type != chomping_indicator_t::CLIP) {
+                    emit_error("Too many block chomping indicators specified.");
+                }
+                chomp_type = chomping_indicator_t::KEEP;
+                break;
+            case '0':
+                emit_error("An indentation level for a block scalar cannot be 0.");
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                if (indent > 0) {
+                    emit_error("Invalid indentation level for a block scalar. It must be between 1 and 9.");
+                }
+                indent = static_cast<char>(*m_cur_itr - '0');
+                break;
+            case ' ':
+            case '\t':
+                break;
+            case '\n':
+                ++m_cur_itr;
+                return;
+            case '#':
+                skip_until_line_end();
+                return;
+            default:
+                emit_error("Invalid character found in a block scalar header.");
+            }
+
+            ++m_cur_itr;
+        }
     }
 
     /// @brief Skip white spaces (half-width spaces and tabs) from the current position.
