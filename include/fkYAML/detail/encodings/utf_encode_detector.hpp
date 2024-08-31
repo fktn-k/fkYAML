@@ -30,48 +30,53 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept {
     has_bom = false;
 
+    uint8_t byte0 = bytes[0];
+    uint8_t byte1 = bytes[1];
+    uint8_t byte2 = bytes[2];
+    uint8_t byte3 = bytes[3];
+
     // Check if a BOM exists.
 
-    if (bytes[0] == uint8_t(0xEFu) && bytes[1] == uint8_t(0xBBu) && bytes[2] == uint8_t(0xBFu)) {
+    if (byte0 == uint8_t(0xEFu) && byte1 == uint8_t(0xBBu) && byte2 == uint8_t(0xBFu)) {
         has_bom = true;
         return utf_encode_t::UTF_8;
     }
 
-    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == uint8_t(0xFEu) && bytes[3] == uint8_t(0xFFu)) {
+    if (byte0 == 0 && byte1 == 0 && byte2 == uint8_t(0xFEu) && byte3 == uint8_t(0xFFu)) {
         has_bom = true;
         return utf_encode_t::UTF_32BE;
     }
 
-    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu) && bytes[2] == 0 && bytes[3] == 0) {
+    if (byte0 == uint8_t(0xFFu) && byte1 == uint8_t(0xFEu) && byte2 == 0 && byte3 == 0) {
         has_bom = true;
         return utf_encode_t::UTF_32LE;
     }
 
-    if (bytes[0] == uint8_t(0xFEu) && bytes[1] == uint8_t(0xFFu)) {
+    if (byte0 == uint8_t(0xFEu) && byte1 == uint8_t(0xFFu)) {
         has_bom = true;
         return utf_encode_t::UTF_16BE;
     }
 
-    if (bytes[0] == uint8_t(0xFFu) && bytes[1] == uint8_t(0xFEu)) {
+    if (byte0 == uint8_t(0xFFu) && byte1 == uint8_t(0xFEu)) {
         has_bom = true;
         return utf_encode_t::UTF_16LE;
     }
 
     // Test the first character assuming it's an ASCII character.
 
-    if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == 0 && 0 < bytes[3] && bytes[3] < uint8_t(0x80u)) {
+    if (byte0 == 0 && byte1 == 0 && byte2 == 0 && 0 < byte3 && byte3 < uint8_t(0x80u)) {
         return utf_encode_t::UTF_32BE;
     }
 
-    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0 && bytes[2] == 0 && bytes[3] == 0) {
+    if (0 < byte0 && byte0 < uint8_t(0x80u) && byte1 == 0 && byte2 == 0 && byte3 == 0) {
         return utf_encode_t::UTF_32LE;
     }
 
-    if (bytes[0] == 0 && 0 < bytes[1] && bytes[1] < uint8_t(0x80u)) {
+    if (byte0 == 0 && 0 < byte1 && byte1 < uint8_t(0x80u)) {
         return utf_encode_t::UTF_16BE;
     }
 
-    if (0 < bytes[0] && bytes[0] < uint8_t(0x80u) && bytes[1] == 0) {
+    if (0 < byte0 && byte0 < uint8_t(0x80u) && byte1 == 0) {
         return utf_encode_t::UTF_16LE;
     }
 
