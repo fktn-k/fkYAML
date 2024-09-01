@@ -10,7 +10,8 @@
 #include <fkYAML/node.hpp>
 
 int main() {
-    fkyaml::node n({true, false});
+    double pi = 3.141592;
+    fkyaml::node n = pi;
     std::cout << n << std::endl;
     return 0;
 }

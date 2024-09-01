@@ -90,10 +90,12 @@ public:
     using value_converter_type = ConverterType<T, SFINAE>;
 
     /// @brief Definition of node value types.
+    /// @deprecated Use fkyaml::node_type enum class. (since 0.3.12)
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/node_t/
     using node_t = detail::node_t;
 
     /// @brief Definition of YAML version types.
+    /// @deprecated Use fkyaml::yaml_version_type enum class. (since 0.3.12)
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/yaml_version_t/
     using yaml_version_t = detail::yaml_version_t;
 
@@ -587,7 +589,8 @@ public:
 
         if (is_sequence()) {
             if (!n.is_integer()) {
-                throw fkyaml::type_error("An argument of operator[] for sequence nodes must be an integer.", get_type());
+                throw fkyaml::type_error(
+                    "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
             return p_node_value->p_sequence->operator[](n.get_value<int>());
@@ -618,7 +621,8 @@ public:
 
         if (is_sequence()) {
             if (!node_key.is_integer()) {
-                throw fkyaml::type_error("An argument of operator[] for sequence nodes must be an integer.", get_type());
+                throw fkyaml::type_error(
+                    "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
             return p_node_value->p_sequence->operator[](node_key.get_value<int>());
@@ -644,7 +648,8 @@ public:
 
         if (is_sequence()) {
             if (!key.is_integer()) {
-                throw fkyaml::type_error("An argument of operator[] for sequence nodes must be an integer.", get_type());
+                throw fkyaml::type_error(
+                    "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
             return p_node_value->p_sequence->operator[](key.template get_value<int>());
@@ -670,7 +675,8 @@ public:
 
         if (is_sequence()) {
             if (!key.is_integer()) {
-                throw fkyaml::type_error("An argument of operator[] for sequence nodes must be an integer.", get_type());
+                throw fkyaml::type_error(
+                    "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
             return p_node_value->p_sequence->operator[](key.template get_value<int>());
@@ -809,6 +815,9 @@ public:
     }
 
 public:
+    /// @brief Returns the type of the current basic_node value.
+    /// @return The type of the YAML node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_type/
     node_type get_type() const noexcept {
         if (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
@@ -819,6 +828,7 @@ public:
     }
 
     /// @brief Returns the type of the current basic_node value.
+    /// @deprecated Use get_type() function. (since 0.3.12)
     /// @return The type of the YAML node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/type/
     FK_YAML_DEPRECATED("Since 0.3.12; Use get_type()")
@@ -1143,17 +1153,24 @@ public:
         return p_node_value->p_mapping->at(key);
     }
 
+    /// @brief Get the YAML version for this basic_node object.
+    /// @return The YAML version if already set, `yaml_version_type::VERSION_1_2` otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version_type/
     yaml_version_type get_yaml_version_type() const noexcept {
         return mp_meta->is_version_specified ? mp_meta->version : yaml_version_type::VERSION_1_2;
     }
 
-    void set_yaml_version_type(yaml_version_type version) noexcept {
+    /// @brief Set the YAML version for this basic_node object.
+    /// @param[in] version The target YAML version.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version_type/
+    void set_yaml_version_type(const yaml_version_type version) noexcept {
         mp_meta->version = version;
         mp_meta->is_version_specified = true;
     }
 
-    /// @brief Get the YAML version specification for this basic_node object.
-    /// @return The YAML version if any is applied to the basic_node object, `yaml_version_t::VER_1_2` otherwise.
+    /// @brief Get the YAML version for this basic_node object.
+    /// @deprecated Use get_yaml_version_type() function. (since 0.3.12)
+    /// @return The YAML version if already set, `yaml_version_t::VER_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
     FK_YAML_DEPRECATED("Since 0.3.12; Use get_yaml_version_type()")
     yaml_version_t get_yaml_version() const noexcept {
@@ -1161,9 +1178,9 @@ public:
         return detail::convert_from_yaml_version_type(tmp_type);
     }
 
-    /// @brief Set the YAML version specification for this basic_node object.
-    /// @note If no YAML directive
-    /// @param[in] A version of the YAML format.
+    /// @brief Set the YAML version for this basic_node object.
+    /// @deprecated Use set_yaml_version_type(yaml_version_type) function. (since 0.3.12)
+    /// @param[in] version The target YAML version.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     FK_YAML_DEPRECATED("Since 0.3.12; Use set_yaml_version_type(const yaml_version_type)")
     void set_yaml_version(const yaml_version_t version) noexcept {

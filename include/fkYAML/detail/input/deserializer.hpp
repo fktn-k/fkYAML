@@ -373,7 +373,10 @@ private:
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
                     m_context_stack.emplace_back(
-                        line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, new basic_node_type(node_type::SEQUENCE));
+                        line,
+                        indent,
+                        context_state_t::BLOCK_MAPPING_EXPLICIT_KEY,
+                        new basic_node_type(node_type::SEQUENCE));
                     mp_current_node = m_context_stack.back().p_node;
                     apply_directive_set(*mp_current_node);
                     parse_context context(
@@ -508,7 +511,8 @@ private:
 
                 basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
-                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(key_node, basic_node_type());
+                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(
+                    key_node, basic_node_type());
                 mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
                     line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);

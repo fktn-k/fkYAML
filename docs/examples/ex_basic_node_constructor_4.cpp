@@ -12,6 +12,6 @@
 int main() {
     fkyaml::node n(fkyaml::node::node_t::BOOLEAN);
     fkyaml::node n2(n);
-    std::cout << n << std::endl;
+    std::cout << n2 << std::endl;
     return 0;
 }

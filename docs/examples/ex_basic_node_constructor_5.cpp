@@ -10,8 +10,8 @@
 #include <fkYAML/node.hpp>
 
 int main() {
-    double pi = 3.141592;
-    fkyaml::node n = pi;
-    std::cout << n << std::endl;
+    fkyaml::node n(fkyaml::node::node_t::BOOLEAN);
+    fkyaml::node n2(std::move(n));
+    std::cout << n2 << std::endl;
     return 0;
 }

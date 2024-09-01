@@ -18,13 +18,13 @@
 FK_YAML_NAMESPACE_BEGIN
 
 enum class node_type : std::uint32_t {
-    SEQUENCE,     //!< sequence value type
-    MAPPING,      //!< mapping value type
-    NULL_OBJECT,  //!< null value type
-    BOOLEAN,      //!< boolean value type
-    INTEGER,      //!< integer value type
-    FLOAT,        //!< float point value type
-    STRING,       //!< string value type
+    SEQUENCE,    //!< sequence value type
+    MAPPING,     //!< mapping value type
+    NULL_OBJECT, //!< null value type
+    BOOLEAN,     //!< boolean value type
+    INTEGER,     //!< integer value type
+    FLOAT,       //!< float point value type
+    STRING,      //!< string value type
 };
 
 inline const char* to_string(node_type t) noexcept {
