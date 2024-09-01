@@ -6,11 +6,14 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
+#include <iomanip>
 #include <iostream>
 #include <fkYAML/node.hpp>
 
 int main() {
-    fkyaml::node n({true, false});
-    std::cout << n << std::endl;
+    // A `fkyaml::node` object has `yaml_version_t::VER_1_2` by default.
+    fkyaml::node n;
+    std::cout << std::boolalpha << (n.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2) << std::endl;
+
     return 0;
 }

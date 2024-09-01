@@ -36,7 +36,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_type& s) {
     if (!n.is_sequence()) {
-        throw type_error("The target node value type is not sequence type.", n.type());
+        throw type_error("The target node value type is not sequence type.", n.get_type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::sequence_type&>();
 }
@@ -56,7 +56,7 @@ template <
         int> = 0>
 inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& s) {
     if (!n.is_sequence()) {
-        throw type_error("The target node value is not sequence type.", n.type());
+        throw type_error("The target node value is not sequence type.", n.get_type());
     }
 
     s.reserve(n.size());
@@ -73,7 +73,7 @@ inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& 
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_type& m) {
     if (!n.is_mapping()) {
-        throw type_error("The target node value type is not mapping type.", n.type());
+        throw type_error("The target node value type is not mapping type.", n.get_type());
     }
 
     for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
@@ -92,7 +92,7 @@ template <
         int> = 0>
 inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, CompatibleValueType, Compare, Allocator>& m) {
     if (!n.is_mapping()) {
-        throw type_error("The target node value type is not mapping type.", n.type());
+        throw type_error("The target node value type is not mapping type.", n.get_type());
     }
 
     for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
@@ -109,7 +109,7 @@ template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::valu
 inline void from_node(const BasicNodeType& n, std::nullptr_t& null) {
     // to ensure the target node value type is null.
     if (!n.is_null()) {
-        throw type_error("The target node value type is not null type.", n.type());
+        throw type_error("The target node value type is not null type.", n.get_type());
     }
     null = nullptr;
 }
@@ -121,7 +121,7 @@ inline void from_node(const BasicNodeType& n, std::nullptr_t& null) {
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_type& b) {
     if (!n.is_boolean()) {
-        throw type_error("The target node value type is not boolean type.", n.type());
+        throw type_error("The target node value type is not boolean type.", n.get_type());
     }
     b = n.template get_value_ref<const typename BasicNodeType::boolean_type&>();
 }
@@ -133,7 +133,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_ty
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_type& i) {
     if (!n.is_integer()) {
-        throw type_error("The target node value type is not integer type.", n.type());
+        throw type_error("The target node value type is not integer type.", n.get_type());
     }
     i = n.template get_value_ref<const typename BasicNodeType::integer_type&>();
 }
@@ -152,7 +152,7 @@ template <
         int> = 0>
 inline void from_node(const BasicNodeType& n, IntegerType& i) {
     if (!n.is_integer()) {
-        throw type_error("The target node value type is not integer type.", n.type());
+        throw type_error("The target node value type is not integer type.", n.get_type());
     }
 
     // under/overflow check.
@@ -175,7 +175,7 @@ inline void from_node(const BasicNodeType& n, IntegerType& i) {
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_number_type& f) {
     if (!n.is_float_number()) {
-        throw type_error("The target node value type is not float number type.", n.type());
+        throw type_error("The target node value type is not float number type.", n.get_type());
     }
     f = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
 }
@@ -194,7 +194,7 @@ template <
         int> = 0>
 inline void from_node(const BasicNodeType& n, FloatType& f) {
     if (!n.is_float_number()) {
-        throw type_error("The target node value type is not float number type.", n.type());
+        throw type_error("The target node value type is not float number type.", n.get_type());
     }
 
     auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
@@ -215,7 +215,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_type& s) {
     if (!n.is_string()) {
-        throw type_error("The target node value type is not string type.", n.type());
+        throw type_error("The target node value type is not string type.", n.get_type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
 }
@@ -237,7 +237,7 @@ template <
         int> = 0>
 inline void from_node(const BasicNodeType& n, CompatibleStringType& s) {
     if (!n.is_string()) {
-        throw type_error("The target node value type is not string type.", n.type());
+        throw type_error("The target node value type is not string type.", n.get_type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
 }

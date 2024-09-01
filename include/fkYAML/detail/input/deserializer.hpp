@@ -37,19 +37,19 @@ class basic_deserializer {
     static_assert(is_basic_node<BasicNodeType>::value, "basic_deserializer only accepts basic_node<...>");
 
     /** A type for the target basic_node. */
-    using node_type = BasicNodeType;
+    using basic_node_type = BasicNodeType;
     /** A type for the lexical analyzer. */
-    using lexer_type = lexical_analyzer<node_type>;
+    using lexer_type = lexical_analyzer<basic_node_type>;
     /** A type for the document metainfo. */
-    using doc_metainfo_type = document_metainfo<node_type>;
+    using doc_metainfo_type = document_metainfo<basic_node_type>;
     /** A type for the tag resolver. */
-    using tag_resolver_type = tag_resolver<node_type>;
+    using tag_resolver_type = tag_resolver<basic_node_type>;
     /** A type for sequence node value containers. */
-    using sequence_type = typename node_type::sequence_type;
+    using sequence_type = typename basic_node_type::sequence_type;
     /** A type for mapping node value containers. */
-    using mapping_type = typename node_type::mapping_type;
+    using mapping_type = typename basic_node_type::mapping_type;
     /** A type for string node values. */
-    using string_type = typename node_type::string_type;
+    using string_type = typename basic_node_type::string_type;
 
     /// @brief Definition of state types of parse contexts.
     enum class context_state_t {
@@ -74,7 +74,7 @@ class basic_deserializer {
         /// @param _indent The indentation width in the current line. (count from zero)
         /// @param _state The parse context type.
         /// @param _p_node The underlying node associated to this context.
-        parse_context(uint32_t _line, uint32_t _indent, context_state_t _state, node_type* _p_node)
+        parse_context(uint32_t _line, uint32_t _indent, context_state_t _state, basic_node_type* _p_node)
             : line(_line),
               indent(_indent),
               state(_state),
@@ -101,7 +101,7 @@ class basic_deserializer {
         /// The parse context type.
         context_state_t state {context_state_t::BLOCK_MAPPING};
         /// The pointer to the associated node to this context.
-        node_type* p_node {nullptr};
+        basic_node_type* p_node {nullptr};
     };
 
     /// @brief Definitions of state types for expected flow token hints.
@@ -122,9 +122,9 @@ public:
     /// prefer the `deserialize_docs()` function.
     /// @tparam InputAdapterType The type of an input adapter object.
     /// @param input_adapter An input adapter object for the input source buffer.
-    /// @return node_type A root YAML node deserialized from the source string.
+    /// @return basic_node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    node_type deserialize(InputAdapterType&& input_adapter) {
+    basic_node_type deserialize(InputAdapterType&& input_adapter) {
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
         lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
         return deserialize_document(lexer, type);
@@ -133,11 +133,11 @@ public:
     /// @brief Deserialize multiple YAML documents into YAML nodes.
     /// @tparam InputAdapterType The type of an adapter object.
     /// @param input_adapter An input adapter object for the input source buffer.
-    /// @return std::vector<node_type> Root YAML nodes for deserialized YAML documents.
+    /// @return std::vector<basic_node_type> Root YAML nodes for deserialized YAML documents.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    std::vector<node_type> deserialize_docs(InputAdapterType&& input_adapter) {
+    std::vector<basic_node_type> deserialize_docs(InputAdapterType&& input_adapter) {
         lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
-        std::vector<node_type> nodes {};
+        std::vector<basic_node_type> nodes {};
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
         do {
@@ -151,11 +151,11 @@ private:
     /// @brief Deserialize a YAML document into a YAML node.
     /// @param lexer The lexical analyzer to be used.
     /// @param last_type The variable to store the last lexical token type.
-    /// @return node_type A root YAML node deserialized from the YAML document.
-    node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
+    /// @return basic_node_type A root YAML node deserialized from the YAML document.
+    basic_node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
-        node_type root;
+        basic_node_type root;
         mp_meta = root.mp_meta;
 
         // parse directives first.
@@ -168,7 +168,7 @@ private:
 
         switch (type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
-            root = node_type::sequence();
+            root = basic_node_type::sequence();
             apply_directive_set(root);
             if (found_props) {
                 // If node properties are found before the block sequence entry prefix, the properties belong to the
@@ -183,7 +183,7 @@ private:
         }
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
             ++m_flow_context_depth;
-            root = node_type::sequence();
+            root = basic_node_type::sequence();
             apply_directive_set(root);
             apply_node_properties(root);
             m_context_stack.emplace_back(
@@ -192,7 +192,7 @@ private:
             break;
         case lexical_token_t::MAPPING_FLOW_BEGIN:
             ++m_flow_context_depth;
-            root = node_type::mapping();
+            root = basic_node_type::mapping();
             apply_directive_set(root);
             apply_node_properties(root);
             m_context_stack.emplace_back(
@@ -200,7 +200,7 @@ private:
             type = lexer.get_next_token();
             break;
         default: {
-            root = node_type::mapping();
+            root = basic_node_type::mapping();
             apply_directive_set(root);
             if (found_props && line < lexer.get_lines_processed()) {
                 // If node properties and a followed node are on the different line, the properties belong to the root
@@ -359,21 +359,21 @@ private:
                     //   : bar
                     // : baz
                     // ```
-                    *mp_current_node = node_type::mapping();
+                    *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
                 }
 
                 if (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE) {
                     sequence_type& seq = mp_current_node->template get_value_ref<sequence_type&>();
-                    seq.emplace_back(node_type::mapping());
+                    seq.emplace_back(basic_node_type::mapping());
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, &(seq.back()));
                 }
 
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
-                    m_context_stack.emplace_back(
-                        line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, new node_type(node_t::SEQUENCE));
+                    basic_node_type* p_node = new basic_node_type(node_type::SEQUENCE);
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, p_node);
                     mp_current_node = m_context_stack.back().p_node;
                     apply_directive_set(*mp_current_node);
                     parse_context context(
@@ -387,7 +387,7 @@ private:
 
                 // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
                 m_context_stack.emplace_back(
-                    line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, new node_type());
+                    line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, new basic_node_type());
                 mp_current_node = m_context_stack.back().p_node;
                 apply_directive_set(*mp_current_node);
                 indent = lexer.get_last_token_begin_pos();
@@ -442,7 +442,7 @@ private:
                             //   ^
                             //   this !!str tag overwrites the preceeding !!map tag.
                             // ```
-                            *mp_current_node = node_type::mapping();
+                            *mp_current_node = basic_node_type::mapping();
                             apply_directive_set(*mp_current_node);
                             apply_node_properties(*mp_current_node);
                             m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
@@ -452,7 +452,7 @@ private:
 
                     if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                         // a key separator preceeding block sequence entries
-                        *mp_current_node = node_type::sequence();
+                        *mp_current_node = basic_node_type::sequence();
                         apply_directive_set(*mp_current_node);
                         apply_node_properties(*mp_current_node);
                         auto& cur_context = m_context_stack.back();
@@ -485,7 +485,7 @@ private:
                             line = line_after_props;
                             indent = lexer.get_last_token_begin_pos();
                             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(
-                                node_type::mapping());
+                                basic_node_type::mapping());
                             mp_current_node = &mp_current_node->template get_value_ref<sequence_type&>().back();
                             m_context_stack.emplace_back(
                                 line_after_props, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
@@ -506,15 +506,16 @@ private:
                     m_context_stack.pop_back();
                 }
 
-                node_type key_node = std::move(*m_context_stack.back().p_node);
+                basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
-                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(key_node, node_type());
+                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(
+                    key_node, basic_node_type());
                 mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
                     line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
 
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                    *mp_current_node = node_type::sequence();
+                    *mp_current_node = basic_node_type::sequence();
                     apply_directive_set(*mp_current_node);
                     apply_node_properties(*mp_current_node);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
@@ -544,7 +545,7 @@ private:
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
                 bool is_further_nested = m_context_stack.back().indent < indent;
                 if (is_further_nested) {
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
+                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
                     apply_directive_set(*mp_current_node);
@@ -607,7 +608,7 @@ private:
                 switch (m_context_stack.back().state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::sequence());
+                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
                     break;
@@ -615,11 +616,11 @@ private:
                 case context_state_t::FLOW_MAPPING:
                     // heap-allocated node will be freed in handling the corresponding SEQUENCE_FLOW_END event.
                     m_context_stack.emplace_back(
-                        line, indent, context_state_t::FLOW_SEQUENCE_KEY, new node_type(node_t::SEQUENCE));
+                        line, indent, context_state_t::FLOW_SEQUENCE_KEY, new basic_node_type(node_type::SEQUENCE));
                     mp_current_node = m_context_stack.back().p_node;
                     break;
                 default: {
-                    *mp_current_node = node_type::sequence();
+                    *mp_current_node = basic_node_type::sequence();
                     parse_context& last_context = m_context_stack.back();
                     last_context.line = line;
                     last_context.indent = indent;
@@ -669,7 +670,7 @@ private:
                 // handle cases where the flow sequence is a mapping key node.
 
                 if (!m_context_stack.empty() && state == context_state_t::FLOW_SEQUENCE_KEY) {
-                    node_type key_node = std::move(*mp_current_node);
+                    basic_node_type key_node = std::move(*mp_current_node);
                     delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
@@ -680,7 +681,7 @@ private:
 
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::KEY_SEPARATOR) {
-                    node_type key_node = node_type::mapping();
+                    basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
 
@@ -749,7 +750,7 @@ private:
                 switch (m_context_stack.back().state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
+                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
                     break;
@@ -757,11 +758,11 @@ private:
                 case context_state_t::FLOW_MAPPING:
                     // heap-allocated node will be freed in handling the corresponding MAPPING_FLOW_END event.
                     m_context_stack.emplace_back(
-                        line, indent, context_state_t::FLOW_MAPPING_KEY, new node_type(node_t::MAPPING));
+                        line, indent, context_state_t::FLOW_MAPPING_KEY, new basic_node_type(node_type::MAPPING));
                     mp_current_node = m_context_stack.back().p_node;
                     break;
                 default: {
-                    *mp_current_node = node_type::mapping();
+                    *mp_current_node = basic_node_type::mapping();
                     parse_context& last_context = m_context_stack.back();
                     last_context.line = line;
                     last_context.indent = indent;
@@ -814,7 +815,7 @@ private:
                 // handle cases where the flow mapping is a mapping key node.
 
                 if (!m_context_stack.empty() && state == context_state_t::FLOW_MAPPING_KEY) {
-                    node_type key_node = std::move(*mp_current_node);
+                    basic_node_type key_node = std::move(*mp_current_node);
                     delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
@@ -825,7 +826,7 @@ private:
 
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::KEY_SEPARATOR) {
-                    node_type key_node = node_type::mapping();
+                    basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
 
@@ -956,7 +957,7 @@ private:
     /// @param key a key string to be added to the current YAML node.
     /// @param line The line where the key is found.
     /// @param indent The indentation width in the current line where the key is found.
-    void add_new_key(node_type&& key, const uint32_t line, const uint32_t indent) {
+    void add_new_key(basic_node_type&& key, const uint32_t line, const uint32_t indent) {
         if (m_flow_context_depth == 0) {
             uint32_t pop_num = 0;
             if (indent == 0) {
@@ -988,12 +989,12 @@ private:
         }
 
         if (mp_current_node->is_sequence()) {
-            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(node_type::mapping());
+            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
             mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
             m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
         }
 
-        auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), node_type());
+        auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
         if (!itr.second) {
             throw parse_error("Detected duplication in mapping keys.", line, indent);
         }
@@ -1005,8 +1006,8 @@ private:
     }
 
     /// @brief Assign node value to the current node.
-    /// @param node_value A rvalue node_type object to be assigned to the current node.
-    void assign_node_value(node_type&& node_value, const uint32_t line, const uint32_t indent) {
+    /// @param node_value A rvalue basic_node_type object to be assigned to the current node.
+    void assign_node_value(basic_node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
             if (m_flow_context_depth > 0) {
                 if (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
@@ -1037,7 +1038,7 @@ private:
     /// @param indent The last indent size.
     /// @param line The last line.
     /// @return The created YAML scalar node.
-    node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, uint32_t indent, uint32_t line) {
+    basic_node_type create_scalar_node(lexer_type& lexer, lexical_token_t type, uint32_t indent, uint32_t line) {
         FK_YAML_ASSERT(
             type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
             type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
@@ -1079,22 +1080,22 @@ private:
             }
         }
 
-        node_type node {};
+        basic_node_type node {};
         switch (type) {
         case lexical_token_t::NULL_VALUE:
-            node = node_type(lexer.get_null());
+            node = basic_node_type(lexer.get_null());
             break;
         case lexical_token_t::BOOLEAN_VALUE:
-            node = node_type(lexer.get_boolean());
+            node = basic_node_type(lexer.get_boolean());
             break;
         case lexical_token_t::INTEGER_VALUE:
-            node = node_type(lexer.get_integer());
+            node = basic_node_type(lexer.get_integer());
             break;
         case lexical_token_t::FLOAT_NUMBER_VALUE:
-            node = node_type(lexer.get_float_number());
+            node = basic_node_type(lexer.get_float_number());
             break;
         case lexical_token_t::STRING_VALUE:
-            node = node_type(lexer.get_string());
+            node = basic_node_type(lexer.get_string());
             break;
         case lexical_token_t::ALIAS_PREFIX: {
             const string_type& alias_name = lexer.get_string();
@@ -1124,7 +1125,7 @@ private:
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
     bool deserialize_scalar(lexer_type& lexer, uint32_t& indent, uint32_t& line, lexical_token_t& type) {
-        node_type node = create_scalar_node(lexer, type, indent, line);
+        basic_node_type node = create_scalar_node(lexer, type, indent, line);
 
         if (mp_current_node->is_mapping()) {
             add_new_key(std::move(node), line, indent);
@@ -1168,7 +1169,7 @@ private:
                     break;
                 }
 
-                *mp_current_node = node_type::mapping();
+                *mp_current_node = basic_node_type::mapping();
                 apply_directive_set(*mp_current_node);
             }
             add_new_key(std::move(node), line, indent);
@@ -1182,14 +1183,14 @@ private:
     }
 
     /// @brief Set YAML directive properties to the given node.
-    /// @param node A node_type object to be set YAML directive properties.
-    void apply_directive_set(node_type& node) noexcept {
+    /// @param node A basic_node_type object to be set YAML directive properties.
+    void apply_directive_set(basic_node_type& node) noexcept {
         node.mp_meta = mp_meta;
     }
 
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
     /// @param node A node type object to be set YAML node properties.
-    void apply_node_properties(node_type& node) {
+    void apply_node_properties(basic_node_type& node) {
         if (m_needs_anchor_impl) {
             node.add_anchor_name(m_anchor_name);
             m_needs_anchor_impl = false;
@@ -1205,13 +1206,13 @@ private:
 
     /// @brief Update the target YAML version with an input string.
     /// @param version_str A YAML version string.
-    yaml_version_t convert_yaml_version(const string_type& version_str) noexcept {
-        return (version_str == "1.1") ? yaml_version_t::VER_1_1 : yaml_version_t::VER_1_2;
+    yaml_version_type convert_yaml_version(const string_type& version_str) noexcept {
+        return (version_str == "1.1") ? yaml_version_type::VERSION_1_1 : yaml_version_type::VERSION_1_2;
     }
 
 private:
     /// The currently focused YAML node.
-    node_type* mp_current_node {nullptr};
+    basic_node_type* mp_current_node {nullptr};
     /// The stack of parse contexts.
     std::deque<parse_context> m_context_stack {};
     /// The current depth of flow contexts.

@@ -6,11 +6,16 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <iostream>
+#include <utility>
+
+#include <catch2/catch.hpp>
+
 #include <fkYAML/node.hpp>
 
-int main() {
-    fkyaml::node n({true, false});
-    std::cout << n << std::endl;
-    return 0;
+TEST_CASE("YamlVersionType_ToString") {
+    using test_data_t = std::pair<fkyaml::yaml_version_type, std::string>;
+    auto test_data = GENERATE(
+        test_data_t {fkyaml::yaml_version_type::VERSION_1_1, "VERSION_1_1"},
+        test_data_t {fkyaml::yaml_version_type::VERSION_1_2, "VERSION_1_2"});
+    REQUIRE(test_data.second == fkyaml::to_string(test_data.first));
 }

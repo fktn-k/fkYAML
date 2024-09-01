@@ -110,18 +110,21 @@ target_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:
       /W4 /WX /EHsc /utf-8 /permissive-
       /wd4709 # comma operator within array index expression
+      /wd4996 # for testing deprecated functions
       $<$<CONFIG:Debug>:/Z7>
       $<$<CONFIG:Release>:/Od>
     >
     # GNU
     $<$<CXX_COMPILER_ID:GNU>:
       -Wall -Wextra -Werror -pedantic -Wpedantic --all-warnings --extra-warnings
+      -Wno-deprecated-declarations # for testing deprecated functions
       -Wno-self-move # necessary to build the detail::iterator class test
     >
     # Clang
     $<$<CXX_COMPILER_ID:Clang>:
       -Wall -Wextra -Werror -pedantic
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
+      -Wno-deprecated-declarations # for testing deprecated functions
     >
     # IntelLLVM
     $<$<CXX_COMPILER_ID:IntelLLVM>:
@@ -219,6 +222,7 @@ add_executable(
   test_lexical_analyzer_class.cpp
   test_node_class.cpp
   test_node_ref_storage_class.cpp
+  test_node_type.cpp
   test_ordered_map_class.cpp
   test_position_tracker_class.cpp
   test_scalar_scanner_class.cpp
@@ -229,6 +233,7 @@ add_executable(
   test_utf_encode_detector.cpp
   test_utf_encodings.cpp
   test_yaml_escaper_class.cpp
+  test_yaml_version_type.cpp
   main.cpp
 )
 

@@ -14,6 +14,7 @@
 #include <cstdint>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/yaml_version_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -22,6 +23,28 @@ enum class yaml_version_t : std::uint32_t {
     VER_1_1, //!< YAML version 1.1
     VER_1_2, //!< YAML version 1.2
 };
+
+inline yaml_version_t convert_from_yaml_version_type(yaml_version_type t) noexcept {
+    switch (t) {
+    case yaml_version_type::VERSION_1_1:
+        return yaml_version_t::VER_1_1;
+    case yaml_version_type::VERSION_1_2:
+        return yaml_version_t::VER_1_2;
+    default:                            // LCOV_EXCL_LINE
+        return yaml_version_t::VER_1_2; // LCOV_EXCL_LINE
+    }
+}
+
+inline yaml_version_type convert_to_yaml_version_type(yaml_version_t t) noexcept {
+    switch (t) {
+    case yaml_version_t::VER_1_1:
+        return yaml_version_type::VERSION_1_1;
+    case yaml_version_t::VER_1_2:
+        return yaml_version_type::VERSION_1_2;
+    default:                                   // LCOV_EXCL_LINE
+        return yaml_version_type::VERSION_1_2; // LCOV_EXCL_LINE
+    }
+}
 
 FK_YAML_DETAIL_NAMESPACE_END
 

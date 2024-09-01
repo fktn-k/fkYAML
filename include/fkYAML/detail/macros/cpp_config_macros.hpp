@@ -33,6 +33,19 @@
 #define FK_YAML_HAS_CXX_11
 #endif
 
+// switch usage of the deprecated attribute. [[deprecated]] has been introduced since C++14.
+#if defined(FK_YAML_HAS_CXX_14)
+#define FK_YAML_DEPRECATED(msg) [[deprecated(msg)]]
+#else
+#if defined(_MSC_VER)
+#define FK_YAML_DEPRECATED(msg) __declspec(deprecated(msg))
+#elif defined(__GNUC__) || defined(__clang__)
+#define FK_YAML_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#else
+#define FK_YAML_DEPRECATED(msg)
+#endif
+#endif
+
 // switch usage of inline variables. Inline variables have been introduced since C++17.
 #if defined(FK_YAML_HAS_CXX_17)
 #define FK_YAML_INLINE_VAR inline

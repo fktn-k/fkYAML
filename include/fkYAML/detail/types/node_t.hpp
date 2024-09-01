@@ -15,6 +15,7 @@
 #include <string>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/node_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -47,6 +48,48 @@ inline const char* to_string(node_t t) noexcept {
         return "string";
     default:       // LCOV_EXCL_LINE
         return ""; // LCOV_EXCL_LINE
+    }
+}
+
+inline node_t convert_from_node_type(node_type t) {
+    switch (t) {
+    case node_type::SEQUENCE:
+        return node_t::SEQUENCE;
+    case node_type::MAPPING:
+        return node_t::MAPPING;
+    case node_type::NULL_OBJECT:
+        return node_t::NULL_OBJECT;
+    case node_type::BOOLEAN:
+        return node_t::BOOLEAN;
+    case node_type::INTEGER:
+        return node_t::INTEGER;
+    case node_type::FLOAT:
+        return node_t::FLOAT_NUMBER;
+    case node_type::STRING:
+        return node_t::STRING;
+    default:                        // LCOV_EXCL_LINE
+        return node_t::NULL_OBJECT; // LCOV_EXCL_LINE
+    }
+}
+
+inline node_type convert_to_node_type(node_t t) {
+    switch (t) {
+    case node_t::SEQUENCE:
+        return node_type::SEQUENCE;
+    case node_t::MAPPING:
+        return node_type::MAPPING;
+    case node_t::NULL_OBJECT:
+        return node_type::NULL_OBJECT;
+    case node_t::BOOLEAN:
+        return node_type::BOOLEAN;
+    case node_t::INTEGER:
+        return node_type::INTEGER;
+    case node_t::FLOAT_NUMBER:
+        return node_type::FLOAT;
+    case node_t::STRING:
+        return node_type::STRING;
+    default:                           // LCOV_EXCL_LINE
+        return node_type::NULL_OBJECT; // LCOV_EXCL_LINE
     }
 }
 

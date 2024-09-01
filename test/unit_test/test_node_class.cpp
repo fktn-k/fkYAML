@@ -33,41 +33,82 @@ TEST_CASE("Node_DefaultCtor") {
 }
 
 TEST_CASE("Node_SequenceTypeCtor") {
-    fkyaml::node node(fkyaml::node::node_t::SEQUENCE);
+    fkyaml::node node(fkyaml::node_type::SEQUENCE);
     REQUIRE(node.is_sequence());
     REQUIRE(node.size() == 0);
 }
 
 TEST_CASE("Node_MappingTypeCtor") {
-    fkyaml::node node(fkyaml::node::node_t::MAPPING);
+    fkyaml::node node(fkyaml::node_type::MAPPING);
     REQUIRE(node.is_mapping());
     REQUIRE(node.size() == 0);
 }
 
 TEST_CASE("Node_NullTypeCtor") {
-    fkyaml::node node(fkyaml::node::node_t::NULL_OBJECT);
+    fkyaml::node node(fkyaml::node_type::NULL_OBJECT);
     REQUIRE(node.is_null());
 }
 
 TEST_CASE("Node_BooleanTypeCtor") {
-    fkyaml::node node(fkyaml::node::node_t::BOOLEAN);
+    fkyaml::node node(fkyaml::node_type::BOOLEAN);
     REQUIRE(node.is_boolean());
     REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == false);
 }
 
 TEST_CASE("Node_IntegerTypeCtor") {
-    fkyaml::node node(fkyaml::node::node_t::INTEGER);
+    fkyaml::node node(fkyaml::node_type::INTEGER);
     REQUIRE(node.is_integer());
     REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 0);
 }
 
-TEST_CASE("Node_FloatNumberTypeCtor") {
-    fkyaml::node node(fkyaml::node::node_t::FLOAT_NUMBER);
+TEST_CASE("Node_FloatTypeCtor") {
+    fkyaml::node node(fkyaml::node_type::FLOAT);
     REQUIRE(node.is_float_number());
     REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 0.0);
 }
 
 TEST_CASE("Node_StringTypeCtor") {
+    fkyaml::node node(fkyaml::node_type::STRING);
+    REQUIRE(node.is_string());
+    REQUIRE(node.size() == 0);
+}
+
+TEST_CASE("Node_SequenceTypeCtor(deprecated)") {
+    fkyaml::node node(fkyaml::node::node_t::SEQUENCE);
+    REQUIRE(node.is_sequence());
+    REQUIRE(node.size() == 0);
+}
+
+TEST_CASE("Node_MappingTypeCtor(deprecated)") {
+    fkyaml::node node(fkyaml::node::node_t::MAPPING);
+    REQUIRE(node.is_mapping());
+    REQUIRE(node.size() == 0);
+}
+
+TEST_CASE("Node_NullTypeCtor(deprecated)") {
+    fkyaml::node node(fkyaml::node::node_t::NULL_OBJECT);
+    REQUIRE(node.is_null());
+}
+
+TEST_CASE("Node_BooleanTypeCtor(deprecated)") {
+    fkyaml::node node(fkyaml::node::node_t::BOOLEAN);
+    REQUIRE(node.is_boolean());
+    REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == false);
+}
+
+TEST_CASE("Node_IntegerTypeCtor(deprecated)") {
+    fkyaml::node node(fkyaml::node::node_t::INTEGER);
+    REQUIRE(node.is_integer());
+    REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 0);
+}
+
+TEST_CASE("Node_FloatNumberTypeCtor(deprecated)") {
+    fkyaml::node node(fkyaml::node::node_t::FLOAT_NUMBER);
+    REQUIRE(node.is_float_number());
+    REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 0.0);
+}
+
+TEST_CASE("Node_StringTypeCtor(deprecated)") {
     fkyaml::node node(fkyaml::node::node_t::STRING);
     REQUIRE(node.is_string());
     REQUIRE(node.size() == 0);
@@ -81,12 +122,12 @@ TEST_CASE("Node_ThrowingSpecializationTypeCtor") {
     };
 
     using NodeType = fkyaml::basic_node<std::vector, std::map, bool, int64_t, double, String>;
-    REQUIRE_THROWS_AS(NodeType(NodeType::node_t::STRING), fkyaml::exception);
+    REQUIRE_THROWS_AS(NodeType(fkyaml::node_type::STRING), fkyaml::exception);
 }
 
 TEST_CASE("Node_SequenceCtor") {
     fkyaml::node node(fkyaml::node::sequence_type {fkyaml::node(true), fkyaml::node(false)});
-    REQUIRE(node.type() == fkyaml::node::node_t::SEQUENCE);
+    REQUIRE(node.get_type() == fkyaml::node_type::SEQUENCE);
     REQUIRE(node.is_sequence());
     REQUIRE(node.size() == 2);
     REQUIRE(node[0].is_boolean());
@@ -97,7 +138,7 @@ TEST_CASE("Node_SequenceCtor") {
 
 TEST_CASE("Node_MappingCtor") {
     fkyaml::node node(fkyaml::node::mapping_type {{"test", fkyaml::node(true)}});
-    REQUIRE(node.type() == fkyaml::node::node_t::MAPPING);
+    REQUIRE(node.get_type() == fkyaml::node_type::MAPPING);
     REQUIRE(node.is_mapping());
     REQUIRE(node.size() == 1);
     REQUIRE(node.contains("test"));
@@ -107,34 +148,34 @@ TEST_CASE("Node_MappingCtor") {
 
 TEST_CASE("Node_NullCtor") {
     fkyaml::node node(nullptr);
-    REQUIRE(node.type() == fkyaml::node::node_t::NULL_OBJECT);
+    REQUIRE(node.get_type() == fkyaml::node_type::NULL_OBJECT);
     REQUIRE(node.is_null());
 }
 
 TEST_CASE("Node_BooleanCtor") {
     fkyaml::node node(true);
-    REQUIRE(node.type() == fkyaml::node::node_t::BOOLEAN);
+    REQUIRE(node.get_type() == fkyaml::node_type::BOOLEAN);
     REQUIRE(node.is_boolean());
     REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == true);
 }
 
 TEST_CASE("Node_IntegerCtor") {
     fkyaml::node node(23467);
-    REQUIRE(node.type() == fkyaml::node::node_t::INTEGER);
+    REQUIRE(node.get_type() == fkyaml::node_type::INTEGER);
     REQUIRE(node.is_integer());
     REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 23467);
 }
 
 TEST_CASE("Node_FloatNumberCtor") {
     fkyaml::node node(3.14);
-    REQUIRE(node.type() == fkyaml::node::node_t::FLOAT_NUMBER);
+    REQUIRE(node.get_type() == fkyaml::node_type::FLOAT);
     REQUIRE(node.is_float_number());
     REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
 }
 
 TEST_CASE("Node_StringCtor") {
     auto node = GENERATE(fkyaml::node(std::string("test")));
-    REQUIRE(node.type() == fkyaml::node::node_t::STRING);
+    REQUIRE(node.get_type() == fkyaml::node_type::STRING);
     REQUIRE(node.is_string());
     REQUIRE(node.size() == 4);
     REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
@@ -144,7 +185,7 @@ TEST_CASE("Node_StringCtor") {
 TEST_CASE("Node_StringViewCtor") {
     using namespace std::string_view_literals;
     auto node = fkyaml::node("test"sv);
-    REQUIRE(node.type() == fkyaml::node::node_t::STRING);
+    REQUIRE(node.get_type() == fkyaml::node_type::STRING);
     REQUIRE(node.is_string());
     REQUIRE(node.size() == 4);
     REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
@@ -1391,7 +1432,29 @@ TEST_CASE("Node_GreaterThanOrEqualToOperator") {
 // test cases for type property getter/checkers
 //
 
-TEST_CASE("Node_Type") {
+TEST_CASE("Node_GetType") {
+    using NodeTypePair = std::pair<fkyaml::node, fkyaml::node_type>;
+    auto type_pair = GENERATE(
+        NodeTypePair(fkyaml::node::sequence(), fkyaml::node_type::SEQUENCE),
+        NodeTypePair(fkyaml::node::mapping(), fkyaml::node_type::MAPPING),
+        NodeTypePair(fkyaml::node(), fkyaml::node_type::NULL_OBJECT),
+        NodeTypePair(fkyaml::node(false), fkyaml::node_type::BOOLEAN),
+        NodeTypePair(fkyaml::node(0), fkyaml::node_type::INTEGER),
+        NodeTypePair(fkyaml::node(0.0), fkyaml::node_type::FLOAT),
+        NodeTypePair(fkyaml::node(""), fkyaml::node_type::STRING));
+
+    SECTION("non-alias node types") {
+        REQUIRE(type_pair.first.get_type() == type_pair.second);
+    }
+
+    SECTION("alias node types") {
+        type_pair.first.add_anchor_name("anchor_name");
+        fkyaml::node alias = fkyaml::node::alias_of(type_pair.first);
+        REQUIRE(alias.get_type() == type_pair.second);
+    }
+}
+
+TEST_CASE("Node_Type(deprecated)") {
     using NodeTypePair = std::pair<fkyaml::node, fkyaml::node::node_t>;
     auto type_pair = GENERATE(
         NodeTypePair(fkyaml::node::sequence(), fkyaml::node::node_t::SEQUENCE),
@@ -2095,7 +2158,24 @@ TEST_CASE("Node_At") {
 // test cases for YAML version property getter/setter
 //
 
-TEST_CASE("Node_SetYamlVersion") {
+TEST_CASE("Node_SetYamlVersionType") {
+    fkyaml::node node;
+    node.set_yaml_version_type(fkyaml::yaml_version_type::VERSION_1_1);
+    REQUIRE(node.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_1);
+
+    node.set_yaml_version_type(fkyaml::yaml_version_type::VERSION_1_2);
+    REQUIRE(node.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2);
+}
+
+TEST_CASE("Node_GetYamlVersionType") {
+    fkyaml::node node;
+    REQUIRE(node.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2);
+
+    node.set_yaml_version_type(fkyaml::yaml_version_type::VERSION_1_1);
+    REQUIRE(node.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_1);
+}
+
+TEST_CASE("Node_SetYamlVersion(deprecated)") {
     fkyaml::node node;
     node.set_yaml_version(fkyaml::node::yaml_version_t::VER_1_1);
     REQUIRE(node.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
@@ -2104,7 +2184,7 @@ TEST_CASE("Node_SetYamlVersion") {
     REQUIRE(node.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
 }
 
-TEST_CASE("Node_GetYamlVersion") {
+TEST_CASE("Node_GetYamlVersion(deprecated)") {
     fkyaml::node node;
     REQUIRE(node.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
 
