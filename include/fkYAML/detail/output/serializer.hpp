@@ -21,9 +21,9 @@
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
-#include <fkYAML/detail/types/node_t.hpp>
 #include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
+#include <fkYAML/node_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -137,8 +137,8 @@ private:
     /// @param cur_indent The current indent width
     /// @param str A string to hold serialization result.
     void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
-        switch (node.type()) {
-        case node_t::SEQUENCE:
+        switch (node.get_type()) {
+        case node_type::SEQUENCE:
             for (const auto& seq_item : node) {
                 insert_indentation(cur_indent, str);
                 str += "-";
@@ -164,7 +164,7 @@ private:
                 }
             }
             break;
-        case node_t::MAPPING:
+        case node_type::MAPPING:
             for (auto itr = node.begin(); itr != node.end(); ++itr) {
                 insert_indentation(cur_indent, str);
 
@@ -215,23 +215,23 @@ private:
                 }
             }
             break;
-        case node_t::NULL_OBJECT:
+        case node_type::NULL_OBJECT:
             to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
-        case node_t::BOOLEAN:
+        case node_type::BOOLEAN:
             to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
-        case node_t::INTEGER:
+        case node_type::INTEGER:
             to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
-        case node_t::FLOAT_NUMBER:
+        case node_type::FLOAT:
             to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
-        case node_t::STRING: {
+        case node_type::STRING: {
             bool is_escaped = false;
             typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
 
