@@ -222,6 +222,7 @@ add_executable(
   test_lexical_analyzer_class.cpp
   test_node_class.cpp
   test_node_ref_storage_class.cpp
+  test_node_type.cpp
   test_ordered_map_class.cpp
   test_position_tracker_class.cpp
   test_scalar_scanner_class.cpp
@@ -232,6 +233,7 @@ add_executable(
   test_utf_encode_detector.cpp
   test_utf_encodings.cpp
   test_yaml_escaper_class.cpp
+  test_yaml_version_type.cpp
   main.cpp
 )
 

@@ -372,11 +372,8 @@ private:
                 type = lexer.get_next_token();
                 if (type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
-                    m_context_stack.emplace_back(
-                        line,
-                        indent,
-                        context_state_t::BLOCK_MAPPING_EXPLICIT_KEY,
-                        new basic_node_type(node_type::SEQUENCE));
+                    basic_node_type* p_node = new basic_node_type(node_type::SEQUENCE);
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, p_node);
                     mp_current_node = m_context_stack.back().p_node;
                     apply_directive_set(*mp_current_node);
                     parse_context context(

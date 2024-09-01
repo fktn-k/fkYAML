@@ -40,7 +40,7 @@ inline const char* to_string(node_type t) noexcept {
     case node_type::INTEGER:
         return "INTEGER";
     case node_type::FLOAT:
-        return "FLOAT_NUMBER";
+        return "FLOAT";
     case node_type::STRING:
         return "STRING";
     default:       // LCOV_EXCL_LINE
