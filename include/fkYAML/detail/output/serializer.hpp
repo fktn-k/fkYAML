@@ -21,9 +21,9 @@
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
-#include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
 #include <fkYAML/node_type.hpp>
+#include <fkYAML/yaml_version_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -90,10 +90,10 @@ private:
         if (p_meta->is_version_specified) {
             str += "%YAML ";
             switch (p_meta->version) {
-            case yaml_version_t::VER_1_1:
+            case yaml_version_type::VERSION_1_1:
                 str += "1.1\n";
                 break;
-            case yaml_version_t::VER_1_2:
+            case yaml_version_type::VERSION_1_2:
                 str += "1.2\n";
                 break;
             }

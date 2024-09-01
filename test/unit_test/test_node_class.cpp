@@ -2158,7 +2158,24 @@ TEST_CASE("Node_At") {
 // test cases for YAML version property getter/setter
 //
 
-TEST_CASE("Node_SetYamlVersion") {
+TEST_CASE("Node_SetYamlVersionType") {
+    fkyaml::node node;
+    node.set_yaml_version_type(fkyaml::yaml_version_type::VERSION_1_1);
+    REQUIRE(node.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_1);
+
+    node.set_yaml_version_type(fkyaml::yaml_version_type::VERSION_1_2);
+    REQUIRE(node.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2);
+}
+
+TEST_CASE("Node_GetYamlVersionType") {
+    fkyaml::node node;
+    REQUIRE(node.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2);
+
+    node.set_yaml_version_type(fkyaml::yaml_version_type::VERSION_1_1);
+    REQUIRE(node.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_1);
+}
+
+TEST_CASE("Node_SetYamlVersion(deprecated)") {
     fkyaml::node node;
     node.set_yaml_version(fkyaml::node::yaml_version_t::VER_1_1);
     REQUIRE(node.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
@@ -2167,7 +2184,7 @@ TEST_CASE("Node_SetYamlVersion") {
     REQUIRE(node.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
 }
 
-TEST_CASE("Node_GetYamlVersion") {
+TEST_CASE("Node_GetYamlVersion(deprecated)") {
     fkyaml::node node;
     REQUIRE(node.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
 
