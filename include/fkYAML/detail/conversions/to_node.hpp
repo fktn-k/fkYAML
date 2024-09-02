@@ -17,6 +17,7 @@
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/node_attrs.hpp>
 #include <fkYAML/node_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -28,7 +29,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @brief The external constructor template for basic_node objects.
 /// @note All the non-specialized instanciations results in compilation error since such instantiations are not
 /// supported.
-/// @warning All the specialization must call n.m_node_value.destroy(n.m_node_type) first in construct function to avoid
+/// @warning All the specialization must call n.m_node_value.destroy() first in the construct function to avoid
 /// memory leak.
 /// @tparam node_type The resulting YAMK node value type.
 template <node_type>
@@ -43,8 +44,8 @@ struct external_node_constructor<node_type::SEQUENCE> {
     /// @param s A lvalue sequence value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, const typename BasicNodeType::sequence_type& s) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::SEQUENCE;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::seq_bit;
         n.m_node_value.p_sequence = BasicNodeType::template create_object<typename BasicNodeType::sequence_type>(s);
     }
 
@@ -54,8 +55,8 @@ struct external_node_constructor<node_type::SEQUENCE> {
     /// @param s A rvalue sequence value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::sequence_type&& s) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::SEQUENCE;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::seq_bit;
         n.m_node_value.p_sequence =
             BasicNodeType::template create_object<typename BasicNodeType::sequence_type>(std::move(s));
     }
@@ -70,8 +71,8 @@ struct external_node_constructor<node_type::MAPPING> {
     /// @param m A lvalue mapping value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, const typename BasicNodeType::mapping_type& m) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::MAPPING;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::map_bit;
         n.m_node_value.p_mapping = BasicNodeType::template create_object<typename BasicNodeType::mapping_type>(m);
     }
 
@@ -81,8 +82,8 @@ struct external_node_constructor<node_type::MAPPING> {
     /// @param m A rvalue mapping value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::mapping_type&& m) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::MAPPING;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::map_bit;
         n.m_node_value.p_mapping =
             BasicNodeType::template create_object<typename BasicNodeType::mapping_type>(std::move(m));
     }
@@ -97,8 +98,8 @@ struct external_node_constructor<node_type::NULL_OBJECT> {
     /// @param (unused) nullptr
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, std::nullptr_t /*unused*/) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::NULL_OBJECT;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::null_bit;
         n.m_node_value.p_mapping = nullptr;
     }
 };
@@ -112,8 +113,8 @@ struct external_node_constructor<node_type::BOOLEAN> {
     /// @param b A boolean value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::boolean_type b) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::BOOLEAN;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::bool_bit;
         n.m_node_value.boolean = b;
     }
 };
@@ -127,8 +128,8 @@ struct external_node_constructor<node_type::INTEGER> {
     /// @param i An integer value.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::integer_type i) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::INTEGER;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::int_bit;
         n.m_node_value.integer = i;
     }
 };
@@ -142,8 +143,8 @@ struct external_node_constructor<node_type::FLOAT> {
     /// @param f A floating point number.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::float_number_type f) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::FLOAT;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::float_bit;
         n.m_node_value.float_val = f;
     }
 };
@@ -157,8 +158,8 @@ struct external_node_constructor<node_type::STRING> {
     /// @param s A constant lvalue string.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, const typename BasicNodeType::string_type& s) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::STRING;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::string_bit;
         n.m_node_value.p_string = BasicNodeType::template create_object<typename BasicNodeType::string_type>(s);
     }
 
@@ -168,8 +169,8 @@ struct external_node_constructor<node_type::STRING> {
     /// @param s A rvalue string.
     template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
     static void construct(BasicNodeType& n, typename BasicNodeType::string_type&& s) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::STRING;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::string_bit;
         n.m_node_value.p_string =
             BasicNodeType::template create_object<typename BasicNodeType::string_type>(std::move(s));
     }
@@ -187,8 +188,8 @@ struct external_node_constructor<node_type::STRING> {
                 negation<std::is_same<typename BasicNodeType::string_type, CompatibleStringType>>>::value,
             int> = 0>
     static void construct(BasicNodeType& n, const CompatibleStringType& s) noexcept {
-        n.m_node_value.destroy(n.m_node_type);
-        n.m_node_type = node_type::STRING;
+        n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
+        n.m_attrs = detail::node_attr_bits::string_bit;
         n.m_node_value.p_string = BasicNodeType::template create_object<typename BasicNodeType::string_type>(s);
     }
 };
