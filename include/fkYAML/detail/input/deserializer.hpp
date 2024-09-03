@@ -24,6 +24,7 @@
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/node_attrs.hpp>
 #include <fkYAML/detail/node_property.hpp>
 #include <fkYAML/detail/types/lexical_token_t.hpp>
 #include <fkYAML/exception.hpp>
@@ -1103,9 +1104,9 @@ private:
             if (anchor_counts == 0) {
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
-            node.m_prop.anchor_status = detail::anchor_status_t::ALIAS;
+            node.m_attrs |= detail::node_attr_bits::alias_bit;
             node.m_prop.anchor = alias_name;
-            node.m_prop.anchor_offset = anchor_counts - 1;
+            detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
             break;
         }
         default:   // LCOV_EXCL_LINE
