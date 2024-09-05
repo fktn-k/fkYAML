@@ -246,9 +246,9 @@ private:
 
             auto adapter = input_adapter(str_val);
             lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
-            lexical_token_t token_type = lexer.get_next_token();
+            lexical_token token = lexer.get_next_token();
 
-            if (token_type != lexical_token_t::STRING_VALUE) {
+            if (token.type != lexical_token_t::STRING_VALUE) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
