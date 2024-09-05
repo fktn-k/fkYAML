@@ -500,7 +500,8 @@ private:
         return lexical_token_t::YAML_VER_DIRECTIVE;
     }
 
-    /// @brief Extracts an anchor name from the input and assigns the result to `m_value_buffer`.
+    /// @brief Extracts an anchor name from the input.
+    /// @param token The token into which the extraction result is written.
     void extract_anchor_name(lexical_token& token) {
         FK_YAML_ASSERT(*m_cur_itr == '&' || *m_cur_itr == '*');
 
@@ -534,7 +535,8 @@ private:
         token.token_end_itr = m_cur_itr;
     }
 
-    /// @brief Extracts a tag name from the input and assigns the result to `m_value_buffer`.
+    /// @brief Extracts a tag name from the input.
+    /// @param token The token into which the extraction result is written.
     void extract_tag_name(lexical_token& token) {
         m_value_buffer.clear();
 
@@ -641,7 +643,8 @@ private:
         }
     }
 
-    /// @brief Scan a string token, either plain, single-quoted or double-quoted.
+    /// @brief Scan a scalar token, either plain, single-quoted or double-quoted.
+    /// @param token The token into which the scan result is written.
     /// @return lexical_token_t The lexical token type for strings.
     void scan_scalar(lexical_token& token) {
         m_value_buffer.clear();
@@ -680,6 +683,7 @@ private:
 
     /// @brief Check if the given character is allowed in a single-quoted scalar token.
     /// @param c The character to be checked.
+    /// @param is_value_buffer_used true is assigned when mutated scalar contents is written into m_value_buffer.
     /// @return true if the given character is allowed, false otherwise.
     bool is_allowed_single(char c, bool& is_value_buffer_used) {
         switch (c) {
@@ -757,6 +761,7 @@ private:
 
     /// @brief Check if the given character is allowed in a double-quoted scalar token.
     /// @param c The character to be checked.
+    /// @param is_value_buffer_used true is assigned when mutated scalar contents is written into m_value_buffer.
     /// @return true if the given character is allowed, false otherwise.
     bool is_allowed_double(char c, bool& is_value_buffer_used) {
         switch (c) {
@@ -918,6 +923,7 @@ private:
     }
 
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
+    /// @return true if mutated scalar contents is stored in m_value_buffer, false otherwise.
     bool extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
         // change behaviors depending on the type of a comming string scalar token.
         // * single quoted
@@ -1042,13 +1048,13 @@ private:
             }
 
             uint32_t diff = cur_indent - indent;
-            // m_value_buffer.append(diff, ' ');
             m_token_begin_itr -= diff;
-            chars_in_line += diff;
+            chars_in_line = diff;
         }
 
         for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
-            if (*m_cur_itr == '\n') {
+            char current = *m_cur_itr;
+            if (current == '\n') {
                 if (style == block_style_indicator_t::LITERAL) {
                     if (chars_in_line == 0) {
                         m_value_buffer.push_back('\n');
@@ -1103,8 +1109,6 @@ private:
                         chars_in_line = 0;
                         continue;
                     }
-                    else {
-                    }
 
                     switch (char next = *(m_cur_itr + 1)) {
                     case '\n':
@@ -1133,7 +1137,7 @@ private:
                 m_pos_tracker.update_position(m_cur_itr);
                 cur_indent = m_pos_tracker.get_cur_pos_in_line();
                 if (cur_indent < indent) {
-                    if (*m_cur_itr != ' ') {
+                    if (current != ' ') {
                         // Interpret less indented non-space characters as the start of the next token.
                         break;
                     }
@@ -1141,7 +1145,7 @@ private:
                     continue;
                 }
 
-                if (*m_cur_itr == ' ' && style == block_style_indicator_t::FOLDED) {
+                if (current == ' ' && style == block_style_indicator_t::FOLDED) {
                     // A line being more indented is not folded.
                     m_value_buffer.push_back('\n');
                     is_extra_indented = true;
@@ -1149,7 +1153,6 @@ private:
                 m_token_begin_itr = m_cur_itr;
             }
 
-            // m_value_buffer.push_back(current);
             ++chars_in_line;
         }
 
@@ -1175,13 +1178,15 @@ private:
                 // No need to chomp the trailing newlines.
                 break;
             }
-            while (m_value_buffer.size() > 1) {
+            uint32_t buf_size = static_cast<uint32_t>(m_value_buffer.size());
+            while (buf_size > 1) {
                 // Strings with only newlines are handled above, so no check for the case.
-                char second_last = *(m_value_buffer.end() - 2);
+                char second_last = m_value_buffer[buf_size - 2];
                 if (second_last != '\n') {
                     break;
                 }
                 m_value_buffer.pop_back();
+                --buf_size;
             }
             break;
         }

@@ -34,12 +34,18 @@ public:
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(std::string::const_iterator cur_pos) {
-        m_cur_pos = static_cast<uint32_t>(std::distance(m_begin, cur_pos));
+        uint32_t diff = static_cast<uint32_t>(std::distance(m_last, cur_pos));
+        if (diff == 0) {
+            return;
+        }
+
+        m_cur_pos += diff;
+        uint32_t prev_lines_read = m_lines_read;
         m_lines_read += static_cast<uint32_t>(std::count(m_last, cur_pos, '\n'));
         m_last = cur_pos;
 
-        if (m_lines_read == 0) {
-            m_cur_pos_in_line = m_cur_pos;
+        if (prev_lines_read == m_lines_read) {
+            m_cur_pos_in_line += diff;
             return;
         }
 
