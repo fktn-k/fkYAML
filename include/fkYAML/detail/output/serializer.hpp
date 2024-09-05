@@ -18,8 +18,7 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/conversions/to_string.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
-#include <fkYAML/detail/input/input_adapter.hpp>
-#include <fkYAML/detail/input/lexical_analyzer.hpp>
+#include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/exception.hpp>
 #include <fkYAML/node_type.hpp>
@@ -244,11 +243,7 @@ private:
                 break;
             }
 
-            auto adapter = input_adapter(str_val);
-            lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
-            lexical_token token = lexer.get_next_token();
-
-            if (token.type != lexical_token_t::STRING_VALUE) {
+            if (scalar_scanner::scan(str_val) != node_type::STRING) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';

@@ -90,7 +90,7 @@ public:
             return {};
         }
 
-        lexical_token token {lexical_token_t::STRING_VALUE, m_cur_itr, m_end_itr};
+        lexical_token token {lexical_token_t::PLAIN_SCALAR, m_cur_itr, m_end_itr};
 
         switch (char current = *m_cur_itr) {
         case '?':
@@ -247,7 +247,8 @@ public:
             uint32_t indent = 0;
             ++m_cur_itr;
             get_block_style_metadata(chomp_type, indent);
-            token.type = scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            token.type = lexical_token_t::BLOCK_SCALAR;
             token.token_begin_itr = m_value_buffer.cbegin();
             token.token_end_itr = m_value_buffer.cend();
             return token;
@@ -257,7 +258,8 @@ public:
             uint32_t indent = 0;
             ++m_cur_itr;
             get_block_style_metadata(chomp_type, indent);
-            token.type = scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            token.type = lexical_token_t::BLOCK_SCALAR;
             token.token_begin_itr = m_value_buffer.cbegin();
             token.token_end_itr = m_value_buffer.cend();
             return token;
@@ -652,22 +654,18 @@ private:
             if (needs_last_double_quote || needs_last_single_quote) {
                 m_token_begin_itr = ++m_cur_itr;
                 ++token.token_begin_itr;
+                token.type = needs_last_double_quote ? lexical_token_t::DOUBLE_QUOTED_SCALAR
+                                                     : lexical_token_t::SINGLE_QUOTED_SCALAR;
+            }
+            else {
+                token.type = lexical_token_t::PLAIN_SCALAR;
             }
         }
 
-        lexical_token_t type = extract_string_token(needs_last_single_quote, needs_last_double_quote);
-        FK_YAML_ASSERT(type == lexical_token_t::STRING_VALUE);
+        extract_string_token(needs_last_single_quote, needs_last_double_quote);
 
         token.token_begin_itr = m_value_buffer.cbegin();
         token.token_end_itr = m_value_buffer.cend();
-
-        if (needs_last_single_quote || needs_last_double_quote) {
-            // just returned the extracted string value if quoted.
-            token.type = type;
-            return;
-        }
-
-        token.type = scalar_scanner::scan(m_value_buffer);
     }
 
     /// @brief Check if the given character is allowed in a single-quoted scalar token.
@@ -926,8 +924,7 @@ private:
     }
 
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
-    /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
+    void extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
         // change behaviors depending on the type of a comming string scalar token.
         // * single quoted
         // * double quoted
@@ -960,7 +957,7 @@ private:
                 if (ret != std::string::npos) {
                     bool is_allowed = (this->*pfn_is_allowed)(current);
                     if (!is_allowed) {
-                        return lexical_token_t::STRING_VALUE;
+                        return;
                     }
 
                     continue;
@@ -991,16 +988,13 @@ private:
         }
 
         m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-        return lexical_token_t::STRING_VALUE;
     }
 
     /// @brief Scan a block style string token either in the literal or folded style.
     /// @param style The style of the given token, either literal or folded.
     /// @param chomp The chomping indicator type of the given token, either strip, keep or clip.
     /// @param indent The indent size specified for the given token.
-    /// @return The lexical token type for strings.
-    lexical_token_t scan_block_style_string_token(
-        block_style_indicator_t style, chomping_indicator_t chomp, uint32_t indent) {
+    void scan_block_style_string_token(block_style_indicator_t style, chomping_indicator_t chomp, uint32_t indent) {
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
@@ -1023,7 +1017,7 @@ private:
             if (chomp != chomping_indicator_t::KEEP) {
                 m_value_buffer.clear();
             }
-            return lexical_token_t::STRING_VALUE;
+            return;
         }
 
         m_pos_tracker.update_position(m_cur_itr);
@@ -1193,8 +1187,6 @@ private:
         case chomping_indicator_t::KEEP:
             break;
         }
-
-        return lexical_token_t::STRING_VALUE;
     }
 
     /// @brief Handle unescaped control characters.

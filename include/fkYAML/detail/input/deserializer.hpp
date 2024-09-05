@@ -864,11 +864,10 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX:
-            case lexical_token_t::NULL_VALUE:
-            case lexical_token_t::BOOLEAN_VALUE:
-            case lexical_token_t::INTEGER_VALUE:
-            case lexical_token_t::FLOAT_NUMBER_VALUE:
-            case lexical_token_t::STRING_VALUE: {
+            case lexical_token_t::PLAIN_SCALAR:
+            case lexical_token_t::SINGLE_QUOTED_SCALAR:
+            case lexical_token_t::DOUBLE_QUOTED_SCALAR:
+            case lexical_token_t::BLOCK_SCALAR: {
                 bool do_continue = deserialize_scalar(lexer, indent, line, token);
                 if (do_continue) {
                     continue;
@@ -1049,9 +1048,15 @@ private:
     basic_node_type create_scalar_node(const lexical_token& token, uint32_t indent, uint32_t line) {
         lexical_token_t type = token.type;
         FK_YAML_ASSERT(
-            type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
-            type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
-            type == lexical_token_t::STRING_VALUE || type == lexical_token_t::ALIAS_PREFIX);
+            type == lexical_token_t::PLAIN_SCALAR || type == lexical_token_t::SINGLE_QUOTED_SCALAR ||
+            type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_SCALAR ||
+            type == lexical_token_t::ALIAS_PREFIX);
+
+        const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
+        node_type value_type {node_type::STRING};
+        if (type == lexical_token_t::PLAIN_SCALAR) {
+            value_type = scalar_scanner::scan(token_str);
+        }
 
         if (m_needs_tag_impl) {
             if (type == lexical_token_t::ALIAS_PREFIX) {
@@ -1064,24 +1069,24 @@ private:
 
             switch (tag_type) {
             case tag_t::NULL_VALUE:
-                type = lexical_token_t::NULL_VALUE;
+                value_type = node_type::NULL_OBJECT;
                 break;
             case tag_t::BOOLEAN:
-                type = lexical_token_t::BOOLEAN_VALUE;
+                value_type = node_type::BOOLEAN;
                 break;
             case tag_t::INTEGER:
-                type = lexical_token_t::INTEGER_VALUE;
+                value_type = node_type::INTEGER;
                 break;
             case tag_t::FLOATING_NUMBER:
-                type = lexical_token_t::FLOAT_NUMBER_VALUE;
+                value_type = node_type::FLOAT;
                 break;
             case tag_t::STRING:
-                type = lexical_token_t::STRING_VALUE;
+                value_type = node_type::STRING;
                 break;
             case tag_t::NON_SPECIFIC:
                 // scalars with the non-specific tag is resolved to a string tag.
                 // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
-                type = lexical_token_t::STRING_VALUE;
+                value_type = node_type::STRING;
                 break;
             case tag_t::CUSTOM_TAG:
             default:
@@ -1089,17 +1094,31 @@ private:
             }
         }
 
-        const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
-
         basic_node_type node {};
-        switch (type) {
-        case lexical_token_t::NULL_VALUE:
+
+        if (type == lexical_token_t::ALIAS_PREFIX) {
+            uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
+            if (anchor_counts == 0) {
+                throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
+            }
+            node.m_attrs |= detail::node_attr_bits::alias_bit;
+            node.m_prop.anchor = std::move(token_str);
+            detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
+
+            apply_directive_set(node);
+            apply_node_properties(node);
+
+            return node;
+        }
+
+        switch (value_type) {
+        case node_type::NULL_OBJECT:
             node = basic_node_type(from_string(token_str, type_tag<std::nullptr_t> {}));
             break;
-        case lexical_token_t::BOOLEAN_VALUE:
+        case node_type::BOOLEAN:
             node = basic_node_type(from_string(token_str, type_tag<boolean_type> {}));
             break;
-        case lexical_token_t::INTEGER_VALUE:
+        case node_type::INTEGER:
             if (token_str.size() > 2 && token_str.rfind("0o", 0) != std::string::npos) {
                 // Replace the prefix "0o" with "0" so STL functions can convert octal chars to an integer.
                 // Note that the YAML specifies octal values start with the prefix "0o", not "0".
@@ -1110,22 +1129,12 @@ private:
                 node = basic_node_type(from_string(token_str, type_tag<integer_type> {}));
             }
             break;
-        case lexical_token_t::FLOAT_NUMBER_VALUE:
+        case node_type::FLOAT:
             node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
             break;
-        case lexical_token_t::STRING_VALUE:
+        case node_type::STRING:
             node = basic_node_type(std::move(token_str));
             break;
-        case lexical_token_t::ALIAS_PREFIX: {
-            uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
-            if (anchor_counts == 0) {
-                throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
-            }
-            node.m_attrs |= detail::node_attr_bits::alias_bit;
-            node.m_prop.anchor = std::move(token_str);
-            detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
-            break;
-        }
         default:   // LCOV_EXCL_LINE
             break; // LCOV_EXCL_LINE
         }

@@ -180,12 +180,12 @@ TEST_CASE("LexicalAnalyzer_EndOfDirectives") {
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -254,7 +254,7 @@ TEST_CASE("LexicalAnalyzer_Colon") {
     SECTION("colon with an always-safe character") {
         lexer_t lexer(fkyaml::detail::input_adapter(":test"));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == ":test");
     }
 
@@ -263,7 +263,7 @@ TEST_CASE("LexicalAnalyzer_Colon") {
             GENERATE(std::string(":,"), std::string(":{"), std::string(":}"), std::string(":["), std::string(":]"));
         lexer_t lexer(fkyaml::detail::input_adapter(input));
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == input);
     }
 
@@ -286,102 +286,8 @@ TEST_CASE("LexicalAnalzer_BlockSequenceEntryPrefix") {
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
-}
-
-TEST_CASE("LexicalAnalyzer_Null") {
-    fkyaml::detail::lexical_token token;
-
-    SECTION("valid null scalar token") {
-        auto buffer = GENERATE(std::string("null"), std::string("Null"), std::string("NULL"), std::string("~"));
-        lexer_t lexer(fkyaml::detail::input_adapter(buffer));
-
-        REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::NULL_VALUE);
-    }
-}
-
-TEST_CASE("LexicalAnalyzer_Boolean") {
-    fkyaml::detail::lexical_token token;
-
-    auto buffer = GENERATE(
-        std::string("true"),
-        std::string("True"),
-        std::string("TRUE"),
-        std::string("false"),
-        std::string("False"),
-        std::string("FALSE"));
-    lexer_t lexer(fkyaml::detail::input_adapter(buffer));
-
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
-}
-
-TEST_CASE("LexicalAnalyzer_Integer") {
-    fkyaml::detail::lexical_token token;
-
-    auto buffer = GENERATE(
-        std::string("-1234"),
-        std::string("-853255"),
-        std::string("-1"),
-        std::string("0"),
-        std::string("643"),
-        std::string("+123"));
-
-    lexer_t lexer(fkyaml::detail::input_adapter(buffer));
-
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::INTEGER_VALUE);
-}
-
-TEST_CASE("LexicalAnalyzer_OctalInteger") {
-    auto buffer = GENERATE(std::string("0o27"), std::string("0o5"), std::string("0o77772"), std::string("0o672"));
-
-    lexer_t lexer(fkyaml::detail::input_adapter(buffer));
-    fkyaml::detail::lexical_token token;
-
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::INTEGER_VALUE);
-}
-
-TEST_CASE("LexicalAnalyzer_HexadecimalInteger") {
-    auto buffer = GENERATE(std::string("0xA04F"), std::string("0xa7F3"), std::string("0xFf29Bc"));
-
-    lexer_t lexer(fkyaml::detail::input_adapter(buffer));
-    fkyaml::detail::lexical_token token;
-
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::INTEGER_VALUE);
-}
-
-TEST_CASE("LexicalAnalyzer_FloatingPointNumber") {
-    fkyaml::detail::lexical_token token;
-
-    auto buffer = GENERATE(
-        std::string("-1.234"),
-        std::string("-21."),
-        std::string("0."),
-        std::string("12."),
-        std::string("567.8"),
-        std::string("0.24"),
-        std::string("9.8e-3"),
-        std::string("3.95E3"),
-        std::string("1.863e+3"),
-        std::string(".inf"),
-        std::string(".Inf"),
-        std::string(".INF"),
-        std::string("-.inf"),
-        std::string("-.Inf"),
-        std::string("-.INF"),
-        std::string(".nan"),
-        std::string(".NaN"),
-        std::string(".NAN"));
-
-    lexer_t lexer(fkyaml::detail::input_adapter(buffer));
-
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
 }
 
 TEST_CASE("LexicalAnalyzer_PlainString") {
@@ -433,7 +339,7 @@ TEST_CASE("LexicalAnalyzer_PlainString") {
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == value_pair.second);
 }
 
@@ -461,7 +367,7 @@ TEST_CASE("LexicalAnalyzer_SingleQuotedString") {
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == value_pair.second);
 }
 
@@ -491,7 +397,7 @@ TEST_CASE("LexicalAnalyzer_DoubleQuotedString") {
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == value_pair.second);
 }
 
@@ -547,7 +453,7 @@ TEST_CASE("LexicalAnalyzer_MultiByteCharString") {
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == mb_char);
 }
 
@@ -644,7 +550,7 @@ TEST_CASE("LexicalAnalyzer_EscapedUnicodeCharacter") {
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == value_pair.second);
 }
 
@@ -848,7 +754,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "");
     }
 
@@ -858,7 +764,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "");
     }
 
@@ -868,7 +774,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "\n");
     }
 
@@ -895,7 +801,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "  foo\nbar\n");
     }
 
@@ -906,7 +812,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo\nbar\n");
     }
 
@@ -921,7 +827,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "\nfoo\nbar\n\nbaz");
     }
 
@@ -935,7 +841,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo\n  bar\n\nbaz");
     }
 
@@ -950,7 +856,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "\nfoo\nbar\n\nbaz\n");
     }
 
@@ -964,7 +870,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo\n  bar\n\nbaz\n");
     }
 
@@ -977,7 +883,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo\n  bar\n\nbaz");
     }
 
@@ -992,7 +898,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "\nfoo\nbar\n\nbaz\n\n");
     }
 
@@ -1006,7 +912,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo\n  bar\n\nbaz\n\n");
     }
 
@@ -1016,7 +922,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo\n");
     }
 
@@ -1044,7 +950,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "");
     }
 
@@ -1054,7 +960,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "");
     }
 
@@ -1064,7 +970,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "\n");
     }
 
@@ -1091,7 +997,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "\n  foo\nbar\n");
     }
 
@@ -1102,7 +1008,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo\n  bar\n");
     }
 
@@ -1116,7 +1022,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo\n\nbar\n");
     }
 
@@ -1129,7 +1035,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo bar");
     }
 
@@ -1142,7 +1048,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo bar\n");
     }
 
@@ -1155,7 +1061,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo bar\n\n");
     }
 
@@ -1165,7 +1071,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         lexer_t lexer(fkyaml::detail::input_adapter(input));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo\n");
     }
 
@@ -1291,7 +1197,7 @@ TEST_CASE("LexicalAnalyzer_Tag") {
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == input.substr(0, input.size() - 4));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "tag");
     }
 
@@ -1331,14 +1237,14 @@ TEST_CASE("LexicalAnalyzer_KeyBooleanValuePair") {
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "true");
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1350,14 +1256,14 @@ TEST_CASE("LexicalAnalyzer_KeyIntegerValuePair") {
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::INTEGER_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "-5784");
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1369,14 +1275,14 @@ TEST_CASE("LexicalAnalyzer_KeyFloatNumberValuePair") {
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "-5.58e-3");
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1388,14 +1294,14 @@ TEST_CASE("LexicalAnalyzer_KeyStringValuePair") {
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR);
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "some value");
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1409,7 +1315,7 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
         lexer_t lexer(fkyaml::detail::input_adapter("test: [ foo, bar ]"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1419,14 +1325,14 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1440,7 +1346,7 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
         lexer_t lexer(fkyaml::detail::input_adapter("test: [ { foo: one, bar: false }, { foo: two, bar: true } ]"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1453,28 +1359,28 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "one");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "false");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1487,28 +1393,28 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "two");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "true");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1529,7 +1435,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
         lexer_t lexer(fkyaml::detail::input_adapter("test: { bool: true, foo: bar, pi: 3.14 }"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1539,42 +1445,42 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bool");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "true");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "pi");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE_NOTHROW(std::string(token.token_begin_itr, token.token_end_itr));
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "3.14");
 
@@ -1589,7 +1495,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
         lexer_t lexer(fkyaml::detail::input_adapter("test: {foo: bar baz}"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1599,14 +1505,14 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar baz");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1625,7 +1531,7 @@ TEST_CASE("LexicalAnalyzer_BlockSequence") {
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1635,14 +1541,14 @@ TEST_CASE("LexicalAnalyzer_BlockSequence") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1654,7 +1560,7 @@ TEST_CASE("LexicalAnalyzer_BlockSequence") {
         lexer_t lexer(fkyaml::detail::input_adapter(buffer));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1664,50 +1570,50 @@ TEST_CASE("LexicalAnalyzer_BlockSequence") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "one");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "false");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "two");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "true");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1722,43 +1628,43 @@ TEST_CASE("LexicalAnalyzer_BlockMapping") {
         lexer_t lexer(fkyaml::detail::input_adapter("test:\n  bool: true\n  foo: \'bar\'\n  pi: 3.14"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bool");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "true");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "pi");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE_NOTHROW(std::string(token.token_begin_itr, token.token_end_itr));
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "3.14");
 
@@ -1770,36 +1676,36 @@ TEST_CASE("LexicalAnalyzer_BlockMapping") {
         lexer_t lexer(fkyaml::detail::input_adapter("test: |\n  a literal scalar.\nfoo: \'bar\'\npi: 3.14"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "a literal scalar.\n");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "pi");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE_NOTHROW(std::string(token.token_begin_itr, token.token_end_itr));
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "3.14");
 
@@ -1811,36 +1717,36 @@ TEST_CASE("LexicalAnalyzer_BlockMapping") {
         lexer_t lexer(fkyaml::detail::input_adapter("test: >\n  a literal scalar.\nfoo: \'bar\'\npi: 3.14"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "test");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "a literal scalar.\n");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "pi");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        REQUIRE(token.type == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE_NOTHROW(std::string(token.token_begin_itr, token.token_end_itr));
         REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "3.14");
 

@@ -2437,54 +2437,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/assert.hpp>
 
-// #include <fkYAML/detail/types/lexical_token_t.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief Definition of lexical token types.
-enum class lexical_token_t {
-    END_OF_BUFFER,         //!< the end of input buffer.
-    EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
-    KEY_SEPARATOR,         //!< the key separater `:`
-    VALUE_SEPARATOR,       //!< the value separater `,`
-    ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
-    ALIAS_PREFIX,          //!< the character for alias prefix `*`
-    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
-    TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
-    TAG_PREFIX,            //!< the character for tag prefix `!`
-    INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
-    SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
-    SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
-    SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
-    MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
-    MAPPING_FLOW_END,      //!< the character for mapping end `}`
-    NULL_VALUE,            //!< a null value found. use get_null() to get a value.
-    BOOLEAN_VALUE,         //!< a boolean value found. use get_boolean() to get a value.
-    INTEGER_VALUE,         //!< an integer value found. use get_integer() to get a value.
-    FLOAT_NUMBER_VALUE,    //!< a float number value found. use get_float_number() to get a value.
-    STRING_VALUE,          //!< the character for string begin `"` or any character except the above ones
-    END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
-    END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
-};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
+// #include <fkYAML/node_type.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -2510,13 +2463,13 @@ inline bool is_xdigit(char c) {
 } // namespace
 class scalar_scanner {
 public:
-    static lexical_token_t scan(const std::string& token) {
+    static node_type scan(const std::string& token) {
         switch (token.size()) {
         case 0:
-            return lexical_token_t::STRING_VALUE;
+            return node_type::STRING;
         case 1:
             if (token[0] == '~') {
-                return lexical_token_t::NULL_VALUE;
+                return node_type::NULL_OBJECT;
             }
             break;
         case 4:
@@ -2524,19 +2477,19 @@ public:
             case 'n':
             case 'N':
                 if (token == "null" || token == "Null" || token == "NULL") {
-                    return lexical_token_t::NULL_VALUE;
+                    return node_type::NULL_OBJECT;
                 }
                 break;
             case 't':
             case 'T':
                 if (token == "true" || token == "True" || token == "TRUE") {
-                    return lexical_token_t::BOOLEAN_VALUE;
+                    return node_type::BOOLEAN;
                 }
                 break;
             case '.':
                 if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
                     token == ".NAN") {
-                    return lexical_token_t::FLOAT_NUMBER_VALUE;
+                    return node_type::FLOAT;
                 }
                 break;
             }
@@ -2546,12 +2499,12 @@ public:
             case 'f':
             case 'F':
                 if (token == "false" || token == "False" || token == "FALSE") {
-                    return lexical_token_t::BOOLEAN_VALUE;
+                    return node_type::BOOLEAN;
                 }
                 break;
             case '-':
                 if (token[1] == '.' && (token == "-.inf" || token == "-.Inf" || token == "-.INF")) {
-                    return lexical_token_t::FLOAT_NUMBER_VALUE;
+                    return node_type::FLOAT;
                 }
                 break;
             }
@@ -2562,18 +2515,18 @@ public:
     }
 
 private:
-    static lexical_token_t scan_possible_number_token(const std::string& token) {
+    static node_type scan_possible_number_token(const std::string& token) {
         std::string::const_iterator itr = token.begin();
         std::size_t size = token.size();
         FK_YAML_ASSERT(size > 0);
 
         switch (*itr) {
         case '-':
-            return (size > 1) ? scan_negative_number(++itr, --size) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_negative_number(++itr, --size) : node_type::STRING;
         case '+':
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, false) : node_type::STRING;
         case '0':
-            return (size > 1) ? scan_after_zero_at_first(++itr, --size) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_after_zero_at_first(++itr, --size) : node_type::INTEGER;
         case '1':
         case '2':
         case '3':
@@ -2583,111 +2536,105 @@ private:
         case '7':
         case '8':
         case '9':
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, false) : node_type::INTEGER;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return node_type::STRING;
         }
     }
 
-    static lexical_token_t scan_negative_number(std::string::const_iterator itr, std::size_t size) {
+    static node_type scan_negative_number(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, false) : node_type::INTEGER;
         }
 
-        return lexical_token_t::STRING_VALUE;
+        return node_type::STRING;
     }
 
-    static lexical_token_t scan_after_zero_at_first(std::string::const_iterator itr, std::size_t size) {
+    static node_type scan_after_zero_at_first(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
             // a token consisting of the beginning '0' and some following numbers, e.g., `0123`, is not an integer
             // according to https://yaml.org/spec/1.2.2/#10213-integer.
-            return lexical_token_t::STRING_VALUE;
+            return node_type::STRING;
         }
 
         switch (*itr) {
         case '.': {
             if (size == 1) {
                 // 0 is omitted after `0.`.
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
+                return node_type::FLOAT;
             }
-            lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
-            return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
-                                                          : lexical_token_t::FLOAT_NUMBER_VALUE;
+            node_type ret = scan_after_decimal_point(++itr, --size, true);
+            return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
         }
         case 'o':
-            return (size > 1) ? scan_octal_number(++itr, --size) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_octal_number(++itr, --size) : node_type::STRING;
         case 'x':
-            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : node_type::STRING;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return node_type::STRING;
         }
     }
 
-    static lexical_token_t scan_decimal_number(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
+    static node_type scan_decimal_number(std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : node_type::INTEGER;
         }
 
         switch (*itr) {
         case '.': {
             if (has_decimal_point) {
                 // the token has more than one period, e.g., a semantic version `1.2.3`.
-                return lexical_token_t::STRING_VALUE;
+                return node_type::STRING;
             }
             if (size == 1) {
                 // 0 is omitted after the decimal point
-                return lexical_token_t::FLOAT_NUMBER_VALUE;
+                return node_type::FLOAT;
             }
-            lexical_token_t ret = scan_after_decimal_point(++itr, --size, true);
-            return (ret == lexical_token_t::STRING_VALUE) ? lexical_token_t::STRING_VALUE
-                                                          : lexical_token_t::FLOAT_NUMBER_VALUE;
+            node_type ret = scan_after_decimal_point(++itr, --size, true);
+            return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
         }
         case 'e':
         case 'E':
-            return (size > 1) ? scan_after_exponent(++itr, --size, has_decimal_point) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_after_exponent(++itr, --size, has_decimal_point) : node_type::STRING;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return node_type::STRING;
         }
     }
 
-    static lexical_token_t scan_after_decimal_point(
+    static node_type scan_after_decimal_point(
         std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
-                              : lexical_token_t::FLOAT_NUMBER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : node_type::FLOAT;
         }
 
-        return lexical_token_t::STRING_VALUE;
+        return node_type::STRING;
     }
 
-    static lexical_token_t scan_after_exponent(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
+    static node_type scan_after_exponent(std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point)
-                              : lexical_token_t::FLOAT_NUMBER_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : node_type::FLOAT;
         }
 
         switch (*itr) {
         case '+':
         case '-':
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : lexical_token_t::STRING_VALUE;
+            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : node_type::STRING;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return node_type::STRING;
         }
     }
 
-    static lexical_token_t scan_octal_number(std::string::const_iterator itr, std::size_t size) {
+    static node_type scan_octal_number(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
         switch (*itr) {
@@ -2699,19 +2646,19 @@ private:
         case '5':
         case '6':
         case '7':
-            return (size > 1) ? scan_octal_number(++itr, --size) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_octal_number(++itr, --size) : node_type::INTEGER;
         default:
-            return lexical_token_t::STRING_VALUE;
+            return node_type::STRING;
         }
     }
 
-    static lexical_token_t scan_hexadecimal_number(std::string::const_iterator itr, std::size_t size) {
+    static node_type scan_hexadecimal_number(std::string::const_iterator itr, std::size_t size) {
         FK_YAML_ASSERT(size > 0);
 
         if (is_xdigit(*itr)) {
-            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : lexical_token_t::INTEGER_VALUE;
+            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : node_type::INTEGER;
         }
-        return lexical_token_t::STRING_VALUE;
+        return node_type::STRING;
     }
 };
 
@@ -2884,6 +2831,52 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief Definition of lexical token types.
+enum class lexical_token_t {
+    END_OF_BUFFER,         //!< the end of input buffer.
+    EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
+    KEY_SEPARATOR,         //!< the key separater `:`
+    VALUE_SEPARATOR,       //!< the value separater `,`
+    ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
+    ALIAS_PREFIX,          //!< the character for alias prefix `*`
+    YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
+    TAG_DIRECTIVE,         //!< a TAG directive found. use GetTagInfo() to get the tag information.
+    TAG_PREFIX,            //!< the character for tag prefix `!`
+    INVALID_DIRECTIVE,     //!< an invalid directive found. do not try to get the value.
+    SEQUENCE_BLOCK_PREFIX, //!< the character for sequence block prefix `- `
+    SEQUENCE_FLOW_BEGIN,   //!< the character for sequence flow begin `[`
+    SEQUENCE_FLOW_END,     //!< the character for sequence flow end `]`
+    MAPPING_FLOW_BEGIN,    //!< the character for mapping begin `{`
+    MAPPING_FLOW_END,      //!< the character for mapping end `}`
+    PLAIN_SCALAR,          //!< plain (unquoted) scalars
+    SINGLE_QUOTED_SCALAR,  //!< single-quoted scalars
+    DOUBLE_QUOTED_SCALAR,  //!< double-quoted scalars
+    BLOCK_SCALAR,          //!< block style scalars
+    END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
+    END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
 
 // #include <fkYAML/exception.hpp>
 
@@ -2945,7 +2938,7 @@ public:
             return {};
         }
 
-        lexical_token token {lexical_token_t::STRING_VALUE, m_cur_itr, m_end_itr};
+        lexical_token token {lexical_token_t::PLAIN_SCALAR, m_cur_itr, m_end_itr};
 
         switch (char current = *m_cur_itr) {
         case '?':
@@ -3102,7 +3095,8 @@ public:
             uint32_t indent = 0;
             ++m_cur_itr;
             get_block_style_metadata(chomp_type, indent);
-            token.type = scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
+            token.type = lexical_token_t::BLOCK_SCALAR;
             token.token_begin_itr = m_value_buffer.cbegin();
             token.token_end_itr = m_value_buffer.cend();
             return token;
@@ -3112,7 +3106,8 @@ public:
             uint32_t indent = 0;
             ++m_cur_itr;
             get_block_style_metadata(chomp_type, indent);
-            token.type = scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
+            token.type = lexical_token_t::BLOCK_SCALAR;
             token.token_begin_itr = m_value_buffer.cbegin();
             token.token_end_itr = m_value_buffer.cend();
             return token;
@@ -3507,22 +3502,18 @@ private:
             if (needs_last_double_quote || needs_last_single_quote) {
                 m_token_begin_itr = ++m_cur_itr;
                 ++token.token_begin_itr;
+                token.type = needs_last_double_quote ? lexical_token_t::DOUBLE_QUOTED_SCALAR
+                                                     : lexical_token_t::SINGLE_QUOTED_SCALAR;
+            }
+            else {
+                token.type = lexical_token_t::PLAIN_SCALAR;
             }
         }
 
-        lexical_token_t type = extract_string_token(needs_last_single_quote, needs_last_double_quote);
-        FK_YAML_ASSERT(type == lexical_token_t::STRING_VALUE);
+        extract_string_token(needs_last_single_quote, needs_last_double_quote);
 
         token.token_begin_itr = m_value_buffer.cbegin();
         token.token_end_itr = m_value_buffer.cend();
-
-        if (needs_last_single_quote || needs_last_double_quote) {
-            // just returned the extracted string value if quoted.
-            token.type = type;
-            return;
-        }
-
-        token.type = scalar_scanner::scan(m_value_buffer);
     }
 
     /// @brief Check if the given character is allowed in a single-quoted scalar token.
@@ -3781,8 +3772,7 @@ private:
     }
 
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
-    /// @return lexical_token_t The lexical token type for strings.
-    lexical_token_t extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
+    void extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
         // change behaviors depending on the type of a comming string scalar token.
         // * single quoted
         // * double quoted
@@ -3815,7 +3805,7 @@ private:
                 if (ret != std::string::npos) {
                     bool is_allowed = (this->*pfn_is_allowed)(current);
                     if (!is_allowed) {
-                        return lexical_token_t::STRING_VALUE;
+                        return;
                     }
 
                     continue;
@@ -3846,16 +3836,13 @@ private:
         }
 
         m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-        return lexical_token_t::STRING_VALUE;
     }
 
     /// @brief Scan a block style string token either in the literal or folded style.
     /// @param style The style of the given token, either literal or folded.
     /// @param chomp The chomping indicator type of the given token, either strip, keep or clip.
     /// @param indent The indent size specified for the given token.
-    /// @return The lexical token type for strings.
-    lexical_token_t scan_block_style_string_token(
-        block_style_indicator_t style, chomping_indicator_t chomp, uint32_t indent) {
+    void scan_block_style_string_token(block_style_indicator_t style, chomping_indicator_t chomp, uint32_t indent) {
         m_value_buffer.clear();
 
         // Handle leading all-space lines.
@@ -3878,7 +3865,7 @@ private:
             if (chomp != chomping_indicator_t::KEEP) {
                 m_value_buffer.clear();
             }
-            return lexical_token_t::STRING_VALUE;
+            return;
         }
 
         m_pos_tracker.update_position(m_cur_itr);
@@ -4048,8 +4035,6 @@ private:
         case chomping_indicator_t::KEEP:
             break;
         }
-
-        return lexical_token_t::STRING_VALUE;
     }
 
     /// @brief Handle unescaped control characters.
@@ -5490,11 +5475,10 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX:
-            case lexical_token_t::NULL_VALUE:
-            case lexical_token_t::BOOLEAN_VALUE:
-            case lexical_token_t::INTEGER_VALUE:
-            case lexical_token_t::FLOAT_NUMBER_VALUE:
-            case lexical_token_t::STRING_VALUE: {
+            case lexical_token_t::PLAIN_SCALAR:
+            case lexical_token_t::SINGLE_QUOTED_SCALAR:
+            case lexical_token_t::DOUBLE_QUOTED_SCALAR:
+            case lexical_token_t::BLOCK_SCALAR: {
                 bool do_continue = deserialize_scalar(lexer, indent, line, token);
                 if (do_continue) {
                     continue;
@@ -5675,9 +5659,15 @@ private:
     basic_node_type create_scalar_node(const lexical_token& token, uint32_t indent, uint32_t line) {
         lexical_token_t type = token.type;
         FK_YAML_ASSERT(
-            type == lexical_token_t::NULL_VALUE || type == lexical_token_t::BOOLEAN_VALUE ||
-            type == lexical_token_t::INTEGER_VALUE || type == lexical_token_t::FLOAT_NUMBER_VALUE ||
-            type == lexical_token_t::STRING_VALUE || type == lexical_token_t::ALIAS_PREFIX);
+            type == lexical_token_t::PLAIN_SCALAR || type == lexical_token_t::SINGLE_QUOTED_SCALAR ||
+            type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_SCALAR ||
+            type == lexical_token_t::ALIAS_PREFIX);
+
+        const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
+        node_type value_type {node_type::STRING};
+        if (type == lexical_token_t::PLAIN_SCALAR) {
+            value_type = scalar_scanner::scan(token_str);
+        }
 
         if (m_needs_tag_impl) {
             if (type == lexical_token_t::ALIAS_PREFIX) {
@@ -5690,24 +5680,24 @@ private:
 
             switch (tag_type) {
             case tag_t::NULL_VALUE:
-                type = lexical_token_t::NULL_VALUE;
+                value_type = node_type::NULL_OBJECT;
                 break;
             case tag_t::BOOLEAN:
-                type = lexical_token_t::BOOLEAN_VALUE;
+                value_type = node_type::BOOLEAN;
                 break;
             case tag_t::INTEGER:
-                type = lexical_token_t::INTEGER_VALUE;
+                value_type = node_type::INTEGER;
                 break;
             case tag_t::FLOATING_NUMBER:
-                type = lexical_token_t::FLOAT_NUMBER_VALUE;
+                value_type = node_type::FLOAT;
                 break;
             case tag_t::STRING:
-                type = lexical_token_t::STRING_VALUE;
+                value_type = node_type::STRING;
                 break;
             case tag_t::NON_SPECIFIC:
                 // scalars with the non-specific tag is resolved to a string tag.
                 // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
-                type = lexical_token_t::STRING_VALUE;
+                value_type = node_type::STRING;
                 break;
             case tag_t::CUSTOM_TAG:
             default:
@@ -5715,17 +5705,31 @@ private:
             }
         }
 
-        const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
-
         basic_node_type node {};
-        switch (type) {
-        case lexical_token_t::NULL_VALUE:
+
+        if (type == lexical_token_t::ALIAS_PREFIX) {
+            uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
+            if (anchor_counts == 0) {
+                throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
+            }
+            node.m_attrs |= detail::node_attr_bits::alias_bit;
+            node.m_prop.anchor = std::move(token_str);
+            detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
+
+            apply_directive_set(node);
+            apply_node_properties(node);
+
+            return node;
+        }
+
+        switch (value_type) {
+        case node_type::NULL_OBJECT:
             node = basic_node_type(from_string(token_str, type_tag<std::nullptr_t> {}));
             break;
-        case lexical_token_t::BOOLEAN_VALUE:
+        case node_type::BOOLEAN:
             node = basic_node_type(from_string(token_str, type_tag<boolean_type> {}));
             break;
-        case lexical_token_t::INTEGER_VALUE:
+        case node_type::INTEGER:
             if (token_str.size() > 2 && token_str.rfind("0o", 0) != std::string::npos) {
                 // Replace the prefix "0o" with "0" so STL functions can convert octal chars to an integer.
                 // Note that the YAML specifies octal values start with the prefix "0o", not "0".
@@ -5736,22 +5740,12 @@ private:
                 node = basic_node_type(from_string(token_str, type_tag<integer_type> {}));
             }
             break;
-        case lexical_token_t::FLOAT_NUMBER_VALUE:
+        case node_type::FLOAT:
             node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
             break;
-        case lexical_token_t::STRING_VALUE:
+        case node_type::STRING:
             node = basic_node_type(std::move(token_str));
             break;
-        case lexical_token_t::ALIAS_PREFIX: {
-            uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
-            if (anchor_counts == 0) {
-                throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
-            }
-            node.m_attrs |= detail::node_attr_bits::alias_bit;
-            node.m_prop.anchor = std::move(token_str);
-            detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
-            break;
-        }
         default:   // LCOV_EXCL_LINE
             break; // LCOV_EXCL_LINE
         }
@@ -7726,9 +7720,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 
-// #include <fkYAML/detail/input/input_adapter.hpp>
-
-// #include <fkYAML/detail/input/lexical_analyzer.hpp>
+// #include <fkYAML/detail/input/scalar_scanner.hpp>
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -7958,11 +7950,7 @@ private:
                 break;
             }
 
-            auto adapter = input_adapter(str_val);
-            lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
-            lexical_token token = lexer.get_next_token();
-
-            if (token.type != lexical_token_t::STRING_VALUE) {
+            if (scalar_scanner::scan(str_val) != node_type::STRING) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
