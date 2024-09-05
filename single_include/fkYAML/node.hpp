@@ -2943,7 +2943,7 @@ public:
         switch (char current = *m_cur_itr) {
         case '?':
             if (++m_cur_itr == m_end_itr) {
-                token.token_end_itr == m_end_itr;
+                token.token_end_itr = m_end_itr;
                 return token;
             }
 
@@ -3510,20 +3510,30 @@ private:
             }
         }
 
-        extract_string_token(needs_last_single_quote, needs_last_double_quote);
+        bool is_value_buff_used = extract_string_token(needs_last_single_quote, needs_last_double_quote);
 
-        token.token_begin_itr = m_value_buffer.cbegin();
-        token.token_end_itr = m_value_buffer.cend();
+        if (is_value_buff_used) {
+            token.token_begin_itr = m_value_buffer.cbegin();
+            token.token_end_itr = m_value_buffer.cend();
+        }
+        else {
+            token.token_end_itr = m_cur_itr;
+            if (token.type != lexical_token_t::PLAIN_SCALAR) {
+                // If extract_string_token() didn't use m_value_buffer to store mutated scalar value, m_cur_itr is at
+                // the last quotation mark, which will cause infinite loops from the next get_next_token() call.
+                ++m_cur_itr;
+            }
+        }
     }
 
     /// @brief Check if the given character is allowed in a single-quoted scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_single(char c) {
-        bool ret = false;
-
+    bool is_allowed_single(char c, bool& is_value_buffer_used) {
         switch (c) {
         case '\n': {
+            is_value_buffer_used = true;
+
             // discard trailing white spaces which preceeds the line break in the current line.
             auto before_trailing_spaces_itr = m_cur_itr - 1;
             bool ends_loop = false;
@@ -3561,41 +3571,46 @@ private:
             }
 
             m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\'') ? m_cur_itr-- : m_cur_itr;
-            ret = true;
-            break;
+            return true;
         }
 
         case '\'':
-            // If single quotation marks are repeated twice in a single-quoted string token,
-            // they are considered as an escaped single quotation mark.
             if (m_cur_itr + 1 == m_end_itr) {
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                m_token_begin_itr = m_cur_itr;
-                break;
+                if (is_value_buffer_used) {
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
+                    m_token_begin_itr = m_cur_itr;
+                }
+                return false;
             }
 
             if (*(m_cur_itr + 1) != '\'') {
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                break;
+                if (is_value_buffer_used) {
+                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
+                }
+                return false;
             }
+
+            // If single quotation marks are repeated twice in a single-quoted string token,
+            // they are considered as an escaped single quotation mark.
+            is_value_buffer_used = true;
 
             m_value_buffer.append(m_token_begin_itr, ++m_cur_itr);
             m_token_begin_itr = m_cur_itr + 1;
-            ret = true;
-            break;
-        }
+            return true;
 
-        return ret;
+        default:         // LCOV_EXCL_LINE
+            return true; // LCOV_EXCL_LINE
+        }
     }
 
     /// @brief Check if the given character is allowed in a double-quoted scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_double(char c) {
-        bool ret = false;
-
+    bool is_allowed_double(char c, bool& is_value_buffer_used) {
         switch (c) {
         case '\n': {
+            is_value_buffer_used = true;
+
             // discard trailing white spaces which preceeds the line break in the current line.
             auto before_trailing_spaces_itr = m_cur_itr - 1;
             bool ends_loop = false;
@@ -3633,15 +3648,18 @@ private:
             }
 
             m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
-            ret = true;
-            break;
+            return true;
         }
 
         case '\"':
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-            break;
+            if (is_value_buffer_used) {
+                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
+            }
+            return false;
 
         case '\\':
+            is_value_buffer_used = true;
+
             m_value_buffer.append(m_token_begin_itr, m_cur_itr);
 
             // Handle escaped characters.
@@ -3655,8 +3673,7 @@ private:
                 }
 
                 m_token_begin_itr = m_cur_itr + 1;
-                ret = true;
-                break;
+                return true;
             }
 
             // move until the next non-space character is found.
@@ -3664,29 +3681,25 @@ private:
             skip_white_spaces();
 
             m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
-            ret = true;
-            break;
-        }
+            return true;
 
-        return ret;
+        default:         // LCOV_EXCL_LINE
+            return true; // LCOV_EXCL_LINE
+        }
     }
 
     /// @brief Check if the given character is allowed in a plain scalar token.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_plain(char c) {
-        bool ret = false;
-
+    bool is_allowed_plain(char c, bool& /*unused*/) {
         switch (c) {
         case '\n':
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-            break;
+            return false;
 
         case ' ': {
             // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
             // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
             char next = *(m_cur_itr + 1);
-            bool is_appended = false;
 
             // These characters are permitted when not inside a flow collection, and not inside an implicit key.
             // TODO: Support detection of implicit key context for this check.
@@ -3697,13 +3710,7 @@ private:
                 case '[':
                 case ']':
                 case ',':
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                    is_appended = true;
-                    break;
-                }
-
-                if (is_appended) {
-                    break;
+                    return false;
                 }
             }
 
@@ -3711,12 +3718,7 @@ private:
             if (next == ':') {
                 char peeked = *(m_cur_itr + 2);
                 if (peeked == ' ') {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                    is_appended = true;
-                }
-
-                if (is_appended) {
-                    break;
+                    return false;
                 }
             }
 
@@ -3725,13 +3727,10 @@ private:
             case '\n':
             case '#':
             case '\\':
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                is_appended = true;
-                break;
+                return false;
             }
 
-            ret = !is_appended;
-            break;
+            return true;
         }
 
         case ':': {
@@ -3744,13 +3743,9 @@ private:
             case ' ':
             case '\t':
             case '\n':
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-                break;
-            default:
-                ret = true;
-                break;
+                return false;
             }
-            break;
+            return true;
         }
 
         case '{':
@@ -3760,26 +3755,25 @@ private:
         case ',':
             // just regard the flow indicators as a normal character if plain but not inside a flow context.
             if (m_flow_context_depth == 0) {
-                ret = true;
-                break;
+                return true;
             }
 
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-            break;
-        }
+            return false;
 
-        return ret;
+        default:         // LCOV_EXCL_LINE
+            return true; // LCOV_EXCL_LINE
+        }
     }
 
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
-    void extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
+    bool extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
         // change behaviors depending on the type of a comming string scalar token.
         // * single quoted
         // * double quoted
         // * plain
 
         std::string check_filters {"\n"};
-        bool (lexical_analyzer::*pfn_is_allowed)(char) = nullptr;
+        bool (lexical_analyzer::*pfn_is_allowed)(char, bool&) = nullptr;
 
         if (needs_last_single_quote) {
             check_filters.append("\'");
@@ -3791,21 +3785,25 @@ private:
         }
         else // plain scalars
         {
-            check_filters.append(" :{}[],");
+            check_filters.append(" :");
+            if (m_flow_context_depth > 0) {
+                check_filters.append("{}[],");
+            }
             pfn_is_allowed = &lexical_analyzer::is_allowed_plain;
         }
 
         // scan the contents of a string scalar token.
 
+        bool is_value_buffer_used = false;
         for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr) {
             char current = *m_cur_itr;
             uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
             if (num_bytes == 1) {
                 auto ret = check_filters.find(current);
                 if (ret != std::string::npos) {
-                    bool is_allowed = (this->*pfn_is_allowed)(current);
+                    bool is_allowed = (this->*pfn_is_allowed)(current, is_value_buffer_used);
                     if (!is_allowed) {
-                        return;
+                        return is_value_buffer_used;
                     }
 
                     continue;
@@ -3835,7 +3833,10 @@ private:
             emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
-        m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+        if (is_value_buffer_used) {
+            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+        }
+        return is_value_buffer_used;
     }
 
     /// @brief Scan a block style string token either in the literal or folded style.
