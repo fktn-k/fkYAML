@@ -76,8 +76,8 @@ public:
         m_pos_tracker.set_target_buffer(m_input_buffer);
     }
 
-    /// @brief Get the next lexical token type by scanning the left of the input buffer.
-    /// @return lexical_token_t The next lexical token type.
+    /// @brief Get the next lexical token by scanning the left of the input buffer.
+    /// @return lexical_token The next lexical token.
     lexical_token get_next_token() {
         skip_white_spaces_and_newline_codes();
 
@@ -845,10 +845,59 @@ private:
         }
     }
 
-    /// @brief Check if the given character is allowed in a plain scalar token.
+    /// @brief Check if the given character is allowed in a plain scalar token outside a flow context.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
     bool is_allowed_plain(char c, bool& /*unused*/) {
+        switch (c) {
+        case '\n':
+            return false;
+
+        case ' ': {
+            // Allow a space in a plain scalar only if the space is surrounded by non-space characters.
+            // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+
+            switch (*(m_cur_itr + 1)) {
+            case ':': {
+                // " :" is permitted in a plain style string token, but not when followed by a space.
+                char peeked = *(m_cur_itr + 2);
+                if (peeked == ' ') {
+                    return false;
+                }
+                return true;
+            }
+            case ' ':
+            case '\n':
+            case '#':
+            case '\\':
+                return false;
+            }
+
+            return true;
+        }
+
+        case ':': {
+            // A colon as a key separator must be followed by
+            // * a white space or
+            // * a newline code.
+            switch (*(m_cur_itr + 1)) {
+            case ' ':
+            case '\t':
+            case '\n':
+                return false;
+            }
+            return true;
+        }
+
+        default:         // LCOV_EXCL_LINE
+            return true; // LCOV_EXCL_LINE
+        }
+    }
+
+    /// @brief Check if the given character is allowed in a plain scalar token inside a flow context.
+    /// @param c The character to be checked.
+    /// @return true if the given character is allowed, false otherwise.
+    bool is_allowed_plain_flow(char c, bool& /*unused*/) {
         switch (c) {
         case '\n':
             return false;
@@ -860,15 +909,13 @@ private:
 
             // These characters are permitted when not inside a flow collection, and not inside an implicit key.
             // TODO: Support detection of implicit key context for this check.
-            if (m_flow_context_depth > 0) {
-                switch (next) {
-                case '{':
-                case '}':
-                case '[':
-                case ']':
-                case ',':
-                    return false;
-                }
+            switch (next) {
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+                return false;
             }
 
             // " :" is permitted in a plain style string token, but not when followed by a space.
@@ -910,11 +957,6 @@ private:
         case '[':
         case ']':
         case ',':
-            // just regard the flow indicators as a normal character if plain but not inside a flow context.
-            if (m_flow_context_depth == 0) {
-                return true;
-            }
-
             return false;
 
         default:         // LCOV_EXCL_LINE
@@ -941,13 +983,15 @@ private:
             check_filters.append("\"\\");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
-        else // plain scalars
-        {
+        else if (m_flow_context_depth == 0) {
+            // plain scalar outside flow contexts
             check_filters.append(" :");
-            if (m_flow_context_depth > 0) {
-                check_filters.append("{}[],");
-            }
             pfn_is_allowed = &lexical_analyzer::is_allowed_plain;
+        }
+        else {
+            // plain scalar inside flow contexts
+            check_filters.append(" :{}[],");
+            pfn_is_allowed = &lexical_analyzer::is_allowed_plain_flow;
         }
 
         // scan the contents of a string scalar token.

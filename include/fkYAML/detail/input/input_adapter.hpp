@@ -126,6 +126,8 @@ private:
             }
         }
 
+        buffer.reserve(std::distance(m_current, m_end));
+
         do {
             IterType cr_or_end_itr = std::find(m_current, m_end, '\r');
             buffer.append(m_current, cr_or_end_itr);
