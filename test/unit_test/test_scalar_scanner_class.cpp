@@ -92,6 +92,7 @@ TEST_CASE("ScalarScanner_StringValue") {
         std::string("-.infValue"),
         std::string("-.InfValue"),
         std::string("-.INFValue"),
+        std::string(".foo"),
         std::string("abc"),
         std::string("0th"),
         std::string("0123"),

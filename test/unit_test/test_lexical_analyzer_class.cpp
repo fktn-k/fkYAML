@@ -290,7 +290,7 @@ TEST_CASE("LexicalAnalzer_BlockSequenceEntryPrefix") {
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
 }
 
-TEST_CASE("LexicalAnalyzer_PlainString") {
+TEST_CASE("LexicalAnalyzer_PlainScalar") {
     using value_pair_t = std::pair<std::string, fkyaml::node::string_type>;
     auto value_pair = GENERATE(
         value_pair_t(std::string("test"), fkyaml::node::string_type("test")),
@@ -304,6 +304,8 @@ TEST_CASE("LexicalAnalyzer_PlainString") {
         value_pair_t(std::string("-foo"), fkyaml::node::string_type("-foo")),
         value_pair_t(std::string("-.test"), fkyaml::node::string_type("-.test")),
         value_pair_t(std::string("?"), fkyaml::node::string_type("?")),
+        value_pair_t(std::string("--foo"), fkyaml::node::string_type("--foo")),
+        value_pair_t(std::string("+123"), fkyaml::node::string_type("+123")),
         value_pair_t(std::string("1.2.3"), fkyaml::node::string_type("1.2.3")),
         value_pair_t(std::string("foo,bar"), fkyaml::node::string_type("foo,bar")),
         value_pair_t(std::string("foo[bar"), fkyaml::node::string_type("foo[bar")),
@@ -343,13 +345,14 @@ TEST_CASE("LexicalAnalyzer_PlainString") {
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == value_pair.second);
 }
 
-TEST_CASE("LexicalAnalyzer_SingleQuotedString") {
+TEST_CASE("LexicalAnalyzer_SingleQuotedScalar") {
     using value_pair_t = std::pair<std::string, fkyaml::node::string_type>;
     auto value_pair = GENERATE(
         value_pair_t(std::string("\'\'"), fkyaml::node::string_type("")),
         value_pair_t(std::string("\'foo\"bar\'"), fkyaml::node::string_type("foo\"bar")),
         value_pair_t(std::string("\'foo bar\'"), fkyaml::node::string_type("foo bar")),
         value_pair_t(std::string("\'foo\'\'bar\'"), fkyaml::node::string_type("foo\'bar")),
+        value_pair_t(std::string("\'foo\'\'bar\' "), fkyaml::node::string_type("foo\'bar")),
         value_pair_t(std::string("\'foo,bar\'"), fkyaml::node::string_type("foo,bar")),
         value_pair_t(std::string("\'foo]bar\'"), fkyaml::node::string_type("foo]bar")),
         value_pair_t(std::string("\'foo}bar\'"), fkyaml::node::string_type("foo}bar")),
@@ -371,7 +374,7 @@ TEST_CASE("LexicalAnalyzer_SingleQuotedString") {
     REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == value_pair.second);
 }
 
-TEST_CASE("LexicalAnalyzer_DoubleQuotedString") {
+TEST_CASE("LexicalAnalyzer_DoubleQuotedScalar") {
     using value_pair_t = std::pair<std::string, fkyaml::node::string_type>;
     auto value_pair = GENERATE(
         value_pair_t(std::string("\"\""), fkyaml::node::string_type("")),
@@ -1432,7 +1435,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
     fkyaml::detail::lexical_token token;
 
     SECTION("simple flow mapping") {
-        lexer_t lexer(fkyaml::detail::input_adapter("test: { bool: true, foo: bar, pi: 3.14 }"));
+        lexer_t lexer(fkyaml::detail::input_adapter("test: { bool : true, foo :b: bar, pi: 3.14 }"));
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
@@ -1460,7 +1463,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
-        REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo");
+        REQUIRE(std::string(token.token_begin_itr, token.token_end_itr) == "foo :b");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);

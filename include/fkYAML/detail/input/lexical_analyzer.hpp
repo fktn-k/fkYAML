@@ -188,7 +188,8 @@ public:
 
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
-                if (std::equal(m_token_begin_itr, m_cur_itr + 3, "---")) {
+                bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
+                if (is_dir_end) {
                     m_cur_itr += 3;
                     token.type = lexical_token_t::END_OF_DIRECTIVES;
                     return token;
@@ -232,7 +233,8 @@ public:
         case '.': {
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
-                if (std::equal(m_cur_itr, m_cur_itr + 3, "...")) {
+                bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
+                if (is_doc_end) {
                     m_cur_itr += 3;
                     token.type = lexical_token_t::END_OF_DOCUMENT;
                     return token;
@@ -1035,9 +1037,6 @@ private:
             emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
-        if (is_value_buffer_used) {
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-        }
         return is_value_buffer_used;
     }
 

@@ -3042,7 +3042,8 @@ public:
 
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
-                if (std::equal(m_token_begin_itr, m_cur_itr + 3, "---")) {
+                bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
+                if (is_dir_end) {
                     m_cur_itr += 3;
                     token.type = lexical_token_t::END_OF_DIRECTIVES;
                     return token;
@@ -3086,7 +3087,8 @@ public:
         case '.': {
             bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
             if (is_available) {
-                if (std::equal(m_cur_itr, m_cur_itr + 3, "...")) {
+                bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
+                if (is_doc_end) {
                     m_cur_itr += 3;
                     token.type = lexical_token_t::END_OF_DOCUMENT;
                     return token;
@@ -3889,9 +3891,6 @@ private:
             emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
-        if (is_value_buffer_used) {
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-        }
         return is_value_buffer_used;
     }
 
@@ -5785,8 +5784,9 @@ private:
         case node_type::BOOLEAN:
             node = basic_node_type(from_string(token_str, type_tag<boolean_type> {}));
             break;
-        case node_type::INTEGER:
-            if (token_str.size() > 2 && token_str.rfind("0o", 0) != std::string::npos) {
+        case node_type::INTEGER: {
+            bool is_octal = (token_str.size() > 2) && (token_str.rfind("0o", 0) != std::string::npos);
+            if (is_octal) {
                 // Replace the prefix "0o" with "0" so STL functions can convert octal chars to an integer.
                 // Note that the YAML specifies octal values start with the prefix "0o", not "0".
                 // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
@@ -5796,6 +5796,7 @@ private:
                 node = basic_node_type(from_string(token_str, type_tag<integer_type> {}));
             }
             break;
+        }
         case node_type::FLOAT:
             node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
             break;
@@ -8008,7 +8009,8 @@ private:
                 break;
             }
 
-            if (scalar_scanner::scan(str_val) != node_type::STRING) {
+            node_type type_if_plain = scalar_scanner::scan(str_val); // LCOV_EXCL_LINE
+            if (type_if_plain != node_type::STRING) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';

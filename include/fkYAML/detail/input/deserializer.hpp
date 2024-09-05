@@ -1118,8 +1118,9 @@ private:
         case node_type::BOOLEAN:
             node = basic_node_type(from_string(token_str, type_tag<boolean_type> {}));
             break;
-        case node_type::INTEGER:
-            if (token_str.size() > 2 && token_str.rfind("0o", 0) != std::string::npos) {
+        case node_type::INTEGER: {
+            bool is_octal = (token_str.size() > 2) && (token_str.rfind("0o", 0) != std::string::npos);
+            if (is_octal) {
                 // Replace the prefix "0o" with "0" so STL functions can convert octal chars to an integer.
                 // Note that the YAML specifies octal values start with the prefix "0o", not "0".
                 // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
@@ -1129,6 +1130,7 @@ private:
                 node = basic_node_type(from_string(token_str, type_tag<integer_type> {}));
             }
             break;
+        }
         case node_type::FLOAT:
             node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
             break;

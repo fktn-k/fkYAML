@@ -243,7 +243,8 @@ private:
                 break;
             }
 
-            if (scalar_scanner::scan(str_val) != node_type::STRING) {
+            node_type type_if_plain = scalar_scanner::scan(str_val); // LCOV_EXCL_LINE
+            if (type_if_plain != node_type::STRING) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
