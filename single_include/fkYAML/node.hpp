@@ -2944,7 +2944,9 @@ public:
             return {};
         }
 
-        lexical_token token {lexical_token_t::PLAIN_SCALAR, m_cur_itr, m_end_itr};
+        lexical_token token {};
+        token.type = lexical_token_t::PLAIN_SCALAR;
+        token.token_begin_itr = m_cur_itr;
 
         switch (char current = *m_cur_itr) {
         case '?':
@@ -3981,12 +3983,12 @@ private:
                             break;
                         }
 
-                        char current = *m_cur_itr;
-                        if (current == ' ') {
+                        char c = *m_cur_itr;
+                        if (c == ' ') {
                             continue;
                         }
 
-                        if (current == '\n') {
+                        if (c == '\n') {
                             is_next_empty = true;
                             break;
                         }
