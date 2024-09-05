@@ -220,6 +220,7 @@ add_executable(
   test_input_adapter.cpp
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
+  test_node_attrs.cpp
   test_node_class.cpp
   test_node_ref_storage_class.cpp
   test_node_type.cpp
