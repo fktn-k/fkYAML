@@ -900,8 +900,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
 #define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
 
+#include <cmath>
 #include <cstring>
 #include <limits>
+#include <string>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -1090,11 +1092,127 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
     return true;
 }
 
+template <typename FloatType>
+inline void set_infinity(FloatType& f, const FloatType sign) noexcept;
+
+template <>
+inline void set_infinity<float>(float& f, const float sign) noexcept {
+    f = std::numeric_limits<float>::infinity() * sign;
+}
+
+template <>
+inline void set_infinity<double>(double& f, const double sign) noexcept {
+    f = std::numeric_limits<double>::infinity() * sign;
+}
+
+template <>
+inline void set_infinity<long double>(long double& f, const long double sign) noexcept {
+    f = std::numeric_limits<long double>::infinity() * sign;
+}
+
+template <typename FloatType>
+inline void set_nan(FloatType& f) noexcept;
+
+template <>
+inline void set_nan<float>(float& f) noexcept {
+    f = std::nanf("");
+}
+
+template <>
+inline void set_nan<double>(double& f) noexcept {
+    f = std::nan("");
+}
+
+template <>
+inline void set_nan<long double>(long double& f) noexcept {
+    f = std::nanl("");
+}
+
+template <typename CharItr>
+inline bool atof_impl(CharItr begin, CharItr end, float& f) {
+    std::size_t idx = 0;
+    f = std::stof(std::string(begin, end), &idx);
+    return idx == static_cast<std::size_t>(std::distance(begin, end));
+}
+
+template <typename CharItr>
+inline bool atof_impl(CharItr begin, CharItr end, double& f) {
+    std::size_t idx = 0;
+    f = std::stod(std::string(begin, end), &idx);
+    return idx == static_cast<std::size_t>(std::distance(begin, end));
+}
+
+template <typename CharItr>
+inline bool atof_impl(CharItr begin, CharItr end, long double& f) {
+    std::size_t idx = 0;
+    f = std::stold(std::string(begin, end), &idx);
+    return idx == static_cast<std::size_t>(std::distance(begin, end));
+}
+
+template <typename CharItr, typename FloatType>
+inline bool atof(CharItr begin, CharItr end, FloatType& f) {
+    static_assert(is_iterator_of<CharItr, char>::value, "atof() accepts iterators for char type");
+    static_assert(std::is_floating_point<FloatType>::value, "atof() accepts floating point types as an output type");
+
+    if (begin == end) {
+        return false;
+    }
+
+    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const char* p_begin = &*begin;
+    // const char* p_end = p_begin + len;
+
+    if (*p_begin == '-') {
+        if (len == 5) {
+            const char* p_from_second = p_begin + 1;
+            bool is_min_inf_scalar = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
+                                     (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
+                                     (std::strncmp(p_from_second, ".INF", 4) == 0);
+
+            if (is_min_inf_scalar) {
+                set_infinity(f, FloatType(-1.));
+                return true;
+            }
+        }
+    }
+    else if (len == 4) {
+        bool is_inf_scalar = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||
+                             (std::strncmp(p_begin, ".INF", 4) == 0);
+        bool is_nan_scalar = false;
+        if (!is_inf_scalar) {
+            is_nan_scalar = (std::strncmp(p_begin, ".nan", 4) == 0) || (std::strncmp(p_begin, ".NaN", 4) == 0) ||
+                            (std::strncmp(p_begin, ".NAN", 4) == 0);
+        }
+
+        if (is_inf_scalar) {
+            set_infinity(f, FloatType(1.));
+            return true;
+        }
+
+        if (is_nan_scalar) {
+            set_nan(f);
+            return true;
+        }
+    }
+
+    bool success = false;
+    try {
+        success = atof_impl(begin, end, f);
+    }
+    catch (const std::exception& /*unused*/) {
+        success = false;
+    }
+
+    return success;
+}
+
 FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_ */
 
-// #include <fkYAML/detail/conversions/from_string.hpp>
+// #include <fkYAML/detail/document_metainfo.hpp>
+
+// #include <fkYAML/detail/input/lexical_analyzer.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
 /// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
@@ -1105,20 +1223,169 @@ FK_YAML_DETAIL_NAMESPACE_END
 ///
 /// @file
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
+#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 
+#include <cctype>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
-#include <string>
 #include <type_traits>
+#include <vector>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
-// #include <fkYAML/detail/meta/stl_supplement.hpp>
+// #include <fkYAML/detail/assert.hpp>
 
-// #include <fkYAML/detail/meta/type_traits.hpp>
+// #include <fkYAML/detail/encodings/uri_encoding.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
+
+#include <cctype>
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief A class which handles URI encodings.
+class uri_encoding {
+public:
+    /// @brief Validates the encoding of the given character sequence.
+    /// @param begin An iterator to the first element of the character sequence.
+    /// @param end An iterator to the past-the-end element of the character sequence.
+    /// @return true if all the characters are valid, false otherwise.
+    static bool validate(std::string::const_iterator begin, std::string::const_iterator end) noexcept {
+        if (begin == end) {
+            return true;
+        }
+
+        std::string::const_iterator current = begin;
+
+        for (; current != end; ++current) {
+            if (*current == '%') {
+                bool are_valid_octets = validate_octets(++current, end);
+                if (!are_valid_octets) {
+                    return false;
+                }
+
+                continue;
+            }
+
+            bool is_allowed_character = validate_character(*current);
+            if (!is_allowed_character) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+private:
+    /// @brief Validates the given octets.
+    /// @param begin An iterator to the first octet.
+    /// @param end An iterator to the past-the-end element of the whole character sequence.
+    /// @return true if the octets are valid, false otherwise.
+    static bool validate_octets(std::string::const_iterator& begin, std::string::const_iterator& end) {
+        for (int i = 0; i < 2; i++, ++begin) {
+            if (begin == end) {
+                return false;
+            }
+
+            // Normalize a character for a-f/A-F comparison
+            int octet = std::tolower(*begin);
+
+            if ('0' <= octet && octet <= '9') {
+                continue;
+            }
+
+            if ('a' <= octet && octet <= 'f') {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /// @brief Verify if the given character is allowed as a URI character.
+    /// @param c The target character.
+    /// @return true if the given character is allowed as a URI character, false otherwise.
+    static bool validate_character(char c) {
+        // Check if the current character is one of reserved/unreserved characters which are allowed for
+        // use. See the following links for details:
+        // * reserved characters:   https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
+        // * unreserved characters: https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
+
+        switch (c) {
+        // reserved characters (gen-delims)
+        case ':':
+        case '/':
+        case '?':
+        case '#':
+        case '[':
+        case ']':
+        case '@':
+        // reserved characters (sub-delims)
+        case '!':
+        case '$':
+        case '&':
+        case '\'':
+        case '(':
+        case ')':
+        case '*':
+        case '+':
+        case ',':
+        case ';':
+        case '=':
+        // unreserved characters
+        case '-':
+        case '.':
+        case '_':
+        case '~':
+            return true;
+        default:
+            // alphabets and numbers are also allowed.
+            return std::isalnum(c);
+        }
+    }
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_ */
+
+// #include <fkYAML/detail/encodings/utf_encodings.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
+
+#include <array>
+#include <cstdint>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
 
 // #include <fkYAML/exception.hpp>
 ///  _______   __ __   __  _____   __  __  __
@@ -1515,404 +1782,6 @@ private:
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_EXCEPTION_HPP_ */
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief Convert a string YAML token to a ValueType object.
-/// @tparam ValueType A target value type.
-/// @tparam CharType The type of characters in a source string.
-template <typename ValueType, typename CharType>
-inline ValueType from_string(const std::basic_string<CharType>& s, type_tag<ValueType> /*unused*/);
-
-/// @brief Specialization of from_string() for null values with std::string
-/// @tparam  N/A
-template <>
-inline std::nullptr_t from_string(const std::string& s, type_tag<std::nullptr_t> /*unused*/) {
-    if (s == "null" || s == "Null" || s == "NULL" || s == "~") {
-        return nullptr;
-    }
-
-    throw exception("Cannot convert a string into a null value.");
-}
-
-/// @brief Specialization of from_string() for boolean values with std::string.
-/// @tparam  N/A
-template <>
-inline bool from_string(const std::string& s, type_tag<bool> /*unused*/) {
-    if (s == "true" || s == "True" || s == "TRUE") {
-        return true;
-    }
-
-    if (s == "false" || s == "False" || s == "FALSE") {
-        return false;
-    }
-
-    throw exception("Cannot convert a string into a boolean value.");
-}
-
-/// @brief Specialization of from_string() for int values with std::string.
-/// @tparam  N/A
-template <>
-inline int from_string(const std::string& s, type_tag<int> /*unused*/) {
-    std::size_t idx = 0;
-    long ret = 0;
-
-    try {
-        ret = std::stoi(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into an int value.");
-    }
-
-    return ret;
-}
-
-/// @brief Specialization of from_string() for long values with std::string.
-/// @tparam  N/A
-template <>
-inline long from_string(const std::string& s, type_tag<long> /*unused*/) {
-    std::size_t idx = 0;
-    long ret = 0;
-
-    try {
-        ret = std::stol(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into a long value.");
-    }
-
-    return ret;
-}
-
-/// @brief Specialization of from_string() for long long values with std::string.
-/// @tparam  N/A
-template <>
-inline long long from_string(const std::string& s, type_tag<long long> /*unused*/) {
-    std::size_t idx = 0;
-    long long ret = 0;
-
-    try {
-        ret = std::stoll(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into a long long value.");
-    }
-
-    return ret;
-}
-
-/// @brief Partial specialization of from_string() for other signed integer types with std::string.
-/// @tparam SignedIntType A signed integer type other than long long.
-template <typename SignedIntType>
-inline enable_if_t<
-    conjunction<
-        is_non_bool_integral<SignedIntType>, std::is_signed<SignedIntType>, negation<std::is_same<SignedIntType, int>>,
-        negation<std::is_same<SignedIntType, long>>, negation<std::is_same<SignedIntType, long long>>>::value,
-    SignedIntType>
-from_string(const std::string& s, type_tag<SignedIntType> /*unused*/) {
-    const auto tmp_ret = from_string(s, type_tag<int> {});
-    if (static_cast<long long>(std::numeric_limits<SignedIntType>::max()) < tmp_ret) {
-        throw exception("Failed to convert a long long value into a SignedIntegerType value.");
-    }
-
-    return static_cast<SignedIntType>(tmp_ret);
-}
-
-/// @brief Specialization of from_string() for unsigned long values with std::string.
-/// @tparam  N/A
-template <>
-inline unsigned long from_string(const std::string& s, type_tag<unsigned long> /*unused*/) {
-    std::size_t idx = 0;
-    unsigned long ret = 0;
-
-    try {
-        ret = std::stoul(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into an unsigned long value.");
-    }
-
-    return ret;
-}
-
-/// @brief Specialization of from_string() for unsigned long long values with std::string.
-/// @tparam  N/A
-template <>
-inline unsigned long long from_string(const std::string& s, type_tag<unsigned long long> /*unused*/) {
-    std::size_t idx = 0;
-    unsigned long long ret = 0;
-
-    try {
-        ret = std::stoull(s, &idx, 0);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into an unsigned long long value.");
-    }
-
-    return ret;
-}
-
-/// @brief Partial specialization of from_string() for other unsigned integer types with std::string.
-/// @tparam UnsignedIntType An unsigned integer type other than unsigned long long.
-template <typename UnsignedIntType>
-inline enable_if_t<
-    conjunction<
-        is_non_bool_integral<UnsignedIntType>, std::is_unsigned<UnsignedIntType>,
-        negation<std::is_same<UnsignedIntType, unsigned long>>,
-        negation<std::is_same<UnsignedIntType, unsigned long long>>>::value,
-    UnsignedIntType>
-from_string(const std::string& s, type_tag<UnsignedIntType> /*unused*/) {
-    const auto tmp_ret = from_string(s, type_tag<unsigned long> {});
-    if (static_cast<long long>(std::numeric_limits<UnsignedIntType>::max()) < tmp_ret) {
-        throw exception("Failed to convert an unsigned long long into an unsigned integer value.");
-    }
-
-    return static_cast<UnsignedIntType>(tmp_ret);
-}
-
-/// @brief Specialization of from_string() for float values with std::string.
-/// @tparam  N/A
-template <>
-inline float from_string(const std::string& s, type_tag<float> /*unused*/) {
-    if (s == ".inf" || s == ".Inf" || s == ".INF") {
-        return std::numeric_limits<float>::infinity();
-    }
-
-    if (s == "-.inf" || s == "-.Inf" || s == "-.INF") {
-        static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required.");
-        return -1 * std::numeric_limits<float>::infinity();
-    }
-
-    if (s == ".nan" || s == ".NaN" || s == ".NAN") {
-        return std::nanf("");
-    }
-
-    std::size_t idx = 0;
-    float ret = 0.0f;
-
-    try {
-        ret = std::stof(s, &idx);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into a float value.");
-    }
-
-    return ret;
-}
-
-/// @brief Specialization of from_string() for double values with std::string.
-/// @tparam  N/A
-template <>
-inline double from_string(const std::string& s, type_tag<double> /*unused*/) {
-    if (s == ".inf" || s == ".Inf" || s == ".INF") {
-        return std::numeric_limits<double>::infinity();
-    }
-
-    if (s == "-.inf" || s == "-.Inf" || s == "-.INF") {
-        static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 required.");
-        return -1 * std::numeric_limits<double>::infinity();
-    }
-
-    if (s == ".nan" || s == ".NaN" || s == ".NAN") {
-        return std::nan("");
-    }
-
-    std::size_t idx = 0;
-    double ret = 0.0;
-
-    try {
-        ret = std::stod(s, &idx);
-    }
-    catch (const std::exception& /*unused*/) {
-        throw exception("Failed to convert a string into a double value.");
-    }
-
-    return ret;
-}
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_ */
-
-// #include <fkYAML/detail/document_metainfo.hpp>
-
-// #include <fkYAML/detail/input/lexical_analyzer.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
-#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
-
-#include <cctype>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <limits>
-#include <type_traits>
-#include <vector>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/detail/assert.hpp>
-
-// #include <fkYAML/detail/encodings/uri_encoding.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
-
-#include <cctype>
-#include <string>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief A class which handles URI encodings.
-class uri_encoding {
-public:
-    /// @brief Validates the encoding of the given character sequence.
-    /// @param begin An iterator to the first element of the character sequence.
-    /// @param end An iterator to the past-the-end element of the character sequence.
-    /// @return true if all the characters are valid, false otherwise.
-    static bool validate(std::string::const_iterator begin, std::string::const_iterator end) noexcept {
-        if (begin == end) {
-            return true;
-        }
-
-        std::string::const_iterator current = begin;
-
-        for (; current != end; ++current) {
-            if (*current == '%') {
-                bool are_valid_octets = validate_octets(++current, end);
-                if (!are_valid_octets) {
-                    return false;
-                }
-
-                continue;
-            }
-
-            bool is_allowed_character = validate_character(*current);
-            if (!is_allowed_character) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-private:
-    /// @brief Validates the given octets.
-    /// @param begin An iterator to the first octet.
-    /// @param end An iterator to the past-the-end element of the whole character sequence.
-    /// @return true if the octets are valid, false otherwise.
-    static bool validate_octets(std::string::const_iterator& begin, std::string::const_iterator& end) {
-        for (int i = 0; i < 2; i++, ++begin) {
-            if (begin == end) {
-                return false;
-            }
-
-            // Normalize a character for a-f/A-F comparison
-            int octet = std::tolower(*begin);
-
-            if ('0' <= octet && octet <= '9') {
-                continue;
-            }
-
-            if ('a' <= octet && octet <= 'f') {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /// @brief Verify if the given character is allowed as a URI character.
-    /// @param c The target character.
-    /// @return true if the given character is allowed as a URI character, false otherwise.
-    static bool validate_character(char c) {
-        // Check if the current character is one of reserved/unreserved characters which are allowed for
-        // use. See the following links for details:
-        // * reserved characters:   https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
-        // * unreserved characters: https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
-
-        switch (c) {
-        // reserved characters (gen-delims)
-        case ':':
-        case '/':
-        case '?':
-        case '#':
-        case '[':
-        case ']':
-        case '@':
-        // reserved characters (sub-delims)
-        case '!':
-        case '$':
-        case '&':
-        case '\'':
-        case '(':
-        case ')':
-        case '*':
-        case '+':
-        case ',':
-        case ';':
-        case '=':
-        // unreserved characters
-        case '-':
-        case '.':
-        case '_':
-        case '~':
-            return true;
-        default:
-            // alphabets and numbers are also allowed.
-            return std::isalnum(c);
-        }
-    }
-};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_ */
-
-// #include <fkYAML/detail/encodings/utf_encodings.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
-
-#include <array>
-#include <cstdint>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/exception.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -5959,9 +5828,12 @@ private:
             break;
         }
         case node_type::FLOAT: {
-            // TODO: use detail::atof() when it's implemented.
-            const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
-            node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
+            float_number_type float_val = 0;
+            bool converted = detail::atof(token.token_begin_itr, token.token_end_itr, float_val);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to a floating point value", line, indent);
+            }
+            node = basic_node_type(float_val);
             break;
         }
         case node_type::STRING:

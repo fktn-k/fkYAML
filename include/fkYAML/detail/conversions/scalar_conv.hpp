@@ -16,8 +16,10 @@
 #ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
 #define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
 
+#include <cmath>
 #include <cstring>
 #include <limits>
+#include <string>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
@@ -202,6 +204,120 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
 
     i = 0;
     return true;
+}
+
+template <typename FloatType>
+inline void set_infinity(FloatType& f, const FloatType sign) noexcept;
+
+template <>
+inline void set_infinity<float>(float& f, const float sign) noexcept {
+    f = std::numeric_limits<float>::infinity() * sign;
+}
+
+template <>
+inline void set_infinity<double>(double& f, const double sign) noexcept {
+    f = std::numeric_limits<double>::infinity() * sign;
+}
+
+template <>
+inline void set_infinity<long double>(long double& f, const long double sign) noexcept {
+    f = std::numeric_limits<long double>::infinity() * sign;
+}
+
+template <typename FloatType>
+inline void set_nan(FloatType& f) noexcept;
+
+template <>
+inline void set_nan<float>(float& f) noexcept {
+    f = std::nanf("");
+}
+
+template <>
+inline void set_nan<double>(double& f) noexcept {
+    f = std::nan("");
+}
+
+template <>
+inline void set_nan<long double>(long double& f) noexcept {
+    f = std::nanl("");
+}
+
+template <typename CharItr>
+inline bool atof_impl(CharItr begin, CharItr end, float& f) {
+    std::size_t idx = 0;
+    f = std::stof(std::string(begin, end), &idx);
+    return idx == static_cast<std::size_t>(std::distance(begin, end));
+}
+
+template <typename CharItr>
+inline bool atof_impl(CharItr begin, CharItr end, double& f) {
+    std::size_t idx = 0;
+    f = std::stod(std::string(begin, end), &idx);
+    return idx == static_cast<std::size_t>(std::distance(begin, end));
+}
+
+template <typename CharItr>
+inline bool atof_impl(CharItr begin, CharItr end, long double& f) {
+    std::size_t idx = 0;
+    f = std::stold(std::string(begin, end), &idx);
+    return idx == static_cast<std::size_t>(std::distance(begin, end));
+}
+
+template <typename CharItr, typename FloatType>
+inline bool atof(CharItr begin, CharItr end, FloatType& f) {
+    static_assert(is_iterator_of<CharItr, char>::value, "atof() accepts iterators for char type");
+    static_assert(std::is_floating_point<FloatType>::value, "atof() accepts floating point types as an output type");
+
+    if (begin == end) {
+        return false;
+    }
+
+    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const char* p_begin = &*begin;
+    // const char* p_end = p_begin + len;
+
+    if (*p_begin == '-') {
+        if (len == 5) {
+            const char* p_from_second = p_begin + 1;
+            bool is_min_inf_scalar = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
+                                     (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
+                                     (std::strncmp(p_from_second, ".INF", 4) == 0);
+
+            if (is_min_inf_scalar) {
+                set_infinity(f, FloatType(-1.));
+                return true;
+            }
+        }
+    }
+    else if (len == 4) {
+        bool is_inf_scalar = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||
+                             (std::strncmp(p_begin, ".INF", 4) == 0);
+        bool is_nan_scalar = false;
+        if (!is_inf_scalar) {
+            is_nan_scalar = (std::strncmp(p_begin, ".nan", 4) == 0) || (std::strncmp(p_begin, ".NaN", 4) == 0) ||
+                            (std::strncmp(p_begin, ".NAN", 4) == 0);
+        }
+
+        if (is_inf_scalar) {
+            set_infinity(f, FloatType(1.));
+            return true;
+        }
+
+        if (is_nan_scalar) {
+            set_nan(f);
+            return true;
+        }
+    }
+
+    bool success = false;
+    try {
+        success = atof_impl(begin, end, f);
+    }
+    catch (const std::exception& /*unused*/) {
+        success = false;
+    }
+
+    return success;
 }
 
 FK_YAML_DETAIL_NAMESPACE_END

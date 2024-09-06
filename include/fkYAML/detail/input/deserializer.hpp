@@ -19,7 +19,6 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/conversions/scalar_conv.hpp>
-#include <fkYAML/detail/conversions/from_string.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/input/tag_resolver.hpp>
@@ -1143,9 +1142,12 @@ private:
             break;
         }
         case node_type::FLOAT: {
-            // TODO: use detail::atof() when it's implemented.
-            const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
-            node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
+            float_number_type float_val = 0;
+            bool converted = detail::atof(token.token_begin_itr, token.token_end_itr, float_val);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to a floating point value", line, indent);
+            }
+            node = basic_node_type(float_val);
             break;
         }
         case node_type::STRING:
