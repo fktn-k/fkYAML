@@ -216,7 +216,6 @@ add_executable(
   test_custom_from_node.cpp
   test_deserializer_class.cpp
   test_exception_class.cpp
-  test_from_string.cpp
   test_input_adapter.cpp
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
@@ -226,6 +225,7 @@ add_executable(
   test_node_type.cpp
   test_ordered_map_class.cpp
   test_position_tracker_class.cpp
+  test_scalar_conv.cpp
   test_scalar_scanner_class.cpp
   test_serializer_class.cpp
   test_string_formatter.cpp
