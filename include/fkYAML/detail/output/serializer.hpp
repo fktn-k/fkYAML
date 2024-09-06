@@ -14,6 +14,7 @@
 #include <cmath>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/conversions/to_string.hpp>
@@ -243,7 +244,7 @@ private:
                 break;
             }
 
-            node_type type_if_plain = scalar_scanner::scan(str_val); // LCOV_EXCL_LINE
+            node_type type_if_plain = scalar_scanner::scan(str_val.begin(), str_val.end());
             if (type_if_plain != node_type::STRING) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)

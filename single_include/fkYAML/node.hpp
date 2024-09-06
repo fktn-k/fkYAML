@@ -2551,7 +2551,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
 #define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
 
-#include <algorithm>
+#include <cstring>
 #include <string>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
@@ -2584,70 +2584,99 @@ inline bool is_xdigit(char c) {
 } // namespace
 class scalar_scanner {
 public:
-    static node_type scan(const std::string& token) {
-        switch (token.size()) {
-        case 0:
+    static node_type scan(std::string::const_iterator begin, std::string::const_iterator end) {
+        if (begin == end) {
             return node_type::STRING;
+        }
+
+        uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+        if (len > 5) {
+            return scan_possible_number_token(begin, len);
+        }
+
+        const char* p_begin = &*begin;
+
+        switch (len) {
         case 1:
-            if (token[0] == '~') {
+            if (*p_begin == '~') {
                 return node_type::NULL_OBJECT;
             }
             break;
         case 4:
-            switch (token[0]) {
+            switch (*p_begin) {
             case 'n':
+                // no possible case of begin a number otherwise.
+                return (std::strncmp(p_begin + 1, "ull", 3) == 0) ? node_type::NULL_OBJECT : node_type::STRING;
             case 'N':
-                if (token == "null" || token == "Null" || token == "NULL") {
-                    return node_type::NULL_OBJECT;
-                }
-                break;
+                // no possible case of begin a number otherwise.
+                return ((std::strncmp(p_begin + 1, "ull", 3) == 0) || (std::strncmp(p_begin + 1, "ULL", 3) == 0))
+                           ? node_type::NULL_OBJECT
+                           : node_type::STRING;
             case 't':
+                // no possible case of being a number otherwise.
+                return (std::strncmp(p_begin + 1, "rue", 3) == 0) ? node_type::BOOLEAN : node_type::STRING;
             case 'T':
-                if (token == "true" || token == "True" || token == "TRUE") {
-                    return node_type::BOOLEAN;
-                }
-                break;
-            case '.':
-                if (token == ".inf" || token == ".Inf" || token == ".INF" || token == ".nan" || token == ".NaN" ||
-                    token == ".NAN") {
+                // no possible case of being a number otherwise.
+                return ((std::strncmp(p_begin + 1, "rue", 3) == 0) || (std::strncmp(p_begin + 1, "RUE", 3) == 0))
+                           ? node_type::BOOLEAN
+                           : node_type::STRING;
+            case '.': {
+                const char* p_from_second = p_begin + 1;
+                bool is_inf_or_nan_scalar =
+                    (std::strncmp(p_from_second, "inf", 3) == 0) || (std::strncmp(p_from_second, "Inf", 3) == 0) ||
+                    (std::strncmp(p_from_second, "INF", 3) == 0) || (std::strncmp(p_from_second, "nan", 3) == 0) ||
+                    (std::strncmp(p_from_second, "NaN", 3) == 0) || (std::strncmp(p_from_second, "NAN", 3) == 0);
+                if (is_inf_or_nan_scalar) {
                     return node_type::FLOAT;
                 }
                 break;
             }
+            }
             break;
         case 5:
-            switch (token[0]) {
+            switch (*p_begin) {
             case 'f':
-            case 'F':
-                if (token == "false" || token == "False" || token == "FALSE") {
+                if (std::strncmp(p_begin + 1, "alse", 4) == 0) {
                     return node_type::BOOLEAN;
                 }
                 break;
+            case 'F': {
+                bool is_false_scalar =
+                    (std::strncmp(p_begin + 1, "alse", 4) == 0) || (std::strncmp(p_begin + 1, "ALSE", 4) == 0);
+                if (is_false_scalar) {
+                    return node_type::BOOLEAN;
+                }
+                break;
+            }
             case '-':
-                if (token[1] == '.' && (token == "-.inf" || token == "-.Inf" || token == "-.INF")) {
-                    return node_type::FLOAT;
+                if (*(p_begin + 1) == '.') {
+                    const char* p_from_third = p_begin + 2;
+                    bool is_min_inf_scalar = (std::strncmp(p_from_third, "inf", 3) == 0) ||
+                                             (std::strncmp(p_from_third, "Inf", 3) == 0) ||
+                                             (std::strncmp(p_from_third, "INF", 3) == 0);
+                    if (is_min_inf_scalar) {
+                        return node_type::FLOAT;
+                    }
                 }
                 break;
             }
             break;
         }
 
-        return scan_possible_number_token(token);
+        return scan_possible_number_token(begin, len);
     }
 
 private:
-    static node_type scan_possible_number_token(const std::string& token) {
-        std::string::const_iterator itr = token.begin();
-        std::size_t size = token.size();
-        FK_YAML_ASSERT(size > 0);
+    static node_type scan_possible_number_token(std::string::const_iterator itr, uint32_t len) {
+        FK_YAML_ASSERT(len > 0);
 
         switch (*itr) {
         case '-':
-            return (size > 1) ? scan_negative_number(++itr, --size) : node_type::STRING;
+            return (len > 1) ? scan_negative_number(++itr, --len) : node_type::STRING;
         case '+':
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : node_type::STRING;
+            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::STRING;
         case '0':
-            return (size > 1) ? scan_after_zero_at_first(++itr, --size) : node_type::INTEGER;
+            return (len > 1) ? scan_after_zero_at_first(++itr, --len) : node_type::INTEGER;
         case '1':
         case '2':
         case '3':
@@ -2657,24 +2686,24 @@ private:
         case '7':
         case '8':
         case '9':
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : node_type::INTEGER;
+            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::INTEGER;
         default:
             return node_type::STRING;
         }
     }
 
-    static node_type scan_negative_number(std::string::const_iterator itr, std::size_t size) {
-        FK_YAML_ASSERT(size > 0);
+    static node_type scan_negative_number(std::string::const_iterator itr, uint32_t len) {
+        FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, false) : node_type::INTEGER;
+            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::INTEGER;
         }
 
         return node_type::STRING;
     }
 
-    static node_type scan_after_zero_at_first(std::string::const_iterator itr, std::size_t size) {
-        FK_YAML_ASSERT(size > 0);
+    static node_type scan_after_zero_at_first(std::string::const_iterator itr, uint32_t len) {
+        FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
             // a token consisting of the beginning '0' and some following numbers, e.g., `0123`, is not an integer
@@ -2684,27 +2713,27 @@ private:
 
         switch (*itr) {
         case '.': {
-            if (size == 1) {
+            if (len == 1) {
                 // 0 is omitted after `0.`.
                 return node_type::FLOAT;
             }
-            node_type ret = scan_after_decimal_point(++itr, --size, true);
+            node_type ret = scan_after_decimal_point(++itr, --len, true);
             return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
         }
         case 'o':
-            return (size > 1) ? scan_octal_number(++itr, --size) : node_type::STRING;
+            return (len > 1) ? scan_octal_number(++itr, --len) : node_type::STRING;
         case 'x':
-            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : node_type::STRING;
+            return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::STRING;
         default:
             return node_type::STRING;
         }
     }
 
-    static node_type scan_decimal_number(std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
-        FK_YAML_ASSERT(size > 0);
+    static node_type scan_decimal_number(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
+        FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : node_type::INTEGER;
+            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::INTEGER;
         }
 
         switch (*itr) {
@@ -2713,50 +2742,49 @@ private:
                 // the token has more than one period, e.g., a semantic version `1.2.3`.
                 return node_type::STRING;
             }
-            if (size == 1) {
+            if (len == 1) {
                 // 0 is omitted after the decimal point
                 return node_type::FLOAT;
             }
-            node_type ret = scan_after_decimal_point(++itr, --size, true);
+            node_type ret = scan_after_decimal_point(++itr, --len, true);
             return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
         }
         case 'e':
         case 'E':
-            return (size > 1) ? scan_after_exponent(++itr, --size, has_decimal_point) : node_type::STRING;
+            return (len > 1) ? scan_after_exponent(++itr, --len, has_decimal_point) : node_type::STRING;
         default:
             return node_type::STRING;
         }
     }
 
-    static node_type scan_after_decimal_point(
-        std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
-        FK_YAML_ASSERT(size > 0);
+    static node_type scan_after_decimal_point(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
+        FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : node_type::FLOAT;
+            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
         }
 
         return node_type::STRING;
     }
 
-    static node_type scan_after_exponent(std::string::const_iterator itr, std::size_t size, bool has_decimal_point) {
-        FK_YAML_ASSERT(size > 0);
+    static node_type scan_after_exponent(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
+        FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : node_type::FLOAT;
+            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
         }
 
         switch (*itr) {
         case '+':
         case '-':
-            return (size > 1) ? scan_decimal_number(++itr, --size, has_decimal_point) : node_type::STRING;
+            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::STRING;
         default:
             return node_type::STRING;
         }
     }
 
-    static node_type scan_octal_number(std::string::const_iterator itr, std::size_t size) {
-        FK_YAML_ASSERT(size > 0);
+    static node_type scan_octal_number(std::string::const_iterator itr, uint32_t len) {
+        FK_YAML_ASSERT(len > 0);
 
         switch (*itr) {
         case '0':
@@ -2767,17 +2795,17 @@ private:
         case '5':
         case '6':
         case '7':
-            return (size > 1) ? scan_octal_number(++itr, --size) : node_type::INTEGER;
+            return (len > 1) ? scan_octal_number(++itr, --len) : node_type::INTEGER;
         default:
             return node_type::STRING;
         }
     }
 
-    static node_type scan_hexadecimal_number(std::string::const_iterator itr, std::size_t size) {
-        FK_YAML_ASSERT(size > 0);
+    static node_type scan_hexadecimal_number(std::string::const_iterator itr, uint32_t len) {
+        FK_YAML_ASSERT(len > 0);
 
         if (is_xdigit(*itr)) {
-            return (size > 1) ? scan_hexadecimal_number(++itr, --size) : node_type::INTEGER;
+            return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::INTEGER;
         }
         return node_type::STRING;
     }
@@ -5841,10 +5869,9 @@ private:
             type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_SCALAR ||
             type == lexical_token_t::ALIAS_PREFIX);
 
-        const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
         node_type value_type {node_type::STRING};
         if (type == lexical_token_t::PLAIN_SCALAR) {
-            value_type = scalar_scanner::scan(token_str);
+            value_type = scalar_scanner::scan(token.token_begin_itr, token.token_end_itr);
         }
 
         if (m_needs_tag_impl) {
@@ -5886,10 +5913,13 @@ private:
         basic_node_type node {};
 
         if (type == lexical_token_t::ALIAS_PREFIX) {
+            const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
+
             uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
             if (anchor_counts == 0) {
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
+
             node.m_attrs |= detail::node_attr_bits::alias_bit;
             node.m_prop.anchor = std::move(token_str);
             detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
@@ -5928,12 +5958,14 @@ private:
             node = basic_node_type(integer);
             break;
         }
-        case node_type::FLOAT:
+        case node_type::FLOAT: {
             // TODO: use detail::atof() when it's implemented.
+            const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
             node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
             break;
+        }
         case node_type::STRING:
-            node = basic_node_type(std::move(token_str));
+            node = basic_node_type(std::string(token.token_begin_itr, token.token_end_itr));
             break;
         default:   // LCOV_EXCL_LINE
             break; // LCOV_EXCL_LINE
@@ -7904,6 +7936,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <cmath>
 #include <sstream>
 #include <string>
+#include <vector>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -8231,7 +8264,7 @@ private:
                 break;
             }
 
-            node_type type_if_plain = scalar_scanner::scan(str_val); // LCOV_EXCL_LINE
+            node_type type_if_plain = scalar_scanner::scan(str_val.begin(), str_val.end());
             if (type_if_plain != node_type::STRING) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)

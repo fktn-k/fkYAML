@@ -1053,10 +1053,9 @@ private:
             type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_SCALAR ||
             type == lexical_token_t::ALIAS_PREFIX);
 
-        const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
         node_type value_type {node_type::STRING};
         if (type == lexical_token_t::PLAIN_SCALAR) {
-            value_type = scalar_scanner::scan(token_str);
+            value_type = scalar_scanner::scan(token.token_begin_itr, token.token_end_itr);
         }
 
         if (m_needs_tag_impl) {
@@ -1098,10 +1097,13 @@ private:
         basic_node_type node {};
 
         if (type == lexical_token_t::ALIAS_PREFIX) {
+            const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
+
             uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
             if (anchor_counts == 0) {
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
+
             node.m_attrs |= detail::node_attr_bits::alias_bit;
             node.m_prop.anchor = std::move(token_str);
             detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
@@ -1140,12 +1142,14 @@ private:
             node = basic_node_type(integer);
             break;
         }
-        case node_type::FLOAT:
+        case node_type::FLOAT: {
             // TODO: use detail::atof() when it's implemented.
+            const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
             node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
             break;
+        }
         case node_type::STRING:
-            node = basic_node_type(std::move(token_str));
+            node = basic_node_type(std::string(token.token_begin_itr, token.token_end_itr));
             break;
         default:   // LCOV_EXCL_LINE
             break; // LCOV_EXCL_LINE
