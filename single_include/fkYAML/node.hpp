@@ -881,7 +881,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
-// #include <fkYAML/detail/conversions/to_string.hpp>
+// #include <fkYAML/detail/conversions/scalar_conv.hpp>
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
 /// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
@@ -892,114 +892,207 @@ FK_YAML_DETAIL_NAMESPACE_END
 ///
 /// @file
 
-#ifndef TO__string_HPP_
-#define TO__string_HPP_
+// **NOTE FOR LIBARARY DEVELOPERS**:
+// Implementations in this header file are intentionally optimized for conversions between YAML scalars and native C++
+// types. So, some implementations don't follow the convensions in the standard C++ functions. For example, octals must
+// begin with "0o" (not "0"), which is specified in the YAML spec 1.2.
 
-#include <cmath>
+#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
+#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
+
+#include <cstring>
 #include <limits>
-#include <string>
-#include <sstream>
-#include <type_traits>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/meta/type_traits.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @brief Converts a ValueType object to a string YAML token.
-/// @tparam ValueType A source value type.
-/// @tparam CharType The type of characters for the conversion result.
-/// @param s A resulting output string.
-/// @param v A source value.
-template <typename ValueType, typename CharType>
-inline void to_string(ValueType v, std::basic_string<CharType>& s) noexcept;
+template <typename CharItr>
+inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcept {
+    static_assert(is_iterator_of<CharItr, char>::value, "atoi_dec() accepts iterators for char type");
 
-/// @brief Specialization of to_string() for null values.
-/// @param s A resulting string YAML token.
-/// @param (unused) nullptr
-template <>
-inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept {
-    s = "null";
-}
-
-/// @brief Specialization of to_string() for booleans.
-/// @param s A resulting string YAML token.
-/// @param b A boolean source value.
-template <>
-inline void to_string(bool b, std::string& s) noexcept {
-    s = b ? "true" : "false";
-}
-
-/// @brief Specialization of to_string() for integers.
-/// @tparam IntegerType An integer type.
-/// @param s A resulting string YAML token.
-/// @param i An integer source value.
-template <typename IntegerType>
-inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept {
-    s = std::to_string(i);
-}
-
-/// @brief Specialization of to_string() for floating point numbers.
-/// @tparam FloatType A floating point number type.
-/// @param s A resulting string YAML token.
-/// @param f A floating point number source value.
-template <typename FloatType>
-inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept {
-    if (std::isnan(f)) {
-        s = ".nan";
-        return;
+    if (begin == end) {
+        return false;
     }
 
-    if (std::isinf(f)) {
-        if (f == std::numeric_limits<FloatType>::infinity()) {
-            s = ".inf";
+    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+
+    // This path is the most probable case, so check it first.
+    if (len == 4) {
+        const char* p_begin = &*begin;
+        return (std::strncmp(p_begin, "null", 4) == 0) || (std::strncmp(p_begin, "Null", 4) == 0) ||
+               (std::strncmp(p_begin, "NULL", 4) == 0);
+    }
+
+    if (len == 1) {
+        return *begin == '~';
+    }
+
+    return false;
+}
+
+template <typename CharItr, typename BoolType>
+inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
+    static_assert(is_iterator_of<CharItr, char>::value, "atoi_dec() accepts iterators for char type");
+
+    if (begin == end) {
+        return false;
+    }
+
+    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const char* p_begin = &*begin;
+
+    if (len == 4) {
+        bool is_true_scalar = (std::strncmp(p_begin, "true", 4) == 0) || (std::strncmp(p_begin, "True", 4) == 0) ||
+                              (std::strncmp(p_begin, "TRUE", 4) == 0);
+
+        if (is_true_scalar) {
+            boolean = true;
+        }
+        return is_true_scalar;
+    }
+
+    if (len == 5) {
+        bool is_false_scalar = (std::strncmp(p_begin, "false", 5) == 0) || (std::strncmp(p_begin, "False", 5) == 0) ||
+                               (std::strncmp(p_begin, "FALSE", 5) == 0);
+
+        if (is_false_scalar) {
+            boolean = false;
+        }
+        return is_false_scalar;
+    }
+
+    return false;
+}
+
+template <typename CharItr, typename IntType>
+inline bool atoi_dec(CharItr begin, CharItr end, IntType& i) noexcept {
+    static_assert(is_iterator_of<CharItr, char>::value, "atoi_dec() accepts iterators for char type");
+    static_assert(
+        is_non_bool_integral<IntType>::value, "atoi_dec() accepts non-boolean integral types as an output type");
+
+    if (begin == end) {
+        return false;
+    }
+
+    i = 0;
+    do {
+        char c = *begin;
+        if (c < '0' || '9' < c) {
+            return false;
+        }
+        i = i * IntType(10) + IntType(c - '0');
+    } while (++begin != end);
+
+    return true;
+}
+
+template <typename CharItr, typename IntType>
+inline bool atoi_oct(CharItr begin, CharItr end, IntType& i) noexcept {
+    static_assert(is_iterator_of<CharItr, char>::value, "atoi_oct() accepts iterators for char type");
+    static_assert(
+        is_non_bool_integral<IntType>::value, "atoi_oct() accepts non-boolean integral types as an output type");
+
+    if (begin == end) {
+        return false;
+    }
+
+    i = 0;
+    do {
+        char c = *begin;
+        if (c < '0' || '7' < c) {
+            return false;
+        }
+        i = i * IntType(8) + IntType(c - '0');
+    } while (++begin != end);
+
+    return true;
+}
+
+template <typename CharItr, typename IntType>
+inline bool atoi_hex(CharItr begin, CharItr end, IntType& i) noexcept {
+    static_assert(is_iterator_of<CharItr, char>::value, "atoi_hex() accepts iterators for char type");
+    static_assert(
+        is_non_bool_integral<IntType>::value, "atoi_hex() accepts non-boolean integral types as an output type");
+
+    if (begin == end) {
+        return false;
+    }
+
+    i = 0;
+    do {
+        char c = *begin;
+        IntType ci = 0;
+        if ('0' <= c && c <= '9') {
+            ci = IntType(c - '0');
+        }
+        else if ('A' <= c && c <= 'F') {
+            ci = IntType(c - 'A' + 10);
+        }
+        else if ('a' <= c && c <= 'f') {
+            ci = IntType(c - 'a' + 10);
         }
         else {
-            s = "-.inf";
+            return false;
         }
-        return;
+        i = i * IntType(16) + ci;
+    } while (++begin != end);
+
+    return true;
+}
+
+template <typename CharItr, typename IntType>
+inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
+    static_assert(is_iterator_of<CharItr, char>::value, "atoi() accepts iterators for char type");
+    static_assert(is_non_bool_integral<IntType>::value, "atoi() accepts non-boolean integral types as an output type");
+
+    if (begin == end) {
+        return false;
     }
 
-    std::ostringstream oss;
-    oss << f;
-    s = oss.str();
+    char first = *begin;
+    if (first == '+') {
+        return atoi_dec(begin + 1, end, i);
+    }
+
+    if (first == '-') {
+        if (!std::numeric_limits<IntType>::is_signed) {
+            return false;
+        }
+
+        bool success = atoi_dec(begin + 1, end, i);
+        if (success) {
+            i *= IntType(-1);
+        }
+
+        return success;
+    }
+
+    if (first != '0') {
+        return atoi_dec(begin, end, i);
+    }
+    else if (begin + 1 != end) {
+        switch (*(begin + 1)) {
+        case 'o':
+            return atoi_oct(begin + 2, end, i);
+        case 'x':
+            return atoi_hex(begin + 2, end, i);
+        default:
+            // The YAML spec doesn't allow decimals starting with 0.
+            return false;
+        }
+    }
+
+    i = 0;
+    return true;
 }
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* TO__string_HPP_ */
-
-// #include <fkYAML/detail/document_metainfo.hpp>
-
-// #include <fkYAML/detail/input/lexical_analyzer.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
-#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
-
-#include <cctype>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <limits>
-#include <type_traits>
-#include <vector>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/detail/assert.hpp>
+#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_ */
 
 // #include <fkYAML/detail/conversions/from_string.hpp>
 ///  _______   __ __   __  _____   __  __  __
@@ -1641,6 +1734,34 @@ inline double from_string(const std::string& s, type_tag<double> /*unused*/) {
 FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_STRING_HPP_ */
+
+// #include <fkYAML/detail/document_metainfo.hpp>
+
+// #include <fkYAML/detail/input/lexical_analyzer.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
+#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
+
+#include <cctype>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <limits>
+#include <type_traits>
+#include <vector>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/assert.hpp>
 
 // #include <fkYAML/detail/encodings/uri_encoding.hpp>
 ///  _______   __ __   __  _____   __  __  __
@@ -5780,26 +5901,35 @@ private:
         }
 
         switch (value_type) {
-        case node_type::NULL_OBJECT:
-            node = basic_node_type(from_string(token_str, type_tag<std::nullptr_t> {}));
+        case node_type::NULL_OBJECT: {
+            std::nullptr_t null = nullptr;
+            bool converted = detail::aton(token.token_begin_itr, token.token_end_itr, null);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to a null.", line, indent);
+            }
+            // The above `node` variable is already null, so no instance creation is needed.
             break;
-        case node_type::BOOLEAN:
-            node = basic_node_type(from_string(token_str, type_tag<boolean_type> {}));
+        }
+        case node_type::BOOLEAN: {
+            boolean_type boolean = static_cast<boolean_type>(false);
+            bool converted = detail::atob(token.token_begin_itr, token.token_end_itr, boolean);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to a boolean.", line, indent);
+            }
+            node = basic_node_type(boolean);
             break;
+        }
         case node_type::INTEGER: {
-            bool is_octal = (token_str.size() > 2) && (token_str.rfind("0o", 0) != std::string::npos);
-            if (is_octal) {
-                // Replace the prefix "0o" with "0" so STL functions can convert octal chars to an integer.
-                // Note that the YAML specifies octal values start with the prefix "0o", not "0".
-                // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
-                node = basic_node_type(from_string("0" + token_str.substr(2), type_tag<integer_type> {}));
+            integer_type integer = 0;
+            bool converted = detail::atoi(token.token_begin_itr, token.token_end_itr, integer);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to an integer.", line, indent);
             }
-            else {
-                node = basic_node_type(from_string(token_str, type_tag<integer_type> {}));
-            }
+            node = basic_node_type(integer);
             break;
         }
         case node_type::FLOAT:
+            // TODO: use detail::atof() when it's implemented.
             node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
             break;
         case node_type::STRING:
@@ -7778,6 +7908,96 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 // #include <fkYAML/detail/conversions/to_string.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef TO__string_HPP_
+#define TO__string_HPP_
+
+#include <cmath>
+#include <limits>
+#include <string>
+#include <sstream>
+#include <type_traits>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/meta/stl_supplement.hpp>
+
+// #include <fkYAML/detail/meta/type_traits.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief Converts a ValueType object to a string YAML token.
+/// @tparam ValueType A source value type.
+/// @tparam CharType The type of characters for the conversion result.
+/// @param s A resulting output string.
+/// @param v A source value.
+template <typename ValueType, typename CharType>
+inline void to_string(ValueType v, std::basic_string<CharType>& s) noexcept;
+
+/// @brief Specialization of to_string() for null values.
+/// @param s A resulting string YAML token.
+/// @param (unused) nullptr
+template <>
+inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept {
+    s = "null";
+}
+
+/// @brief Specialization of to_string() for booleans.
+/// @param s A resulting string YAML token.
+/// @param b A boolean source value.
+template <>
+inline void to_string(bool b, std::string& s) noexcept {
+    s = b ? "true" : "false";
+}
+
+/// @brief Specialization of to_string() for integers.
+/// @tparam IntegerType An integer type.
+/// @param s A resulting string YAML token.
+/// @param i An integer source value.
+template <typename IntegerType>
+inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept {
+    s = std::to_string(i);
+}
+
+/// @brief Specialization of to_string() for floating point numbers.
+/// @tparam FloatType A floating point number type.
+/// @param s A resulting string YAML token.
+/// @param f A floating point number source value.
+template <typename FloatType>
+inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept {
+    if (std::isnan(f)) {
+        s = ".nan";
+        return;
+    }
+
+    if (std::isinf(f)) {
+        if (f == std::numeric_limits<FloatType>::infinity()) {
+            s = ".inf";
+        }
+        else {
+            s = "-.inf";
+        }
+        return;
+    }
+
+    std::ostringstream oss;
+    oss << f;
+    s = oss.str();
+}
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* TO__string_HPP_ */
 
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 

@@ -21,7 +21,6 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
-#include <fkYAML/detail/conversions/from_string.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>

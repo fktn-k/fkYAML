@@ -18,7 +18,8 @@
 #include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
-#include <fkYAML/detail/conversions/to_string.hpp>
+#include <fkYAML/detail/conversions/scalar_conv.hpp>
+#include <fkYAML/detail/conversions/from_string.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/input/tag_resolver.hpp>
@@ -1112,26 +1113,35 @@ private:
         }
 
         switch (value_type) {
-        case node_type::NULL_OBJECT:
-            node = basic_node_type(from_string(token_str, type_tag<std::nullptr_t> {}));
+        case node_type::NULL_OBJECT: {
+            std::nullptr_t null = nullptr;
+            bool converted = detail::aton(token.token_begin_itr, token.token_end_itr, null);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to a null.", line, indent);
+            }
+            // The above `node` variable is already null, so no instance creation is needed.
             break;
-        case node_type::BOOLEAN:
-            node = basic_node_type(from_string(token_str, type_tag<boolean_type> {}));
+        }
+        case node_type::BOOLEAN: {
+            boolean_type boolean = static_cast<boolean_type>(false);
+            bool converted = detail::atob(token.token_begin_itr, token.token_end_itr, boolean);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to a boolean.", line, indent);
+            }
+            node = basic_node_type(boolean);
             break;
+        }
         case node_type::INTEGER: {
-            bool is_octal = (token_str.size() > 2) && (token_str.rfind("0o", 0) != std::string::npos);
-            if (is_octal) {
-                // Replace the prefix "0o" with "0" so STL functions can convert octal chars to an integer.
-                // Note that the YAML specifies octal values start with the prefix "0o", not "0".
-                // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
-                node = basic_node_type(from_string("0" + token_str.substr(2), type_tag<integer_type> {}));
+            integer_type integer = 0;
+            bool converted = detail::atoi(token.token_begin_itr, token.token_end_itr, integer);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to an integer.", line, indent);
             }
-            else {
-                node = basic_node_type(from_string(token_str, type_tag<integer_type> {}));
-            }
+            node = basic_node_type(integer);
             break;
         }
         case node_type::FLOAT:
+            // TODO: use detail::atof() when it's implemented.
             node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
             break;
         case node_type::STRING:
