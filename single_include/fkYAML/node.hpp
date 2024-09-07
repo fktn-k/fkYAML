@@ -938,16 +938,24 @@ struct conv_limits_base {};
 
 /// @brief The specialization of conv_limits_base for 1 byte integers, e.g., int8_t, uint8_t.
 template <>
-struct conv_limits_base<1> {
+struct conv_limits_base<1u> {
     /// max characters for octals (0o377) without the prefix part.
     static constexpr std::size_t max_chars_oct = 3;
     /// max characters for hexadecimals (0xFF) without the prefix part.
     static constexpr std::size_t max_chars_hex = 2;
 
+    /// @brief Check if the given octals are safely converted into 1 byte integer.
+    /// @param octs The pointer to octal characters
+    /// @param len The length of octal characters
+    /// @return true is safely convertible, false otherwise.
     static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
         return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '3');
     }
 
+    /// @brief Check if the given hexadecimals are safely converted into 1 byte integer.
+    /// @param octs The pointer to hexadecimal characters
+    /// @param len The length of hexadecimal characters
+    /// @return true is safely convertible, false otherwise.
     static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
         return len <= max_chars_hex;
     }
@@ -955,16 +963,24 @@ struct conv_limits_base<1> {
 
 /// @brief The specialization of conv_limits_base for 2 byte integers, e.g., int16_t, uint16_t.
 template <>
-struct conv_limits_base<2> {
+struct conv_limits_base<2u> {
     /// max characters for octals (0o177777) without the prefix part.
     static constexpr std::size_t max_chars_oct = 6;
     /// max characters for hexadecimals (0xFFFF) without the prefix part.
     static constexpr std::size_t max_chars_hex = 4;
 
+    /// @brief Check if the given octals are safely converted into 2 byte integer.
+    /// @param octs The pointer to octal characters
+    /// @param len The length of octal characters
+    /// @return true is safely convertible, false otherwise.
     static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
         return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '1');
     }
 
+    /// @brief Check if the given hexadecimals are safely converted into 2 byte integer.
+    /// @param octs The pointer to hexadecimal characters
+    /// @param len The length of hexadecimal characters
+    /// @return true is safely convertible, false otherwise.
     static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
         return len <= max_chars_hex;
     }
@@ -972,16 +988,24 @@ struct conv_limits_base<2> {
 
 /// @brief The specialization of conv_limits_base for 4 byte integers, e.g., int32_t, uint32_t.
 template <>
-struct conv_limits_base<4> {
+struct conv_limits_base<4u> {
     /// max characters for octals (0o37777777777) without the prefix part.
     static constexpr std::size_t max_chars_oct = 11;
     /// max characters for hexadecimals (0xFFFFFFFF) without the prefix part.
     static constexpr std::size_t max_chars_hex = 8;
 
+    /// @brief Check if the given octals are safely converted into 4 byte integer.
+    /// @param octs The pointer to octal characters
+    /// @param len The length of octal characters
+    /// @return true is safely convertible, false otherwise.
     static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
         return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '3');
     }
 
+    /// @brief Check if the given hexadecimals are safely converted into 4 byte integer.
+    /// @param octs The pointer to hexadecimal characters
+    /// @param len The length of hexadecimal characters
+    /// @return true is safely convertible, false otherwise.
     static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
         return len <= max_chars_hex;
     }
@@ -989,16 +1013,24 @@ struct conv_limits_base<4> {
 
 /// @brief The specialization of conv_limits_base for 8 byte integers, e.g., int64_t, uint64_t.
 template <>
-struct conv_limits_base<8> {
+struct conv_limits_base<8u> {
     /// max characters for octals (0o1777777777777777777777) without the prefix part.
     static constexpr std::size_t max_chars_oct = 22;
     /// max characters for hexadecimals (0xFFFFFFFFFFFFFFFF) without the prefix part.
     static constexpr std::size_t max_chars_hex = 16;
 
+    /// @brief Check if the given octals are safely converted into 8 byte integer.
+    /// @param octs The pointer to octal characters
+    /// @param len The length of octal characters
+    /// @return true is safely convertible, false otherwise.
     static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
         return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '1');
     }
 
+    /// @brief Check if the given hexadecimals are safely converted into 8 byte integer.
+    /// @param octs The pointer to hexadecimal characters
+    /// @param len The length of hexadecimal characters
+    /// @return true is safely convertible, false otherwise.
     static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
         return len <= max_chars_hex;
     }
@@ -1017,7 +1049,7 @@ struct conv_limits {};
 
 /// @brief The specialization of conv_limits for 1 byte signed integers, e.g., int8_t.
 template <>
-struct conv_limits<1, true> : conv_limits_base<1> {
+struct conv_limits<1u, true> : conv_limits_base<1u> {
     /// with or without sign.
     static constexpr bool is_signed = true;
 
@@ -1025,14 +1057,26 @@ struct conv_limits<1, true> : conv_limits_base<1> {
     static constexpr std::size_t max_chars_dec = 3;
 
     /// string representation of max decimal value.
-    static constexpr char max_value_chars_dec[] = "127";
+    static const char* max_value_chars_dec() noexcept {
+        // Making this function a static constexpr variable, a link error happens.
+        // Although the issue has been fixed since C++17, this workaround is necessary to let this functionality work
+        // with C++11 (the library's default C++ standard version).
+        // The same thing is applied to similar functions in the other specializations.
+
+        static constexpr char max_value_chars[] = "127";
+        return &max_value_chars[0];
+    }
+
     /// string representation of min decimal value without sign.
-    static constexpr char min_value_chars_dec[] = "128";
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "128";
+        return &min_value_chars[0];
+    }
 };
 
 /// @brief The specialization of conv_limits for 1 byte unsigned integers, e.g., uint8_t.
 template <>
-struct conv_limits<1, false> : conv_limits_base<1> {
+struct conv_limits<1u, false> : conv_limits_base<1u> {
     /// with or without sign.
     static constexpr bool is_signed = false;
 
@@ -1040,14 +1084,21 @@ struct conv_limits<1, false> : conv_limits_base<1> {
     static constexpr std::size_t max_chars_dec = 3;
 
     /// string representation of max decimal value.
-    static constexpr char max_value_chars_dec[] = "255";
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "255";
+        return &max_value_chars[0];
+    }
+
     /// string representation of min decimal value.
-    static constexpr char min_value_chars_dec[] = "0";
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "0";
+        return &min_value_chars[0];
+    }
 };
 
 /// @brief The specialization of conv_limits for 2 byte signed integers, e.g., int16_t.
 template <>
-struct conv_limits<2, true> : conv_limits_base<2> {
+struct conv_limits<2u, true> : conv_limits_base<2u> {
     /// with or without sign.
     static constexpr bool is_signed = true;
 
@@ -1055,14 +1106,21 @@ struct conv_limits<2, true> : conv_limits_base<2> {
     static constexpr std::size_t max_chars_dec = 5;
 
     /// string representation of max decimal value.
-    static constexpr char max_value_chars_dec[] = "32767";
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "32767";
+        return &max_value_chars[0];
+    }
+
     /// string representation of min decimal value without sign.
-    static constexpr char min_value_chars_dec[] = "32768";
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "32768";
+        return &min_value_chars[0];
+    }
 };
 
 /// @brief The specialization of conv_limits for 2 byte unsigned integers, e.g., uint16_t.
 template <>
-struct conv_limits<2, false> : conv_limits_base<2> {
+struct conv_limits<2u, false> : conv_limits_base<2u> {
     /// with or without sign.
     static constexpr bool is_signed = false;
 
@@ -1070,14 +1128,21 @@ struct conv_limits<2, false> : conv_limits_base<2> {
     static constexpr std::size_t max_chars_dec = 5;
 
     /// string representation of max decimal value.
-    static constexpr char max_value_chars_dec[] = "65535";
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "65535";
+        return &max_value_chars[0];
+    }
+
     /// string representation of min decimal value.
-    static constexpr char min_value_chars_dec[] = "0";
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "0";
+        return &min_value_chars[0];
+    }
 };
 
 /// @brief The specialization of conv_limits for 4 byte signed integers, e.g., int32_t.
 template <>
-struct conv_limits<4, true> : conv_limits_base<4> {
+struct conv_limits<4u, true> : conv_limits_base<4u> {
     /// with or without sign.
     static constexpr bool is_signed = true;
 
@@ -1085,14 +1150,21 @@ struct conv_limits<4, true> : conv_limits_base<4> {
     static constexpr std::size_t max_chars_dec = 10;
 
     /// string representation of max decimal value.
-    static constexpr char max_value_chars_dec[] = "2147483647";
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "2147483647";
+        return &max_value_chars[0];
+    }
+
     /// string representation of min decimal value without sign.
-    static constexpr char min_value_chars_dec[] = "2147483648";
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "2147483648";
+        return &min_value_chars[0];
+    }
 };
 
 /// @brief The specialization of conv_limits for 4 byte unsigned integers, e.g., uint32_t.
 template <>
-struct conv_limits<4, false> : conv_limits_base<4> {
+struct conv_limits<4u, false> : conv_limits_base<4u> {
     /// with or without sign.
     static constexpr bool is_signed = false;
 
@@ -1100,14 +1172,21 @@ struct conv_limits<4, false> : conv_limits_base<4> {
     static constexpr std::size_t max_chars_dec = 10;
 
     /// string representation of max decimal value.
-    static constexpr char max_value_chars_dec[] = "4294967295";
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "4294967295";
+        return &max_value_chars[0];
+    }
+
     /// string representation of min decimal value.
-    static constexpr char min_value_chars_dec[] = "0";
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "0";
+        return &min_value_chars[0];
+    }
 };
 
 /// @brief The specialization of conv_limits for 8 byte signed integers, e.g., int64_t.
 template <>
-struct conv_limits<8, true> : conv_limits_base<8> {
+struct conv_limits<8u, true> : conv_limits_base<8u> {
     /// with or without sign.
     static constexpr bool is_signed = true;
 
@@ -1115,14 +1194,21 @@ struct conv_limits<8, true> : conv_limits_base<8> {
     static constexpr std::size_t max_chars_dec = 19;
 
     /// string representation of max decimal value.
-    static constexpr char max_value_chars_dec[] = "9223372036854775807";
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "9223372036854775807";
+        return &max_value_chars[0];
+    }
+
     /// string representation of min decimal value without sign.
-    static constexpr char min_value_chars_dec[] = "9223372036854775808";
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "9223372036854775808";
+        return &min_value_chars[0];
+    }
 };
 
 /// @brief The specialization of conv_limits for 8 byte unsigned integers, e.g., uint64_t.
 template <>
-struct conv_limits<8, false> : conv_limits_base<8> {
+struct conv_limits<8u, false> : conv_limits_base<8u> {
     /// with or without sign.
     static constexpr bool is_signed = false;
 
@@ -1130,9 +1216,16 @@ struct conv_limits<8, false> : conv_limits_base<8> {
     static constexpr std::size_t max_chars_dec = 20;
 
     /// string representation of max decimal value.
-    static constexpr char max_value_chars_dec[] = "18446744073709551615";
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "18446744073709551615";
+        return &max_value_chars[0];
+    }
+
     /// string representation of min decimal value.
-    static constexpr char min_value_chars_dec[] = "0";
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "0";
+        return &min_value_chars[0];
+    }
 };
 
 //////////////////////////
@@ -1276,13 +1369,15 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
     }
 
     if (len == conv_limits_type::max_chars_dec) {
+        const char* p_max_value_chars_dec = conv_limits_type::max_value_chars_dec();
+
         for (std::size_t idx = 0; idx < conv_limits_type::max_chars_dec; idx++) {
-            if (p_begin[idx] < conv_limits_type::max_value_chars_dec[idx]) {
+            if (p_begin[idx] < p_max_value_chars_dec[idx]) {
                 // No need to check the lower digits. Overflow will no longer happen.
                 break;
             }
 
-            if (p_begin[idx] > conv_limits_type::max_value_chars_dec[idx]) {
+            if (p_begin[idx] > p_max_value_chars_dec[idx]) {
                 // Overflow will happen.
                 return false;
             }
@@ -1317,13 +1412,15 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
     }
 
     if (len == conv_limits_type::max_chars_dec) {
+        const char* p_min_value_chars_dec = conv_limits_type::min_value_chars_dec();
+
         for (std::size_t idx = 0; idx < conv_limits_type::max_chars_dec; idx++) {
-            if (p_begin[idx] < conv_limits_type::min_value_chars_dec[idx]) {
+            if (p_begin[idx] < p_min_value_chars_dec[idx]) {
                 // No need to check the lower digits. Underflow will no longer happen.
                 break;
             }
 
-            if (p_begin[idx] > conv_limits_type::min_value_chars_dec[idx]) {
+            if (p_begin[idx] > p_min_value_chars_dec[idx]) {
                 // Underflow will happen.
                 return false;
             }
