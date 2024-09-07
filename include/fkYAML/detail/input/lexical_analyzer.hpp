@@ -206,7 +206,7 @@ public:
             token.type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
             return token;
         case ']': // sequence flow end
-            m_flow_context_depth--;
+            m_flow_context_depth = m_flow_context_depth > 0 ? m_flow_context_depth - 1 : 0;
             ++m_cur_itr;
             token.type = lexical_token_t::SEQUENCE_FLOW_END;
             return token;
@@ -216,7 +216,7 @@ public:
             token.type = lexical_token_t::MAPPING_FLOW_BEGIN;
             return token;
         case '}': // mapping flow end
-            m_flow_context_depth--;
+            m_flow_context_depth = m_flow_context_depth > 0 ? m_flow_context_depth - 1 : 0;
             ++m_cur_itr;
             token.type = lexical_token_t::MAPPING_FLOW_END;
             return token;

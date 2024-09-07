@@ -330,16 +330,20 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
 //
 
 /// @brief Converts a scalar into decimals. This is common implementation for both signed/unsigned integer types.
-/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @warning
+/// This function does NOT care about overflows if IntType is unsigned. The source string value must be validated
+/// beforehand by calling either atoi_dec_pos() or atoi_dec_neg() functions.
+/// Furthermore, `p_begin` and `p_end` must NOT be null. Validate them before calling this function.
 /// @tparam IntType The output integer type. It can be either signed or unsigned.
 /// @param p_begin The pointer to the first element of the scalar.
 /// @param p_end The pointer to the past-the-end element of the scalar.
 /// @param i The output integer value holder.
 /// @return true if the conversion completes successfully, false otherwise.
 template <typename IntType>
-inline bool atoi_dec_common(const char* p_begin, const char* p_end, IntType& i) noexcept {
+inline bool atoi_dec_unchecked(const char* p_begin, const char* p_end, IntType& i) noexcept {
     static_assert(
-        is_non_bool_integral<IntType>::value, "atoi_dec_common() accepts non-boolean integral types as an output type");
+        is_non_bool_integral<IntType>::value,
+        "atoi_dec_unchecked() accepts non-boolean integral types as an output type");
 
     i = 0;
     do {
@@ -347,6 +351,7 @@ inline bool atoi_dec_common(const char* p_begin, const char* p_end, IntType& i) 
         if (c < '0' || '9' < c) {
             return false;
         }
+        // Overflow is intentional when the IntType is signed.
         i = i * IntType(10) + IntType(c - '0');
     } while (++p_begin != p_end);
 
@@ -391,7 +396,7 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
         }
     }
 
-    return atoi_dec_common(p_begin, p_end, i);
+    return atoi_dec_unchecked(p_begin, p_end, i);
 }
 
 /// @brief Converts a scalar into negative decimals. This function executes bounds check to avoid underflow.
@@ -432,7 +437,7 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
         }
     }
 
-    return atoi_dec_common(p_begin, p_end, i);
+    return atoi_dec_unchecked(p_begin, p_end, i);
 }
 
 //

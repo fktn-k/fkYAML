@@ -156,7 +156,7 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
       -fno-omit-frame-pointer
       -fsanitize=address,undefined,bounds,integer,nullability
       -fno-sanitize-recover=all
-      -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+      -fno-sanitize=signed-integer-overflow,implicit-conversion
   )
 
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
@@ -166,7 +166,7 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
         -fno-omit-frame-pointer
         -fsanitize=address,undefined,bounds,integer,nullability
         -fno-sanitize-recover=all
-        -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+        -fno-sanitize=signed-integer-overflow,implicit-conversion
     )
   else()
     target_link_libraries(
@@ -175,7 +175,7 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
         -fno-omit-frame-pointer
         -fsanitize=address,undefined,bounds,integer,nullability
         -fno-sanitize-recover=all
-        -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+        -fno-sanitize=signed-integer-overflow,implicit-conversion
     )
   endif()
 endif()
