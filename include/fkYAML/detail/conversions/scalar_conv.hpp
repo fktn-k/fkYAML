@@ -24,16 +24,26 @@
 #include <fkYAML/detail/meta/type_traits.hpp>
 
 #ifdef FK_YAML_HAS_TO_CHARS
+// Prefer std::to_chars() and std::from_chars() functions if available.
 #include <charconv>
 #else
-#include <string>
+// Fallback to legacy string conversion functions otherwise.
+#include <string> // std::stof(), std::stod(), std::stold()
 #endif
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+//////////////////////////
+//   conv_limits_base   //
+//////////////////////////
+
+/// @brief A structure which provides limits for conversions between scalars and integers.
+/// @note This structure contains common limits in both signed and unsigned integers.
+/// @tparam NumBytes The number of bytes for the integer type.
 template <std::size_t NumBytes>
 struct conv_limits_base {};
 
+/// @brief The specialization of conv_limits_base for 1 byte integers, e.g., int8_t, uint8_t.
 template <>
 struct conv_limits_base<1> {
     /// max characters for octals (0o377) without the prefix part.
@@ -50,6 +60,7 @@ struct conv_limits_base<1> {
     }
 };
 
+/// @brief The specialization of conv_limits_base for 2 byte integers, e.g., int16_t, uint16_t.
 template <>
 struct conv_limits_base<2> {
     /// max characters for octals (0o177777) without the prefix part.
@@ -66,6 +77,7 @@ struct conv_limits_base<2> {
     }
 };
 
+/// @brief The specialization of conv_limits_base for 4 byte integers, e.g., int32_t, uint32_t.
 template <>
 struct conv_limits_base<4> {
     /// max characters for octals (0o37777777777) without the prefix part.
@@ -82,6 +94,7 @@ struct conv_limits_base<4> {
     }
 };
 
+/// @brief The specialization of conv_limits_base for 8 byte integers, e.g., int64_t, uint64_t.
 template <>
 struct conv_limits_base<8> {
     /// max characters for octals (0o1777777777777777777777) without the prefix part.
@@ -98,9 +111,18 @@ struct conv_limits_base<8> {
     }
 };
 
+/////////////////////
+//   conv_limits   //
+/////////////////////
+
+/// @brief A structure which provides limits for conversions between scalars and integers.
+/// @note This structure contains limits which differs based on signedness.
+/// @tparam NumBytes The number of bytes for the integer type.
+/// @tparam IsSigned Whether an integer is signed or unsigned
 template <std::size_t NumBytes, bool IsSigned>
 struct conv_limits {};
 
+/// @brief The specialization of conv_limits for 1 byte signed integers, e.g., int8_t.
 template <>
 struct conv_limits<1, true> : conv_limits_base<1> {
     /// with or without sign.
@@ -115,6 +137,7 @@ struct conv_limits<1, true> : conv_limits_base<1> {
     static constexpr char min_value_chars_dec[] = "128";
 };
 
+/// @brief The specialization of conv_limits for 1 byte unsigned integers, e.g., uint8_t.
 template <>
 struct conv_limits<1, false> : conv_limits_base<1> {
     /// with or without sign.
@@ -129,6 +152,7 @@ struct conv_limits<1, false> : conv_limits_base<1> {
     static constexpr char min_value_chars_dec[] = "0";
 };
 
+/// @brief The specialization of conv_limits for 2 byte signed integers, e.g., int16_t.
 template <>
 struct conv_limits<2, true> : conv_limits_base<2> {
     /// with or without sign.
@@ -143,6 +167,7 @@ struct conv_limits<2, true> : conv_limits_base<2> {
     static constexpr char min_value_chars_dec[] = "32768";
 };
 
+/// @brief The specialization of conv_limits for 2 byte unsigned integers, e.g., uint16_t.
 template <>
 struct conv_limits<2, false> : conv_limits_base<2> {
     /// with or without sign.
@@ -157,6 +182,7 @@ struct conv_limits<2, false> : conv_limits_base<2> {
     static constexpr char min_value_chars_dec[] = "0";
 };
 
+/// @brief The specialization of conv_limits for 4 byte signed integers, e.g., int32_t.
 template <>
 struct conv_limits<4, true> : conv_limits_base<4> {
     /// with or without sign.
@@ -171,6 +197,7 @@ struct conv_limits<4, true> : conv_limits_base<4> {
     static constexpr char min_value_chars_dec[] = "2147483648";
 };
 
+/// @brief The specialization of conv_limits for 4 byte unsigned integers, e.g., uint32_t.
 template <>
 struct conv_limits<4, false> : conv_limits_base<4> {
     /// with or without sign.
@@ -185,6 +212,7 @@ struct conv_limits<4, false> : conv_limits_base<4> {
     static constexpr char min_value_chars_dec[] = "0";
 };
 
+/// @brief The specialization of conv_limits for 8 byte signed integers, e.g., int64_t.
 template <>
 struct conv_limits<8, true> : conv_limits_base<8> {
     /// with or without sign.
@@ -199,6 +227,7 @@ struct conv_limits<8, true> : conv_limits_base<8> {
     static constexpr char min_value_chars_dec[] = "9223372036854775808";
 };
 
+/// @brief The specialization of conv_limits for 8 byte unsigned integers, e.g., uint64_t.
 template <>
 struct conv_limits<8, false> : conv_limits_base<8> {
     /// with or without sign.
@@ -213,6 +242,16 @@ struct conv_limits<8, false> : conv_limits_base<8> {
     static constexpr char min_value_chars_dec[] = "0";
 };
 
+//////////////////////////
+//   scalar <--> null   //
+//////////////////////////
+
+/// @brief Converts a scalar into a null value
+/// @tparam CharItr Type of char iterators. Its value type must be `char` (maybe cv-qualified).
+/// @param begin The iterator to the first element of the scalar.
+/// @param end The iterator to the past-the-end element of the scalar.
+/// @param /*unused*/ The null value holder (unused since it can only have `nullptr`)
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename CharItr>
 inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcept {
     static_assert(is_iterator_of<CharItr, char>::value, "atoi_dec() accepts iterators for char type");
@@ -237,6 +276,17 @@ inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcep
     return false;
 }
 
+/////////////////////////////
+//   scalar <--> boolean   //
+/////////////////////////////
+
+/// @brief Converts a scalar into a boolean value
+/// @tparam CharItr The type of char iterators. Its value type must be `char` (maybe cv-qualified).
+/// @tparam BoolType The output boolean type.
+/// @param begin The iterator to the first element of the scalar.
+/// @param end The iterator to the past-the-end element of the scalar.
+/// @param boolean The boolean value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename CharItr, typename BoolType>
 inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
     static_assert(is_iterator_of<CharItr, char>::value, "atoi_dec() accepts iterators for char type");
@@ -253,7 +303,7 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
                               (std::strncmp(p_begin, "TRUE", 4) == 0);
 
         if (is_true_scalar) {
-            boolean = true;
+            boolean = static_cast<BoolType>(true);
         }
         return is_true_scalar;
     }
@@ -263,7 +313,7 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
                                (std::strncmp(p_begin, "FALSE", 5) == 0);
 
         if (is_false_scalar) {
-            boolean = false;
+            boolean = static_cast<BoolType>(false);
         }
         return is_false_scalar;
     }
@@ -271,10 +321,25 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
     return false;
 }
 
+/////////////////////////////
+//   scalar <--> integer   //
+/////////////////////////////
+
+//
+// scalar --> decimals
+//
+
+/// @brief Converts a scalar into decimals. This is common implementation for both signed/unsigned integer types.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename IntType>
 inline bool atoi_dec_common(const char* p_begin, const char* p_end, IntType& i) noexcept {
     static_assert(
-        is_non_bool_integral<IntType>::value, "atoi_dec() accepts non-boolean integral types as an output type");
+        is_non_bool_integral<IntType>::value, "atoi_dec_common() accepts non-boolean integral types as an output type");
 
     i = 0;
     do {
@@ -288,10 +353,17 @@ inline bool atoi_dec_common(const char* p_begin, const char* p_end, IntType& i) 
     return true;
 }
 
+/// @brief Converts a scalar into positive decimals. This function executes bounds check to avoid overflow.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename IntType>
 inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noexcept {
     static_assert(
-        is_non_bool_integral<IntType>::value, "atoi_dec() accepts non-boolean integral types as an output type");
+        is_non_bool_integral<IntType>::value, "atoi_dec_pos() accepts non-boolean integral types as an output type");
 
     if (p_begin == p_end) {
         return false;
@@ -322,10 +394,18 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
     return atoi_dec_common(p_begin, p_end, i);
 }
 
+/// @brief Converts a scalar into negative decimals. This function executes bounds check to avoid underflow.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It must be signed.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename IntType>
 inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noexcept {
     static_assert(
-        is_non_bool_integral<IntType>::value, "atoi_dec() accepts non-boolean integral types as an output type");
+        is_non_bool_integral<IntType>::value && std::is_signed<IntType>::value,
+        "atoi_dec_neg() accepts non-boolean signed integral types as an output type");
 
     if (p_begin == p_end) {
         return false;
@@ -356,6 +436,17 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
     return atoi_dec_common(p_begin, p_end, i);
 }
 
+//
+// scalar --> octals
+//
+
+/// @brief Converts a scalar into octals. This function executes bounds check to avoid overflow.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename IntType>
 inline bool atoi_oct(const char* p_begin, const char* p_end, IntType& i) noexcept {
     static_assert(
@@ -384,6 +475,17 @@ inline bool atoi_oct(const char* p_begin, const char* p_end, IntType& i) noexcep
     return true;
 }
 
+//
+// scalar --> hexadecimals
+//
+
+/// @brief Converts a scalar into hexadecimals. This function executes bounds check to avoid overflow.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename IntType>
 inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcept {
     static_assert(
@@ -422,6 +524,17 @@ inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcep
     return true;
 }
 
+//
+// atoi() & itoa()
+//
+
+/// @brief Converts a scalar into integers. This function executes bounds check to avoid overflow/underflow.
+/// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param begin The iterator to the first element of the scalar.
+/// @param end The iterator to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename CharItr, typename IntType>
 inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
     static_assert(is_iterator_of<CharItr, char>::value, "atoi() accepts iterators for char type");
@@ -472,32 +585,57 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
     return true;
 }
 
+///////////////////////////
+//   scalar <--> float   //
+///////////////////////////
+
+/// @brief Set an infinite `float` value based on the given signedness.
+/// @param f The output `float` value holder.
+/// @param sign Whether the infinite value should be positive or negative.
 inline void set_infinity(float& f, const float sign) noexcept {
     f = std::numeric_limits<float>::infinity() * sign;
 }
 
+/// @brief Set an infinite `double` value based on the given signedness.
+/// @param f The output `double` value holder.
+/// @param sign Whether the infinite value should be positive or negative.
 inline void set_infinity(double& f, const double sign) noexcept {
     f = std::numeric_limits<double>::infinity() * sign;
 }
 
+/// @brief Set an infinite `long double` value based on the given signedness.
+/// @param f The output `long double` value holder.
+/// @param sign Whether the infinite value should be positive or negative.
 inline void set_infinity(long double& f, const long double sign) noexcept {
     f = std::numeric_limits<long double>::infinity() * sign;
 }
 
+/// @brief Set a NaN `float` value.
+/// @param f The output `float` value holder.
 inline void set_nan(float& f) noexcept {
     f = std::nanf("");
 }
 
+/// @brief Set a NaN `double` value.
+/// @param f The output `double` value holder.
 inline void set_nan(double& f) noexcept {
     f = std::nan("");
 }
 
+/// @brief Set a NaN `long double` value.
+/// @param f The output `long double` value holder.
 inline void set_nan(long double& f) noexcept {
     f = std::nanl("");
 }
 
 #ifdef FK_YAML_HAS_TO_CHARS
 
+/// @brief Converts a scalar into a floating point value.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param f The output floating point value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename FloatType>
 inline bool atof_impl(const char* p_begin, const char* p_end, FloatType& f) noexcept {
     static_assert(std::is_floating_point_v<FloatType>, "atof_impl() accepts floating point types as an output type");
@@ -509,18 +647,36 @@ inline bool atof_impl(const char* p_begin, const char* p_end, FloatType& f) noex
 
 #else // defined(FK_YAML_HAS_TO_CHARS)
 
+/// @brief Converts a scalar into a `float` value.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param f The output `float` value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 inline bool atof_impl(const char* p_begin, const char* p_end, float& f) {
     std::size_t idx = 0;
     f = std::stof(std::string(p_begin, p_end), &idx);
     return idx == static_cast<std::size_t>(p_end - p_begin);
 }
 
+/// @brief Converts a scalar into a `double` value.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param f The output `double` value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
     std::size_t idx = 0;
     f = std::stod(std::string(p_begin, p_end), &idx);
     return idx == static_cast<std::size_t>(p_end - p_begin);
 }
 
+/// @brief Converts a scalar into a `long double` value.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param f The output `long double` value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 inline bool atof_impl(const char* p_begin, const char* p_end, long double& f) {
     std::size_t idx = 0;
     f = std::stold(std::string(p_begin, p_end), &idx);
@@ -529,6 +685,13 @@ inline bool atof_impl(const char* p_begin, const char* p_end, long double& f) {
 
 #endif // defined(FK_YAML_HAS_TO_CHARS)
 
+/// @brief Converts a scalar into a floating point value.
+/// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
+/// @tparam FloatType The output floatint point value type.
+/// @param begin The iterator to the first element of the scalar.
+/// @param end The iterator to the past-the-end element of the scalar.
+/// @param f The output floating point value holder.
+/// @return true if the conversion completes successfully, false otherwise.
 template <typename CharItr, typename FloatType>
 inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(atof_impl(&*begin, &*begin, f))) {
     static_assert(is_iterator_of<CharItr, char>::value, "atof() accepts iterators for char type");
