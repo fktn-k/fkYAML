@@ -1271,13 +1271,13 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
     }
 
     if (len == conv_limits_type::max_chars_dec) {
-        for (std::size_t i = 0; i < conv_limits_type::max_chars_dec; i++) {
-            if (p_begin[i] < conv_limits_type::max_value_chars_dec[i]) {
+        for (std::size_t idx = 0; idx < conv_limits_type::max_chars_dec; idx++) {
+            if (p_begin[idx] < conv_limits_type::max_value_chars_dec[idx]) {
                 // No need to check the lower digits. Overflow will no longer happen.
                 break;
             }
 
-            if (p_begin[i] > conv_limits_type::max_value_chars_dec[i]) {
+            if (p_begin[idx] > conv_limits_type::max_value_chars_dec[idx]) {
                 // Overflow will happen.
                 return false;
             }
@@ -1312,13 +1312,13 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
     }
 
     if (len == conv_limits_type::max_chars_dec) {
-        for (std::size_t i = 0; i < conv_limits_type::max_chars_dec; i++) {
-            if (p_begin[i] < conv_limits_type::min_value_chars_dec[i]) {
+        for (std::size_t idx = 0; idx < conv_limits_type::max_chars_dec; idx++) {
+            if (p_begin[idx] < conv_limits_type::min_value_chars_dec[idx]) {
                 // No need to check the lower digits. Underflow will no longer happen.
                 break;
             }
 
-            if (p_begin[i] > conv_limits_type::min_value_chars_dec[i]) {
+            if (p_begin[idx] > conv_limits_type::min_value_chars_dec[idx]) {
                 // Underflow will happen.
                 return false;
             }
