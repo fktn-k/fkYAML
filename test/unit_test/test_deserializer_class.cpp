@@ -152,6 +152,18 @@ TEST_CASE("Deserializer_FloatingPointNumberKey") {
     }
 }
 
+TEST_CASE("Deserializer_ScalarConversionErrorHandling") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    auto input = GENERATE(
+        std::string("!!null foo: bar"),
+        std::string("!!bool foo: bar"),
+        std::string("!!int foo: bar"),
+        std::string("!!float foo: bar"));
+    REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+}
+
 TEST_CASE("Deserializer_InvalidIndentation") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;

@@ -23,7 +23,7 @@ TEST_CASE("ScalarConv_aton") {
     }
 
     SECTION("invalid string for the null value") {
-        std::string input("test");
+        auto input = GENERATE(std::string("test"), std::string(""));
         REQUIRE(fkyaml::detail::aton(input.begin(), input.end(), null) == false);
     }
 }
@@ -44,8 +44,62 @@ TEST_CASE("ScalarConv_atob") {
     }
 
     SECTION("invalid string for the boolean values") {
-        std::string input("test");
+        auto input = GENERATE(std::string("test"), std::string("test2"), std::string(""));
         REQUIRE(fkyaml::detail::atob(input.begin(), input.end(), boolean) == false);
+    }
+}
+
+TEST_CASE("ScalarConv_atoi") {
+    // implement common (not integer type specific) test cases
+
+    int32_t integer = 0;
+
+    SECTION("empty input") {
+        std::string input = "";
+        REQUIRE(fkyaml::detail::atoi(input.begin(), input.end(), integer) == false);
+    }
+
+    SECTION("decimal number with an explicit plus sign") {
+        std::string input = "+64";
+        REQUIRE(fkyaml::detail::atoi(input.begin(), input.end(), integer) == true);
+        REQUIRE(integer == int32_t(64));
+    }
+
+    SECTION("hexadecimal number with different writings in alphabets") {
+        auto input = GENERATE(std::string("0xFA"), std::string("0xfa"));
+        REQUIRE(fkyaml::detail::atoi(input.begin(), input.end(), integer) == true);
+        REQUIRE(integer == 0xFA);
+    }
+
+    SECTION("max digits but within bounds") {
+        using test_data_t = std::pair<std::string, int32_t>;
+        auto test_data = GENERATE(
+            test_data_t(std::string("1147483647"), 1147483647), test_data_t(std::string("-1147483648"), -1147483648));
+
+        REQUIRE(fkyaml::detail::atoi(test_data.first.begin(), test_data.first.end(), integer) == true);
+        REQUIRE(integer == test_data.second);
+    }
+
+    SECTION("invalid values") {
+        auto input = GENERATE(
+            std::string("0123"),
+            std::string("+"),
+            std::string("21474836470"),
+            std::string("-"),
+            std::string("-21474836480"),
+            std::string("1/"),
+            std::string("1:"),
+            std::string("0o"),
+            std::string("0o/"),
+            std::string("0o8"),
+            std::string("0x"),
+            std::string("0x/"),
+            std::string("0x:"),
+            std::string("0x@"),
+            std::string("0xG"),
+            std::string("0x`"),
+            std::string("0xg"));
+        REQUIRE(fkyaml::detail::atoi(input.begin(), input.end(), integer) == false);
     }
 }
 
@@ -334,10 +388,21 @@ TEST_CASE("ScalarConv_atof_float") {
         REQUIRE(std::isnan(fp));
     }
 
-    SECTION("float value") {
+    SECTION("values") {
         std::string input("3.14");
         REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
         REQUIRE(std::abs(fp - 3.14f) < limits_type::epsilon());
+
+        input = "-3.14";
+        REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
+        REQUIRE(std::abs(fp + 3.14f) < limits_type::epsilon());
+
+        input = "-0.5";
+        REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
+        REQUIRE(std::abs(fp + 0.5f) < limits_type::epsilon());
+
+        input = "";
+        REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == false);
 
         input = "3.40282347e+39";
         REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == false);
@@ -366,10 +431,21 @@ TEST_CASE("ScalarConv_atof_double") {
         REQUIRE(std::isnan(fp));
     }
 
-    SECTION("double value") {
+    SECTION("values") {
         std::string input("3.14");
         REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
         REQUIRE(std::abs(fp - 3.14) < limits_type::epsilon());
+
+        input = "-3.14";
+        REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
+        REQUIRE(std::abs(fp + 3.14) < limits_type::epsilon());
+
+        input = "-0.5";
+        REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
+        REQUIRE(std::abs(fp + 0.5) < limits_type::epsilon());
+
+        input = "";
+        REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == false);
 
         input = "1.7976931348623157E+309";
         REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == false);
@@ -398,10 +474,21 @@ TEST_CASE("ScalarConv_atof_long_double") {
         REQUIRE(std::isnan(fp));
     }
 
-    SECTION("long double value") {
+    SECTION("values") {
         std::string input("3.14");
         REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
         REQUIRE(std::abs(fp - 3.14l) < limits_type::epsilon());
+
+        input = "-3.14";
+        REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
+        REQUIRE(std::abs(fp + 3.14l) < limits_type::epsilon());
+
+        input = "-0.5";
+        REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
+        REQUIRE(std::abs(fp + 0.5l) < limits_type::epsilon());
+
+        input = "";
+        REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == false);
 
         // TODO: overflow check
     }

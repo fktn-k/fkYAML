@@ -39,8 +39,14 @@ inline bool is_xdigit(char c) {
 }
 
 } // namespace
+
+/// @brief The class which detects a scalar value type by scanning contents.
 class scalar_scanner {
 public:
+    /// @brief Detects a scalar value type by scanning the contents ranged by the given iterators.
+    /// @param begin The iterator to the first element of the scalar.
+    /// @param end The iterator to the past-the-end element of the scalar.
+    /// @return A detected scalar value type.
     static node_type scan(std::string::const_iterator begin, std::string::const_iterator end) {
         if (begin == end) {
             return node_type::STRING;
@@ -86,6 +92,7 @@ public:
                 if (is_inf_or_nan_scalar) {
                     return node_type::FLOAT;
                 }
+                // maybe a number.
                 break;
             }
             }
@@ -93,18 +100,13 @@ public:
         case 5:
             switch (*p_begin) {
             case 'f':
-                if (std::strncmp(p_begin + 1, "alse", 4) == 0) {
-                    return node_type::BOOLEAN;
-                }
-                break;
-            case 'F': {
-                bool is_false_scalar =
-                    (std::strncmp(p_begin + 1, "alse", 4) == 0) || (std::strncmp(p_begin + 1, "ALSE", 4) == 0);
-                if (is_false_scalar) {
-                    return node_type::BOOLEAN;
-                }
-                break;
-            }
+                // no possible case of being a number otherwise.
+                return (std::strncmp(p_begin + 1, "alse", 4) == 0) ? node_type::BOOLEAN : node_type::STRING;
+            case 'F':
+                // no possible case of being a number otherwise.
+                return ((std::strncmp(p_begin + 1, "alse", 4) == 0) || (std::strncmp(p_begin + 1, "ALSE", 4) == 0))
+                           ? node_type::BOOLEAN
+                           : node_type::STRING;
             case '-':
                 if (*(p_begin + 1) == '.') {
                     const char* p_from_third = p_begin + 2;
@@ -115,6 +117,7 @@ public:
                         return node_type::FLOAT;
                     }
                 }
+                // maybe a number.
                 break;
             }
             break;
@@ -124,6 +127,10 @@ public:
     }
 
 private:
+    /// @brief Detects a scalar value type from the contents (possibly an integer or a floating-point value).
+    /// @param itr The iterator to the first element of the scalar.
+    /// @param len The length of the scalar contents.
+    /// @return A detected scalar value type.
     static node_type scan_possible_number_token(std::string::const_iterator itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
@@ -149,6 +156,10 @@ private:
         }
     }
 
+    /// @brief Detects a scalar value type by scanning the contents right after the negative sign.
+    /// @param itr The iterator to the past-the-negative-sign element of the scalar.
+    /// @param len The length of the scalar contents left unscanned.
+    /// @return A detected scalar value type.
     static node_type scan_negative_number(std::string::const_iterator itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
@@ -159,6 +170,10 @@ private:
         return node_type::STRING;
     }
 
+    /// @brief Detects a scalar value type by scanning the contents right after the beginning 0.
+    /// @param itr The iterator to the past-the-zero element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @return A detected scalar value type.
     static node_type scan_after_zero_at_first(std::string::const_iterator itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
@@ -186,6 +201,11 @@ private:
         }
     }
 
+    /// @brief Detects a scalar value type by scanning the contents part starting with a decimal.
+    /// @param itr The iterator to the beginning decimal element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @param has_decimal_point Whether a decimal point has already been found in the previous part.
+    /// @return A detected scalar value type.
     static node_type scan_decimal_number(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
         FK_YAML_ASSERT(len > 0);
 
@@ -214,6 +234,11 @@ private:
         }
     }
 
+    /// @brief Detects a scalar value type by scanning the contents right after a decimal point.
+    /// @param itr The iterator to the past-the-decimal-point element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
+    /// @return A detected scalar value type.
     static node_type scan_after_decimal_point(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
         FK_YAML_ASSERT(len > 0);
 
@@ -224,6 +249,11 @@ private:
         return node_type::STRING;
     }
 
+    /// @brief Detects a scalar value type by scanning the contents right after the exponent prefix ("e" or "E").
+    /// @param itr The iterator to the past-the-exponent-prefix element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
+    /// @return A detected scalar value type.
     static node_type scan_after_exponent(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
         FK_YAML_ASSERT(len > 0);
 
@@ -240,6 +270,10 @@ private:
         }
     }
 
+    /// @brief Detects a scalar value type by scanning the contents assuming octal numbers.
+    /// @param itr The iterator to the octal-number element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @return A detected scalar value type.
     static node_type scan_octal_number(std::string::const_iterator itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
@@ -258,6 +292,10 @@ private:
         }
     }
 
+    /// @brief Detects a scalar value type by scanning the contents assuming hexadecimal numbers.
+    /// @param itr The iterator to the hexadecimal-number element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @return A detected scalar value type.
     static node_type scan_hexadecimal_number(std::string::const_iterator itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
