@@ -33,7 +33,7 @@
 #define FK_YAML_HAS_CXX_11
 #endif
 
-// switch usage of the deprecated attribute. [[deprecated]] has been introduced since C++14.
+// switch usage of the deprecated attribute. [[deprecated]] is available since C++14.
 #if defined(FK_YAML_HAS_CXX_14)
 #define FK_YAML_DEPRECATED(msg) [[deprecated(msg)]]
 #else
@@ -46,7 +46,7 @@
 #endif
 #endif
 
-// switch usage of inline variables. Inline variables have been introduced since C++17.
+// switch usage of inline variables which have been available since C++17.
 #if defined(FK_YAML_HAS_CXX_17)
 #define FK_YAML_INLINE_VAR inline
 #else
@@ -60,12 +60,19 @@
 #endif
 #endif
 
-// switch usage of char8_t. char8_t has been introduced since C++20
+// switch usage of char8_t which has been available since C++20.
 #if !defined(FK_YAML_HAS_CHAR8_T)
 #if defined(FK_YAML_HAS_CXX_20)
 #if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
 #define FK_YAML_HAS_CHAR8_T
 #endif
+#endif
+#endif
+
+// switch usages of the std::to_chars()/std::from_chars() functions which have been available since C++17.
+#if defined(FK_YAML_HAS_CXX_17)
+#if defined(__cpp_lib_to_chars) && __cpp_lib_to_chars >= 201611L
+#define FK_YAML_HAS_TO_CHARS
 #endif
 #endif
 

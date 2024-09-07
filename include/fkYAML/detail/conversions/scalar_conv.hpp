@@ -19,10 +19,15 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
-#include <string>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
+
+#ifdef FK_YAML_HAS_TO_CHARS
+#include <charconv>
+#else
+#include <string>
+#endif
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -467,65 +472,65 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
     return true;
 }
 
-template <typename FloatType>
-inline void set_infinity(FloatType& f, const FloatType sign) noexcept;
-
-template <>
-inline void set_infinity<float>(float& f, const float sign) noexcept {
+inline void set_infinity(float& f, const float sign) noexcept {
     f = std::numeric_limits<float>::infinity() * sign;
 }
 
-template <>
-inline void set_infinity<double>(double& f, const double sign) noexcept {
+inline void set_infinity(double& f, const double sign) noexcept {
     f = std::numeric_limits<double>::infinity() * sign;
 }
 
-template <>
-inline void set_infinity<long double>(long double& f, const long double sign) noexcept {
+inline void set_infinity(long double& f, const long double sign) noexcept {
     f = std::numeric_limits<long double>::infinity() * sign;
 }
 
-template <typename FloatType>
-inline void set_nan(FloatType& f) noexcept;
-
-template <>
-inline void set_nan<float>(float& f) noexcept {
+inline void set_nan(float& f) noexcept {
     f = std::nanf("");
 }
 
-template <>
-inline void set_nan<double>(double& f) noexcept {
+inline void set_nan(double& f) noexcept {
     f = std::nan("");
 }
 
-template <>
-inline void set_nan<long double>(long double& f) noexcept {
+inline void set_nan(long double& f) noexcept {
     f = std::nanl("");
 }
 
-template <typename CharItr>
-inline bool atof_impl(CharItr begin, CharItr end, float& f) {
-    std::size_t idx = 0;
-    f = std::stof(std::string(begin, end), &idx);
-    return idx == static_cast<std::size_t>(std::distance(begin, end));
+#ifdef FK_YAML_HAS_TO_CHARS
+
+template <typename FloatType>
+inline bool atof_impl(const char* p_begin, const char* p_end, FloatType& f) noexcept {
+    static_assert(std::is_floating_point_v<FloatType>, "atof_impl() accepts floating point types as an output type");
+    if (auto [ptr, ec] = std::from_chars(p_begin, p_end, f); ec == std::errc {}) {
+        return ptr == p_end;
+    }
+    return false;
 }
 
-template <typename CharItr>
-inline bool atof_impl(CharItr begin, CharItr end, double& f) {
+#else // defined(FK_YAML_HAS_TO_CHARS)
+
+inline bool atof_impl(const char* p_begin, const char* p_end, float& f) {
     std::size_t idx = 0;
-    f = std::stod(std::string(begin, end), &idx);
-    return idx == static_cast<std::size_t>(std::distance(begin, end));
+    f = std::stof(std::string(p_begin, p_end), &idx);
+    return idx == static_cast<std::size_t>(p_end - p_begin);
 }
 
-template <typename CharItr>
-inline bool atof_impl(CharItr begin, CharItr end, long double& f) {
+inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
     std::size_t idx = 0;
-    f = std::stold(std::string(begin, end), &idx);
-    return idx == static_cast<std::size_t>(std::distance(begin, end));
+    f = std::stod(std::string(p_begin, p_end), &idx);
+    return idx == static_cast<std::size_t>(p_end - p_begin);
 }
+
+inline bool atof_impl(const char* p_begin, const char* p_end, long double& f) {
+    std::size_t idx = 0;
+    f = std::stold(std::string(p_begin, p_end), &idx);
+    return idx == static_cast<std::size_t>(p_end - p_begin);
+}
+
+#endif // defined(FK_YAML_HAS_TO_CHARS)
 
 template <typename CharItr, typename FloatType>
-inline bool atof(CharItr begin, CharItr end, FloatType& f) {
+inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(atof_impl(&*begin, &*begin, f))) {
     static_assert(is_iterator_of<CharItr, char>::value, "atof() accepts iterators for char type");
     static_assert(std::is_floating_point<FloatType>::value, "atof() accepts floating point types as an output type");
 
@@ -535,7 +540,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) {
 
     uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
     const char* p_begin = &*begin;
-    // const char* p_end = p_begin + len;
+    const char* p_end = p_begin + len;
 
     if (*p_begin == '-') {
         if (len == 5) {
@@ -570,15 +575,19 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) {
         }
     }
 
+#ifdef FK_YAML_HAS_TO_CHARS
+    return atof_impl(p_begin, p_end, f);
+#else
     bool success = false;
     try {
-        success = atof_impl(begin, end, f);
+        success = atof_impl(p_begin, p_end, f);
     }
     catch (const std::exception& /*unused*/) {
         success = false;
     }
 
     return success;
+#endif
 }
 
 FK_YAML_DETAIL_NAMESPACE_END
