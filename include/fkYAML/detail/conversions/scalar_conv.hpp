@@ -254,7 +254,7 @@ struct conv_limits<8, false> : conv_limits_base<8> {
 /// @return true if the conversion completes successfully, false otherwise.
 template <typename CharItr>
 inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcept {
-    static_assert(is_iterator_of<CharItr, char>::value, "atoi_dec() accepts iterators for char type");
+    static_assert(is_iterator_of<CharItr, char>::value, "aton() accepts iterators for char type");
 
     if (begin == end) {
         return false;
@@ -289,7 +289,7 @@ inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcep
 /// @return true if the conversion completes successfully, false otherwise.
 template <typename CharItr, typename BoolType>
 inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
-    static_assert(is_iterator_of<CharItr, char>::value, "atoi_dec() accepts iterators for char type");
+    static_assert(is_iterator_of<CharItr, char>::value, "atob() accepts iterators for char type");
 
     if (begin == end) {
         return false;
@@ -404,8 +404,7 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
 template <typename IntType>
 inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noexcept {
     static_assert(
-        is_non_bool_integral<IntType>::value && std::is_signed<IntType>::value,
-        "atoi_dec_neg() accepts non-boolean signed integral types as an output type");
+        is_non_bool_integral<IntType>::value, "atoi_dec_neg() accepts non-boolean integral types as an output type");
 
     if (p_begin == p_end) {
         return false;
