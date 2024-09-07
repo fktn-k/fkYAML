@@ -1597,13 +1597,6 @@ inline void set_infinity(double& f, const double sign) noexcept {
     f = std::numeric_limits<double>::infinity() * sign;
 }
 
-/// @brief Set an infinite `long double` value based on the given signedness.
-/// @param f The output `long double` value holder.
-/// @param sign Whether the infinite value should be positive or negative.
-inline void set_infinity(long double& f, const long double sign) noexcept {
-    f = std::numeric_limits<long double>::infinity() * sign;
-}
-
 /// @brief Set a NaN `float` value.
 /// @param f The output `float` value holder.
 inline void set_nan(float& f) noexcept {
@@ -1614,12 +1607,6 @@ inline void set_nan(float& f) noexcept {
 /// @param f The output `double` value holder.
 inline void set_nan(double& f) noexcept {
     f = std::nan("");
-}
-
-/// @brief Set a NaN `long double` value.
-/// @param f The output `long double` value holder.
-inline void set_nan(long double& f) noexcept {
-    f = std::nanl("");
 }
 
 #ifdef FK_YAML_HAS_TO_CHARS
@@ -1662,18 +1649,6 @@ inline bool atof_impl(const char* p_begin, const char* p_end, float& f) {
 inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
     std::size_t idx = 0;
     f = std::stod(std::string(p_begin, p_end), &idx);
-    return idx == static_cast<std::size_t>(p_end - p_begin);
-}
-
-/// @brief Converts a scalar into a `long double` value.
-/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
-/// @param p_begin The pointer to the first element of the scalar.
-/// @param p_end The pointer to the past-the-end element of the scalar.
-/// @param f The output `long double` value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-inline bool atof_impl(const char* p_begin, const char* p_end, long double& f) {
-    std::size_t idx = 0;
-    f = std::stold(std::string(p_begin, p_end), &idx);
     return idx == static_cast<std::size_t>(p_end - p_begin);
 }
 
