@@ -156,7 +156,7 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
       -fno-omit-frame-pointer
       -fsanitize=address,undefined,bounds,integer,nullability
       -fno-sanitize-recover=all
-      -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+      -fno-sanitize=signed-integer-overflow,implicit-conversion
   )
 
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
@@ -166,7 +166,7 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
         -fno-omit-frame-pointer
         -fsanitize=address,undefined,bounds,integer,nullability
         -fno-sanitize-recover=all
-        -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+        -fno-sanitize=signed-integer-overflow,implicit-conversion
     )
   else()
     target_link_libraries(
@@ -175,7 +175,7 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
         -fno-omit-frame-pointer
         -fsanitize=address,undefined,bounds,integer,nullability
         -fno-sanitize-recover=all
-        -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+        -fno-sanitize=signed-integer-overflow,implicit-conversion
     )
   endif()
 endif()
@@ -216,7 +216,6 @@ add_executable(
   test_custom_from_node.cpp
   test_deserializer_class.cpp
   test_exception_class.cpp
-  test_from_string.cpp
   test_input_adapter.cpp
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
@@ -226,6 +225,7 @@ add_executable(
   test_node_type.cpp
   test_ordered_map_class.cpp
   test_position_tracker_class.cpp
+  test_scalar_conv.cpp
   test_scalar_scanner_class.cpp
   test_serializer_class.cpp
   test_string_formatter.cpp

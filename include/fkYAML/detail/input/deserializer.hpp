@@ -18,7 +18,7 @@
 #include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
-#include <fkYAML/detail/conversions/to_string.hpp>
+#include <fkYAML/detail/conversions/scalar_conv.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/input/tag_resolver.hpp>
@@ -1052,10 +1052,9 @@ private:
             type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_SCALAR ||
             type == lexical_token_t::ALIAS_PREFIX);
 
-        const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
         node_type value_type {node_type::STRING};
         if (type == lexical_token_t::PLAIN_SCALAR) {
-            value_type = scalar_scanner::scan(token_str);
+            value_type = scalar_scanner::scan(token.token_begin_itr, token.token_end_itr);
         }
 
         if (m_needs_tag_impl) {
@@ -1097,10 +1096,13 @@ private:
         basic_node_type node {};
 
         if (type == lexical_token_t::ALIAS_PREFIX) {
+            const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
+
             uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
             if (anchor_counts == 0) {
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
+
             node.m_attrs |= detail::node_attr_bits::alias_bit;
             node.m_prop.anchor = std::move(token_str);
             detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
@@ -1112,30 +1114,44 @@ private:
         }
 
         switch (value_type) {
-        case node_type::NULL_OBJECT:
-            node = basic_node_type(from_string(token_str, type_tag<std::nullptr_t> {}));
-            break;
-        case node_type::BOOLEAN:
-            node = basic_node_type(from_string(token_str, type_tag<boolean_type> {}));
-            break;
-        case node_type::INTEGER: {
-            bool is_octal = (token_str.size() > 2) && (token_str.rfind("0o", 0) != std::string::npos);
-            if (is_octal) {
-                // Replace the prefix "0o" with "0" so STL functions can convert octal chars to an integer.
-                // Note that the YAML specifies octal values start with the prefix "0o", not "0".
-                // See https://yaml.org/spec/1.2.2/#1032-tag-resolution for more details.
-                node = basic_node_type(from_string("0" + token_str.substr(2), type_tag<integer_type> {}));
+        case node_type::NULL_OBJECT: {
+            std::nullptr_t null = nullptr;
+            bool converted = detail::aton(token.token_begin_itr, token.token_end_itr, null);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to a null.", line, indent);
             }
-            else {
-                node = basic_node_type(from_string(token_str, type_tag<integer_type> {}));
-            }
+            // The above `node` variable is already null, so no instance creation is needed.
             break;
         }
-        case node_type::FLOAT:
-            node = basic_node_type(from_string(token_str, type_tag<float_number_type> {}));
+        case node_type::BOOLEAN: {
+            boolean_type boolean = static_cast<boolean_type>(false);
+            bool converted = detail::atob(token.token_begin_itr, token.token_end_itr, boolean);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to a boolean.", line, indent);
+            }
+            node = basic_node_type(boolean);
             break;
+        }
+        case node_type::INTEGER: {
+            integer_type integer = 0;
+            bool converted = detail::atoi(token.token_begin_itr, token.token_end_itr, integer);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to an integer.", line, indent);
+            }
+            node = basic_node_type(integer);
+            break;
+        }
+        case node_type::FLOAT: {
+            float_number_type float_val = 0;
+            bool converted = detail::atof(token.token_begin_itr, token.token_end_itr, float_val);
+            if (!converted) {
+                throw parse_error("Failed to convert a scalar to a floating point value", line, indent);
+            }
+            node = basic_node_type(float_val);
+            break;
+        }
         case node_type::STRING:
-            node = basic_node_type(std::move(token_str));
+            node = basic_node_type(std::string(token.token_begin_itr, token.token_end_itr));
             break;
         default:   // LCOV_EXCL_LINE
             break; // LCOV_EXCL_LINE
