@@ -14,18 +14,27 @@
 // This file is assumed to be included only by version_macros.hpp file.
 // To avoid redundant inclusion, do not include version_macros.hpp file as the other files do.
 
+// With the MSVC compilers, the value of __cplusplus is by default always "199611L"(C++98).
+// To avoid that, the library instead references _MSVC_LANG which is always set a correct value.
+// See https://devblogs.microsoft.com/cppblog/msvc-now-correctly-reports-__cplusplus/ for more details.
+#if defined(_MSVC_LANG) && !defined(__clang__)
+#define FK_YAML_CPLUSPLUS _MSVC_LANG
+#else
+#define FK_YAML_CPLUSPLUS __cplusplus
+#endif
+
 // C++ language standard detection (__cplusplus is not yet defined for C++23)
 // Skip detection if the definitions listed below already exist.
 #if !defined(FK_YAML_HAS_CXX_20) && !defined(FK_YAML_HAS_CXX_17) && !defined(FK_YAML_HAS_CXX_14) &&                    \
     !defined(FK_YAML_CXX_11)
-#if (defined(__cplusplus) && __cplusplus >= 202002L) || (defined(_MSVC_LANG) && MSVC_LANG >= 202002L)
+#if FK_YAML_CPLUSPLUS >= 202002L
 #define FK_YAML_HAS_CXX_20
 #define FK_YAML_HAS_CXX_17
 #define FK_YAML_HAS_CXX_14
-#elif (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_HAS_CXX17) && _HAS_CXX17 == 1)
+#elif FK_YAML_CPLUSPLUS >= 201703L
 #define FK_YAML_HAS_CXX_17
 #define FK_YAML_HAS_CXX_14
-#elif (defined(__cplusplus) && __cplusplus >= 201402L) || (defined(_HAS_CXX14) && _HAS_CXX14 == 1)
+#elif FK_YAML_CPLUSPLUS >= 201402L
 #define FK_YAML_HAS_CXX_14
 #endif
 
