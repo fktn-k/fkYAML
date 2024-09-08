@@ -781,15 +781,15 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
     const char* p_begin = &*begin;
     const char* p_end = p_begin + len;
 
-    if (*p_begin == '-') {
+    if (*p_begin == '-' || *p_begin == '+') {
         if (len == 5) {
             const char* p_from_second = p_begin + 1;
-            bool is_min_inf_scalar = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
-                                     (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
-                                     (std::strncmp(p_from_second, ".INF", 4) == 0);
+            bool is_inf_scalar = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
+                                 (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
+                                 (std::strncmp(p_from_second, ".INF", 4) == 0);
 
-            if (is_min_inf_scalar) {
-                set_infinity(f, FloatType(-1.));
+            if (is_inf_scalar) {
+                set_infinity(f, *p_begin == '-' ? FloatType(-1.) : FloatType(1.));
                 return true;
             }
         }

@@ -107,6 +107,7 @@ public:
                 return ((std::strncmp(p_begin + 1, "alse", 4) == 0) || (std::strncmp(p_begin + 1, "ALSE", 4) == 0))
                            ? node_type::BOOLEAN
                            : node_type::STRING;
+            case '+':
             case '-':
                 if (*(p_begin + 1) == '.') {
                     const char* p_from_third = p_begin + 2;

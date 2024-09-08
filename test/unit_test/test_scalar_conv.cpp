@@ -371,7 +371,13 @@ TEST_CASE("ScalarConv_atof_float") {
     using limits_type = std::numeric_limits<float>;
 
     SECTION("positive infinity") {
-        auto input = GENERATE(std::string(".inf"), std::string(".Inf"), std::string(".INF"));
+        auto input = GENERATE(
+            std::string(".inf"),
+            std::string(".Inf"),
+            std::string(".INF"),
+            std::string("+.inf"),
+            std::string("+.Inf"),
+            std::string("+.INF"));
         REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
         REQUIRE(std::isinf(fp));
     }
@@ -414,7 +420,13 @@ TEST_CASE("ScalarConv_atof_double") {
     using limits_type = std::numeric_limits<double>;
 
     SECTION("positive infinity") {
-        auto input = GENERATE(std::string(".inf"), std::string(".Inf"), std::string(".INF"));
+        auto input = GENERATE(
+            std::string(".inf"),
+            std::string(".Inf"),
+            std::string(".INF"),
+            std::string("+.inf"),
+            std::string("+.Inf"),
+            std::string("+.INF"));
         REQUIRE(fkyaml::detail::atof(input.begin(), input.end(), fp) == true);
         REQUIRE(std::isinf(fp));
     }
