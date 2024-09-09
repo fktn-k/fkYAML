@@ -4019,8 +4019,6 @@ struct lexical_token {
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 class lexical_analyzer {
 private:
-    using char_traits_type = typename std::char_traits<char>;
-
     enum class block_style_indicator_t {
         LITERAL, //!< keeps newlines inside the block as they are indicated by a pipe `|`.
         FOLDED,  //!< replaces newlines inside the block with spaces indicated by a right angle bracket `>`.
@@ -4033,11 +4031,6 @@ private:
     };
 
 public:
-    using boolean_type = typename BasicNodeType::boolean_type;
-    using integer_type = typename BasicNodeType::integer_type;
-    using float_number_type = typename BasicNodeType::float_number_type;
-    using string_type = typename BasicNodeType::string_type;
-
     /// @brief Construct a new lexical_analyzer object.
     /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object.
