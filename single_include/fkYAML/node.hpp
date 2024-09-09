@@ -1792,12 +1792,12 @@ public:
     /// @param begin An iterator to the first element of the character sequence.
     /// @param end An iterator to the past-the-end element of the character sequence.
     /// @return true if all the characters are valid, false otherwise.
-    static bool validate(std::string::const_iterator begin, std::string::const_iterator end) noexcept {
+    static bool validate(const char* begin, const char* end) noexcept {
         if (begin == end) {
             return true;
         }
 
-        std::string::const_iterator current = begin;
+        const char* current = begin;
 
         for (; current != end; ++current) {
             if (*current == '%') {
@@ -1823,7 +1823,7 @@ private:
     /// @param begin An iterator to the first octet.
     /// @param end An iterator to the past-the-end element of the whole character sequence.
     /// @return true if the octets are valid, false otherwise.
-    static bool validate_octets(std::string::const_iterator& begin, std::string::const_iterator& end) {
+    static bool validate_octets(const char*& begin, const char*& end) {
         for (int i = 0; i < 2; i++, ++begin) {
             if (begin == end) {
                 return false;
@@ -2611,7 +2611,7 @@ class yaml_escaper {
     using iterator = ::std::string::const_iterator;
 
 public:
-    static bool unescape(iterator& begin, iterator end, std::string& buff) {
+    static bool unescape(const char*& begin, const char* end, std::string& buff) {
         FK_YAML_ASSERT(*begin == '\\' && std::distance(begin, end) > 0);
         bool ret = true;
 
@@ -2698,7 +2698,7 @@ public:
         return ret;
     }
 
-    static ::std::string escape(iterator begin, iterator end, bool& is_escaped) {
+    static ::std::string escape(const char* begin, const char* end, bool& is_escaped) {
         ::std::string escaped {};
         escaped.reserve(std::distance(begin, end));
         for (; begin != end; ++begin) {
@@ -2897,7 +2897,7 @@ private:
         return false;
     }
 
-    static bool extract_codepoint(iterator& begin, iterator end, int bytes_to_read, char32_t& codepoint) {
+    static bool extract_codepoint(const char*& begin, const char* end, int bytes_to_read, char32_t& codepoint) {
         bool has_enough_room = static_cast<int>(std::distance(begin, end)) >= (bytes_to_read - 1);
         if (!has_enough_room) {
             return false;
@@ -2984,7 +2984,7 @@ public:
     /// @param begin The iterator to the first element of the scalar.
     /// @param end The iterator to the past-the-end element of the scalar.
     /// @return A detected scalar value type.
-    static node_type scan(std::string::const_iterator begin, std::string::const_iterator end) {
+    static node_type scan(const char* begin, const char* end) {
         if (begin == end) {
             return node_type::STRING;
         }
@@ -3069,7 +3069,7 @@ private:
     /// @param itr The iterator to the first element of the scalar.
     /// @param len The length of the scalar contents.
     /// @return A detected scalar value type.
-    static node_type scan_possible_number_token(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_possible_number_token(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         switch (*itr) {
@@ -3098,7 +3098,7 @@ private:
     /// @param itr The iterator to the past-the-negative-sign element of the scalar.
     /// @param len The length of the scalar contents left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_negative_number(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_negative_number(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -3112,7 +3112,7 @@ private:
     /// @param itr The iterator to the past-the-zero element of the scalar.
     /// @param len The length of the scalar left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_after_zero_at_first(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_after_zero_at_first(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -3144,7 +3144,7 @@ private:
     /// @param len The length of the scalar left unscanned.
     /// @param has_decimal_point Whether a decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_decimal_number(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
+    static node_type scan_decimal_number(const char* itr, uint32_t len, bool has_decimal_point) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -3177,7 +3177,7 @@ private:
     /// @param len The length of the scalar left unscanned.
     /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_after_decimal_point(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
+    static node_type scan_after_decimal_point(const char* itr, uint32_t len, bool has_decimal_point) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -3192,7 +3192,7 @@ private:
     /// @param len The length of the scalar left unscanned.
     /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_after_exponent(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
+    static node_type scan_after_exponent(const char* itr, uint32_t len, bool has_decimal_point) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -3212,7 +3212,7 @@ private:
     /// @param itr The iterator to the octal-number element of the scalar.
     /// @param len The length of the scalar left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_octal_number(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_octal_number(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         switch (*itr) {
@@ -3234,7 +3234,7 @@ private:
     /// @param itr The iterator to the hexadecimal-number element of the scalar.
     /// @param len The length of the scalar left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_hexadecimal_number(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_hexadecimal_number(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_xdigit(*itr)) {
@@ -3302,7 +3302,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @brief A type which represents get_character function.
 /// @tparam T A target type.
 template <typename T>
-using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer(std::declval<std::string&>()));
+using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer());
 
 /// @brief Type traits to check if InputAdapterType has get_character member function.
 /// @tparam InputAdapterType An input adapter type to check if it has get_character function.
@@ -3337,13 +3337,550 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
+// #include <fkYAML/detail/str_view.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_STR_VIEW_HPP_
+#define FK_YAML_DETAIL_STR_VIEW_HPP_
+
+#include <limits>
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/meta/stl_supplement.hpp>
+
+// #include <fkYAML/detail/meta/type_traits.hpp>
+
+// #include <fkYAML/exception.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+template <typename CharT, typename Traits = std::char_traits<CharT>>
+class basic_str_view {
+    static_assert(!std::is_array<CharT>::value, "CharT must not be an array type.");
+    static_assert(
+        std::is_trivial<CharT>::value && std::is_standard_layout<CharT>::value,
+        "CharT must be a trivial, standard layout type.");
+    static_assert(
+        std::is_same<CharT, typename Traits::char_type>::value, "CharT & Traits::char_type must be the same type.");
+
+public:
+    using traits_type = Traits;
+    using value_type = CharT;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+    using const_iterator = const value_type*;
+    using iterator = const_iterator;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+    using reverse_iterator = const_reverse_iterator;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+
+    static constexpr size_type npos = static_cast<size_type>(-1);
+
+    basic_str_view() noexcept = default;
+    ~basic_str_view() noexcept = default;
+    basic_str_view(const basic_str_view&) noexcept = default;
+    basic_str_view(basic_str_view&&) noexcept = default;
+
+    basic_str_view(const value_type* p_str) noexcept
+        : m_len(traits_type::length(p_str)),
+          mp_str(p_str) {
+    }
+
+    basic_str_view(std::nullptr_t) = delete;
+
+    basic_str_view(const value_type* p_str, size_type len) noexcept
+        : m_len(len),
+          mp_str(p_str) {
+    }
+
+    template <
+        typename ItrType,
+        enable_if_t<
+            conjunction<
+                is_iterator_of<ItrType, CharT>,
+                std::is_base_of<
+                    std::random_access_iterator_tag, typename std::iterator_traits<ItrType>::iterator_category>>::value,
+            int> = 0>
+    basic_str_view(ItrType first, ItrType last) noexcept
+        : m_len(last - first),
+          mp_str(m_len > 0 ? &*first : nullptr) {
+    }
+
+    basic_str_view(const std::basic_string<CharT>& str) noexcept
+        : m_len(str.length()),
+          mp_str(str.data()) {
+    }
+
+    basic_str_view& operator=(const basic_str_view&) noexcept = default;
+    basic_str_view& operator=(basic_str_view&&) noexcept = default;
+
+    const_iterator begin() const noexcept {
+        return mp_str;
+    }
+
+    const_iterator end() const noexcept {
+        return mp_str + m_len;
+    }
+
+    const_iterator cbegin() const noexcept {
+        return mp_str;
+    }
+
+    const_iterator cend() const noexcept {
+        return mp_str + m_len;
+    }
+
+    const_reverse_iterator rbegin() const noexcept {
+        return const_reverse_iterator(end());
+    }
+
+    const_reverse_iterator rend() const noexcept {
+        return const_reverse_iterator(begin());
+    }
+
+    const_reverse_iterator crbegin() const noexcept {
+        return const_reverse_iterator(end());
+    }
+
+    const_reverse_iterator crend() const noexcept {
+        return const_reverse_iterator(begin());
+    }
+
+    size_type size() const noexcept {
+        return m_len;
+    }
+
+    size_type length() const noexcept {
+        return m_len;
+    }
+
+    constexpr size_type max_size() const noexcept {
+        return std::numeric_limits<difference_type>::max();
+    }
+
+    bool empty() const noexcept {
+        return m_len == 0;
+    }
+
+    const_reference operator[](size_type pos) const noexcept {
+        return *(mp_str + pos);
+    }
+
+    const_reference at(size_type pos) const {
+        if (pos >= m_len) {
+            throw fkyaml::out_of_range(pos);
+        }
+        return *(mp_str + pos);
+    }
+
+    const_reference front() const noexcept {
+        return *mp_str;
+    }
+
+    const_reference back() const {
+        return *(mp_str + m_len - 1);
+    }
+
+    const_pointer data() const noexcept {
+        return mp_str;
+    }
+
+    void remove_prefix(size_type n) noexcept {
+        mp_str += n;
+        m_len -= n;
+    }
+
+    void remove_suffix(size_type n) noexcept {
+        m_len -= n;
+    }
+
+    void swap(basic_str_view& other) noexcept {
+        auto tmp = *this;
+        *this = other;
+        other = tmp;
+    }
+
+    size_type copy(CharT* p_str, size_type n, size_type pos = 0) const {
+        if (pos > m_len) {
+            throw fkyaml::out_of_range(pos);
+        }
+        const size_type rlen = std::min(n, m_len - pos);
+        traits_type::copy(p_str, mp_str + pos, rlen);
+        return rlen;
+    }
+
+    basic_str_view substr(size_type pos = 0, size_type n = npos) const {
+        if (pos > m_len) {
+            throw fkyaml::out_of_range(pos);
+        }
+        const size_type rlen = std::min(n, m_len - pos);
+        return basic_str_view(mp_str + pos, rlen);
+    }
+
+    int compare(basic_str_view sv) const noexcept {
+        const size_type rlen = std::min(m_len, sv.m_len);
+        int ret = traits_type::compare(mp_str, sv.mp_str, rlen);
+
+        if (ret == 0) {
+            using int_limits = std::numeric_limits<int>;
+            difference_type diff = m_len - sv.m_len;
+
+            if (diff > int_limits::max()) {
+                ret = int_limits::max();
+            }
+            else if (diff < int_limits::min()) {
+                ret = int_limits::min();
+            }
+            else {
+                ret = static_cast<int>(diff);
+            }
+        }
+
+        return ret;
+    }
+
+    int compare(size_type pos1, size_type n1, basic_str_view sv) const {
+        return substr(pos1, n1).compare(sv);
+    }
+
+    int compare(size_type pos1, size_type n1, basic_str_view sv, size_type pos2, size_type n2) const {
+        return substr(pos1, n1).compare(sv.substr(pos2, n2));
+    }
+
+    int compare(const CharT* s) const {
+        return compare(basic_str_view(s));
+    }
+
+    int compare(size_type pos1, size_type n1, const CharT* s) const {
+        return substr(pos1, n1).compare(basic_str_view(s));
+    }
+
+    int compare(size_type pos1, size_type n1, const CharT* s, size_type n2) const {
+        return substr(pos1, n1).compare(basic_str_view(s, n2));
+    }
+
+    bool starts_with(basic_str_view sv) const noexcept {
+        return substr(0, sv.size()) == sv;
+    }
+
+    bool starts_with(CharT c) const noexcept {
+        return !empty() && traits_type::eq(front(), c);
+    }
+
+    bool starts_with(const CharT* s) const noexcept {
+        return starts_with(basic_str_view(s));
+    }
+
+    bool ends_with(basic_str_view sv) const noexcept {
+        const size_type size = m_len;
+        const size_type sv_size = sv.size();
+        return size >= sv_size && traits_type::compare(end() - sv_size, sv.data(), sv_size) == 0;
+    }
+
+    bool ends_with(CharT c) const noexcept {
+        return !empty() && traits_type::eq(back(), c);
+    }
+
+    bool ends_with(const CharT* s) const noexcept {
+        return ends_with(basic_str_view(s));
+    }
+
+    bool contains(basic_str_view sv) const noexcept {
+        return find(sv) != npos;
+    }
+
+    bool contains(CharT c) const noexcept {
+        return find(c) != npos;
+    }
+
+    bool contains(const CharT* s) const noexcept {
+        return find(s) != npos;
+    }
+
+    size_type find(basic_str_view sv, size_type pos = 0) const noexcept {
+        return find(sv.mp_str, pos, sv.m_len);
+    }
+
+    size_type find(CharT c, size_type pos = 0) const noexcept {
+        size_type ret = npos;
+
+        if (pos < m_len) {
+            const size_type n = m_len - pos;
+            const CharT* p_found = traits_type::find(mp_str + pos, n, c);
+            if (p_found) {
+                ret = p_found - mp_str;
+            }
+        }
+
+        return ret;
+    }
+
+    size_type find(const CharT* s, size_type pos, size_type n) const noexcept {
+        if (n == 0) {
+            return pos <= m_len ? pos : npos;
+        }
+
+        if (pos >= m_len) {
+            return npos;
+        }
+
+        CharT s0 = s[0];
+        const CharT* p_first = mp_str + pos;
+        const CharT* p_last = mp_str + m_len;
+        size_type len = m_len - pos;
+
+        while (len >= n) {
+            // find the first occurence of s0
+            p_first = traits_type::find(p_first, len - n + 1, s0);
+            if (!p_first) {
+                return npos;
+            }
+
+            // compare the full strings from the first occurence of s0
+            if (traits_type::compare(p_first, s, n) == 0) {
+                return p_first - mp_str;
+            }
+
+            len = p_last - (++p_first);
+        }
+
+        return npos;
+    }
+
+    size_type find(const CharT* s, size_type pos = 0) const noexcept {
+        return find(basic_str_view(s), pos);
+    }
+
+    size_type rfind(basic_str_view sv, size_type pos = npos) const noexcept {
+        return rfind(sv.mp_str, pos, sv.m_len);
+    }
+
+    size_type rfind(CharT c, size_type pos = npos) const noexcept {
+        if (m_len == 0) {
+            return npos;
+        }
+
+        size_type idx = pos;
+        if (pos >= m_len) {
+            idx = m_len - 1;
+        }
+
+        while (idx > 0) {
+            if (traits_type::eq(mp_str[idx], c)) {
+                return idx;
+            }
+            --idx;
+        }
+
+        return npos;
+    }
+
+    size_type rfind(const CharT* s, size_type pos, size_type n) const noexcept {
+        if (n <= m_len) {
+            pos = std::min(m_len - n, pos) + 1;
+
+            do {
+                if (traits_type::compare(mp_str + --pos, s, n) == 0) {
+                    return pos;
+                }
+            } while (pos > 0);
+        }
+
+        return npos;
+    }
+
+    size_type rfind(const CharT* s, size_type pos = npos) const noexcept {
+        return rfind(basic_str_view(s), pos);
+    }
+
+    size_type find_first_of(basic_str_view sv, size_type pos = 0) const noexcept {
+        return find_first_of(sv.mp_str, pos, sv.m_len);
+    }
+
+    size_type find_first_of(CharT c, size_type pos = 0) const noexcept {
+        return find(c, pos);
+    }
+
+    size_type find_first_of(const CharT* s, size_type pos, size_type n) const noexcept {
+        if (n == 0) {
+            return npos;
+        }
+
+        for (size_type idx = pos; idx < m_len; ++idx) {
+            const CharT* p_found = traits_type::find(s, n, mp_str[idx]);
+            if (p_found) {
+                return idx;
+            }
+        }
+
+        return npos;
+    }
+
+    size_type find_first_of(const CharT* s, size_type pos = 0) const noexcept {
+        return find_first_of(basic_str_view(s), pos);
+    }
+
+    size_type find_last_of(basic_str_view sv, size_type pos = npos) const noexcept {
+        return find_last_of(sv.mp_str, pos, sv.m_len);
+    }
+
+    size_type find_last_of(CharT c, size_type pos = npos) const noexcept {
+        return rfind(c, pos);
+    }
+
+    size_type find_last_of(const CharT* s, size_type pos, size_type n) const noexcept {
+        if (n <= m_len) {
+            pos = std::min(m_len - n, pos) + 1;
+
+            do {
+                const CharT* p_found = traits_type::find(s, n, mp_str[--pos]);
+                if (p_found) {
+                    return pos;
+                }
+            } while (pos > 0);
+        }
+
+        return npos;
+    }
+
+    size_type find_last_of(const CharT* s, size_type pos = npos) const noexcept {
+        return find_last_of(basic_str_view(s), pos);
+    }
+
+    size_type find_first_not_of(basic_str_view sv, size_type pos = npos) const noexcept {
+        return find_first_not_of(sv.mp_str, pos, sv.m_len);
+    }
+
+    size_type find_first_not_of(CharT c, size_type pos = npos) const noexcept {
+        for (; pos < m_len; ++pos) {
+            if (!traits_type::eq(mp_str[pos], c)) {
+                return pos;
+            }
+        }
+
+        return npos;
+    }
+
+    size_type find_first_not_of(const CharT* s, size_type pos, size_type n) const noexcept {
+        for (; pos < m_len; ++pos) {
+            const CharT* p_found = traits_type::find(s, n, mp_str[pos]);
+            if (!p_found) {
+                return pos;
+            }
+        }
+
+        return npos;
+    }
+
+    size_type find_first_not_of(const CharT* s, size_type pos = npos) const noexcept {
+        return find_first_not_of(basic_str_view(s), pos);
+    }
+
+    size_type find_last_not_of(basic_str_view sv, size_type pos = npos) const noexcept {
+        return find_last_not_of(sv.mp_str, pos, sv.m_len);
+    }
+
+    size_type find_last_not_of(CharT c, size_type pos = npos) const noexcept {
+        if (m_len > 0) {
+            pos = std::min(m_len, pos);
+
+            do {
+                if (!traits_type::eq(mp_str[--pos], c)) {
+                    return pos;
+                }
+            } while (pos > 0);
+        }
+
+        return npos;
+    }
+
+    size_type find_last_not_of(const CharT* s, size_type pos, size_type n) const noexcept {
+        if (n <= m_len) {
+            pos = std::min(m_len - n, pos) + 1;
+
+            do {
+                const CharT* p_found = traits_type::find(s, n, mp_str[--pos]);
+                if (!p_found) {
+                    return pos;
+                }
+            } while (pos > 0);
+        }
+
+        return npos;
+    }
+
+    size_type find_last_not_of(const CharT* s, size_type pos = npos) const noexcept {
+        return find_last_not_of(basic_str_view(s), pos);
+    }
+
+private:
+    size_type m_len {0};
+    const value_type* mp_str {nullptr};
+};
+
+template <typename CharT, typename Traits>
+bool operator==(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+    // Comparing the lengths first will omit unnecessary value comparison in compare().
+    return lhs.size() == rhs.size() && lhs.compare(rhs) == 0;
+}
+
+template <typename CharT, typename Traits>
+bool operator!=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+template <typename CharT, typename Traits>
+bool operator<(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+    return lhs.compare(rhs) < 0;
+}
+
+template <typename CharT, typename Traits>
+bool operator<=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+    return lhs.compare(rhs) <= 0;
+}
+
+template <typename CharT, typename Traits>
+bool operator>(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+    return lhs.compare(rhs) > 0;
+}
+
+template <typename CharT, typename Traits>
+bool operator>=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+    return lhs.compare(rhs) >= 0;
+}
+
+template <typename CharT, typename Traits>
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, basic_str_view<CharT, Traits> sv) {
+    return os.write(sv.data(), static_cast<std::streamsize>(sv.size()));
+}
+
+using str_view = basic_str_view<char>;
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_STR_VIEW_HPP_ */
+
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief A position tracker of the target buffer.
 class position_tracker {
 public:
-    void set_target_buffer(const std::string& buffer) {
+    void set_target_buffer(str_view buffer) noexcept {
         m_begin = m_last = buffer.begin();
         m_end = buffer.end();
     }
@@ -3351,16 +3888,16 @@ public:
     /// @brief Update the set of the current position informations.
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
-    void update_position(std::string::const_iterator cur_pos) {
-        uint32_t diff = static_cast<uint32_t>(std::distance(m_last, cur_pos));
+    void update_position(const char* p_current) {
+        uint32_t diff = static_cast<uint32_t>(std::distance(m_last, p_current));
         if (diff == 0) {
             return;
         }
 
         m_cur_pos += diff;
         uint32_t prev_lines_read = m_lines_read;
-        m_lines_read += static_cast<uint32_t>(std::count(m_last, cur_pos, '\n'));
-        m_last = cur_pos;
+        m_lines_read += static_cast<uint32_t>(std::count(m_last, p_current, '\n'));
+        m_last = p_current;
 
         if (prev_lines_read == m_lines_read) {
             m_cur_pos_in_line += diff;
@@ -3368,8 +3905,8 @@ public:
         }
 
         uint32_t count = 0;
-        while (--cur_pos != m_begin) {
-            if (*cur_pos == '\n') {
+        while (--p_current != m_begin) {
+            if (*p_current == '\n') {
                 break;
             }
             count++;
@@ -3395,11 +3932,11 @@ public:
 
 private:
     /// The iterator to the beginning element in the target buffer.
-    std::string::const_iterator m_begin {};
+    const char* m_begin {};
     /// The iterator to the past-the-end element in the target buffer.
-    std::string::const_iterator m_end {};
+    const char* m_end {};
     /// The iterator to the last updated element in the target buffer.
-    std::string::const_iterator m_last {};
+    const char* m_last {};
     /// The current position from the beginning of an input buffer.
     uint32_t m_cur_pos {0};
     /// The current position in the current line.
@@ -3412,11 +3949,11 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_ */
 
-// #include <fkYAML/detail/meta/input_adapter_traits.hpp>
-
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
+
+// #include <fkYAML/detail/str_view.hpp>
 
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 ///  _______   __ __   __  _____   __  __  __
@@ -3473,8 +4010,8 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct lexical_token {
     lexical_token_t type {lexical_token_t::END_OF_BUFFER};
-    std::string::const_iterator token_begin_itr {};
-    std::string::const_iterator token_end_itr {};
+    const char* token_begin_itr {};
+    const char* token_end_itr {};
 };
 
 /// @brief A class which lexically analizes YAML formatted inputs.
@@ -3504,11 +4041,10 @@ public:
     /// @brief Construct a new lexical_analyzer object.
     /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object.
-    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    explicit lexical_analyzer(InputAdapterType&& input_adapter) {
-        std::forward<InputAdapterType>(input_adapter).fill_buffer(m_input_buffer);
-        m_cur_itr = m_token_begin_itr = m_input_buffer.cbegin();
-        m_end_itr = m_input_buffer.cend();
+    explicit lexical_analyzer(str_view input_buffer) noexcept
+        : m_input_buffer(input_buffer),
+          m_cur_itr(m_input_buffer.begin()),
+          m_end_itr(m_input_buffer.end()) {
         m_pos_tracker.set_target_buffer(m_input_buffer);
     }
 
@@ -3689,8 +4225,8 @@ public:
             get_block_style_metadata(chomp_type, indent);
             scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
             token.type = lexical_token_t::BLOCK_SCALAR;
-            token.token_begin_itr = m_value_buffer.cbegin();
-            token.token_end_itr = m_value_buffer.cend();
+            token.token_begin_itr = m_value_buffer.c_str();
+            token.token_end_itr = m_value_buffer.c_str() + m_value_buffer.size();
             return token;
         }
         case '>': {
@@ -3700,8 +4236,8 @@ public:
             get_block_style_metadata(chomp_type, indent);
             scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
             token.type = lexical_token_t::BLOCK_SCALAR;
-            token.token_begin_itr = m_value_buffer.cbegin();
-            token.token_end_itr = m_value_buffer.cend();
+            token.token_begin_itr = m_value_buffer.c_str();
+            token.token_end_itr = m_value_buffer.c_str() + m_value_buffer.size();
             return token;
         }
         default:
@@ -3723,25 +4259,20 @@ public:
     }
 
     /// @brief Get the YAML version specification.
-    /// @return const string_type& A YAML version specification.
-    const string_type& get_yaml_version() const {
-        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
-        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
-
-        return m_value_buffer;
+    /// @return str_view A YAML version specification.
+    str_view get_yaml_version() const noexcept {
+        return m_yaml_version;
     }
 
     /// @brief Get the YAML tag handle defined in the TAG directive.
-    /// @return const std::string& A tag handle.
-    const std::string& get_tag_handle() const {
-        FK_YAML_ASSERT(!m_tag_handle.empty());
+    /// @return str_view A tag handle.
+    str_view get_tag_handle() const noexcept {
         return m_tag_handle;
     }
 
     /// @brief Get the YAML tag prefix defined in the TAG directive.
-    /// @return const std::string A tag prefix.
-    const std::string& get_tag_prefix() const {
-        FK_YAML_ASSERT(!m_tag_prefix.empty());
+    /// @return str_view A tag prefix.
+    str_view get_tag_prefix() const noexcept {
         return m_tag_prefix;
     }
 
@@ -3789,7 +4320,7 @@ private:
 
         if (m_value_buffer == "YAML") {
             if (!ends_loop) {
-                emit_error("There must be at least one white space between \"%YAML\" and tag info.");
+                emit_error("There must be at least one white space between \"%YAML\" and version.");
             }
             skip_white_spaces();
             return scan_yaml_version_directive();
@@ -3802,8 +4333,6 @@ private:
     /// @brief Scan a YAML tag directive.
     /// @return lexical_token_t The lexical token type for YAML tag directives.
     lexical_token_t scan_tag_directive() {
-        m_tag_handle.clear();
-        m_tag_prefix.clear();
         m_token_begin_itr = m_cur_itr;
 
         //
@@ -3868,7 +4397,7 @@ private:
         }
         }
 
-        m_tag_handle.assign(m_token_begin_itr, m_cur_itr);
+        m_tag_handle = str_view {m_token_begin_itr, m_cur_itr};
 
         skip_white_spaces();
 
@@ -3877,6 +4406,7 @@ private:
         //
 
         m_token_begin_itr = m_cur_itr;
+        const char* p_tag_prefix_begin = m_cur_itr;
         switch (*m_cur_itr) {
         // a tag prefix must not start with flow indicators to avoid ambiguity.
         // See https://yaml.org/spec/1.2.2/#rule-ns-global-tag-prefix for more details.
@@ -3900,12 +4430,12 @@ private:
             }
         } while (!ends_loop && ++m_cur_itr != m_end_itr);
 
-        m_tag_prefix.assign(m_token_begin_itr, m_cur_itr);
-
-        bool is_valid = uri_encoding::validate(m_tag_prefix.begin(), m_tag_prefix.end());
+        bool is_valid = uri_encoding::validate(p_tag_prefix_begin, m_cur_itr);
         if (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
+
+        m_tag_prefix = str_view {p_tag_prefix_begin, m_cur_itr};
 
         return lexical_token_t::TAG_DIRECTIVE;
     }
@@ -3914,7 +4444,6 @@ private:
     /// @note Only 1.1 and 1.2 are supported. If not, throws an exception.
     /// @return lexical_token_t The lexical token type for YAML version directives.
     lexical_token_t scan_yaml_version_directive() {
-        m_value_buffer.clear();
         m_token_begin_itr = m_cur_itr;
 
         bool ends_loop = false;
@@ -3931,9 +4460,9 @@ private:
             }
         }
 
-        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
+        m_yaml_version = str_view {m_token_begin_itr, m_cur_itr};
 
-        if (m_value_buffer != "1.1" && m_value_buffer != "1.2") {
+        if (m_yaml_version.compare("1.1") != 0 && m_yaml_version.compare("1.2") != 0) {
             emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
         }
 
@@ -4071,12 +4600,12 @@ private:
             }
 
             // TODO: This should be achieved with no copy...
-            const std::string named_handle(token.token_begin_itr, token.token_end_itr);
+            str_view named_handle(token.token_begin_itr, token.token_end_itr);
             std::size_t last_tag_prefix_pos = named_handle.find_last_of('!');
-            FK_YAML_ASSERT(last_tag_prefix_pos != std::string::npos);
+            FK_YAML_ASSERT(last_tag_prefix_pos != str_view::npos);
 
-            bool is_valid_uri =
-                uri_encoding::validate(named_handle.begin() + last_tag_prefix_pos + 1, named_handle.end());
+            str_view tag_uri = named_handle.substr(last_tag_prefix_pos + 1);
+            bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
             if (!is_valid_uri) {
                 emit_error("Invalid URI character is found in a named tag handle.");
             }
@@ -4108,8 +4637,8 @@ private:
         bool is_value_buff_used = extract_string_token(needs_last_single_quote, needs_last_double_quote);
 
         if (is_value_buff_used) {
-            token.token_begin_itr = m_value_buffer.cbegin();
-            token.token_end_itr = m_value_buffer.cend();
+            token.token_begin_itr = m_value_buffer.c_str();
+            token.token_end_itr = m_value_buffer.c_str() + m_value_buffer.size();
         }
         else {
             token.token_end_itr = m_cur_itr;
@@ -4437,7 +4966,7 @@ private:
         // scan the contents of a string scalar token.
 
         bool is_value_buffer_used = false;
-        for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr) {
+        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
             char current = *m_cur_itr;
             uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
             if (num_bytes == 1) {
@@ -4446,6 +4975,10 @@ private:
                     bool is_allowed = (this->*pfn_is_allowed)(current, is_value_buffer_used);
                     if (!is_allowed) {
                         return is_value_buffer_used;
+                    }
+
+                    if (m_cur_itr == m_end_itr) {
+                        break;
                     }
 
                     continue;
@@ -4845,21 +5378,23 @@ private:
 
 private:
     /// An input buffer adapter to be analyzed.
-    std::string m_input_buffer {};
+    str_view m_input_buffer {};
     /// The iterator to the current character in the input buffer.
-    std::string::const_iterator m_cur_itr {};
+    const char* m_cur_itr {};
     /// The iterator to the beginning of the current token.
-    std::string::const_iterator m_token_begin_itr {};
+    const char* m_token_begin_itr {};
     /// The iterator to the past-the-end element in the input buffer.
-    std::string::const_iterator m_end_itr {};
+    const char* m_end_itr {};
     /// The current position tracker of the input buffer.
     mutable position_tracker m_pos_tracker {};
     /// A temporal buffer to store a string to be parsed to an actual token value.
     std::string m_value_buffer {};
+    /// The last yaml version.
+    str_view m_yaml_version {};
     /// The last tag handle.
-    std::string m_tag_handle {};
-    /// The last tag prefix
-    std::string m_tag_prefix {};
+    str_view m_tag_handle {};
+    /// The last tag prefix.
+    str_view m_tag_prefix {};
     /// The beginning position of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)
@@ -5383,8 +5918,10 @@ public:
     /// @return basic_node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     basic_node_type deserialize(InputAdapterType&& input_adapter) {
+        input_adapter.fill_buffer();
+        lexer_type lexer(input_adapter.get_buffer());
+
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
-        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
         return deserialize_document(lexer, type);
     }
 
@@ -5394,7 +5931,9 @@ public:
     /// @return std::vector<basic_node_type> Root YAML nodes for deserialized YAML documents.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     std::vector<basic_node_type> deserialize_docs(InputAdapterType&& input_adapter) {
-        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
+        input_adapter.fill_buffer();
+        lexer_type lexer(input_adapter.get_buffer());
+
         std::vector<basic_node_type> nodes {};
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
@@ -5515,9 +6054,9 @@ private:
                 lacks_end_of_directives_marker = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
-                const std::string& tag_handle = lexer.get_tag_handle();
-                switch (tag_handle.size()) {
-                case 1: {
+                str_view tag_handle_view = lexer.get_tag_handle();
+                switch (tag_handle_view.size()) {
+                case 1 /* ! */: {
                     bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
@@ -5525,11 +6064,12 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    mp_meta->primary_handle_prefix = lexer.get_tag_prefix();
+                    str_view tag_prefix = lexer.get_tag_prefix();
+                    mp_meta->primary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
-                case 2: {
+                case 2 /* !! */: {
                     bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
@@ -5537,13 +6077,17 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    mp_meta->secondary_handle_prefix = lexer.get_tag_prefix();
+                    str_view tag_prefix = lexer.get_tag_prefix();
+                    mp_meta->secondary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
-                default: {
+                default /* !<handle>! */: {
+                    std::string tag_handle(tag_handle_view.begin(), tag_handle_view.end());
+                    str_view tag_prefix_view = lexer.get_tag_prefix();
+                    std::string tag_prefix(tag_prefix_view.begin(), tag_prefix_view.end());
                     bool is_already_specified =
-                        !(mp_meta->named_handle_map.emplace(tag_handle, lexer.get_tag_prefix()).second);
+                        !(mp_meta->named_handle_map.emplace(std::move(tag_handle), std::move(tag_prefix)).second);
                     if (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
@@ -6501,8 +7045,8 @@ private:
 
     /// @brief Update the target YAML version with an input string.
     /// @param version_str A YAML version string.
-    yaml_version_type convert_yaml_version(const string_type& version_str) noexcept {
-        return (version_str == "1.1") ? yaml_version_type::VERSION_1_1 : yaml_version_type::VERSION_1_2;
+    yaml_version_type convert_yaml_version(str_view version_str) noexcept {
+        return (version_str.compare("1.1") == 0) ? yaml_version_type::VERSION_1_1 : yaml_version_type::VERSION_1_2;
     }
 
 private:
@@ -6936,6 +7480,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
+// #include <fkYAML/detail/str_view.hpp>
+
 // #include <fkYAML/exception.hpp>
 
 
@@ -6977,29 +7523,32 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
-        buffer.clear();
-        buffer.reserve(std::distance(m_current, m_end));
+    void fill_buffer() {
+        m_buffer.clear();
 
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
-            fill_buffer_utf8(buffer);
+            fill_buffer_utf8();
             break;
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            fill_buffer_utf16(buffer);
+            fill_buffer_utf16();
             break;
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            fill_buffer_utf32(buffer);
+            fill_buffer_utf32();
             break;
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
     /// @brief The concrete implementation of fill_buffer() for UTF-8 encoded inputs.
     /// @param buffer A buffer to be filled with the input.
-    void fill_buffer_utf8(std::string& buffer) {
+    void fill_buffer_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         IterType current = m_current;
@@ -7039,19 +7588,23 @@ private:
             }
         }
 
-        buffer.reserve(std::distance(m_current, m_end));
+        m_buffer.reserve(std::distance(m_current, m_end));
 
         do {
             IterType cr_or_end_itr = std::find(m_current, m_end, '\r');
-            buffer.append(m_current, cr_or_end_itr);
+            m_buffer.append(m_current, cr_or_end_itr);
             m_current = (cr_or_end_itr == m_end) ? cr_or_end_itr : std::next(cr_or_end_itr);
         } while (m_current != m_end);
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @param buffer A buffer to be filled with the input.
-    void fill_buffer_utf16(std::string& buffer) {
+    void fill_buffer_utf16() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
+
+        // Assume the input characters are all ASCII characters.
+        // That's the most probably the case.
+        m_buffer.reserve(std::distance(m_current, m_end) / 2);
 
         int shift_bits[2] {0, 0};
         if (m_encode_type == utf_encode_t::UTF_16BE) {
@@ -7084,14 +7637,18 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32(std::string& buffer) {
+    void fill_buffer_utf32() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
+
+        // Assume the input characters are all ASCII characters.
+        // That's the most probably the case.
+        m_buffer.reserve(std::distance(m_current, m_end) / 4);
 
         int shift_bits[4] {0, 0, 0, 0};
         if (m_encode_type == utf_encode_t::UTF_32BE) {
@@ -7117,7 +7674,7 @@ private:
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+                m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
     }
@@ -7129,6 +7686,8 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 #ifdef FK_YAML_HAS_CHAR8_T
@@ -7165,7 +7724,7 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         IterType current = m_current;
         while (current != m_end) {
             uint8_t first = static_cast<uint8_t>(*current++);
@@ -7203,13 +7762,17 @@ public:
             }
         }
 
-        buffer.reserve(std::distance(m_current, m_end));
+        m_buffer.reserve(std::distance(m_current, m_end));
         while (m_current != m_end) {
             char c = char(*m_current++);
             if (c != '\r') {
-                buffer.push_back(c);
+                m_buffer.push_back(c);
             }
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
@@ -7219,6 +7782,8 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 #endif // defined(FK_YAML_HAS_CHAR8_T)
@@ -7253,7 +7818,7 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
@@ -7261,7 +7826,9 @@ public:
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
 
-        buffer.reserve(std::distance(m_current, m_end) * 2);
+        // Assume the input characters are all ASCII characters.
+        // That's the most probably the case.
+        m_buffer.reserve(std::distance(m_current, m_end));
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
@@ -7284,8 +7851,12 @@ public:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
@@ -7295,6 +7866,8 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_16BE};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 /// @brief An input adapter for iterators of type char32_t.
@@ -7327,7 +7900,7 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         int shift_bits[4] {0, 0, 0, 0};
         if (m_encode_type == utf_encode_t::UTF_32LE) {
             shift_bits[0] = 24;
@@ -7339,7 +7912,9 @@ public:
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
 
-        buffer.reserve(std::distance(m_current, m_end) * 4);
+        // Assume the input characters are all ASCII characters.
+        // That's the most probably the case.
+        m_buffer.reserve(std::distance(m_current, m_end));
 
         while (m_current != m_end) {
             char32_t tmp = *m_current++;
@@ -7351,9 +7926,13 @@ public:
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+                m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
@@ -7363,6 +7942,8 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 /// @brief An input adapter for C-style file handles.
@@ -7391,26 +7972,30 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
-            fill_buffer_utf8(buffer);
+            fill_buffer_utf8();
             break;
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            fill_buffer_utf16(buffer);
+            fill_buffer_utf16();
             break;
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            fill_buffer_utf32(buffer);
+            fill_buffer_utf32();
             break;
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf8(std::string& buffer) {
+    void fill_buffer_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
@@ -7429,13 +8014,13 @@ private:
                     ++p_cr_or_end;
                 }
 
-                buffer.append(p_current, p_cr_or_end);
+                m_buffer.append(p_current, p_cr_or_end);
                 p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
             } while (p_current != p_end);
         }
 
-        auto current = buffer.begin();
-        auto end = buffer.end();
+        auto current = m_buffer.begin();
+        auto end = m_buffer.end();
         while (current != end) {
             uint8_t first = static_cast<uint8_t>(*current++);
             uint32_t num_bytes = utf8::get_num_bytes(first);
@@ -7475,7 +8060,7 @@ private:
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf16(std::string& buffer) {
+    void fill_buffer_utf16() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         int shift_bits[2] {0, 0};
@@ -7510,13 +8095,13 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32(std::string& buffer) {
+    void fill_buffer_utf32() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         int shift_bits[4] {0, 0, 0, 0};
@@ -7549,7 +8134,7 @@ private:
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+                m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
     }
@@ -7559,6 +8144,8 @@ private:
     std::FILE* m_file {nullptr};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 /// @brief An input adapter for streams
@@ -7583,26 +8170,30 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
-            fill_buffer_utf8(buffer);
+            fill_buffer_utf8();
             break;
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            fill_buffer_utf16(buffer);
+            fill_buffer_utf16();
             break;
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            fill_buffer_utf32(buffer);
+            fill_buffer_utf32();
             break;
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf8(std::string& buffer) {
+    void fill_buffer_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
@@ -7622,13 +8213,13 @@ private:
                     ++p_cr_or_end;
                 }
 
-                buffer.append(p_current, p_cr_or_end);
+                m_buffer.append(p_current, p_cr_or_end);
                 p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
             } while (p_current != p_end);
         } while (!m_istream->eof());
 
-        auto current = buffer.begin();
-        auto end = buffer.end();
+        auto current = m_buffer.begin();
+        auto end = m_buffer.end();
         while (current != end) {
             uint8_t first = static_cast<uint8_t>(*current++);
             uint32_t num_bytes = utf8::get_num_bytes(first);
@@ -7668,7 +8259,7 @@ private:
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf16(std::string& buffer) {
+    void fill_buffer_utf16() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         int shift_bits[2] {0, 0};
@@ -7710,13 +8301,13 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32(std::string& buffer) {
+    void fill_buffer_utf32() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         int shift_bits[4] {0, 0, 0, 0};
@@ -7750,7 +8341,7 @@ private:
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+                m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         } while (!m_istream->eof());
     }
@@ -7760,6 +8351,8 @@ private:
     std::istream* m_istream {nullptr};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 /////////////////////////////////
@@ -8703,7 +9296,8 @@ private:
             // The next line is intentionally excluded from the LCOV coverage target since the next line is somehow
             // misrecognized as it has a binary branch. Possibly begin() or end() has some conditional branch(es)
             // internally. Confirmed with LCOV 1.14 on Ubuntu22.04.
-            node_type type_if_plain = scalar_scanner::scan(str_val.begin(), str_val.end()); // LCOV_EXCL_LINE
+            node_type type_if_plain =
+                scalar_scanner::scan(str_val.c_str(), str_val.c_str() + str_val.size()); // LCOV_EXCL_LINE
 
             if (type_if_plain != node_type::STRING) {
                 // Surround a string value with double quotes to keep semantic equality.
@@ -8800,7 +9394,7 @@ private:
 
         using string_type = typename BasicNodeType::string_type;
         const string_type& s = node.template get_value_ref<const string_type&>();
-        return yaml_escaper::escape(s.begin(), s.end(), is_escaped);
+        return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
     } // LCOV_EXCL_LINE
 
 private:

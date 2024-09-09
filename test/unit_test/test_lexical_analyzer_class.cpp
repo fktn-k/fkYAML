@@ -16,16 +16,16 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
     fkyaml::detail::lexical_token token;
 
     SECTION("valid YAML directive") {
-        using value_pair_t = std::pair<fkyaml::detail::str_view, std::string>;
+        using value_pair_t = std::pair<fkyaml::detail::str_view, fkyaml::detail::str_view>;
         auto value_pair = GENERATE(
-            value_pair_t("%YAML 1.1 ", std::string("1.1")),
-            value_pair_t("%YAML\t1.1\t", std::string("1.1")),
-            value_pair_t("%YAML 1.1\n", std::string("1.1")),
-            value_pair_t("%YAML 1.1", std::string("1.1")),
-            value_pair_t("%YAML 1.2 ", std::string("1.2")),
-            value_pair_t("%YAML\t1.2\t", std::string("1.2")),
-            value_pair_t("%YAML 1.2\n", std::string("1.2")),
-            value_pair_t("%YAML 1.2", std::string("1.2")));
+            value_pair_t("%YAML 1.1 ", "1.1"),
+            value_pair_t("%YAML\t1.1\t", "1.1"),
+            value_pair_t("%YAML 1.1\n", "1.1"),
+            value_pair_t("%YAML 1.1", "1.1"),
+            value_pair_t("%YAML 1.2 ", "1.2"),
+            value_pair_t("%YAML\t1.2\t", "1.2"),
+            value_pair_t("%YAML 1.2\n", "1.2"),
+            value_pair_t("%YAML 1.2", "1.2"));
 
         lexer_t lexer(value_pair.first);
 
@@ -76,8 +76,8 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
-        REQUIRE(lexer.get_tag_handle() == "!");
-        REQUIRE(lexer.get_tag_prefix() == "foo");
+        REQUIRE(lexer.get_tag_handle().compare("!") == 0);
+        REQUIRE(lexer.get_tag_prefix().compare("foo") == 0);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
@@ -88,8 +88,8 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
-        REQUIRE(lexer.get_tag_handle() == "!!");
-        REQUIRE(lexer.get_tag_prefix() == "foo");
+        REQUIRE(lexer.get_tag_handle().compare("!!") == 0);
+        REQUIRE(lexer.get_tag_prefix().compare("foo") == 0);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
@@ -101,8 +101,8 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
-        REQUIRE(lexer.get_tag_handle() == "!va1id-ta9!");
-        REQUIRE(lexer.get_tag_prefix() == "foo");
+        REQUIRE(lexer.get_tag_handle().compare("!va1id-ta9!") == 0);
+        REQUIRE(lexer.get_tag_prefix().compare("foo") == 0);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
@@ -184,7 +184,7 @@ TEST_CASE("LexicalAnalyzer_EndOfDirectives") {
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
-    REQUIRE(lexer.get_yaml_version() == "1.2");
+    REQUIRE(lexer.get_yaml_version() == fkyaml::detail::str_view("1.2"));
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
     REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -205,7 +205,7 @@ TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
-    REQUIRE(lexer.get_yaml_version() == "1.2");
+    REQUIRE(lexer.get_yaml_version() == fkyaml::detail::str_view("1.2"));
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
     REQUIRE_NOTHROW(token = lexer.get_next_token());

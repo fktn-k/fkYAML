@@ -285,25 +285,20 @@ public:
     }
 
     /// @brief Get the YAML version specification.
-    /// @return const string_type& A YAML version specification.
-    const string_type& get_yaml_version() const {
-        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
-        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
-
-        return m_value_buffer;
+    /// @return str_view A YAML version specification.
+    str_view get_yaml_version() const noexcept {
+        return m_yaml_version;
     }
 
     /// @brief Get the YAML tag handle defined in the TAG directive.
-    /// @return const std::string& A tag handle.
-    const std::string& get_tag_handle() const {
-        FK_YAML_ASSERT(!m_tag_handle.empty());
+    /// @return str_view A tag handle.
+    str_view get_tag_handle() const noexcept {
         return m_tag_handle;
     }
 
     /// @brief Get the YAML tag prefix defined in the TAG directive.
-    /// @return const std::string A tag prefix.
-    const std::string& get_tag_prefix() const {
-        FK_YAML_ASSERT(!m_tag_prefix.empty());
+    /// @return str_view A tag prefix.
+    str_view get_tag_prefix() const noexcept {
         return m_tag_prefix;
     }
 
@@ -351,7 +346,7 @@ private:
 
         if (m_value_buffer == "YAML") {
             if (!ends_loop) {
-                emit_error("There must be at least one white space between \"%YAML\" and tag info.");
+                emit_error("There must be at least one white space between \"%YAML\" and version.");
             }
             skip_white_spaces();
             return scan_yaml_version_directive();
@@ -364,8 +359,6 @@ private:
     /// @brief Scan a YAML tag directive.
     /// @return lexical_token_t The lexical token type for YAML tag directives.
     lexical_token_t scan_tag_directive() {
-        m_tag_handle.clear();
-        m_tag_prefix.clear();
         m_token_begin_itr = m_cur_itr;
 
         //
@@ -430,7 +423,7 @@ private:
         }
         }
 
-        m_tag_handle.assign(m_token_begin_itr, m_cur_itr);
+        m_tag_handle = str_view {m_token_begin_itr, m_cur_itr};
 
         skip_white_spaces();
 
@@ -439,6 +432,7 @@ private:
         //
 
         m_token_begin_itr = m_cur_itr;
+        const char* p_tag_prefix_begin = m_cur_itr;
         switch (*m_cur_itr) {
         // a tag prefix must not start with flow indicators to avoid ambiguity.
         // See https://yaml.org/spec/1.2.2/#rule-ns-global-tag-prefix for more details.
@@ -462,13 +456,12 @@ private:
             }
         } while (!ends_loop && ++m_cur_itr != m_end_itr);
 
-        m_tag_prefix.assign(m_token_begin_itr, m_cur_itr);
-
-        str_view tag_prefix = m_tag_prefix;
-        bool is_valid = uri_encoding::validate(tag_prefix.begin(), tag_prefix.end());
+        bool is_valid = uri_encoding::validate(p_tag_prefix_begin, m_cur_itr);
         if (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
+
+        m_tag_prefix = str_view {p_tag_prefix_begin, m_cur_itr};
 
         return lexical_token_t::TAG_DIRECTIVE;
     }
@@ -477,7 +470,6 @@ private:
     /// @note Only 1.1 and 1.2 are supported. If not, throws an exception.
     /// @return lexical_token_t The lexical token type for YAML version directives.
     lexical_token_t scan_yaml_version_directive() {
-        m_value_buffer.clear();
         m_token_begin_itr = m_cur_itr;
 
         bool ends_loop = false;
@@ -494,9 +486,9 @@ private:
             }
         }
 
-        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
+        m_yaml_version = str_view {m_token_begin_itr, m_cur_itr};
 
-        if (m_value_buffer != "1.1" && m_value_buffer != "1.2") {
+        if (m_yaml_version.compare("1.1") != 0 && m_yaml_version.compare("1.2") != 0) {
             emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
         }
 
@@ -1423,10 +1415,12 @@ private:
     mutable position_tracker m_pos_tracker {};
     /// A temporal buffer to store a string to be parsed to an actual token value.
     std::string m_value_buffer {};
+    /// The last yaml version.
+    str_view m_yaml_version {};
     /// The last tag handle.
-    std::string m_tag_handle {};
-    /// The last tag prefix
-    std::string m_tag_prefix {};
+    str_view m_tag_handle {};
+    /// The last tag prefix.
+    str_view m_tag_prefix {};
     /// The beginning position of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)
