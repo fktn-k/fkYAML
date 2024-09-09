@@ -228,6 +228,7 @@ add_executable(
   test_scalar_conv.cpp
   test_scalar_scanner_class.cpp
   test_serializer_class.cpp
+  test_str_view_class.cpp
   test_string_formatter.cpp
   test_tag_resolver_class.cpp
   test_uri_encoding_class.cpp
