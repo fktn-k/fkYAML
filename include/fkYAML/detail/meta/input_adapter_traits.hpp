@@ -27,7 +27,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @brief A type which represents get_character function.
 /// @tparam T A target type.
 template <typename T>
-using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer(std::declval<std::string&>()));
+using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer());
 
 /// @brief Type traits to check if InputAdapterType has get_character member function.
 /// @tparam InputAdapterType An input adapter type to check if it has get_character function.

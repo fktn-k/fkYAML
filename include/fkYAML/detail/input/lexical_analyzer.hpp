@@ -26,9 +26,9 @@
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/input/position_tracker.hpp>
-#include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/str_view.hpp>
 #include <fkYAML/detail/types/lexical_token_t.hpp>
 #include <fkYAML/exception.hpp>
 
@@ -36,8 +36,8 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct lexical_token {
     lexical_token_t type {lexical_token_t::END_OF_BUFFER};
-    std::string::const_iterator token_begin_itr {};
-    std::string::const_iterator token_end_itr {};
+    const char* token_begin_itr {};
+    const char* token_end_itr {};
 };
 
 /// @brief A class which lexically analizes YAML formatted inputs.
@@ -67,11 +67,10 @@ public:
     /// @brief Construct a new lexical_analyzer object.
     /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object.
-    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    explicit lexical_analyzer(InputAdapterType&& input_adapter) {
-        std::forward<InputAdapterType>(input_adapter).fill_buffer(m_input_buffer);
-        m_cur_itr = m_token_begin_itr = m_input_buffer.cbegin();
-        m_end_itr = m_input_buffer.cend();
+    explicit lexical_analyzer(str_view input_buffer) noexcept
+        : m_input_buffer(input_buffer),
+          m_cur_itr(m_input_buffer.begin()),
+          m_end_itr(m_input_buffer.end()) {
         m_pos_tracker.set_target_buffer(m_input_buffer);
     }
 
@@ -252,8 +251,8 @@ public:
             get_block_style_metadata(chomp_type, indent);
             scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
             token.type = lexical_token_t::BLOCK_SCALAR;
-            token.token_begin_itr = m_value_buffer.cbegin();
-            token.token_end_itr = m_value_buffer.cend();
+            token.token_begin_itr = m_value_buffer.c_str();
+            token.token_end_itr = m_value_buffer.c_str() + m_value_buffer.size();
             return token;
         }
         case '>': {
@@ -263,8 +262,8 @@ public:
             get_block_style_metadata(chomp_type, indent);
             scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
             token.type = lexical_token_t::BLOCK_SCALAR;
-            token.token_begin_itr = m_value_buffer.cbegin();
-            token.token_end_itr = m_value_buffer.cend();
+            token.token_begin_itr = m_value_buffer.c_str();
+            token.token_end_itr = m_value_buffer.c_str() + m_value_buffer.size();
             return token;
         }
         default:
@@ -465,7 +464,8 @@ private:
 
         m_tag_prefix.assign(m_token_begin_itr, m_cur_itr);
 
-        bool is_valid = uri_encoding::validate(m_tag_prefix.begin(), m_tag_prefix.end());
+        str_view tag_prefix = m_tag_prefix;
+        bool is_valid = uri_encoding::validate(tag_prefix.begin(), tag_prefix.end());
         if (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
@@ -634,12 +634,12 @@ private:
             }
 
             // TODO: This should be achieved with no copy...
-            const std::string named_handle(token.token_begin_itr, token.token_end_itr);
+            str_view named_handle(token.token_begin_itr, token.token_end_itr);
             std::size_t last_tag_prefix_pos = named_handle.find_last_of('!');
-            FK_YAML_ASSERT(last_tag_prefix_pos != std::string::npos);
+            FK_YAML_ASSERT(last_tag_prefix_pos != str_view::npos);
 
-            bool is_valid_uri =
-                uri_encoding::validate(named_handle.begin() + last_tag_prefix_pos + 1, named_handle.end());
+            str_view tag_uri = named_handle.substr(last_tag_prefix_pos + 1);
+            bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
             if (!is_valid_uri) {
                 emit_error("Invalid URI character is found in a named tag handle.");
             }
@@ -671,8 +671,8 @@ private:
         bool is_value_buff_used = extract_string_token(needs_last_single_quote, needs_last_double_quote);
 
         if (is_value_buff_used) {
-            token.token_begin_itr = m_value_buffer.cbegin();
-            token.token_end_itr = m_value_buffer.cend();
+            token.token_begin_itr = m_value_buffer.c_str();
+            token.token_end_itr = m_value_buffer.c_str() + m_value_buffer.size();
         }
         else {
             token.token_end_itr = m_cur_itr;
@@ -1000,7 +1000,7 @@ private:
         // scan the contents of a string scalar token.
 
         bool is_value_buffer_used = false;
-        for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr) {
+        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
             char current = *m_cur_itr;
             uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
             if (num_bytes == 1) {
@@ -1009,6 +1009,10 @@ private:
                     bool is_allowed = (this->*pfn_is_allowed)(current, is_value_buffer_used);
                     if (!is_allowed) {
                         return is_value_buffer_used;
+                    }
+
+                    if (m_cur_itr == m_end_itr) {
+                        break;
                     }
 
                     continue;
@@ -1408,13 +1412,13 @@ private:
 
 private:
     /// An input buffer adapter to be analyzed.
-    std::string m_input_buffer {};
+    str_view m_input_buffer {};
     /// The iterator to the current character in the input buffer.
-    std::string::const_iterator m_cur_itr {};
+    const char* m_cur_itr {};
     /// The iterator to the beginning of the current token.
-    std::string::const_iterator m_token_begin_itr {};
+    const char* m_token_begin_itr {};
     /// The iterator to the past-the-end element in the input buffer.
-    std::string::const_iterator m_end_itr {};
+    const char* m_end_itr {};
     /// The current position tracker of the input buffer.
     mutable position_tracker m_pos_tracker {};
     /// A temporal buffer to store a string to be parsed to an actual token value.

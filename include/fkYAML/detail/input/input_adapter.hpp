@@ -24,6 +24,7 @@
 #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/str_view.hpp>
 #include <fkYAML/exception.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -64,29 +65,32 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
-        buffer.clear();
-        buffer.reserve(std::distance(m_current, m_end));
+    void fill_buffer() {
+        m_buffer.clear();
 
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
-            fill_buffer_utf8(buffer);
+            fill_buffer_utf8();
             break;
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            fill_buffer_utf16(buffer);
+            fill_buffer_utf16();
             break;
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            fill_buffer_utf32(buffer);
+            fill_buffer_utf32();
             break;
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
     /// @brief The concrete implementation of fill_buffer() for UTF-8 encoded inputs.
     /// @param buffer A buffer to be filled with the input.
-    void fill_buffer_utf8(std::string& buffer) {
+    void fill_buffer_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         IterType current = m_current;
@@ -126,19 +130,23 @@ private:
             }
         }
 
-        buffer.reserve(std::distance(m_current, m_end));
+        m_buffer.reserve(std::distance(m_current, m_end));
 
         do {
             IterType cr_or_end_itr = std::find(m_current, m_end, '\r');
-            buffer.append(m_current, cr_or_end_itr);
+            m_buffer.append(m_current, cr_or_end_itr);
             m_current = (cr_or_end_itr == m_end) ? cr_or_end_itr : std::next(cr_or_end_itr);
         } while (m_current != m_end);
     }
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @param buffer A buffer to be filled with the input.
-    void fill_buffer_utf16(std::string& buffer) {
+    void fill_buffer_utf16() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
+
+        // Assume the input characters are all ASCII characters.
+        // That's the most probably the case.
+        m_buffer.reserve(std::distance(m_current, m_end) / 2);
 
         int shift_bits[2] {0, 0};
         if (m_encode_type == utf_encode_t::UTF_16BE) {
@@ -171,14 +179,18 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32(std::string& buffer) {
+    void fill_buffer_utf32() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
+
+        // Assume the input characters are all ASCII characters.
+        // That's the most probably the case.
+        m_buffer.reserve(std::distance(m_current, m_end) / 4);
 
         int shift_bits[4] {0, 0, 0, 0};
         if (m_encode_type == utf_encode_t::UTF_32BE) {
@@ -204,7 +216,7 @@ private:
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+                m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
     }
@@ -216,6 +228,8 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 #ifdef FK_YAML_HAS_CHAR8_T
@@ -252,7 +266,7 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         IterType current = m_current;
         while (current != m_end) {
             uint8_t first = static_cast<uint8_t>(*current++);
@@ -290,13 +304,17 @@ public:
             }
         }
 
-        buffer.reserve(std::distance(m_current, m_end));
+        m_buffer.reserve(std::distance(m_current, m_end));
         while (m_current != m_end) {
             char c = char(*m_current++);
             if (c != '\r') {
-                buffer.push_back(c);
+                m_buffer.push_back(c);
             }
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
@@ -306,6 +324,8 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 #endif // defined(FK_YAML_HAS_CHAR8_T)
@@ -340,7 +360,7 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
@@ -348,7 +368,9 @@ public:
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
 
-        buffer.reserve(std::distance(m_current, m_end) * 2);
+        // Assume the input characters are all ASCII characters.
+        // That's the most probably the case.
+        m_buffer.reserve(std::distance(m_current, m_end));
 
         while (m_current != m_end || encoded_buf_size != 0) {
             while (m_current != m_end && encoded_buf_size < 2) {
@@ -371,8 +393,12 @@ public:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
@@ -382,6 +408,8 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_16BE};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 /// @brief An input adapter for iterators of type char32_t.
@@ -414,7 +442,7 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         int shift_bits[4] {0, 0, 0, 0};
         if (m_encode_type == utf_encode_t::UTF_32LE) {
             shift_bits[0] = 24;
@@ -426,7 +454,9 @@ public:
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
 
-        buffer.reserve(std::distance(m_current, m_end) * 4);
+        // Assume the input characters are all ASCII characters.
+        // That's the most probably the case.
+        m_buffer.reserve(std::distance(m_current, m_end));
 
         while (m_current != m_end) {
             char32_t tmp = *m_current++;
@@ -438,9 +468,13 @@ public:
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+                m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
@@ -450,6 +484,8 @@ private:
     IterType m_end {};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 /// @brief An input adapter for C-style file handles.
@@ -478,26 +514,30 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
-            fill_buffer_utf8(buffer);
+            fill_buffer_utf8();
             break;
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            fill_buffer_utf16(buffer);
+            fill_buffer_utf16();
             break;
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            fill_buffer_utf32(buffer);
+            fill_buffer_utf32();
             break;
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf8(std::string& buffer) {
+    void fill_buffer_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
@@ -516,13 +556,13 @@ private:
                     ++p_cr_or_end;
                 }
 
-                buffer.append(p_current, p_cr_or_end);
+                m_buffer.append(p_current, p_cr_or_end);
                 p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
             } while (p_current != p_end);
         }
 
-        auto current = buffer.begin();
-        auto end = buffer.end();
+        auto current = m_buffer.begin();
+        auto end = m_buffer.end();
         while (current != end) {
             uint8_t first = static_cast<uint8_t>(*current++);
             uint32_t num_bytes = utf8::get_num_bytes(first);
@@ -562,7 +602,7 @@ private:
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf16(std::string& buffer) {
+    void fill_buffer_utf16() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         int shift_bits[2] {0, 0};
@@ -597,13 +637,13 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32(std::string& buffer) {
+    void fill_buffer_utf32() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         int shift_bits[4] {0, 0, 0, 0};
@@ -636,7 +676,7 @@ private:
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+                m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
     }
@@ -646,6 +686,8 @@ private:
     std::FILE* m_file {nullptr};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 /// @brief An input adapter for streams
@@ -670,26 +712,30 @@ public:
 
     /// @brief Get a character at the current position and move forward.
     /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer(std::string& buffer) {
+    void fill_buffer() {
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
-            fill_buffer_utf8(buffer);
+            fill_buffer_utf8();
             break;
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            fill_buffer_utf16(buffer);
+            fill_buffer_utf16();
             break;
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            fill_buffer_utf32(buffer);
+            fill_buffer_utf32();
             break;
         }
+    }
+
+    str_view get_buffer() const noexcept {
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
     /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf8(std::string& buffer) {
+    void fill_buffer_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
@@ -709,13 +755,13 @@ private:
                     ++p_cr_or_end;
                 }
 
-                buffer.append(p_current, p_cr_or_end);
+                m_buffer.append(p_current, p_cr_or_end);
                 p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
             } while (p_current != p_end);
         } while (!m_istream->eof());
 
-        auto current = buffer.begin();
-        auto end = buffer.end();
+        auto current = m_buffer.begin();
+        auto end = m_buffer.end();
         while (current != end) {
             uint8_t first = static_cast<uint8_t>(*current++);
             uint32_t num_bytes = utf8::get_num_bytes(first);
@@ -755,7 +801,7 @@ private:
 
     /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf16(std::string& buffer) {
+    void fill_buffer_utf16() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         int shift_bits[2] {0, 0};
@@ -797,13 +843,13 @@ private:
             }
             encoded_buf_size -= consumed_size;
 
-            buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+            m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
     }
 
     /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
     /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32(std::string& buffer) {
+    void fill_buffer_utf32() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         int shift_bits[4] {0, 0, 0, 0};
@@ -837,7 +883,7 @@ private:
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
-                buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
+                m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         } while (!m_istream->eof());
     }
@@ -847,6 +893,8 @@ private:
     std::istream* m_istream {nullptr};
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
+    /// The normalized owned buffer.
+    std::string m_buffer {};
 };
 
 /////////////////////////////////
