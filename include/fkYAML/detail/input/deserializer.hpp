@@ -924,7 +924,7 @@ private:
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_anchor_name.assign(token.token_begin_itr, token.token_end_itr);
+                m_anchor_name.assign(token.str.begin(), token.str.end());
                 m_needs_anchor_impl = true;
 
                 if (!m_needs_tag_impl) {
@@ -942,7 +942,7 @@ private:
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_tag_name.assign(token.token_begin_itr, token.token_end_itr);
+                m_tag_name.assign(token.str.begin(), token.str.end());
                 m_needs_tag_impl = true;
 
                 if (!m_needs_anchor_impl) {
@@ -1063,7 +1063,7 @@ private:
 
         node_type value_type {node_type::STRING};
         if (type == lexical_token_t::PLAIN_SCALAR) {
-            value_type = scalar_scanner::scan(token.token_begin_itr, token.token_end_itr);
+            value_type = scalar_scanner::scan(token.str.begin(), token.str.end());
         }
 
         if (m_needs_tag_impl) {
@@ -1105,7 +1105,7 @@ private:
         basic_node_type node {};
 
         if (type == lexical_token_t::ALIAS_PREFIX) {
-            const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
+            const std::string token_str = std::string(token.str.begin(), token.str.end());
 
             uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
             if (anchor_counts == 0) {
@@ -1125,7 +1125,7 @@ private:
         switch (value_type) {
         case node_type::NULL_OBJECT: {
             std::nullptr_t null = nullptr;
-            bool converted = detail::aton(token.token_begin_itr, token.token_end_itr, null);
+            bool converted = detail::aton(token.str.begin(), token.str.end(), null);
             if (!converted) {
                 throw parse_error("Failed to convert a scalar to a null.", line, indent);
             }
@@ -1134,7 +1134,7 @@ private:
         }
         case node_type::BOOLEAN: {
             boolean_type boolean = static_cast<boolean_type>(false);
-            bool converted = detail::atob(token.token_begin_itr, token.token_end_itr, boolean);
+            bool converted = detail::atob(token.str.begin(), token.str.end(), boolean);
             if (!converted) {
                 throw parse_error("Failed to convert a scalar to a boolean.", line, indent);
             }
@@ -1143,7 +1143,7 @@ private:
         }
         case node_type::INTEGER: {
             integer_type integer = 0;
-            bool converted = detail::atoi(token.token_begin_itr, token.token_end_itr, integer);
+            bool converted = detail::atoi(token.str.begin(), token.str.end(), integer);
             if (!converted) {
                 throw parse_error("Failed to convert a scalar to an integer.", line, indent);
             }
@@ -1152,7 +1152,7 @@ private:
         }
         case node_type::FLOAT: {
             float_number_type float_val = 0;
-            bool converted = detail::atof(token.token_begin_itr, token.token_end_itr, float_val);
+            bool converted = detail::atof(token.str.begin(), token.str.end(), float_val);
             if (!converted) {
                 throw parse_error("Failed to convert a scalar to a floating point value", line, indent);
             }
@@ -1160,7 +1160,7 @@ private:
             break;
         }
         case node_type::STRING:
-            node = basic_node_type(std::string(token.token_begin_itr, token.token_end_itr));
+            node = basic_node_type(std::string(token.str.begin(), token.str.end()));
             break;
         default:   // LCOV_EXCL_LINE
             break; // LCOV_EXCL_LINE

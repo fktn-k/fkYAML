@@ -495,8 +495,47 @@ bool operator==(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits>
 }
 
 template <typename CharT, typename Traits>
+bool operator==(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
+    return lhs == basic_str_view<CharT, Traits>(rhs);
+}
+
+template <typename CharT, typename Traits>
+bool operator==(const std::basic_string<CharT, Traits>& lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+    return basic_str_view<CharT, Traits>(lhs) == rhs;
+}
+
+template <typename CharT, typename Traits, std::size_t N>
+bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
+    // assume `rhs` is null terminated
+    return lhs == basic_str_view<CharT, Traits>(rhs, N - 1);
+}
+
+template <typename CharT, typename Traits, std::size_t N>
+bool operator==(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
+    // assume `lhs` is null terminated
+    return basic_str_view<CharT, Traits>(lhs, N - 1) == rhs;
+}
+
+template <typename CharT, typename Traits>
 bool operator!=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return !(lhs == rhs);
+}
+
+template <typename CharT, typename Traits>
+bool operator!=(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
+    return !(lhs == basic_str_view<CharT, Traits>(rhs));
+}
+
+template <typename CharT, typename Traits, std::size_t N>
+bool operator!=(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
+    // assume `rhs` is null terminated.
+    return !(lhs == basic_str_view<CharT, Traits>(rhs, N - 1));
+}
+
+template <typename CharT, typename Traits, std::size_t N>
+bool operator!=(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
+    // assume `lhs` is null terminate
+    return !(basic_str_view<CharT, Traits>(lhs, N - 1) == rhs);
 }
 
 template <typename CharT, typename Traits>
