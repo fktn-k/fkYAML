@@ -12,21 +12,14 @@
 #define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 
 #include <cctype>
-#include <cmath>
-#include <cstdint>
 #include <cstdlib>
-#include <limits>
-#include <type_traits>
-#include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
-#include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/input/position_tracker.hpp>
-#include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/str_view.hpp>
 #include <fkYAML/detail/types/lexical_token_t.hpp>
@@ -40,8 +33,6 @@ struct lexical_token {
 };
 
 /// @brief A class which lexically analizes YAML formatted inputs.
-/// @tparam BasicNodeType A type of the container for YAML values.
-template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 class lexical_analyzer {
 private:
     enum class block_style_indicator_t {
@@ -83,7 +74,7 @@ public:
         lexical_token token {};
         token.type = lexical_token_t::PLAIN_SCALAR;
 
-        switch (char current = *m_cur_itr) {
+        switch (*m_cur_itr) {
         case '?':
             if (++m_cur_itr == m_end_itr) {
                 token.str = str_view {m_token_begin_itr, m_end_itr};

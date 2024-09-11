@@ -12,9 +12,7 @@
 #define FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
 
 #include <algorithm>
-#include <cstdint>
 #include <deque>
-#include <unordered_map>
 #include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
@@ -24,6 +22,7 @@
 #include <fkYAML/detail/input/tag_resolver.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/node_attrs.hpp>
 #include <fkYAML/detail/node_property.hpp>
@@ -41,7 +40,7 @@ class basic_deserializer {
     /** A type for the target basic_node. */
     using basic_node_type = BasicNodeType;
     /** A type for the lexical analyzer. */
-    using lexer_type = lexical_analyzer<basic_node_type>;
+    using lexer_type = lexical_analyzer;
     /** A type for the document metainfo. */
     using doc_metainfo_type = document_metainfo<basic_node_type>;
     /** A type for the tag resolver. */
