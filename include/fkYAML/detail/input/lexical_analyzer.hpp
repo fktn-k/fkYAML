@@ -11,6 +11,7 @@
 #ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 #define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 
+#include <algorithm>
 #include <cctype>
 #include <cstdlib>
 

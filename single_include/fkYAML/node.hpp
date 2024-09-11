@@ -1749,6 +1749,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 #define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 
+#include <algorithm>
 #include <cctype>
 #include <cstdlib>
 
@@ -2939,79 +2940,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 #define FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_
 
 #include <algorithm>
-#include <string>
-#include <utility>
-#include <vector>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/detail/meta/input_adapter_traits.hpp>
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
-
-#ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
-
-#include <string>
-#include <type_traits>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/detail/meta/detect.hpp>
-
-// #include <fkYAML/detail/meta/stl_supplement.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-///////////////////////////////////////////
-//   Input Adapter API detection traits
-///////////////////////////////////////////
-
-/// @brief A type which represents get_character function.
-/// @tparam T A target type.
-template <typename T>
-using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer());
-
-/// @brief Type traits to check if InputAdapterType has get_character member function.
-/// @tparam InputAdapterType An input adapter type to check if it has get_character function.
-/// @tparam typename N/A
-template <typename InputAdapterType, typename = void>
-struct has_fill_buffer : std::false_type {};
-
-/// @brief A partial specialization of has_fill_buffer if InputAdapterType has get_character member function.
-/// @tparam InputAdapterType A type of a target input adapter.
-template <typename InputAdapterType>
-struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_t, InputAdapterType>::value>>
-    : std::true_type {};
-
-////////////////////////////////
-//   is_input_adapter traits
-////////////////////////////////
-
-/// @brief Type traits to check if T is an input adapter type.
-/// @tparam T A target type.
-/// @tparam typename N/A
-template <typename T, typename = void>
-struct is_input_adapter : std::false_type {};
-
-/// @brief A partial specialization of is_input_adapter if T is an input adapter type.
-/// @tparam InputAdapterType
-template <typename InputAdapterType>
-struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type {};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */
-
-// #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/str_view.hpp>
 ///  _______   __ __   __  _____   __  __  __
@@ -3987,7 +3917,7 @@ public:
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(const char* p_current) {
-        uint32_t diff = static_cast<uint32_t>(std::distance(m_last, p_current));
+        uint32_t diff = static_cast<uint32_t>(p_current - m_last);
         if (diff == 0) {
             return;
         }
@@ -4003,7 +3933,8 @@ public:
         }
 
         uint32_t count = 0;
-        while (--p_current != m_begin) {
+        const char* p_begin = m_begin;
+        while (--p_current != p_begin) {
             if (*p_current == '\n') {
                 break;
             }
@@ -5706,6 +5637,70 @@ FK_YAML_DETAIL_NAMESPACE_END
 #endif /* FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_ */
 
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
+///  _______   __ __   __  _____   __  __  __
+/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+///
+/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+/// SPDX-License-Identifier: MIT
+///
+/// @file
+
+#ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
+#define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
+
+#include <string>
+#include <type_traits>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/meta/detect.hpp>
+
+// #include <fkYAML/detail/meta/stl_supplement.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+///////////////////////////////////////////
+//   Input Adapter API detection traits
+///////////////////////////////////////////
+
+/// @brief A type which represents get_character function.
+/// @tparam T A target type.
+template <typename T>
+using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer());
+
+/// @brief Type traits to check if InputAdapterType has get_character member function.
+/// @tparam InputAdapterType An input adapter type to check if it has get_character function.
+/// @tparam typename N/A
+template <typename InputAdapterType, typename = void>
+struct has_fill_buffer : std::false_type {};
+
+/// @brief A partial specialization of has_fill_buffer if InputAdapterType has get_character member function.
+/// @tparam InputAdapterType A type of a target input adapter.
+template <typename InputAdapterType>
+struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_t, InputAdapterType>::value>>
+    : std::true_type {};
+
+////////////////////////////////
+//   is_input_adapter traits
+////////////////////////////////
+
+/// @brief Type traits to check if T is an input adapter type.
+/// @tparam T A target type.
+/// @tparam typename N/A
+template <typename T, typename = void>
+struct is_input_adapter : std::false_type {};
+
+/// @brief A partial specialization of is_input_adapter if T is an input adapter type.
+/// @tparam InputAdapterType
+template <typename InputAdapterType>
+struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type {};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 

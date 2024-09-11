@@ -12,13 +12,8 @@
 #define FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_
 
 #include <algorithm>
-#include <string>
-#include <utility>
-#include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
-#include <fkYAML/detail/meta/input_adapter_traits.hpp>
-#include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/str_view.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -35,7 +30,7 @@ public:
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(const char* p_current) {
-        uint32_t diff = static_cast<uint32_t>(std::distance(m_last, p_current));
+        uint32_t diff = static_cast<uint32_t>(p_current - m_last);
         if (diff == 0) {
             return;
         }
@@ -51,7 +46,8 @@ public:
         }
 
         uint32_t count = 0;
-        while (--p_current != m_begin) {
+        const char* p_begin = m_begin;
+        while (--p_current != p_begin) {
             if (*p_current == '\n') {
                 break;
             }
