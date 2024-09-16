@@ -23,6 +23,7 @@
 #include <fkYAML/detail/encodings/utf_encode_detector.hpp>
 #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
+#include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/str_view.hpp>
 #include <fkYAML/exception.hpp>
@@ -50,10 +51,11 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
+    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
         : m_current(begin),
           m_end(end),
-          m_encode_type(encode_type) {
+          m_encode_type(encode_type),
+          m_is_contiguous(is_contiguous) {
     }
 
     // allow only move construct/assignment like other input adapters.
@@ -84,7 +86,8 @@ public:
     }
 
     str_view get_buffer() const noexcept {
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_is_contiguous && m_buffer.empty() ? str_view {m_current, m_end}
+                                                   : str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
@@ -130,12 +133,21 @@ private:
             }
         }
 
+        IterType cr_or_end_itr = std::find(m_current, m_end, '\r');
+        if (cr_or_end_itr == m_end && m_is_contiguous) {
+            // The input iterators (begin, end) can be used as-is during parsing.
+            return;
+        }
+
         m_buffer.reserve(std::distance(m_current, m_end));
 
         do {
-            IterType cr_or_end_itr = std::find(m_current, m_end, '\r');
             m_buffer.append(m_current, cr_or_end_itr);
-            m_current = (cr_or_end_itr == m_end) ? cr_or_end_itr : std::next(cr_or_end_itr);
+            if (cr_or_end_itr == m_end) {
+                return;
+            }
+            m_current = std::next(cr_or_end_itr);
+            cr_or_end_itr = std::find(m_current, m_end, '\r');
         } while (m_current != m_end);
     }
 
@@ -230,6 +242,8 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
     std::string m_buffer {};
+    /// Whether or not ItrType is a contiguous iterator.
+    bool m_is_contiguous {false};
 };
 
 #ifdef FK_YAML_HAS_CHAR8_T
@@ -248,10 +262,11 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
+    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
         : m_current(begin),
           m_end(end),
-          m_encode_type(encode_type) {
+          m_encode_type(encode_type),
+          m_is_contiguous(is_contiguous) {
         // char8_t characters must be encoded in the UTF-8 format.
         // See https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0482r6.html.
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
@@ -326,6 +341,8 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
     std::string m_buffer {};
+    /// Whether or not ItrType is a contiguous iterator.
+    bool m_is_contiguous {false};
 };
 
 #endif // defined(FK_YAML_HAS_CHAR8_T)
@@ -344,10 +361,11 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
+    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
         : m_current(begin),
           m_end(end),
-          m_encode_type(encode_type) {
+          m_encode_type(encode_type),
+          m_is_contiguous(is_contiguous) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
     }
 
@@ -410,6 +428,8 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_16BE};
     /// The normalized owned buffer.
     std::string m_buffer {};
+    /// Whether or not ItrType is a contiguous iterator.
+    bool m_is_contiguous {false};
 };
 
 /// @brief An input adapter for iterators of type char32_t.
@@ -426,10 +446,11 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
-    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type) noexcept
+    iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
         : m_current(begin),
           m_end(end),
-          m_encode_type(encode_type) {
+          m_encode_type(encode_type),
+          m_is_contiguous(is_contiguous) {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
     }
 
@@ -486,6 +507,8 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
     /// The normalized owned buffer.
     std::string m_buffer {};
+    /// Whether or not ItrType is a contiguous iterator.
+    bool m_is_contiguous {false};
 };
 
 /// @brief An input adapter for C-style file handles.
@@ -901,6 +924,17 @@ private:
 //   input_adapter providers   //
 /////////////////////////////////
 
+namespace {
+
+template <typename ItrType>
+inline iterator_input_adapter<ItrType> create_iterator_input_adapter(
+    ItrType begin, ItrType end, bool is_contiguous) noexcept {
+    utf_encode_t encode_type = utf_encode_detector<ItrType>::detect(begin, end);
+    return iterator_input_adapter<ItrType>(begin, end, encode_type, is_contiguous);
+}
+
+} // anonymous namespace
+
 /// @brief A factory method for iterator_input_adapter objects with ieterator values.
 /// @tparam ItrType An iterator type.
 /// @param begin The beginning of iterators.
@@ -908,8 +942,22 @@ private:
 /// @return iterator_input_adapter<ItrType> An iterator_input_adapter object for the target iterator type.
 template <typename ItrType>
 inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end) {
-    utf_encode_t encode_type = utf_encode_detector<ItrType>::detect(begin, end);
-    return iterator_input_adapter<ItrType>(begin, end, encode_type);
+    constexpr bool is_random_access_itr =
+        std::is_same<typename std::iterator_traits<ItrType>::iterator_category, std::random_access_iterator_tag>::value;
+
+    // Check if `begin` & `end` are contiguous iterators.
+    // Getting distance between begin and (end - 1) avoids dereferencing an invalid sentinel.
+    bool is_contiguous = false;
+    if (is_random_access_itr) {
+        ptrdiff_t size = static_cast<ptrdiff_t>(std::distance(begin, end - 1));
+        if (size > 0) {
+            using CharPtr = remove_cvref_t<typename std::iterator_traits<ItrType>::pointer>;
+            CharPtr p_begin = &*begin;
+            CharPtr p_second_last = &*(end - 1);
+            is_contiguous = (p_second_last - p_begin == size);
+        }
+    }
+    return create_iterator_input_adapter(begin, end, is_contiguous);
 }
 
 /// @brief A factory method for iterator_input_adapter objects with C-style arrays.
@@ -917,8 +965,8 @@ inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
 /// @tparam N A size of an array.
 /// @return decltype(input_adapter(array, array + N)) An iterator_input_adapter object for the target array.
 template <typename T, std::size_t N>
-inline auto input_adapter(T (&array)[N]) -> decltype(input_adapter(array, array + (N - 1))) {
-    return input_adapter(array, array + (N - 1));
+inline auto input_adapter(T (&array)[N]) -> decltype(create_iterator_input_adapter(array, array + (N - 1), true)) {
+    return create_iterator_input_adapter(array, array + (N - 1), true);
 }
 
 /// @brief A namespace to implement container_input_adapter_factory for internal use.
@@ -938,15 +986,18 @@ struct container_input_adapter_factory {};
 template <typename ContainerType>
 struct container_input_adapter_factory<
     ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>> {
+    /// Whether or not ContainerType is a contiguous container.
+    static constexpr bool is_contiguous = is_contiguous_container<ContainerType>::value;
+
     /// A type for resulting input adapter object.
-    using adapter_type =
-        decltype(input_adapter(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>())));
+    using adapter_type = decltype(create_iterator_input_adapter(
+        begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()), is_contiguous));
 
     /// @brief A factory method of input adapter objects for the target container objects.
     /// @param container A container-like input object.
     /// @return adapter_type An iterator_input_adapter object.
     static adapter_type create(const ContainerType& container) {
-        return input_adapter(begin(container), end(container));
+        return create_iterator_input_adapter(begin(container), end(container), is_contiguous);
     }
 };
 
