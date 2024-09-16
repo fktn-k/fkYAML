@@ -30,21 +30,21 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 //   Input Adapter API detection traits
 ///////////////////////////////////////////
 
-/// @brief A type which represents get_character function.
+/// @brief A type which represents get_buffer_view function.
 /// @tparam T A target type.
 template <typename T>
-using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer());
+using get_buffer_view_fn_t = decltype(std::declval<T>().get_buffer_view());
 
-/// @brief Type traits to check if InputAdapterType has get_character member function.
-/// @tparam InputAdapterType An input adapter type to check if it has get_character function.
+/// @brief Type traits to check if InputAdapterType has get_buffer_view member function.
+/// @tparam InputAdapterType An input adapter type to check if it has get_buffer_view function.
 /// @tparam typename N/A
 template <typename InputAdapterType, typename = void>
-struct has_fill_buffer : std::false_type {};
+struct has_get_buffer_view : std::false_type {};
 
-/// @brief A partial specialization of has_fill_buffer if InputAdapterType has get_character member function.
+/// @brief A partial specialization of has_get_buffer_view if InputAdapterType has get_buffer_view member function.
 /// @tparam InputAdapterType A type of a target input adapter.
 template <typename InputAdapterType>
-struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_t, InputAdapterType>::value>>
+struct has_get_buffer_view<InputAdapterType, enable_if_t<is_detected<get_buffer_view_fn_t, InputAdapterType>::value>>
     : std::true_type {};
 
 ////////////////////////////////
@@ -60,7 +60,8 @@ struct is_input_adapter : std::false_type {};
 /// @brief A partial specialization of is_input_adapter if T is an input adapter type.
 /// @tparam InputAdapterType
 template <typename InputAdapterType>
-struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type {};
+struct is_input_adapter<InputAdapterType, enable_if_t<has_get_buffer_view<InputAdapterType>::value>> : std::true_type {
+};
 
 /////////////////////////////////////////////////
 //   traits for contiguous iterator detection

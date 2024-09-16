@@ -172,8 +172,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8N") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 12);
         REQUIRE(buffer[0] == 't');
@@ -196,8 +195,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8N") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 12);
         REQUIRE(buffer[0] == 't');
@@ -222,8 +220,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8N") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -243,8 +240,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8N") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -265,8 +261,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8BOM") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 12);
         REQUIRE(buffer[0] == 't');
@@ -291,8 +286,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8BOM") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 12);
         REQUIRE(buffer[0] == 't');
@@ -317,8 +311,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8BOM") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -338,8 +331,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8BOM") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -359,8 +351,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -380,8 +371,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 'a');
@@ -401,8 +391,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -423,8 +412,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
         using itr_type = typename std::u16string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 'a');
@@ -447,8 +435,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -469,8 +456,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -492,8 +478,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -514,8 +499,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -534,8 +518,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -556,8 +539,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
         using itr_type = typename std::u16string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -579,8 +561,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -601,8 +582,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer[0] == 'a');
         REQUIRE(buffer[1] == char(0xE3u));
@@ -622,8 +602,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -643,8 +622,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -663,8 +641,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -685,8 +662,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
         using itr_type = typename std::u16string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -708,8 +684,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -730,8 +705,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -753,8 +727,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -775,8 +748,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -795,8 +767,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -817,8 +788,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
         using itr_type = typename std::u16string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -840,8 +810,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -862,8 +831,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 9);
         REQUIRE(buffer[0] == 'a');
@@ -884,8 +852,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -904,8 +871,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -923,8 +889,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -944,8 +909,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
         using itr_type = typename std::u32string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -966,8 +930,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -987,8 +950,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1008,8 +970,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1028,8 +989,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1047,8 +1007,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1068,8 +1027,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
         using itr_type = typename std::u32string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1090,8 +1048,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1111,8 +1068,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1132,8 +1088,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1152,8 +1107,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1171,8 +1125,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1192,8 +1145,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
         using itr_type = typename std::u32string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1214,8 +1166,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1235,8 +1186,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1256,8 +1206,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1276,8 +1225,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
         using itr_type = typename std::string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1295,8 +1243,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1316,8 +1263,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
         using itr_type = typename std::u32string::iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1338,8 +1284,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1359,8 +1304,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == 'a');
@@ -1387,8 +1331,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 3);
         REQUIRE(buffer[0] == char(0x5Au));
@@ -1406,7 +1349,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        REQUIRE_THROWS_AS(input_adapter.fill_buffer(), fkyaml::invalid_encoding);
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
 
         std::fclose(p_file);
     }
@@ -1416,8 +1359,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 3);
         REQUIRE(buffer[0] == char(0x5Au));
@@ -1430,7 +1372,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        REQUIRE_THROWS_AS(input_adapter.fill_buffer(), fkyaml::invalid_encoding);
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
     /////////////////////////////////
@@ -1445,8 +1387,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 4);
         REQUIRE(buffer[0] == char(0xC2u));
@@ -1465,7 +1406,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        REQUIRE_THROWS_AS(input_adapter.fill_buffer(), fkyaml::invalid_encoding);
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
 
         std::fclose(p_file);
     }
@@ -1475,8 +1416,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 4);
         REQUIRE(buffer[0] == char(0xC2u));
@@ -1490,7 +1430,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        REQUIRE_THROWS_AS(input_adapter.fill_buffer(), fkyaml::invalid_encoding);
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
     /////////////////////////////////
@@ -1505,8 +1445,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 6);
         REQUIRE(buffer[0] == char(0xE0u));
@@ -1527,7 +1466,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        REQUIRE_THROWS_AS(input_adapter.fill_buffer(), fkyaml::invalid_encoding);
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
 
         std::fclose(p_file);
     }
@@ -1537,8 +1476,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 6);
         REQUIRE(buffer[0] == char(0xE0u));
@@ -1554,7 +1492,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        REQUIRE_THROWS_AS(input_adapter.fill_buffer(), fkyaml::invalid_encoding);
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
     /////////////////////////////////
@@ -1569,8 +1507,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == char(0xF0u));
@@ -1593,7 +1530,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        REQUIRE_THROWS_AS(input_adapter.fill_buffer(), fkyaml::invalid_encoding);
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
 
         std::fclose(p_file);
     }
@@ -1603,8 +1540,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 8);
         REQUIRE(buffer[0] == char(0xF0u));
@@ -1622,7 +1558,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        REQUIRE_THROWS_AS(input_adapter.fill_buffer(), fkyaml::invalid_encoding);
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 }
 
@@ -1632,8 +1568,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1654,8 +1589,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char8_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1679,8 +1613,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1702,8 +1635,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1727,8 +1659,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1761,8 +1692,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1785,8 +1715,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1808,8 +1737,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1834,8 +1762,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BENewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1868,8 +1795,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BENewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1892,8 +1818,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BENewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(p_file);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
@@ -1915,8 +1840,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BENewlineCodeNormalization") {
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
-        input_adapter.fill_buffer();
-        fkyaml::detail::str_view buffer = input_adapter.get_buffer();
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
 
         REQUIRE(buffer.size() == 10);
         REQUIRE(buffer[0] == 't');
