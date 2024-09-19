@@ -98,12 +98,11 @@ TEST_CASE("StrView_MoveAssignmentOperator") {
 TEST_CASE("StrView_ReverseIterators") {
     const char str[] = "hello world!";
     fkyaml::detail::str_view sv = str;
-    const char* p_str = &str[0];
 
     REQUIRE(&*sv.rbegin() == &str[11]);
-    REQUIRE(sv.rend().operator->() == (p_str - 1));
+    REQUIRE(sv.rend().operator->() + 1 == &str[0]);
     REQUIRE(&*sv.crbegin() == &str[11]);
-    REQUIRE(sv.crend().operator->() == (p_str - 1));
+    REQUIRE(sv.crend().operator->() + 1 == &str[0]);
 }
 
 TEST_CASE("StrView_MaxSize") {
