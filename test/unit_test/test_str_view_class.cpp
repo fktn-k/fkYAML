@@ -12,7 +12,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <fkYAML/detail/str_view.hpp>
+#include <fkYAML/node.hpp>
 
 TEST_CASE("StrView_DefaultCtor") {
     fkyaml::detail::str_view sv;
