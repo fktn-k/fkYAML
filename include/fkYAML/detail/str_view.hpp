@@ -221,7 +221,7 @@ public:
     /// @return The element at the given position.
     const_reference at(size_type pos) const {
         if (pos >= m_len) {
-            throw fkyaml::out_of_range(pos);
+            throw fkyaml::out_of_range(static_cast<int>(pos));
         }
         return *(mp_str + pos);
     }
@@ -266,13 +266,14 @@ public:
     }
 
     /// @brief Copys the referenced character sequence values from `pos` by `n` size.
+    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the lenth.
     /// @param p_str The pointer to a character sequence buffer for output.
     /// @param n The number of elements to write into `p_str`.
     /// @param pos The offset of the beginning position to copy values.
     /// @return The number of elements to be written into `p_str`.
     size_type copy(CharT* p_str, size_type n, size_type pos = 0) const {
         if (pos > m_len) {
-            throw fkyaml::out_of_range(pos);
+            throw fkyaml::out_of_range(static_cast<int>(pos));
         }
         const size_type rlen = std::min(n, m_len - pos);
         traits_type::copy(p_str, mp_str + pos, rlen);
@@ -286,7 +287,7 @@ public:
     /// @return A newly created sub basic_str_view object.
     basic_str_view substr(size_type pos = 0, size_type n = npos) const {
         if (pos > m_len) {
-            throw fkyaml::out_of_range(pos);
+            throw fkyaml::out_of_range(static_cast<int>(pos));
         }
         const size_type rlen = std::min(n, m_len - pos);
         return basic_str_view(mp_str + pos, rlen);
