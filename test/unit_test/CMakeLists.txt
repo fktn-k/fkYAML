@@ -126,6 +126,10 @@ target_compile_options(
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
       -Wno-deprecated-declarations # for testing deprecated functions
     >
+    $<$<CXX_COMPILER_ID:AppleClang>:
+      -Wall -Wextra -Werror -pedantic
+      -Wno-deprecated-declarations # for testing deprecated functions
+    >
     # IntelLLVM
     $<$<CXX_COMPILER_ID:IntelLLVM>:
       # IntelLLVM warns the usage of nans and infinities due to its over-estimation.
