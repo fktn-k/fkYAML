@@ -264,7 +264,7 @@ public:
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
-        : m_current(begin),
+        : m_begin(begin),
           m_end(end),
           m_encode_type(encode_type),
           m_is_contiguous(is_contiguous) {

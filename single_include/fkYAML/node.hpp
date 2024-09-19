@@ -3149,7 +3149,7 @@ public:
     /// @brief Get the maximum number of the character sequence size.
     /// @return The maximum number of the character sequence size.
     constexpr size_type max_size() const noexcept {
-        return std::numeric_limits<difference_type>::max();
+        return static_cast<size_type>(std::numeric_limits<difference_type>::max());
     }
 
     /// @brief Checks if the referenced character sequence is empty.
@@ -8161,7 +8161,7 @@ public:
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
-        : m_current(begin),
+        : m_begin(begin),
           m_end(end),
           m_encode_type(encode_type),
           m_is_contiguous(is_contiguous) {

@@ -199,7 +199,7 @@ public:
     /// @brief Get the maximum number of the character sequence size.
     /// @return The maximum number of the character sequence size.
     constexpr size_type max_size() const noexcept {
-        return std::numeric_limits<difference_type>::max();
+        return static_cast<size_type>(std::numeric_limits<difference_type>::max());
     }
 
     /// @brief Checks if the referenced character sequence is empty.
