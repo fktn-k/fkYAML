@@ -207,21 +207,29 @@ TEST_CASE("StrView_Substr") {
 }
 
 TEST_CASE("StrView_Compare") {
-    std::string long_str(static_cast<std::size_t>(std::numeric_limits<int>::max()) + 4u, 'a');
-    fkyaml::detail::str_view view = long_str;
+    constexpr std::size_t long_str_size = static_cast<std::size_t>(std::numeric_limits<int>::max()) + 4u;
+    char* p_long_str = new char[long_str_size] {};
+    for (std::size_t i = 0; i < long_str_size - 1; i++) {
+        p_long_str[i] = 'a';
+    }
+    p_long_str[long_str_size - 1] = '\0';
+    fkyaml::detail::str_view view(p_long_str, long_str_size - 1);
 
     fkyaml::detail::str_view sv = "a";
     REQUIRE(sv.compare("a") == 0);
     REQUIRE(sv.compare("b") == -1);
     REQUIRE(sv.compare("`") == 1);
-    REQUIRE(sv.compare(long_str.data()) == std::numeric_limits<int>::min());
+    REQUIRE(sv.compare(p_long_str) == std::numeric_limits<int>::min());
     fkyaml::detail::str_view view_4a = "aaaa";
-    REQUIRE(view.compare(long_str.size() - 4u, 4u, view_4a.data()) == 0);
-    REQUIRE(view.compare(long_str.size() - 4u, 4u, view_4a.data(), view_4a.size()) == 0);
-    REQUIRE(view.compare(long_str.size() - 4u, 4u, view_4a, 0, view_4a.size()) == 0);
-    REQUIRE(view.compare(long_str.size() - 4u, 4u, view_4a) == 0);
+    REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a.data()) == 0);
+    REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a.data(), view_4a.size()) == 0);
+    REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a, 0, view_4a.size()) == 0);
+    REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a) == 0);
     REQUIRE(sv.compare(view) == std::numeric_limits<int>::min());
     REQUIRE(view.compare(sv) == std::numeric_limits<int>::max());
+
+    delete[] p_long_str;
+    p_long_str = nullptr;
 }
 
 TEST_CASE("StrView_StartsWith") {
