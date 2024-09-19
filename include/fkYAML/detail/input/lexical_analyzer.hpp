@@ -977,10 +977,6 @@ private:
                         return is_value_buffer_used;
                     }
 
-                    if (m_cur_itr == m_end_itr) {
-                        break;
-                    }
-
                     continue;
                 }
 

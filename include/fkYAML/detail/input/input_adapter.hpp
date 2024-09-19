@@ -950,12 +950,11 @@ inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
     bool is_contiguous = false;
     if (is_random_access_itr) {
         ptrdiff_t size = static_cast<ptrdiff_t>(std::distance(begin, end - 1));
-        if (size > 0) {
-            using CharPtr = remove_cvref_t<typename std::iterator_traits<ItrType>::pointer>;
-            CharPtr p_begin = &*begin;
-            CharPtr p_second_last = &*(end - 1);
-            is_contiguous = (p_second_last - p_begin == size);
-        }
+
+        using CharPtr = remove_cvref_t<typename std::iterator_traits<ItrType>::pointer>;
+        CharPtr p_begin = &*begin;
+        CharPtr p_second_last = &*(end - 1);
+        is_contiguous = (p_second_last - p_begin == size);
     }
     return create_iterator_input_adapter(begin, end, is_contiguous);
 }

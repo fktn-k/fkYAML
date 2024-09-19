@@ -3251,7 +3251,8 @@ public:
 
         if (ret == 0) {
             using int_limits = std::numeric_limits<int>;
-            difference_type diff = m_len - sv.m_len;
+            difference_type diff =
+                m_len > sv.m_len ? m_len - sv.m_len : difference_type(-1) * difference_type(sv.m_len - m_len);
 
             if (diff > int_limits::max()) {
                 ret = int_limits::max();
@@ -3474,12 +3475,11 @@ public:
             idx = m_len - 1;
         }
 
-        while (idx > 0) {
+        do {
             if (traits_type::eq(mp_str[idx], c)) {
                 return idx;
             }
-            --idx;
-        }
+        } while (idx > 0 && --idx < m_len);
 
         return npos;
     }
@@ -3582,14 +3582,14 @@ public:
     /// @return The beginning position of `s` characters, `npos` otherwise.
     size_type find_last_of(const CharT* s, size_type pos, size_type n) const noexcept {
         if (n <= m_len) {
-            pos = std::min(m_len - n, pos) + 1;
+            pos = std::min(m_len - n - 1, pos);
 
             do {
-                const CharT* p_found = traits_type::find(s, n, mp_str[--pos]);
+                const CharT* p_found = traits_type::find(s, n, mp_str[pos]);
                 if (p_found) {
                     return pos;
                 }
-            } while (pos > 0);
+            } while (pos-- != 0);
         }
 
         return npos;
@@ -3607,7 +3607,7 @@ public:
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of non `sv` characters, `npos` otherwise.
-    size_type find_first_not_of(basic_str_view sv, size_type pos = npos) const noexcept {
+    size_type find_first_not_of(basic_str_view sv, size_type pos = 0) const noexcept {
         return find_first_not_of(sv.mp_str, pos, sv.m_len);
     }
 
@@ -3615,7 +3615,7 @@ public:
     /// @param c The character to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of non `c` character, `npos` otherwise.
-    size_type find_first_not_of(CharT c, size_type pos = npos) const noexcept {
+    size_type find_first_not_of(CharT c, size_type pos = 0) const noexcept {
         for (; pos < m_len; ++pos) {
             if (!traits_type::eq(mp_str[pos], c)) {
                 return pos;
@@ -3646,7 +3646,7 @@ public:
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of non `s` characters, `npos` otherwise.
-    size_type find_first_not_of(const CharT* s, size_type pos = npos) const noexcept {
+    size_type find_first_not_of(const CharT* s, size_type pos = 0) const noexcept {
         return find_first_not_of(basic_str_view(s), pos);
     }
 
@@ -3710,6 +3710,14 @@ private:
     const value_type* mp_str {nullptr};
 };
 
+// Prior to C++17, a static constexpr class member needs an out-of-class definition.
+#ifndef FK_YAML_HAS_CXX_17
+
+template <typename CharT, typename Traits>
+constexpr typename basic_str_view<CharT, Traits>::size_type basic_str_view<CharT, Traits>::npos;
+
+#endif // !defined(FK_YAML_HAS_CXX_17)
+
 /// @brief An equal-to operator of the basic_str_view class.
 /// @tparam CharT Character type
 /// @tparam Traits Character traits type.
@@ -3717,7 +3725,7 @@ private:
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits>
-bool operator==(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator==(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     // Comparing the lengths first will omit unnecessary value comparison in compare().
     return lhs.size() == rhs.size() && lhs.compare(rhs) == 0;
 }
@@ -3729,7 +3737,7 @@ bool operator==(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits>
 /// @param rhs A basic_string object to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits>
-bool operator==(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
+inline bool operator==(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
     return lhs == basic_str_view<CharT, Traits>(rhs);
 }
 
@@ -3740,7 +3748,7 @@ bool operator==(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits>
-bool operator==(const std::basic_string<CharT, Traits>& lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator==(const std::basic_string<CharT, Traits>& lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return basic_str_view<CharT, Traits>(lhs) == rhs;
 }
 
@@ -3752,7 +3760,7 @@ bool operator==(const std::basic_string<CharT, Traits>& lhs, basic_str_view<Char
 /// @param rhs A character array to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits, std::size_t N>
-bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
+inline bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
     // assume `rhs` is null terminated
     return lhs == basic_str_view<CharT, Traits>(rhs, N - 1);
 }
@@ -3765,7 +3773,7 @@ bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexce
 /// @param lhs A basic_str_view object to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits, std::size_t N>
-bool operator==(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator==(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
     // assume `lhs` is null terminated
     return basic_str_view<CharT, Traits>(lhs, N - 1) == rhs;
 }
@@ -3777,7 +3785,7 @@ bool operator==(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexce
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits>
-bool operator!=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator!=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return !(lhs == rhs);
 }
 
@@ -3788,7 +3796,7 @@ bool operator!=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits>
 /// @param rhs A basic_string object to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits>
-bool operator!=(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
+inline bool operator!=(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
     return !(lhs == basic_str_view<CharT, Traits>(rhs));
 }
 
@@ -3799,7 +3807,7 @@ bool operator!=(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits>
-bool operator!=(const std::basic_string<CharT, Traits>& lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator!=(const std::basic_string<CharT, Traits>& lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return !(basic_str_view<CharT, Traits>(lhs) == rhs);
 }
 
@@ -3811,7 +3819,7 @@ bool operator!=(const std::basic_string<CharT, Traits>& lhs, basic_str_view<Char
 /// @param rhs A character array to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits, std::size_t N>
-bool operator!=(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
+inline bool operator!=(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
     // assume `rhs` is null terminated.
     return !(lhs == basic_str_view<CharT, Traits>(rhs, N - 1));
 }
@@ -3824,7 +3832,7 @@ bool operator!=(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexce
 /// @param lhs A basic_str_view object to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits, std::size_t N>
-bool operator!=(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator!=(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
     // assume `lhs` is null terminate
     return !(basic_str_view<CharT, Traits>(lhs, N - 1) == rhs);
 }
@@ -3836,7 +3844,7 @@ bool operator!=(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexce
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if `lhs` is less than `rhs`, false otherwise.
 template <typename CharT, typename Traits>
-bool operator<(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator<(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return lhs.compare(rhs) < 0;
 }
 
@@ -3847,7 +3855,7 @@ bool operator<(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> 
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if `lhs` is less than or equal to `rhs`, false otherwise.
 template <typename CharT, typename Traits>
-bool operator<=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator<=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return lhs.compare(rhs) <= 0;
 }
 
@@ -3858,7 +3866,7 @@ bool operator<=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits>
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if `lhs` is greater than `rhs`, false otherwise.
 template <typename CharT, typename Traits>
-bool operator>(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator>(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return lhs.compare(rhs) > 0;
 }
 
@@ -3869,7 +3877,7 @@ bool operator>(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> 
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if `lhs` is greater than or equal to `rhs`, false otherwise.
 template <typename CharT, typename Traits>
-bool operator>=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator>=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return lhs.compare(rhs) >= 0;
 }
 
@@ -3880,7 +3888,8 @@ bool operator>=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits>
 /// @param sv A basic_str_view object.
 /// @return Reference to the output stream object `os`.
 template <typename CharT, typename Traits>
-std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, basic_str_view<CharT, Traits> sv) {
+inline std::basic_ostream<CharT, Traits>& operator<<(
+    std::basic_ostream<CharT, Traits>& os, basic_str_view<CharT, Traits> sv) {
     return os.write(sv.data(), static_cast<std::streamsize>(sv.size()));
 }
 
@@ -4984,10 +4993,6 @@ private:
                         return is_value_buffer_used;
                     }
 
-                    if (m_cur_itr == m_end_itr) {
-                        break;
-                    }
-
                     continue;
                 }
 
@@ -5672,21 +5677,21 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 //   Input Adapter API detection traits
 ///////////////////////////////////////////
 
-/// @brief A type which represents get_character function.
+/// @brief A type which represents get_buffer_view function.
 /// @tparam T A target type.
 template <typename T>
-using fill_buffer_fn_t = decltype(std::declval<T>().fill_buffer());
+using get_buffer_view_fn_t = decltype(std::declval<T>().get_buffer_view());
 
-/// @brief Type traits to check if InputAdapterType has get_character member function.
-/// @tparam InputAdapterType An input adapter type to check if it has get_character function.
+/// @brief Type traits to check if InputAdapterType has get_buffer_view member function.
+/// @tparam InputAdapterType An input adapter type to check if it has get_buffer_view function.
 /// @tparam typename N/A
 template <typename InputAdapterType, typename = void>
-struct has_fill_buffer : std::false_type {};
+struct has_get_buffer_view : std::false_type {};
 
-/// @brief A partial specialization of has_fill_buffer if InputAdapterType has get_character member function.
+/// @brief A partial specialization of has_get_buffer_view if InputAdapterType has get_buffer_view member function.
 /// @tparam InputAdapterType A type of a target input adapter.
 template <typename InputAdapterType>
-struct has_fill_buffer<InputAdapterType, enable_if_t<is_detected<fill_buffer_fn_t, InputAdapterType>::value>>
+struct has_get_buffer_view<InputAdapterType, enable_if_t<is_detected<get_buffer_view_fn_t, InputAdapterType>::value>>
     : std::true_type {};
 
 ////////////////////////////////
@@ -5702,7 +5707,8 @@ struct is_input_adapter : std::false_type {};
 /// @brief A partial specialization of is_input_adapter if T is an input adapter type.
 /// @tparam InputAdapterType
 template <typename InputAdapterType>
-struct is_input_adapter<InputAdapterType, enable_if_t<has_fill_buffer<InputAdapterType>::value>> : std::true_type {};
+struct is_input_adapter<InputAdapterType, enable_if_t<has_get_buffer_view<InputAdapterType>::value>> : std::true_type {
+};
 
 /////////////////////////////////////////////////
 //   traits for contiguous iterator detection
@@ -6350,8 +6356,8 @@ public:
     /// @return basic_node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     basic_node_type deserialize(InputAdapterType&& input_adapter) {
-        input_adapter.fill_buffer();
-        lexer_type lexer(input_adapter.get_buffer());
+        str_view input_view = input_adapter.get_buffer_view();
+        lexer_type lexer(input_view);
 
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
         return deserialize_document(lexer, type);
@@ -6363,8 +6369,8 @@ public:
     /// @return std::vector<basic_node_type> Root YAML nodes for deserialized YAML documents.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     std::vector<basic_node_type> deserialize_docs(InputAdapterType&& input_adapter) {
-        input_adapter.fill_buffer();
-        lexer_type lexer(input_adapter.get_buffer());
+        str_view input_view = input_adapter.get_buffer_view();
+        lexer_type lexer(input_view);
 
         std::vector<basic_node_type> nodes {};
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
@@ -7931,9 +7937,7 @@ class iterator_input_adapter;
 /// @brief An input adapter for iterators of type char.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -7942,8 +7946,9 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
+    /// @param is_contiguous Whether iterators are contiguous or not.
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
-        : m_current(begin),
+        : m_begin(begin),
           m_end(end),
           m_encode_type(encode_type),
           m_is_contiguous(is_contiguous) {
@@ -7956,38 +7961,32 @@ public:
     iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
     ~iterator_input_adapter() = default;
 
-    /// @brief Get a character at the current position and move forward.
-    /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer() {
+    /// @brief Get view into the input buffer contents.
+    /// @return View into the input buffer contents.
+    str_view get_buffer_view() {
         m_buffer.clear();
 
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
-            fill_buffer_utf8();
-            break;
+            return get_buffer_view_utf8();
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            fill_buffer_utf16();
-            break;
+            return get_buffer_view_utf16();
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            fill_buffer_utf32();
-            break;
+            return get_buffer_view_utf32();
+        default:       // LCOV_EXCL_LINE
+            return {}; // LCOV_EXCL_LINE
         }
     }
 
-    str_view get_buffer() const noexcept {
-        return m_is_contiguous && m_buffer.empty() ? str_view {m_current, m_end}
-                                                   : str_view {m_buffer.begin(), m_buffer.end()};
-    }
-
 private:
-    /// @brief The concrete implementation of fill_buffer() for UTF-8 encoded inputs.
-    /// @param buffer A buffer to be filled with the input.
-    void fill_buffer_utf8() {
+    /// @brief The concrete implementation of get_buffer_view() for UTF-8 encoded inputs.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    str_view get_buffer_view_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
-        IterType current = m_current;
+        IterType current = m_begin;
         while (current != m_end) {
             uint8_t first = uint8_t(*current++);
             uint32_t num_bytes = utf8::get_num_bytes(first);
@@ -8024,32 +8023,35 @@ private:
             }
         }
 
-        IterType cr_or_end_itr = std::find(m_current, m_end, '\r');
+        IterType cr_or_end_itr = std::find(m_begin, m_end, '\r');
         if (cr_or_end_itr == m_end && m_is_contiguous) {
             // The input iterators (begin, end) can be used as-is during parsing.
-            return;
+            return str_view {m_begin, m_end};
         }
 
-        m_buffer.reserve(std::distance(m_current, m_end));
+        m_buffer.reserve(std::distance(m_begin, m_end));
 
+        current = m_begin;
         do {
-            m_buffer.append(m_current, cr_or_end_itr);
+            m_buffer.append(current, cr_or_end_itr);
             if (cr_or_end_itr == m_end) {
-                return;
+                break;
             }
-            m_current = std::next(cr_or_end_itr);
-            cr_or_end_itr = std::find(m_current, m_end, '\r');
-        } while (m_current != m_end);
+            current = std::next(cr_or_end_itr);
+            cr_or_end_itr = std::find(current, m_end, '\r');
+        } while (current != m_end);
+
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
-    /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
-    /// @param buffer A buffer to be filled with the input.
-    void fill_buffer_utf16() {
+    /// @brief The concrete implementation of get_buffer_view() for UTF-16 encoded inputs.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    str_view get_buffer_view_utf16() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         // Assume the input characters are all ASCII characters.
         // That's the most probably the case.
-        m_buffer.reserve(std::distance(m_current, m_end) / 2);
+        m_buffer.reserve(std::distance(m_begin, m_end) / 2);
 
         int shift_bits[2] {0, 0};
         if (m_encode_type == utf_encode_t::UTF_16BE) {
@@ -8065,10 +8067,11 @@ private:
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
 
-        while (m_current != m_end || encoded_buf_size != 0) {
-            while (m_current != m_end && encoded_buf_size < 2) {
-                char16_t utf16 = static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[0]);
-                utf16 |= static_cast<char16_t>(uint8_t(*m_current++) << shift_bits[1]);
+        IterType current = m_begin;
+        while (current != m_end || encoded_buf_size != 0) {
+            while (current != m_end && encoded_buf_size < 2) {
+                char16_t utf16 = static_cast<char16_t>(uint8_t(*current++) << shift_bits[0]);
+                utf16 |= static_cast<char16_t>(uint8_t(*current++) << shift_bits[1]);
                 if (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
@@ -8084,16 +8087,18 @@ private:
 
             m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
+
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
-    /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32() {
+    /// @brief The concrete implementation of get_buffer_view() for UTF-32 encoded inputs.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    str_view get_buffer_view_utf32() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         // Assume the input characters are all ASCII characters.
         // That's the most probably the case.
-        m_buffer.reserve(std::distance(m_current, m_end) / 4);
+        m_buffer.reserve(std::distance(m_begin, m_end) / 4);
 
         int shift_bits[4] {0, 0, 0, 0};
         if (m_encode_type == utf_encode_t::UTF_32BE) {
@@ -8111,22 +8116,25 @@ private:
         std::array<uint8_t, 4> utf8_buffer {{0, 0, 0, 0}};
         uint32_t utf8_buf_size {0};
 
-        while (m_current != m_end) {
-            char32_t utf32 = static_cast<char32_t>(*m_current++ << shift_bits[0]);
-            utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[1]);
-            utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[2]);
-            utf32 |= static_cast<char32_t>(*m_current++ << shift_bits[3]);
+        IterType current = m_begin;
+        while (current != m_end) {
+            char32_t utf32 = static_cast<char32_t>(*current++ << shift_bits[0]);
+            utf32 |= static_cast<char32_t>(*current++ << shift_bits[1]);
+            utf32 |= static_cast<char32_t>(*current++ << shift_bits[2]);
+            utf32 |= static_cast<char32_t>(*current++ << shift_bits[3]);
 
             if (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
+
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
-    /// The iterator at the current position.
-    IterType m_current {};
+    /// The iterator at the beginning of input.
+    IterType m_begin {};
     /// The iterator at the end of input.
     IterType m_end {};
     /// The encoding type for this input adapter.
@@ -8142,9 +8150,7 @@ private:
 /// @brief An input adapter for iterators of type char8_t.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char8_t>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char8_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -8153,6 +8159,7 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
+    /// @param is_contiguous Whether iterators are contiguous or not.
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
         : m_current(begin),
           m_end(end),
@@ -8170,10 +8177,10 @@ public:
     iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
     ~iterator_input_adapter() = default;
 
-    /// @brief Get a character at the current position and move forward.
-    /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer() {
-        IterType current = m_current;
+    /// @brief Get view into the input buffer contents.
+    /// @return View into the input buffer contents.
+    str_view get_buffer_view() {
+        IterType current = m_begin;
         while (current != m_end) {
             uint8_t first = static_cast<uint8_t>(*current++);
             uint32_t num_bytes = utf8::get_num_bytes(first);
@@ -8210,22 +8217,22 @@ public:
             }
         }
 
-        m_buffer.reserve(std::distance(m_current, m_end));
-        while (m_current != m_end) {
-            char c = char(*m_current++);
+        m_buffer.reserve(std::distance(m_begin, m_end));
+        current = m_begin;
+
+        while (current != m_end) {
+            char c = char(*current++);
             if (c != '\r') {
                 m_buffer.push_back(c);
             }
         }
-    }
 
-    str_view get_buffer() const noexcept {
         return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
-    /// The iterator at the current position.
-    IterType m_current {};
+    /// The iterator at the beginning of input.
+    IterType m_begin {};
     /// The iterator at the end of input.
     IterType m_end {};
     /// The encoding type for this input adapter.
@@ -8241,9 +8248,7 @@ private:
 /// @brief An input adapter for iterators of type char16_t.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char16_t>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char16_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -8252,8 +8257,9 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
+    /// @param is_contiguous Whether iterators are contiguous or not.
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
-        : m_current(begin),
+        : m_begin(begin),
           m_end(end),
           m_encode_type(encode_type),
           m_is_contiguous(is_contiguous) {
@@ -8267,9 +8273,9 @@ public:
     iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
     ~iterator_input_adapter() = default;
 
-    /// @brief Get a character at the current position and move forward.
-    /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer() {
+    /// @brief Get view into the input buffer contents.
+    /// @return View into the input buffer contents.
+    str_view get_buffer_view() {
         int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
@@ -8279,11 +8285,12 @@ public:
 
         // Assume the input characters are all ASCII characters.
         // That's the most probably the case.
-        m_buffer.reserve(std::distance(m_current, m_end));
+        m_buffer.reserve(std::distance(m_begin, m_end));
 
-        while (m_current != m_end || encoded_buf_size != 0) {
-            while (m_current != m_end && encoded_buf_size < 2) {
-                char16_t utf16 = *m_current++;
+        IterType current = m_begin;
+        while (current != m_end || encoded_buf_size != 0) {
+            while (current != m_end && encoded_buf_size < 2) {
+                char16_t utf16 = *current++;
                 utf16 = char16_t(
                     static_cast<uint16_t>((utf16 & 0x00FFu) << shift_bits) |
                     static_cast<uint16_t>((utf16 & 0xFF00u) >> shift_bits));
@@ -8304,15 +8311,13 @@ public:
 
             m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
-    }
 
-    str_view get_buffer() const noexcept {
         return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
-    /// The iterator at the current position.
-    IterType m_current {};
+    /// The iterator at the beginning of input.
+    IterType m_begin {};
     /// The iterator at the end of input.
     IterType m_end {};
     /// The encoding type for this input adapter.
@@ -8326,9 +8331,7 @@ private:
 /// @brief An input adapter for iterators of type char32_t.
 /// @tparam IterType An iterator type.
 template <typename IterType>
-class iterator_input_adapter<
-    IterType,
-    enable_if_t<std::is_same<remove_cv_t<typename std::iterator_traits<IterType>::value_type>, char32_t>::value>> {
+class iterator_input_adapter<IterType, enable_if_t<is_iterator_of<IterType, char32_t>::value>> {
 public:
     /// @brief Construct a new iterator_input_adapter object.
     iterator_input_adapter() = default;
@@ -8337,8 +8340,9 @@ public:
     /// @param begin The beginning of iteraters.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
+    /// @param is_contiguous Whether iterators are contiguous or not.
     iterator_input_adapter(IterType begin, IterType end, utf_encode_t encode_type, bool is_contiguous) noexcept
-        : m_current(begin),
+        : m_begin(begin),
           m_end(end),
           m_encode_type(encode_type),
           m_is_contiguous(is_contiguous) {
@@ -8352,9 +8356,9 @@ public:
     iterator_input_adapter& operator=(iterator_input_adapter&&) = default;
     ~iterator_input_adapter() = default;
 
-    /// @brief Get a character at the current position and move forward.
-    /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer() {
+    /// @brief Get view into the input buffer contents.
+    /// @return View into the input buffer contents.
+    str_view get_buffer_view() {
         int shift_bits[4] {0, 0, 0, 0};
         if (m_encode_type == utf_encode_t::UTF_32LE) {
             shift_bits[0] = 24;
@@ -8368,10 +8372,11 @@ public:
 
         // Assume the input characters are all ASCII characters.
         // That's the most probably the case.
-        m_buffer.reserve(std::distance(m_current, m_end));
+        m_buffer.reserve(std::distance(m_begin, m_end));
 
-        while (m_current != m_end) {
-            char32_t tmp = *m_current++;
+        IterType current = m_begin;
+        while (current != m_end) {
+            char32_t tmp = *current++;
             char32_t utf32 = char32_t(
                 static_cast<uint32_t>((tmp & 0xFF000000u) >> shift_bits[0]) |
                 static_cast<uint32_t>((tmp & 0x00FF0000u) >> shift_bits[1]) |
@@ -8383,15 +8388,13 @@ public:
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
-    }
 
-    str_view get_buffer() const noexcept {
         return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
-    /// The iterator at the current position.
-    IterType m_current {};
+    /// The iterator at the beginning of input.
+    IterType m_begin {};
     /// The iterator at the end of input.
     IterType m_end {};
     /// The encoding type for this input adapter.
@@ -8426,32 +8429,27 @@ public:
     file_input_adapter& operator=(file_input_adapter&&) = default;
     ~file_input_adapter() = default;
 
-    /// @brief Get a character at the current position and move forward.
-    /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer() {
+    /// @brief Get view into the input buffer contents.
+    /// @return View into the input buffer contents.
+    str_view get_buffer_view() {
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
-            fill_buffer_utf8();
-            break;
+            return get_buffer_view_utf8();
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            fill_buffer_utf16();
-            break;
+            return get_buffer_view_utf16();
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            fill_buffer_utf32();
-            break;
+            return get_buffer_view_utf32();
+        default:       // LCOV_EXCL_LINE
+            return {}; // LCOV_EXCL_LINE
         }
     }
 
-    str_view get_buffer() const noexcept {
-        return str_view {m_buffer.begin(), m_buffer.end()};
-    }
-
 private:
-    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf8() {
+    /// @brief The concrete implementation of get_buffer_view() for UTF-8 encoded inputs.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    str_view get_buffer_view_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
@@ -8512,11 +8510,13 @@ private:
                 break;
             }
         }
+
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
-    /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf16() {
+    /// @brief The concrete implementation of get_buffer_view() for UTF-16 encoded inputs.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    str_view get_buffer_view_utf16() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         int shift_bits[2] {0, 0};
@@ -8553,11 +8553,13 @@ private:
 
             m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
+
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
-    /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32() {
+    /// @brief The concrete implementation of get_buffer_view() for UTF-32 encoded inputs.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    str_view get_buffer_view_utf32() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         int shift_bits[4] {0, 0, 0, 0};
@@ -8579,7 +8581,7 @@ private:
         while (std::feof(m_file) == 0) {
             std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
             if (size != 4) {
-                return;
+                break;
             }
 
             char32_t utf32 = char32_t(
@@ -8593,6 +8595,8 @@ private:
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         }
+
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
@@ -8612,6 +8616,7 @@ public:
 
     /// @brief Construct a new stream_input_adapter object.
     /// @param is A reference to the target input stream.
+    /// @param encode_type The encoding type for this input adapter.
     explicit stream_input_adapter(std::istream& is, utf_encode_t encode_type) noexcept
         : m_istream(&is),
           m_encode_type(encode_type) {
@@ -8624,32 +8629,27 @@ public:
     stream_input_adapter& operator=(stream_input_adapter&&) = default;
     ~stream_input_adapter() = default;
 
-    /// @brief Get a character at the current position and move forward.
-    /// @return std::char_traits<char_type>::int_type A character or EOF.
-    void fill_buffer() {
+    /// @brief Get view into the input buffer contents.
+    /// @return View into the input buffer contents.
+    str_view get_buffer_view() {
         switch (m_encode_type) {
         case utf_encode_t::UTF_8:
-            fill_buffer_utf8();
-            break;
+            return get_buffer_view_utf8();
         case utf_encode_t::UTF_16BE:
         case utf_encode_t::UTF_16LE:
-            fill_buffer_utf16();
-            break;
+            return get_buffer_view_utf16();
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
-            fill_buffer_utf32();
-            break;
+            return get_buffer_view_utf32();
+        default:       // LCOV_EXCL_LINE
+            return {}; // LCOV_EXCL_LINE
         }
     }
 
-    str_view get_buffer() const noexcept {
-        return str_view {m_buffer.begin(), m_buffer.end()};
-    }
-
 private:
-    /// @brief The concrete implementation of get_character() for UTF-8 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf8() {
+    /// @brief The concrete implementation of get_buffer_view() for UTF-8 encoded inputs.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    str_view get_buffer_view_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
@@ -8711,11 +8711,13 @@ private:
                 break;
             }
         }
+
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
-    /// @brief The concrete implementation of get_character() for UTF-16 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf16() {
+    /// @brief The concrete implementation of get_buffer_view() for UTF-16 encoded inputs.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    str_view get_buffer_view_utf16() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_16BE || m_encode_type == utf_encode_t::UTF_16LE);
 
         int shift_bits[2] {0, 0};
@@ -8759,11 +8761,13 @@ private:
 
             m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
+
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
-    /// @brief The concrete implementation of get_character() for UTF-32 encoded inputs.
-    /// @return A UTF-8 encoded byte at the current position, or EOF.
-    void fill_buffer_utf32() {
+    /// @brief The concrete implementation of get_buffer_view() for UTF-32 encoded inputs.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    str_view get_buffer_view_utf32() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_32BE || m_encode_type == utf_encode_t::UTF_32LE);
 
         int shift_bits[4] {0, 0, 0, 0};
@@ -8786,7 +8790,7 @@ private:
             m_istream->read(&chars[0], 4);
             std::streamsize size = m_istream->gcount();
             if (size != 4) {
-                return;
+                break;
             }
 
             char32_t utf32 = char32_t(
@@ -8800,6 +8804,8 @@ private:
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
         } while (!m_istream->eof());
+
+        return str_view {m_buffer.begin(), m_buffer.end()};
     }
 
 private:
@@ -8841,12 +8847,11 @@ inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
     bool is_contiguous = false;
     if (is_random_access_itr) {
         ptrdiff_t size = static_cast<ptrdiff_t>(std::distance(begin, end - 1));
-        if (size > 0) {
-            using CharPtr = remove_cvref_t<typename std::iterator_traits<ItrType>::pointer>;
-            CharPtr p_begin = &*begin;
-            CharPtr p_second_last = &*(end - 1);
-            is_contiguous = (p_second_last - p_begin == size);
-        }
+
+        using CharPtr = remove_cvref_t<typename std::iterator_traits<ItrType>::pointer>;
+        CharPtr p_begin = &*begin;
+        CharPtr p_second_last = &*(end - 1);
+        is_contiguous = (p_second_last - p_begin == size);
     }
     return create_iterator_input_adapter(begin, end, is_contiguous);
 }

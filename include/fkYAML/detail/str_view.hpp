@@ -301,7 +301,8 @@ public:
 
         if (ret == 0) {
             using int_limits = std::numeric_limits<int>;
-            difference_type diff = m_len - sv.m_len;
+            difference_type diff =
+                m_len > sv.m_len ? m_len - sv.m_len : difference_type(-1) * difference_type(sv.m_len - m_len);
 
             if (diff > int_limits::max()) {
                 ret = int_limits::max();
@@ -524,12 +525,11 @@ public:
             idx = m_len - 1;
         }
 
-        while (idx > 0) {
+        do {
             if (traits_type::eq(mp_str[idx], c)) {
                 return idx;
             }
-            --idx;
-        }
+        } while (idx > 0 && --idx < m_len);
 
         return npos;
     }
@@ -632,14 +632,14 @@ public:
     /// @return The beginning position of `s` characters, `npos` otherwise.
     size_type find_last_of(const CharT* s, size_type pos, size_type n) const noexcept {
         if (n <= m_len) {
-            pos = std::min(m_len - n, pos) + 1;
+            pos = std::min(m_len - n - 1, pos);
 
             do {
-                const CharT* p_found = traits_type::find(s, n, mp_str[--pos]);
+                const CharT* p_found = traits_type::find(s, n, mp_str[pos]);
                 if (p_found) {
                     return pos;
                 }
-            } while (pos > 0);
+            } while (pos-- != 0);
         }
 
         return npos;
@@ -657,7 +657,7 @@ public:
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of non `sv` characters, `npos` otherwise.
-    size_type find_first_not_of(basic_str_view sv, size_type pos = npos) const noexcept {
+    size_type find_first_not_of(basic_str_view sv, size_type pos = 0) const noexcept {
         return find_first_not_of(sv.mp_str, pos, sv.m_len);
     }
 
@@ -665,7 +665,7 @@ public:
     /// @param c The character to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of non `c` character, `npos` otherwise.
-    size_type find_first_not_of(CharT c, size_type pos = npos) const noexcept {
+    size_type find_first_not_of(CharT c, size_type pos = 0) const noexcept {
         for (; pos < m_len; ++pos) {
             if (!traits_type::eq(mp_str[pos], c)) {
                 return pos;
@@ -696,7 +696,7 @@ public:
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of non `s` characters, `npos` otherwise.
-    size_type find_first_not_of(const CharT* s, size_type pos = npos) const noexcept {
+    size_type find_first_not_of(const CharT* s, size_type pos = 0) const noexcept {
         return find_first_not_of(basic_str_view(s), pos);
     }
 
@@ -760,6 +760,14 @@ private:
     const value_type* mp_str {nullptr};
 };
 
+// Prior to C++17, a static constexpr class member needs an out-of-class definition.
+#ifndef FK_YAML_HAS_CXX_17
+
+template <typename CharT, typename Traits>
+constexpr typename basic_str_view<CharT, Traits>::size_type basic_str_view<CharT, Traits>::npos;
+
+#endif // !defined(FK_YAML_HAS_CXX_17)
+
 /// @brief An equal-to operator of the basic_str_view class.
 /// @tparam CharT Character type
 /// @tparam Traits Character traits type.
@@ -767,7 +775,7 @@ private:
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits>
-bool operator==(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator==(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     // Comparing the lengths first will omit unnecessary value comparison in compare().
     return lhs.size() == rhs.size() && lhs.compare(rhs) == 0;
 }
@@ -779,7 +787,7 @@ bool operator==(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits>
 /// @param rhs A basic_string object to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits>
-bool operator==(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
+inline bool operator==(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
     return lhs == basic_str_view<CharT, Traits>(rhs);
 }
 
@@ -790,7 +798,7 @@ bool operator==(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits>
-bool operator==(const std::basic_string<CharT, Traits>& lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator==(const std::basic_string<CharT, Traits>& lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return basic_str_view<CharT, Traits>(lhs) == rhs;
 }
 
@@ -802,7 +810,7 @@ bool operator==(const std::basic_string<CharT, Traits>& lhs, basic_str_view<Char
 /// @param rhs A character array to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits, std::size_t N>
-bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
+inline bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
     // assume `rhs` is null terminated
     return lhs == basic_str_view<CharT, Traits>(rhs, N - 1);
 }
@@ -815,7 +823,7 @@ bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexce
 /// @param lhs A basic_str_view object to compare with.
 /// @return true if the two objects are the same, false otherwise.
 template <typename CharT, typename Traits, std::size_t N>
-bool operator==(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator==(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
     // assume `lhs` is null terminated
     return basic_str_view<CharT, Traits>(lhs, N - 1) == rhs;
 }
@@ -827,7 +835,7 @@ bool operator==(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexce
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits>
-bool operator!=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator!=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return !(lhs == rhs);
 }
 
@@ -838,7 +846,7 @@ bool operator!=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits>
 /// @param rhs A basic_string object to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits>
-bool operator!=(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
+inline bool operator!=(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT, Traits>& rhs) noexcept {
     return !(lhs == basic_str_view<CharT, Traits>(rhs));
 }
 
@@ -849,7 +857,7 @@ bool operator!=(basic_str_view<CharT, Traits> lhs, const std::basic_string<CharT
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits>
-bool operator!=(const std::basic_string<CharT, Traits>& lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator!=(const std::basic_string<CharT, Traits>& lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return !(basic_str_view<CharT, Traits>(lhs) == rhs);
 }
 
@@ -861,7 +869,7 @@ bool operator!=(const std::basic_string<CharT, Traits>& lhs, basic_str_view<Char
 /// @param rhs A character array to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits, std::size_t N>
-bool operator!=(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
+inline bool operator!=(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
     // assume `rhs` is null terminated.
     return !(lhs == basic_str_view<CharT, Traits>(rhs, N - 1));
 }
@@ -874,7 +882,7 @@ bool operator!=(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexce
 /// @param lhs A basic_str_view object to compare with.
 /// @return true if the two objects are different, false otherwise.
 template <typename CharT, typename Traits, std::size_t N>
-bool operator!=(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator!=(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
     // assume `lhs` is null terminate
     return !(basic_str_view<CharT, Traits>(lhs, N - 1) == rhs);
 }
@@ -886,7 +894,7 @@ bool operator!=(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexce
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if `lhs` is less than `rhs`, false otherwise.
 template <typename CharT, typename Traits>
-bool operator<(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator<(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return lhs.compare(rhs) < 0;
 }
 
@@ -897,7 +905,7 @@ bool operator<(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> 
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if `lhs` is less than or equal to `rhs`, false otherwise.
 template <typename CharT, typename Traits>
-bool operator<=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator<=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return lhs.compare(rhs) <= 0;
 }
 
@@ -908,7 +916,7 @@ bool operator<=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits>
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if `lhs` is greater than `rhs`, false otherwise.
 template <typename CharT, typename Traits>
-bool operator>(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator>(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return lhs.compare(rhs) > 0;
 }
 
@@ -919,7 +927,7 @@ bool operator>(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> 
 /// @param rhs A basic_str_view object to compare with.
 /// @return true if `lhs` is greater than or equal to `rhs`, false otherwise.
 template <typename CharT, typename Traits>
-bool operator>=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
+inline bool operator>=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits> rhs) noexcept {
     return lhs.compare(rhs) >= 0;
 }
 
@@ -930,7 +938,8 @@ bool operator>=(basic_str_view<CharT, Traits> lhs, basic_str_view<CharT, Traits>
 /// @param sv A basic_str_view object.
 /// @return Reference to the output stream object `os`.
 template <typename CharT, typename Traits>
-std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, basic_str_view<CharT, Traits> sv) {
+inline std::basic_ostream<CharT, Traits>& operator<<(
+    std::basic_ostream<CharT, Traits>& os, basic_str_view<CharT, Traits> sv) {
     return os.write(sv.data(), static_cast<std::streamsize>(sv.size()));
 }
 
