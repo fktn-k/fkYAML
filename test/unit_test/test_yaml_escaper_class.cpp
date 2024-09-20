@@ -14,7 +14,7 @@
 
 TEST_CASE("YamlEscaper_Unescape") {
     SECTION("valid escape sequence") {
-        using test_data_t = std::pair<std::string, std::string>;
+        using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
         auto test_data = GENERATE(
             test_data_t {"\\a", "\a"},
             test_data_t {"\\b", "\b"},
@@ -44,20 +44,20 @@ TEST_CASE("YamlEscaper_Unescape") {
             test_data_t {"\\U0000007F", {char(0x7F)}});
 
         std::string buff {};
-        auto begin_itr = test_data.first.cbegin();
-        auto end_itr = test_data.first.cend();
+        auto begin_itr = test_data.first.begin();
+        auto end_itr = test_data.first.end();
         REQUIRE(fkyaml::detail::yaml_escaper::unescape(begin_itr, end_itr, buff));
         REQUIRE(buff == test_data.second);
     }
 
     SECTION("invalid escape sequence") {
         auto input = GENERATE(
-            std::string("\\Q"),
-            std::string("\\xw"),
-            std::string("\\x+"),
-            std::string("\\u="),
-            std::string("\\U^"),
-            std::string("\\x{"));
+            fkyaml::detail::str_view("\\Q"),
+            fkyaml::detail::str_view("\\xw"),
+            fkyaml::detail::str_view("\\x+"),
+            fkyaml::detail::str_view("\\u="),
+            fkyaml::detail::str_view("\\U^"),
+            fkyaml::detail::str_view("\\x{"));
 
         std::string buff {};
         auto begin_itr = input.cbegin();
@@ -66,7 +66,7 @@ TEST_CASE("YamlEscaper_Unescape") {
     }
 
     SECTION("invalid UTF encoding") {
-        std::string input = "\\U00110000";
+        fkyaml::detail::str_view input = "\\U00110000";
         auto begin_itr = input.cbegin();
         auto end_itr = input.cend();
         std::string buff {};
@@ -116,8 +116,7 @@ TEST_CASE("YamlEscaper_Escape") {
         test_data_t {{char(0xE2u), char(0x80u), char(0xA9u)}, "\\P"});
 
     bool is_escaped = false;
-    auto begin_itr = test_data.first.cbegin();
-    auto end_itr = test_data.first.cend();
-    REQUIRE(fkyaml::detail::yaml_escaper::escape(begin_itr, end_itr, is_escaped) == test_data.second);
+    fkyaml::detail::str_view input = test_data.first;
+    REQUIRE(fkyaml::detail::yaml_escaper::escape(input.begin(), input.end(), is_escaped) == test_data.second);
     REQUIRE(is_escaped);
 }

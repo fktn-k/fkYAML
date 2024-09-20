@@ -11,24 +11,18 @@
 #ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 #define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
 
+#include <algorithm>
 #include <cctype>
-#include <cmath>
-#include <cstdint>
 #include <cstdlib>
-#include <limits>
-#include <type_traits>
-#include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
-#include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/input/position_tracker.hpp>
-#include <fkYAML/detail/meta/input_adapter_traits.hpp>
-#include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
+#include <fkYAML/detail/str_view.hpp>
 #include <fkYAML/detail/types/lexical_token_t.hpp>
 #include <fkYAML/exception.hpp>
 
@@ -36,17 +30,12 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct lexical_token {
     lexical_token_t type {lexical_token_t::END_OF_BUFFER};
-    std::string::const_iterator token_begin_itr {};
-    std::string::const_iterator token_end_itr {};
+    str_view str {};
 };
 
 /// @brief A class which lexically analizes YAML formatted inputs.
-/// @tparam BasicNodeType A type of the container for YAML values.
-template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 class lexical_analyzer {
 private:
-    using char_traits_type = typename std::char_traits<char>;
-
     enum class block_style_indicator_t {
         LITERAL, //!< keeps newlines inside the block as they are indicated by a pipe `|`.
         FOLDED,  //!< replaces newlines inside the block with spaces indicated by a right angle bracket `>`.
@@ -59,19 +48,13 @@ private:
     };
 
 public:
-    using boolean_type = typename BasicNodeType::boolean_type;
-    using integer_type = typename BasicNodeType::integer_type;
-    using float_number_type = typename BasicNodeType::float_number_type;
-    using string_type = typename BasicNodeType::string_type;
-
     /// @brief Construct a new lexical_analyzer object.
     /// @tparam InputAdapterType The type of the input adapter.
     /// @param input_adapter An input adapter object.
-    template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    explicit lexical_analyzer(InputAdapterType&& input_adapter) {
-        std::forward<InputAdapterType>(input_adapter).fill_buffer(m_input_buffer);
-        m_cur_itr = m_token_begin_itr = m_input_buffer.cbegin();
-        m_end_itr = m_input_buffer.cend();
+    explicit lexical_analyzer(str_view input_buffer) noexcept
+        : m_input_buffer(input_buffer),
+          m_cur_itr(m_input_buffer.begin()),
+          m_end_itr(m_input_buffer.end()) {
         m_pos_tracker.set_target_buffer(m_input_buffer);
     }
 
@@ -91,12 +74,11 @@ public:
 
         lexical_token token {};
         token.type = lexical_token_t::PLAIN_SCALAR;
-        token.token_begin_itr = m_cur_itr;
 
-        switch (char current = *m_cur_itr) {
+        switch (*m_cur_itr) {
         case '?':
             if (++m_cur_itr == m_end_itr) {
-                token.token_end_itr = m_end_itr;
+                token.str = str_view {m_token_begin_itr, m_end_itr};
                 return token;
             }
 
@@ -145,7 +127,7 @@ public:
             return token;
         case '&': { // anchor prefix
             extract_anchor_name(token);
-            bool is_empty = token.token_begin_itr == token.token_end_itr;
+            bool is_empty = token.str.empty();
             if (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
@@ -155,7 +137,7 @@ public:
         }
         case '*': { // alias prefix
             extract_anchor_name(token);
-            bool is_empty = token.token_begin_itr == token.token_end_itr;
+            bool is_empty = token.str.empty();
             if (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
@@ -187,7 +169,7 @@ public:
                 break;
             }
 
-            bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
+            bool is_available = ((m_end_itr - m_cur_itr) > 2);
             if (is_available) {
                 bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
                 if (is_dir_end) {
@@ -206,7 +188,7 @@ public:
             token.type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
             return token;
         case ']': // sequence flow end
-            m_flow_context_depth = m_flow_context_depth > 0 ? m_flow_context_depth - 1 : 0;
+            m_flow_context_depth = (m_flow_context_depth > 0) ? m_flow_context_depth - 1 : 0;
             ++m_cur_itr;
             token.type = lexical_token_t::SEQUENCE_FLOW_END;
             return token;
@@ -216,7 +198,7 @@ public:
             token.type = lexical_token_t::MAPPING_FLOW_BEGIN;
             return token;
         case '}': // mapping flow end
-            m_flow_context_depth = m_flow_context_depth > 0 ? m_flow_context_depth - 1 : 0;
+            m_flow_context_depth = (m_flow_context_depth > 0) ? m_flow_context_depth - 1 : 0;
             ++m_cur_itr;
             token.type = lexical_token_t::MAPPING_FLOW_END;
             return token;
@@ -232,7 +214,7 @@ public:
             scan_scalar(token);
             return token;
         case '.': {
-            bool is_available = (std::distance(m_cur_itr, m_end_itr) > 2);
+            bool is_available = ((m_end_itr - m_cur_itr) > 2);
             if (is_available) {
                 bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
                 if (is_doc_end) {
@@ -252,8 +234,7 @@ public:
             get_block_style_metadata(chomp_type, indent);
             scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
             token.type = lexical_token_t::BLOCK_SCALAR;
-            token.token_begin_itr = m_value_buffer.cbegin();
-            token.token_end_itr = m_value_buffer.cend();
+            token.str = m_value_buffer;
             return token;
         }
         case '>': {
@@ -263,8 +244,7 @@ public:
             get_block_style_metadata(chomp_type, indent);
             scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
             token.type = lexical_token_t::BLOCK_SCALAR;
-            token.token_begin_itr = m_value_buffer.cbegin();
-            token.token_end_itr = m_value_buffer.cend();
+            token.str = m_value_buffer;
             return token;
         }
         default:
@@ -286,25 +266,20 @@ public:
     }
 
     /// @brief Get the YAML version specification.
-    /// @return const string_type& A YAML version specification.
-    const string_type& get_yaml_version() const {
-        FK_YAML_ASSERT(!m_value_buffer.empty() && m_value_buffer.size() == 3);
-        FK_YAML_ASSERT(m_value_buffer == "1.1" || m_value_buffer == "1.2");
-
-        return m_value_buffer;
+    /// @return str_view A YAML version specification.
+    str_view get_yaml_version() const noexcept {
+        return m_yaml_version;
     }
 
     /// @brief Get the YAML tag handle defined in the TAG directive.
-    /// @return const std::string& A tag handle.
-    const std::string& get_tag_handle() const {
-        FK_YAML_ASSERT(!m_tag_handle.empty());
+    /// @return str_view A tag handle.
+    str_view get_tag_handle() const noexcept {
         return m_tag_handle;
     }
 
     /// @brief Get the YAML tag prefix defined in the TAG directive.
-    /// @return const std::string A tag prefix.
-    const std::string& get_tag_prefix() const {
-        FK_YAML_ASSERT(!m_tag_prefix.empty());
+    /// @return str_view A tag prefix.
+    str_view get_tag_prefix() const noexcept {
         return m_tag_prefix;
     }
 
@@ -340,9 +315,9 @@ private:
             }
         }
 
-        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
+        str_view dir_name(m_token_begin_itr, m_cur_itr);
 
-        if (m_value_buffer == "TAG") {
+        if (dir_name == "TAG") {
             if (!ends_loop) {
                 emit_error("There must be at least one white space between \"%TAG\" and tag info.");
             }
@@ -350,9 +325,9 @@ private:
             return scan_tag_directive();
         }
 
-        if (m_value_buffer == "YAML") {
+        if (dir_name == "YAML") {
             if (!ends_loop) {
-                emit_error("There must be at least one white space between \"%YAML\" and tag info.");
+                emit_error("There must be at least one white space between \"%YAML\" and version.");
             }
             skip_white_spaces();
             return scan_yaml_version_directive();
@@ -365,8 +340,6 @@ private:
     /// @brief Scan a YAML tag directive.
     /// @return lexical_token_t The lexical token type for YAML tag directives.
     lexical_token_t scan_tag_directive() {
-        m_tag_handle.clear();
-        m_tag_prefix.clear();
         m_token_begin_itr = m_cur_itr;
 
         //
@@ -431,7 +404,7 @@ private:
         }
         }
 
-        m_tag_handle.assign(m_token_begin_itr, m_cur_itr);
+        m_tag_handle = str_view {m_token_begin_itr, m_cur_itr};
 
         skip_white_spaces();
 
@@ -440,6 +413,7 @@ private:
         //
 
         m_token_begin_itr = m_cur_itr;
+        const char* p_tag_prefix_begin = m_cur_itr;
         switch (*m_cur_itr) {
         // a tag prefix must not start with flow indicators to avoid ambiguity.
         // See https://yaml.org/spec/1.2.2/#rule-ns-global-tag-prefix for more details.
@@ -463,12 +437,12 @@ private:
             }
         } while (!ends_loop && ++m_cur_itr != m_end_itr);
 
-        m_tag_prefix.assign(m_token_begin_itr, m_cur_itr);
-
-        bool is_valid = uri_encoding::validate(m_tag_prefix.begin(), m_tag_prefix.end());
+        bool is_valid = uri_encoding::validate(p_tag_prefix_begin, m_cur_itr);
         if (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
+
+        m_tag_prefix = str_view {p_tag_prefix_begin, m_cur_itr};
 
         return lexical_token_t::TAG_DIRECTIVE;
     }
@@ -477,7 +451,6 @@ private:
     /// @note Only 1.1 and 1.2 are supported. If not, throws an exception.
     /// @return lexical_token_t The lexical token type for YAML version directives.
     lexical_token_t scan_yaml_version_directive() {
-        m_value_buffer.clear();
         m_token_begin_itr = m_cur_itr;
 
         bool ends_loop = false;
@@ -494,9 +467,9 @@ private:
             }
         }
 
-        m_value_buffer.assign(m_token_begin_itr, m_cur_itr);
+        m_yaml_version = str_view {m_token_begin_itr, m_cur_itr};
 
-        if (m_value_buffer != "1.1" && m_value_buffer != "1.2") {
+        if (m_yaml_version.compare("1.1") != 0 && m_yaml_version.compare("1.2") != 0) {
             emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
         }
 
@@ -509,7 +482,6 @@ private:
         FK_YAML_ASSERT(*m_cur_itr == '&' || *m_cur_itr == '*');
 
         m_token_begin_itr = ++m_cur_itr;
-        ++token.token_begin_itr;
 
         bool ends_loop = false;
         for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
@@ -535,19 +507,17 @@ private:
             }
         }
 
-        token.token_end_itr = m_cur_itr;
+        token.str = str_view {m_token_begin_itr, m_cur_itr};
     }
 
     /// @brief Extracts a tag name from the input.
     /// @param token The token into which the extraction result is written.
     void extract_tag_name(lexical_token& token) {
-        m_value_buffer.clear();
-
         FK_YAML_ASSERT(*m_cur_itr == '!');
 
         if (++m_cur_itr == m_end_itr) {
             // Just "!" is a non-specific tag.
-            token.token_end_itr = m_end_itr;
+            token.str = str_view {m_token_begin_itr, m_end_itr};
             return;
         }
 
@@ -558,7 +528,7 @@ private:
         case ' ':
         case '\n':
             // Just "!" is a non-specific tag.
-            token.token_end_itr = m_cur_itr;
+            token.str = str_view {m_token_begin_itr, m_cur_itr};
             return;
         case '!':
             // Secondary tag handles (!!suffix)
@@ -602,22 +572,21 @@ private:
             }
         } while (!ends_loop);
 
-        token.token_end_itr = m_cur_itr;
+        token.str = str_view {m_token_begin_itr, m_cur_itr};
 
         if (is_verbatim) {
-            char last = *(token.token_end_itr - 1);
+            char last = token.str.back();
             if (last != '>') {
                 emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
             }
 
             // only the `TAG` part of the `!<TAG>` for URI validation.
-            auto tag_begin = token.token_begin_itr + 2;
-            auto tag_end = token.token_end_itr - 1;
-            if (tag_begin == tag_end) {
+            str_view tag_body = token.str.substr(2, token.str.size() - 3);
+            if (tag_body.empty()) {
                 emit_error("verbatim tag(!<TAG>) must not be empty.");
             }
 
-            bool is_valid_uri = uri_encoding::validate(tag_begin, tag_end);
+            bool is_valid_uri = uri_encoding::validate(tag_body.begin(), tag_body.end());
             if (!is_valid_uri) {
                 emit_error("invalid URI character is found in a verbatim tag.");
             }
@@ -626,20 +595,19 @@ private:
         }
 
         if (is_named_handle) {
-            char last = *(token.token_end_itr - 1);
+            char last = token.str.back();
             if (last == '!') {
                 // Tag shorthand must be followed by a non-empty suffix.
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
                 emit_error("named handle has no suffix.");
             }
 
-            // TODO: This should be achieved with no copy...
-            const std::string named_handle(token.token_begin_itr, token.token_end_itr);
-            std::size_t last_tag_prefix_pos = named_handle.find_last_of('!');
-            FK_YAML_ASSERT(last_tag_prefix_pos != std::string::npos);
+            // get the position of the beginning of a suffix. (!handle!suffix)
+            std::size_t last_tag_prefix_pos = token.str.find_last_of('!');
+            FK_YAML_ASSERT(last_tag_prefix_pos != str_view::npos);
 
-            bool is_valid_uri =
-                uri_encoding::validate(named_handle.begin() + last_tag_prefix_pos + 1, named_handle.end());
+            str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
+            bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
             if (!is_valid_uri) {
                 emit_error("Invalid URI character is found in a named tag handle.");
             }
@@ -659,7 +627,6 @@ private:
             needs_last_double_quote = (*m_cur_itr == '\"');
             if (needs_last_double_quote || needs_last_single_quote) {
                 m_token_begin_itr = ++m_cur_itr;
-                ++token.token_begin_itr;
                 token.type = needs_last_double_quote ? lexical_token_t::DOUBLE_QUOTED_SCALAR
                                                      : lexical_token_t::SINGLE_QUOTED_SCALAR;
             }
@@ -671,11 +638,10 @@ private:
         bool is_value_buff_used = extract_string_token(needs_last_single_quote, needs_last_double_quote);
 
         if (is_value_buff_used) {
-            token.token_begin_itr = m_value_buffer.cbegin();
-            token.token_end_itr = m_value_buffer.cend();
+            token.str = str_view {m_value_buffer.begin(), m_value_buffer.end()};
         }
         else {
-            token.token_end_itr = m_cur_itr;
+            token.str = str_view {m_token_begin_itr, m_cur_itr};
             if (token.type != lexical_token_t::PLAIN_SCALAR) {
                 // If extract_string_token() didn't use m_value_buffer to store mutated scalar value, m_cur_itr is at
                 // the last quotation mark, which will cause infinite loops from the next get_next_token() call.
@@ -1000,7 +966,7 @@ private:
         // scan the contents of a string scalar token.
 
         bool is_value_buffer_used = false;
-        for (; m_cur_itr != m_end_itr; m_cur_itr = (m_cur_itr == m_end_itr) ? m_cur_itr : ++m_cur_itr) {
+        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
             char current = *m_cur_itr;
             uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
             if (num_bytes == 1) {
@@ -1408,21 +1374,23 @@ private:
 
 private:
     /// An input buffer adapter to be analyzed.
-    std::string m_input_buffer {};
+    str_view m_input_buffer {};
     /// The iterator to the current character in the input buffer.
-    std::string::const_iterator m_cur_itr {};
+    const char* m_cur_itr {};
     /// The iterator to the beginning of the current token.
-    std::string::const_iterator m_token_begin_itr {};
+    const char* m_token_begin_itr {};
     /// The iterator to the past-the-end element in the input buffer.
-    std::string::const_iterator m_end_itr {};
+    const char* m_end_itr {};
     /// The current position tracker of the input buffer.
     mutable position_tracker m_pos_tracker {};
     /// A temporal buffer to store a string to be parsed to an actual token value.
     std::string m_value_buffer {};
+    /// The last yaml version.
+    str_view m_yaml_version {};
     /// The last tag handle.
-    std::string m_tag_handle {};
-    /// The last tag prefix
-    std::string m_tag_prefix {};
+    str_view m_tag_handle {};
+    /// The last tag prefix.
+    str_view m_tag_prefix {};
     /// The beginning position of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)

@@ -12,9 +12,7 @@
 #define FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
 
 #include <algorithm>
-#include <cstdint>
 #include <deque>
-#include <unordered_map>
 #include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
@@ -24,6 +22,7 @@
 #include <fkYAML/detail/input/tag_resolver.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/node_attrs.hpp>
 #include <fkYAML/detail/node_property.hpp>
@@ -41,7 +40,7 @@ class basic_deserializer {
     /** A type for the target basic_node. */
     using basic_node_type = BasicNodeType;
     /** A type for the lexical analyzer. */
-    using lexer_type = lexical_analyzer<basic_node_type>;
+    using lexer_type = lexical_analyzer;
     /** A type for the document metainfo. */
     using doc_metainfo_type = document_metainfo<basic_node_type>;
     /** A type for the tag resolver. */
@@ -133,8 +132,10 @@ public:
     /// @return basic_node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     basic_node_type deserialize(InputAdapterType&& input_adapter) {
+        str_view input_view = input_adapter.get_buffer_view();
+        lexer_type lexer(input_view);
+
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
-        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
         return deserialize_document(lexer, type);
     }
 
@@ -144,7 +145,9 @@ public:
     /// @return std::vector<basic_node_type> Root YAML nodes for deserialized YAML documents.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
     std::vector<basic_node_type> deserialize_docs(InputAdapterType&& input_adapter) {
-        lexer_type lexer(std::forward<InputAdapterType>(input_adapter));
+        str_view input_view = input_adapter.get_buffer_view();
+        lexer_type lexer(input_view);
+
         std::vector<basic_node_type> nodes {};
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
 
@@ -265,9 +268,9 @@ private:
                 lacks_end_of_directives_marker = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
-                const std::string& tag_handle = lexer.get_tag_handle();
-                switch (tag_handle.size()) {
-                case 1: {
+                str_view tag_handle_view = lexer.get_tag_handle();
+                switch (tag_handle_view.size()) {
+                case 1 /* ! */: {
                     bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
@@ -275,11 +278,12 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    mp_meta->primary_handle_prefix = lexer.get_tag_prefix();
+                    str_view tag_prefix = lexer.get_tag_prefix();
+                    mp_meta->primary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
-                case 2: {
+                case 2 /* !! */: {
                     bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
                     if (is_already_specified) {
                         throw parse_error(
@@ -287,13 +291,17 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    mp_meta->secondary_handle_prefix = lexer.get_tag_prefix();
+                    str_view tag_prefix = lexer.get_tag_prefix();
+                    mp_meta->secondary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
-                default: {
+                default /* !<handle>! */: {
+                    std::string tag_handle(tag_handle_view.begin(), tag_handle_view.end());
+                    str_view tag_prefix_view = lexer.get_tag_prefix();
+                    std::string tag_prefix(tag_prefix_view.begin(), tag_prefix_view.end());
                     bool is_already_specified =
-                        !(mp_meta->named_handle_map.emplace(tag_handle, lexer.get_tag_prefix()).second);
+                        !(mp_meta->named_handle_map.emplace(std::move(tag_handle), std::move(tag_prefix)).second);
                     if (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
@@ -915,7 +923,7 @@ private:
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_anchor_name.assign(token.token_begin_itr, token.token_end_itr);
+                m_anchor_name.assign(token.str.begin(), token.str.end());
                 m_needs_anchor_impl = true;
 
                 if (!m_needs_tag_impl) {
@@ -933,7 +941,7 @@ private:
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_tag_name.assign(token.token_begin_itr, token.token_end_itr);
+                m_tag_name.assign(token.str.begin(), token.str.end());
                 m_needs_tag_impl = true;
 
                 if (!m_needs_anchor_impl) {
@@ -1054,7 +1062,7 @@ private:
 
         node_type value_type {node_type::STRING};
         if (type == lexical_token_t::PLAIN_SCALAR) {
-            value_type = scalar_scanner::scan(token.token_begin_itr, token.token_end_itr);
+            value_type = scalar_scanner::scan(token.str.begin(), token.str.end());
         }
 
         if (m_needs_tag_impl) {
@@ -1096,7 +1104,7 @@ private:
         basic_node_type node {};
 
         if (type == lexical_token_t::ALIAS_PREFIX) {
-            const std::string token_str = std::string(token.token_begin_itr, token.token_end_itr);
+            const std::string token_str = std::string(token.str.begin(), token.str.end());
 
             uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
             if (anchor_counts == 0) {
@@ -1116,7 +1124,7 @@ private:
         switch (value_type) {
         case node_type::NULL_OBJECT: {
             std::nullptr_t null = nullptr;
-            bool converted = detail::aton(token.token_begin_itr, token.token_end_itr, null);
+            bool converted = detail::aton(token.str.begin(), token.str.end(), null);
             if (!converted) {
                 throw parse_error("Failed to convert a scalar to a null.", line, indent);
             }
@@ -1125,7 +1133,7 @@ private:
         }
         case node_type::BOOLEAN: {
             boolean_type boolean = static_cast<boolean_type>(false);
-            bool converted = detail::atob(token.token_begin_itr, token.token_end_itr, boolean);
+            bool converted = detail::atob(token.str.begin(), token.str.end(), boolean);
             if (!converted) {
                 throw parse_error("Failed to convert a scalar to a boolean.", line, indent);
             }
@@ -1134,7 +1142,7 @@ private:
         }
         case node_type::INTEGER: {
             integer_type integer = 0;
-            bool converted = detail::atoi(token.token_begin_itr, token.token_end_itr, integer);
+            bool converted = detail::atoi(token.str.begin(), token.str.end(), integer);
             if (!converted) {
                 throw parse_error("Failed to convert a scalar to an integer.", line, indent);
             }
@@ -1143,7 +1151,7 @@ private:
         }
         case node_type::FLOAT: {
             float_number_type float_val = 0;
-            bool converted = detail::atof(token.token_begin_itr, token.token_end_itr, float_val);
+            bool converted = detail::atof(token.str.begin(), token.str.end(), float_val);
             if (!converted) {
                 throw parse_error("Failed to convert a scalar to a floating point value", line, indent);
             }
@@ -1151,7 +1159,7 @@ private:
             break;
         }
         case node_type::STRING:
-            node = basic_node_type(std::string(token.token_begin_itr, token.token_end_itr));
+            node = basic_node_type(std::string(token.str.begin(), token.str.end()));
             break;
         default:   // LCOV_EXCL_LINE
             break; // LCOV_EXCL_LINE
@@ -1251,8 +1259,8 @@ private:
 
     /// @brief Update the target YAML version with an input string.
     /// @param version_str A YAML version string.
-    yaml_version_type convert_yaml_version(const string_type& version_str) noexcept {
-        return (version_str == "1.1") ? yaml_version_type::VERSION_1_1 : yaml_version_type::VERSION_1_2;
+    yaml_version_type convert_yaml_version(str_view version_str) noexcept {
+        return (version_str.compare("1.1") == 0) ? yaml_version_type::VERSION_1_1 : yaml_version_type::VERSION_1_2;
     }
 
 private:

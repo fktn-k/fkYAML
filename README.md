@@ -92,13 +92,13 @@ On an AMD Ryzen 7 5800H @3.20GHz with g++11.4.0 in Ubuntu22.04 (WSL2), fkYAML pa
 
 | Benchmark                          | Release (MB/s) |
 | ---------------------------------- | -------------- |
-| fkYAML                             | 40.491         |
+| fkYAML                             | 41.051         |
 | libfyaml                           | 31.110         |
 | rapidyaml<br>(with mutable buff)   | 147.221        |
 | rapidyaml<br>(with immutable buff) | 144.904        |
 | yaml-cpp                           | 7.397          |
 
-Although [rapidyaml](https://github.com/biojppm/rapidyaml) is in general 4x faster than fkYAML as it focuses on high performance, fkYAML is 30% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also 5.4x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) is in general 4x faster than fkYAML as it focuses on high performance, fkYAML is 30% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also 5.5x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
 Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some real use cases.  
 
 ## Supported compilers

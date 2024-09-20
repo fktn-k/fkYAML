@@ -13,7 +13,7 @@
 #include <fkYAML/node.hpp>
 
 TEST_CASE("PositionTracker_InitialState") {
-    std::string input = "test";
+    fkyaml::detail::str_view input = "test";
     fkyaml::detail::position_tracker pos_tracker {};
     pos_tracker.set_target_buffer(input);
 
@@ -26,7 +26,7 @@ TEST_CASE("PositionTracker_MultipleLines") {
     fkyaml::detail::position_tracker pos_tracker {};
 
     SECTION("first character is not a newline code") {
-        std::string input = "test\nfoo";
+        fkyaml::detail::str_view input = "test\nfoo";
         pos_tracker.set_target_buffer(input);
 
         REQUIRE(pos_tracker.get_cur_pos() == 0);
@@ -60,7 +60,7 @@ TEST_CASE("PositionTracker_MultipleLines") {
     }
 
     SECTION("first character is a newline code") {
-        std::string input = "\ntest\nfoo";
+        fkyaml::detail::str_view input = "\ntest\nfoo";
         pos_tracker.set_target_buffer(input);
 
         REQUIRE(pos_tracker.get_cur_pos() == 0);

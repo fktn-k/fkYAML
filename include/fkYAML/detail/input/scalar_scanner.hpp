@@ -47,7 +47,7 @@ public:
     /// @param begin The iterator to the first element of the scalar.
     /// @param end The iterator to the past-the-end element of the scalar.
     /// @return A detected scalar value type.
-    static node_type scan(std::string::const_iterator begin, std::string::const_iterator end) {
+    static node_type scan(const char* begin, const char* end) {
         if (begin == end) {
             return node_type::STRING;
         }
@@ -132,7 +132,7 @@ private:
     /// @param itr The iterator to the first element of the scalar.
     /// @param len The length of the scalar contents.
     /// @return A detected scalar value type.
-    static node_type scan_possible_number_token(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_possible_number_token(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         switch (*itr) {
@@ -161,7 +161,7 @@ private:
     /// @param itr The iterator to the past-the-negative-sign element of the scalar.
     /// @param len The length of the scalar contents left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_negative_number(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_negative_number(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -175,7 +175,7 @@ private:
     /// @param itr The iterator to the past-the-zero element of the scalar.
     /// @param len The length of the scalar left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_after_zero_at_first(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_after_zero_at_first(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -207,7 +207,7 @@ private:
     /// @param len The length of the scalar left unscanned.
     /// @param has_decimal_point Whether a decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_decimal_number(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
+    static node_type scan_decimal_number(const char* itr, uint32_t len, bool has_decimal_point) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -240,7 +240,7 @@ private:
     /// @param len The length of the scalar left unscanned.
     /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_after_decimal_point(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
+    static node_type scan_after_decimal_point(const char* itr, uint32_t len, bool has_decimal_point) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -255,7 +255,7 @@ private:
     /// @param len The length of the scalar left unscanned.
     /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_after_exponent(std::string::const_iterator itr, uint32_t len, bool has_decimal_point) {
+    static node_type scan_after_exponent(const char* itr, uint32_t len, bool has_decimal_point) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -275,7 +275,7 @@ private:
     /// @param itr The iterator to the octal-number element of the scalar.
     /// @param len The length of the scalar left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_octal_number(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_octal_number(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         switch (*itr) {
@@ -297,7 +297,7 @@ private:
     /// @param itr The iterator to the hexadecimal-number element of the scalar.
     /// @param len The length of the scalar left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_hexadecimal_number(std::string::const_iterator itr, uint32_t len) {
+    static node_type scan_hexadecimal_number(const char* itr, uint32_t len) {
         FK_YAML_ASSERT(len > 0);
 
         if (is_xdigit(*itr)) {

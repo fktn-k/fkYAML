@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------------
 Benchmark                           Time             CPU   Iterations UserCounters...
 -------------------------------------------------------------------------------------
-bm_fkyaml_parse                105774 ns       105775 ns         6662 bytes_per_second=40.4911Mi/s items_per_second=9.45402k/s
+bm_fkyaml_parse                105774 ns       105775 ns         6662 bytes_per_second=41.0509Mi/s items_per_second=9.58472k/s
 bm_yamlcpp_parse               579017 ns       579019 ns         1202 bytes_per_second=7.39692Mi/s items_per_second=1.72706k/s
 bm_libfyaml_parse              137681 ns       137669 ns         5726 bytes_per_second=31.1104Mi/s items_per_second=7.26379k/s
 bm_rapidyaml_parse_inplace      29092 ns        29092 ns        24046 bytes_per_second=147.221Mi/s items_per_second=34.3737k/s

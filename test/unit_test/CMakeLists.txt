@@ -126,6 +126,10 @@ target_compile_options(
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
       -Wno-deprecated-declarations # for testing deprecated functions
     >
+    $<$<CXX_COMPILER_ID:AppleClang>:
+      -Wall -Wextra -Werror -pedantic
+      -Wno-deprecated-declarations # for testing deprecated functions
+    >
     # IntelLLVM
     $<$<CXX_COMPILER_ID:IntelLLVM>:
       # IntelLLVM warns the usage of nans and infinities due to its over-estimation.
@@ -228,6 +232,7 @@ add_executable(
   test_scalar_conv.cpp
   test_scalar_scanner_class.cpp
   test_serializer_class.cpp
+  test_str_view_class.cpp
   test_string_formatter.cpp
   test_tag_resolver_class.cpp
   test_uri_encoding_class.cpp

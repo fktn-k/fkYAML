@@ -21,7 +21,7 @@ TEST_CASE("URIEncoding_Validate") {
             std::string("0123456789"),
             std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
             std::string("abcdefghijklmnopqrstuvwxyz"));
-        REQUIRE(fkyaml::detail::uri_encoding::validate(input.begin(), input.end()));
+        REQUIRE(fkyaml::detail::uri_encoding::validate(input.c_str(), input.c_str() + input.size()));
     }
 
     SECTION("invalid URI characters") {
@@ -76,6 +76,6 @@ TEST_CASE("URIEncoding_Validate") {
             std::string("`"),
             std::string("|"),
             std::string("\x7F"));
-        REQUIRE_FALSE(fkyaml::detail::uri_encoding::validate(input.begin(), input.end()));
+        REQUIRE_FALSE(fkyaml::detail::uri_encoding::validate(input.c_str(), input.c_str() + input.size()));
     }
 }

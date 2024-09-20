@@ -247,7 +247,8 @@ private:
             // The next line is intentionally excluded from the LCOV coverage target since the next line is somehow
             // misrecognized as it has a binary branch. Possibly begin() or end() has some conditional branch(es)
             // internally. Confirmed with LCOV 1.14 on Ubuntu22.04.
-            node_type type_if_plain = scalar_scanner::scan(str_val.begin(), str_val.end()); // LCOV_EXCL_LINE
+            node_type type_if_plain =
+                scalar_scanner::scan(str_val.c_str(), str_val.c_str() + str_val.size()); // LCOV_EXCL_LINE
 
             if (type_if_plain != node_type::STRING) {
                 // Surround a string value with double quotes to keep semantic equality.
@@ -344,7 +345,7 @@ private:
 
         using string_type = typename BasicNodeType::string_type;
         const string_type& s = node.template get_value_ref<const string_type&>();
-        return yaml_escaper::escape(s.begin(), s.end(), is_escaped);
+        return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
     } // LCOV_EXCL_LINE
 
 private:
