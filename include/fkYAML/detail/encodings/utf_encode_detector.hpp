@@ -131,7 +131,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
     }
 };
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 
 /// @brief The partial specialization of utf_encode_detector for char8_t iterators.
 /// @tparam ItrType An iterator type.
@@ -168,7 +168,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
     }
 };
 
-#endif // defined(FK_YAML_HAS_CHAR8_T)
+#endif // FK_YAML_HAS_CHAR8_T
 
 /// @brief The partial specialization of utf_encode_detector for char16_t iterators.
 /// @tparam ItrType An iterator type.

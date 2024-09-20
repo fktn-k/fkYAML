@@ -1703,7 +1703,7 @@ inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n) {
     return fkyaml::node::deserialize(std::move(s), std::move(s + n));
 }
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 /// @brief The user-defined string literal which deserializes a `char8_t` array into a `node` object.
 /// @param s An input `char8_t` array.
 /// @param n The size of `s`.

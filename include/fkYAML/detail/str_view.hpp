@@ -947,7 +947,7 @@ inline std::basic_ostream<CharT, Traits>& operator<<(
 /// @brief view into `char` sequence.
 using str_view = basic_str_view<char>;
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 /// @brief view into `char8_t` sequence.
 using u8str_view = basic_str_view<char8_t>;
 #endif

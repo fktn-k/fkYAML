@@ -248,7 +248,7 @@ private:
     bool m_is_contiguous {false};
 };
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 
 /// @brief An input adapter for iterators of type char8_t.
 /// @tparam IterType An iterator type.
@@ -346,7 +346,7 @@ private:
     bool m_is_contiguous {false};
 };
 
-#endif // defined(FK_YAML_HAS_CHAR8_T)
+#endif // FK_YAML_HAS_CHAR8_T
 
 /// @brief An input adapter for iterators of type char16_t.
 /// @tparam IterType An iterator type.

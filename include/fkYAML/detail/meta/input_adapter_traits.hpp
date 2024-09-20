@@ -20,7 +20,7 @@
 #include <fkYAML/detail/meta/detect.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 
-#ifdef FK_YAML_HAS_CXX_17
+#if defined(FK_YAML_HAS_CXX_17) && FK_YAML_HAS_INCLUDE(<string_view>)
 #include <string_view>
 #endif
 

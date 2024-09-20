@@ -23,7 +23,7 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 
-#ifdef FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_TO_CHARS
 // Prefer std::to_chars() and std::from_chars() functions if available.
 #include <charconv>
 #else
@@ -716,7 +716,7 @@ inline void set_nan(double& f) noexcept {
     f = std::nan("");
 }
 
-#ifdef FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_TO_CHARS
 
 /// @brief Converts a scalar into a floating point value.
 /// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
@@ -733,7 +733,7 @@ inline bool atof_impl(const char* p_begin, const char* p_end, FloatType& f) noex
     return false;
 }
 
-#else // defined(FK_YAML_HAS_TO_CHARS)
+#else
 
 /// @brief Converts a scalar into a `float` value.
 /// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
@@ -759,7 +759,7 @@ inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
     return idx == static_cast<std::size_t>(p_end - p_begin);
 }
 
-#endif // defined(FK_YAML_HAS_TO_CHARS)
+#endif // FK_YAML_HAS_TO_CHARS
 
 /// @brief Converts a scalar into a floating point value.
 /// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
@@ -814,7 +814,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
         }
     }
 
-#ifdef FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_TO_CHARS
     return atof_impl(p_begin, p_end, f);
 #else
     bool success = false;
