@@ -207,29 +207,33 @@ TEST_CASE("StrView_Substr") {
 }
 
 TEST_CASE("StrView_Compare") {
-    constexpr std::size_t long_str_size = static_cast<std::size_t>(std::numeric_limits<int>::max()) + 4u;
-    char* p_long_str = new char[long_str_size] {};
-    for (std::size_t i = 0; i < long_str_size - 1; i++) {
-        p_long_str[i] = 'a';
-    }
-    p_long_str[long_str_size - 1] = '\0';
-    fkyaml::detail::str_view view(p_long_str, long_str_size - 1);
-
     fkyaml::detail::str_view sv = "a";
     REQUIRE(sv.compare("a") == 0);
     REQUIRE(sv.compare("b") == -1);
     REQUIRE(sv.compare("`") == 1);
-    REQUIRE(sv.compare(p_long_str) == std::numeric_limits<int>::min());
-    fkyaml::detail::str_view view_4a = "aaaa";
-    REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a.data()) == 0);
-    REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a.data(), view_4a.size()) == 0);
-    REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a, 0, view_4a.size()) == 0);
-    REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a) == 0);
-    REQUIRE(sv.compare(view) == std::numeric_limits<int>::min());
-    REQUIRE(view.compare(sv) == std::numeric_limits<int>::max());
 
-    delete[] p_long_str;
-    p_long_str = nullptr;
+    // skip checks of comparisons with a large string object if int == ptrdiff_t
+    if (static_cast<std::ptrdiff_t>(std::numeric_limits<int>::max()) < std::numeric_limits<std::ptrdiff_t>::max()) {
+        constexpr std::size_t long_str_size = static_cast<std::size_t>(std::numeric_limits<int>::max()) + 4u;
+        char* p_long_str = (char*)std::malloc(long_str_size);
+        for (std::size_t i = 0; i < long_str_size - 1; i++) {
+            p_long_str[i] = 'a';
+        }
+        p_long_str[long_str_size - 1] = '\0';
+        fkyaml::detail::str_view view(p_long_str, long_str_size - 1);
+
+        REQUIRE(sv.compare(p_long_str) == std::numeric_limits<int>::min());
+        fkyaml::detail::str_view view_4a = "aaaa";
+        REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a.data()) == 0);
+        REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a.data(), view_4a.size()) == 0);
+        REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a, 0, view_4a.size()) == 0);
+        REQUIRE(view.compare(long_str_size - 1u - 4u, 4u, view_4a) == 0);
+        REQUIRE(sv.compare(view) == std::numeric_limits<int>::min());
+        REQUIRE(view.compare(sv) == std::numeric_limits<int>::max());
+
+        std::free(p_long_str);
+        p_long_str = nullptr;
+    }
 }
 
 TEST_CASE("StrView_StartsWith") {
