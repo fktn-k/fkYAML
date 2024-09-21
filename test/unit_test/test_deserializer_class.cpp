@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -150,6 +150,18 @@ TEST_CASE("Deserializer_FloatingPointNumberKey") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - 1.23e-5")));
         REQUIRE(root["test"][0].get_value<double>() == 1.23e-5);
     }
+}
+
+TEST_CASE("Deserializer_ScalarConversionErrorHandling") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    auto input = GENERATE(
+        std::string("!!null foo: bar"),
+        std::string("!!bool foo: bar"),
+        std::string("!!int foo: bar"),
+        std::string("!!float foo: bar"));
+    REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
 }
 
 TEST_CASE("Deserializer_InvalidIndentation") {
@@ -1905,13 +1917,13 @@ TEST_CASE("Deserializer_YAMLVerDirective") {
     SECTION("YAML 1.1") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.1\n---\nfoo: one")));
 
-        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
+        REQUIRE(root.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_1);
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
         REQUIRE(root.contains("foo"));
 
         fkyaml::node& foo_node = root["foo"];
-        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_1);
+        REQUIRE(root.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_1);
         REQUIRE(foo_node.is_string());
         REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
     }
@@ -1919,13 +1931,13 @@ TEST_CASE("Deserializer_YAMLVerDirective") {
     SECTION("YAML 1.2") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%YAML 1.2\n---\nfoo: one")));
 
-        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
+        REQUIRE(root.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2);
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
         REQUIRE(root.contains("foo"));
 
         fkyaml::node& foo_node = root["foo"];
-        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
+        REQUIRE(root.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2);
         REQUIRE(foo_node.is_string());
         REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
     }
@@ -1934,7 +1946,7 @@ TEST_CASE("Deserializer_YAMLVerDirective") {
         REQUIRE_NOTHROW(
             root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\n%YAML 1.1\ntrue: 123")));
 
-        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
+        REQUIRE(root.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2);
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 2);
         REQUIRE(root.contains("foo"));
@@ -2867,7 +2879,7 @@ TEST_CASE("Deserializer_DocumentWithMarkers") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
-        REQUIRE(root.get_yaml_version() == fkyaml::node::yaml_version_t::VER_1_2);
+        REQUIRE(root.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2);
         REQUIRE(root.contains("foo"));
 
         fkyaml::node& foo_node = root["foo"];

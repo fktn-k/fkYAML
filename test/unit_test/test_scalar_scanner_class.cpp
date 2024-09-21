@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,75 +11,108 @@
 #include <fkYAML/node.hpp>
 
 TEST_CASE("ScalarScanner_Empty") {
-    REQUIRE(fkyaml::detail::scalar_scanner::scan("") == fkyaml::detail::lexical_token_t::STRING_VALUE);
+    fkyaml::detail::str_view token = "";
+    REQUIRE(fkyaml::detail::scalar_scanner::scan(token.begin(), token.end()) == fkyaml::node_type::STRING);
 }
 
 TEST_CASE("ScalarScanner_NullValue") {
-    auto token = GENERATE(std::string("~"), std::string("null"), std::string("Null"), std::string("NULL"));
-    REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::NULL_VALUE);
+    auto token = GENERATE(
+        fkyaml::detail::str_view("~"),
+        fkyaml::detail::str_view("null"),
+        fkyaml::detail::str_view("Null"),
+        fkyaml::detail::str_view("NULL"));
+    REQUIRE(fkyaml::detail::scalar_scanner::scan(token.begin(), token.end()) == fkyaml::node_type::NULL_OBJECT);
 }
 
 TEST_CASE("ScalarScanner_BooleanValue") {
     auto token = GENERATE(
-        std::string("true"),
-        std::string("True"),
-        std::string("TRUE"),
-        std::string("false"),
-        std::string("False"),
-        std::string("FALSE"));
-    REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::BOOLEAN_VALUE);
+        fkyaml::detail::str_view("true"),
+        fkyaml::detail::str_view("True"),
+        fkyaml::detail::str_view("TRUE"),
+        fkyaml::detail::str_view("false"),
+        fkyaml::detail::str_view("False"),
+        fkyaml::detail::str_view("FALSE"));
+    REQUIRE(fkyaml::detail::scalar_scanner::scan(token.begin(), token.end()) == fkyaml::node_type::BOOLEAN);
 }
 
 TEST_CASE("ScalarScanner_IntegerNumberValue") {
     auto token = GENERATE(
-        std::string("-1234"),
-        std::string("-853259"),
-        std::string("-1"),
-        std::string("0"),
-        std::string("643"),
-        std::string("+120"),
-        std::string("0o27"),
-        std::string("0o5"),
-        std::string("0o77772"),
-        std::string("0o672"),
-        std::string("0xA04F"),
-        std::string("0xa7F3"),
-        std::string("0xFf29Bc"));
-    REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::INTEGER_VALUE);
+        fkyaml::detail::str_view("-1234"),
+        fkyaml::detail::str_view("-853259"),
+        fkyaml::detail::str_view("-1"),
+        fkyaml::detail::str_view("0"),
+        fkyaml::detail::str_view("643"),
+        fkyaml::detail::str_view("+120"),
+        fkyaml::detail::str_view("0o27"),
+        fkyaml::detail::str_view("0o5"),
+        fkyaml::detail::str_view("0o77772"),
+        fkyaml::detail::str_view("0o672"),
+        fkyaml::detail::str_view("0xA04F"),
+        fkyaml::detail::str_view("0xa7F3"),
+        fkyaml::detail::str_view("0xFf29Bc"));
+    REQUIRE(fkyaml::detail::scalar_scanner::scan(token.begin(), token.end()) == fkyaml::node_type::INTEGER);
 }
 
 TEST_CASE("ScalarScanner_FloatNumberValue") {
     auto token = GENERATE(
-        std::string(".inf"),
-        std::string(".Inf"),
-        std::string(".INF"),
-        std::string(".nan"),
-        std::string(".NaN"),
-        std::string(".NAN"),
-        std::string("-.inf"),
-        std::string("-.Inf"),
-        std::string("-.INF"),
-        std::string("-1.234"),
-        std::string("567.8"),
-        std::string("123."),
-        std::string("0.24"),
-        std::string("0."),
-        std::string("9.8e-3"),
-        std::string("3.95E3"),
-        std::string("1.863e+3"));
-    REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::FLOAT_NUMBER_VALUE);
+        fkyaml::detail::str_view(".inf"),
+        fkyaml::detail::str_view(".Inf"),
+        fkyaml::detail::str_view(".INF"),
+        fkyaml::detail::str_view(".nan"),
+        fkyaml::detail::str_view(".NaN"),
+        fkyaml::detail::str_view(".NAN"),
+        fkyaml::detail::str_view("-.inf"),
+        fkyaml::detail::str_view("-.Inf"),
+        fkyaml::detail::str_view("-.INF"),
+        fkyaml::detail::str_view("+.inf"),
+        fkyaml::detail::str_view("+.Inf"),
+        fkyaml::detail::str_view("+.INF"),
+        fkyaml::detail::str_view("-1.234"),
+        fkyaml::detail::str_view("-21."),
+        fkyaml::detail::str_view("567.8"),
+        fkyaml::detail::str_view("123."),
+        fkyaml::detail::str_view("0.24"),
+        fkyaml::detail::str_view("0."),
+        fkyaml::detail::str_view("9.8e-3"),
+        fkyaml::detail::str_view("3.95E3"),
+        fkyaml::detail::str_view("1.863e+3"));
+    REQUIRE(fkyaml::detail::scalar_scanner::scan(token.begin(), token.end()) == fkyaml::node_type::FLOAT);
 }
 
 TEST_CASE("ScalarScanner_StringValue") {
     auto token = GENERATE(
-        std::string("abc"),
-        std::string("0th"),
-        std::string("0123"),
-        std::string("1.2.3"),
-        std::string("1.non-digit"),
-        std::string("-.foo"),
-        std::string("1exe"),
-        std::string("0oabc"),
-        std::string("0xyz"));
-    REQUIRE(fkyaml::detail::scalar_scanner::scan(token) == fkyaml::detail::lexical_token_t::STRING_VALUE);
+        fkyaml::detail::str_view("nullValue"),
+        fkyaml::detail::str_view("NullValue"),
+        fkyaml::detail::str_view("NULL_VALUE"),
+        fkyaml::detail::str_view("~Value"),
+        fkyaml::detail::str_view("trueValue"),
+        fkyaml::detail::str_view("TrueValue"),
+        fkyaml::detail::str_view("TRUE_VALUE"),
+        fkyaml::detail::str_view("falseValue"),
+        fkyaml::detail::str_view("falsy"),
+        fkyaml::detail::str_view("FalseValue"),
+        fkyaml::detail::str_view("Falsy"),
+        fkyaml::detail::str_view("FALSE_VALUE"),
+        fkyaml::detail::str_view(".infValue"),
+        fkyaml::detail::str_view(".InfValue"),
+        fkyaml::detail::str_view(".INFValue"),
+        fkyaml::detail::str_view(".nanValue"),
+        fkyaml::detail::str_view(".NaNValue"),
+        fkyaml::detail::str_view(".NANValue"),
+        fkyaml::detail::str_view("-.infValue"),
+        fkyaml::detail::str_view("-.InfValue"),
+        fkyaml::detail::str_view("-.INFValue"),
+        fkyaml::detail::str_view(".foo"),
+        fkyaml::detail::str_view("abc"),
+        fkyaml::detail::str_view("0th"),
+        fkyaml::detail::str_view("0123"),
+        fkyaml::detail::str_view("1.2.3"),
+        fkyaml::detail::str_view("1.23e"),
+        fkyaml::detail::str_view("1.2e-z"),
+        fkyaml::detail::str_view("1.non-digit"),
+        fkyaml::detail::str_view("-.foo"),
+        fkyaml::detail::str_view("1exe"),
+        fkyaml::detail::str_view("0oabc"),
+        fkyaml::detail::str_view("0xyz"));
+    REQUIRE(fkyaml::detail::scalar_scanner::scan(token.begin(), token.end()) == fkyaml::node_type::STRING);
 }

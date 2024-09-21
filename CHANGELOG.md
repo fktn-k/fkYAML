@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.12](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.12) (2024-09-21)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.11...v0.3.12)
+
+- Parse +.inf as the positive float infinity [\#393](https://github.com/fktn-k/fkYAML/pull/393) ([fktn-k](https://github.com/fktn-k))
+- Use \_MSVC\_LANG macro when compiled with MSVC for C++ standard detection [\#392](https://github.com/fktn-k/fkYAML/pull/392) ([fktn-k](https://github.com/fktn-k))
+- Fix detecting invalid contents of block scalar headers [\#387](https://github.com/fktn-k/fkYAML/pull/387) ([fktn-k](https://github.com/fktn-k))
+
+- Use likely/unlikely if available [\#395](https://github.com/fktn-k/fkYAML/pull/395) ([fktn-k](https://github.com/fktn-k))
+- Reduce string copies in parse [\#394](https://github.com/fktn-k/fkYAML/pull/394) ([fktn-k](https://github.com/fktn-k))
+- Improve conversion from scalars to native types [\#391](https://github.com/fktn-k/fkYAML/pull/391) ([fktn-k](https://github.com/fktn-k))
+- Refactor lexical analysis [\#390](https://github.com/fktn-k/fkYAML/pull/390) ([fktn-k](https://github.com/fktn-k))
+- Refactor node attributes management [\#389](https://github.com/fktn-k/fkYAML/pull/389) ([fktn-k](https://github.com/fktn-k))
+- Add node\_type/yaml\_version\_type enum class APIs [\#388](https://github.com/fktn-k/fkYAML/pull/388) ([fktn-k](https://github.com/fktn-k))
+- Improve UTF encoding detection [\#386](https://github.com/fktn-k/fkYAML/pull/386) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.11](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.11) (2024-08-24)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.10...v0.3.11)

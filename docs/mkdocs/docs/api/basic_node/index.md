@@ -34,19 +34,19 @@ This class provides features to handle YAML nodes.
 
 ## Member Types
 
-| Name                                            | Description                                                |
-|-------------------------------------------------|------------------------------------------------------------|
-| [sequence_type](sequence_type.md)               | The type used to store sequence node value containers.     |
-| [mapping_type](mapping_type.md)                 | The type used to store mapping node value containers.      |
-| [boolean_type](boolean_type.md)                 | The type used to store boolean node values.                |
-| [integer_type](integer_type.md)                 | The type used to store integer node values.                |
-| [float_number_type](float_number_type.md)       | The type used to store float number node values.           |
-| [string_type](string_type.md)                   | The type used to store string node values.                 |
-| [value_converter_type](value_converter_type.md) | The type used to convert between node and native data.     |
-| [iterator](iterator.md)                         | The type for non-constant iterators.                       |
-| [const_iterator](const_iterator.md)             | The type for constant iterators.                           |
-| [node_t](node_t.md)                             | The type used to store the internal value type.            |
-| [yaml_version_t](yaml_version_t.md)             | The type used to store the enable version of YAML.         |
+| Name                                            | Description                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------------- |
+| [sequence_type](sequence_type.md)               | The type used to store sequence node value containers.              |
+| [mapping_type](mapping_type.md)                 | The type used to store mapping node value containers.               |
+| [boolean_type](boolean_type.md)                 | The type used to store boolean node values.                         |
+| [integer_type](integer_type.md)                 | The type used to store integer node values.                         |
+| [float_number_type](float_number_type.md)       | The type used to store float number node values.                    |
+| [string_type](string_type.md)                   | The type used to store string node values.                          |
+| [value_converter_type](value_converter_type.md) | The type used to convert between node and native data.              |
+| [iterator](iterator.md)                         | The type for non-constant iterators.                                |
+| [const_iterator](const_iterator.md)             | The type for constant iterators.                                    |
+| [node_t](node_t.md)                             | **(DEPRECATED)** The type used to store the internal value type.    |
+| [yaml_version_t](yaml_version_t.md)             | **(DEPRECATED)** The type used to store the enable version of YAML. |
 
 ## Member Functions
 
@@ -61,17 +61,18 @@ This class provides features to handle YAML nodes.
 | [alias_of](alias_of.md)         | (static) | constructs a basic_node with an anchor node.                  |
 
 ### Inspection for Node Value Types
-| Name                                  | Description                                           |
-|---------------------------------------|-------------------------------------------------------|
-| [type](type.md)                       | returns the type of a node value in a basic_node.     |
-| [is_sequence](is_sequence.md)         | checks if a basic_node has a sequence node value.     |
-| [is_mapping](is_mapping.md)           | checks if a basic_node has a mapping node value.      |
-| [is_null](is_null.md)                 | checks if a basic_node has a null node value.         |
-| [is_scalar](is_scalar.md)             | checks if a basic_node has a scalar node value.       |
-| [is_boolean](is_boolean.md)           | checks if a basic_node has a boolean node value.      |
-| [is_integer](is_integer.md)           | checks if a basic_node has an integer node value.     |
-| [is_float_number](is_float_number.md) | checks if a basic_node has a float number node value. |
-| [is_string](is_string.md)             | checks if a basic_node has a string node value.       |
+| Name                                  | Description                                                        |
+| ------------------------------------- | ------------------------------------------------------------------ |
+| [get_type](get_type.md)               | returns the type of a node value in a basic_node.                  |
+| [type](type.md)                       | **(DEPRECATED)** returns the type of a node value in a basic_node. |
+| [is_sequence](is_sequence.md)         | checks if a basic_node has a sequence node value.                  |
+| [is_mapping](is_mapping.md)           | checks if a basic_node has a mapping node value.                   |
+| [is_null](is_null.md)                 | checks if a basic_node has a null node value.                      |
+| [is_scalar](is_scalar.md)             | checks if a basic_node has a scalar node value.                    |
+| [is_boolean](is_boolean.md)           | checks if a basic_node has a boolean node value.                   |
+| [is_integer](is_integer.md)           | checks if a basic_node has an integer node value.                  |
+| [is_float_number](is_float_number.md) | checks if a basic_node has a float number node value.              |
+| [is_string](is_string.md)             | checks if a basic_node has a string node value.                    |
 
 ### Conversions
 | Name                                    |          | Description                                                        |
@@ -114,7 +115,7 @@ This class provides features to handle YAML nodes.
 | [operator>](operator_gt.md)  | comparison: greater than          |
 | [operator>=](operator_ge.md) | comparison: greater than or equal |
 
-### Aliasing Nodes
+### Manipulations for Node Properties
 | Name                                  | Description                                              |
 | ------------------------------------- | -------------------------------------------------------- |
 | [is_alias](is_alias.md)               | checks if a basic_node is an alias node.                 |
@@ -122,6 +123,17 @@ This class provides features to handle YAML nodes.
 | [add_anchor_name](add_anchor_name.md) | registers an anchor name to a basic_node object.         |
 | [get_anchor_name](get_anchor_name.md) | gets an anchor name associated with a basic_node object. |
 | [has_anchor_name](has_anchor_name.md) | checks if a basic_node has any anchor name.              |
+| [add_tag_name](add_tag_name.md)       | registers a tag name to a basic_node object.             |
+| [get_tag_name](get_tag_name.md)       | gets a tag name associated with a basic_node object.     |
+| [has_tag_name](has_tag_name.md)       | checks if a basic_node has any tag name.                 |
+
+### Manipulations for Document Properties
+| Name                                              | Description                                                               |
+| ------------------------------------------------- | ------------------------------------------------------------------------- |
+| [get_yaml_version_type](get_yaml_version_type.md) | gets a YAML version associated with a basic_node object.                  |
+| [set_yaml_version_type](set_yaml_version_type.md) | sets a YAML version to a basic_node object.                               |
+| [get_yaml_version](get_yaml_version.md)           | **(DEPRECATED)** gets a YAML version associated with a basic_node object. |
+| [set_yaml_version](set_yaml_version.md)           | **(DEPRECATED)** sets a YAML version to a basic_node object.              |
 
 ### Modifiers
 

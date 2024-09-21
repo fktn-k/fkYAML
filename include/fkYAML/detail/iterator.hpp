@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -150,7 +150,7 @@ public:
     /// @param rhs An iterator object to be copied with.
     /// @return iterator& Reference to this iterator object.
     iterator& operator=(const iterator& rhs) noexcept {
-        if (&rhs == this) {
+        if FK_YAML_UNLIKELY (&rhs == this) {
             return *this;
         }
 
@@ -171,7 +171,7 @@ public:
     /// @param rhs An iterator object to be moved from.
     /// @return iterator& Reference to this iterator object.
     iterator& operator=(iterator&& rhs) noexcept {
-        if (&rhs == this) {
+        if FK_YAML_UNLIKELY (&rhs == this) {
             return *this;
         }
 
@@ -299,7 +299,7 @@ public:
     /// @return true  This iterator object is equal to the other.
     /// @return false This iterator object is not equal to the other.
     bool operator==(const iterator& rhs) const {
-        if (m_inner_iterator_type != rhs.m_inner_iterator_type) {
+        if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
@@ -324,11 +324,11 @@ public:
     /// @return true  This iterator object is less than the other.
     /// @return false This iterator object is not less than the other.
     bool operator<(const iterator& rhs) const {
-        if (m_inner_iterator_type != rhs.m_inner_iterator_type) {
+        if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
-        if (m_inner_iterator_type == iterator_t::MAPPING) {
+        if FK_YAML_UNLIKELY (m_inner_iterator_type == iterator_t::MAPPING) {
             throw fkyaml::exception("Cannot compare order of iterators of the mapping container type");
         }
 
@@ -369,7 +369,7 @@ public:
     /// @brief Get the key string of the YAML mapping node for the current iterator.
     /// @return const std::string& The key string of the YAML mapping node for the current iterator.
     const typename ValueType::mapping_type::key_type& key() const {
-        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
+        if FK_YAML_UNLIKELY (m_inner_iterator_type == iterator_t::SEQUENCE) {
             throw fkyaml::exception("Cannot retrieve key from non-mapping iterators.");
         }
 

@@ -6,12 +6,26 @@
 void set_yaml_version(const yaml_version_t version) noexcept;
 ```
 
-Sets the version of the YAML format to the `basic_node` object.  
+!!! warning "Deprecation"
+
+    The function [`#!cpp void set_yaml_version_type(const yaml_version_type)`](set_yaml_version_type.md) replaces the function `#!cpp void set_yaml_version(const basic_node::yaml_version_t)` which has been deprecated in version 0.3.12. It will be removed in version 0.4.0. Please replace calls like  
+    
+    ```cpp
+    n.set_yaml_version(fkyaml::node::yaml_version_t::VER_1_2);
+    ```
+    
+    with  
+    
+    ```cpp
+    n.set_yaml_version_type(fkyaml::yaml_version_type::VERSION_1_2);
+    ```
+
+Sets a target YAML version to the `basic_node` object.  
 
 ### **Parameters**
 
 ***version*** [in]
-:   A version of the YAML format.
+:   A target YAML version.
 
 ???+ Example
 

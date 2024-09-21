@@ -5,11 +5,13 @@
 ```cpp
 basic_node() = default; // (1)
 
-explicit basic_node(const node_t type); // (2)
+explicit basic_node(const node_type type); // (2)
 
-basic_node(const basic_node& rhs); // (3)
+explicit basic_node(const node_t type); // (3) deprecated
 
-basic_node(basic_node&& rhs) noexcept; // (4)
+basic_node(const basic_node& rhs); // (4)
+
+basic_node(basic_node&& rhs) noexcept; // (5)
 
 template <
     typename CompatibleType, typename U = detail::remove_cv_ref_t<CompatibleType>,
@@ -19,14 +21,14 @@ template <
             detail::disjunction<detail::is_node_compatible_type<basic_node, U>>>::value,
         int> = 0>
 basic_node(CompatibleType&& val) noexcept(
-    noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>()))); // (5)
+    noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>()))); // (6)
 
 template <
     typename NodeRefStorageType,
     detail::enable_if_t<detail::is_node_ref_storage<NodeRefStorageType>::value, int> = 0>
-basic_node(const NodeRefStorageType& node_ref_storage) noexcept; // (6)
+basic_node(const NodeRefStorageType& node_ref_storage) noexcept; // (7)
 
-basic_node(initializer_list_t init); // (7)
+basic_node(initializer_list_t init); // (8)
 ```
 
 Constructs a new basic_node from a variety of data sources.  
@@ -54,7 +56,7 @@ The resulting basic_node has the [`node_t::NULL_OBJECT`](node_t.md) type.
 ## Overload (2)
 
 ```cpp
-explicit basic_node(const node_t type);
+explicit basic_node(const node_type type);
 ```
 Constructs a basic_node with the given type.  
 The resulting basic_node has a default value for the given type.  
@@ -78,15 +80,30 @@ The resulting basic_node has a default value for the given type.
 ## Overload (3)
 
 ```cpp
-basic_node(const basic_node& rhs);
+explicit basic_node(const node_t type);
 ```
-Copy constructor. Copies the internal data of `rhs` into the resulting basic_node.  
-The resulting basic_node has the same type and value as `rhs`.  
+
+!!! warning "Deprecation"
+
+    The constructor `#!cpp basic_node(const node_type)` replaces the constructor `#!cpp basic_node(const node_t)` which has been deprecated in version 0.3.12. It will be removed in version 0.4.0. Please replace calls like  
+
+    ```cpp
+    fkyaml::node n(fkyaml::node::node_t::MAPPING);
+    ```
+
+    with  
+
+    ```cpp
+    fkyaml::node n(fkyaml::node_type::MAPPING);
+    ```
+
+Constructs a basic_node with the given type.  
+The resulting basic_node has a default value for the given type.  
 
 ### **Parameters**
 
-***`rhs`*** [in]
-:   A basic_node object to be copied with.
+***`type`*** [in]
+:   A YAML node type.
 
 ???+ Example
 
@@ -100,6 +117,30 @@ The resulting basic_node has the same type and value as `rhs`.
     ```
 
 ## Overload (4)
+
+```cpp
+basic_node(const basic_node& rhs);
+```
+Copy constructor. Copies the internal data of `rhs` into the resulting basic_node.  
+The resulting basic_node has the same type and value as `rhs`.  
+
+### **Parameters**
+
+***`rhs`*** [in]
+:   A basic_node object to be copied with.
+
+???+ Example
+
+    ```cpp
+    --8<-- "examples/ex_basic_node_constructor_4.cpp:9"
+    ```
+
+    output:
+    ```bash
+    --8<-- "examples/ex_basic_node_constructor_4.output"
+    ```
+
+## Overload (5)
 
 ```cpp
 basic_node(basic_node&& rhs) noexcept;
@@ -116,15 +157,15 @@ The value of the argument `rhs` after calling this move constructor, will be the
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_4.cpp:9"
+    --8<-- "examples/ex_basic_node_constructor_5.cpp:9"
     ```
 
     output:
     ```bash
-    --8<-- "examples/ex_basic_node_constructor_4.output"
+    --8<-- "examples/ex_basic_node_constructor_5.output"
     ```
 
-## Overload (5)
+## Overload (6)
 
 ```cpp
 template <
@@ -156,15 +197,15 @@ The resulting basic_node has the value of `val` and the type which is associated
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_5.cpp:9"
+    --8<-- "examples/ex_basic_node_constructor_6.cpp:9"
     ```
 
     output:
     ```bash
-    --8<-- "examples/ex_basic_node_constructor_5.output"
+    --8<-- "examples/ex_basic_node_constructor_6.output"
     ```
 
-## Overload (6)
+## Overload (7)
 
 ```cpp
 template <
@@ -194,15 +235,15 @@ The resulting basic_node has the value of the referenced basic_node by `node_ref
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_6.cpp:9"
+    --8<-- "examples/ex_basic_node_constructor_7.cpp:9"
     ```
 
     output:
     ```bash
-    --8<-- "examples/ex_basic_node_constructor_6.output"
+    --8<-- "examples/ex_basic_node_constructor_7.output"
     ```
 
-## Overload (7)
+## Overload (8)
 
 ```cpp
 basic_node(initializer_list_t init);
@@ -220,12 +261,12 @@ If `init` contains a sequence of basic_node objects in which the number of basic
 ???+ Example
 
     ```cpp
-    --8<-- "examples/ex_basic_node_constructor_7.cpp:9"
+    --8<-- "examples/ex_basic_node_constructor_8.cpp:9"
     ```
 
     output:
     ```bash
-    --8<-- "examples/ex_basic_node_constructor_7.output"
+    --8<-- "examples/ex_basic_node_constructor_8.output"
     ```
 ---
 

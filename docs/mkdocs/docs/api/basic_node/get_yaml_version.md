@@ -6,6 +6,19 @@
 yaml_version_t get_yaml_version() const noexcept;
 ```
 
+!!! warning "Deprecation"
+
+    The function [`#!cpp yaml_version_type get_yaml_version_type()`](set_yaml_version_type.md) replaces the function `#!cpp basic_node::yaml_version_t get_yaml_version()` which has been deprecated in version 0.3.12. It will be removed in version 0.4.0. Please replace calls like  
+    
+    ```cpp
+    fkyaml::node::yaml_version_t v = n.get_yaml_version();
+    ```
+    with
+    
+    ```cpp
+    fkyaml::yaml_version_type v = n.get_yaml_version_type();
+    ```
+
 Returns the version of the YAML format applied for the `basic_node` object.  
 
 ### **Return Value**

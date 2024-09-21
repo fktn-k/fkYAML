@@ -16,7 +16,7 @@ TOOL_SRCS = $(shell find tool -type f -name '*.cpp' | sort)
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 11
+TARGET_PATCH_VERSION := 12
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -173,15 +173,21 @@ html-coverage: lcov-coverage
 #   Benchmark   #
 #################
 
-bm-debug:
+build-bm-debug:
 	cmake -B build_bm_debug -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RUN_BENCHMARK=ON
 	cmake --build build_bm_debug --config Debug
-	./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/macos.yml > ./tool/benchmark/result_debug.log
 
-bm-release:
+bm-debug: build-bm-debug
+	cmake -B build_bm_debug -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RUN_BENCHMARK=ON
+	cmake --build build_bm_debug --config Debug
+	./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/macos.yml
+
+build-bm-release:
 	cmake -B build_bm_release -S . -DCMAKE_BUILD_TYPE=Release -DFK_YAML_RUN_BENCHMARK=ON
 	cmake --build build_bm_release --config Release
-	./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/macos.yml > ./tool/benchmark/result_release.log
+
+bm-release: build-bm-release
+	./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/macos.yml
 
 ###################
 #   Maintenance   #

@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -24,7 +24,7 @@ class yaml_escaper {
     using iterator = ::std::string::const_iterator;
 
 public:
-    static bool unescape(iterator& begin, iterator end, std::string& buff) {
+    static bool unescape(const char*& begin, const char* end, std::string& buff) {
         FK_YAML_ASSERT(*begin == '\\' && std::distance(begin, end) > 0);
         bool ret = true;
 
@@ -81,7 +81,7 @@ public:
         case 'x': {
             char32_t codepoint {0};
             ret = extract_codepoint(begin, end, 1, codepoint);
-            if (ret) {
+            if FK_YAML_LIKELY (ret) {
                 unescape_escaped_unicode(codepoint, buff);
             }
             break;
@@ -89,7 +89,7 @@ public:
         case 'u': {
             char32_t codepoint {0};
             ret = extract_codepoint(begin, end, 2, codepoint);
-            if (ret) {
+            if FK_YAML_LIKELY (ret) {
                 unescape_escaped_unicode(codepoint, buff);
             }
             break;
@@ -97,7 +97,7 @@ public:
         case 'U': {
             char32_t codepoint {0};
             ret = extract_codepoint(begin, end, 4, codepoint);
-            if (ret) {
+            if FK_YAML_LIKELY (ret) {
                 unescape_escaped_unicode(codepoint, buff);
             }
             break;
@@ -111,7 +111,7 @@ public:
         return ret;
     }
 
-    static ::std::string escape(iterator begin, iterator end, bool& is_escaped) {
+    static ::std::string escape(const char* begin, const char* end, bool& is_escaped) {
         ::std::string escaped {};
         escaped.reserve(std::distance(begin, end));
         for (; begin != end; ++begin) {
@@ -310,7 +310,7 @@ private:
         return false;
     }
 
-    static bool extract_codepoint(iterator& begin, iterator end, int bytes_to_read, char32_t& codepoint) {
+    static bool extract_codepoint(const char*& begin, const char* end, int bytes_to_read, char32_t& codepoint) {
         bool has_enough_room = static_cast<int>(std::distance(begin, end)) >= (bytes_to_read - 1);
         if (!has_enough_room) {
             return false;

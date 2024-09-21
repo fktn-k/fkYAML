@@ -110,18 +110,25 @@ target_compile_options(
     $<$<CXX_COMPILER_ID:MSVC>:
       /W4 /WX /EHsc /utf-8 /permissive-
       /wd4709 # comma operator within array index expression
+      /wd4996 # for testing deprecated functions
       $<$<CONFIG:Debug>:/Z7>
       $<$<CONFIG:Release>:/Od>
     >
     # GNU
     $<$<CXX_COMPILER_ID:GNU>:
       -Wall -Wextra -Werror -pedantic -Wpedantic --all-warnings --extra-warnings
+      -Wno-deprecated-declarations # for testing deprecated functions
       -Wno-self-move # necessary to build the detail::iterator class test
     >
     # Clang
     $<$<CXX_COMPILER_ID:Clang>:
       -Wall -Wextra -Werror -pedantic
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
+      -Wno-deprecated-declarations # for testing deprecated functions
+    >
+    $<$<CXX_COMPILER_ID:AppleClang>:
+      -Wall -Wextra -Werror -pedantic
+      -Wno-deprecated-declarations # for testing deprecated functions
     >
     # IntelLLVM
     $<$<CXX_COMPILER_ID:IntelLLVM>:
@@ -153,7 +160,7 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
       -fno-omit-frame-pointer
       -fsanitize=address,undefined,bounds,integer,nullability
       -fno-sanitize-recover=all
-      -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+      -fno-sanitize=signed-integer-overflow,implicit-conversion
   )
 
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
@@ -163,7 +170,7 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
         -fno-omit-frame-pointer
         -fsanitize=address,undefined,bounds,integer,nullability
         -fno-sanitize-recover=all
-        -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+        -fno-sanitize=signed-integer-overflow,implicit-conversion
     )
   else()
     target_link_libraries(
@@ -172,7 +179,7 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
         -fno-omit-frame-pointer
         -fsanitize=address,undefined,bounds,integer,nullability
         -fno-sanitize-recover=all
-        -fno-sanitize=unsigned-integer-overflow,unsigned-shift-base
+        -fno-sanitize=signed-integer-overflow,implicit-conversion
     )
   endif()
 endif()
@@ -212,23 +219,27 @@ add_executable(
   ${TEST_TARGET}
   test_custom_from_node.cpp
   test_deserializer_class.cpp
-  test_encode_detector.cpp
   test_exception_class.cpp
-  test_from_string.cpp
   test_input_adapter.cpp
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
+  test_node_attrs.cpp
   test_node_class.cpp
   test_node_ref_storage_class.cpp
+  test_node_type.cpp
   test_ordered_map_class.cpp
   test_position_tracker_class.cpp
+  test_scalar_conv.cpp
   test_scalar_scanner_class.cpp
   test_serializer_class.cpp
+  test_str_view_class.cpp
   test_string_formatter.cpp
   test_tag_resolver_class.cpp
   test_uri_encoding_class.cpp
+  test_utf_encode_detector.cpp
   test_utf_encodings.cpp
   test_yaml_escaper_class.cpp
+  test_yaml_version_type.cpp
   main.cpp
 )
 

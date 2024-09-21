@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -144,13 +144,19 @@ TEST_CASE("UTF8_Validate") {
             fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xBFu)}) == true);
 
         REQUIRE(
+            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0x8Fu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
+        REQUIRE(
             fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xC0u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
         REQUIRE(
             fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xC1u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
         REQUIRE(
+            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0x7Fu), uint8_t(0xBFu)}) == false);
+        REQUIRE(
             fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xC0u), uint8_t(0xBFu)}) == false);
         REQUIRE(
             fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xC1u), uint8_t(0xBFu)}) == false);
+        REQUIRE(
+            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0x7Fu)}) == false);
         REQUIRE(
             fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC0u)}) == false);
         REQUIRE(

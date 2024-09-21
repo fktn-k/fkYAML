@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -130,8 +130,17 @@ public:
     /// @brief Construct a new type_error object with an error message and a node type.
     /// @param[in] msg An error message.
     /// @param[in] type The type of a source node value.
-    explicit type_error(const char* msg, detail::node_t type) noexcept
+    explicit type_error(const char* msg, node_type type) noexcept
         : exception(generate_error_message(msg, type).c_str()) {
+    }
+
+    /// @brief Construct a new type_error object with an error message and a node type.
+    /// @deprecated Use type_error(const char*, node_type) constructor. (since 0.3.12).
+    /// @param[in] msg An error message.
+    /// @param[in] type The type of a source node value.
+    FK_YAML_DEPRECATED("Since 0.3.12; Use explicit type_error(const char*, node_type)")
+    explicit type_error(const char* msg, detail::node_t type) noexcept
+        : type_error(msg, detail::convert_to_node_type(type)) {
     }
 
 private:
@@ -139,8 +148,8 @@ private:
     /// @param msg An error message.
     /// @param type The type of a source node value.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, detail::node_t type) const noexcept {
-        return detail::format("type_error: %s type=%s", msg, detail::to_string(type));
+    std::string generate_error_message(const char* msg, node_type type) const noexcept {
+        return detail::format("type_error: %s type=%s", msg, to_string(type));
     }
 };
 

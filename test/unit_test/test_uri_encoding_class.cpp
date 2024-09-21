@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -21,7 +21,7 @@ TEST_CASE("URIEncoding_Validate") {
             std::string("0123456789"),
             std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
             std::string("abcdefghijklmnopqrstuvwxyz"));
-        REQUIRE(fkyaml::detail::uri_encoding::validate(input.begin(), input.end()));
+        REQUIRE(fkyaml::detail::uri_encoding::validate(input.c_str(), input.c_str() + input.size()));
     }
 
     SECTION("invalid URI characters") {
@@ -76,6 +76,6 @@ TEST_CASE("URIEncoding_Validate") {
             std::string("`"),
             std::string("|"),
             std::string("\x7F"));
-        REQUIRE_FALSE(fkyaml::detail::uri_encoding::validate(input.begin(), input.end()));
+        REQUIRE_FALSE(fkyaml::detail::uri_encoding::validate(input.c_str(), input.c_str() + input.size()));
     }
 }

@@ -10,6 +10,20 @@ enum class yaml_version_t
 };
 ```
 
+!!! warning "Deprecation"
+
+    The enum class [`fkyaml::yaml_version_type`](../yaml_version_type.md) replaces the type alias `fkyaml::basic_node::yaml_version_t` which has been deprecated in version 0.3.12. It will be removed in version 0.4.0. Please replace usages like  
+    
+    ```cpp
+    fkyaml::node::yaml_version_t v;
+    ```
+    
+    with  
+    
+    ```cpp
+    fkyaml::yaml_version_type v;
+    ```
+
 This enumeration collects the used versions of YAML specification. It is used as meta data of a basic_node and the functions [`get_yaml_version`](get_yaml_version.md) and [`set_yaml_version`](set_yaml_version.md) rely on it.  
 
 ???+ Example

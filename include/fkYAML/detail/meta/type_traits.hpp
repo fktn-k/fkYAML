@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,6 +11,7 @@
 #ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
 #define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
 
+#include <iterator>
 #include <limits>
 #include <type_traits>
 
@@ -104,6 +105,12 @@ struct is_complete_type : std::false_type {};
 /// @tparam T
 template <typename T>
 struct is_complete_type<T, decltype(void(sizeof(T)))> : std::true_type {};
+
+/// @brief A utility alias to test if the value type of `ItrType` is `T`.
+/// @tparam ItrType An iterator type.
+/// @tparam T The target iterator value type.
+template <typename ItrType, typename T>
+using is_iterator_of = std::is_same<remove_cv_t<typename std::iterator_traits<ItrType>::value_type>, T>;
 
 /// @brief A utility struct to generate static constant instance.
 /// @tparam T A target type for the resulting static constant instance.

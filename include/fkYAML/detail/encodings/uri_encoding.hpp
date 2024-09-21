@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -25,12 +25,12 @@ public:
     /// @param begin An iterator to the first element of the character sequence.
     /// @param end An iterator to the past-the-end element of the character sequence.
     /// @return true if all the characters are valid, false otherwise.
-    static bool validate(std::string::const_iterator begin, std::string::const_iterator end) noexcept {
+    static bool validate(const char* begin, const char* end) noexcept {
         if (begin == end) {
             return true;
         }
 
-        std::string::const_iterator current = begin;
+        const char* current = begin;
 
         for (; current != end; ++current) {
             if (*current == '%') {
@@ -56,7 +56,7 @@ private:
     /// @param begin An iterator to the first octet.
     /// @param end An iterator to the past-the-end element of the whole character sequence.
     /// @return true if the octets are valid, false otherwise.
-    static bool validate_octets(std::string::const_iterator& begin, std::string::const_iterator& end) {
+    static bool validate_octets(const char*& begin, const char*& end) {
         for (int i = 0; i < 2; i++, ++begin) {
             if (begin == end) {
                 return false;

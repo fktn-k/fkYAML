@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -16,7 +16,7 @@
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
-#include <fkYAML/detail/types/yaml_version_t.hpp>
+#include <fkYAML/yaml_version_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -24,7 +24,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 template <typename BasicNodeType, typename = enable_if_t<is_basic_node<BasicNodeType>::value>>
 struct document_metainfo {
     /// The YAML version used for the YAML document.
-    yaml_version_t version {yaml_version_t::VER_1_2};
+    yaml_version_type version {yaml_version_type::VERSION_1_2};
     /// Whether or not the YAML version has been specified.
     bool is_version_specified {false};
     /// The prefix of the primary handle.

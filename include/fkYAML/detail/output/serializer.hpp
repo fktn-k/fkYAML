@@ -1,6 +1,6 @@
 ///  _______   __ __   __  _____   __  __  __
 /// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.11
+/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
 /// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 ///
 /// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -14,16 +14,16 @@
 #include <cmath>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/conversions/to_string.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
-#include <fkYAML/detail/input/input_adapter.hpp>
-#include <fkYAML/detail/input/lexical_analyzer.hpp>
+#include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
-#include <fkYAML/detail/types/node_t.hpp>
-#include <fkYAML/detail/types/yaml_version_t.hpp>
 #include <fkYAML/exception.hpp>
+#include <fkYAML/node_type.hpp>
+#include <fkYAML/yaml_version_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -90,10 +90,10 @@ private:
         if (p_meta->is_version_specified) {
             str += "%YAML ";
             switch (p_meta->version) {
-            case yaml_version_t::VER_1_1:
+            case yaml_version_type::VERSION_1_1:
                 str += "1.1\n";
                 break;
-            case yaml_version_t::VER_1_2:
+            case yaml_version_type::VERSION_1_2:
                 str += "1.2\n";
                 break;
             }
@@ -137,8 +137,8 @@ private:
     /// @param cur_indent The current indent width
     /// @param str A string to hold serialization result.
     void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
-        switch (node.type()) {
-        case node_t::SEQUENCE:
+        switch (node.get_type()) {
+        case node_type::SEQUENCE:
             for (const auto& seq_item : node) {
                 insert_indentation(cur_indent, str);
                 str += "-";
@@ -164,7 +164,7 @@ private:
                 }
             }
             break;
-        case node_t::MAPPING:
+        case node_type::MAPPING:
             for (auto itr = node.begin(); itr != node.end(); ++itr) {
                 insert_indentation(cur_indent, str);
 
@@ -215,23 +215,23 @@ private:
                 }
             }
             break;
-        case node_t::NULL_OBJECT:
+        case node_type::NULL_OBJECT:
             to_string(nullptr, m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
-        case node_t::BOOLEAN:
+        case node_type::BOOLEAN:
             to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
-        case node_t::INTEGER:
+        case node_type::INTEGER:
             to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
-        case node_t::FLOAT_NUMBER:
+        case node_type::FLOAT:
             to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
             str += m_tmp_str_buff;
             break;
-        case node_t::STRING: {
+        case node_type::STRING: {
             bool is_escaped = false;
             typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
 
@@ -244,11 +244,13 @@ private:
                 break;
             }
 
-            auto adapter = input_adapter(str_val);
-            lexical_analyzer<BasicNodeType> lexer(std::move(adapter));
-            lexical_token_t token_type = lexer.get_next_token();
+            // The next line is intentionally excluded from the LCOV coverage target since the next line is somehow
+            // misrecognized as it has a binary branch. Possibly begin() or end() has some conditional branch(es)
+            // internally. Confirmed with LCOV 1.14 on Ubuntu22.04.
+            node_type type_if_plain =
+                scalar_scanner::scan(str_val.c_str(), str_val.c_str() + str_val.size()); // LCOV_EXCL_LINE
 
-            if (token_type != lexical_token_t::STRING_VALUE) {
+            if (type_if_plain != node_type::STRING) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
@@ -343,7 +345,7 @@ private:
 
         using string_type = typename BasicNodeType::string_type;
         const string_type& s = node.template get_value_ref<const string_type&>();
-        return yaml_escaper::escape(s.begin(), s.end(), is_escaped);
+        return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
     } // LCOV_EXCL_LINE
 
 private:

@@ -55,7 +55,7 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.magiclink
-  - pymdownx.superfences:
+  - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tilde
@@ -116,9 +116,11 @@ nav:
           - float_number_type: api/basic_node/float_number_type.md
           - get_anchor_name: api/basic_node/get_anchor_name.md
           - get_tag_name: api/basic_node/get_tag_name.md
+          - get_type: api/basic_node/get_type.md
           - get_value: api/basic_node/get_value.md
           - get_value_ref: api/basic_node/get_value_ref.md
           - get_yaml_version: api/basic_node/get_yaml_version.md
+          - get_yaml_version_type: api/basic_node/get_yaml_version_type.md
           - has_anchor_name: api/basic_node/has_anchor_name.md
           - has_tag_name: api/basic_node/has_tag_name.md
           - integer_type: api/basic_node/integer_type.md
@@ -142,6 +144,7 @@ nav:
           - serialize: api/basic_node/serialize.md
           - serialize_docs: api/basic_node/serialize_docs.md
           - set_yaml_version: api/basic_node/set_yaml_version.md
+          - set_yaml_version_type: api/basic_node/set_yaml_version_type.md
           - size: api/basic_node/size.md
           - string_type: api/basic_node/string_type.md
           - swap: api/basic_node/swap.md
@@ -165,6 +168,7 @@ nav:
           - parse_error: api/exception/parse_error.md
           - type_error: api/exception/type_error.md
       - macros: api/macros.md
+      - node_type: api/node_type.md
       - node_value_converter:
           - node_value_converter: api/node_value_converter/index.md
           - from_node: api/node_value_converter/from_node.md
@@ -180,3 +184,4 @@ nav:
           - emplace: api/ordered_map/emplace.md
           - find: api/ordered_map/find.md
           - operator[]: api/ordered_map/operator[].md
+      - yaml_version_type: api/yaml_version_type.md
