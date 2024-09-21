@@ -35,7 +35,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @param s A sequence node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_type& s) {
-    if (!n.is_sequence()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::sequence_type&>();
@@ -55,7 +55,7 @@ template <
             negation<std::is_same<std::vector<CompatibleValueType>, typename BasicNodeType::sequence_type>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& s) {
-    if (!n.is_sequence()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value is not sequence type.", n.get_type());
     }
 
@@ -72,7 +72,7 @@ inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& 
 /// @param m A mapping node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_type& m) {
-    if (!n.is_mapping()) {
+    if FK_YAML_UNLIKELY (!n.is_mapping()) {
         throw type_error("The target node value type is not mapping type.", n.get_type());
     }
 
@@ -91,7 +91,7 @@ template <
             has_from_node<BasicNodeType, CompatibleValueType>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, CompatibleValueType, Compare, Allocator>& m) {
-    if (!n.is_mapping()) {
+    if FK_YAML_UNLIKELY (!n.is_mapping()) {
         throw type_error("The target node value type is not mapping type.", n.get_type());
     }
 
@@ -108,7 +108,7 @@ inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, Compat
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, std::nullptr_t& null) {
     // to ensure the target node value type is null.
-    if (!n.is_null()) {
+    if FK_YAML_UNLIKELY (!n.is_null()) {
         throw type_error("The target node value type is not null type.", n.get_type());
     }
     null = nullptr;
@@ -120,7 +120,7 @@ inline void from_node(const BasicNodeType& n, std::nullptr_t& null) {
 /// @param b A boolean node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_type& b) {
-    if (!n.is_boolean()) {
+    if FK_YAML_UNLIKELY (!n.is_boolean()) {
         throw type_error("The target node value type is not boolean type.", n.get_type());
     }
     b = n.template get_value_ref<const typename BasicNodeType::boolean_type&>();
@@ -132,7 +132,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_ty
 /// @param i An integer node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_type& i) {
-    if (!n.is_integer()) {
+    if FK_YAML_UNLIKELY (!n.is_integer()) {
         throw type_error("The target node value type is not integer type.", n.get_type());
     }
     i = n.template get_value_ref<const typename BasicNodeType::integer_type&>();
@@ -151,17 +151,17 @@ template <
             negation<std::is_same<IntegerType, typename BasicNodeType::integer_type>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, IntegerType& i) {
-    if (!n.is_integer()) {
+    if FK_YAML_UNLIKELY (!n.is_integer()) {
         throw type_error("The target node value type is not integer type.", n.get_type());
     }
 
     // under/overflow check.
     using node_int_type = typename BasicNodeType::integer_type;
     node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
-    if (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min())) {
+    if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min())) {
         throw exception("Integer value underflow detected.");
     }
-    if (static_cast<node_int_type>(std::numeric_limits<IntegerType>::max()) < tmp_int) {
+    if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntegerType>::max()) < tmp_int) {
         throw exception("Integer value overflow detected.");
     }
 
@@ -174,7 +174,7 @@ inline void from_node(const BasicNodeType& n, IntegerType& i) {
 /// @param f A float number node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_number_type& f) {
-    if (!n.is_float_number()) {
+    if FK_YAML_UNLIKELY (!n.is_float_number()) {
         throw type_error("The target node value type is not float number type.", n.get_type());
     }
     f = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
@@ -193,15 +193,15 @@ template <
             negation<std::is_same<FloatType, typename BasicNodeType::float_number_type>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, FloatType& f) {
-    if (!n.is_float_number()) {
+    if FK_YAML_UNLIKELY (!n.is_float_number()) {
         throw type_error("The target node value type is not float number type.", n.get_type());
     }
 
     auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
-    if (tmp_float < std::numeric_limits<FloatType>::lowest()) {
+    if FK_YAML_UNLIKELY (tmp_float < std::numeric_limits<FloatType>::lowest()) {
         throw exception("Floating point value underflow detected.");
     }
-    if (std::numeric_limits<FloatType>::max() < tmp_float) {
+    if FK_YAML_UNLIKELY (std::numeric_limits<FloatType>::max() < tmp_float) {
         throw exception("Floating point value overflow detected.");
     }
 
@@ -214,7 +214,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
 /// @param s A string node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_type& s) {
-    if (!n.is_string()) {
+    if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
@@ -236,7 +236,7 @@ template <
                 std::is_assignable<CompatibleStringType, const typename BasicNodeType::string_type&>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, CompatibleStringType& s) {
-    if (!n.is_string()) {
+    if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();

@@ -15,9 +15,9 @@
 #ifndef FK_YAML_ASSERT
 #ifndef NDEBUG
 #include <cassert>
-#define FK_YAML_ASSERT(x) assert(x) // NOLINT(cppcoreguidelines-macro-usage)
+#define FK_YAML_ASSERT(x) assert(x)
 #else
-#define FK_YAML_ASSERT(x) // NOLINT(cppcoreguidelines-macro-usage)
+#define FK_YAML_ASSERT(x)
 #endif
 #endif
 

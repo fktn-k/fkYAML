@@ -81,7 +81,7 @@ public:
         case 'x': {
             char32_t codepoint {0};
             ret = extract_codepoint(begin, end, 1, codepoint);
-            if (ret) {
+            if FK_YAML_LIKELY (ret) {
                 unescape_escaped_unicode(codepoint, buff);
             }
             break;
@@ -89,7 +89,7 @@ public:
         case 'u': {
             char32_t codepoint {0};
             ret = extract_codepoint(begin, end, 2, codepoint);
-            if (ret) {
+            if FK_YAML_LIKELY (ret) {
                 unescape_escaped_unicode(codepoint, buff);
             }
             break;
@@ -97,7 +97,7 @@ public:
         case 'U': {
             char32_t codepoint {0};
             ret = extract_codepoint(begin, end, 4, codepoint);
-            if (ret) {
+            if FK_YAML_LIKELY (ret) {
                 unescape_escaped_unicode(codepoint, buff);
             }
             break;

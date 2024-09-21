@@ -62,27 +62,70 @@
 #define FK_YAML_INLINE_VAR
 #endif
 
+// Detect __has_* macros.
+// The following macros replace redundant `defined(__has_*) && __has_*(...)`.
+
 #ifdef __has_include
-#if __has_include(<version>)
+#define FK_YAML_HAS_INCLUDE(header) __has_include(header)
+#else
+#define FK_YAML_HAS_INCLUDE(header) (0)
+#endif
+
+#ifdef __has_builtin
+#define FK_YAML_HAS_BUILTIN(builtin) __has_builtin(builtin)
+#else
+#define FK_YAML_HAS_BUILTIN(builtin) (0)
+#endif
+
+#ifdef __has_cpp_attribute
+#define FK_YAML_HAS_CPP_ATTRIBUTE(attr) __has_cpp_attribute(attr)
+#else
+#define FK_YAML_HAS_CPP_ATTRIBUTE(attr) (0)
+#endif
+
+#if FK_YAML_HAS_INCLUDE(<version>)
 // <version> is available since C++20
 #include <version>
 #endif
+
+//
+// C++ feature detections
+//
+
+// switch usages of the std::to_chars()/std::from_chars() functions which have been available since C++17.
+#if defined(FK_YAML_HAS_CXX_17) && defined(__cpp_lib_to_chars) && __cpp_lib_to_chars >= 201611L
+#define FK_YAML_HAS_TO_CHARS (1)
+#else
+#define FK_YAML_HAS_TO_CHARS (0)
 #endif
 
 // switch usage of char8_t which has been available since C++20.
-#if !defined(FK_YAML_HAS_CHAR8_T)
-#if defined(FK_YAML_HAS_CXX_20)
-#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
-#define FK_YAML_HAS_CHAR8_T
-#endif
-#endif
+#if defined(FK_YAML_HAS_CXX_20) && defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
+#define FK_YAML_HAS_CHAR8_T (1)
+#else
+#define FK_YAML_HAS_CHAR8_T (0)
 #endif
 
-// switch usages of the std::to_chars()/std::from_chars() functions which have been available since C++17.
-#if defined(FK_YAML_HAS_CXX_17)
-#if defined(__cpp_lib_to_chars) && __cpp_lib_to_chars >= 201611L
-#define FK_YAML_HAS_TO_CHARS
+//
+// C++ attribute detections
+//
+
+// switch usage of [[likely]] C++ attribute which has been available since C++20.
+#if defined(FK_YAML_HAS_CXX_20) && FK_YAML_HAS_CPP_ATTRIBUTE(likely) >= 201803L
+#define FK_YAML_LIKELY(expr) (!!(expr)) [[likely]]
+#elif FK_YAML_HAS_BUILTIN(__builtin_expect)
+#define FK_YAML_LIKELY(expr) (__builtin_expect(!!(expr), 1))
+#else
+#define FK_YAML_LIKELY(expr) (!!(expr))
 #endif
+
+// switch usage of [[unlikely]] C++ attribute which has been available since C++20.
+#if defined(FK_YAML_HAS_CXX_20) && FK_YAML_HAS_CPP_ATTRIBUTE(unlikely) >= 201803L
+#define FK_YAML_UNLIKELY(expr) (!!(expr)) [[unlikely]]
+#elif FK_YAML_HAS_BUILTIN(__builtin_expect)
+#define FK_YAML_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
+#else
+#define FK_YAML_UNLIKELY(expr) (!!(expr))
 #endif
 
 #endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */

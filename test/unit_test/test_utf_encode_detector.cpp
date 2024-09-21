@@ -204,7 +204,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
     //   char8_t iterators   //
     ///////////////////////////
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 
     SECTION("char8_t iterators encoded in the UTF-8") {
         std::u8string input {char8_t(0x60u), char8_t(0x61u), char8_t(0x62u), char8_t(0x63u)};
@@ -244,7 +244,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE_THROWS_AS(fkyaml::detail::utf_encode_detector<iterator_type>::detect(begin, end), fkyaml::exception);
     }
 
-#endif // defined(FK_YAML_HAS_CHAR8_T)
+#endif // FK_YAML_HAS_CHAR8_T
 
     ////////////////////////////
     //   char16_t iterators   //

@@ -98,7 +98,7 @@ private:
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -106,7 +106,7 @@ private:
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -115,7 +115,7 @@ private:
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -175,7 +175,9 @@ private:
             while (current != m_end && encoded_buf_size < 2) {
                 char16_t utf16 = static_cast<char16_t>(uint8_t(*current++) << shift_bits[0]);
                 utf16 |= static_cast<char16_t>(uint8_t(*current++) << shift_bits[1]);
-                if (utf16 != char16_t(0x000Du)) {
+
+                // skip appending CRs.
+                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -183,7 +185,7 @@ private:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1) {
+            if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
             }
             encoded_buf_size -= consumed_size;
@@ -226,7 +228,7 @@ private:
             utf32 |= static_cast<char32_t>(*current++ << shift_bits[2]);
             utf32 |= static_cast<char32_t>(*current++ << shift_bits[3]);
 
-            if (utf32 != char32_t(0x0000000Du)) {
+            if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
@@ -248,7 +250,7 @@ private:
     bool m_is_contiguous {false};
 };
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 
 /// @brief An input adapter for iterators of type char8_t.
 /// @tparam IterType An iterator type.
@@ -292,7 +294,7 @@ public:
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -300,7 +302,7 @@ public:
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -309,7 +311,7 @@ public:
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -325,7 +327,7 @@ public:
 
         while (current != m_end) {
             char c = char(*current++);
-            if (c != '\r') {
+            if FK_YAML_LIKELY (c != '\r') {
                 m_buffer.push_back(c);
             }
         }
@@ -346,7 +348,7 @@ private:
     bool m_is_contiguous {false};
 };
 
-#endif // defined(FK_YAML_HAS_CHAR8_T)
+#endif // FK_YAML_HAS_CHAR8_T
 
 /// @brief An input adapter for iterators of type char16_t.
 /// @tparam IterType An iterator type.
@@ -398,7 +400,7 @@ public:
                     static_cast<uint16_t>((utf16 & 0x00FFu) << shift_bits) |
                     static_cast<uint16_t>((utf16 & 0xFF00u) >> shift_bits));
 
-                if (utf16 != char16_t(0x000Du)) {
+                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -406,7 +408,7 @@ public:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1) {
+            if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
             }
@@ -486,7 +488,7 @@ public:
                 static_cast<uint32_t>((tmp & 0x0000FF00u) << shift_bits[2]) |
                 static_cast<uint32_t>((tmp & 0x000000FFu) << shift_bits[3]));
 
-            if (utf32 != char32_t(0x0000000Du)) {
+            if FK_YAML_UNLIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
@@ -586,7 +588,7 @@ private:
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -594,7 +596,7 @@ private:
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -603,7 +605,7 @@ private:
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -641,7 +643,7 @@ private:
                 char16_t utf16 = char16_t(
                     static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
-                if (utf16 != char16_t(0x000Du)) {
+                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -649,7 +651,7 @@ private:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1) {
+            if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
             }
             encoded_buf_size -= consumed_size;
@@ -693,7 +695,7 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            if (utf32 != char32_t(0x0000000Du)) {
+            if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
@@ -787,7 +789,7 @@ private:
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -795,7 +797,7 @@ private:
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -804,7 +806,7 @@ private:
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -849,7 +851,7 @@ private:
                     static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
 
-                if (utf16 != char16_t(0x000Du)) {
+                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             };
@@ -857,7 +859,7 @@ private:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1) {
+            if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
             }
             encoded_buf_size -= consumed_size;
@@ -902,7 +904,7 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            if (utf32 != char32_t(0x0000000Du)) {
+            if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
@@ -1016,7 +1018,7 @@ inline typename input_adapter_factory::container_input_adapter_factory<Container
 /// @param file A file handle.
 /// @return file_input_adapter A file_input_adapter object.
 inline file_input_adapter input_adapter(std::FILE* file) {
-    if (!file) {
+    if FK_YAML_UNLIKELY (!file) {
         throw fkyaml::exception("Invalid FILE object pointer.");
     }
     utf_encode_t encode_type = file_utf_encode_detector::detect(file);
@@ -1027,7 +1029,7 @@ inline file_input_adapter input_adapter(std::FILE* file) {
 /// @param stream An input stream.
 /// @return stream_input_adapter A stream_input_adapter object.
 inline stream_input_adapter input_adapter(std::istream& stream) {
-    if (!stream.good()) {
+    if FK_YAML_UNLIKELY (!stream.good()) {
         throw fkyaml::exception("Invalid stream.");
     }
     utf_encode_t encode_type = stream_utf_encode_detector::detect(stream);

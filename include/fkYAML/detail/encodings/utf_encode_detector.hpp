@@ -97,7 +97,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
     /// @param end The iterator to the past-the end element of an input.
     /// @return A detected encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) noexcept {
-        if (begin == end) {
+        if FK_YAML_UNLIKELY (begin == end) {
             return utf_encode_t::UTF_8;
         }
 
@@ -131,7 +131,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
     }
 };
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 
 /// @brief The partial specialization of utf_encode_detector for char8_t iterators.
 /// @tparam ItrType An iterator type.
@@ -142,7 +142,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
     /// @param end The iterator to the past-the end element of an input.
     /// @return A detected encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) {
-        if (begin == end) {
+        if FK_YAML_UNLIKELY (begin == end) {
             return utf_encode_t::UTF_8;
         }
 
@@ -155,7 +155,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-        if (encode_type != utf_encode_t::UTF_8) {
+        if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_8) {
             throw exception("char8_t characters must be encoded in the UTF-8 format.");
         }
 
@@ -168,7 +168,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
     }
 };
 
-#endif // defined(FK_YAML_HAS_CHAR8_T)
+#endif // FK_YAML_HAS_CHAR8_T
 
 /// @brief The partial specialization of utf_encode_detector for char16_t iterators.
 /// @tparam ItrType An iterator type.
@@ -179,7 +179,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
     /// @param end The iterator to the past-the end element of an input.
     /// @return A detected encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) {
-        if (begin == end) {
+        if FK_YAML_UNLIKELY (begin == end) {
             return utf_encode_t::UTF_16BE;
         }
 
@@ -194,7 +194,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-        if (encode_type != utf_encode_t::UTF_16BE && encode_type != utf_encode_t::UTF_16LE) {
+        if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_16BE && encode_type != utf_encode_t::UTF_16LE) {
             throw exception("char16_t characters must be encoded in the UTF-16 format.");
         }
 
@@ -216,7 +216,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
     /// @param end The iterator to the past-the end element of an input.
     /// @return A detected encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) {
-        if (begin == end) {
+        if FK_YAML_UNLIKELY (begin == end) {
             return utf_encode_t::UTF_32BE;
         }
 
@@ -230,7 +230,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-        if (encode_type != utf_encode_t::UTF_32BE && encode_type != utf_encode_t::UTF_32LE) {
+        if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_32BE && encode_type != utf_encode_t::UTF_32LE) {
             throw exception("char32_t characters must be encoded in the UTF-32 format.");
         }
 
@@ -299,7 +299,7 @@ struct stream_utf_encode_detector {
             is.read(&ch, 1);
             std::streamsize size = is.gcount();
             if (size != 1) {
-                // without this, seekg() will fail in the switch-case statement below.
+                // without this, seekg() will fail.
                 is.clear();
                 break;
             }

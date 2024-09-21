@@ -23,7 +23,7 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 
-#ifdef FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_TO_CHARS
 // Prefer std::to_chars() and std::from_chars() functions if available.
 #include <charconv>
 #else
@@ -349,14 +349,14 @@ template <typename CharItr>
 inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcept {
     static_assert(is_iterator_of<CharItr, char>::value, "aton() accepts iterators for char type");
 
-    if (begin == end) {
+    if FK_YAML_UNLIKELY (begin == end) {
         return false;
     }
 
     uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
 
     // This path is the most probable case, so check it first.
-    if (len == 4) {
+    if FK_YAML_LIKELY (len == 4) {
         const char* p_begin = &*begin;
         return (std::strncmp(p_begin, "null", 4) == 0) || (std::strncmp(p_begin, "Null", 4) == 0) ||
                (std::strncmp(p_begin, "NULL", 4) == 0);
@@ -384,7 +384,7 @@ template <typename CharItr, typename BoolType>
 inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
     static_assert(is_iterator_of<CharItr, char>::value, "atob() accepts iterators for char type");
 
-    if (begin == end) {
+    if FK_YAML_UNLIKELY (begin == end) {
         return false;
     }
 
@@ -395,7 +395,7 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
         bool is_true_scalar = (std::strncmp(p_begin, "true", 4) == 0) || (std::strncmp(p_begin, "True", 4) == 0) ||
                               (std::strncmp(p_begin, "TRUE", 4) == 0);
 
-        if (is_true_scalar) {
+        if FK_YAML_LIKELY (is_true_scalar) {
             boolean = static_cast<BoolType>(true);
         }
         return is_true_scalar;
@@ -405,7 +405,7 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
         bool is_false_scalar = (std::strncmp(p_begin, "false", 5) == 0) || (std::strncmp(p_begin, "False", 5) == 0) ||
                                (std::strncmp(p_begin, "FALSE", 5) == 0);
 
-        if (is_false_scalar) {
+        if FK_YAML_LIKELY (is_false_scalar) {
             boolean = static_cast<BoolType>(false);
         }
         return is_false_scalar;
@@ -441,7 +441,7 @@ inline bool atoi_dec_unchecked(const char* p_begin, const char* p_end, IntType& 
     i = 0;
     do {
         char c = *p_begin;
-        if (c < '0' || '9' < c) {
+        if FK_YAML_UNLIKELY (c < '0' || '9' < c) {
             return false;
         }
         // Overflow is intentional when the IntType is signed.
@@ -463,14 +463,14 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
     static_assert(
         is_non_bool_integral<IntType>::value, "atoi_dec_pos() accepts non-boolean integral types as an output type");
 
-    if (p_begin == p_end) {
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
         return false;
     }
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
     std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if (len > conv_limits_type::max_chars_dec) {
+    if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
         // Overflow will happen.
         return false;
     }
@@ -484,7 +484,7 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
                 break;
             }
 
-            if (p_begin[idx] > p_max_value_chars_dec[idx]) {
+            if FK_YAML_UNLIKELY (p_begin[idx] > p_max_value_chars_dec[idx]) {
                 // Overflow will happen.
                 return false;
             }
@@ -506,14 +506,14 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
     static_assert(
         is_non_bool_integral<IntType>::value, "atoi_dec_neg() accepts non-boolean integral types as an output type");
 
-    if (p_begin == p_end) {
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
         return false;
     }
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
     std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if (len > conv_limits_type::max_chars_dec) {
+    if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
         // Underflow will happen.
         return false;
     }
@@ -527,7 +527,7 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
                 break;
             }
 
-            if (p_begin[idx] > p_min_value_chars_dec[idx]) {
+            if FK_YAML_UNLIKELY (p_begin[idx] > p_min_value_chars_dec[idx]) {
                 // Underflow will happen.
                 return false;
             }
@@ -553,21 +553,21 @@ inline bool atoi_oct(const char* p_begin, const char* p_end, IntType& i) noexcep
     static_assert(
         is_non_bool_integral<IntType>::value, "atoi_oct() accepts non-boolean integral types as an output type");
 
-    if (p_begin == p_end) {
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
         return false;
     }
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
     std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if (!conv_limits_type::check_if_octs_safe(p_begin, len)) {
+    if FK_YAML_UNLIKELY (!conv_limits_type::check_if_octs_safe(p_begin, len)) {
         return false;
     }
 
     i = 0;
     do {
         char c = *p_begin;
-        if (c < '0' || '7' < c) {
+        if FK_YAML_UNLIKELY (c < '0' || '7' < c) {
             return false;
         }
         i = i * IntType(8) + IntType(c - '0');
@@ -592,14 +592,14 @@ inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcep
     static_assert(
         is_non_bool_integral<IntType>::value, "atoi_hex() accepts non-boolean integral types as an output type");
 
-    if (p_begin == p_end) {
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
         return false;
     }
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
     std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if (!conv_limits_type::check_if_hexs_safe(p_begin, len)) {
+    if FK_YAML_UNLIKELY (!conv_limits_type::check_if_hexs_safe(p_begin, len)) {
         return false;
     }
 
@@ -641,7 +641,7 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
     static_assert(is_iterator_of<CharItr, char>::value, "atoi() accepts iterators for char type");
     static_assert(is_non_bool_integral<IntType>::value, "atoi() accepts non-boolean integral types as an output type");
 
-    if (begin == end) {
+    if FK_YAML_UNLIKELY (begin == end) {
         return false;
     }
 
@@ -716,7 +716,7 @@ inline void set_nan(double& f) noexcept {
     f = std::nan("");
 }
 
-#ifdef FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_TO_CHARS
 
 /// @brief Converts a scalar into a floating point value.
 /// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
@@ -733,7 +733,7 @@ inline bool atof_impl(const char* p_begin, const char* p_end, FloatType& f) noex
     return false;
 }
 
-#else // defined(FK_YAML_HAS_TO_CHARS)
+#else
 
 /// @brief Converts a scalar into a `float` value.
 /// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
@@ -759,7 +759,7 @@ inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
     return idx == static_cast<std::size_t>(p_end - p_begin);
 }
 
-#endif // defined(FK_YAML_HAS_TO_CHARS)
+#endif // FK_YAML_HAS_TO_CHARS
 
 /// @brief Converts a scalar into a floating point value.
 /// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
@@ -773,7 +773,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
     static_assert(is_iterator_of<CharItr, char>::value, "atof() accepts iterators for char type");
     static_assert(std::is_floating_point<FloatType>::value, "atof() accepts floating point types as an output type");
 
-    if (begin == end) {
+    if FK_YAML_UNLIKELY (begin == end) {
         return false;
     }
 
@@ -814,7 +814,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
         }
     }
 
-#ifdef FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_TO_CHARS
     return atof_impl(p_begin, p_end, f);
 #else
     bool success = false;
