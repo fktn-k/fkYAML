@@ -12,7 +12,11 @@
 
 #include <fkYAML/node.hpp>
 #include <yaml-cpp/yaml.h>
+
+#ifdef FK_YAML_BM_HAS_LIBFYAML
 #include <libfyaml.h>
+#endif
+
 #include <ryml.hpp>
 #include <ryml_std.hpp>
 #include <c4/yml/parse.hpp>
@@ -114,8 +118,10 @@ void bm_rapidyaml_parse_arena(benchmark::State& st) {
 // Register benchmarking functions.
 BENCHMARK(bm_fkyaml_parse);
 BENCHMARK(bm_yamlcpp_parse);
+
 #ifdef FK_YAML_BM_HAS_LIBFYAML
 BENCHMARK(bm_libfyaml_parse);
 #endif
+
 BENCHMARK(bm_rapidyaml_parse_inplace);
 BENCHMARK(bm_rapidyaml_parse_arena);
