@@ -178,8 +178,6 @@ build-bm-debug:
 	cmake --build build_bm_debug --config Debug
 
 bm-debug: build-bm-debug
-	cmake -B build_bm_debug -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RUN_BENCHMARK=ON
-	cmake --build build_bm_debug --config Debug
 	./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/macos.yml
 
 build-bm-release:
