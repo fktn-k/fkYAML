@@ -88,6 +88,10 @@
 #include <version>
 #endif
 
+//
+// C++ feature detections
+//
+
 // switch usages of the std::to_chars()/std::from_chars() functions which have been available since C++17.
 #if defined(FK_YAML_HAS_CXX_17) && defined(__cpp_lib_to_chars) && __cpp_lib_to_chars >= 201611L
 #define FK_YAML_HAS_TO_CHARS (1)
@@ -102,7 +106,12 @@
 #define FK_YAML_HAS_CHAR8_T (0)
 #endif
 
-#if FK_YAML_HAS_CPP_ATTRIBUTE(likely) >= 201803L
+//
+// C++ attribute detections
+//
+
+// switch usage of [[likely]] C++ attribute which has been available since C++20.
+#if defined(FK_YAML_HAS_CXX_20) && FK_YAML_HAS_CPP_ATTRIBUTE(likely) >= 201803L
 #define FK_YAML_LIKELY(expr) (!!(expr)) [[likely]]
 #elif FK_YAML_HAS_BUILTIN(__builtin_expect)
 #define FK_YAML_LIKELY(expr) (__builtin_expect(!!(expr), 1))
@@ -110,7 +119,8 @@
 #define FK_YAML_LIKELY(expr) (!!(expr))
 #endif
 
-#if FK_YAML_HAS_CPP_ATTRIBUTE(unlikely) >= 201803L
+// switch usage of [[unlikely]] C++ attribute which has been available since C++20.
+#if defined(FK_YAML_HAS_CXX_20) && FK_YAML_HAS_CPP_ATTRIBUTE(unlikely) >= 201803L
 #define FK_YAML_UNLIKELY(expr) (!!(expr)) [[unlikely]]
 #elif FK_YAML_HAS_BUILTIN(__builtin_expect)
 #define FK_YAML_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
