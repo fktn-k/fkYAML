@@ -128,7 +128,7 @@ public:
         case '&': { // anchor prefix
             extract_anchor_name(token);
             bool is_empty = token.str.empty();
-            if (is_empty) {
+            if FK_YAML_UNLIKELY (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
 
@@ -138,7 +138,7 @@ public:
         case '*': { // alias prefix
             extract_anchor_name(token);
             bool is_empty = token.str.empty();
-            if (is_empty) {
+            if FK_YAML_UNLIKELY (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
 
@@ -318,7 +318,7 @@ private:
         str_view dir_name(m_token_begin_itr, m_cur_itr);
 
         if (dir_name == "TAG") {
-            if (!ends_loop) {
+            if FK_YAML_UNLIKELY (!ends_loop) {
                 emit_error("There must be at least one white space between \"%TAG\" and tag info.");
             }
             skip_white_spaces();
@@ -326,7 +326,7 @@ private:
         }
 
         if (dir_name == "YAML") {
-            if (!ends_loop) {
+            if FK_YAML_UNLIKELY (!ends_loop) {
                 emit_error("There must be at least one white space between \"%YAML\" and version.");
             }
             skip_white_spaces();
@@ -346,11 +346,11 @@ private:
         // extract a tag handle
         //
 
-        if (*m_cur_itr != '!') {
+        if FK_YAML_UNLIKELY (*m_cur_itr != '!') {
             emit_error("Tag handle must start with \'!\'.");
         }
 
-        if (++m_cur_itr == m_end_itr) {
+        if FK_YAML_UNLIKELY (++m_cur_itr == m_end_itr) {
             emit_error("invalid TAG directive is found.");
         }
 
@@ -360,10 +360,10 @@ private:
             // primary handle (!)
             break;
         case '!':
-            if (++m_cur_itr == m_end_itr) {
+            if FK_YAML_UNLIKELY (++m_cur_itr == m_end_itr) {
                 emit_error("invalid TAG directive is found.");
             }
-            if (*m_cur_itr != ' ' && *m_cur_itr != '\t') {
+            if FK_YAML_UNLIKELY (*m_cur_itr != ' ' && *m_cur_itr != '\t') {
                 emit_error("invalid tag handle is found.");
             }
             break;
@@ -380,7 +380,7 @@ private:
                         break;
                     }
                     char next = *(m_cur_itr + 1);
-                    if (next != ' ' && next != '\t') {
+                    if FK_YAML_UNLIKELY (next != ' ' && next != '\t') {
                         emit_error("invalid tag handle is found.");
                     }
                     ends_loop = true;
@@ -389,14 +389,14 @@ private:
                 case '-':
                     break;
                 default:
-                    if (!isalnum(*m_cur_itr)) {
+                    if FK_YAML_UNLIKELY (!isalnum(*m_cur_itr)) {
                         // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
                         emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
                     }
                     break;
                 }
 
-                if (++m_cur_itr == m_end_itr) {
+                if FK_YAML_UNLIKELY (++m_cur_itr == m_end_itr) {
                     emit_error("invalid TAG directive is found.");
                 }
             } while (!ends_loop);
@@ -438,7 +438,7 @@ private:
         } while (!ends_loop && ++m_cur_itr != m_end_itr);
 
         bool is_valid = uri_encoding::validate(p_tag_prefix_begin, m_cur_itr);
-        if (!is_valid) {
+        if FK_YAML_UNLIKELY (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
 
@@ -469,7 +469,7 @@ private:
 
         m_yaml_version = str_view {m_token_begin_itr, m_cur_itr};
 
-        if (m_yaml_version.compare("1.1") != 0 && m_yaml_version.compare("1.2") != 0) {
+        if FK_YAML_UNLIKELY (m_yaml_version.compare("1.1") != 0 && m_yaml_version.compare("1.2") != 0) {
             emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
         }
 
@@ -559,7 +559,7 @@ private:
                 ends_loop = true;
                 break;
             case '!':
-                if (!allows_another_tag_prefix) {
+                if FK_YAML_UNLIKELY (!allows_another_tag_prefix) {
                     emit_error("invalid tag prefix (!) is found.");
                 }
 
@@ -576,18 +576,18 @@ private:
 
         if (is_verbatim) {
             char last = token.str.back();
-            if (last != '>') {
+            if FK_YAML_UNLIKELY (last != '>') {
                 emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
             }
 
             // only the `TAG` part of the `!<TAG>` for URI validation.
             str_view tag_body = token.str.substr(2, token.str.size() - 3);
-            if (tag_body.empty()) {
+            if FK_YAML_UNLIKELY (tag_body.empty()) {
                 emit_error("verbatim tag(!<TAG>) must not be empty.");
             }
 
             bool is_valid_uri = uri_encoding::validate(tag_body.begin(), tag_body.end());
-            if (!is_valid_uri) {
+            if FK_YAML_UNLIKELY (!is_valid_uri) {
                 emit_error("invalid URI character is found in a verbatim tag.");
             }
 
@@ -596,7 +596,7 @@ private:
 
         if (is_named_handle) {
             char last = token.str.back();
-            if (last == '!') {
+            if FK_YAML_UNLIKELY (last == '!') {
                 // Tag shorthand must be followed by a non-empty suffix.
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
                 emit_error("named handle has no suffix.");
@@ -608,7 +608,7 @@ private:
 
             str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
             bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
-            if (!is_valid_uri) {
+            if FK_YAML_UNLIKELY (!is_valid_uri) {
                 emit_error("Invalid URI character is found in a named tag handle.");
             }
         }
@@ -794,7 +794,7 @@ private:
             c = *(m_cur_itr + 1);
             if (c != '\n') {
                 bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
-                if (!is_valid_escaping) {
+                if FK_YAML_UNLIKELY (!is_valid_escaping) {
                     emit_error("Unsupported escape sequence is found in a string token.");
                 }
 
@@ -969,7 +969,7 @@ private:
         for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
             char current = *m_cur_itr;
             uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
-            if (num_bytes == 1) {
+            if FK_YAML_LIKELY (num_bytes == 1) {
                 auto ret = check_filters.find(current);
                 if (ret != std::string::npos) {
                     bool is_allowed = (this->*pfn_is_allowed)(current, is_value_buffer_used);
@@ -981,7 +981,7 @@ private:
                 }
 
                 // Handle unescaped control characters.
-                if (static_cast<uint8_t>(current) <= 0x1F) {
+                if FK_YAML_UNLIKELY (static_cast<uint8_t>(current) <= 0x1F) {
                     handle_unescaped_control_char(current);
                     continue;
                 }
@@ -996,11 +996,11 @@ private:
 
         // Handle the end of input buffer.
 
-        if (needs_last_double_quote) {
+        if FK_YAML_UNLIKELY (needs_last_double_quote) {
             emit_error("Invalid end of input buffer in a double-quoted string token.");
         }
 
-        if (needs_last_single_quote) {
+        if FK_YAML_UNLIKELY (needs_last_single_quote) {
             emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
@@ -1044,7 +1044,7 @@ private:
         if (indent == 0) {
             indent = cur_indent;
         }
-        else if (cur_indent < indent) {
+        else if FK_YAML_UNLIKELY (cur_indent < indent) {
             emit_error("A block style scalar is less indented than the indicated level.");
         }
 
@@ -1286,13 +1286,13 @@ private:
         while (m_cur_itr != m_end_itr) {
             switch (*m_cur_itr) {
             case '-':
-                if (chomp_type != chomping_indicator_t::CLIP) {
+                if FK_YAML_UNLIKELY (chomp_type != chomping_indicator_t::CLIP) {
                     emit_error("Too many block chomping indicators specified.");
                 }
                 chomp_type = chomping_indicator_t::STRIP;
                 break;
             case '+':
-                if (chomp_type != chomping_indicator_t::CLIP) {
+                if FK_YAML_UNLIKELY (chomp_type != chomping_indicator_t::CLIP) {
                     emit_error("Too many block chomping indicators specified.");
                 }
                 chomp_type = chomping_indicator_t::KEEP;
@@ -1308,7 +1308,7 @@ private:
             case '7':
             case '8':
             case '9':
-                if (indent > 0) {
+                if FK_YAML_UNLIKELY (indent > 0) {
                     emit_error("Invalid indentation level for a block scalar. It must be between 1 and 9.");
                 }
                 indent = static_cast<char>(*m_cur_itr - '0');

@@ -256,7 +256,7 @@ private:
 
             switch (token.type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
-                if (mp_meta->is_version_specified) {
+                if FK_YAML_UNLIKELY (mp_meta->is_version_specified) {
                     throw parse_error(
                         "YAML version cannot be specified more than once.",
                         lexer.get_lines_processed(),
@@ -272,7 +272,7 @@ private:
                 switch (tag_handle_view.size()) {
                 case 1 /* ! */: {
                     bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
-                    if (is_already_specified) {
+                    if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Primary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
@@ -285,7 +285,7 @@ private:
                 }
                 case 2 /* !! */: {
                     bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
-                    if (is_already_specified) {
+                    if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Secondary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
@@ -302,7 +302,7 @@ private:
                     std::string tag_prefix(tag_prefix_view.begin(), tag_prefix_view.end());
                     bool is_already_specified =
                         !(mp_meta->named_handle_map.emplace(std::move(tag_handle), std::move(tag_prefix)).second);
-                    if (is_already_specified) {
+                    if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
@@ -321,7 +321,7 @@ private:
                 lacks_end_of_directives_marker = false;
                 break;
             default:
-                if (lacks_end_of_directives_marker) {
+                if FK_YAML_UNLIKELY (lacks_end_of_directives_marker) {
                     throw parse_error(
                         "The end of directives marker (---) is missing after directives.",
                         lexer.get_lines_processed(),
@@ -367,7 +367,7 @@ private:
                     mp_current_node = m_context_stack.back().p_node;
                 }
 
-                if (mp_current_node->is_null()) {
+                if FK_YAML_UNLIKELY (mp_current_node->is_null()) {
                     // This path is needed in case the input contains nested explicit keys like the following YAML
                     // snippet:
                     // ```yaml
@@ -413,7 +413,7 @@ private:
             }
             case lexical_token_t::KEY_SEPARATOR: {
                 bool is_empty_seq = mp_current_node->is_sequence() && mp_current_node->empty();
-                if (is_empty_seq) {
+                if FK_YAML_UNLIKELY (is_empty_seq) {
                     throw parse_error("sequence key should not be empty.", line, indent);
                 }
 
@@ -601,7 +601,7 @@ private:
                                 }
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
-                        if (!is_indent_valid) {
+                        if FK_YAML_UNLIKELY (!is_indent_valid) {
                             throw parse_error("Detected invalid indentaion.", line, indent);
                         }
 
@@ -615,7 +615,7 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                 }
-                else if (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("Flow sequence begininng is found without separated with a comma.", line, indent);
                 }
 
@@ -651,7 +651,7 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::SEQUENCE_FLOW_END: {
-                if (m_flow_context_depth == 0) {
+                if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
                     throw parse_error("Flow sequence ending is found outside the flow context.", line, indent);
                 }
                 --m_flow_context_depth;
@@ -671,7 +671,7 @@ private:
                     });
 
                 bool is_valid = itr != m_context_stack.rend();
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw parse_error("No corresponding flow sequence beginning is found.", line, indent);
                 }
 
@@ -743,7 +743,7 @@ private:
                                 }
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
-                        if (!is_indent_valid) {
+                        if FK_YAML_UNLIKELY (!is_indent_valid) {
                             throw parse_error("Detected invalid indentaion.", line, indent);
                         }
 
@@ -757,7 +757,7 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                 }
-                else if (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("Flow mapping begininng is found without separated with a comma.", line, indent);
                 }
 
@@ -796,7 +796,7 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::MAPPING_FLOW_END: {
-                if (m_flow_context_depth == 0) {
+                if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
                     throw parse_error("Flow mapping ending is found outside the flow context.", line, indent);
                 }
                 --m_flow_context_depth;
@@ -816,7 +816,7 @@ private:
                     });
 
                 bool is_valid = itr != m_context_stack.rend();
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw parse_error("No corresponding flow mapping beginning is found.", line, indent);
                 }
 
@@ -866,7 +866,7 @@ private:
             }
             case lexical_token_t::VALUE_SEPARATOR:
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
-                if (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
@@ -916,7 +916,7 @@ private:
 
             switch (token.type) {
             case lexical_token_t::ANCHOR_PREFIX:
-                if (m_needs_anchor_impl) {
+                if FK_YAML_UNLIKELY (m_needs_anchor_impl) {
                     throw parse_error(
                         "anchor name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
@@ -934,7 +934,7 @@ private:
                 token = lexer.get_next_token();
                 break;
             case lexical_token_t::TAG_PREFIX: {
-                if (m_needs_tag_impl) {
+                if FK_YAML_UNLIKELY (m_needs_tag_impl) {
                     throw parse_error(
                         "tag name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
@@ -985,7 +985,7 @@ private:
                         return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
                     });
                 bool is_indent_valid = (target_itr != m_context_stack.rend());
-                if (!is_indent_valid) {
+                if FK_YAML_UNLIKELY (!is_indent_valid) {
                     throw parse_error("Detected invalid indentaion.", line, indent);
                 }
 
@@ -999,7 +999,7 @@ private:
                 mp_current_node = m_context_stack.back().p_node;
             }
         }
-        else if (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+        else if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
             throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
         }
 
@@ -1010,7 +1010,7 @@ private:
         }
 
         auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
-        if (!itr.second) {
+        if FK_YAML_UNLIKELY (!itr.second) {
             throw parse_error("Detected duplication in mapping keys.", line, indent);
         }
 
@@ -1025,7 +1025,7 @@ private:
     void assign_node_value(basic_node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
             if (m_flow_context_depth > 0) {
-                if (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+                if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
                     throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
                 }
                 m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
@@ -1066,7 +1066,7 @@ private:
         }
 
         if (m_needs_tag_impl) {
-            if (type == lexical_token_t::ALIAS_PREFIX) {
+            if FK_YAML_UNLIKELY (type == lexical_token_t::ALIAS_PREFIX) {
                 throw parse_error("Tag cannot be specified to alias nodes", line, indent);
             }
 
@@ -1107,7 +1107,7 @@ private:
             const std::string token_str = std::string(token.str.begin(), token.str.end());
 
             uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
-            if (anchor_counts == 0) {
+            if FK_YAML_UNLIKELY (anchor_counts == 0) {
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
 
@@ -1125,7 +1125,7 @@ private:
         case node_type::NULL_OBJECT: {
             std::nullptr_t null = nullptr;
             bool converted = detail::aton(token.str.begin(), token.str.end(), null);
-            if (!converted) {
+            if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a null.", line, indent);
             }
             // The above `node` variable is already null, so no instance creation is needed.
@@ -1134,7 +1134,7 @@ private:
         case node_type::BOOLEAN: {
             boolean_type boolean = static_cast<boolean_type>(false);
             bool converted = detail::atob(token.str.begin(), token.str.end(), boolean);
-            if (!converted) {
+            if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a boolean.", line, indent);
             }
             node = basic_node_type(boolean);
@@ -1143,7 +1143,7 @@ private:
         case node_type::INTEGER: {
             integer_type integer = 0;
             bool converted = detail::atoi(token.str.begin(), token.str.end(), integer);
-            if (!converted) {
+            if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to an integer.", line, indent);
             }
             node = basic_node_type(integer);
@@ -1152,7 +1152,7 @@ private:
         case node_type::FLOAT: {
             float_number_type float_val = 0;
             bool converted = detail::atof(token.str.begin(), token.str.end(), float_val);
-            if (!converted) {
+            if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a floating point value", line, indent);
             }
             node = basic_node_type(float_val);
@@ -1213,7 +1213,7 @@ private:
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     break;
                 default:
-                    if (cur_context.line == line) {
+                    if FK_YAML_UNLIKELY (cur_context.line == line) {
                         throw parse_error("Multiple mapping keys are specified on the same line.", line, indent);
                     }
                     cur_context.line = line;

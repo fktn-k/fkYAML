@@ -49,10 +49,10 @@ public:
 private:
     static std::string normalize_tag_name(
         const std::string& tag, const std::shared_ptr<doc_metainfo_type>& directives) {
-        if (tag.empty()) {
+        if FK_YAML_UNLIKELY (tag.empty()) {
             throw invalid_tag("tag must not be empty.", "");
         }
-        if (tag[0] != '!') {
+        if FK_YAML_UNLIKELY (tag[0] != '!') {
             throw invalid_tag("tag must start with \'!\'", tag.c_str());
         }
 
@@ -100,14 +100,14 @@ private:
                 FK_YAML_ASSERT(tag_end_pos < tag.size() - 1);
 
                 bool is_null_or_empty = !directives || directives->named_handle_map.empty();
-                if (is_null_or_empty) {
+                if FK_YAML_UNLIKELY (is_null_or_empty) {
                     throw invalid_tag("named handle has not been registered.", tag.c_str());
                 }
 
                 // find the extracted named handle in the map.
                 auto named_handle_itr = directives->named_handle_map.find(tag.substr(0, tag_end_pos + 1));
                 auto end_itr = directives->named_handle_map.end();
-                if (named_handle_itr == end_itr) {
+                if FK_YAML_UNLIKELY (named_handle_itr == end_itr) {
                     throw invalid_tag("named handle has not been registered.", tag.c_str());
                 }
 

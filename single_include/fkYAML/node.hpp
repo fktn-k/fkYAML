@@ -136,27 +136,60 @@
 #define FK_YAML_INLINE_VAR
 #endif
 
+// Detect __has_* macros.
+// The following macros replace redundant `defined(__has_*) && __has_*(...)`.
+
 #ifdef __has_include
-#if __has_include(<version>)
+#define FK_YAML_HAS_INCLUDE(header) __has_include(header)
+#else
+#define FK_YAML_HAS_INCLUDE(header) (0)
+#endif
+
+#ifdef __has_builtin
+#define FK_YAML_HAS_BUILTIN(builtin) __has_builtin(builtin)
+#else
+#define FK_YAML_HAS_BUILTIN(builtin) (0)
+#endif
+
+#ifdef __has_cpp_attribute
+#define FK_YAML_HAS_CPP_ATTRIBUTE(attr) __has_cpp_attribute(attr)
+#else
+#define FK_YAML_HAS_CPP_ATTRIBUTE(attr) (0)
+#endif
+
+#if FK_YAML_HAS_INCLUDE(<version>)
 // <version> is available since C++20
 #include <version>
 #endif
+
+// switch usages of the std::to_chars()/std::from_chars() functions which have been available since C++17.
+#if defined(FK_YAML_HAS_CXX_17) && defined(__cpp_lib_to_chars) && __cpp_lib_to_chars >= 201611L
+#define FK_YAML_HAS_TO_CHARS (1)
+#else
+#define FK_YAML_HAS_TO_CHARS (0)
 #endif
 
 // switch usage of char8_t which has been available since C++20.
-#if !defined(FK_YAML_HAS_CHAR8_T)
-#if defined(FK_YAML_HAS_CXX_20)
-#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
-#define FK_YAML_HAS_CHAR8_T
-#endif
-#endif
+#if defined(FK_YAML_HAS_CXX_20) && defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
+#define FK_YAML_HAS_CHAR8_T (1)
+#else
+#define FK_YAML_HAS_CHAR8_T (0)
 #endif
 
-// switch usages of the std::to_chars()/std::from_chars() functions which have been available since C++17.
-#if defined(FK_YAML_HAS_CXX_17)
-#if defined(__cpp_lib_to_chars) && __cpp_lib_to_chars >= 201611L
-#define FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_CPP_ATTRIBUTE(likely) >= 201803L
+#define FK_YAML_LIKELY(expr) (!!(expr)) [[likely]]
+#elif FK_YAML_HAS_BUILTIN(__builtin_expect)
+#define FK_YAML_LIKELY(expr) (__builtin_expect(!!(expr), 1))
+#else
+#define FK_YAML_LIKELY(expr) (!!(expr))
 #endif
+
+#if FK_YAML_HAS_CPP_ATTRIBUTE(unlikely) >= 201803L
+#define FK_YAML_UNLIKELY(expr) (!!(expr)) [[unlikely]]
+#elif FK_YAML_HAS_BUILTIN(__builtin_expect)
+#define FK_YAML_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
+#else
+#define FK_YAML_UNLIKELY(expr) (!!(expr))
 #endif
 
 #endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */
@@ -182,9 +215,9 @@
 #ifndef FK_YAML_ASSERT
 #ifndef NDEBUG
 #include <cassert>
-#define FK_YAML_ASSERT(x) assert(x) // NOLINT(cppcoreguidelines-macro-usage)
+#define FK_YAML_ASSERT(x) assert(x)
 #else
-#define FK_YAML_ASSERT(x) // NOLINT(cppcoreguidelines-macro-usage)
+#define FK_YAML_ASSERT(x)
 #endif
 #endif
 
@@ -923,7 +956,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/type_traits.hpp>
 
 
-#ifdef FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_TO_CHARS
 // Prefer std::to_chars() and std::from_chars() functions if available.
 #include <charconv>
 #else
@@ -1249,14 +1282,14 @@ template <typename CharItr>
 inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcept {
     static_assert(is_iterator_of<CharItr, char>::value, "aton() accepts iterators for char type");
 
-    if (begin == end) {
+    if FK_YAML_UNLIKELY (begin == end) {
         return false;
     }
 
     uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
 
     // This path is the most probable case, so check it first.
-    if (len == 4) {
+    if FK_YAML_LIKELY (len == 4) {
         const char* p_begin = &*begin;
         return (std::strncmp(p_begin, "null", 4) == 0) || (std::strncmp(p_begin, "Null", 4) == 0) ||
                (std::strncmp(p_begin, "NULL", 4) == 0);
@@ -1284,7 +1317,7 @@ template <typename CharItr, typename BoolType>
 inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
     static_assert(is_iterator_of<CharItr, char>::value, "atob() accepts iterators for char type");
 
-    if (begin == end) {
+    if FK_YAML_UNLIKELY (begin == end) {
         return false;
     }
 
@@ -1295,7 +1328,7 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
         bool is_true_scalar = (std::strncmp(p_begin, "true", 4) == 0) || (std::strncmp(p_begin, "True", 4) == 0) ||
                               (std::strncmp(p_begin, "TRUE", 4) == 0);
 
-        if (is_true_scalar) {
+        if FK_YAML_LIKELY (is_true_scalar) {
             boolean = static_cast<BoolType>(true);
         }
         return is_true_scalar;
@@ -1305,7 +1338,7 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
         bool is_false_scalar = (std::strncmp(p_begin, "false", 5) == 0) || (std::strncmp(p_begin, "False", 5) == 0) ||
                                (std::strncmp(p_begin, "FALSE", 5) == 0);
 
-        if (is_false_scalar) {
+        if FK_YAML_LIKELY (is_false_scalar) {
             boolean = static_cast<BoolType>(false);
         }
         return is_false_scalar;
@@ -1341,7 +1374,7 @@ inline bool atoi_dec_unchecked(const char* p_begin, const char* p_end, IntType& 
     i = 0;
     do {
         char c = *p_begin;
-        if (c < '0' || '9' < c) {
+        if FK_YAML_UNLIKELY (c < '0' || '9' < c) {
             return false;
         }
         // Overflow is intentional when the IntType is signed.
@@ -1363,14 +1396,14 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
     static_assert(
         is_non_bool_integral<IntType>::value, "atoi_dec_pos() accepts non-boolean integral types as an output type");
 
-    if (p_begin == p_end) {
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
         return false;
     }
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
     std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if (len > conv_limits_type::max_chars_dec) {
+    if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
         // Overflow will happen.
         return false;
     }
@@ -1384,7 +1417,7 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
                 break;
             }
 
-            if (p_begin[idx] > p_max_value_chars_dec[idx]) {
+            if FK_YAML_UNLIKELY (p_begin[idx] > p_max_value_chars_dec[idx]) {
                 // Overflow will happen.
                 return false;
             }
@@ -1406,14 +1439,14 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
     static_assert(
         is_non_bool_integral<IntType>::value, "atoi_dec_neg() accepts non-boolean integral types as an output type");
 
-    if (p_begin == p_end) {
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
         return false;
     }
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
     std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if (len > conv_limits_type::max_chars_dec) {
+    if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
         // Underflow will happen.
         return false;
     }
@@ -1427,7 +1460,7 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
                 break;
             }
 
-            if (p_begin[idx] > p_min_value_chars_dec[idx]) {
+            if FK_YAML_UNLIKELY (p_begin[idx] > p_min_value_chars_dec[idx]) {
                 // Underflow will happen.
                 return false;
             }
@@ -1453,21 +1486,21 @@ inline bool atoi_oct(const char* p_begin, const char* p_end, IntType& i) noexcep
     static_assert(
         is_non_bool_integral<IntType>::value, "atoi_oct() accepts non-boolean integral types as an output type");
 
-    if (p_begin == p_end) {
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
         return false;
     }
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
     std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if (!conv_limits_type::check_if_octs_safe(p_begin, len)) {
+    if FK_YAML_UNLIKELY (!conv_limits_type::check_if_octs_safe(p_begin, len)) {
         return false;
     }
 
     i = 0;
     do {
         char c = *p_begin;
-        if (c < '0' || '7' < c) {
+        if FK_YAML_UNLIKELY (c < '0' || '7' < c) {
             return false;
         }
         i = i * IntType(8) + IntType(c - '0');
@@ -1492,14 +1525,14 @@ inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcep
     static_assert(
         is_non_bool_integral<IntType>::value, "atoi_hex() accepts non-boolean integral types as an output type");
 
-    if (p_begin == p_end) {
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
         return false;
     }
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
     std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if (!conv_limits_type::check_if_hexs_safe(p_begin, len)) {
+    if FK_YAML_UNLIKELY (!conv_limits_type::check_if_hexs_safe(p_begin, len)) {
         return false;
     }
 
@@ -1541,7 +1574,7 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
     static_assert(is_iterator_of<CharItr, char>::value, "atoi() accepts iterators for char type");
     static_assert(is_non_bool_integral<IntType>::value, "atoi() accepts non-boolean integral types as an output type");
 
-    if (begin == end) {
+    if FK_YAML_UNLIKELY (begin == end) {
         return false;
     }
 
@@ -1616,7 +1649,7 @@ inline void set_nan(double& f) noexcept {
     f = std::nan("");
 }
 
-#ifdef FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_TO_CHARS
 
 /// @brief Converts a scalar into a floating point value.
 /// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
@@ -1633,7 +1666,7 @@ inline bool atof_impl(const char* p_begin, const char* p_end, FloatType& f) noex
     return false;
 }
 
-#else // defined(FK_YAML_HAS_TO_CHARS)
+#else
 
 /// @brief Converts a scalar into a `float` value.
 /// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
@@ -1659,7 +1692,7 @@ inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
     return idx == static_cast<std::size_t>(p_end - p_begin);
 }
 
-#endif // defined(FK_YAML_HAS_TO_CHARS)
+#endif // FK_YAML_HAS_TO_CHARS
 
 /// @brief Converts a scalar into a floating point value.
 /// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
@@ -1673,7 +1706,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
     static_assert(is_iterator_of<CharItr, char>::value, "atof() accepts iterators for char type");
     static_assert(std::is_floating_point<FloatType>::value, "atof() accepts floating point types as an output type");
 
-    if (begin == end) {
+    if FK_YAML_UNLIKELY (begin == end) {
         return false;
     }
 
@@ -1714,7 +1747,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
         }
     }
 
-#ifdef FK_YAML_HAS_TO_CHARS
+#if FK_YAML_HAS_TO_CHARS
     return atof_impl(p_begin, p_end, f);
 #else
     bool success = false;
@@ -2662,7 +2695,7 @@ public:
         case 'x': {
             char32_t codepoint {0};
             ret = extract_codepoint(begin, end, 1, codepoint);
-            if (ret) {
+            if FK_YAML_LIKELY (ret) {
                 unescape_escaped_unicode(codepoint, buff);
             }
             break;
@@ -2670,7 +2703,7 @@ public:
         case 'u': {
             char32_t codepoint {0};
             ret = extract_codepoint(begin, end, 2, codepoint);
-            if (ret) {
+            if FK_YAML_LIKELY (ret) {
                 unescape_escaped_unicode(codepoint, buff);
             }
             break;
@@ -2678,7 +2711,7 @@ public:
         case 'U': {
             char32_t codepoint {0};
             ret = extract_codepoint(begin, end, 4, codepoint);
-            if (ret) {
+            if FK_YAML_LIKELY (ret) {
                 unescape_escaped_unicode(codepoint, buff);
             }
             break;
@@ -3170,7 +3203,7 @@ public:
     /// @param pos The position of the target element.
     /// @return The element at the given position.
     const_reference at(size_type pos) const {
-        if (pos >= m_len) {
+        if FK_YAML_UNLIKELY (pos >= m_len) {
             throw fkyaml::out_of_range(static_cast<int>(pos));
         }
         return *(mp_str + pos);
@@ -3222,7 +3255,7 @@ public:
     /// @param pos The offset of the beginning position to copy values.
     /// @return The number of elements to be written into `p_str`.
     size_type copy(CharT* p_str, size_type n, size_type pos = 0) const {
-        if (pos > m_len) {
+        if FK_YAML_UNLIKELY (pos > m_len) {
             throw fkyaml::out_of_range(static_cast<int>(pos));
         }
         const size_type rlen = std::min(n, m_len - pos);
@@ -3236,7 +3269,7 @@ public:
     /// @param n The number of elements to the end of a new sub basic_str_view object.
     /// @return A newly created sub basic_str_view object.
     basic_str_view substr(size_type pos = 0, size_type n = npos) const {
-        if (pos > m_len) {
+        if FK_YAML_UNLIKELY (pos > m_len) {
             throw fkyaml::out_of_range(static_cast<int>(pos));
         }
         const size_type rlen = std::min(n, m_len - pos);
@@ -3397,7 +3430,7 @@ public:
     size_type find(CharT c, size_type pos = 0) const noexcept {
         size_type ret = npos;
 
-        if (pos < m_len) {
+        if FK_YAML_LIKELY (pos < m_len) {
             const size_type n = m_len - pos;
             const CharT* p_found = traits_type::find(mp_str + pos, n, c);
             if (p_found) {
@@ -3415,11 +3448,11 @@ public:
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
     size_type find(const CharT* s, size_type pos, size_type n) const noexcept {
-        if (n == 0) {
+        if FK_YAML_UNLIKELY (n == 0) {
             return pos <= m_len ? pos : npos;
         }
 
-        if (pos >= m_len) {
+        if FK_YAML_UNLIKELY (pos >= m_len) {
             return npos;
         }
 
@@ -3467,7 +3500,7 @@ public:
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `c` character, `npos` otherwise.
     size_type rfind(CharT c, size_type pos = npos) const noexcept {
-        if (m_len == 0) {
+        if FK_YAML_UNLIKELY (m_len == 0) {
             return npos;
         }
 
@@ -3492,7 +3525,7 @@ public:
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
     size_type rfind(const CharT* s, size_type pos, size_type n) const noexcept {
-        if (n <= m_len) {
+        if FK_YAML_LIKELY (n <= m_len) {
             pos = std::min(m_len - n, pos) + 1;
 
             do {
@@ -3537,7 +3570,7 @@ public:
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
     size_type find_first_of(const CharT* s, size_type pos, size_type n) const noexcept {
-        if (n == 0) {
+        if FK_YAML_UNLIKELY (n == 0) {
             return npos;
         }
 
@@ -3582,7 +3615,7 @@ public:
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
     size_type find_last_of(const CharT* s, size_type pos, size_type n) const noexcept {
-        if (n <= m_len) {
+        if FK_YAML_LIKELY (n <= m_len) {
             pos = std::min(m_len - n - 1, pos);
 
             do {
@@ -3664,7 +3697,7 @@ public:
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of non `c` character, `npos` otherwise.
     size_type find_last_not_of(CharT c, size_type pos = npos) const noexcept {
-        if (m_len > 0) {
+        if FK_YAML_LIKELY (m_len > 0) {
             pos = std::min(m_len, pos);
 
             do {
@@ -3684,7 +3717,7 @@ public:
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of non `s` characters, `npos` otherwise.
     size_type find_last_not_of(const CharT* s, size_type pos, size_type n) const noexcept {
-        if (n <= m_len) {
+        if FK_YAML_UNLIKELY (n <= m_len) {
             pos = std::min(m_len - n, pos) + 1;
 
             do {
@@ -3897,7 +3930,7 @@ inline std::basic_ostream<CharT, Traits>& operator<<(
 /// @brief view into `char` sequence.
 using str_view = basic_str_view<char>;
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 /// @brief view into `char8_t` sequence.
 using u8str_view = basic_str_view<char8_t>;
 #endif
@@ -4145,7 +4178,7 @@ public:
         case '&': { // anchor prefix
             extract_anchor_name(token);
             bool is_empty = token.str.empty();
-            if (is_empty) {
+            if FK_YAML_UNLIKELY (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
 
@@ -4155,7 +4188,7 @@ public:
         case '*': { // alias prefix
             extract_anchor_name(token);
             bool is_empty = token.str.empty();
-            if (is_empty) {
+            if FK_YAML_UNLIKELY (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
 
@@ -4335,7 +4368,7 @@ private:
         str_view dir_name(m_token_begin_itr, m_cur_itr);
 
         if (dir_name == "TAG") {
-            if (!ends_loop) {
+            if FK_YAML_UNLIKELY (!ends_loop) {
                 emit_error("There must be at least one white space between \"%TAG\" and tag info.");
             }
             skip_white_spaces();
@@ -4343,7 +4376,7 @@ private:
         }
 
         if (dir_name == "YAML") {
-            if (!ends_loop) {
+            if FK_YAML_UNLIKELY (!ends_loop) {
                 emit_error("There must be at least one white space between \"%YAML\" and version.");
             }
             skip_white_spaces();
@@ -4363,11 +4396,11 @@ private:
         // extract a tag handle
         //
 
-        if (*m_cur_itr != '!') {
+        if FK_YAML_UNLIKELY (*m_cur_itr != '!') {
             emit_error("Tag handle must start with \'!\'.");
         }
 
-        if (++m_cur_itr == m_end_itr) {
+        if FK_YAML_UNLIKELY (++m_cur_itr == m_end_itr) {
             emit_error("invalid TAG directive is found.");
         }
 
@@ -4377,10 +4410,10 @@ private:
             // primary handle (!)
             break;
         case '!':
-            if (++m_cur_itr == m_end_itr) {
+            if FK_YAML_UNLIKELY (++m_cur_itr == m_end_itr) {
                 emit_error("invalid TAG directive is found.");
             }
-            if (*m_cur_itr != ' ' && *m_cur_itr != '\t') {
+            if FK_YAML_UNLIKELY (*m_cur_itr != ' ' && *m_cur_itr != '\t') {
                 emit_error("invalid tag handle is found.");
             }
             break;
@@ -4397,7 +4430,7 @@ private:
                         break;
                     }
                     char next = *(m_cur_itr + 1);
-                    if (next != ' ' && next != '\t') {
+                    if FK_YAML_UNLIKELY (next != ' ' && next != '\t') {
                         emit_error("invalid tag handle is found.");
                     }
                     ends_loop = true;
@@ -4406,14 +4439,14 @@ private:
                 case '-':
                     break;
                 default:
-                    if (!isalnum(*m_cur_itr)) {
+                    if FK_YAML_UNLIKELY (!isalnum(*m_cur_itr)) {
                         // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
                         emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
                     }
                     break;
                 }
 
-                if (++m_cur_itr == m_end_itr) {
+                if FK_YAML_UNLIKELY (++m_cur_itr == m_end_itr) {
                     emit_error("invalid TAG directive is found.");
                 }
             } while (!ends_loop);
@@ -4455,7 +4488,7 @@ private:
         } while (!ends_loop && ++m_cur_itr != m_end_itr);
 
         bool is_valid = uri_encoding::validate(p_tag_prefix_begin, m_cur_itr);
-        if (!is_valid) {
+        if FK_YAML_UNLIKELY (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
 
@@ -4486,7 +4519,7 @@ private:
 
         m_yaml_version = str_view {m_token_begin_itr, m_cur_itr};
 
-        if (m_yaml_version.compare("1.1") != 0 && m_yaml_version.compare("1.2") != 0) {
+        if FK_YAML_UNLIKELY (m_yaml_version.compare("1.1") != 0 && m_yaml_version.compare("1.2") != 0) {
             emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
         }
 
@@ -4576,7 +4609,7 @@ private:
                 ends_loop = true;
                 break;
             case '!':
-                if (!allows_another_tag_prefix) {
+                if FK_YAML_UNLIKELY (!allows_another_tag_prefix) {
                     emit_error("invalid tag prefix (!) is found.");
                 }
 
@@ -4593,18 +4626,18 @@ private:
 
         if (is_verbatim) {
             char last = token.str.back();
-            if (last != '>') {
+            if FK_YAML_UNLIKELY (last != '>') {
                 emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
             }
 
             // only the `TAG` part of the `!<TAG>` for URI validation.
             str_view tag_body = token.str.substr(2, token.str.size() - 3);
-            if (tag_body.empty()) {
+            if FK_YAML_UNLIKELY (tag_body.empty()) {
                 emit_error("verbatim tag(!<TAG>) must not be empty.");
             }
 
             bool is_valid_uri = uri_encoding::validate(tag_body.begin(), tag_body.end());
-            if (!is_valid_uri) {
+            if FK_YAML_UNLIKELY (!is_valid_uri) {
                 emit_error("invalid URI character is found in a verbatim tag.");
             }
 
@@ -4613,7 +4646,7 @@ private:
 
         if (is_named_handle) {
             char last = token.str.back();
-            if (last == '!') {
+            if FK_YAML_UNLIKELY (last == '!') {
                 // Tag shorthand must be followed by a non-empty suffix.
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
                 emit_error("named handle has no suffix.");
@@ -4625,7 +4658,7 @@ private:
 
             str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
             bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
-            if (!is_valid_uri) {
+            if FK_YAML_UNLIKELY (!is_valid_uri) {
                 emit_error("Invalid URI character is found in a named tag handle.");
             }
         }
@@ -4811,7 +4844,7 @@ private:
             c = *(m_cur_itr + 1);
             if (c != '\n') {
                 bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
-                if (!is_valid_escaping) {
+                if FK_YAML_UNLIKELY (!is_valid_escaping) {
                     emit_error("Unsupported escape sequence is found in a string token.");
                 }
 
@@ -4986,7 +5019,7 @@ private:
         for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
             char current = *m_cur_itr;
             uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
-            if (num_bytes == 1) {
+            if FK_YAML_LIKELY (num_bytes == 1) {
                 auto ret = check_filters.find(current);
                 if (ret != std::string::npos) {
                     bool is_allowed = (this->*pfn_is_allowed)(current, is_value_buffer_used);
@@ -4998,7 +5031,7 @@ private:
                 }
 
                 // Handle unescaped control characters.
-                if (static_cast<uint8_t>(current) <= 0x1F) {
+                if FK_YAML_UNLIKELY (static_cast<uint8_t>(current) <= 0x1F) {
                     handle_unescaped_control_char(current);
                     continue;
                 }
@@ -5013,11 +5046,11 @@ private:
 
         // Handle the end of input buffer.
 
-        if (needs_last_double_quote) {
+        if FK_YAML_UNLIKELY (needs_last_double_quote) {
             emit_error("Invalid end of input buffer in a double-quoted string token.");
         }
 
-        if (needs_last_single_quote) {
+        if FK_YAML_UNLIKELY (needs_last_single_quote) {
             emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
@@ -5061,7 +5094,7 @@ private:
         if (indent == 0) {
             indent = cur_indent;
         }
-        else if (cur_indent < indent) {
+        else if FK_YAML_UNLIKELY (cur_indent < indent) {
             emit_error("A block style scalar is less indented than the indicated level.");
         }
 
@@ -5303,13 +5336,13 @@ private:
         while (m_cur_itr != m_end_itr) {
             switch (*m_cur_itr) {
             case '-':
-                if (chomp_type != chomping_indicator_t::CLIP) {
+                if FK_YAML_UNLIKELY (chomp_type != chomping_indicator_t::CLIP) {
                     emit_error("Too many block chomping indicators specified.");
                 }
                 chomp_type = chomping_indicator_t::STRIP;
                 break;
             case '+':
-                if (chomp_type != chomping_indicator_t::CLIP) {
+                if FK_YAML_UNLIKELY (chomp_type != chomping_indicator_t::CLIP) {
                     emit_error("Too many block chomping indicators specified.");
                 }
                 chomp_type = chomping_indicator_t::KEEP;
@@ -5325,7 +5358,7 @@ private:
             case '7':
             case '8':
             case '9':
-                if (indent > 0) {
+                if FK_YAML_UNLIKELY (indent > 0) {
                     emit_error("Invalid indentation level for a block scalar. It must be between 1 and 9.");
                 }
                 indent = static_cast<char>(*m_cur_itr - '0');
@@ -5512,10 +5545,10 @@ public:
 private:
     static std::string normalize_tag_name(
         const std::string& tag, const std::shared_ptr<doc_metainfo_type>& directives) {
-        if (tag.empty()) {
+        if FK_YAML_UNLIKELY (tag.empty()) {
             throw invalid_tag("tag must not be empty.", "");
         }
-        if (tag[0] != '!') {
+        if FK_YAML_UNLIKELY (tag[0] != '!') {
             throw invalid_tag("tag must start with \'!\'", tag.c_str());
         }
 
@@ -5563,14 +5596,14 @@ private:
                 FK_YAML_ASSERT(tag_end_pos < tag.size() - 1);
 
                 bool is_null_or_empty = !directives || directives->named_handle_map.empty();
-                if (is_null_or_empty) {
+                if FK_YAML_UNLIKELY (is_null_or_empty) {
                     throw invalid_tag("named handle has not been registered.", tag.c_str());
                 }
 
                 // find the extracted named handle in the map.
                 auto named_handle_itr = directives->named_handle_map.find(tag.substr(0, tag_end_pos + 1));
                 auto end_itr = directives->named_handle_map.end();
-                if (named_handle_itr == end_itr) {
+                if FK_YAML_UNLIKELY (named_handle_itr == end_itr) {
                     throw invalid_tag("named handle has not been registered.", tag.c_str());
                 }
 
@@ -5668,7 +5701,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 
-#ifdef FK_YAML_HAS_CXX_17
+#if defined(FK_YAML_HAS_CXX_17) && FK_YAML_HAS_INCLUDE(<string_view>)
 #include <string_view>
 #endif
 
@@ -6481,7 +6514,7 @@ private:
 
             switch (token.type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
-                if (mp_meta->is_version_specified) {
+                if FK_YAML_UNLIKELY (mp_meta->is_version_specified) {
                     throw parse_error(
                         "YAML version cannot be specified more than once.",
                         lexer.get_lines_processed(),
@@ -6497,7 +6530,7 @@ private:
                 switch (tag_handle_view.size()) {
                 case 1 /* ! */: {
                     bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
-                    if (is_already_specified) {
+                    if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Primary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
@@ -6510,7 +6543,7 @@ private:
                 }
                 case 2 /* !! */: {
                     bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
-                    if (is_already_specified) {
+                    if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Secondary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
@@ -6527,7 +6560,7 @@ private:
                     std::string tag_prefix(tag_prefix_view.begin(), tag_prefix_view.end());
                     bool is_already_specified =
                         !(mp_meta->named_handle_map.emplace(std::move(tag_handle), std::move(tag_prefix)).second);
-                    if (is_already_specified) {
+                    if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
@@ -6546,7 +6579,7 @@ private:
                 lacks_end_of_directives_marker = false;
                 break;
             default:
-                if (lacks_end_of_directives_marker) {
+                if FK_YAML_UNLIKELY (lacks_end_of_directives_marker) {
                     throw parse_error(
                         "The end of directives marker (---) is missing after directives.",
                         lexer.get_lines_processed(),
@@ -6592,7 +6625,7 @@ private:
                     mp_current_node = m_context_stack.back().p_node;
                 }
 
-                if (mp_current_node->is_null()) {
+                if FK_YAML_UNLIKELY (mp_current_node->is_null()) {
                     // This path is needed in case the input contains nested explicit keys like the following YAML
                     // snippet:
                     // ```yaml
@@ -6638,7 +6671,7 @@ private:
             }
             case lexical_token_t::KEY_SEPARATOR: {
                 bool is_empty_seq = mp_current_node->is_sequence() && mp_current_node->empty();
-                if (is_empty_seq) {
+                if FK_YAML_UNLIKELY (is_empty_seq) {
                     throw parse_error("sequence key should not be empty.", line, indent);
                 }
 
@@ -6826,7 +6859,7 @@ private:
                                 }
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
-                        if (!is_indent_valid) {
+                        if FK_YAML_UNLIKELY (!is_indent_valid) {
                             throw parse_error("Detected invalid indentaion.", line, indent);
                         }
 
@@ -6840,7 +6873,7 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                 }
-                else if (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("Flow sequence begininng is found without separated with a comma.", line, indent);
                 }
 
@@ -6876,7 +6909,7 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::SEQUENCE_FLOW_END: {
-                if (m_flow_context_depth == 0) {
+                if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
                     throw parse_error("Flow sequence ending is found outside the flow context.", line, indent);
                 }
                 --m_flow_context_depth;
@@ -6896,7 +6929,7 @@ private:
                     });
 
                 bool is_valid = itr != m_context_stack.rend();
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw parse_error("No corresponding flow sequence beginning is found.", line, indent);
                 }
 
@@ -6968,7 +7001,7 @@ private:
                                 }
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
-                        if (!is_indent_valid) {
+                        if FK_YAML_UNLIKELY (!is_indent_valid) {
                             throw parse_error("Detected invalid indentaion.", line, indent);
                         }
 
@@ -6982,7 +7015,7 @@ private:
                         mp_current_node = m_context_stack.back().p_node;
                     }
                 }
-                else if (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("Flow mapping begininng is found without separated with a comma.", line, indent);
                 }
 
@@ -7021,7 +7054,7 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::MAPPING_FLOW_END: {
-                if (m_flow_context_depth == 0) {
+                if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
                     throw parse_error("Flow mapping ending is found outside the flow context.", line, indent);
                 }
                 --m_flow_context_depth;
@@ -7041,7 +7074,7 @@ private:
                     });
 
                 bool is_valid = itr != m_context_stack.rend();
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw parse_error("No corresponding flow mapping beginning is found.", line, indent);
                 }
 
@@ -7091,7 +7124,7 @@ private:
             }
             case lexical_token_t::VALUE_SEPARATOR:
                 FK_YAML_ASSERT(m_flow_context_depth > 0);
-                if (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
@@ -7141,7 +7174,7 @@ private:
 
             switch (token.type) {
             case lexical_token_t::ANCHOR_PREFIX:
-                if (m_needs_anchor_impl) {
+                if FK_YAML_UNLIKELY (m_needs_anchor_impl) {
                     throw parse_error(
                         "anchor name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
@@ -7159,7 +7192,7 @@ private:
                 token = lexer.get_next_token();
                 break;
             case lexical_token_t::TAG_PREFIX: {
-                if (m_needs_tag_impl) {
+                if FK_YAML_UNLIKELY (m_needs_tag_impl) {
                     throw parse_error(
                         "tag name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
@@ -7210,7 +7243,7 @@ private:
                         return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
                     });
                 bool is_indent_valid = (target_itr != m_context_stack.rend());
-                if (!is_indent_valid) {
+                if FK_YAML_UNLIKELY (!is_indent_valid) {
                     throw parse_error("Detected invalid indentaion.", line, indent);
                 }
 
@@ -7224,7 +7257,7 @@ private:
                 mp_current_node = m_context_stack.back().p_node;
             }
         }
-        else if (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+        else if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
             throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
         }
 
@@ -7235,7 +7268,7 @@ private:
         }
 
         auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
-        if (!itr.second) {
+        if FK_YAML_UNLIKELY (!itr.second) {
             throw parse_error("Detected duplication in mapping keys.", line, indent);
         }
 
@@ -7250,7 +7283,7 @@ private:
     void assign_node_value(basic_node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
             if (m_flow_context_depth > 0) {
-                if (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+                if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
                     throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
                 }
                 m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
@@ -7291,7 +7324,7 @@ private:
         }
 
         if (m_needs_tag_impl) {
-            if (type == lexical_token_t::ALIAS_PREFIX) {
+            if FK_YAML_UNLIKELY (type == lexical_token_t::ALIAS_PREFIX) {
                 throw parse_error("Tag cannot be specified to alias nodes", line, indent);
             }
 
@@ -7332,7 +7365,7 @@ private:
             const std::string token_str = std::string(token.str.begin(), token.str.end());
 
             uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
-            if (anchor_counts == 0) {
+            if FK_YAML_UNLIKELY (anchor_counts == 0) {
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
 
@@ -7350,7 +7383,7 @@ private:
         case node_type::NULL_OBJECT: {
             std::nullptr_t null = nullptr;
             bool converted = detail::aton(token.str.begin(), token.str.end(), null);
-            if (!converted) {
+            if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a null.", line, indent);
             }
             // The above `node` variable is already null, so no instance creation is needed.
@@ -7359,7 +7392,7 @@ private:
         case node_type::BOOLEAN: {
             boolean_type boolean = static_cast<boolean_type>(false);
             bool converted = detail::atob(token.str.begin(), token.str.end(), boolean);
-            if (!converted) {
+            if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a boolean.", line, indent);
             }
             node = basic_node_type(boolean);
@@ -7368,7 +7401,7 @@ private:
         case node_type::INTEGER: {
             integer_type integer = 0;
             bool converted = detail::atoi(token.str.begin(), token.str.end(), integer);
-            if (!converted) {
+            if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to an integer.", line, indent);
             }
             node = basic_node_type(integer);
@@ -7377,7 +7410,7 @@ private:
         case node_type::FLOAT: {
             float_number_type float_val = 0;
             bool converted = detail::atof(token.str.begin(), token.str.end(), float_val);
-            if (!converted) {
+            if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a floating point value", line, indent);
             }
             node = basic_node_type(float_val);
@@ -7438,7 +7471,7 @@ private:
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     break;
                 default:
-                    if (cur_context.line == line) {
+                    if FK_YAML_UNLIKELY (cur_context.line == line) {
                         throw parse_error("Multiple mapping keys are specified on the same line.", line, indent);
                     }
                     cur_context.line = line;
@@ -7674,7 +7707,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
     /// @param end The iterator to the past-the end element of an input.
     /// @return A detected encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) noexcept {
-        if (begin == end) {
+        if FK_YAML_UNLIKELY (begin == end) {
             return utf_encode_t::UTF_8;
         }
 
@@ -7708,7 +7741,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
     }
 };
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 
 /// @brief The partial specialization of utf_encode_detector for char8_t iterators.
 /// @tparam ItrType An iterator type.
@@ -7719,7 +7752,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
     /// @param end The iterator to the past-the end element of an input.
     /// @return A detected encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) {
-        if (begin == end) {
+        if FK_YAML_UNLIKELY (begin == end) {
             return utf_encode_t::UTF_8;
         }
 
@@ -7732,7 +7765,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-        if (encode_type != utf_encode_t::UTF_8) {
+        if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_8) {
             throw exception("char8_t characters must be encoded in the UTF-8 format.");
         }
 
@@ -7745,7 +7778,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
     }
 };
 
-#endif // defined(FK_YAML_HAS_CHAR8_T)
+#endif // FK_YAML_HAS_CHAR8_T
 
 /// @brief The partial specialization of utf_encode_detector for char16_t iterators.
 /// @tparam ItrType An iterator type.
@@ -7756,7 +7789,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
     /// @param end The iterator to the past-the end element of an input.
     /// @return A detected encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) {
-        if (begin == end) {
+        if FK_YAML_UNLIKELY (begin == end) {
             return utf_encode_t::UTF_16BE;
         }
 
@@ -7771,7 +7804,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-        if (encode_type != utf_encode_t::UTF_16BE && encode_type != utf_encode_t::UTF_16LE) {
+        if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_16BE && encode_type != utf_encode_t::UTF_16LE) {
             throw exception("char16_t characters must be encoded in the UTF-16 format.");
         }
 
@@ -7793,7 +7826,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
     /// @param end The iterator to the past-the end element of an input.
     /// @return A detected encoding type.
     static utf_encode_t detect(ItrType& begin, const ItrType& end) {
-        if (begin == end) {
+        if FK_YAML_UNLIKELY (begin == end) {
             return utf_encode_t::UTF_32BE;
         }
 
@@ -7807,7 +7840,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
         bool has_bom = false;
         utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
-        if (encode_type != utf_encode_t::UTF_32BE && encode_type != utf_encode_t::UTF_32LE) {
+        if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_32BE && encode_type != utf_encode_t::UTF_32LE) {
             throw exception("char32_t characters must be encoded in the UTF-32 format.");
         }
 
@@ -7876,7 +7909,7 @@ struct stream_utf_encode_detector {
             is.read(&ch, 1);
             std::streamsize size = is.gcount();
             if (size != 1) {
-                // without this, seekg() will fail in the switch-case statement below.
+                // without this, seekg() will fail.
                 is.clear();
                 break;
             }
@@ -7996,7 +8029,7 @@ private:
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8004,7 +8037,7 @@ private:
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8013,7 +8046,7 @@ private:
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8073,7 +8106,9 @@ private:
             while (current != m_end && encoded_buf_size < 2) {
                 char16_t utf16 = static_cast<char16_t>(uint8_t(*current++) << shift_bits[0]);
                 utf16 |= static_cast<char16_t>(uint8_t(*current++) << shift_bits[1]);
-                if (utf16 != char16_t(0x000Du)) {
+
+                // skip appending CRs.
+                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -8081,7 +8116,7 @@ private:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1) {
+            if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
             }
             encoded_buf_size -= consumed_size;
@@ -8124,7 +8159,7 @@ private:
             utf32 |= static_cast<char32_t>(*current++ << shift_bits[2]);
             utf32 |= static_cast<char32_t>(*current++ << shift_bits[3]);
 
-            if (utf32 != char32_t(0x0000000Du)) {
+            if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
@@ -8146,7 +8181,7 @@ private:
     bool m_is_contiguous {false};
 };
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 
 /// @brief An input adapter for iterators of type char8_t.
 /// @tparam IterType An iterator type.
@@ -8190,7 +8225,7 @@ public:
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8198,7 +8233,7 @@ public:
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8207,7 +8242,7 @@ public:
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8223,7 +8258,7 @@ public:
 
         while (current != m_end) {
             char c = char(*current++);
-            if (c != '\r') {
+            if FK_YAML_LIKELY (c != '\r') {
                 m_buffer.push_back(c);
             }
         }
@@ -8244,7 +8279,7 @@ private:
     bool m_is_contiguous {false};
 };
 
-#endif // defined(FK_YAML_HAS_CHAR8_T)
+#endif // FK_YAML_HAS_CHAR8_T
 
 /// @brief An input adapter for iterators of type char16_t.
 /// @tparam IterType An iterator type.
@@ -8296,7 +8331,7 @@ public:
                     static_cast<uint16_t>((utf16 & 0x00FFu) << shift_bits) |
                     static_cast<uint16_t>((utf16 & 0xFF00u) >> shift_bits));
 
-                if (utf16 != char16_t(0x000Du)) {
+                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -8304,7 +8339,7 @@ public:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1) {
+            if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
             }
@@ -8384,7 +8419,7 @@ public:
                 static_cast<uint32_t>((tmp & 0x0000FF00u) << shift_bits[2]) |
                 static_cast<uint32_t>((tmp & 0x000000FFu) << shift_bits[3]));
 
-            if (utf32 != char32_t(0x0000000Du)) {
+            if FK_YAML_UNLIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
@@ -8484,7 +8519,7 @@ private:
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8492,7 +8527,7 @@ private:
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8501,7 +8536,7 @@ private:
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8539,7 +8574,7 @@ private:
                 char16_t utf16 = char16_t(
                     static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
-                if (utf16 != char16_t(0x000Du)) {
+                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -8547,7 +8582,7 @@ private:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1) {
+            if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
             }
             encoded_buf_size -= consumed_size;
@@ -8591,7 +8626,7 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            if (utf32 != char32_t(0x0000000Du)) {
+            if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
@@ -8685,7 +8720,7 @@ private:
             case 2: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8693,7 +8728,7 @@ private:
             case 3: {
                 std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8702,7 +8737,7 @@ private:
                 std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
                 bool is_valid = utf8::validate(bytes);
-                if (!is_valid) {
+                if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
@@ -8747,7 +8782,7 @@ private:
                     static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
                     static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
 
-                if (utf16 != char16_t(0x000Du)) {
+                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             };
@@ -8755,7 +8790,7 @@ private:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
-            if (consumed_size == 1) {
+            if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
             }
             encoded_buf_size -= consumed_size;
@@ -8800,7 +8835,7 @@ private:
                 static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
                 static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
 
-            if (utf32 != char32_t(0x0000000Du)) {
+            if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
@@ -8914,7 +8949,7 @@ inline typename input_adapter_factory::container_input_adapter_factory<Container
 /// @param file A file handle.
 /// @return file_input_adapter A file_input_adapter object.
 inline file_input_adapter input_adapter(std::FILE* file) {
-    if (!file) {
+    if FK_YAML_UNLIKELY (!file) {
         throw fkyaml::exception("Invalid FILE object pointer.");
     }
     utf_encode_t encode_type = file_utf_encode_detector::detect(file);
@@ -8925,7 +8960,7 @@ inline file_input_adapter input_adapter(std::FILE* file) {
 /// @param stream An input stream.
 /// @return stream_input_adapter A stream_input_adapter object.
 inline stream_input_adapter input_adapter(std::istream& stream) {
-    if (!stream.good()) {
+    if FK_YAML_UNLIKELY (!stream.good()) {
         throw fkyaml::exception("Invalid stream.");
     }
     utf_encode_t encode_type = stream_utf_encode_detector::detect(stream);
@@ -9092,7 +9127,7 @@ public:
     /// @param rhs An iterator object to be copied with.
     /// @return iterator& Reference to this iterator object.
     iterator& operator=(const iterator& rhs) noexcept {
-        if (&rhs == this) {
+        if FK_YAML_UNLIKELY (&rhs == this) {
             return *this;
         }
 
@@ -9113,7 +9148,7 @@ public:
     /// @param rhs An iterator object to be moved from.
     /// @return iterator& Reference to this iterator object.
     iterator& operator=(iterator&& rhs) noexcept {
-        if (&rhs == this) {
+        if FK_YAML_UNLIKELY (&rhs == this) {
             return *this;
         }
 
@@ -9241,7 +9276,7 @@ public:
     /// @return true  This iterator object is equal to the other.
     /// @return false This iterator object is not equal to the other.
     bool operator==(const iterator& rhs) const {
-        if (m_inner_iterator_type != rhs.m_inner_iterator_type) {
+        if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
@@ -9266,11 +9301,11 @@ public:
     /// @return true  This iterator object is less than the other.
     /// @return false This iterator object is not less than the other.
     bool operator<(const iterator& rhs) const {
-        if (m_inner_iterator_type != rhs.m_inner_iterator_type) {
+        if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
 
-        if (m_inner_iterator_type == iterator_t::MAPPING) {
+        if FK_YAML_UNLIKELY (m_inner_iterator_type == iterator_t::MAPPING) {
             throw fkyaml::exception("Cannot compare order of iterators of the mapping container type");
         }
 
@@ -9311,7 +9346,7 @@ public:
     /// @brief Get the key string of the YAML mapping node for the current iterator.
     /// @return const std::string& The key string of the YAML mapping node for the current iterator.
     const typename ValueType::mapping_type::key_type& key() const {
-        if (m_inner_iterator_type == iterator_t::SEQUENCE) {
+        if FK_YAML_UNLIKELY (m_inner_iterator_type == iterator_t::SEQUENCE) {
             throw fkyaml::exception("Cannot retrieve key from non-mapping iterators.");
         }
 
@@ -10019,7 +10054,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @param s A sequence node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_type& s) {
-    if (!n.is_sequence()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::sequence_type&>();
@@ -10039,7 +10074,7 @@ template <
             negation<std::is_same<std::vector<CompatibleValueType>, typename BasicNodeType::sequence_type>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& s) {
-    if (!n.is_sequence()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value is not sequence type.", n.get_type());
     }
 
@@ -10056,7 +10091,7 @@ inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& 
 /// @param m A mapping node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_type& m) {
-    if (!n.is_mapping()) {
+    if FK_YAML_UNLIKELY (!n.is_mapping()) {
         throw type_error("The target node value type is not mapping type.", n.get_type());
     }
 
@@ -10075,7 +10110,7 @@ template <
             has_from_node<BasicNodeType, CompatibleValueType>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, CompatibleValueType, Compare, Allocator>& m) {
-    if (!n.is_mapping()) {
+    if FK_YAML_UNLIKELY (!n.is_mapping()) {
         throw type_error("The target node value type is not mapping type.", n.get_type());
     }
 
@@ -10092,7 +10127,7 @@ inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, Compat
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, std::nullptr_t& null) {
     // to ensure the target node value type is null.
-    if (!n.is_null()) {
+    if FK_YAML_UNLIKELY (!n.is_null()) {
         throw type_error("The target node value type is not null type.", n.get_type());
     }
     null = nullptr;
@@ -10104,7 +10139,7 @@ inline void from_node(const BasicNodeType& n, std::nullptr_t& null) {
 /// @param b A boolean node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_type& b) {
-    if (!n.is_boolean()) {
+    if FK_YAML_UNLIKELY (!n.is_boolean()) {
         throw type_error("The target node value type is not boolean type.", n.get_type());
     }
     b = n.template get_value_ref<const typename BasicNodeType::boolean_type&>();
@@ -10116,7 +10151,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_ty
 /// @param i An integer node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_type& i) {
-    if (!n.is_integer()) {
+    if FK_YAML_UNLIKELY (!n.is_integer()) {
         throw type_error("The target node value type is not integer type.", n.get_type());
     }
     i = n.template get_value_ref<const typename BasicNodeType::integer_type&>();
@@ -10135,17 +10170,17 @@ template <
             negation<std::is_same<IntegerType, typename BasicNodeType::integer_type>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, IntegerType& i) {
-    if (!n.is_integer()) {
+    if FK_YAML_UNLIKELY (!n.is_integer()) {
         throw type_error("The target node value type is not integer type.", n.get_type());
     }
 
     // under/overflow check.
     using node_int_type = typename BasicNodeType::integer_type;
     node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
-    if (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min())) {
+    if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min())) {
         throw exception("Integer value underflow detected.");
     }
-    if (static_cast<node_int_type>(std::numeric_limits<IntegerType>::max()) < tmp_int) {
+    if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntegerType>::max()) < tmp_int) {
         throw exception("Integer value overflow detected.");
     }
 
@@ -10158,7 +10193,7 @@ inline void from_node(const BasicNodeType& n, IntegerType& i) {
 /// @param f A float number node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_number_type& f) {
-    if (!n.is_float_number()) {
+    if FK_YAML_UNLIKELY (!n.is_float_number()) {
         throw type_error("The target node value type is not float number type.", n.get_type());
     }
     f = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
@@ -10177,15 +10212,15 @@ template <
             negation<std::is_same<FloatType, typename BasicNodeType::float_number_type>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, FloatType& f) {
-    if (!n.is_float_number()) {
+    if FK_YAML_UNLIKELY (!n.is_float_number()) {
         throw type_error("The target node value type is not float number type.", n.get_type());
     }
 
     auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
-    if (tmp_float < std::numeric_limits<FloatType>::lowest()) {
+    if FK_YAML_UNLIKELY (tmp_float < std::numeric_limits<FloatType>::lowest()) {
         throw exception("Floating point value underflow detected.");
     }
-    if (std::numeric_limits<FloatType>::max() < tmp_float) {
+    if FK_YAML_UNLIKELY (std::numeric_limits<FloatType>::max() < tmp_float) {
         throw exception("Floating point value overflow detected.");
     }
 
@@ -10198,7 +10233,7 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
 /// @param s A string node value object.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_type& s) {
-    if (!n.is_string()) {
+    if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
@@ -10220,7 +10255,7 @@ template <
                 std::is_assignable<CompatibleStringType, const typename BasicNodeType::string_type&>>>::value,
         int> = 0>
 inline void from_node(const BasicNodeType& n, CompatibleStringType& s) {
-    if (!n.is_string()) {
+    if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
@@ -11051,7 +11086,7 @@ public:
         : m_attrs(rhs.m_attrs),
           mp_meta(rhs.mp_meta),
           m_prop(rhs.m_prop) {
-        if (!has_anchor_name()) {
+        if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs & detail::node_attr_mask::value) {
             case detail::node_attr_bits::seq_bit:
                 m_node_value.p_sequence = create_object<sequence_type>(*(rhs.m_node_value.p_sequence));
@@ -11087,7 +11122,7 @@ public:
         : m_attrs(rhs.m_attrs),
           mp_meta(std::move(rhs.mp_meta)),
           m_prop(std::move(rhs.m_prop)) {
-        if (!has_anchor_name()) {
+        if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs & detail::node_attr_mask::value) {
             case detail::node_attr_bits::seq_bit:
                 FK_YAML_ASSERT(rhs.m_node_value.p_sequence != nullptr);
@@ -11338,13 +11373,15 @@ public:
     /// @return An alias YAML node created from the given anchor node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/alias_of/
     static basic_node alias_of(const basic_node& anchor_node) {
-        if (!anchor_node.has_anchor_name() || (anchor_node.m_attrs & detail::node_attr_bits::anchor_bit) == 0) {
+        using namespace detail::node_attr_bits;
+
+        if FK_YAML_UNLIKELY (!anchor_node.has_anchor_name() || !(anchor_node.m_attrs & anchor_bit)) {
             throw fkyaml::exception("Cannot create an alias without anchor name.");
         }
 
         basic_node node = anchor_node;
         node.m_attrs &= ~detail::node_attr_mask::anchoring;
-        node.m_attrs |= detail::node_attr_bits::alias_bit;
+        node.m_attrs |= alias_bit;
         return node;
     } // LCOV_EXCL_LINE
 
@@ -11379,7 +11416,7 @@ public:
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
     basic_node& operator[](KeyType&& key) {
-        if (is_scalar()) {
+        if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
@@ -11387,7 +11424,7 @@ public:
         const node_value* p_node_value = get_node_value_ptr();
 
         if (is_sequence()) {
-            if (!n.is_integer()) {
+            if FK_YAML_UNLIKELY (!n.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
@@ -11411,7 +11448,7 @@ public:
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
     const basic_node& operator[](KeyType&& key) const {
-        if (is_scalar()) {
+        if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
@@ -11419,7 +11456,7 @@ public:
         const node_value* p_node_value = get_node_value_ptr();
 
         if (is_sequence()) {
-            if (!node_key.is_integer()) {
+            if FK_YAML_UNLIKELY (!node_key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
@@ -11439,14 +11476,14 @@ public:
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
     basic_node& operator[](KeyType&& key) {
-        if (is_scalar()) {
+        if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
         const node_value* p_node_value = get_node_value_ptr();
 
         if (is_sequence()) {
-            if (!key.is_integer()) {
+            if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
@@ -11466,14 +11503,14 @@ public:
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
     const basic_node& operator[](KeyType&& key) const {
-        if (is_scalar()) {
+        if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
         const node_value* p_node_value = get_node_value_ptr();
 
         if (is_sequence()) {
-            if (!key.is_integer()) {
+            if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
@@ -11763,7 +11800,7 @@ public:
                                   detail::is_node_compatible_type<basic_node, detail::remove_cvref_t<KeyType>>>::value,
                               int> = 0>
     bool contains(KeyType&& key) const {
-        if (get_node_attrs() & detail::node_attr_bits::map_bit) {
+        if FK_YAML_LIKELY (get_node_attrs() & detail::node_attr_bits::map_bit) {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
 
@@ -11783,7 +11820,7 @@ public:
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
     bool contains(KeyType&& key) const {
-        if (get_node_attrs() & detail::node_attr_bits::map_bit) {
+        if FK_YAML_LIKELY (get_node_attrs() & detail::node_attr_bits::map_bit) {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
 
@@ -11806,7 +11843,7 @@ public:
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
     basic_node& at(KeyType&& key) {
-        if (is_scalar()) {
+        if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", get_type());
         }
 
@@ -11814,7 +11851,7 @@ public:
         const node_value* p_node_value = get_node_value_ptr();
 
         if (is_sequence()) {
-            if (!node_key.is_integer()) {
+            if FK_YAML_UNLIKELY (!node_key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
@@ -11822,7 +11859,7 @@ public:
             sequence_type& seq = *p_node_value->p_sequence;
             int index = node_key.template get_value<int>();
             int size = static_cast<int>(seq.size());
-            if (index >= size) {
+            if FK_YAML_UNLIKELY (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
             return seq.at(index);
@@ -11831,7 +11868,7 @@ public:
         FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
         mapping_type& map = *p_node_value->p_mapping;
         bool is_found = map.find(node_key) != map.end();
-        if (!is_found) {
+        if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(node_key).c_str());
         }
         return map.at(node_key);
@@ -11849,7 +11886,7 @@ public:
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
     const basic_node& at(KeyType&& key) const {
-        if (is_scalar()) {
+        if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", get_type());
         }
 
@@ -11857,7 +11894,7 @@ public:
         const node_value* p_node_value = get_node_value_ptr();
 
         if (is_sequence()) {
-            if (!node_key.is_integer()) {
+            if FK_YAML_UNLIKELY (!node_key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
@@ -11865,7 +11902,7 @@ public:
             const sequence_type& seq = *p_node_value->p_sequence;
             int index = node_key.template get_value<int>();
             int size = static_cast<int>(seq.size());
-            if (index >= size) {
+            if FK_YAML_UNLIKELY (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
             return seq.at(index);
@@ -11874,7 +11911,7 @@ public:
         FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
         const mapping_type& map = *p_node_value->p_mapping;
         bool is_found = map.find(node_key) != map.end();
-        if (!is_found) {
+        if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(node_key).c_str());
         }
         return map.at(node_key);
@@ -11888,14 +11925,14 @@ public:
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
     basic_node& at(KeyType&& key) {
-        if (is_scalar()) {
+        if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", get_type());
         }
 
         const node_value* p_node_value = get_node_value_ptr();
 
         if (is_sequence()) {
-            if (!key.is_integer()) {
+            if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
@@ -11903,7 +11940,7 @@ public:
             sequence_type& seq = *p_node_value->p_sequence;
             int index = std::forward<KeyType>(key).template get_value<int>();
             int size = static_cast<int>(seq.size());
-            if (index >= size) {
+            if FK_YAML_UNLIKELY (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
             return seq.at(index);
@@ -11912,7 +11949,7 @@ public:
         FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
         mapping_type& map = *p_node_value->p_mapping;
         bool is_found = map.find(key) != map.end();
-        if (!is_found) {
+        if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(key).c_str());
         }
         return map.at(key);
@@ -11926,14 +11963,14 @@ public:
     template <
         typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
     const basic_node& at(KeyType&& key) const {
-        if (is_scalar()) {
+        if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", get_type());
         }
 
         const node_value* p_node_value = get_node_value_ptr();
 
         if (is_sequence()) {
-            if (!key.is_integer()) {
+            if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
@@ -11941,7 +11978,7 @@ public:
             const sequence_type& seq = *p_node_value->p_sequence;
             int index = std::forward<KeyType>(key).template get_value<int>();
             int size = static_cast<int>(seq.size());
-            if (index >= size) {
+            if FK_YAML_UNLIKELY (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
             return seq.at(index);
@@ -11950,7 +11987,7 @@ public:
         FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
         const mapping_type& map = *p_node_value->p_mapping;
         bool is_found = map.find(key) != map.end();
-        if (!is_found) {
+        if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(key).c_str());
         }
         return map.at(key);
@@ -12003,7 +12040,7 @@ public:
     /// @return The anchor name associated with the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_anchor_name/
     const std::string& get_anchor_name() const {
-        if (!has_anchor_name()) {
+        if FK_YAML_UNLIKELY (!has_anchor_name()) {
             throw fkyaml::exception("No anchor name has been set.");
         }
         return m_prop.anchor;
@@ -12078,7 +12115,7 @@ public:
     /// @return The tag name associated with the node. It may be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_tag_name/
     const std::string& get_tag_name() const {
-        if (!has_tag_name()) {
+        if FK_YAML_UNLIKELY (!has_tag_name()) {
             throw fkyaml::exception("No tag name has been set.");
         }
         return m_prop.tag;
@@ -12285,7 +12322,7 @@ private:
     /// @throw fkyaml::exception The node value is not a sequence.
     /// @return Reference to the sequence node value.
     sequence_type& get_value_ref_impl(sequence_type* /*unused*/) {
-        if (m_attrs & detail::node_attr_bits::seq_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::seq_bit) {
             return *(m_node_value.p_sequence);
         }
         throw fkyaml::type_error("The node value is not a sequence.", get_type());
@@ -12295,7 +12332,7 @@ private:
     /// @throw fkyaml::exception The node value is not a sequence.
     /// @return Constant reference to the sequence node value.
     const sequence_type& get_value_ref_impl(const sequence_type* /*unused*/) const {
-        if (m_attrs & detail::node_attr_bits::seq_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::seq_bit) {
             return *(m_node_value.p_sequence);
         }
         throw fkyaml::type_error("The node value is not a sequence.", get_type());
@@ -12305,7 +12342,7 @@ private:
     /// @throw fkyaml::exception The node value is not a mapping.
     /// @return Reference to the mapping node value.
     mapping_type& get_value_ref_impl(mapping_type* /*unused*/) {
-        if (m_attrs & detail::node_attr_bits::map_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::map_bit) {
             return *(m_node_value.p_mapping);
         }
         throw fkyaml::type_error("The node value is not a mapping.", get_type());
@@ -12315,7 +12352,7 @@ private:
     /// @throw fkyaml::exception The node value is not a mapping.
     /// @return Constant reference to the mapping node value.
     const mapping_type& get_value_ref_impl(const mapping_type* /*unused*/) const {
-        if (m_attrs & detail::node_attr_bits::map_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::map_bit) {
             return *(m_node_value.p_mapping);
         }
         throw fkyaml::type_error("The node value is not a mapping.", get_type());
@@ -12325,7 +12362,7 @@ private:
     /// @throw fkyaml::exception The node value is not a boolean.
     /// @return Reference to the boolean node value.
     boolean_type& get_value_ref_impl(boolean_type* /*unused*/) {
-        if (m_attrs & detail::node_attr_bits::bool_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::bool_bit) {
             return m_node_value.boolean;
         }
         throw fkyaml::type_error("The node value is not a boolean.", get_type());
@@ -12335,7 +12372,7 @@ private:
     /// @throw fkyaml::exception The node value is not a boolean.
     /// @return Constant reference to the boolean node value.
     const boolean_type& get_value_ref_impl(const boolean_type* /*unused*/) const {
-        if (m_attrs & detail::node_attr_bits::bool_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::bool_bit) {
             return m_node_value.boolean;
         }
         throw fkyaml::type_error("The node value is not a boolean.", get_type());
@@ -12345,7 +12382,7 @@ private:
     /// @throw fkyaml::exception The node value is not an integer.
     /// @return Reference to the integer node value.
     integer_type& get_value_ref_impl(integer_type* /*unused*/) {
-        if (m_attrs & detail::node_attr_bits::int_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::int_bit) {
             return m_node_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
@@ -12355,7 +12392,7 @@ private:
     /// @throw fkyaml::exception The node value is not an integer.
     /// @return Constant reference to the integer node value.
     const integer_type& get_value_ref_impl(const integer_type* /*unused*/) const {
-        if (m_attrs & detail::node_attr_bits::int_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::int_bit) {
             return m_node_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
@@ -12365,7 +12402,7 @@ private:
     /// @throw fkyaml::exception The node value is not a floating point number.
     /// @return Reference to the floating point number node value.
     float_number_type& get_value_ref_impl(float_number_type* /*unused*/) {
-        if (m_attrs & detail::node_attr_bits::float_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::float_bit) {
             return m_node_value.float_val;
         }
         throw fkyaml::type_error("The node value is not a floating point number.", get_type());
@@ -12375,7 +12412,7 @@ private:
     /// @throw fkyaml::exception The node value is not a floating point number.
     /// @return Constant reference to the floating point number node value.
     const float_number_type& get_value_ref_impl(const float_number_type* /*unused*/) const {
-        if (m_attrs & detail::node_attr_bits::float_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::float_bit) {
             return m_node_value.float_val;
         }
         throw fkyaml::type_error("The node value is not a floating point number.", get_type());
@@ -12385,7 +12422,7 @@ private:
     /// @throw fkyaml::exception The node value is not a string.
     /// @return Reference to the string node value.
     string_type& get_value_ref_impl(string_type* /*unused*/) {
-        if (m_attrs & detail::node_attr_bits::string_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::string_bit) {
             return *(m_node_value.p_string);
         }
         throw fkyaml::type_error("The node value is not a string.", get_type());
@@ -12395,7 +12432,7 @@ private:
     /// @throw fkyaml::exception The node value is not a string.
     /// @return Constant reference to the string node value.
     const string_type& get_value_ref_impl(const string_type* /*unused*/) const {
-        if (m_attrs & detail::node_attr_bits::string_bit) {
+        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::string_bit) {
             return *(m_node_value.p_string);
         }
         throw fkyaml::type_error("The node value is not a string.", get_type());
@@ -12499,7 +12536,7 @@ inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n) {
     return fkyaml::node::deserialize(std::move(s), std::move(s + n));
 }
 
-#ifdef FK_YAML_HAS_CHAR8_T
+#if FK_YAML_HAS_CHAR8_T
 /// @brief The user-defined string literal which deserializes a `char8_t` array into a `node` object.
 /// @param s An input `char8_t` array.
 /// @param n The size of `s`.
