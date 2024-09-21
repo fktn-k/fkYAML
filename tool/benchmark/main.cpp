@@ -83,8 +83,15 @@ void bm_libfyaml_parse(benchmark::State& st) {
 
 // rapidyaml (in place)
 void bm_rapidyaml_parse_inplace(benchmark::State& st) {
-    c4::substr c4_test_src = c4::to_substr(test_src).trimr('\0');
+    std::string in_place_buff(test_src.size(), '\0');
+    c4::substr c4_test_src = c4::to_substr(in_place_buff).trimr('\0');
+
     for (auto _ : st) {
+        // ryml::parse_in_place() modifies the contents of `in_place_buff` during parsing.
+        // Without the following copy, the second (and subsequent) parsing would fail.
+        assert(in_place_buff.size() == test_src.size());
+        std::memcpy(in_place_buff.data(), test_src.data(), in_place_buff.size());
+
         ryml::Tree tree = ryml::parse_in_place(c4_test_src);
     }
 

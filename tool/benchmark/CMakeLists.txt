@@ -32,7 +32,7 @@ endif()
 FetchContent_Declare(
   rapidyaml
   GIT_REPOSITORY https://github.com/biojppm/rapidyaml
-  GIT_TAG v0.6.0
+  GIT_TAG v0.7.2
   GIT_SUBMODULES "ext/c4core"
 )
 FetchContent_MakeAvailable(rapidyaml)
