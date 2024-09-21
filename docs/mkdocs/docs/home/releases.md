@@ -1,5 +1,59 @@
 # Releases
 
+## [v0.3.12](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.12) (2024-09-21)
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.12/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.12/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.12/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.12/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.12/node.hpp) (single header)
+
+### Summary
+
+This release adds some basic_node APIs to get/set node attributes for more secure backwards compatibilities in future releases. Because of that, some existing APIs have been deprecated (see the list down below). It's recommended for users to replace deprecated API usages with new APIs.  
+Furthermore, relatively large refactoring has been made for better performance and more flexible node attribute configurations (just preparation for now, but will be added within a few coming releases). As a result, deserialization performance has increased. See the Benchmarking section in README.md for details.  
+Last but not least, several bugs have also been resolved in deserialization, and active C++ standard is now correctly detected at compile time when using MSVC compilers where `__cplusplus` macro doesn't hold a correct value by default.  
+
+#### :sparkles: New Features
+
+- Add node\_type/yaml\_version\_type enum class APIs by [fktn-k](https://github.com/fktn-k) in [\#388](https://github.com/fktn-k/fkYAML/pull/388)
+  - In this PR, the following APIs has been deprecated. Although they still work as before except for compile-time deprecation warnings, it's highly recommended to replace their usages with new APIs since they are planned to be removed in v0.4.0. See the Deprecation notes in each deprecated API reference page for migration guides.
+    - [`fkyaml::basic_node::node_t`](https://fktn-k.github.io/fkYAML/api/basic_node/node_t/)  
+      - Replace with: [`fkyaml::node_type`](https://fktn-k.github.io/fkYAML/api/node_type/)
+    - [`fkyaml::basic_node::basic_node(const fkyaml::basic_node::node_t)`](https://fktn-k.github.io/fkYAML/api/basic_node/constructor/#overload-3)
+      - Replace with: [`fkyaml::basic_node::basic_node(const fkyaml::node_type)`](https://fktn-k.github.io/fkYAML/api/basic_node/constructor/#overload-2)
+    - [`fkyaml::basic_node::node_t fkyaml::basic_node::type()`](https://fktn-k.github.io/fkYAML/api/basic_node/type/)
+      - Replace with: [`fkyaml::basic_node::get_type()`](https://fktn-k.github.io/fkYAML/api/basic_node/get_type/)
+    - [`fkyaml::basic_node::yaml_version_t`](https://fktn-k.github.io/fkYAML/api/basic_node/yaml_version_t/)
+      - Replace with: [`fkyaml::yaml_version_type`](https://fktn-k.github.io/fkYAML/api/yaml_version_type/)
+    - [`fkyaml::basic_node::yaml_version_t fkyaml::basic_node::get_yaml_version()`](https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/)
+      - Replace with: [`fkyaml::yaml_version_type fkyaml::basic_node::get_yaml_version_type()`](https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version_type/)
+    - [`void fkyaml::basic_node::set_yaml_version(const fkyaml::basic_node::yaml_version_t)`](https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/)
+      - Replace with: [`void fkyaml::basic_node::set_yaml_version_type(const fkyaml::yaml_version_type)`](https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version_type/)
+
+
+#### :zap: Improvements
+
+- Improve UTF encoding detection by [fktn-k](https://github.com/fktn-k) in [\#386](https://github.com/fktn-k/fkYAML/pull/386)
+- Refactor node attributes management by [fktn-k](https://github.com/fktn-k) in [\#389](https://github.com/fktn-k/fkYAML/pull/389)
+- Refactor lexical analysis by [fktn-k](https://github.com/fktn-k) in [\#390](https://github.com/fktn-k/fkYAML/pull/390)
+- Improve conversion from scalars to native types by [fktn-k](https://github.com/fktn-k) in [\#391](https://github.com/fktn-k/fkYAML/pull/391)
+- Reduce string copies in parse by [fktn-k](https://github.com/fktn-k) in [\#394](https://github.com/fktn-k/fkYAML/pull/394)
+- Use likely/unlikely if available by [fktn-k](https://github.com/fktn-k) in [\#395](https://github.com/fktn-k/fkYAML/pull/395)
+
+#### :bug: Bug Fixes
+
+- Fix detecting invalid contents of block scalar headers by [fktn-k](https://github.com/fktn-k) in [\#387](https://github.com/fktn-k/fkYAML/pull/387)
+- Use \_MSVC\_LANG macro when compiled with MSVC for C++ standard detection by [fktn-k](https://github.com/fktn-k) in [\#392](https://github.com/fktn-k/fkYAML/pull/392)
+- Parse +.inf as the positive float infinity by [fktn-k](https://github.com/fktn-k) in [\#393](https://github.com/fktn-k/fkYAML/pull/393)
+
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.11...v0.3.12
+
+---
+
 ## **fkYAML version 0.3.11**
 
 !!! abstract "Release Packages"
