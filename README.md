@@ -21,8 +21,8 @@ You can add YAML support into your projects by just including header files where
 - [Community Support](#community-support)
 - [How to use fkYAML](#how-to-use-fkyaml)
 - [How to test fkYAML](#how-to-test-fkYAML)
-- [Benchmarking](#benchmarking)
 - [Supported compilers](#supported-compilers)
+- [Benchmarking](#benchmarking)
 - [License](#license)
 - [Used third-party tools](#used-third-party-tools)
 
@@ -85,22 +85,6 @@ $ cmake --build build --config Debug
 $ ctest -C Debug --test-dir build --output-on-failure
 ```
 
-## Benchmarking
-
-Though experimental, benchmarking scores are now available with [the dedicated benchmarking tool](./tool/benchmark/README.md) for the parsing.  
-On an AMD Ryzen 7 5800H @3.20GHz with g++11.4.0 in Ubuntu22.04 (WSL2), fkYAML parses [the YAML source](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/macos.yml) at a competitive speed compared against other existing YAML libraries for C/C++:
-
-| Benchmark                          | Release (MB/s) |
-| ---------------------------------- | -------------- |
-| fkYAML                             | 41.051         |
-| libfyaml                           | 31.110         |
-| rapidyaml<br>(with mutable buff)   | 147.221        |
-| rapidyaml<br>(with immutable buff) | 144.904        |
-| yaml-cpp                           | 7.397          |
-
-Although [rapidyaml](https://github.com/biojppm/rapidyaml) is in general 4x faster than fkYAML as it focuses on high performance, fkYAML is 30% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also 5.5x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
-Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some real use cases.  
-
 ## Supported compilers
 Currently, the following compilers are known to work and used in GitHub Actions workflows:
 
@@ -152,6 +136,47 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 
 Requests for new compiler supports are welcome.  
 If you encounter a problem regarding compilers, please let us know by [creating an issue](https://github.com/fktn-k/fkYAML/issues/new?assignees=&labels=kind%3A+bug&projects=&template=bug-report.yml) or a PR with the information of your Operating System so that the same situation can be reproduced.  
+
+## Benchmarking
+
+Though efficiency is not everything, speed and memory consumption are very important characteristics for C++ developers. Regarding speed, benchmarking scores are now available with [the dedicated benchmarking tool](./tool/benchmark/README.md) for the parsing.  
+The following tables are created from the benchmarking results in the following environment:
+* CPU: AMD Ryzen 7 5800H @3.20GHz
+* OS: Ubuntu22.04 (WSL2)
+* Compiler: g++11.4.0
+
+### Parsing [ubuntu.yml](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/ubuntu.yml)
+
+| Benchmark                          | processed bytes per second (Debug) | processed bytes per second (Release) |
+| ---------------------------------- | ---------------------------------- | ------------------------------------ |
+| fkYAML                             | 48.0896Mi/s                        | 50.4621Mi/s                          |
+| libfyaml                           | 8.39097Mi/s                        | 35.6895Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 8.9962Gi/s                         | 19.5486Gi/s                          |
+| rapidyaml<br>(with immutable buff) | 29.4563Mi/s                        | 140.742Mi/s                          |
+| yaml-cpp                           | 1.05087Mi/s                        | 8.67172Mi/s                          |
+
+### Parsing [citm_catalog.json](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.json)
+
+| Benchmark                          | processed bytes per second (Debug) | processed bytes per second (Release) |
+| ---------------------------------- | ---------------------------------- | ------------------------------------ |
+| fkYAML                             | 70.6833Mi/s                        | 75.5534Mi/s                          |
+| libfyaml                           | 38.7268Mi/s                        | 51.9599Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 4.75074Gi/s                        | 16.5046Gi/s                          |
+| rapidyaml<br>(with immutable buff) | 38.7268Mi/s                        | 145.916Mi/s                          |
+| yaml-cpp                           | 2.01743Mi/s                        | 14.7372Mi/s                          |
+
+### Parsing [citm_catalog.yml](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.yml)
+
+| Benchmark                          | processed bytes per second (Debug) | processed bytes per second (Release) |
+| ---------------------------------- | ---------------------------------- | ------------------------------------ |
+| fkYAML                             | 30.1867Mi/s                        | 32.7921Mi/s                          |
+| libfyaml                           | 6.21108Mi/s                        | 23.285Mi/s                           |
+| rapidyaml<br>(with mutable buff)   | 29.8103Gi/s                        | 29.3442Gi/s                          |
+| rapidyaml<br>(with immutable buff) | 19.1685Mi/s                        | 68.212Mi/s                           |
+| yaml-cpp                           | 808.316Ki/s                        | 6.21174Mi/s                          |
+
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) is 2-4x faster with immutable buffer and far faster with mutable buff than fkYAML as it focuses on high performance, fkYAML is in general 40% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also more than 5x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some real use cases since there is no need for string manipulations.  
 
 ## License
 
