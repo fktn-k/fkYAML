@@ -1942,19 +1942,24 @@ TEST_CASE("Deserializer_YAMLVerDirective") {
         REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
     }
 
-    SECTION("YAML directive in the content to be ignored") {
+    SECTION("YAML directive in the content is a valid scalar") {
         REQUIRE_NOTHROW(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\n%YAML 1.1\ntrue: 123")));
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\n%YAML 1.1: is valid\ntrue: 123")));
 
         REQUIRE(root.get_yaml_version_type() == fkyaml::yaml_version_type::VERSION_1_2);
         REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 2);
+        REQUIRE(root.size() == 3);
         REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("%YAML 1.1"));
         REQUIRE(root.contains(true));
 
         fkyaml::node& foo_node = root["foo"];
         REQUIRE(foo_node.is_string());
         REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+
+        fkyaml::node& yaml11_node = root["%YAML 1.1"];
+        REQUIRE(yaml11_node.is_string());
+        REQUIRE(yaml11_node.get_value_ref<std::string&>() == "is valid");
 
         fkyaml::node& true_node = root[true];
         REQUIRE(true_node.is_integer());

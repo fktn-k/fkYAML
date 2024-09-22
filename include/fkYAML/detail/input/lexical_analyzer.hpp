@@ -31,6 +31,15 @@ struct lexical_token {
     str_view str {};
 };
 
+namespace {
+
+// whether the current context is flow(1) or block(0)
+const uint32_t flow_context_bit = 1u << 0u;
+// whether the curent document part is directive(1) or content(0)
+const uint32_t document_directive_bit = 1u << 1u;
+
+} // anonymous namespace
+
 /// @brief A class which lexically analizes YAML formatted inputs.
 class lexical_analyzer {
 private:
@@ -104,7 +113,7 @@ public:
             case ']':
             case '{':
             case '}':
-                if (m_flow_context_depth > 0) {
+                if (m_state & flow_context_bit) {
                     // the above characters are not "safe" to be followed in a flow context.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
@@ -151,7 +160,12 @@ public:
             scan_comment();
             return get_next_token();
         case '%': // directive prefix
-            token.type = scan_directive();
+            if (m_state & document_directive_bit) {
+                token.type = scan_directive();
+            }
+            else {
+                scan_scalar(token);
+            }
             return token;
         case '-': {
             char next = *(m_cur_itr + 1);
@@ -181,22 +195,18 @@ public:
             return token;
         }
         case '[': // sequence flow begin
-            m_flow_context_depth++;
             ++m_cur_itr;
             token.type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
             return token;
         case ']': // sequence flow end
-            m_flow_context_depth = (m_flow_context_depth > 0) ? m_flow_context_depth - 1 : 0;
             ++m_cur_itr;
             token.type = lexical_token_t::SEQUENCE_FLOW_END;
             return token;
         case '{': // mapping flow begin
-            m_flow_context_depth++;
             ++m_cur_itr;
             token.type = lexical_token_t::MAPPING_FLOW_BEGIN;
             return token;
         case '}': // mapping flow end
-            m_flow_context_depth = (m_flow_context_depth > 0) ? m_flow_context_depth - 1 : 0;
             ++m_cur_itr;
             token.type = lexical_token_t::MAPPING_FLOW_END;
             return token;
@@ -279,6 +289,20 @@ public:
     /// @return str_view A tag prefix.
     str_view get_tag_prefix() const noexcept {
         return m_tag_prefix;
+    }
+
+    void set_context_state(bool is_flow_context) noexcept {
+        m_state &= ~flow_context_bit;
+        if (is_flow_context) {
+            m_state |= flow_context_bit;
+        }
+    }
+
+    void set_document_state(bool is_directive) noexcept {
+        m_state &= ~document_directive_bit;
+        if (is_directive) {
+            m_state |= document_directive_bit;
+        }
     }
 
 private:
@@ -950,15 +974,15 @@ private:
             check_filters.append("\"\\");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
-        else if (m_flow_context_depth == 0) {
-            // plain scalar outside flow contexts
-            check_filters.append(" :");
-            pfn_is_allowed = &lexical_analyzer::is_allowed_plain;
-        }
-        else {
+        else if (m_state & flow_context_bit) {
             // plain scalar inside flow contexts
             check_filters.append(" :{}[],");
             pfn_is_allowed = &lexical_analyzer::is_allowed_plain_flow;
+        }
+        else {
+            // plain scalar outside flow contexts
+            check_filters.append(" :");
+            pfn_is_allowed = &lexical_analyzer::is_allowed_plain;
         }
 
         // scan the contents of a string scalar token.
@@ -1394,7 +1418,7 @@ private:
     /// The beginning line of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_line {0};
     /// The current depth of flow context.
-    uint32_t m_flow_context_depth {0};
+    uint32_t m_state {0};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
