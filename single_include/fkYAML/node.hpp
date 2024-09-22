@@ -4047,6 +4047,15 @@ struct lexical_token {
     str_view str {};
 };
 
+namespace {
+
+// whether the current context is flow(1) or block(0)
+const uint32_t flow_context_bit = 1u << 0u;
+// whether the curent document part is directive(1) or content(0)
+const uint32_t document_directive_bit = 1u << 1u;
+
+} // anonymous namespace
+
 /// @brief A class which lexically analizes YAML formatted inputs.
 class lexical_analyzer {
 private:
@@ -4120,7 +4129,7 @@ public:
             case ']':
             case '{':
             case '}':
-                if (m_flow_context_depth > 0) {
+                if (m_state & flow_context_bit) {
                     // the above characters are not "safe" to be followed in a flow context.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     break;
@@ -4167,7 +4176,14 @@ public:
             scan_comment();
             return get_next_token();
         case '%': // directive prefix
-            token.type = scan_directive();
+            if (m_state & document_directive_bit) {
+                token.type = scan_directive();
+            }
+            else {
+                // The '%' character can be safely used as the first character in document contents.
+                // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
+                scan_scalar(token);
+            }
             return token;
         case '-': {
             char next = *(m_cur_itr + 1);
@@ -4197,22 +4213,18 @@ public:
             return token;
         }
         case '[': // sequence flow begin
-            m_flow_context_depth++;
             ++m_cur_itr;
             token.type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
             return token;
         case ']': // sequence flow end
-            m_flow_context_depth = (m_flow_context_depth > 0) ? m_flow_context_depth - 1 : 0;
             ++m_cur_itr;
             token.type = lexical_token_t::SEQUENCE_FLOW_END;
             return token;
         case '{': // mapping flow begin
-            m_flow_context_depth++;
             ++m_cur_itr;
             token.type = lexical_token_t::MAPPING_FLOW_BEGIN;
             return token;
         case '}': // mapping flow end
-            m_flow_context_depth = (m_flow_context_depth > 0) ? m_flow_context_depth - 1 : 0;
             ++m_cur_itr;
             token.type = lexical_token_t::MAPPING_FLOW_END;
             return token;
@@ -4295,6 +4307,24 @@ public:
     /// @return str_view A tag prefix.
     str_view get_tag_prefix() const noexcept {
         return m_tag_prefix;
+    }
+
+    /// @brief Toggles the context state between flow and block.
+    /// @param is_flow_context true: flow context, false: block context
+    void set_context_state(bool is_flow_context) noexcept {
+        m_state &= ~flow_context_bit;
+        if (is_flow_context) {
+            m_state |= flow_context_bit;
+        }
+    }
+
+    /// @brief Toggles the document state between directive and content.
+    /// @param is_directive true: directive, false: content
+    void set_document_state(bool is_directive) noexcept {
+        m_state &= ~document_directive_bit;
+        if (is_directive) {
+            m_state |= document_directive_bit;
+        }
     }
 
 private:
@@ -4966,15 +4996,15 @@ private:
             check_filters.append("\"\\");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
-        else if (m_flow_context_depth == 0) {
-            // plain scalar outside flow contexts
-            check_filters.append(" :");
-            pfn_is_allowed = &lexical_analyzer::is_allowed_plain;
-        }
-        else {
+        else if (m_state & flow_context_bit) {
             // plain scalar inside flow contexts
             check_filters.append(" :{}[],");
             pfn_is_allowed = &lexical_analyzer::is_allowed_plain_flow;
+        }
+        else {
+            // plain scalar outside flow contexts
+            check_filters.append(" :");
+            pfn_is_allowed = &lexical_analyzer::is_allowed_plain;
         }
 
         // scan the contents of a string scalar token.
@@ -5410,7 +5440,7 @@ private:
     /// The beginning line of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_line {0};
     /// The current depth of flow context.
-    uint32_t m_flow_context_depth {0};
+    uint32_t m_state {0};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -6404,6 +6434,7 @@ private:
         }
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
             ++m_flow_context_depth;
+            lexer.set_context_state(true);
             root = basic_node_type::sequence();
             apply_directive_set(root);
             apply_node_properties(root);
@@ -6413,6 +6444,7 @@ private:
             break;
         case lexical_token_t::MAPPING_FLOW_BEGIN:
             ++m_flow_context_depth;
+            lexer.set_context_state(true);
             root = basic_node_type::mapping();
             apply_directive_set(root);
             apply_node_properties(root);
@@ -6460,6 +6492,7 @@ private:
     /// @param last_type The variable to store the last lexical token type.
     void deserialize_directives(lexer_type& lexer, lexical_token& last_token) {
         bool lacks_end_of_directives_marker = false;
+        lexer.set_document_state(true);
 
         for (;;) {
             lexical_token token = lexer.get_next_token();
@@ -6539,6 +6572,7 @@ private:
                 }
                 // end the parsing of directives if the other tokens are found.
                 last_token = token;
+                lexer.set_document_state(false);
                 return;
             }
         }
@@ -6750,11 +6784,6 @@ private:
 
                 continue;
             }
-            // just ignore directives
-            case lexical_token_t::YAML_VER_DIRECTIVE:
-            case lexical_token_t::TAG_DIRECTIVE:
-            case lexical_token_t::INVALID_DIRECTIVE:
-                break;
             case lexical_token_t::ANCHOR_PREFIX:
             case lexical_token_t::TAG_PREFIX:
                 deserialize_node_properties(lexer, token, line, indent);
@@ -6789,6 +6818,8 @@ private:
             }
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
                 if (m_flow_context_depth == 0) {
+                    lexer.set_context_state(true);
+
                     uint32_t pop_num = 0;
                     if (indent == 0) {
                         pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
@@ -6864,7 +6895,10 @@ private:
                 if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
                     throw parse_error("Flow sequence ending is found outside the flow context.", line, indent);
                 }
-                --m_flow_context_depth;
+
+                if (--m_flow_context_depth == 0) {
+                    lexer.set_context_state(false);
+                }
 
                 // find the corresponding flow sequence beginning.
                 auto itr = std::find_if( // LCOV_EXCL_LINE
@@ -6931,6 +6965,8 @@ private:
             }
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 if (m_flow_context_depth == 0) {
+                    lexer.set_context_state(true);
+
                     uint32_t pop_num = 0;
                     if (indent == 0) {
                         pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
@@ -7009,7 +7045,10 @@ private:
                 if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
                     throw parse_error("Flow mapping ending is found outside the flow context.", line, indent);
                 }
-                --m_flow_context_depth;
+
+                if (--m_flow_context_depth == 0) {
+                    lexer.set_context_state(false);
+                }
 
                 // find the corresponding flow mapping beginning.
                 auto itr = std::find_if( // LCOV_EXCL_LINE
@@ -7098,6 +7137,11 @@ private:
             case lexical_token_t::END_OF_DOCUMENT:
                 last_type = token.type;
                 return;
+            // no way to come here while lexically analyzing document contents.
+            case lexical_token_t::YAML_VER_DIRECTIVE: // LCOV_EXCL_LINE
+            case lexical_token_t::TAG_DIRECTIVE:      // LCOV_EXCL_LINE
+            case lexical_token_t::INVALID_DIRECTIVE:  // LCOV_EXCL_LINE
+                break;                                // LCOV_EXCL_LINE
             }
 
             token = lexer.get_next_token();
