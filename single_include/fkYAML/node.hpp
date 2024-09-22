@@ -4180,6 +4180,8 @@ public:
                 token.type = scan_directive();
             }
             else {
+                // The '%' character can be safely used as the first character in document contents.
+                // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
                 scan_scalar(token);
             }
             return token;
@@ -4307,6 +4309,8 @@ public:
         return m_tag_prefix;
     }
 
+    /// @brief Toggles the context state between flow and block.
+    /// @param is_flow_context true: flow context, false: block context
     void set_context_state(bool is_flow_context) noexcept {
         m_state &= ~flow_context_bit;
         if (is_flow_context) {
@@ -4314,6 +4318,8 @@ public:
         }
     }
 
+    /// @brief Toggles the document state between directive and content.
+    /// @param is_directive true: directive, false: content
     void set_document_state(bool is_directive) noexcept {
         m_state &= ~document_directive_bit;
         if (is_directive) {
