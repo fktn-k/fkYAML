@@ -1,0 +1,300 @@
+name: Ubuntu
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - .github/workflows/ubuntu.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - test/**
+      - tool/**
+      - .clang-tidy
+      - CMakeLists.txt
+      - Makefile
+  pull_request:
+    paths:
+      - .github/workflows/ubuntu.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - test/**
+      - tool/**
+      - .clang-tidy
+      - CMakeLists.txt
+      - Makefile
+  workflow_dispatch:
+
+env:
+  JOBS: 3
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu-latest:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [ Debug, Release ]
+        use_single_header: ["ON", "OFF"]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_USE_SINGLE_HEADER=${{matrix.use_single_header}}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build_${{matrix.build_type}} --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build_${{matrix.build_type}}
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  ci_test_clang_tidy:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Run Clang-Tidy
+      run: make clang-tidy
+
+  ci_test_iwyu:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install include-what-you-use
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y iwyu
+        include-what-you-use --version
+
+    - name: Run include-what-you-use
+      run: make iwyu
+
+  ci_test_valgrind:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Valgrind
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y valgrind
+        valgrind --version
+
+    - name: Run Valgrind
+      run: make valgrind
+
+  ci_test_clang_sanitizers:
+    runs-on: ubuntu-latest
+    container: silkeh/clang:latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Install git and unzip
+        run: |
+          apt-get update
+          apt-get install -y git unzip
+          git --version
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Get latest CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Run Clang Sanitizers
+        run: make clang-sanitizers
+
+  ci_test_clang_cxx_standards:
+    runs-on: ubuntu-latest
+    container: silkeh/clang:latest
+    strategy:
+      matrix:
+        cxx_standard: [ "11", "14", "17", "20", "23" ]
+        build_type: [ Debug, Release ]
+
+    steps:
+    - name: Install git and unzip
+      run: |
+        apt-get update
+        apt-get install -y git unzip
+        git --version
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Get latest CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Install package for test
+      run: |
+        cmake -B ${{github.workspace}}/build_for_package
+        cmake --build ${{github.workspace}}/build_for_package --target install
+        rm -rf ${{github.workspace}}/build_for_package
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
+
+    - name: Build & Test
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+        cd ${{github.workspace}}/build
+        ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  ci_test_gcc_cxx_standards:
+    runs-on: ubuntu-latest
+    container: gcc:latest
+    strategy:
+      matrix:
+        cxx_standard: [ "11", "14", "17", "20", "23" ]
+        build_type: [ Debug, Release ]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Get latest CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Install package for test
+      run: |
+        cmake -B ${{github.workspace}}/build_for_package
+        cmake --build ${{github.workspace}}/build_for_package --target install
+        rm -rf ${{github.workspace}}/build_for_package
+
+    - name: Configure CMake and Ninja
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
+
+    - name: Build & Test
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+        cd ${{github.workspace}}/build
+        ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  ci_test_clang_versions:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [ "3.5", "3.6", "3.7", "3.8", "3.9", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", latest ]
+        build_type: [ Debug, Release ]
+    container: silkeh/clang:${{matrix.compiler}}
+
+    steps:
+    - name: Install git and unzip
+      run: |
+        apt-get update
+        apt-get install -y git unzip
+        git --version
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Get latest CMake and Ninja
+      uses: lukka/get-cmake@latest
+
+    - name: Install package for test
+      run: |
+        cmake -B ${{github.workspace}}/build_for_package
+        cmake --build ${{github.workspace}}/build_for_package --target install
+        rm -rf ${{github.workspace}}/build_for_package
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON
+
+    - name: Build & Test
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+        cd ${{github.workspace}}/build
+        ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  ci_test_gcc_versions:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [ "7", "8", "9", "10", "11", "12", "13", "14", latest ]
+        build_type: [ Debug, Release ]
+    container: gcc:${{matrix.compiler}}
+
+    steps:
+    - name: Install git and unzip
+      run: |
+        apt-get update
+        apt-get install -y git unzip
+        git --version
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Get latest CMake and Ninja
+      uses: lukka/get-cmake@latest
+
+    - name: Install package for test
+      run: |
+        cmake -B ${{github.workspace}}/build_for_package
+        cmake --build ${{github.workspace}}/build_for_package --target install
+        rm -rf ${{github.workspace}}/build_for_package
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON
+
+    - name: Build & Test
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+        cd ${{github.workspace}}/build
+        ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  ci_test_icpx:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [ Debug, Release ]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Intel oneAPI Base Toolkit
+      run: | # from the official document: https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2024-1/apt.html
+        wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+        echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+        sudo apt-get install -y intel-basekit
+
+    - name: Configure CMake
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx -DFK_YAML_BUILD_TEST=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      run: ctest --test-dir ${{github.workspace}}/build -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
