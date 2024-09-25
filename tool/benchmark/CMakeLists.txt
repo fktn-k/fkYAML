@@ -71,6 +71,12 @@ target_compile_options(
     >
 )
 
+target_compile_options(
+  ryml
+  PUBLIC
+    $<$<CXX_COMPILER_ID:MSVC>: /wd4819>
+)
+
 target_link_libraries(
   benchmarker
   PRIVATE

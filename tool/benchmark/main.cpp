@@ -6,6 +6,13 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
+#ifdef _MSC_VER
+// suppress the C4996 warning against the usage of fopen().
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#include <cassert>
+#include <cstring>
 #include <string>
 
 #include <benchmark/benchmark.h>
@@ -94,7 +101,7 @@ void bm_rapidyaml_parse_inplace(benchmark::State& st) {
         // ryml::parse_in_place() modifies the contents of `in_place_buff` during parsing.
         // Without the following copy, the second (and subsequent) parsing would fail.
         assert(in_place_buff.size() == test_src.size());
-        std::memcpy(in_place_buff.data(), test_src.data(), in_place_buff.size());
+        std::memcpy(&in_place_buff[0], &test_src[0], in_place_buff.size());
 
         ryml::Tree tree = ryml::parse_in_place(c4_test_src);
     }
