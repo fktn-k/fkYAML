@@ -56,18 +56,65 @@ class basic_deserializer {
     /** A type for string node values. */
     using string_type = typename basic_node_type::string_type;
 
-    /// @brief Definition of state types of parse contexts.
-    enum class context_state_t {
-        BLOCK_MAPPING,                //!< The underlying node is a block mapping.
-        BLOCK_MAPPING_EXPLICIT_KEY,   //!< The underlying node is an explicit block mapping key.
-        BLOCK_MAPPING_EXPLICIT_VALUE, //!< The underlying node is an explicit block mapping value.
-        MAPPING_VALUE,                //!< The underlying node is a block mapping value.
-        BLOCK_SEQUENCE,               //!< The underlying node is a block sequence.
-        FLOW_SEQUENCE,                //!< The underlying node is a flow sequence.
-        FLOW_SEQUENCE_KEY,            //!< The underlying node is a flow sequence as a key.
-        FLOW_MAPPING,                 //!< The underlying node is a flow mapping.
-        FLOW_MAPPING_KEY,             //!< The underlying node is a flow mapping as a key.
+    /// @brief Definitions of parse context type.
+    class state_bits {
+    public:
+        static constexpr uint32_t unknown = 0u;
+        static constexpr uint32_t map = 1u << 0u;
+        static constexpr uint32_t seq = 1u << 1u;
+        static constexpr uint32_t block = 1u << 2u;
+        static constexpr uint32_t flow = 1u << 3u;
+        static constexpr uint32_t key = 1u << 4u;
+        static constexpr uint32_t value = 1u << 5u;
+        static constexpr uint32_t xplicit = 1u << 6u;
+        static constexpr uint32_t heap = 1u << 7u;
+
+        // utility bit sets
+        static constexpr uint32_t block_seq = block | seq;
+        static constexpr uint32_t block_map = block | map;
+        static constexpr uint32_t flow_seq = flow | seq;
+        static constexpr uint32_t flow_map = flow | map;
+        static constexpr uint32_t xplicit_key = key | xplicit;
+
+        constexpr state_bits() noexcept = default;
+        constexpr state_bits(const state_bits&) noexcept = default;
+        constexpr state_bits(state_bits&&) noexcept = default;
+        constexpr state_bits& operator=(const state_bits&) noexcept = default;
+        constexpr state_bits& operator=(state_bits&&) noexcept = default;
+
+        constexpr state_bits(uint32_t bits) noexcept
+            : m_bits(bits) {
+        }
+
+        constexpr state_bits& operator=(uint32_t bits) noexcept {
+            m_bits = bits;
+        }
+
+        constexpr uint32_t get(uint32_t mask = std::numeric_limits<uint32_t>::max()) const noexcept {
+            return m_bits & mask;
+        }
+
+        constexpr bool matches(uint32_t bits) const noexcept {
+            return m_bits == bits;
+        }
+
+        constexpr bool contains(uint32_t mask) const noexcept {
+            return (m_bits & mask) == mask;
+        }
+
+        constexpr bool has_any(uint32_t mask) const noexcept {
+            return m_bits & mask;
+        }
+
+        void reset(uint32_t bits) noexcept {
+            m_bits = bits;
+        }
+
+    private:
+        uint32_t m_bits {unknown};
     };
+
+    static_assert(std::is_standard_layout<state_bits>::value, "state_bits must be trivial.");
 
     /// @brief Context information set for parsing.
     struct parse_context {
@@ -75,27 +122,21 @@ class basic_deserializer {
         parse_context() = default;
 
         /// @brief Construct a new parse_context object with non-default values for each parameter.
-        /// @param _line The current line. (count from zero)
-        /// @param _indent The indentation width in the current line. (count from zero)
-        /// @param _state The parse context type.
-        /// @param _p_node The underlying node associated to this context.
-        parse_context(uint32_t _line, uint32_t _indent, context_state_t _state, basic_node_type* _p_node)
-            : line(_line),
-              indent(_indent),
-              state(_state),
-              p_node(_p_node) {
+        /// @param line The current line. (count from zero)
+        /// @param indent The indentation width in the current line. (count from zero)
+        /// @param state The parse context type.
+        /// @param p_node The underlying node associated to this context.
+        parse_context(uint32_t line, uint32_t indent, uint32_t state, basic_node_type* p_node)
+            : line(line),
+              indent(indent),
+              state(state),
+              p_node(p_node) {
         }
 
         ~parse_context() {
-            switch (state) {
-            case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
-            case context_state_t::FLOW_SEQUENCE_KEY:
-            case context_state_t::FLOW_MAPPING_KEY:
+            if (state.has_any(state_bits::heap)) {
                 delete p_node;
                 p_node = nullptr;
-                break;
-            default:
-                break;
             }
         }
 
@@ -104,7 +145,7 @@ class basic_deserializer {
         /// The indentation width in the current line. (count from zero)
         uint32_t indent {0};
         /// The parse context type.
-        context_state_t state {context_state_t::BLOCK_MAPPING};
+        state_bits state {};
         /// The pointer to the associated node to this context.
         basic_node_type* p_node {nullptr};
     };
@@ -185,7 +226,7 @@ private:
                 apply_node_properties(root);
             }
             parse_context context(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
+                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), state_bits::block_seq, &root);
             m_context_stack.emplace_back(std::move(context));
             token = lexer.get_next_token();
             break;
@@ -197,7 +238,7 @@ private:
             apply_directive_set(root);
             apply_node_properties(root);
             m_context_stack.emplace_back(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_SEQUENCE, &root);
+                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), state_bits::flow_seq, &root);
             token = lexer.get_next_token();
             break;
         case lexical_token_t::MAPPING_FLOW_BEGIN:
@@ -207,7 +248,7 @@ private:
             apply_directive_set(root);
             apply_node_properties(root);
             m_context_stack.emplace_back(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
+                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), state_bits::flow_map, &root);
             token = lexer.get_next_token();
             break;
         default: {
@@ -219,7 +260,7 @@ private:
                 apply_node_properties(root);
             }
             parse_context context(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
+                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), state_bits::block_map, &root);
             m_context_stack.emplace_back(std::move(context));
             break;
         }
@@ -381,23 +422,24 @@ private:
                     apply_directive_set(*mp_current_node);
                 }
 
-                if (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE) {
+                if (m_context_stack.back().state.contains(state_bits::block_seq)) {
                     sequence_type& seq = mp_current_node->template get_value_ref<sequence_type&>();
                     seq.emplace_back(basic_node_type::mapping());
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, &(seq.back()));
+                    m_context_stack.emplace_back(line, indent, state_bits::block_map, &(seq.back()));
                 }
 
                 token = lexer.get_next_token();
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
                     basic_node_type* p_node = new basic_node_type(node_type::SEQUENCE);
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, p_node);
+                    m_context_stack.emplace_back(
+                        line, indent, state_bits::block_map | state_bits::xplicit_key | state_bits::heap, p_node);
                     mp_current_node = m_context_stack.back().p_node;
                     apply_directive_set(*mp_current_node);
                     parse_context context(
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos(),
-                        context_state_t::BLOCK_SEQUENCE,
+                        state_bits::block_seq,
                         mp_current_node);
                     m_context_stack.emplace_back(std::move(context));
                     break;
@@ -405,7 +447,10 @@ private:
 
                 // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
                 m_context_stack.emplace_back(
-                    line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, new basic_node_type());
+                    line,
+                    indent,
+                    state_bits::block_map | state_bits::xplicit_key | state_bits::heap,
+                    new basic_node_type());
                 mp_current_node = m_context_stack.back().p_node;
                 apply_directive_set(*mp_current_node);
                 indent = lexer.get_last_token_begin_pos();
@@ -463,7 +508,7 @@ private:
                             *mp_current_node = basic_node_type::mapping();
                             apply_directive_set(*mp_current_node);
                             apply_node_properties(*mp_current_node);
-                            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                            m_context_stack.emplace_back(line, indent, state_bits::block_map, mp_current_node);
                             continue;
                         }
                     }
@@ -476,7 +521,7 @@ private:
                         auto& cur_context = m_context_stack.back();
                         cur_context.line = line;
                         cur_context.indent = indent;
-                        cur_context.state = context_state_t::BLOCK_SEQUENCE;
+                        cur_context.state.reset(state_bits::block_seq);
 
                         token = lexer.get_next_token();
                         line = lexer.get_lines_processed();
@@ -506,7 +551,7 @@ private:
                                 basic_node_type::mapping());
                             mp_current_node = &mp_current_node->template get_value_ref<sequence_type&>().back();
                             m_context_stack.emplace_back(
-                                line_after_props, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                                line_after_props, indent, state_bits::block_map, mp_current_node);
                             apply_node_properties(*mp_current_node);
                         }
 
@@ -520,7 +565,7 @@ private:
 
                 // handle explicit mapping key separators.
 
-                while (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                while (!m_context_stack.back().state.contains(state_bits::block_map | state_bits::xplicit_key)) {
                     m_context_stack.pop_back();
                 }
 
@@ -530,13 +575,13 @@ private:
                     key_node, basic_node_type());
                 mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
-                    line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
+                    line, indent, state_bits::block_map | state_bits::xplicit | state_bits::value, mp_current_node);
 
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     *mp_current_node = basic_node_type::sequence();
                     apply_directive_set(*mp_current_node);
                     apply_node_properties(*mp_current_node);
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
+                    m_context_stack.emplace_back(line, indent, state_bits::block_seq, mp_current_node);
                     break;
                 }
 
@@ -560,14 +605,14 @@ private:
                 if (is_further_nested) {
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
+                    m_context_stack.emplace_back(line, indent, state_bits::block_seq, mp_current_node);
                     apply_directive_set(*mp_current_node);
                     apply_node_properties(*mp_current_node);
                     break;
                 }
 
                 // move back to the previous sequence if necessary.
-                while (m_context_stack.back().state != context_state_t::BLOCK_SEQUENCE ||
+                while (!m_context_stack.back().state.contains(state_bits::block_seq) ||
                        indent != m_context_stack.back().indent) {
                     m_context_stack.pop_back();
                 }
@@ -587,17 +632,8 @@ private:
                             m_context_stack.rbegin(),
                             m_context_stack.rend(),
                             [indent](const parse_context& c) {
-                                if (indent != c.indent) {
-                                    return false;
-                                }
-
-                                switch (c.state) {
-                                case context_state_t::BLOCK_MAPPING:
-                                case context_state_t::MAPPING_VALUE:
-                                    return true;
-                                default:
-                                    return false;
-                                }
+                                return (indent == c.indent) && c.state.has_any(state_bits::map) &&
+                                       c.state.has_any(state_bits::block | state_bits::value);
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if FK_YAML_UNLIKELY (!is_indent_valid) {
@@ -620,18 +656,21 @@ private:
 
                 ++m_flow_context_depth;
 
-                switch (m_context_stack.back().state) {
-                case context_state_t::BLOCK_SEQUENCE:
-                case context_state_t::FLOW_SEQUENCE:
+                switch (m_context_stack.back().state.get(~state_bits::heap)) {
+                case state_bits::block_seq:
+                case state_bits::flow_seq:
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
-                    m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
+                    m_context_stack.emplace_back(line, indent, state_bits::flow_seq, mp_current_node);
                     break;
-                case context_state_t::BLOCK_MAPPING:
-                case context_state_t::FLOW_MAPPING:
+                case state_bits::block_map:
+                case state_bits::flow_map:
                     // heap-allocated node will be freed in handling the corresponding SEQUENCE_FLOW_END event.
                     m_context_stack.emplace_back(
-                        line, indent, context_state_t::FLOW_SEQUENCE_KEY, new basic_node_type(node_type::SEQUENCE));
+                        line,
+                        indent,
+                        state_bits::flow_seq | state_bits::key | state_bits::heap,
+                        new basic_node_type(node_type::SEQUENCE));
                     mp_current_node = m_context_stack.back().p_node;
                     break;
                 default: {
@@ -639,8 +678,7 @@ private:
                     parse_context& last_context = m_context_stack.back();
                     last_context.line = line;
                     last_context.indent = indent;
-                    last_context.state = context_state_t::FLOW_SEQUENCE;
-                    break;
+                    last_context.state.reset(state_bits::flow_seq);
                 }
                 }
 
@@ -662,15 +700,7 @@ private:
                 auto itr = std::find_if( // LCOV_EXCL_LINE
                     m_context_stack.rbegin(),
                     m_context_stack.rend(),
-                    [](const parse_context& c) {
-                        switch (c.state) {
-                        case context_state_t::FLOW_SEQUENCE_KEY:
-                        case context_state_t::FLOW_SEQUENCE:
-                            return true;
-                        default:
-                            return false;
-                        }
-                    });
+                    [](const parse_context& c) { return c.state.contains(state_bits::flow_seq); });
 
                 bool is_valid = itr != m_context_stack.rend();
                 if FK_YAML_UNLIKELY (!is_valid) {
@@ -682,12 +712,12 @@ private:
                 mp_current_node = last_context.p_node;
                 last_context.p_node = nullptr;
                 indent = last_context.indent;
-                context_state_t state = last_context.state;
+                const state_bits& state = last_context.state;
                 m_context_stack.pop_back();
 
                 // handle cases where the flow sequence is a mapping key node.
 
-                if (!m_context_stack.empty() && state == context_state_t::FLOW_SEQUENCE_KEY) {
+                if (!m_context_stack.empty() && state.contains(state_bits::flow_seq | state_bits::key)) {
                     basic_node_type key_node = std::move(*mp_current_node);
                     delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
@@ -703,7 +733,7 @@ private:
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
 
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    m_context_stack.emplace_back(line, indent, state_bits::block_map, mp_current_node);
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
                     add_new_key(std::move(key_node), line, indent);
@@ -734,17 +764,8 @@ private:
                             m_context_stack.rbegin(),
                             m_context_stack.rend(),
                             [indent](const parse_context& c) {
-                                if (indent != c.indent) {
-                                    return false;
-                                }
-
-                                switch (c.state) {
-                                case context_state_t::BLOCK_MAPPING:
-                                case context_state_t::MAPPING_VALUE:
-                                    return true;
-                                default:
-                                    return false;
-                                }
+                                return (indent == c.indent) && c.state.has_any(state_bits::map) &&
+                                       c.state.has_any(state_bits::block | state_bits::value);
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if FK_YAML_UNLIKELY (!is_indent_valid) {
@@ -767,18 +788,21 @@ private:
 
                 ++m_flow_context_depth;
 
-                switch (m_context_stack.back().state) {
-                case context_state_t::BLOCK_SEQUENCE:
-                case context_state_t::FLOW_SEQUENCE:
+                switch (m_context_stack.back().state.get(~state_bits::heap)) {
+                case state_bits::block_seq:
+                case state_bits::flow_seq:
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
-                    m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
+                    m_context_stack.emplace_back(line, indent, state_bits::flow_map, mp_current_node);
                     break;
-                case context_state_t::BLOCK_MAPPING:
-                case context_state_t::FLOW_MAPPING:
+                case state_bits::block_map:
+                case state_bits::flow_map:
                     // heap-allocated node will be freed in handling the corresponding MAPPING_FLOW_END event.
                     m_context_stack.emplace_back(
-                        line, indent, context_state_t::FLOW_MAPPING_KEY, new basic_node_type(node_type::MAPPING));
+                        line,
+                        indent,
+                        state_bits::flow_map | state_bits::key | state_bits::heap,
+                        new basic_node_type(node_type::MAPPING));
                     mp_current_node = m_context_stack.back().p_node;
                     break;
                 default: {
@@ -786,8 +810,7 @@ private:
                     parse_context& last_context = m_context_stack.back();
                     last_context.line = line;
                     last_context.indent = indent;
-                    last_context.state = context_state_t::FLOW_MAPPING;
-                    break;
+                    last_context.state.reset(state_bits::flow_map);
                 }
                 }
 
@@ -812,15 +835,7 @@ private:
                 auto itr = std::find_if( // LCOV_EXCL_LINE
                     m_context_stack.rbegin(),
                     m_context_stack.rend(),
-                    [](const parse_context& c) {
-                        switch (c.state) {
-                        case context_state_t::FLOW_MAPPING_KEY:
-                        case context_state_t::FLOW_MAPPING:
-                            return true;
-                        default:
-                            return false;
-                        }
-                    });
+                    [](const parse_context& c) { return c.state.contains(state_bits::flow_map); });
 
                 bool is_valid = itr != m_context_stack.rend();
                 if FK_YAML_UNLIKELY (!is_valid) {
@@ -832,12 +847,12 @@ private:
                 mp_current_node = last_context.p_node;
                 last_context.p_node = nullptr;
                 indent = last_context.indent;
-                context_state_t state = last_context.state;
+                const state_bits& state = last_context.state;
                 m_context_stack.pop_back();
 
                 // handle cases where the flow mapping is a mapping key node.
 
-                if (!m_context_stack.empty() && state == context_state_t::FLOW_MAPPING_KEY) {
+                if (!m_context_stack.empty() && state.contains(state_bits::flow_map | state_bits::key)) {
                     basic_node_type key_node = std::move(*mp_current_node);
                     delete mp_current_node;
                     mp_current_node = m_context_stack.back().p_node;
@@ -853,7 +868,7 @@ private:
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
 
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    m_context_stack.emplace_back(line, indent, state_bits::block_map, mp_current_node);
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
                     add_new_key(std::move(key_node), line, indent);
@@ -994,7 +1009,7 @@ private:
                 auto target_itr =
                     std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
                         // the target node is a block mapping key node with the same indentation.
-                        return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
+                        return (indent == c.indent) && c.state.matches(state_bits::block_map);
                     });
                 bool is_indent_valid = (target_itr != m_context_stack.rend());
                 if FK_YAML_UNLIKELY (!is_indent_valid) {
@@ -1018,7 +1033,7 @@ private:
         if (mp_current_node->is_sequence()) {
             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
             mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
-            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+            m_context_stack.emplace_back(line, indent, state_bits::block_map, mp_current_node);
         }
 
         auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
@@ -1029,7 +1044,7 @@ private:
         mp_current_node = &(itr.first->second);
         parse_context& key_context = m_context_stack.back();
         m_context_stack.emplace_back(
-            key_context.line, key_context.indent, context_state_t::MAPPING_VALUE, mp_current_node);
+            key_context.line, key_context.indent, state_bits::map | state_bits::value, mp_current_node);
     }
 
     /// @brief Assign node value to the current node.
@@ -1049,7 +1064,8 @@ private:
 
         // a scalar node
         *mp_current_node = std::move(node_value);
-        if (m_flow_context_depth > 0 || m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+        if (m_flow_context_depth > 0 ||
+            !m_context_stack.back().state.contains(state_bits::block_map | state_bits::xplicit_key)) {
             m_context_stack.pop_back();
             mp_current_node = m_context_stack.back().p_node;
 
@@ -1208,7 +1224,7 @@ private:
                 // # ^ this separator
                 // ```
                 assign_node_value(std::move(node), line, indent);
-                if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                if (!m_context_stack.back().state.contains(state_bits::block_map | state_bits::xplicit_key)) {
                     mp_current_node = m_context_stack.back().p_node;
                     m_context_stack.pop_back();
                 }
@@ -1219,19 +1235,16 @@ private:
 
             if (mp_current_node->is_scalar()) {
                 parse_context& cur_context = m_context_stack.back();
-                switch (cur_context.state) {
-                case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
-                case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                    break;
-                default:
+                if (cur_context.state.contains(state_bits::block_map | state_bits::xplicit)) {
+                    m_context_stack.emplace_back(line, indent, state_bits::block_map, mp_current_node);
+                }
+                else {
                     if FK_YAML_UNLIKELY (cur_context.line == line) {
                         throw parse_error("Multiple mapping keys are specified on the same line.", line, indent);
                     }
                     cur_context.line = line;
                     cur_context.indent = indent;
-                    cur_context.state = context_state_t::BLOCK_MAPPING;
-                    break;
+                    cur_context.state.reset(state_bits::block_map);
                 }
 
                 *mp_current_node = basic_node_type::mapping();
