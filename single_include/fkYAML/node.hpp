@@ -4645,16 +4645,24 @@ private:
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
                 emit_error("named handle has no suffix.");
             }
+        }
 
-            // get the position of the beginning of a suffix. (!handle!suffix)
-            std::size_t last_tag_prefix_pos = token.str.find_last_of('!');
-            FK_YAML_ASSERT(last_tag_prefix_pos != str_view::npos);
+        // get the position of last tag prefix character (!) to extract body of tag shorthands.
+        // tag shorthand is either primary(!tag), secondary(!!tag) or named(!handle!tag).
+        std::size_t last_tag_prefix_pos = token.str.find_last_of('!');
+        FK_YAML_ASSERT(last_tag_prefix_pos != str_view::npos);
 
-            str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
-            bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
-            if FK_YAML_UNLIKELY (!is_valid_uri) {
-                emit_error("Invalid URI character is found in a named tag handle.");
-            }
+        str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
+        bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
+        if FK_YAML_UNLIKELY (!is_valid_uri) {
+            emit_error("Invalid URI character is found in a named tag handle.");
+        }
+
+        // Tag shorthands cannot contain flow indicators({}[],).
+        // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
+        std::size_t invalid_char_pos = tag_uri.find_first_of("{}[],");
+        if (invalid_char_pos != str_view::npos) {
+            emit_error("Tag shorthand cannot contain flow indicators({}[],).");
         }
     }
 

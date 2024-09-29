@@ -1105,7 +1105,22 @@ TEST_CASE("LexicalAnalyzer_Tag") {
             fkyaml::detail::str_view("!<%f:oo> tag"),
             fkyaml::detail::str_view("!<!%f:oo> tag"),
             fkyaml::detail::str_view("!foo! tag"),
-            fkyaml::detail::str_view("!foo!%f:oo tag"));
+            fkyaml::detail::str_view("!foo!%f:oo tag"),
+            fkyaml::detail::str_view("!foo{ tag"),
+            fkyaml::detail::str_view("!foo} tag"),
+            fkyaml::detail::str_view("!foo[ tag"),
+            fkyaml::detail::str_view("!foo] tag"),
+            fkyaml::detail::str_view("!foo, tag"),
+            fkyaml::detail::str_view("!!foo{ tag"),
+            fkyaml::detail::str_view("!!foo} tag"),
+            fkyaml::detail::str_view("!!foo[ tag"),
+            fkyaml::detail::str_view("!!foo] tag"),
+            fkyaml::detail::str_view("!!foo, tag"),
+            fkyaml::detail::str_view("!foo!bar{ tag"),
+            fkyaml::detail::str_view("!foo!bar} tag"),
+            fkyaml::detail::str_view("!foo!bar[ tag"),
+            fkyaml::detail::str_view("!foo!bar] tag"),
+            fkyaml::detail::str_view("!foo!bar, tag"));
 
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
