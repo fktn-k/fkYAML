@@ -114,7 +114,7 @@ public:
             int> = 0>
     basic_str_view(ItrType first, ItrType last) noexcept
         : m_len(last - first),
-          mp_str(m_len > 0 ? &*first : nullptr) {
+          mp_str(&*first) {
     }
 
     /// @brief Constructs a basic_str_view object from a compatible std::basic_string object.

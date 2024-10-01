@@ -385,32 +385,33 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
 }
 
 TEST_CASE("LexicalAnalyzer_SingleQuotedScalar") {
-    using value_pair_t = std::pair<fkyaml::detail::str_view, fkyaml::detail::str_view>;
+    using value_pair_t = std::pair<fkyaml::detail::str_view, uint32_t /*end offset*/>;
     auto value_pair = GENERATE(
-        value_pair_t("\'\'", ""),
-        value_pair_t("\'foo\"bar\'", "foo\"bar"),
-        value_pair_t("\'foo bar\'", "foo bar"),
-        value_pair_t("\'foo\'\'bar\'", "foo\'bar"),
-        value_pair_t("\'foo\'\'bar\' ", "foo\'bar"),
-        value_pair_t("\'foo,bar\'", "foo,bar"),
-        value_pair_t("\'foo]bar\'", "foo]bar"),
-        value_pair_t("\'foo}bar\'", "foo}bar"),
-        value_pair_t("\'foo\"bar\'", "foo\"bar"),
-        value_pair_t("\'foo:bar\'", "foo:bar"),
-        value_pair_t("\'foo\\bar\'", "foo\\bar"),
+        value_pair_t("\'\'", 1),
+        value_pair_t("\'foo\"bar\'", 1),
+        value_pair_t("\'foo bar\'", 1),
+        value_pair_t("\'foo\'\'bar\'", 1),
+        value_pair_t("\'foo\'\'bar\' ", 2),
+        value_pair_t("\'foo,bar\'", 1),
+        value_pair_t("\'foo]bar\'", 1),
+        value_pair_t("\'foo}bar\'", 1),
+        value_pair_t("\'foo\"bar\'", 1),
+        value_pair_t("\'foo:bar\'", 1),
+        value_pair_t("\'foo\\bar\'", 1),
 
-        value_pair_t("\'foo\nbar\'", "foo bar"),
-        value_pair_t("\'foo \t\n \tbar\'", "foo bar"),
-        value_pair_t("\'foo\n\n \t\nbar\'", "foo\n\nbar"),
-        value_pair_t("\'\nfoo\n\n \t\nbar\'", " foo\n\nbar"),
-        value_pair_t("\'foo\nbar\n\'", "foo bar "));
+        value_pair_t("\'foo\nbar\'", 1),
+        value_pair_t("\'foo \t\n \tbar\'", 1),
+        value_pair_t("\'foo\n\n \t\nbar\'", 1),
+        value_pair_t("\'\nfoo\n\n \t\nbar\'", 1),
+        value_pair_t("\'foo\nbar\n\'", 1));
 
     fkyaml::detail::lexical_analyzer lexer(value_pair.first);
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR);
-    REQUIRE(token.str == value_pair.second);
+    REQUIRE(token.str.begin() == value_pair.first.begin() + 1);
+    REQUIRE(token.str.end() == value_pair.first.end() - value_pair.second);
 }
 
 TEST_CASE("LexicalAnalyzer_DoubleQuotedScalar") {

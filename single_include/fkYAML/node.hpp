@@ -916,842 +916,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
-// #include <fkYAML/detail/conversions/scalar_conv.hpp>
-//  _______   __ __   __  _____   __  __  __
-// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-//
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-// SPDX-License-Identifier: MIT
-
-// **NOTE FOR LIBARARY DEVELOPERS**:
-// Implementations in this header file are intentionally optimized for conversions between YAML scalars and native C++
-// types. So, some implementations don't follow the convensions in the standard C++ functions. For example, octals must
-// begin with "0o" (not "0"), which is specified in the YAML spec 1.2.
-
-#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
-#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
-
-#include <cmath>
-#include <cstring>
-#include <limits>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/detail/meta/type_traits.hpp>
-
-
-#if FK_YAML_HAS_TO_CHARS
-// Prefer std::to_chars() and std::from_chars() functions if available.
-#include <charconv>
-#else
-// Fallback to legacy string conversion functions otherwise.
-#include <string> // std::stof(), std::stod(), std::stold()
-#endif
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-//////////////////////////
-//   conv_limits_base   //
-//////////////////////////
-
-/// @brief A structure which provides limits for conversions between scalars and integers.
-/// @note This structure contains common limits in both signed and unsigned integers.
-/// @tparam NumBytes The number of bytes for the integer type.
-template <std::size_t NumBytes>
-struct conv_limits_base {};
-
-/// @brief The specialization of conv_limits_base for 1 byte integers, e.g., int8_t, uint8_t.
-template <>
-struct conv_limits_base<1u> {
-    /// max characters for octals (0o377) without the prefix part.
-    static constexpr std::size_t max_chars_oct = 3;
-    /// max characters for hexadecimals (0xFF) without the prefix part.
-    static constexpr std::size_t max_chars_hex = 2;
-
-    /// @brief Check if the given octals are safely converted into 1 byte integer.
-    /// @param octs The pointer to octal characters
-    /// @param len The length of octal characters
-    /// @return true is safely convertible, false otherwise.
-    static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
-        return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '3');
-    }
-
-    /// @brief Check if the given hexadecimals are safely converted into 1 byte integer.
-    /// @param octs The pointer to hexadecimal characters
-    /// @param len The length of hexadecimal characters
-    /// @return true is safely convertible, false otherwise.
-    static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
-        return len <= max_chars_hex;
-    }
-};
-
-/// @brief The specialization of conv_limits_base for 2 byte integers, e.g., int16_t, uint16_t.
-template <>
-struct conv_limits_base<2u> {
-    /// max characters for octals (0o177777) without the prefix part.
-    static constexpr std::size_t max_chars_oct = 6;
-    /// max characters for hexadecimals (0xFFFF) without the prefix part.
-    static constexpr std::size_t max_chars_hex = 4;
-
-    /// @brief Check if the given octals are safely converted into 2 byte integer.
-    /// @param octs The pointer to octal characters
-    /// @param len The length of octal characters
-    /// @return true is safely convertible, false otherwise.
-    static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
-        return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '1');
-    }
-
-    /// @brief Check if the given hexadecimals are safely converted into 2 byte integer.
-    /// @param octs The pointer to hexadecimal characters
-    /// @param len The length of hexadecimal characters
-    /// @return true is safely convertible, false otherwise.
-    static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
-        return len <= max_chars_hex;
-    }
-};
-
-/// @brief The specialization of conv_limits_base for 4 byte integers, e.g., int32_t, uint32_t.
-template <>
-struct conv_limits_base<4u> {
-    /// max characters for octals (0o37777777777) without the prefix part.
-    static constexpr std::size_t max_chars_oct = 11;
-    /// max characters for hexadecimals (0xFFFFFFFF) without the prefix part.
-    static constexpr std::size_t max_chars_hex = 8;
-
-    /// @brief Check if the given octals are safely converted into 4 byte integer.
-    /// @param octs The pointer to octal characters
-    /// @param len The length of octal characters
-    /// @return true is safely convertible, false otherwise.
-    static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
-        return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '3');
-    }
-
-    /// @brief Check if the given hexadecimals are safely converted into 4 byte integer.
-    /// @param octs The pointer to hexadecimal characters
-    /// @param len The length of hexadecimal characters
-    /// @return true is safely convertible, false otherwise.
-    static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
-        return len <= max_chars_hex;
-    }
-};
-
-/// @brief The specialization of conv_limits_base for 8 byte integers, e.g., int64_t, uint64_t.
-template <>
-struct conv_limits_base<8u> {
-    /// max characters for octals (0o1777777777777777777777) without the prefix part.
-    static constexpr std::size_t max_chars_oct = 22;
-    /// max characters for hexadecimals (0xFFFFFFFFFFFFFFFF) without the prefix part.
-    static constexpr std::size_t max_chars_hex = 16;
-
-    /// @brief Check if the given octals are safely converted into 8 byte integer.
-    /// @param octs The pointer to octal characters
-    /// @param len The length of octal characters
-    /// @return true is safely convertible, false otherwise.
-    static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
-        return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '1');
-    }
-
-    /// @brief Check if the given hexadecimals are safely converted into 8 byte integer.
-    /// @param octs The pointer to hexadecimal characters
-    /// @param len The length of hexadecimal characters
-    /// @return true is safely convertible, false otherwise.
-    static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
-        return len <= max_chars_hex;
-    }
-};
-
-/////////////////////
-//   conv_limits   //
-/////////////////////
-
-/// @brief A structure which provides limits for conversions between scalars and integers.
-/// @note This structure contains limits which differs based on signedness.
-/// @tparam NumBytes The number of bytes for the integer type.
-/// @tparam IsSigned Whether an integer is signed or unsigned
-template <std::size_t NumBytes, bool IsSigned>
-struct conv_limits {};
-
-/// @brief The specialization of conv_limits for 1 byte signed integers, e.g., int8_t.
-template <>
-struct conv_limits<1u, true> : conv_limits_base<1u> {
-    /// with or without sign.
-    static constexpr bool is_signed = true;
-
-    /// max characters for decimals (-128..127) without sign.
-    static constexpr std::size_t max_chars_dec = 3;
-
-    /// string representation of max decimal value.
-    static const char* max_value_chars_dec() noexcept {
-        // Making this function a static constexpr variable, a link error happens.
-        // Although the issue has been fixed since C++17, this workaround is necessary to let this functionality work
-        // with C++11 (the library's default C++ standard version).
-        // The same thing is applied to similar functions in the other specializations.
-
-        static constexpr char max_value_chars[] = "127";
-        return &max_value_chars[0];
-    }
-
-    /// string representation of min decimal value without sign.
-    static const char* min_value_chars_dec() noexcept {
-        static constexpr char min_value_chars[] = "128";
-        return &min_value_chars[0];
-    }
-};
-
-/// @brief The specialization of conv_limits for 1 byte unsigned integers, e.g., uint8_t.
-template <>
-struct conv_limits<1u, false> : conv_limits_base<1u> {
-    /// with or without sign.
-    static constexpr bool is_signed = false;
-
-    /// max characters for decimals (0..255) without sign.
-    static constexpr std::size_t max_chars_dec = 3;
-
-    /// string representation of max decimal value.
-    static const char* max_value_chars_dec() noexcept {
-        static constexpr char max_value_chars[] = "255";
-        return &max_value_chars[0];
-    }
-
-    /// string representation of min decimal value.
-    static const char* min_value_chars_dec() noexcept {
-        static constexpr char min_value_chars[] = "0";
-        return &min_value_chars[0];
-    }
-};
-
-/// @brief The specialization of conv_limits for 2 byte signed integers, e.g., int16_t.
-template <>
-struct conv_limits<2u, true> : conv_limits_base<2u> {
-    /// with or without sign.
-    static constexpr bool is_signed = true;
-
-    /// max characters for decimals (-32768..32767) without sign.
-    static constexpr std::size_t max_chars_dec = 5;
-
-    /// string representation of max decimal value.
-    static const char* max_value_chars_dec() noexcept {
-        static constexpr char max_value_chars[] = "32767";
-        return &max_value_chars[0];
-    }
-
-    /// string representation of min decimal value without sign.
-    static const char* min_value_chars_dec() noexcept {
-        static constexpr char min_value_chars[] = "32768";
-        return &min_value_chars[0];
-    }
-};
-
-/// @brief The specialization of conv_limits for 2 byte unsigned integers, e.g., uint16_t.
-template <>
-struct conv_limits<2u, false> : conv_limits_base<2u> {
-    /// with or without sign.
-    static constexpr bool is_signed = false;
-
-    /// max characters for decimals (0..65535) without sign.
-    static constexpr std::size_t max_chars_dec = 5;
-
-    /// string representation of max decimal value.
-    static const char* max_value_chars_dec() noexcept {
-        static constexpr char max_value_chars[] = "65535";
-        return &max_value_chars[0];
-    }
-
-    /// string representation of min decimal value.
-    static const char* min_value_chars_dec() noexcept {
-        static constexpr char min_value_chars[] = "0";
-        return &min_value_chars[0];
-    }
-};
-
-/// @brief The specialization of conv_limits for 4 byte signed integers, e.g., int32_t.
-template <>
-struct conv_limits<4u, true> : conv_limits_base<4u> {
-    /// with or without sign.
-    static constexpr bool is_signed = true;
-
-    /// max characters for decimals (-2147483648..2147483647) without sign.
-    static constexpr std::size_t max_chars_dec = 10;
-
-    /// string representation of max decimal value.
-    static const char* max_value_chars_dec() noexcept {
-        static constexpr char max_value_chars[] = "2147483647";
-        return &max_value_chars[0];
-    }
-
-    /// string representation of min decimal value without sign.
-    static const char* min_value_chars_dec() noexcept {
-        static constexpr char min_value_chars[] = "2147483648";
-        return &min_value_chars[0];
-    }
-};
-
-/// @brief The specialization of conv_limits for 4 byte unsigned integers, e.g., uint32_t.
-template <>
-struct conv_limits<4u, false> : conv_limits_base<4u> {
-    /// with or without sign.
-    static constexpr bool is_signed = false;
-
-    /// max characters for decimals (0..4294967295) without sign.
-    static constexpr std::size_t max_chars_dec = 10;
-
-    /// string representation of max decimal value.
-    static const char* max_value_chars_dec() noexcept {
-        static constexpr char max_value_chars[] = "4294967295";
-        return &max_value_chars[0];
-    }
-
-    /// string representation of min decimal value.
-    static const char* min_value_chars_dec() noexcept {
-        static constexpr char min_value_chars[] = "0";
-        return &min_value_chars[0];
-    }
-};
-
-/// @brief The specialization of conv_limits for 8 byte signed integers, e.g., int64_t.
-template <>
-struct conv_limits<8u, true> : conv_limits_base<8u> {
-    /// with or without sign.
-    static constexpr bool is_signed = true;
-
-    /// max characters for decimals (-9223372036854775808..9223372036854775807) without sign.
-    static constexpr std::size_t max_chars_dec = 19;
-
-    /// string representation of max decimal value.
-    static const char* max_value_chars_dec() noexcept {
-        static constexpr char max_value_chars[] = "9223372036854775807";
-        return &max_value_chars[0];
-    }
-
-    /// string representation of min decimal value without sign.
-    static const char* min_value_chars_dec() noexcept {
-        static constexpr char min_value_chars[] = "9223372036854775808";
-        return &min_value_chars[0];
-    }
-};
-
-/// @brief The specialization of conv_limits for 8 byte unsigned integers, e.g., uint64_t.
-template <>
-struct conv_limits<8u, false> : conv_limits_base<8u> {
-    /// with or without sign.
-    static constexpr bool is_signed = false;
-
-    /// max characters for decimals (0..18446744073709551615) without sign.
-    static constexpr std::size_t max_chars_dec = 20;
-
-    /// string representation of max decimal value.
-    static const char* max_value_chars_dec() noexcept {
-        static constexpr char max_value_chars[] = "18446744073709551615";
-        return &max_value_chars[0];
-    }
-
-    /// string representation of min decimal value.
-    static const char* min_value_chars_dec() noexcept {
-        static constexpr char min_value_chars[] = "0";
-        return &min_value_chars[0];
-    }
-};
-
-//////////////////////////
-//   scalar <--> null   //
-//////////////////////////
-
-/// @brief Converts a scalar into a null value
-/// @tparam CharItr Type of char iterators. Its value type must be `char` (maybe cv-qualified).
-/// @param begin The iterator to the first element of the scalar.
-/// @param end The iterator to the past-the-end element of the scalar.
-/// @param /*unused*/ The null value holder (unused since it can only have `nullptr`)
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename CharItr>
-inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcept {
-    static_assert(is_iterator_of<CharItr, char>::value, "aton() accepts iterators for char type");
-
-    if FK_YAML_UNLIKELY (begin == end) {
-        return false;
-    }
-
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
-
-    // This path is the most probable case, so check it first.
-    if FK_YAML_LIKELY (len == 4) {
-        const char* p_begin = &*begin;
-        return (std::strncmp(p_begin, "null", 4) == 0) || (std::strncmp(p_begin, "Null", 4) == 0) ||
-               (std::strncmp(p_begin, "NULL", 4) == 0);
-    }
-
-    if (len == 1) {
-        return *begin == '~';
-    }
-
-    return false;
-}
-
-/////////////////////////////
-//   scalar <--> boolean   //
-/////////////////////////////
-
-/// @brief Converts a scalar into a boolean value
-/// @tparam CharItr The type of char iterators. Its value type must be `char` (maybe cv-qualified).
-/// @tparam BoolType The output boolean type.
-/// @param begin The iterator to the first element of the scalar.
-/// @param end The iterator to the past-the-end element of the scalar.
-/// @param boolean The boolean value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename CharItr, typename BoolType>
-inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
-    static_assert(is_iterator_of<CharItr, char>::value, "atob() accepts iterators for char type");
-
-    if FK_YAML_UNLIKELY (begin == end) {
-        return false;
-    }
-
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
-    const char* p_begin = &*begin;
-
-    if (len == 4) {
-        bool is_true_scalar = (std::strncmp(p_begin, "true", 4) == 0) || (std::strncmp(p_begin, "True", 4) == 0) ||
-                              (std::strncmp(p_begin, "TRUE", 4) == 0);
-
-        if FK_YAML_LIKELY (is_true_scalar) {
-            boolean = static_cast<BoolType>(true);
-        }
-        return is_true_scalar;
-    }
-
-    if (len == 5) {
-        bool is_false_scalar = (std::strncmp(p_begin, "false", 5) == 0) || (std::strncmp(p_begin, "False", 5) == 0) ||
-                               (std::strncmp(p_begin, "FALSE", 5) == 0);
-
-        if FK_YAML_LIKELY (is_false_scalar) {
-            boolean = static_cast<BoolType>(false);
-        }
-        return is_false_scalar;
-    }
-
-    return false;
-}
-
-/////////////////////////////
-//   scalar <--> integer   //
-/////////////////////////////
-
-//
-// scalar --> decimals
-//
-
-/// @brief Converts a scalar into decimals. This is common implementation for both signed/unsigned integer types.
-/// @warning
-/// This function does NOT care about overflows if IntType is unsigned. The source string value must be validated
-/// beforehand by calling either atoi_dec_pos() or atoi_dec_neg() functions.
-/// Furthermore, `p_begin` and `p_end` must NOT be null. Validate them before calling this function.
-/// @tparam IntType The output integer type. It can be either signed or unsigned.
-/// @param p_begin The pointer to the first element of the scalar.
-/// @param p_end The pointer to the past-the-end element of the scalar.
-/// @param i The output integer value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename IntType>
-inline bool atoi_dec_unchecked(const char* p_begin, const char* p_end, IntType& i) noexcept {
-    static_assert(
-        is_non_bool_integral<IntType>::value,
-        "atoi_dec_unchecked() accepts non-boolean integral types as an output type");
-
-    i = 0;
-    do {
-        char c = *p_begin;
-        if FK_YAML_UNLIKELY (c < '0' || '9' < c) {
-            return false;
-        }
-        // Overflow is intentional when the IntType is signed.
-        i = i * IntType(10) + IntType(c - '0');
-    } while (++p_begin != p_end);
-
-    return true;
-}
-
-/// @brief Converts a scalar into positive decimals. This function executes bounds check to avoid overflow.
-/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
-/// @tparam IntType The output integer type. It can be either signed or unsigned.
-/// @param p_begin The pointer to the first element of the scalar.
-/// @param p_end The pointer to the past-the-end element of the scalar.
-/// @param i The output integer value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename IntType>
-inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noexcept {
-    static_assert(
-        is_non_bool_integral<IntType>::value, "atoi_dec_pos() accepts non-boolean integral types as an output type");
-
-    if FK_YAML_UNLIKELY (p_begin == p_end) {
-        return false;
-    }
-
-    using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
-
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
-        // Overflow will happen.
-        return false;
-    }
-
-    if (len == conv_limits_type::max_chars_dec) {
-        const char* p_max_value_chars_dec = conv_limits_type::max_value_chars_dec();
-
-        for (std::size_t idx = 0; idx < conv_limits_type::max_chars_dec; idx++) {
-            if (p_begin[idx] < p_max_value_chars_dec[idx]) {
-                // No need to check the lower digits. Overflow will no longer happen.
-                break;
-            }
-
-            if FK_YAML_UNLIKELY (p_begin[idx] > p_max_value_chars_dec[idx]) {
-                // Overflow will happen.
-                return false;
-            }
-        }
-    }
-
-    return atoi_dec_unchecked(p_begin, p_end, i);
-}
-
-/// @brief Converts a scalar into negative decimals. This function executes bounds check to avoid underflow.
-/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
-/// @tparam IntType The output integer type. It must be signed.
-/// @param p_begin The pointer to the first element of the scalar.
-/// @param p_end The pointer to the past-the-end element of the scalar.
-/// @param i The output integer value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename IntType>
-inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noexcept {
-    static_assert(
-        is_non_bool_integral<IntType>::value, "atoi_dec_neg() accepts non-boolean integral types as an output type");
-
-    if FK_YAML_UNLIKELY (p_begin == p_end) {
-        return false;
-    }
-
-    using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
-
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
-        // Underflow will happen.
-        return false;
-    }
-
-    if (len == conv_limits_type::max_chars_dec) {
-        const char* p_min_value_chars_dec = conv_limits_type::min_value_chars_dec();
-
-        for (std::size_t idx = 0; idx < conv_limits_type::max_chars_dec; idx++) {
-            if (p_begin[idx] < p_min_value_chars_dec[idx]) {
-                // No need to check the lower digits. Underflow will no longer happen.
-                break;
-            }
-
-            if FK_YAML_UNLIKELY (p_begin[idx] > p_min_value_chars_dec[idx]) {
-                // Underflow will happen.
-                return false;
-            }
-        }
-    }
-
-    return atoi_dec_unchecked(p_begin, p_end, i);
-}
-
-//
-// scalar --> octals
-//
-
-/// @brief Converts a scalar into octals. This function executes bounds check to avoid overflow.
-/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
-/// @tparam IntType The output integer type. It can be either signed or unsigned.
-/// @param p_begin The pointer to the first element of the scalar.
-/// @param p_end The pointer to the past-the-end element of the scalar.
-/// @param i The output integer value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename IntType>
-inline bool atoi_oct(const char* p_begin, const char* p_end, IntType& i) noexcept {
-    static_assert(
-        is_non_bool_integral<IntType>::value, "atoi_oct() accepts non-boolean integral types as an output type");
-
-    if FK_YAML_UNLIKELY (p_begin == p_end) {
-        return false;
-    }
-
-    using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
-
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if FK_YAML_UNLIKELY (!conv_limits_type::check_if_octs_safe(p_begin, len)) {
-        return false;
-    }
-
-    i = 0;
-    do {
-        char c = *p_begin;
-        if FK_YAML_UNLIKELY (c < '0' || '7' < c) {
-            return false;
-        }
-        i = i * IntType(8) + IntType(c - '0');
-    } while (++p_begin != p_end);
-
-    return true;
-}
-
-//
-// scalar --> hexadecimals
-//
-
-/// @brief Converts a scalar into hexadecimals. This function executes bounds check to avoid overflow.
-/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
-/// @tparam IntType The output integer type. It can be either signed or unsigned.
-/// @param p_begin The pointer to the first element of the scalar.
-/// @param p_end The pointer to the past-the-end element of the scalar.
-/// @param i The output integer value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename IntType>
-inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcept {
-    static_assert(
-        is_non_bool_integral<IntType>::value, "atoi_hex() accepts non-boolean integral types as an output type");
-
-    if FK_YAML_UNLIKELY (p_begin == p_end) {
-        return false;
-    }
-
-    using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
-
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
-    if FK_YAML_UNLIKELY (!conv_limits_type::check_if_hexs_safe(p_begin, len)) {
-        return false;
-    }
-
-    i = 0;
-    do {
-        char c = *p_begin;
-        IntType ci = 0;
-        if ('0' <= c && c <= '9') {
-            ci = IntType(c - '0');
-        }
-        else if ('A' <= c && c <= 'F') {
-            ci = IntType(c - 'A' + 10);
-        }
-        else if ('a' <= c && c <= 'f') {
-            ci = IntType(c - 'a' + 10);
-        }
-        else {
-            return false;
-        }
-        i = i * IntType(16) + ci;
-    } while (++p_begin != p_end);
-
-    return true;
-}
-
-//
-// atoi() & itoa()
-//
-
-/// @brief Converts a scalar into integers. This function executes bounds check to avoid overflow/underflow.
-/// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
-/// @tparam IntType The output integer type. It can be either signed or unsigned.
-/// @param begin The iterator to the first element of the scalar.
-/// @param end The iterator to the past-the-end element of the scalar.
-/// @param i The output integer value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename CharItr, typename IntType>
-inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
-    static_assert(is_iterator_of<CharItr, char>::value, "atoi() accepts iterators for char type");
-    static_assert(is_non_bool_integral<IntType>::value, "atoi() accepts non-boolean integral types as an output type");
-
-    if FK_YAML_UNLIKELY (begin == end) {
-        return false;
-    }
-
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
-    const char* p_begin = &*begin;
-    const char* p_end = p_begin + len;
-
-    char first = *begin;
-    if (first == '+') {
-        return atoi_dec_pos(p_begin + 1, p_end, i);
-    }
-
-    if (first == '-') {
-        if (!std::numeric_limits<IntType>::is_signed) {
-            return false;
-        }
-
-        bool success = atoi_dec_neg(p_begin + 1, p_end, i);
-        if (success) {
-            i *= IntType(-1);
-        }
-
-        return success;
-    }
-
-    if (first != '0') {
-        return atoi_dec_pos(p_begin, p_end, i);
-    }
-    else if (p_begin + 1 != p_end) {
-        switch (*(p_begin + 1)) {
-        case 'o':
-            return atoi_oct(p_begin + 2, p_end, i);
-        case 'x':
-            return atoi_hex(p_begin + 2, p_end, i);
-        default:
-            // The YAML spec doesn't allow decimals starting with 0.
-            return false;
-        }
-    }
-
-    i = 0;
-    return true;
-}
-
-///////////////////////////
-//   scalar <--> float   //
-///////////////////////////
-
-/// @brief Set an infinite `float` value based on the given signedness.
-/// @param f The output `float` value holder.
-/// @param sign Whether the infinite value should be positive or negative.
-inline void set_infinity(float& f, const float sign) noexcept {
-    f = std::numeric_limits<float>::infinity() * sign;
-}
-
-/// @brief Set an infinite `double` value based on the given signedness.
-/// @param f The output `double` value holder.
-/// @param sign Whether the infinite value should be positive or negative.
-inline void set_infinity(double& f, const double sign) noexcept {
-    f = std::numeric_limits<double>::infinity() * sign;
-}
-
-/// @brief Set a NaN `float` value.
-/// @param f The output `float` value holder.
-inline void set_nan(float& f) noexcept {
-    f = std::nanf("");
-}
-
-/// @brief Set a NaN `double` value.
-/// @param f The output `double` value holder.
-inline void set_nan(double& f) noexcept {
-    f = std::nan("");
-}
-
-#if FK_YAML_HAS_TO_CHARS
-
-/// @brief Converts a scalar into a floating point value.
-/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
-/// @param p_begin The pointer to the first element of the scalar.
-/// @param p_end The pointer to the past-the-end element of the scalar.
-/// @param f The output floating point value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename FloatType>
-inline bool atof_impl(const char* p_begin, const char* p_end, FloatType& f) noexcept {
-    static_assert(std::is_floating_point_v<FloatType>, "atof_impl() accepts floating point types as an output type");
-    if (auto [ptr, ec] = std::from_chars(p_begin, p_end, f); ec == std::errc {}) {
-        return ptr == p_end;
-    }
-    return false;
-}
-
-#else
-
-/// @brief Converts a scalar into a `float` value.
-/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
-/// @param p_begin The pointer to the first element of the scalar.
-/// @param p_end The pointer to the past-the-end element of the scalar.
-/// @param f The output `float` value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-inline bool atof_impl(const char* p_begin, const char* p_end, float& f) {
-    std::size_t idx = 0;
-    f = std::stof(std::string(p_begin, p_end), &idx);
-    return idx == static_cast<std::size_t>(p_end - p_begin);
-}
-
-/// @brief Converts a scalar into a `double` value.
-/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
-/// @param p_begin The pointer to the first element of the scalar.
-/// @param p_end The pointer to the past-the-end element of the scalar.
-/// @param f The output `double` value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
-    std::size_t idx = 0;
-    f = std::stod(std::string(p_begin, p_end), &idx);
-    return idx == static_cast<std::size_t>(p_end - p_begin);
-}
-
-#endif // FK_YAML_HAS_TO_CHARS
-
-/// @brief Converts a scalar into a floating point value.
-/// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
-/// @tparam FloatType The output floating point value type.
-/// @param begin The iterator to the first element of the scalar.
-/// @param end The iterator to the past-the-end element of the scalar.
-/// @param f The output floating point value holder.
-/// @return true if the conversion completes successfully, false otherwise.
-template <typename CharItr, typename FloatType>
-inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(atof_impl(&*begin, &*begin, f))) {
-    static_assert(is_iterator_of<CharItr, char>::value, "atof() accepts iterators for char type");
-    static_assert(std::is_floating_point<FloatType>::value, "atof() accepts floating point types as an output type");
-
-    if FK_YAML_UNLIKELY (begin == end) {
-        return false;
-    }
-
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
-    const char* p_begin = &*begin;
-    const char* p_end = p_begin + len;
-
-    if (*p_begin == '-' || *p_begin == '+') {
-        if (len == 5) {
-            const char* p_from_second = p_begin + 1;
-            bool is_inf_scalar = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
-                                 (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
-                                 (std::strncmp(p_from_second, ".INF", 4) == 0);
-
-            if (is_inf_scalar) {
-                set_infinity(f, *p_begin == '-' ? FloatType(-1.) : FloatType(1.));
-                return true;
-            }
-        }
-    }
-    else if (len == 4) {
-        bool is_inf_scalar = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||
-                             (std::strncmp(p_begin, ".INF", 4) == 0);
-        bool is_nan_scalar = false;
-        if (!is_inf_scalar) {
-            is_nan_scalar = (std::strncmp(p_begin, ".nan", 4) == 0) || (std::strncmp(p_begin, ".NaN", 4) == 0) ||
-                            (std::strncmp(p_begin, ".NAN", 4) == 0);
-        }
-
-        if (is_inf_scalar) {
-            set_infinity(f, FloatType(1.));
-            return true;
-        }
-
-        if (is_nan_scalar) {
-            set_nan(f);
-            return true;
-        }
-    }
-
-#if FK_YAML_HAS_TO_CHARS
-    return atof_impl(p_begin, p_end, f);
-#else
-    bool success = false;
-    try {
-        success = atof_impl(p_begin, p_end, f);
-    }
-    catch (const std::exception& /*unused*/) {
-        success = false;
-    }
-
-    return success;
-#endif
-}
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP */
-
 // #include <fkYAML/detail/document_metainfo.hpp>
 
 // #include <fkYAML/detail/input/lexical_analyzer.hpp>
@@ -3065,7 +2229,7 @@ public:
             int> = 0>
     basic_str_view(ItrType first, ItrType last) noexcept
         : m_len(last - first),
-          mp_str(m_len > 0 ? &*first : nullptr) {
+          mp_str(&*first) {
     }
 
     /// @brief Constructs a basic_str_view object from a compatible std::basic_string object.
@@ -4672,29 +3836,31 @@ private:
     void scan_scalar(lexical_token& token) {
         m_value_buffer.clear();
 
-        bool needs_last_single_quote = false;
         bool needs_last_double_quote = false;
-        if (m_cur_itr == m_token_begin_itr) {
-            needs_last_single_quote = (*m_cur_itr == '\'');
-            needs_last_double_quote = (*m_cur_itr == '\"');
-            if (needs_last_double_quote || needs_last_single_quote) {
-                m_token_begin_itr = ++m_cur_itr;
-                token.type = needs_last_double_quote ? lexical_token_t::DOUBLE_QUOTED_SCALAR
-                                                     : lexical_token_t::SINGLE_QUOTED_SCALAR;
-            }
-            else {
-                token.type = lexical_token_t::PLAIN_SCALAR;
-            }
+        switch (*m_token_begin_itr) {
+        case '\'':
+            ++m_token_begin_itr;
+            token.type = lexical_token_t::SINGLE_QUOTED_SCALAR;
+            determine_single_quoted_scalar_range(token.str);
+            return;
+        case '\"':
+            needs_last_double_quote = true;
+            m_token_begin_itr = ++m_cur_itr;
+            token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
+            break;
+        default:
+            token.type = lexical_token_t::PLAIN_SCALAR;
+            break;
         }
 
-        bool is_value_buff_used = extract_string_token(needs_last_single_quote, needs_last_double_quote);
+        bool is_value_buff_used = extract_string_token(needs_last_double_quote);
 
         if (is_value_buff_used) {
             token.str = str_view {m_value_buffer.begin(), m_value_buffer.end()};
         }
         else {
             token.str = str_view {m_token_begin_itr, m_cur_itr};
-            if (token.type != lexical_token_t::PLAIN_SCALAR) {
+            if (token.type == lexical_token_t::DOUBLE_QUOTED_SCALAR) {
                 // If extract_string_token() didn't use m_value_buffer to store mutated scalar value, m_cur_itr is at
                 // the last quotation mark, which will cause infinite loops from the next get_next_token() call.
                 ++m_cur_itr;
@@ -4702,82 +3868,33 @@ private:
         }
     }
 
-    /// @brief Check if the given character is allowed in a single-quoted scalar token.
-    /// @param c The character to be checked.
-    /// @param is_value_buffer_used true is assigned when mutated scalar contents is written into m_value_buffer.
-    /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_single(char c, bool& is_value_buffer_used) {
-        switch (c) {
-        case '\n': {
-            is_value_buffer_used = true;
+    void determine_single_quoted_scalar_range(str_view& token) {
+        str_view sv {m_token_begin_itr, m_end_itr};
 
-            // discard trailing white spaces which precedes the line break in the current line.
-            auto before_trailing_spaces_itr = m_cur_itr - 1;
-            bool ends_loop = false;
-            while (before_trailing_spaces_itr != m_token_begin_itr) {
-                switch (*before_trailing_spaces_itr) {
-                case ' ':
-                case '\t':
-                    --before_trailing_spaces_itr;
-                    break;
-                default:
-                    ends_loop = true;
-                    break;
+        std::size_t pos = sv.find('\'');
+        if (pos != str_view::npos) {
+            do {
+                if (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
+                    // closing single quote is found.
+                    token = {m_token_begin_itr, pos};
+                    for (const auto c : token) {
+                        if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                            handle_unescaped_control_char(c);
+                        }
+                    }
+                    m_cur_itr = sv.begin() + (pos + 1);
+                    return;
                 }
 
-                if (ends_loop) {
-                    break;
-                }
-            }
-            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
-
-            // move to the beginning of the next line.
-            ++m_cur_itr;
-
-            // apply line folding according to the number of following empty lines.
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
-            skip_white_spaces_and_newline_codes();
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
-            if (trailing_empty_lines > 0) {
-                m_value_buffer.append(trailing_empty_lines, '\n');
-            }
-            else {
-                m_value_buffer.push_back(' ');
-            }
-
-            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\'') ? m_cur_itr-- : m_cur_itr;
-            return true;
+                // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
+                // escaped single quotation mark. Skip the second one which would otherwise be detected as a closing
+                // single quotation mark in the next loop.
+                pos = sv.find('\'', pos + 2);
+            } while (pos != str_view::npos);
         }
 
-        case '\'':
-            if (m_cur_itr + 1 == m_end_itr) {
-                if (is_value_buffer_used) {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                    m_token_begin_itr = m_cur_itr;
-                }
-                return false;
-            }
-
-            if (*(m_cur_itr + 1) != '\'') {
-                if (is_value_buffer_used) {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                }
-                return false;
-            }
-
-            // If single quotation marks are repeated twice in a single-quoted string token,
-            // they are considered as an escaped single quotation mark.
-            is_value_buffer_used = true;
-
-            m_value_buffer.append(m_token_begin_itr, ++m_cur_itr);
-            m_token_begin_itr = m_cur_itr + 1;
-            return true;
-
-        default:         // LCOV_EXCL_LINE
-            return true; // LCOV_EXCL_LINE
-        }
+        m_cur_itr = m_end_itr; // update for error information
+        emit_error("Invalid end of input buffer in a single-quoted scalar token.");
     }
 
     /// @brief Check if the given character is allowed in a double-quoted scalar token.
@@ -4987,7 +4104,7 @@ private:
 
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
     /// @return true if mutated scalar contents is stored in m_value_buffer, false otherwise.
-    bool extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
+    bool extract_string_token(bool needs_last_double_quote) {
         // change behaviors depending on the type of a coming string scalar token.
         // * single quoted
         // * double quoted
@@ -4996,11 +4113,7 @@ private:
         std::string check_filters {"\n"};
         bool (lexical_analyzer::*pfn_is_allowed)(char, bool&) = nullptr;
 
-        if (needs_last_single_quote) {
-            check_filters.append("\'");
-            pfn_is_allowed = &lexical_analyzer::is_allowed_single;
-        }
-        else if (needs_last_double_quote) {
+        if (needs_last_double_quote) {
             check_filters.append("\"\\");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
@@ -5050,10 +4163,6 @@ private:
 
         if FK_YAML_UNLIKELY (needs_last_double_quote) {
             emit_error("Invalid end of input buffer in a double-quoted string token.");
-        }
-
-        if FK_YAML_UNLIKELY (needs_last_single_quote) {
-            emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
         return is_value_buffer_used;
@@ -5455,6 +4564,1436 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP */
 
+// #include <fkYAML/detail/input/scalar_parser.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP_
+#define FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP_
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/assert.hpp>
+
+// #include <fkYAML/detail/conversions/scalar_conv.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+// **NOTE FOR LIBARARY DEVELOPERS**:
+// Implementations in this header file are intentionally optimized for conversions between YAML scalars and native C++
+// types. So, some implementations don't follow the convensions in the standard C++ functions. For example, octals must
+// begin with "0o" (not "0"), which is specified in the YAML spec 1.2.
+
+#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
+#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
+
+#include <cmath>
+#include <cstring>
+#include <limits>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/meta/type_traits.hpp>
+
+
+#if FK_YAML_HAS_TO_CHARS
+// Prefer std::to_chars() and std::from_chars() functions if available.
+#include <charconv>
+#else
+// Fallback to legacy string conversion functions otherwise.
+#include <string> // std::stof(), std::stod(), std::stold()
+#endif
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+//////////////////////////
+//   conv_limits_base   //
+//////////////////////////
+
+/// @brief A structure which provides limits for conversions between scalars and integers.
+/// @note This structure contains common limits in both signed and unsigned integers.
+/// @tparam NumBytes The number of bytes for the integer type.
+template <std::size_t NumBytes>
+struct conv_limits_base {};
+
+/// @brief The specialization of conv_limits_base for 1 byte integers, e.g., int8_t, uint8_t.
+template <>
+struct conv_limits_base<1u> {
+    /// max characters for octals (0o377) without the prefix part.
+    static constexpr std::size_t max_chars_oct = 3;
+    /// max characters for hexadecimals (0xFF) without the prefix part.
+    static constexpr std::size_t max_chars_hex = 2;
+
+    /// @brief Check if the given octals are safely converted into 1 byte integer.
+    /// @param octs The pointer to octal characters
+    /// @param len The length of octal characters
+    /// @return true is safely convertible, false otherwise.
+    static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
+        return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '3');
+    }
+
+    /// @brief Check if the given hexadecimals are safely converted into 1 byte integer.
+    /// @param octs The pointer to hexadecimal characters
+    /// @param len The length of hexadecimal characters
+    /// @return true is safely convertible, false otherwise.
+    static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
+        return len <= max_chars_hex;
+    }
+};
+
+/// @brief The specialization of conv_limits_base for 2 byte integers, e.g., int16_t, uint16_t.
+template <>
+struct conv_limits_base<2u> {
+    /// max characters for octals (0o177777) without the prefix part.
+    static constexpr std::size_t max_chars_oct = 6;
+    /// max characters for hexadecimals (0xFFFF) without the prefix part.
+    static constexpr std::size_t max_chars_hex = 4;
+
+    /// @brief Check if the given octals are safely converted into 2 byte integer.
+    /// @param octs The pointer to octal characters
+    /// @param len The length of octal characters
+    /// @return true is safely convertible, false otherwise.
+    static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
+        return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '1');
+    }
+
+    /// @brief Check if the given hexadecimals are safely converted into 2 byte integer.
+    /// @param octs The pointer to hexadecimal characters
+    /// @param len The length of hexadecimal characters
+    /// @return true is safely convertible, false otherwise.
+    static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
+        return len <= max_chars_hex;
+    }
+};
+
+/// @brief The specialization of conv_limits_base for 4 byte integers, e.g., int32_t, uint32_t.
+template <>
+struct conv_limits_base<4u> {
+    /// max characters for octals (0o37777777777) without the prefix part.
+    static constexpr std::size_t max_chars_oct = 11;
+    /// max characters for hexadecimals (0xFFFFFFFF) without the prefix part.
+    static constexpr std::size_t max_chars_hex = 8;
+
+    /// @brief Check if the given octals are safely converted into 4 byte integer.
+    /// @param octs The pointer to octal characters
+    /// @param len The length of octal characters
+    /// @return true is safely convertible, false otherwise.
+    static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
+        return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '3');
+    }
+
+    /// @brief Check if the given hexadecimals are safely converted into 4 byte integer.
+    /// @param octs The pointer to hexadecimal characters
+    /// @param len The length of hexadecimal characters
+    /// @return true is safely convertible, false otherwise.
+    static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
+        return len <= max_chars_hex;
+    }
+};
+
+/// @brief The specialization of conv_limits_base for 8 byte integers, e.g., int64_t, uint64_t.
+template <>
+struct conv_limits_base<8u> {
+    /// max characters for octals (0o1777777777777777777777) without the prefix part.
+    static constexpr std::size_t max_chars_oct = 22;
+    /// max characters for hexadecimals (0xFFFFFFFFFFFFFFFF) without the prefix part.
+    static constexpr std::size_t max_chars_hex = 16;
+
+    /// @brief Check if the given octals are safely converted into 8 byte integer.
+    /// @param octs The pointer to octal characters
+    /// @param len The length of octal characters
+    /// @return true is safely convertible, false otherwise.
+    static bool check_if_octs_safe(const char* octs, std::size_t len) noexcept {
+        return (len < max_chars_oct) || (len == max_chars_oct && octs[0] <= '1');
+    }
+
+    /// @brief Check if the given hexadecimals are safely converted into 8 byte integer.
+    /// @param octs The pointer to hexadecimal characters
+    /// @param len The length of hexadecimal characters
+    /// @return true is safely convertible, false otherwise.
+    static bool check_if_hexs_safe(const char* /*unused*/, std::size_t len) noexcept {
+        return len <= max_chars_hex;
+    }
+};
+
+/////////////////////
+//   conv_limits   //
+/////////////////////
+
+/// @brief A structure which provides limits for conversions between scalars and integers.
+/// @note This structure contains limits which differs based on signedness.
+/// @tparam NumBytes The number of bytes for the integer type.
+/// @tparam IsSigned Whether an integer is signed or unsigned
+template <std::size_t NumBytes, bool IsSigned>
+struct conv_limits {};
+
+/// @brief The specialization of conv_limits for 1 byte signed integers, e.g., int8_t.
+template <>
+struct conv_limits<1u, true> : conv_limits_base<1u> {
+    /// with or without sign.
+    static constexpr bool is_signed = true;
+
+    /// max characters for decimals (-128..127) without sign.
+    static constexpr std::size_t max_chars_dec = 3;
+
+    /// string representation of max decimal value.
+    static const char* max_value_chars_dec() noexcept {
+        // Making this function a static constexpr variable, a link error happens.
+        // Although the issue has been fixed since C++17, this workaround is necessary to let this functionality work
+        // with C++11 (the library's default C++ standard version).
+        // The same thing is applied to similar functions in the other specializations.
+
+        static constexpr char max_value_chars[] = "127";
+        return &max_value_chars[0];
+    }
+
+    /// string representation of min decimal value without sign.
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "128";
+        return &min_value_chars[0];
+    }
+};
+
+/// @brief The specialization of conv_limits for 1 byte unsigned integers, e.g., uint8_t.
+template <>
+struct conv_limits<1u, false> : conv_limits_base<1u> {
+    /// with or without sign.
+    static constexpr bool is_signed = false;
+
+    /// max characters for decimals (0..255) without sign.
+    static constexpr std::size_t max_chars_dec = 3;
+
+    /// string representation of max decimal value.
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "255";
+        return &max_value_chars[0];
+    }
+
+    /// string representation of min decimal value.
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "0";
+        return &min_value_chars[0];
+    }
+};
+
+/// @brief The specialization of conv_limits for 2 byte signed integers, e.g., int16_t.
+template <>
+struct conv_limits<2u, true> : conv_limits_base<2u> {
+    /// with or without sign.
+    static constexpr bool is_signed = true;
+
+    /// max characters for decimals (-32768..32767) without sign.
+    static constexpr std::size_t max_chars_dec = 5;
+
+    /// string representation of max decimal value.
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "32767";
+        return &max_value_chars[0];
+    }
+
+    /// string representation of min decimal value without sign.
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "32768";
+        return &min_value_chars[0];
+    }
+};
+
+/// @brief The specialization of conv_limits for 2 byte unsigned integers, e.g., uint16_t.
+template <>
+struct conv_limits<2u, false> : conv_limits_base<2u> {
+    /// with or without sign.
+    static constexpr bool is_signed = false;
+
+    /// max characters for decimals (0..65535) without sign.
+    static constexpr std::size_t max_chars_dec = 5;
+
+    /// string representation of max decimal value.
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "65535";
+        return &max_value_chars[0];
+    }
+
+    /// string representation of min decimal value.
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "0";
+        return &min_value_chars[0];
+    }
+};
+
+/// @brief The specialization of conv_limits for 4 byte signed integers, e.g., int32_t.
+template <>
+struct conv_limits<4u, true> : conv_limits_base<4u> {
+    /// with or without sign.
+    static constexpr bool is_signed = true;
+
+    /// max characters for decimals (-2147483648..2147483647) without sign.
+    static constexpr std::size_t max_chars_dec = 10;
+
+    /// string representation of max decimal value.
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "2147483647";
+        return &max_value_chars[0];
+    }
+
+    /// string representation of min decimal value without sign.
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "2147483648";
+        return &min_value_chars[0];
+    }
+};
+
+/// @brief The specialization of conv_limits for 4 byte unsigned integers, e.g., uint32_t.
+template <>
+struct conv_limits<4u, false> : conv_limits_base<4u> {
+    /// with or without sign.
+    static constexpr bool is_signed = false;
+
+    /// max characters for decimals (0..4294967295) without sign.
+    static constexpr std::size_t max_chars_dec = 10;
+
+    /// string representation of max decimal value.
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "4294967295";
+        return &max_value_chars[0];
+    }
+
+    /// string representation of min decimal value.
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "0";
+        return &min_value_chars[0];
+    }
+};
+
+/// @brief The specialization of conv_limits for 8 byte signed integers, e.g., int64_t.
+template <>
+struct conv_limits<8u, true> : conv_limits_base<8u> {
+    /// with or without sign.
+    static constexpr bool is_signed = true;
+
+    /// max characters for decimals (-9223372036854775808..9223372036854775807) without sign.
+    static constexpr std::size_t max_chars_dec = 19;
+
+    /// string representation of max decimal value.
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "9223372036854775807";
+        return &max_value_chars[0];
+    }
+
+    /// string representation of min decimal value without sign.
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "9223372036854775808";
+        return &min_value_chars[0];
+    }
+};
+
+/// @brief The specialization of conv_limits for 8 byte unsigned integers, e.g., uint64_t.
+template <>
+struct conv_limits<8u, false> : conv_limits_base<8u> {
+    /// with or without sign.
+    static constexpr bool is_signed = false;
+
+    /// max characters for decimals (0..18446744073709551615) without sign.
+    static constexpr std::size_t max_chars_dec = 20;
+
+    /// string representation of max decimal value.
+    static const char* max_value_chars_dec() noexcept {
+        static constexpr char max_value_chars[] = "18446744073709551615";
+        return &max_value_chars[0];
+    }
+
+    /// string representation of min decimal value.
+    static const char* min_value_chars_dec() noexcept {
+        static constexpr char min_value_chars[] = "0";
+        return &min_value_chars[0];
+    }
+};
+
+//////////////////////////
+//   scalar <--> null   //
+//////////////////////////
+
+/// @brief Converts a scalar into a null value
+/// @tparam CharItr Type of char iterators. Its value type must be `char` (maybe cv-qualified).
+/// @param begin The iterator to the first element of the scalar.
+/// @param end The iterator to the past-the-end element of the scalar.
+/// @param /*unused*/ The null value holder (unused since it can only have `nullptr`)
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename CharItr>
+inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcept {
+    static_assert(is_iterator_of<CharItr, char>::value, "aton() accepts iterators for char type");
+
+    if FK_YAML_UNLIKELY (begin == end) {
+        return false;
+    }
+
+    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+
+    // This path is the most probable case, so check it first.
+    if FK_YAML_LIKELY (len == 4) {
+        const char* p_begin = &*begin;
+        return (std::strncmp(p_begin, "null", 4) == 0) || (std::strncmp(p_begin, "Null", 4) == 0) ||
+               (std::strncmp(p_begin, "NULL", 4) == 0);
+    }
+
+    if (len == 1) {
+        return *begin == '~';
+    }
+
+    return false;
+}
+
+/////////////////////////////
+//   scalar <--> boolean   //
+/////////////////////////////
+
+/// @brief Converts a scalar into a boolean value
+/// @tparam CharItr The type of char iterators. Its value type must be `char` (maybe cv-qualified).
+/// @tparam BoolType The output boolean type.
+/// @param begin The iterator to the first element of the scalar.
+/// @param end The iterator to the past-the-end element of the scalar.
+/// @param boolean The boolean value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename CharItr, typename BoolType>
+inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
+    static_assert(is_iterator_of<CharItr, char>::value, "atob() accepts iterators for char type");
+
+    if FK_YAML_UNLIKELY (begin == end) {
+        return false;
+    }
+
+    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const char* p_begin = &*begin;
+
+    if (len == 4) {
+        bool is_true_scalar = (std::strncmp(p_begin, "true", 4) == 0) || (std::strncmp(p_begin, "True", 4) == 0) ||
+                              (std::strncmp(p_begin, "TRUE", 4) == 0);
+
+        if FK_YAML_LIKELY (is_true_scalar) {
+            boolean = static_cast<BoolType>(true);
+        }
+        return is_true_scalar;
+    }
+
+    if (len == 5) {
+        bool is_false_scalar = (std::strncmp(p_begin, "false", 5) == 0) || (std::strncmp(p_begin, "False", 5) == 0) ||
+                               (std::strncmp(p_begin, "FALSE", 5) == 0);
+
+        if FK_YAML_LIKELY (is_false_scalar) {
+            boolean = static_cast<BoolType>(false);
+        }
+        return is_false_scalar;
+    }
+
+    return false;
+}
+
+/////////////////////////////
+//   scalar <--> integer   //
+/////////////////////////////
+
+//
+// scalar --> decimals
+//
+
+/// @brief Converts a scalar into decimals. This is common implementation for both signed/unsigned integer types.
+/// @warning
+/// This function does NOT care about overflows if IntType is unsigned. The source string value must be validated
+/// beforehand by calling either atoi_dec_pos() or atoi_dec_neg() functions.
+/// Furthermore, `p_begin` and `p_end` must NOT be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename IntType>
+inline bool atoi_dec_unchecked(const char* p_begin, const char* p_end, IntType& i) noexcept {
+    static_assert(
+        is_non_bool_integral<IntType>::value,
+        "atoi_dec_unchecked() accepts non-boolean integral types as an output type");
+
+    i = 0;
+    do {
+        char c = *p_begin;
+        if FK_YAML_UNLIKELY (c < '0' || '9' < c) {
+            return false;
+        }
+        // Overflow is intentional when the IntType is signed.
+        i = i * IntType(10) + IntType(c - '0');
+    } while (++p_begin != p_end);
+
+    return true;
+}
+
+/// @brief Converts a scalar into positive decimals. This function executes bounds check to avoid overflow.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename IntType>
+inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noexcept {
+    static_assert(
+        is_non_bool_integral<IntType>::value, "atoi_dec_pos() accepts non-boolean integral types as an output type");
+
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
+        return false;
+    }
+
+    using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
+
+    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
+        // Overflow will happen.
+        return false;
+    }
+
+    if (len == conv_limits_type::max_chars_dec) {
+        const char* p_max_value_chars_dec = conv_limits_type::max_value_chars_dec();
+
+        for (std::size_t idx = 0; idx < conv_limits_type::max_chars_dec; idx++) {
+            if (p_begin[idx] < p_max_value_chars_dec[idx]) {
+                // No need to check the lower digits. Overflow will no longer happen.
+                break;
+            }
+
+            if FK_YAML_UNLIKELY (p_begin[idx] > p_max_value_chars_dec[idx]) {
+                // Overflow will happen.
+                return false;
+            }
+        }
+    }
+
+    return atoi_dec_unchecked(p_begin, p_end, i);
+}
+
+/// @brief Converts a scalar into negative decimals. This function executes bounds check to avoid underflow.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It must be signed.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename IntType>
+inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noexcept {
+    static_assert(
+        is_non_bool_integral<IntType>::value, "atoi_dec_neg() accepts non-boolean integral types as an output type");
+
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
+        return false;
+    }
+
+    using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
+
+    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
+        // Underflow will happen.
+        return false;
+    }
+
+    if (len == conv_limits_type::max_chars_dec) {
+        const char* p_min_value_chars_dec = conv_limits_type::min_value_chars_dec();
+
+        for (std::size_t idx = 0; idx < conv_limits_type::max_chars_dec; idx++) {
+            if (p_begin[idx] < p_min_value_chars_dec[idx]) {
+                // No need to check the lower digits. Underflow will no longer happen.
+                break;
+            }
+
+            if FK_YAML_UNLIKELY (p_begin[idx] > p_min_value_chars_dec[idx]) {
+                // Underflow will happen.
+                return false;
+            }
+        }
+    }
+
+    return atoi_dec_unchecked(p_begin, p_end, i);
+}
+
+//
+// scalar --> octals
+//
+
+/// @brief Converts a scalar into octals. This function executes bounds check to avoid overflow.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename IntType>
+inline bool atoi_oct(const char* p_begin, const char* p_end, IntType& i) noexcept {
+    static_assert(
+        is_non_bool_integral<IntType>::value, "atoi_oct() accepts non-boolean integral types as an output type");
+
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
+        return false;
+    }
+
+    using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
+
+    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    if FK_YAML_UNLIKELY (!conv_limits_type::check_if_octs_safe(p_begin, len)) {
+        return false;
+    }
+
+    i = 0;
+    do {
+        char c = *p_begin;
+        if FK_YAML_UNLIKELY (c < '0' || '7' < c) {
+            return false;
+        }
+        i = i * IntType(8) + IntType(c - '0');
+    } while (++p_begin != p_end);
+
+    return true;
+}
+
+//
+// scalar --> hexadecimals
+//
+
+/// @brief Converts a scalar into hexadecimals. This function executes bounds check to avoid overflow.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename IntType>
+inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcept {
+    static_assert(
+        is_non_bool_integral<IntType>::value, "atoi_hex() accepts non-boolean integral types as an output type");
+
+    if FK_YAML_UNLIKELY (p_begin == p_end) {
+        return false;
+    }
+
+    using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
+
+    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    if FK_YAML_UNLIKELY (!conv_limits_type::check_if_hexs_safe(p_begin, len)) {
+        return false;
+    }
+
+    i = 0;
+    do {
+        char c = *p_begin;
+        IntType ci = 0;
+        if ('0' <= c && c <= '9') {
+            ci = IntType(c - '0');
+        }
+        else if ('A' <= c && c <= 'F') {
+            ci = IntType(c - 'A' + 10);
+        }
+        else if ('a' <= c && c <= 'f') {
+            ci = IntType(c - 'a' + 10);
+        }
+        else {
+            return false;
+        }
+        i = i * IntType(16) + ci;
+    } while (++p_begin != p_end);
+
+    return true;
+}
+
+//
+// atoi() & itoa()
+//
+
+/// @brief Converts a scalar into integers. This function executes bounds check to avoid overflow/underflow.
+/// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
+/// @tparam IntType The output integer type. It can be either signed or unsigned.
+/// @param begin The iterator to the first element of the scalar.
+/// @param end The iterator to the past-the-end element of the scalar.
+/// @param i The output integer value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename CharItr, typename IntType>
+inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
+    static_assert(is_iterator_of<CharItr, char>::value, "atoi() accepts iterators for char type");
+    static_assert(is_non_bool_integral<IntType>::value, "atoi() accepts non-boolean integral types as an output type");
+
+    if FK_YAML_UNLIKELY (begin == end) {
+        return false;
+    }
+
+    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const char* p_begin = &*begin;
+    const char* p_end = p_begin + len;
+
+    char first = *begin;
+    if (first == '+') {
+        return atoi_dec_pos(p_begin + 1, p_end, i);
+    }
+
+    if (first == '-') {
+        if (!std::numeric_limits<IntType>::is_signed) {
+            return false;
+        }
+
+        bool success = atoi_dec_neg(p_begin + 1, p_end, i);
+        if (success) {
+            i *= IntType(-1);
+        }
+
+        return success;
+    }
+
+    if (first != '0') {
+        return atoi_dec_pos(p_begin, p_end, i);
+    }
+    else if (p_begin + 1 != p_end) {
+        switch (*(p_begin + 1)) {
+        case 'o':
+            return atoi_oct(p_begin + 2, p_end, i);
+        case 'x':
+            return atoi_hex(p_begin + 2, p_end, i);
+        default:
+            // The YAML spec doesn't allow decimals starting with 0.
+            return false;
+        }
+    }
+
+    i = 0;
+    return true;
+}
+
+///////////////////////////
+//   scalar <--> float   //
+///////////////////////////
+
+/// @brief Set an infinite `float` value based on the given signedness.
+/// @param f The output `float` value holder.
+/// @param sign Whether the infinite value should be positive or negative.
+inline void set_infinity(float& f, const float sign) noexcept {
+    f = std::numeric_limits<float>::infinity() * sign;
+}
+
+/// @brief Set an infinite `double` value based on the given signedness.
+/// @param f The output `double` value holder.
+/// @param sign Whether the infinite value should be positive or negative.
+inline void set_infinity(double& f, const double sign) noexcept {
+    f = std::numeric_limits<double>::infinity() * sign;
+}
+
+/// @brief Set a NaN `float` value.
+/// @param f The output `float` value holder.
+inline void set_nan(float& f) noexcept {
+    f = std::nanf("");
+}
+
+/// @brief Set a NaN `double` value.
+/// @param f The output `double` value holder.
+inline void set_nan(double& f) noexcept {
+    f = std::nan("");
+}
+
+#if FK_YAML_HAS_TO_CHARS
+
+/// @brief Converts a scalar into a floating point value.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param f The output floating point value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename FloatType>
+inline bool atof_impl(const char* p_begin, const char* p_end, FloatType& f) noexcept {
+    static_assert(std::is_floating_point_v<FloatType>, "atof_impl() accepts floating point types as an output type");
+    if (auto [ptr, ec] = std::from_chars(p_begin, p_end, f); ec == std::errc {}) {
+        return ptr == p_end;
+    }
+    return false;
+}
+
+#else
+
+/// @brief Converts a scalar into a `float` value.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param f The output `float` value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+inline bool atof_impl(const char* p_begin, const char* p_end, float& f) {
+    std::size_t idx = 0;
+    f = std::stof(std::string(p_begin, p_end), &idx);
+    return idx == static_cast<std::size_t>(p_end - p_begin);
+}
+
+/// @brief Converts a scalar into a `double` value.
+/// @warning `p_begin` and `p_end` must not be null. Validate them before calling this function.
+/// @param p_begin The pointer to the first element of the scalar.
+/// @param p_end The pointer to the past-the-end element of the scalar.
+/// @param f The output `double` value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
+    std::size_t idx = 0;
+    f = std::stod(std::string(p_begin, p_end), &idx);
+    return idx == static_cast<std::size_t>(p_end - p_begin);
+}
+
+#endif // FK_YAML_HAS_TO_CHARS
+
+/// @brief Converts a scalar into a floating point value.
+/// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
+/// @tparam FloatType The output floating point value type.
+/// @param begin The iterator to the first element of the scalar.
+/// @param end The iterator to the past-the-end element of the scalar.
+/// @param f The output floating point value holder.
+/// @return true if the conversion completes successfully, false otherwise.
+template <typename CharItr, typename FloatType>
+inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(atof_impl(&*begin, &*begin, f))) {
+    static_assert(is_iterator_of<CharItr, char>::value, "atof() accepts iterators for char type");
+    static_assert(std::is_floating_point<FloatType>::value, "atof() accepts floating point types as an output type");
+
+    if FK_YAML_UNLIKELY (begin == end) {
+        return false;
+    }
+
+    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const char* p_begin = &*begin;
+    const char* p_end = p_begin + len;
+
+    if (*p_begin == '-' || *p_begin == '+') {
+        if (len == 5) {
+            const char* p_from_second = p_begin + 1;
+            bool is_inf_scalar = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
+                                 (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
+                                 (std::strncmp(p_from_second, ".INF", 4) == 0);
+
+            if (is_inf_scalar) {
+                set_infinity(f, *p_begin == '-' ? FloatType(-1.) : FloatType(1.));
+                return true;
+            }
+        }
+    }
+    else if (len == 4) {
+        bool is_inf_scalar = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||
+                             (std::strncmp(p_begin, ".INF", 4) == 0);
+        bool is_nan_scalar = false;
+        if (!is_inf_scalar) {
+            is_nan_scalar = (std::strncmp(p_begin, ".nan", 4) == 0) || (std::strncmp(p_begin, ".NaN", 4) == 0) ||
+                            (std::strncmp(p_begin, ".NAN", 4) == 0);
+        }
+
+        if (is_inf_scalar) {
+            set_infinity(f, FloatType(1.));
+            return true;
+        }
+
+        if (is_nan_scalar) {
+            set_nan(f);
+            return true;
+        }
+    }
+
+#if FK_YAML_HAS_TO_CHARS
+    return atof_impl(p_begin, p_end, f);
+#else
+    bool success = false;
+    try {
+        success = atof_impl(p_begin, p_end, f);
+    }
+    catch (const std::exception& /*unused*/) {
+        success = false;
+    }
+
+    return success;
+#endif
+}
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP */
+
+// #include <fkYAML/detail/input/scalar_scanner.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
+#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
+
+#include <cstring>
+#include <string>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+// #include <fkYAML/detail/assert.hpp>
+
+// #include <fkYAML/node_type.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+namespace {
+
+/// @brief Check if the given character is a digit.
+/// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with MSVC.
+/// @param c A character to be checked.
+/// @return true if the given character is a digit, false otherwise.
+inline bool is_digit(char c) {
+    return ('0' <= c && c <= '9');
+}
+
+/// @brief Check if the given character is a hex-digit.
+/// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with MSVC.
+/// @param c A character to be checked.
+/// @return true if the given character is a hex-digit, false otherwise.
+inline bool is_xdigit(char c) {
+    return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
+}
+
+} // namespace
+
+/// @brief The class which detects a scalar value type by scanning contents.
+class scalar_scanner {
+public:
+    /// @brief Detects a scalar value type by scanning the contents ranged by the given iterators.
+    /// @param begin The iterator to the first element of the scalar.
+    /// @param end The iterator to the past-the-end element of the scalar.
+    /// @return A detected scalar value type.
+    static node_type scan(const char* begin, const char* end) noexcept {
+        if (begin == end) {
+            return node_type::STRING;
+        }
+
+        uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+        if (len > 5) {
+            return scan_possible_number_token(begin, len);
+        }
+
+        const char* p_begin = &*begin;
+
+        switch (len) {
+        case 1:
+            if (*p_begin == '~') {
+                return node_type::NULL_OBJECT;
+            }
+            break;
+        case 4:
+            switch (*p_begin) {
+            case 'n':
+                // no possible case of begin a number otherwise.
+                return (std::strncmp(p_begin + 1, "ull", 3) == 0) ? node_type::NULL_OBJECT : node_type::STRING;
+            case 'N':
+                // no possible case of begin a number otherwise.
+                return ((std::strncmp(p_begin + 1, "ull", 3) == 0) || (std::strncmp(p_begin + 1, "ULL", 3) == 0))
+                           ? node_type::NULL_OBJECT
+                           : node_type::STRING;
+            case 't':
+                // no possible case of being a number otherwise.
+                return (std::strncmp(p_begin + 1, "rue", 3) == 0) ? node_type::BOOLEAN : node_type::STRING;
+            case 'T':
+                // no possible case of being a number otherwise.
+                return ((std::strncmp(p_begin + 1, "rue", 3) == 0) || (std::strncmp(p_begin + 1, "RUE", 3) == 0))
+                           ? node_type::BOOLEAN
+                           : node_type::STRING;
+            case '.': {
+                const char* p_from_second = p_begin + 1;
+                bool is_inf_or_nan_scalar =
+                    (std::strncmp(p_from_second, "inf", 3) == 0) || (std::strncmp(p_from_second, "Inf", 3) == 0) ||
+                    (std::strncmp(p_from_second, "INF", 3) == 0) || (std::strncmp(p_from_second, "nan", 3) == 0) ||
+                    (std::strncmp(p_from_second, "NaN", 3) == 0) || (std::strncmp(p_from_second, "NAN", 3) == 0);
+                if (is_inf_or_nan_scalar) {
+                    return node_type::FLOAT;
+                }
+                // maybe a number.
+                break;
+            }
+            }
+            break;
+        case 5:
+            switch (*p_begin) {
+            case 'f':
+                // no possible case of being a number otherwise.
+                return (std::strncmp(p_begin + 1, "alse", 4) == 0) ? node_type::BOOLEAN : node_type::STRING;
+            case 'F':
+                // no possible case of being a number otherwise.
+                return ((std::strncmp(p_begin + 1, "alse", 4) == 0) || (std::strncmp(p_begin + 1, "ALSE", 4) == 0))
+                           ? node_type::BOOLEAN
+                           : node_type::STRING;
+            case '+':
+            case '-':
+                if (*(p_begin + 1) == '.') {
+                    const char* p_from_third = p_begin + 2;
+                    bool is_min_inf_scalar = (std::strncmp(p_from_third, "inf", 3) == 0) ||
+                                             (std::strncmp(p_from_third, "Inf", 3) == 0) ||
+                                             (std::strncmp(p_from_third, "INF", 3) == 0);
+                    if (is_min_inf_scalar) {
+                        return node_type::FLOAT;
+                    }
+                }
+                // maybe a number.
+                break;
+            }
+            break;
+        }
+
+        return scan_possible_number_token(begin, len);
+    }
+
+private:
+    /// @brief Detects a scalar value type from the contents (possibly an integer or a floating-point value).
+    /// @param itr The iterator to the first element of the scalar.
+    /// @param len The length of the scalar contents.
+    /// @return A detected scalar value type.
+    static node_type scan_possible_number_token(const char* itr, uint32_t len) noexcept {
+        FK_YAML_ASSERT(len > 0);
+
+        switch (*itr) {
+        case '-':
+            return (len > 1) ? scan_negative_number(++itr, --len) : node_type::STRING;
+        case '+':
+            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::STRING;
+        case '0':
+            return (len > 1) ? scan_after_zero_at_first(++itr, --len) : node_type::INTEGER;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::INTEGER;
+        default:
+            return node_type::STRING;
+        }
+    }
+
+    /// @brief Detects a scalar value type by scanning the contents right after the negative sign.
+    /// @param itr The iterator to the past-the-negative-sign element of the scalar.
+    /// @param len The length of the scalar contents left unscanned.
+    /// @return A detected scalar value type.
+    static node_type scan_negative_number(const char* itr, uint32_t len) noexcept {
+        FK_YAML_ASSERT(len > 0);
+
+        if (is_digit(*itr)) {
+            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::INTEGER;
+        }
+
+        return node_type::STRING;
+    }
+
+    /// @brief Detects a scalar value type by scanning the contents right after the beginning 0.
+    /// @param itr The iterator to the past-the-zero element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @return A detected scalar value type.
+    static node_type scan_after_zero_at_first(const char* itr, uint32_t len) noexcept {
+        FK_YAML_ASSERT(len > 0);
+
+        if (is_digit(*itr)) {
+            // a token consisting of the beginning '0' and some following numbers, e.g., `0123`, is not an integer
+            // according to https://yaml.org/spec/1.2.2/#10213-integer.
+            return node_type::STRING;
+        }
+
+        switch (*itr) {
+        case '.': {
+            if (len == 1) {
+                // 0 is omitted after `0.`.
+                return node_type::FLOAT;
+            }
+            node_type ret = scan_after_decimal_point(++itr, --len, true);
+            return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
+        }
+        case 'o':
+            return (len > 1) ? scan_octal_number(++itr, --len) : node_type::STRING;
+        case 'x':
+            return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::STRING;
+        default:
+            return node_type::STRING;
+        }
+    }
+
+    /// @brief Detects a scalar value type by scanning the contents part starting with a decimal.
+    /// @param itr The iterator to the beginning decimal element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @param has_decimal_point Whether a decimal point has already been found in the previous part.
+    /// @return A detected scalar value type.
+    static node_type scan_decimal_number(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
+        FK_YAML_ASSERT(len > 0);
+
+        if (is_digit(*itr)) {
+            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::INTEGER;
+        }
+
+        switch (*itr) {
+        case '.': {
+            if (has_decimal_point) {
+                // the token has more than one period, e.g., a semantic version `1.2.3`.
+                return node_type::STRING;
+            }
+            if (len == 1) {
+                // 0 is omitted after the decimal point
+                return node_type::FLOAT;
+            }
+            node_type ret = scan_after_decimal_point(++itr, --len, true);
+            return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
+        }
+        case 'e':
+        case 'E':
+            return (len > 1) ? scan_after_exponent(++itr, --len, has_decimal_point) : node_type::STRING;
+        default:
+            return node_type::STRING;
+        }
+    }
+
+    /// @brief Detects a scalar value type by scanning the contents right after a decimal point.
+    /// @param itr The iterator to the past-the-decimal-point element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
+    /// @return A detected scalar value type.
+    static node_type scan_after_decimal_point(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
+        FK_YAML_ASSERT(len > 0);
+
+        if (is_digit(*itr)) {
+            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
+        }
+
+        return node_type::STRING;
+    }
+
+    /// @brief Detects a scalar value type by scanning the contents right after the exponent prefix ("e" or "E").
+    /// @param itr The iterator to the past-the-exponent-prefix element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
+    /// @return A detected scalar value type.
+    static node_type scan_after_exponent(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
+        FK_YAML_ASSERT(len > 0);
+
+        if (is_digit(*itr)) {
+            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
+        }
+
+        switch (*itr) {
+        case '+':
+        case '-':
+            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::STRING;
+        default:
+            return node_type::STRING;
+        }
+    }
+
+    /// @brief Detects a scalar value type by scanning the contents assuming octal numbers.
+    /// @param itr The iterator to the octal-number element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @return A detected scalar value type.
+    static node_type scan_octal_number(const char* itr, uint32_t len) noexcept {
+        FK_YAML_ASSERT(len > 0);
+
+        switch (*itr) {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+            return (len > 1) ? scan_octal_number(++itr, --len) : node_type::INTEGER;
+        default:
+            return node_type::STRING;
+        }
+    }
+
+    /// @brief Detects a scalar value type by scanning the contents assuming hexadecimal numbers.
+    /// @param itr The iterator to the hexadecimal-number element of the scalar.
+    /// @param len The length of the scalar left unscanned.
+    /// @return A detected scalar value type.
+    static node_type scan_hexadecimal_number(const char* itr, uint32_t len) noexcept {
+        FK_YAML_ASSERT(len > 0);
+
+        if (is_xdigit(*itr)) {
+            return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::INTEGER;
+        }
+        return node_type::STRING;
+    }
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP */
+
+// #include <fkYAML/detail/input/tag_t.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP
+#define FK_YAML_DETAIL_INPUT_TAG_T_HPP
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief Definition of YAML directive sets.
+enum class tag_t {
+    NONE,            //!< Represents a non-specific tag "?".
+    NON_SPECIFIC,    //!< Represents a non-specific tag "!".
+    CUSTOM_TAG,      //!< Represents a custom tag
+    SEQUENCE,        //!< Represents a sequence tag.
+    MAPPING,         //!< Represents a mapping tag.
+    NULL_VALUE,      //!< Represents a null value tag.
+    BOOLEAN,         //!< Represents a boolean tag.
+    INTEGER,         //!< Represents an integer type
+    FLOATING_NUMBER, //!< Represents a floating point number tag.
+    STRING,          //!< Represents a string tag.
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_INPUT_TAG_T_HPP */
+
+// #include <fkYAML/detail/meta/node_traits.hpp>
+
+// #include <fkYAML/detail/str_view.hpp>
+
+// #include <fkYAML/detail/types/lexical_token_t.hpp>
+
+// #include <fkYAML/exception.hpp>
+
+// #include <fkYAML/node_type.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+template <typename BasicNodeType>
+class scalar_parser {
+    static_assert(is_basic_node<BasicNodeType>::value, "scalar_parser only accepts basic_node<...>");
+
+public:
+    using basic_node_type = BasicNodeType;
+
+private:
+    /** A type for boolean node values. */
+    using boolean_type = typename basic_node_type::boolean_type;
+    /** A type for integer node values. */
+    using integer_type = typename basic_node_type::integer_type;
+    /** A type for floating point node values. */
+    using float_number_type = typename basic_node_type::float_number_type;
+    /** A type for string node values. */
+    using string_type = typename basic_node_type::string_type;
+
+public:
+    scalar_parser(uint32_t line, uint32_t indent) noexcept
+        : m_line(line),
+          m_indent(indent) {
+    }
+
+    ~scalar_parser() noexcept = default;
+
+    scalar_parser(const scalar_parser&) noexcept = default;
+    scalar_parser(scalar_parser&&) noexcept = default;
+    scalar_parser& operator=(const scalar_parser&) noexcept = default;
+    scalar_parser& operator=(scalar_parser&&) noexcept = default;
+
+    basic_node_type parse(lexical_token_t lex_type, tag_t tag_type, str_view token) {
+        FK_YAML_ASSERT(
+            lex_type == lexical_token_t::PLAIN_SCALAR || lex_type == lexical_token_t::SINGLE_QUOTED_SCALAR ||
+            lex_type == lexical_token_t::DOUBLE_QUOTED_SCALAR || lex_type == lexical_token_t::BLOCK_SCALAR);
+        FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
+
+        token = parse_scalar_token(lex_type, token);
+        node_type value_type = decide_value_type(lex_type, tag_type, token);
+        return create_scalar_node(value_type, token);
+    }
+
+private:
+    str_view parse_scalar_token(lexical_token_t lex_type, str_view token) {
+        switch (lex_type) {
+        case lexical_token_t::SINGLE_QUOTED_SCALAR:
+            token = parse_single_quoted_scalar(token);
+            break;
+        case lexical_token_t::PLAIN_SCALAR:
+        default:
+            break;
+        }
+
+        return token;
+    }
+
+    str_view parse_single_quoted_scalar(str_view token) noexcept {
+        if (token.empty()) {
+            return token;
+        }
+
+        std::size_t pos = token.find_first_of("\'\n");
+        if (pos == str_view::npos) {
+            return token;
+        }
+
+        if (m_buffer.capacity() < token.size()) {
+            m_buffer.reserve(token.size());
+        }
+
+        do {
+            if (token[pos] == '\'') {
+                // unescape escaped single quote. ('' -> ')
+                m_buffer.append(token.begin(), token.begin() + (pos + 1));
+                token.remove_prefix(pos + 2); // move next to the escaped single quote.
+                continue;
+            }
+
+            // process line folding
+
+            // discard trailing white spaces which precedes the line break in the current line.
+            std::size_t last_non_space_pos = token.substr(0, pos).find_last_not_of(" \t");
+            if (last_non_space_pos == str_view::npos) {
+                m_buffer.append(token.begin(), pos);
+            }
+            else {
+                m_buffer.append(token.begin(), last_non_space_pos + 1);
+            }
+            token.remove_prefix(pos + 1); // move next to the LF
+
+            uint32_t empty_line_counts = 0;
+            do {
+                std::size_t non_space_pos = token.find_first_not_of(" \t");
+                if (non_space_pos == str_view::npos || token[non_space_pos] != '\n') {
+                    if (non_space_pos == str_view::npos) {
+                        non_space_pos = token.size();
+                    }
+                    token.remove_prefix(non_space_pos);
+                    break;
+                }
+
+                ++empty_line_counts;
+            } while (true);
+
+            if (empty_line_counts > 0) {
+                m_buffer.append(empty_line_counts, '\n');
+            }
+            else {
+                m_buffer.push_back(' ');
+            }
+
+            pos = token.find_first_of("\'\n");
+        } while (pos != str_view::npos);
+
+        if (!token.empty()) {
+            m_buffer.append(token.begin(), token.size());
+        }
+
+        return {m_buffer};
+    }
+
+    node_type decide_value_type(lexical_token_t lex_type, tag_t tag_type, str_view token) const noexcept {
+        node_type value_type {node_type::STRING};
+        if (lex_type == lexical_token_t::PLAIN_SCALAR) {
+            value_type = scalar_scanner::scan(token.begin(), token.end());
+        }
+
+        switch (tag_type) {
+        case tag_t::NULL_VALUE:
+            value_type = node_type::NULL_OBJECT;
+            break;
+        case tag_t::BOOLEAN:
+            value_type = node_type::BOOLEAN;
+            break;
+        case tag_t::INTEGER:
+            value_type = node_type::INTEGER;
+            break;
+        case tag_t::FLOATING_NUMBER:
+            value_type = node_type::FLOAT;
+            break;
+        case tag_t::STRING:
+            value_type = node_type::STRING;
+            break;
+        case tag_t::NON_SPECIFIC:
+            // scalars with the non-specific tag is resolved to a string tag.
+            // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
+            value_type = node_type::STRING;
+            break;
+        case tag_t::NONE:
+        case tag_t::CUSTOM_TAG:
+        default:
+            break;
+        }
+
+        return value_type;
+    }
+
+    basic_node_type create_scalar_node(node_type type, str_view token) {
+        basic_node_type node {};
+
+        switch (type) {
+        case node_type::NULL_OBJECT: {
+            std::nullptr_t null = nullptr;
+            bool converted = detail::aton(token.begin(), token.end(), null);
+            if FK_YAML_UNLIKELY (!converted) {
+                throw parse_error("Failed to convert a scalar to a null.", m_line, m_indent);
+            }
+            // The above `node` variable is already null, so no instance creation is needed.
+            break;
+        }
+        case node_type::BOOLEAN: {
+            boolean_type boolean = static_cast<boolean_type>(false);
+            bool converted = detail::atob(token.begin(), token.end(), boolean);
+            if FK_YAML_UNLIKELY (!converted) {
+                throw parse_error("Failed to convert a scalar to a boolean.", m_line, m_indent);
+            }
+            node = basic_node_type(boolean);
+            break;
+        }
+        case node_type::INTEGER: {
+            integer_type integer = 0;
+            bool converted = detail::atoi(token.begin(), token.end(), integer);
+            if FK_YAML_UNLIKELY (!converted) {
+                throw parse_error("Failed to convert a scalar to an integer.", m_line, m_indent);
+            }
+            node = basic_node_type(integer);
+            break;
+        }
+        case node_type::FLOAT: {
+            float_number_type float_val = 0;
+            bool converted = detail::atof(token.begin(), token.end(), float_val);
+            if FK_YAML_UNLIKELY (!converted) {
+                throw parse_error("Failed to convert a scalar to a floating point value", m_line, m_indent);
+            }
+            node = basic_node_type(float_val);
+            break;
+        }
+        case node_type::STRING:
+            node = basic_node_type(std::string(token.begin(), token.end()));
+            break;
+        default:   // LCOV_EXCL_LINE
+            break; // LCOV_EXCL_LINE
+        }
+
+        return node;
+    }
+
+    uint32_t m_line {0};
+    uint32_t m_indent {0};
+    std::string m_buffer {};
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP_ */
+
 // #include <fkYAML/detail/input/tag_resolver.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -5478,38 +6017,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/document_metainfo.hpp>
 
 // #include <fkYAML/detail/input/tag_t.hpp>
-//  _______   __ __   __  _____   __  __  __
-// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-//
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-// SPDX-License-Identifier: MIT
-
-#ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP
-#define FK_YAML_DETAIL_INPUT_TAG_T_HPP
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief Definition of YAML directive sets.
-enum class tag_t {
-    NON_SPECIFIC,    //!< Represents a non-specific tag.
-    CUSTOM_TAG,      //!< Represents a custom tag
-    SEQUENCE,        //!< Represents a sequence tag.
-    MAPPING,         //!< Represents a mapping tag.
-    NULL_VALUE,      //!< Represents a null value tag.
-    BOOLEAN,         //!< Represents a boolean tag.
-    INTEGER,         //!< Represents an integer type
-    FLOATING_NUMBER, //!< Represents a floating point number tag.
-    STRING,          //!< Represents a string tag.
-};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_INPUT_TAG_T_HPP */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -5784,321 +6291,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
-// #include <fkYAML/detail/input/scalar_scanner.hpp>
-//  _______   __ __   __  _____   __  __  __
-// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-//
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-// SPDX-License-Identifier: MIT
-
-#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
-#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
-
-#include <cstring>
-#include <string>
-
-// #include <fkYAML/detail/macros/version_macros.hpp>
-
-// #include <fkYAML/detail/assert.hpp>
-
-// #include <fkYAML/node_type.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-namespace {
-
-/// @brief Check if the given character is a digit.
-/// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a digit, false otherwise.
-inline bool is_digit(char c) {
-    return ('0' <= c && c <= '9');
-}
-
-/// @brief Check if the given character is a hex-digit.
-/// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a hex-digit, false otherwise.
-inline bool is_xdigit(char c) {
-    return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
-}
-
-} // namespace
-
-/// @brief The class which detects a scalar value type by scanning contents.
-class scalar_scanner {
-public:
-    /// @brief Detects a scalar value type by scanning the contents ranged by the given iterators.
-    /// @param begin The iterator to the first element of the scalar.
-    /// @param end The iterator to the past-the-end element of the scalar.
-    /// @return A detected scalar value type.
-    static node_type scan(const char* begin, const char* end) {
-        if (begin == end) {
-            return node_type::STRING;
-        }
-
-        uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
-        if (len > 5) {
-            return scan_possible_number_token(begin, len);
-        }
-
-        const char* p_begin = &*begin;
-
-        switch (len) {
-        case 1:
-            if (*p_begin == '~') {
-                return node_type::NULL_OBJECT;
-            }
-            break;
-        case 4:
-            switch (*p_begin) {
-            case 'n':
-                // no possible case of begin a number otherwise.
-                return (std::strncmp(p_begin + 1, "ull", 3) == 0) ? node_type::NULL_OBJECT : node_type::STRING;
-            case 'N':
-                // no possible case of begin a number otherwise.
-                return ((std::strncmp(p_begin + 1, "ull", 3) == 0) || (std::strncmp(p_begin + 1, "ULL", 3) == 0))
-                           ? node_type::NULL_OBJECT
-                           : node_type::STRING;
-            case 't':
-                // no possible case of being a number otherwise.
-                return (std::strncmp(p_begin + 1, "rue", 3) == 0) ? node_type::BOOLEAN : node_type::STRING;
-            case 'T':
-                // no possible case of being a number otherwise.
-                return ((std::strncmp(p_begin + 1, "rue", 3) == 0) || (std::strncmp(p_begin + 1, "RUE", 3) == 0))
-                           ? node_type::BOOLEAN
-                           : node_type::STRING;
-            case '.': {
-                const char* p_from_second = p_begin + 1;
-                bool is_inf_or_nan_scalar =
-                    (std::strncmp(p_from_second, "inf", 3) == 0) || (std::strncmp(p_from_second, "Inf", 3) == 0) ||
-                    (std::strncmp(p_from_second, "INF", 3) == 0) || (std::strncmp(p_from_second, "nan", 3) == 0) ||
-                    (std::strncmp(p_from_second, "NaN", 3) == 0) || (std::strncmp(p_from_second, "NAN", 3) == 0);
-                if (is_inf_or_nan_scalar) {
-                    return node_type::FLOAT;
-                }
-                // maybe a number.
-                break;
-            }
-            }
-            break;
-        case 5:
-            switch (*p_begin) {
-            case 'f':
-                // no possible case of being a number otherwise.
-                return (std::strncmp(p_begin + 1, "alse", 4) == 0) ? node_type::BOOLEAN : node_type::STRING;
-            case 'F':
-                // no possible case of being a number otherwise.
-                return ((std::strncmp(p_begin + 1, "alse", 4) == 0) || (std::strncmp(p_begin + 1, "ALSE", 4) == 0))
-                           ? node_type::BOOLEAN
-                           : node_type::STRING;
-            case '+':
-            case '-':
-                if (*(p_begin + 1) == '.') {
-                    const char* p_from_third = p_begin + 2;
-                    bool is_min_inf_scalar = (std::strncmp(p_from_third, "inf", 3) == 0) ||
-                                             (std::strncmp(p_from_third, "Inf", 3) == 0) ||
-                                             (std::strncmp(p_from_third, "INF", 3) == 0);
-                    if (is_min_inf_scalar) {
-                        return node_type::FLOAT;
-                    }
-                }
-                // maybe a number.
-                break;
-            }
-            break;
-        }
-
-        return scan_possible_number_token(begin, len);
-    }
-
-private:
-    /// @brief Detects a scalar value type from the contents (possibly an integer or a floating-point value).
-    /// @param itr The iterator to the first element of the scalar.
-    /// @param len The length of the scalar contents.
-    /// @return A detected scalar value type.
-    static node_type scan_possible_number_token(const char* itr, uint32_t len) {
-        FK_YAML_ASSERT(len > 0);
-
-        switch (*itr) {
-        case '-':
-            return (len > 1) ? scan_negative_number(++itr, --len) : node_type::STRING;
-        case '+':
-            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::STRING;
-        case '0':
-            return (len > 1) ? scan_after_zero_at_first(++itr, --len) : node_type::INTEGER;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::INTEGER;
-        default:
-            return node_type::STRING;
-        }
-    }
-
-    /// @brief Detects a scalar value type by scanning the contents right after the negative sign.
-    /// @param itr The iterator to the past-the-negative-sign element of the scalar.
-    /// @param len The length of the scalar contents left unscanned.
-    /// @return A detected scalar value type.
-    static node_type scan_negative_number(const char* itr, uint32_t len) {
-        FK_YAML_ASSERT(len > 0);
-
-        if (is_digit(*itr)) {
-            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::INTEGER;
-        }
-
-        return node_type::STRING;
-    }
-
-    /// @brief Detects a scalar value type by scanning the contents right after the beginning 0.
-    /// @param itr The iterator to the past-the-zero element of the scalar.
-    /// @param len The length of the scalar left unscanned.
-    /// @return A detected scalar value type.
-    static node_type scan_after_zero_at_first(const char* itr, uint32_t len) {
-        FK_YAML_ASSERT(len > 0);
-
-        if (is_digit(*itr)) {
-            // a token consisting of the beginning '0' and some following numbers, e.g., `0123`, is not an integer
-            // according to https://yaml.org/spec/1.2.2/#10213-integer.
-            return node_type::STRING;
-        }
-
-        switch (*itr) {
-        case '.': {
-            if (len == 1) {
-                // 0 is omitted after `0.`.
-                return node_type::FLOAT;
-            }
-            node_type ret = scan_after_decimal_point(++itr, --len, true);
-            return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
-        }
-        case 'o':
-            return (len > 1) ? scan_octal_number(++itr, --len) : node_type::STRING;
-        case 'x':
-            return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::STRING;
-        default:
-            return node_type::STRING;
-        }
-    }
-
-    /// @brief Detects a scalar value type by scanning the contents part starting with a decimal.
-    /// @param itr The iterator to the beginning decimal element of the scalar.
-    /// @param len The length of the scalar left unscanned.
-    /// @param has_decimal_point Whether a decimal point has already been found in the previous part.
-    /// @return A detected scalar value type.
-    static node_type scan_decimal_number(const char* itr, uint32_t len, bool has_decimal_point) {
-        FK_YAML_ASSERT(len > 0);
-
-        if (is_digit(*itr)) {
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::INTEGER;
-        }
-
-        switch (*itr) {
-        case '.': {
-            if (has_decimal_point) {
-                // the token has more than one period, e.g., a semantic version `1.2.3`.
-                return node_type::STRING;
-            }
-            if (len == 1) {
-                // 0 is omitted after the decimal point
-                return node_type::FLOAT;
-            }
-            node_type ret = scan_after_decimal_point(++itr, --len, true);
-            return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
-        }
-        case 'e':
-        case 'E':
-            return (len > 1) ? scan_after_exponent(++itr, --len, has_decimal_point) : node_type::STRING;
-        default:
-            return node_type::STRING;
-        }
-    }
-
-    /// @brief Detects a scalar value type by scanning the contents right after a decimal point.
-    /// @param itr The iterator to the past-the-decimal-point element of the scalar.
-    /// @param len The length of the scalar left unscanned.
-    /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
-    /// @return A detected scalar value type.
-    static node_type scan_after_decimal_point(const char* itr, uint32_t len, bool has_decimal_point) {
-        FK_YAML_ASSERT(len > 0);
-
-        if (is_digit(*itr)) {
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
-        }
-
-        return node_type::STRING;
-    }
-
-    /// @brief Detects a scalar value type by scanning the contents right after the exponent prefix ("e" or "E").
-    /// @param itr The iterator to the past-the-exponent-prefix element of the scalar.
-    /// @param len The length of the scalar left unscanned.
-    /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
-    /// @return A detected scalar value type.
-    static node_type scan_after_exponent(const char* itr, uint32_t len, bool has_decimal_point) {
-        FK_YAML_ASSERT(len > 0);
-
-        if (is_digit(*itr)) {
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
-        }
-
-        switch (*itr) {
-        case '+':
-        case '-':
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::STRING;
-        default:
-            return node_type::STRING;
-        }
-    }
-
-    /// @brief Detects a scalar value type by scanning the contents assuming octal numbers.
-    /// @param itr The iterator to the octal-number element of the scalar.
-    /// @param len The length of the scalar left unscanned.
-    /// @return A detected scalar value type.
-    static node_type scan_octal_number(const char* itr, uint32_t len) {
-        FK_YAML_ASSERT(len > 0);
-
-        switch (*itr) {
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-            return (len > 1) ? scan_octal_number(++itr, --len) : node_type::INTEGER;
-        default:
-            return node_type::STRING;
-        }
-    }
-
-    /// @brief Detects a scalar value type by scanning the contents assuming hexadecimal numbers.
-    /// @param itr The iterator to the hexadecimal-number element of the scalar.
-    /// @param len The length of the scalar left unscanned.
-    /// @return A detected scalar value type.
-    static node_type scan_hexadecimal_number(const char* itr, uint32_t len) {
-        FK_YAML_ASSERT(len > 0);
-
-        if (is_xdigit(*itr)) {
-            return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::INTEGER;
-        }
-        return node_type::STRING;
-    }
-};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP */
-
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/node_attrs.hpp>
@@ -6293,18 +6485,12 @@ class basic_deserializer {
     using doc_metainfo_type = document_metainfo<basic_node_type>;
     /** A type for the tag resolver. */
     using tag_resolver_type = tag_resolver<basic_node_type>;
+    /** A type for the scalar parser. */
+    using scalar_parser_type = scalar_parser<basic_node_type>;
     /** A type for sequence node value containers. */
     using sequence_type = typename basic_node_type::sequence_type;
     /** A type for mapping node value containers. */
     using mapping_type = typename basic_node_type::mapping_type;
-    /** A type for boolean node values. */
-    using boolean_type = typename basic_node_type::boolean_type;
-    /** A type for integer node values. */
-    using integer_type = typename basic_node_type::integer_type;
-    /** A type for floating point node values. */
-    using float_number_type = typename basic_node_type::float_number_type;
-    /** A type for string node values. */
-    using string_type = typename basic_node_type::string_type;
 
     /// @brief Definition of state types of parse contexts.
     enum class context_state_t {
@@ -7322,50 +7508,11 @@ private:
             type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_SCALAR ||
             type == lexical_token_t::ALIAS_PREFIX);
 
-        node_type value_type {node_type::STRING};
-        if (type == lexical_token_t::PLAIN_SCALAR) {
-            value_type = scalar_scanner::scan(token.str.begin(), token.str.end());
-        }
-
-        if (m_needs_tag_impl) {
-            if FK_YAML_UNLIKELY (type == lexical_token_t::ALIAS_PREFIX) {
-                throw parse_error("Tag cannot be specified to alias nodes", line, indent);
-            }
-
-            tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-
-            FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
-
-            switch (tag_type) {
-            case tag_t::NULL_VALUE:
-                value_type = node_type::NULL_OBJECT;
-                break;
-            case tag_t::BOOLEAN:
-                value_type = node_type::BOOLEAN;
-                break;
-            case tag_t::INTEGER:
-                value_type = node_type::INTEGER;
-                break;
-            case tag_t::FLOATING_NUMBER:
-                value_type = node_type::FLOAT;
-                break;
-            case tag_t::STRING:
-                value_type = node_type::STRING;
-                break;
-            case tag_t::NON_SPECIFIC:
-                // scalars with the non-specific tag is resolved to a string tag.
-                // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
-                value_type = node_type::STRING;
-                break;
-            case tag_t::CUSTOM_TAG:
-            default:
-                break;
-            }
-        }
-
-        basic_node_type node {};
-
         if (type == lexical_token_t::ALIAS_PREFIX) {
+            if FK_YAML_UNLIKELY (m_needs_tag_impl) {
+                throw parse_error("Tag cannot be specified to an alias node", line, indent);
+            }
+
             const std::string token_str = std::string(token.str.begin(), token.str.end());
 
             uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
@@ -7373,6 +7520,7 @@ private:
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
 
+            basic_node_type node {};
             node.m_attrs |= detail::node_attr_bits::alias_bit;
             node.m_prop.anchor = std::move(token_str);
             detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
@@ -7383,50 +7531,12 @@ private:
             return node;
         }
 
-        switch (value_type) {
-        case node_type::NULL_OBJECT: {
-            std::nullptr_t null = nullptr;
-            bool converted = detail::aton(token.str.begin(), token.str.end(), null);
-            if FK_YAML_UNLIKELY (!converted) {
-                throw parse_error("Failed to convert a scalar to a null.", line, indent);
-            }
-            // The above `node` variable is already null, so no instance creation is needed.
-            break;
-        }
-        case node_type::BOOLEAN: {
-            boolean_type boolean = static_cast<boolean_type>(false);
-            bool converted = detail::atob(token.str.begin(), token.str.end(), boolean);
-            if FK_YAML_UNLIKELY (!converted) {
-                throw parse_error("Failed to convert a scalar to a boolean.", line, indent);
-            }
-            node = basic_node_type(boolean);
-            break;
-        }
-        case node_type::INTEGER: {
-            integer_type integer = 0;
-            bool converted = detail::atoi(token.str.begin(), token.str.end(), integer);
-            if FK_YAML_UNLIKELY (!converted) {
-                throw parse_error("Failed to convert a scalar to an integer.", line, indent);
-            }
-            node = basic_node_type(integer);
-            break;
-        }
-        case node_type::FLOAT: {
-            float_number_type float_val = 0;
-            bool converted = detail::atof(token.str.begin(), token.str.end(), float_val);
-            if FK_YAML_UNLIKELY (!converted) {
-                throw parse_error("Failed to convert a scalar to a floating point value", line, indent);
-            }
-            node = basic_node_type(float_val);
-            break;
-        }
-        case node_type::STRING:
-            node = basic_node_type(std::string(token.str.begin(), token.str.end()));
-            break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        tag_t tag_type {tag_t::NONE};
+        if (m_needs_tag_impl) {
+            tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
         }
 
+        basic_node_type node = scalar_parser_type(line, indent).parse(type, tag_type, token.str);
         apply_directive_set(node);
         apply_node_properties(node);
 

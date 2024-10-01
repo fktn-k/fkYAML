@@ -58,11 +58,90 @@ public:
             lex_type == lexical_token_t::DOUBLE_QUOTED_SCALAR || lex_type == lexical_token_t::BLOCK_SCALAR);
         FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
 
+        token = parse_scalar_token(lex_type, token);
         node_type value_type = decide_value_type(lex_type, tag_type, token);
         return create_scalar_node(value_type, token);
     }
 
 private:
+    str_view parse_scalar_token(lexical_token_t lex_type, str_view token) {
+        switch (lex_type) {
+        case lexical_token_t::SINGLE_QUOTED_SCALAR:
+            token = parse_single_quoted_scalar(token);
+            break;
+        case lexical_token_t::PLAIN_SCALAR:
+        default:
+            break;
+        }
+
+        return token;
+    }
+
+    str_view parse_single_quoted_scalar(str_view token) noexcept {
+        if (token.empty()) {
+            return token;
+        }
+
+        std::size_t pos = token.find_first_of("\'\n");
+        if (pos == str_view::npos) {
+            return token;
+        }
+
+        if (m_buffer.capacity() < token.size()) {
+            m_buffer.reserve(token.size());
+        }
+
+        do {
+            if (token[pos] == '\'') {
+                // unescape escaped single quote. ('' -> ')
+                m_buffer.append(token.begin(), token.begin() + (pos + 1));
+                token.remove_prefix(pos + 2); // move next to the escaped single quote.
+                continue;
+            }
+
+            // process line folding
+
+            // discard trailing white spaces which precedes the line break in the current line.
+            std::size_t last_non_space_pos = token.substr(0, pos).find_last_not_of(" \t");
+            if (last_non_space_pos == str_view::npos) {
+                m_buffer.append(token.begin(), pos);
+            }
+            else {
+                m_buffer.append(token.begin(), last_non_space_pos + 1);
+            }
+            token.remove_prefix(pos + 1); // move next to the LF
+
+            uint32_t empty_line_counts = 0;
+            do {
+                std::size_t non_space_pos = token.find_first_not_of(" \t");
+                if (non_space_pos == str_view::npos || token[non_space_pos] != '\n') {
+                    if (non_space_pos == str_view::npos) {
+                        non_space_pos = token.size();
+                    }
+                    token.remove_prefix(non_space_pos);
+                    break;
+                }
+
+                ++empty_line_counts;
+            } while (true);
+
+            if (empty_line_counts > 0) {
+                m_buffer.append(empty_line_counts, '\n');
+            }
+            else {
+                m_buffer.push_back(' ');
+            }
+
+            pos = token.find_first_of("\'\n");
+        } while (pos != str_view::npos);
+
+        if (!token.empty()) {
+            m_buffer.append(token.begin(), token.size());
+        }
+
+        return {m_buffer};
+    }
+
     node_type decide_value_type(lexical_token_t lex_type, tag_t tag_type, str_view token) const noexcept {
         node_type value_type {node_type::STRING};
         if (lex_type == lexical_token_t::PLAIN_SCALAR) {
@@ -99,7 +178,7 @@ private:
         return value_type;
     }
 
-    basic_node_type create_scalar_node(node_type type, str_view token) const {
+    basic_node_type create_scalar_node(node_type type, str_view token) {
         basic_node_type node {};
 
         switch (type) {
@@ -151,6 +230,7 @@ private:
 
     uint32_t m_line {0};
     uint32_t m_indent {0};
+    std::string m_buffer {};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

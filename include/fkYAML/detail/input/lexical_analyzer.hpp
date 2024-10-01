@@ -656,29 +656,31 @@ private:
     void scan_scalar(lexical_token& token) {
         m_value_buffer.clear();
 
-        bool needs_last_single_quote = false;
         bool needs_last_double_quote = false;
-        if (m_cur_itr == m_token_begin_itr) {
-            needs_last_single_quote = (*m_cur_itr == '\'');
-            needs_last_double_quote = (*m_cur_itr == '\"');
-            if (needs_last_double_quote || needs_last_single_quote) {
-                m_token_begin_itr = ++m_cur_itr;
-                token.type = needs_last_double_quote ? lexical_token_t::DOUBLE_QUOTED_SCALAR
-                                                     : lexical_token_t::SINGLE_QUOTED_SCALAR;
-            }
-            else {
-                token.type = lexical_token_t::PLAIN_SCALAR;
-            }
+        switch (*m_token_begin_itr) {
+        case '\'':
+            ++m_token_begin_itr;
+            token.type = lexical_token_t::SINGLE_QUOTED_SCALAR;
+            determine_single_quoted_scalar_range(token.str);
+            return;
+        case '\"':
+            needs_last_double_quote = true;
+            m_token_begin_itr = ++m_cur_itr;
+            token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
+            break;
+        default:
+            token.type = lexical_token_t::PLAIN_SCALAR;
+            break;
         }
 
-        bool is_value_buff_used = extract_string_token(needs_last_single_quote, needs_last_double_quote);
+        bool is_value_buff_used = extract_string_token(needs_last_double_quote);
 
         if (is_value_buff_used) {
             token.str = str_view {m_value_buffer.begin(), m_value_buffer.end()};
         }
         else {
             token.str = str_view {m_token_begin_itr, m_cur_itr};
-            if (token.type != lexical_token_t::PLAIN_SCALAR) {
+            if (token.type == lexical_token_t::DOUBLE_QUOTED_SCALAR) {
                 // If extract_string_token() didn't use m_value_buffer to store mutated scalar value, m_cur_itr is at
                 // the last quotation mark, which will cause infinite loops from the next get_next_token() call.
                 ++m_cur_itr;
@@ -686,82 +688,33 @@ private:
         }
     }
 
-    /// @brief Check if the given character is allowed in a single-quoted scalar token.
-    /// @param c The character to be checked.
-    /// @param is_value_buffer_used true is assigned when mutated scalar contents is written into m_value_buffer.
-    /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_single(char c, bool& is_value_buffer_used) {
-        switch (c) {
-        case '\n': {
-            is_value_buffer_used = true;
+    void determine_single_quoted_scalar_range(str_view& token) {
+        str_view sv {m_token_begin_itr, m_end_itr};
 
-            // discard trailing white spaces which precedes the line break in the current line.
-            auto before_trailing_spaces_itr = m_cur_itr - 1;
-            bool ends_loop = false;
-            while (before_trailing_spaces_itr != m_token_begin_itr) {
-                switch (*before_trailing_spaces_itr) {
-                case ' ':
-                case '\t':
-                    --before_trailing_spaces_itr;
-                    break;
-                default:
-                    ends_loop = true;
-                    break;
+        std::size_t pos = sv.find('\'');
+        if (pos != str_view::npos) {
+            do {
+                if (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
+                    // closing single quote is found.
+                    token = {m_token_begin_itr, pos};
+                    for (const auto c : token) {
+                        if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                            handle_unescaped_control_char(c);
+                        }
+                    }
+                    m_cur_itr = sv.begin() + (pos + 1);
+                    return;
                 }
 
-                if (ends_loop) {
-                    break;
-                }
-            }
-            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
-
-            // move to the beginning of the next line.
-            ++m_cur_itr;
-
-            // apply line folding according to the number of following empty lines.
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
-            skip_white_spaces_and_newline_codes();
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
-            if (trailing_empty_lines > 0) {
-                m_value_buffer.append(trailing_empty_lines, '\n');
-            }
-            else {
-                m_value_buffer.push_back(' ');
-            }
-
-            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\'') ? m_cur_itr-- : m_cur_itr;
-            return true;
+                // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
+                // escaped single quotation mark. Skip the second one which would otherwise be detected as a closing
+                // single quotation mark in the next loop.
+                pos = sv.find('\'', pos + 2);
+            } while (pos != str_view::npos);
         }
 
-        case '\'':
-            if (m_cur_itr + 1 == m_end_itr) {
-                if (is_value_buffer_used) {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                    m_token_begin_itr = m_cur_itr;
-                }
-                return false;
-            }
-
-            if (*(m_cur_itr + 1) != '\'') {
-                if (is_value_buffer_used) {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-                }
-                return false;
-            }
-
-            // If single quotation marks are repeated twice in a single-quoted string token,
-            // they are considered as an escaped single quotation mark.
-            is_value_buffer_used = true;
-
-            m_value_buffer.append(m_token_begin_itr, ++m_cur_itr);
-            m_token_begin_itr = m_cur_itr + 1;
-            return true;
-
-        default:         // LCOV_EXCL_LINE
-            return true; // LCOV_EXCL_LINE
-        }
+        m_cur_itr = m_end_itr; // update for error information
+        emit_error("Invalid end of input buffer in a single-quoted scalar token.");
     }
 
     /// @brief Check if the given character is allowed in a double-quoted scalar token.
@@ -971,7 +924,7 @@ private:
 
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
     /// @return true if mutated scalar contents is stored in m_value_buffer, false otherwise.
-    bool extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
+    bool extract_string_token(bool needs_last_double_quote) {
         // change behaviors depending on the type of a coming string scalar token.
         // * single quoted
         // * double quoted
@@ -980,11 +933,7 @@ private:
         std::string check_filters {"\n"};
         bool (lexical_analyzer::*pfn_is_allowed)(char, bool&) = nullptr;
 
-        if (needs_last_single_quote) {
-            check_filters.append("\'");
-            pfn_is_allowed = &lexical_analyzer::is_allowed_single;
-        }
-        else if (needs_last_double_quote) {
+        if (needs_last_double_quote) {
             check_filters.append("\"\\");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
@@ -1034,10 +983,6 @@ private:
 
         if FK_YAML_UNLIKELY (needs_last_double_quote) {
             emit_error("Invalid end of input buffer in a double-quoted string token.");
-        }
-
-        if FK_YAML_UNLIKELY (needs_last_single_quote) {
-            emit_error("Invalid end of input buffer in a single-quoted string token.");
         }
 
         return is_value_buffer_used;
