@@ -87,6 +87,8 @@ private:
             return token;
         }
 
+        m_use_owned_buffer = true;
+
         if (m_buffer.capacity() < token.size()) {
             m_buffer.reserve(token.size());
         }
@@ -219,7 +221,13 @@ private:
             break;
         }
         case node_type::STRING:
-            node = basic_node_type(std::string(token.begin(), token.end()));
+            if (m_use_owned_buffer) {
+                node = basic_node_type(std::move(m_buffer));
+                m_use_owned_buffer = false;
+            }
+            else {
+                node = basic_node_type(std::string(token.begin(), token.end()));
+            }
             break;
         default:   // LCOV_EXCL_LINE
             break; // LCOV_EXCL_LINE
@@ -230,6 +238,7 @@ private:
 
     uint32_t m_line {0};
     uint32_t m_indent {0};
+    bool m_use_owned_buffer {false};
     std::string m_buffer {};
 };
 
