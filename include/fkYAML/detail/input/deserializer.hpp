@@ -14,13 +14,12 @@
 #include <vector>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
-#include <fkYAML/detail/conversions/scalar_conv.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
+#include <fkYAML/detail/input/scalar_parser.hpp>
 #include <fkYAML/detail/input/tag_resolver.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
-#include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/node_attrs.hpp>
 #include <fkYAML/detail/node_property.hpp>
@@ -43,18 +42,12 @@ class basic_deserializer {
     using doc_metainfo_type = document_metainfo<basic_node_type>;
     /** A type for the tag resolver. */
     using tag_resolver_type = tag_resolver<basic_node_type>;
+    /** A type for the scalar parser. */
+    using scalar_parser_type = scalar_parser<basic_node_type>;
     /** A type for sequence node value containers. */
     using sequence_type = typename basic_node_type::sequence_type;
     /** A type for mapping node value containers. */
     using mapping_type = typename basic_node_type::mapping_type;
-    /** A type for boolean node values. */
-    using boolean_type = typename basic_node_type::boolean_type;
-    /** A type for integer node values. */
-    using integer_type = typename basic_node_type::integer_type;
-    /** A type for floating point node values. */
-    using float_number_type = typename basic_node_type::float_number_type;
-    /** A type for string node values. */
-    using string_type = typename basic_node_type::string_type;
 
     /// @brief Definition of state types of parse contexts.
     enum class context_state_t {
@@ -1072,50 +1065,11 @@ private:
             type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_SCALAR ||
             type == lexical_token_t::ALIAS_PREFIX);
 
-        node_type value_type {node_type::STRING};
-        if (type == lexical_token_t::PLAIN_SCALAR) {
-            value_type = scalar_scanner::scan(token.str.begin(), token.str.end());
-        }
-
-        if (m_needs_tag_impl) {
-            if FK_YAML_UNLIKELY (type == lexical_token_t::ALIAS_PREFIX) {
-                throw parse_error("Tag cannot be specified to alias nodes", line, indent);
-            }
-
-            tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-
-            FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
-
-            switch (tag_type) {
-            case tag_t::NULL_VALUE:
-                value_type = node_type::NULL_OBJECT;
-                break;
-            case tag_t::BOOLEAN:
-                value_type = node_type::BOOLEAN;
-                break;
-            case tag_t::INTEGER:
-                value_type = node_type::INTEGER;
-                break;
-            case tag_t::FLOATING_NUMBER:
-                value_type = node_type::FLOAT;
-                break;
-            case tag_t::STRING:
-                value_type = node_type::STRING;
-                break;
-            case tag_t::NON_SPECIFIC:
-                // scalars with the non-specific tag is resolved to a string tag.
-                // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
-                value_type = node_type::STRING;
-                break;
-            case tag_t::CUSTOM_TAG:
-            default:
-                break;
-            }
-        }
-
-        basic_node_type node {};
-
         if (type == lexical_token_t::ALIAS_PREFIX) {
+            if FK_YAML_UNLIKELY (m_needs_tag_impl) {
+                throw parse_error("Tag cannot be specified to an alias node", line, indent);
+            }
+
             const std::string token_str = std::string(token.str.begin(), token.str.end());
 
             uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
@@ -1123,6 +1077,7 @@ private:
                 throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
             }
 
+            basic_node_type node {};
             node.m_attrs |= detail::node_attr_bits::alias_bit;
             node.m_prop.anchor = std::move(token_str);
             detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
@@ -1133,50 +1088,12 @@ private:
             return node;
         }
 
-        switch (value_type) {
-        case node_type::NULL_OBJECT: {
-            std::nullptr_t null = nullptr;
-            bool converted = detail::aton(token.str.begin(), token.str.end(), null);
-            if FK_YAML_UNLIKELY (!converted) {
-                throw parse_error("Failed to convert a scalar to a null.", line, indent);
-            }
-            // The above `node` variable is already null, so no instance creation is needed.
-            break;
-        }
-        case node_type::BOOLEAN: {
-            boolean_type boolean = static_cast<boolean_type>(false);
-            bool converted = detail::atob(token.str.begin(), token.str.end(), boolean);
-            if FK_YAML_UNLIKELY (!converted) {
-                throw parse_error("Failed to convert a scalar to a boolean.", line, indent);
-            }
-            node = basic_node_type(boolean);
-            break;
-        }
-        case node_type::INTEGER: {
-            integer_type integer = 0;
-            bool converted = detail::atoi(token.str.begin(), token.str.end(), integer);
-            if FK_YAML_UNLIKELY (!converted) {
-                throw parse_error("Failed to convert a scalar to an integer.", line, indent);
-            }
-            node = basic_node_type(integer);
-            break;
-        }
-        case node_type::FLOAT: {
-            float_number_type float_val = 0;
-            bool converted = detail::atof(token.str.begin(), token.str.end(), float_val);
-            if FK_YAML_UNLIKELY (!converted) {
-                throw parse_error("Failed to convert a scalar to a floating point value", line, indent);
-            }
-            node = basic_node_type(float_val);
-            break;
-        }
-        case node_type::STRING:
-            node = basic_node_type(std::string(token.str.begin(), token.str.end()));
-            break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        tag_t tag_type {tag_t::NONE};
+        if (m_needs_tag_impl) {
+            tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
         }
 
+        basic_node_type node = scalar_parser_type(line, indent).parse(type, tag_type, token.str);
         apply_directive_set(node);
         apply_node_properties(node);
 

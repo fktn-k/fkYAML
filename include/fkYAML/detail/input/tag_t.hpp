@@ -15,7 +15,8 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of YAML directive sets.
 enum class tag_t {
-    NON_SPECIFIC,    //!< Represents a non-specific tag.
+    NONE,            //!< Represents a non-specific tag "?".
+    NON_SPECIFIC,    //!< Represents a non-specific tag "!".
     CUSTOM_TAG,      //!< Represents a custom tag
     SEQUENCE,        //!< Represents a sequence tag.
     MAPPING,         //!< Represents a mapping tag.
