@@ -3850,6 +3850,10 @@ private:
             break;
         default:
             token.type = lexical_token_t::PLAIN_SCALAR;
+            if ((m_state & flow_context_bit) == 0) {
+                determine_plain_scalar_range(token.str);
+                return;
+            }
             break;
         }
 
@@ -3895,6 +3899,83 @@ private:
 
         m_cur_itr = m_end_itr; // update for error information
         emit_error("Invalid end of input buffer in a single-quoted scalar token.");
+    }
+
+    void determine_plain_scalar_range(str_view& token) {
+        str_view sv {m_token_begin_itr, m_end_itr};
+
+        str_view check_filter {"\n :"};
+
+        std::size_t pos = sv.find_first_of(check_filter);
+        if FK_YAML_UNLIKELY (pos == str_view::npos) {
+            token = sv;
+            for (const auto c : token) {
+                if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                    handle_unescaped_control_char(c);
+                }
+            }
+            m_cur_itr = m_end_itr;
+            return;
+        }
+
+        bool ends_loop = false;
+        do {
+            switch (sv[pos]) {
+            case '\n':
+                ends_loop = true;
+                break;
+            case ' ':
+                if FK_YAML_UNLIKELY (pos == sv.size() - 1) {
+                    // trim trailing space.
+                    ends_loop = true;
+                    break;
+                }
+
+                // Allow a space in a plain scalar only if the space is surrounded by non-space characters, but not
+                // followed by the comment prefix " #".
+                // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                switch (sv[pos + 1]) {
+                case ' ':
+                case '\t':
+                case '\n':
+                case '#':
+                    ends_loop = true;
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case ':':
+                if FK_YAML_LIKELY (pos < sv.size() - 1) {
+                    switch (sv[pos + 1]) {
+                    case ' ':
+                    case '\t':
+                    case '\n':
+                        ends_loop = true;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                break;
+            default:   // LCOV_EXCL_LINE
+                break; // LCOV_EXCL_LINE
+            }
+
+            if (ends_loop) {
+                break;
+            }
+
+            pos = sv.find_first_of(check_filter, pos + 1);
+        } while (pos != str_view::npos);
+
+        token = sv.substr(0, pos);
+        for (const auto c : token) {
+            if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                handle_unescaped_control_char(c);
+            }
+        }
+        m_cur_itr = token.end();
     }
 
     /// @brief Check if the given character is allowed in a double-quoted scalar token.
@@ -3983,55 +4064,6 @@ private:
         }
     }
 
-    /// @brief Check if the given character is allowed in a plain scalar token outside a flow context.
-    /// @param c The character to be checked.
-    /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_plain(char c, bool& /*unused*/) {
-        switch (c) {
-        case '\n':
-            return false;
-
-        case ' ': {
-            // Allow a space in a plain scalar only if the space is surrounded by non-space characters.
-            // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-
-            switch (*(m_cur_itr + 1)) {
-            case ':': {
-                // " :" is permitted in a plain style string token, but not when followed by a space.
-                char peeked = *(m_cur_itr + 2);
-                if (peeked == ' ') {
-                    return false;
-                }
-                return true;
-            }
-            case ' ':
-            case '\n':
-            case '#':
-            case '\\':
-                return false;
-            }
-
-            return true;
-        }
-
-        case ':': {
-            // A colon as a key separator must be followed by
-            // * a white space or
-            // * a newline code.
-            switch (*(m_cur_itr + 1)) {
-            case ' ':
-            case '\t':
-            case '\n':
-                return false;
-            }
-            return true;
-        }
-
-        default:         // LCOV_EXCL_LINE
-            return true; // LCOV_EXCL_LINE
-        }
-    }
-
     /// @brief Check if the given character is allowed in a plain scalar token inside a flow context.
     /// @param c The character to be checked.
     /// @return true if the given character is allowed, false otherwise.
@@ -4106,9 +4138,8 @@ private:
     /// @return true if mutated scalar contents is stored in m_value_buffer, false otherwise.
     bool extract_string_token(bool needs_last_double_quote) {
         // change behaviors depending on the type of a coming string scalar token.
-        // * single quoted
         // * double quoted
-        // * plain
+        // * plain (flow)
 
         std::string check_filters {"\n"};
         bool (lexical_analyzer::*pfn_is_allowed)(char, bool&) = nullptr;
@@ -4117,15 +4148,10 @@ private:
             check_filters.append("\"\\");
             pfn_is_allowed = &lexical_analyzer::is_allowed_double;
         }
-        else if (m_state & flow_context_bit) {
+        else {
             // plain scalar inside flow contexts
             check_filters.append(" :{}[],");
             pfn_is_allowed = &lexical_analyzer::is_allowed_plain_flow;
-        }
-        else {
-            // plain scalar outside flow contexts
-            check_filters.append(" :");
-            pfn_is_allowed = &lexical_analyzer::is_allowed_plain;
         }
 
         // scan the contents of a string scalar token.
