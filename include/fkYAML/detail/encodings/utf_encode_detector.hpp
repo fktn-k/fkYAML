@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP
 
 #include <cstdint>
 #include <istream>
@@ -332,4 +332,4 @@ struct stream_utf_encode_detector {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP */

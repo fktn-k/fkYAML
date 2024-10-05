@@ -11,8 +11,8 @@
 // types. So, some implementations don't follow the convensions in the standard C++ functions. For example, octals must
 // begin with "0o" (not "0"), which is specified in the YAML spec 1.2.
 
-#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
-#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
+#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
+#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
 
 #include <cmath>
 #include <cstring>
@@ -829,4 +829,4 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_ */
+#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP */

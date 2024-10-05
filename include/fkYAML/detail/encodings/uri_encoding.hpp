@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
+#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
 
 #include <cctype>
 #include <string>
@@ -122,4 +122,4 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP */

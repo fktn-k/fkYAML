@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_NODE_HPP_
-#define FK_YAML_NODE_HPP_
+#ifndef FK_YAML_NODE_HPP
+#define FK_YAML_NODE_HPP
 
 #include <algorithm>
 #include <cstdint>
@@ -76,8 +76,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_
-#define FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_
+#ifndef FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP
+#define FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP
 
 // This file is assumed to be included only by version_macros.hpp file.
 // To avoid redundant inclusion, do not include version_macros.hpp file as the other files do.
@@ -196,7 +196,7 @@
 #define FK_YAML_UNLIKELY(expr) (!!(expr))
 #endif
 
-#endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */
+#endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP */
 
 
 #endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)
@@ -210,8 +210,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ASSERT_HPP_
-#define FK_YAML_DETAIL_ASSERT_HPP_
+#ifndef FK_YAML_DETAIL_ASSERT_HPP
+#define FK_YAML_DETAIL_ASSERT_HPP
 
 // if FK_YAML_ASSERT is not user-defined. apply the default assert impl.
 #ifndef FK_YAML_ASSERT
@@ -223,7 +223,7 @@
 #endif
 #endif
 
-#endif /* FK_YAML_DETAIL_ASSERT_HPP_ */
+#endif /* FK_YAML_DETAIL_ASSERT_HPP */
 
 // #include <fkYAML/detail/document_metainfo.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -234,8 +234,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_
-#define FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_
+#ifndef FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP
+#define FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP
 
 #include <string>
 #include <map>
@@ -251,8 +251,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP
+#define FK_YAML_DETAIL_META_NODE_TRAITS_HPP
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -265,8 +265,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_DETECT_HPP_
-#define FK_YAML_DETAIL_META_DETECT_HPP_
+#ifndef FK_YAML_DETAIL_META_DETECT_HPP
+#define FK_YAML_DETAIL_META_DETECT_HPP
 
 #include <type_traits>
 
@@ -281,8 +281,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
-#define FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
+#ifndef FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP
+#define FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP
 
 #include <cstddef>
 #include <type_traits>
@@ -452,7 +452,7 @@ using std::remove_cvref_t;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_ */
+#endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -514,7 +514,7 @@ using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_DETECT_HPP_ */
+#endif /* FK_YAML_DETAIL_META_DETECT_HPP */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -527,8 +527,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
+#define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
 
 #include <iterator>
 #include <limits>
@@ -686,7 +686,7 @@ using head_type = typename get_head_type<Types...>::type;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -833,7 +833,7 @@ struct is_node_compatible_type : is_node_compatible_type_impl<BasicNodeType, Com
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP */
 
 // #include <fkYAML/yaml_version_type.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -844,8 +844,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_YAML_VERSION_TYPE_HPP_
-#define FK_YAML_YAML_VERSION_TYPE_HPP_
+#ifndef FK_YAML_YAML_VERSION_TYPE_HPP
+#define FK_YAML_YAML_VERSION_TYPE_HPP
 
 #include <cstdint>
 
@@ -872,7 +872,7 @@ inline const char* to_string(yaml_version_type t) noexcept {
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_YAML_VERSION_TYPE_HPP_ */
+#endif /* FK_YAML_YAML_VERSION_TYPE_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -896,7 +896,7 @@ struct document_metainfo {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_ */
+#endif /* FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP */
 
 // #include <fkYAML/detail/input/deserializer.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -907,8 +907,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
-#define FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP
+#define FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP
 
 #include <algorithm>
 #include <deque>
@@ -930,8 +930,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // types. So, some implementations don't follow the convensions in the standard C++ functions. For example, octals must
 // begin with "0o" (not "0"), which is specified in the YAML spec 1.2.
 
-#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
-#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
+#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
+#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
 
 #include <cmath>
 #include <cstring>
@@ -1750,7 +1750,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_ */
+#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP */
 
 // #include <fkYAML/detail/document_metainfo.hpp>
 
@@ -1763,8 +1763,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP_
-#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
+#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
 
 #include <algorithm>
 #include <cctype>
@@ -1783,8 +1783,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
+#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
 
 #include <cctype>
 #include <string>
@@ -1900,7 +1900,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP */
 
 // #include <fkYAML/detail/encodings/utf_encodings.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -1911,8 +1911,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP
 
 #include <array>
 #include <cstdint>
@@ -1928,8 +1928,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_EXCEPTION_HPP_
-#define FK_YAML_EXCEPTION_HPP_
+#ifndef FK_YAML_EXCEPTION_HPP
+#define FK_YAML_EXCEPTION_HPP
 
 #include <array>
 #include <initializer_list>
@@ -1947,8 +1947,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_STRING_FORMATTER_HPP_
-#define FK_YAML_DETAIL_STRING_FORMATTER_HPP_
+#ifndef FK_YAML_DETAIL_STRING_FORMATTER_HPP
+#define FK_YAML_DETAIL_STRING_FORMATTER_HPP
 
 #include <cstdarg>
 #include <cstdio>
@@ -1983,7 +1983,7 @@ inline std::string format(const char* fmt, ...) {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_STRING_FORMATTER_HPP_ */
+#endif /* FK_YAML_DETAIL_STRING_FORMATTER_HPP */
 
 // #include <fkYAML/detail/types/node_t.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -1994,8 +1994,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_TYPES_NODE_T_HPP_
-#define FK_YAML_DETAIL_TYPES_NODE_T_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_NODE_T_HPP
+#define FK_YAML_DETAIL_TYPES_NODE_T_HPP
 
 #include <cstdint>
 #include <string>
@@ -2011,8 +2011,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_NODE_TYPE_HPP_
-#define FK_YAML_NODE_TYPE_HPP_
+#ifndef FK_YAML_NODE_TYPE_HPP
+#define FK_YAML_NODE_TYPE_HPP
 
 #include <cstdint>
 
@@ -2054,7 +2054,7 @@ inline const char* to_string(node_type t) noexcept {
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_TYPE_HPP_ */
+#endif /* FK_YAML_NODE_TYPE_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -2135,7 +2135,7 @@ inline node_type convert_to_node_type(node_t t) {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -2305,7 +2305,7 @@ private:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_EXCEPTION_HPP_ */
+#endif /* FK_YAML_EXCEPTION_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -2577,7 +2577,7 @@ inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint3
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP */
 
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -2588,8 +2588,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP
+#define FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP
 
 #include <string>
 
@@ -2926,7 +2926,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP */
 
 // #include <fkYAML/detail/input/position_tracker.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -2937,8 +2937,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_
-#define FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP
+#define FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP
 
 #include <algorithm>
 
@@ -2953,8 +2953,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_STR_VIEW_HPP_
-#define FK_YAML_DETAIL_STR_VIEW_HPP_
+#ifndef FK_YAML_DETAIL_STR_VIEW_HPP
+#define FK_YAML_DETAIL_STR_VIEW_HPP
 
 #include <limits>
 #include <string>
@@ -3909,7 +3909,7 @@ using u32str_view = basic_str_view<char32_t>;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_STR_VIEW_HPP_ */
+#endif /* FK_YAML_DETAIL_STR_VIEW_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -3985,7 +3985,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -4000,8 +4000,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
+#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -4035,7 +4035,7 @@ enum class lexical_token_t {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP */
 
 // #include <fkYAML/exception.hpp>
 
@@ -5453,7 +5453,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP */
 
 // #include <fkYAML/detail/input/tag_resolver.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -5464,8 +5464,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_
-#define FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP
+#define FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP
 
 #include <memory>
 #include <string>
@@ -5486,8 +5486,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP_
-#define FK_YAML_DETAIL_INPUT_TAG_T_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP
+#define FK_YAML_DETAIL_INPUT_TAG_T_HPP
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -5509,7 +5509,7 @@ enum class tag_t {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_TAG_T_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_TAG_T_HPP */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -5671,7 +5671,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP */
 
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -5682,8 +5682,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP
+#define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP
 
 #include <array>
 #include <string>
@@ -5780,7 +5780,7 @@ struct is_contiguous_container<std::vector<T, Alloc>> : std::true_type {};
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -5793,8 +5793,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
-#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
+#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
 
 #include <cstring>
 #include <string>
@@ -6097,7 +6097,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -6110,8 +6110,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_NODE_ATTRS_HPP_
-#define FK_YAML_DETAIL_NODE_ATTRS_HPP_
+#ifndef FK_YAML_DETAIL_NODE_ATTRS_HPP
+#define FK_YAML_DETAIL_NODE_ATTRS_HPP
 
 #include <cstdint>
 #include <limits>
@@ -6240,7 +6240,7 @@ inline void set_anchor_offset(uint32_t offset, node_attr_t& attrs) noexcept {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_NODE_ATTRS_HPP_ */
+#endif /* FK_YAML_DETAIL_NODE_ATTRS_HPP */
 
 // #include <fkYAML/detail/node_property.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -6251,8 +6251,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_NODE_PROPERTY_HPP_
-#define FK_YAML_DETAIL_NODE_PROPERTY_HPP_
+#ifndef FK_YAML_DETAIL_NODE_PROPERTY_HPP
+#define FK_YAML_DETAIL_NODE_PROPERTY_HPP
 
 #include <string>
 
@@ -6270,7 +6270,7 @@ struct node_property {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP_ */
+#endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP */
 
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 
@@ -7548,7 +7548,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP */
 
 // #include <fkYAML/detail/input/input_adapter.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -7559,8 +7559,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
-#define FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP
+#define FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP
 
 #include <array>
 #include <cstdio>
@@ -7582,8 +7582,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP
 
 #include <cstdint>
 #include <istream>
@@ -7599,8 +7599,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -7619,7 +7619,7 @@ enum class utf_encode_t {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -7942,7 +7942,7 @@ struct stream_utf_encode_detector {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP */
 
 // #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 
@@ -8967,7 +8967,7 @@ inline stream_input_adapter input_adapter(std::istream& stream) {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP */
 
 // #include <fkYAML/detail/iterator.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -8978,8 +8978,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ITERATOR_HPP_
-#define FK_YAML_DETAIL_ITERATOR_HPP_
+#ifndef FK_YAML_DETAIL_ITERATOR_HPP
+#define FK_YAML_DETAIL_ITERATOR_HPP
 
 #include <cstddef>
 #include <iterator>
@@ -9364,7 +9364,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ITERATOR_HPP_ */
+#endif /* FK_YAML_DETAIL_ITERATOR_HPP */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -9385,8 +9385,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_
-#define FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_
+#ifndef FK_YAML_DETAIL_NODE_REF_STORAGE_HPP
+#define FK_YAML_DETAIL_NODE_REF_STORAGE_HPP
 
 #include <initializer_list>
 #include <type_traits>
@@ -9465,7 +9465,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_ */
+#endif /* FK_YAML_DETAIL_NODE_REF_STORAGE_HPP */
 
 // #include <fkYAML/detail/output/serializer.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -9476,8 +9476,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
-#define FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
+#ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP
+#define FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP
 
 #include <cmath>
 #include <sstream>
@@ -9495,8 +9495,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef TO__string_HPP_
-#define TO__string_HPP_
+#ifndef TO_STRING_HPP
+#define TO_STRING_HPP
 
 #include <cmath>
 #include <limits>
@@ -9581,7 +9581,7 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* TO__string_HPP_ */
+#endif /* TO_STRING_HPP */
 
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 
@@ -9926,7 +9926,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP */
 
 // #include <fkYAML/detail/types/node_t.hpp>
 
@@ -9939,8 +9939,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
-#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP
+#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP
 
 #include <cstdint>
 
@@ -9981,7 +9981,7 @@ inline yaml_version_type convert_to_yaml_version_type(yaml_version_t t) noexcept
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP */
 
 // #include <fkYAML/exception.hpp>
 
@@ -9996,8 +9996,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_NODE_VALUE_CONVERTER_HPP_
-#define FK_YAML_NODE_VALUE_CONVERTER_HPP_
+#ifndef FK_YAML_NODE_VALUE_CONVERTER_HPP
+#define FK_YAML_NODE_VALUE_CONVERTER_HPP
 
 #include <utility>
 
@@ -10012,8 +10012,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
 
 #include <limits>
 #include <map>
@@ -10289,7 +10289,7 @@ FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP */
 
 // #include <fkYAML/detail/conversions/to_node.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -10300,8 +10300,8 @@ FK_YAML_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
 
 #include <utility>
 
@@ -10637,7 +10637,7 @@ FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -10677,7 +10677,7 @@ public:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_VALUE_CONVERTER_HPP_ */
+#endif /* FK_YAML_NODE_VALUE_CONVERTER_HPP */
 
 // #include <fkYAML/ordered_map.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -10688,8 +10688,8 @@ FK_YAML_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_ORDERED_MAP_HPP_
-#define FK_YAML_ORDERED_MAP_HPP_
+#ifndef FK_YAML_ORDERED_MAP_HPP
+#define FK_YAML_ORDERED_MAP_HPP
 
 #include <functional>
 #include <initializer_list>
@@ -10856,7 +10856,7 @@ private:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_ORDERED_MAP_HPP_ */
+#endif /* FK_YAML_ORDERED_MAP_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -12538,4 +12538,4 @@ inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_HPP_ */
+#endif /* FK_YAML_NODE_HPP */

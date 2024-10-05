@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
 
 #include <limits>
 #include <map>
@@ -277,4 +277,4 @@ FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP */

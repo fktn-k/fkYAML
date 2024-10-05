@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
+#define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
 
 #include <iterator>
 #include <limits>
@@ -162,4 +162,4 @@ using head_type = typename get_head_type<Types...>::type;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP */

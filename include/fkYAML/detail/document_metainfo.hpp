@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_
-#define FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_
+#ifndef FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP
+#define FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP
 
 #include <string>
 #include <map>
@@ -37,4 +37,4 @@ struct document_metainfo {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_ */
+#endif /* FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP */

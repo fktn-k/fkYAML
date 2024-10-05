@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_
-#define FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_
+#ifndef FK_YAML_DETAIL_NODE_REF_STORAGE_HPP
+#define FK_YAML_DETAIL_NODE_REF_STORAGE_HPP
 
 #include <initializer_list>
 #include <type_traits>
@@ -83,4 +83,4 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_ */
+#endif /* FK_YAML_DETAIL_NODE_REF_STORAGE_HPP */

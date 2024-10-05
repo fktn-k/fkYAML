@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_NODE_HPP_
-#define FK_YAML_NODE_HPP_
+#ifndef FK_YAML_NODE_HPP
+#define FK_YAML_NODE_HPP
 
 #include <algorithm>
 #include <cstdint>
@@ -1718,4 +1718,4 @@ inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_HPP_ */
+#endif /* FK_YAML_NODE_HPP */

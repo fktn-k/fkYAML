@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_STR_VIEW_HPP_
-#define FK_YAML_DETAIL_STR_VIEW_HPP_
+#ifndef FK_YAML_DETAIL_STR_VIEW_HPP
+#define FK_YAML_DETAIL_STR_VIEW_HPP
 
 #include <limits>
 #include <string>
@@ -958,4 +958,4 @@ using u32str_view = basic_str_view<char32_t>;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_STR_VIEW_HPP_ */
+#endif /* FK_YAML_DETAIL_STR_VIEW_HPP */

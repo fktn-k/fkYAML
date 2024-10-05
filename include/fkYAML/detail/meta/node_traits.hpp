@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP
+#define FK_YAML_DETAIL_META_NODE_TRAITS_HPP
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/detect.hpp>
@@ -158,4 +158,4 @@ struct is_node_compatible_type : is_node_compatible_type_impl<BasicNodeType, Com
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP */

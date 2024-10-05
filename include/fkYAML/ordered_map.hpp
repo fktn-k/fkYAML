@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_ORDERED_MAP_HPP_
-#define FK_YAML_ORDERED_MAP_HPP_
+#ifndef FK_YAML_ORDERED_MAP_HPP
+#define FK_YAML_ORDERED_MAP_HPP
 
 #include <functional>
 #include <initializer_list>
@@ -171,4 +171,4 @@ private:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_ORDERED_MAP_HPP_ */
+#endif /* FK_YAML_ORDERED_MAP_HPP */
