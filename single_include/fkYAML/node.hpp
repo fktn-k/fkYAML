@@ -130,6 +130,13 @@
 #define FK_YAML_INLINE_VAR
 #endif
 
+// switch usage of constexpr keyward depending on active C++ standard.
+#if defined(FK_YAML_HAS_CXX_17)
+#define FK_YAML_CXX17_CONSTEXPR constexpr
+#else
+#define FK_YAML_CXX17_CONSTEXPR
+#endif
+
 // Detect __has_* macros.
 // The following macros replace redundant `defined(__has_*) && __has_*(...)`.
 
@@ -2184,24 +2191,42 @@ public:
     static constexpr size_type npos = static_cast<size_type>(-1);
 
     /// Constructs a basic_str_view object.
-    basic_str_view() noexcept = default;
+    constexpr basic_str_view() noexcept = default;
 
     /// Destroys a basic_str_view object.
     ~basic_str_view() noexcept = default;
 
     /// @brief Copy constructs a basic_str_view object.
     /// @param _ A basic_str_view object to copy from.
-    basic_str_view(const basic_str_view&) noexcept = default;
+    constexpr basic_str_view(const basic_str_view&) noexcept = default;
 
     /// @brief Move constructs a basic_str_view object.
     /// @param _ A basic_str_view object to move from.
-    basic_str_view(basic_str_view&&) noexcept = default;
+    constexpr basic_str_view(basic_str_view&&) noexcept = default;
 
     /// @brief Constructs a basic_str_view object from a pointer to a character sequence.
+    /// @note std::char_traits::length() is constexpr from C++17.
     /// @param p_str A pointer to a character sequence. (Must be null-terminated, or an undefined behavior.)
-    basic_str_view(const value_type* p_str) noexcept
+    template <
+        typename CharPtrT,
+        enable_if_t<
+            disjunction<std::is_same<CharPtrT, value_type*>, std::is_same<CharPtrT, const value_type*>>::value, int> =
+            0>
+    FK_YAML_CXX17_CONSTEXPR basic_str_view(CharPtrT p_str) noexcept
         : m_len(traits_type::length(p_str)),
           mp_str(p_str) {
+    }
+
+    /// @brief Constructs a basic_str_view object from a C-style char array.
+    /// @note
+    /// This constructor assumes the last element is the null character ('\0'). If that's not desirable, consider using
+    /// one of the other overloads.
+    /// @tparam N The size of a C-style char array.
+    /// @param str A C-style char array. (Must be null-terminated)
+    template <std::size_t N>
+    constexpr basic_str_view(const value_type (&str)[N]) noexcept
+        : m_len(N - 1),
+          mp_str(&str[0]) {
     }
 
     /// @brief Construction from a null pointer is forbidden.
@@ -2210,7 +2235,7 @@ public:
     /// @brief Constructs a basic_str_view object from a pointer to a character sequence and its size.
     /// @param p_str A pointer to a character sequence. (May or may not be null-terminated.)
     /// @param len The length of a character sequence.
-    basic_str_view(const value_type* p_str, size_type len) noexcept
+    constexpr basic_str_view(const value_type* p_str, size_type len) noexcept
         : m_len(len),
           mp_str(p_str) {
     }
@@ -3923,12 +3948,8 @@ private:
     void determine_plain_scalar_range(str_view& token) {
         str_view sv {m_token_begin_itr, m_end_itr};
 
-        str_view check_filter {"\n :"};
-        if (m_state & flow_context_bit) {
-            check_filter = "\n :{}[],";
-        }
-
-        std::size_t pos = sv.find_first_of(check_filter);
+        constexpr str_view filter = "\n :{}[],";
+        std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             token = sv;
             m_cur_itr = m_end_itr;
@@ -3994,7 +4015,7 @@ private:
             case ']':
             case ',':
                 // This check is enabled only in a flow context.
-                ends_loop = true;
+                ends_loop = (m_state & flow_context_bit);
                 break;
             default:   // LCOV_EXCL_LINE
                 break; // LCOV_EXCL_LINE
@@ -4004,7 +4025,7 @@ private:
                 break;
             }
 
-            pos = sv.find_first_of(check_filter, pos + 1);
+            pos = sv.find_first_of(filter, pos + 1);
         } while (pos != str_view::npos);
 
         token = sv.substr(0, pos);
@@ -5685,7 +5706,8 @@ private:
             return token;
         }
 
-        std::size_t pos = token.find_first_of("\'\n");
+        constexpr str_view filter = "\'\n";
+        std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
         }
@@ -5710,7 +5732,7 @@ private:
                 process_line_folding(token, pos);
             }
 
-            pos = token.find_first_of("\'\n");
+            pos = token.find_first_of(filter);
         } while (pos != str_view::npos);
 
         if (!token.empty()) {
@@ -5725,7 +5747,8 @@ private:
             return token;
         }
 
-        std::size_t pos = token.find_first_of("\\\n");
+        constexpr str_view filter = "\\\n";
+        std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
         }
@@ -5760,7 +5783,7 @@ private:
                 process_line_folding(token, pos);
             }
 
-            pos = token.find_first_of("\\\n");
+            pos = token.find_first_of(filter);
         } while (pos != str_view::npos);
 
         if (!token.empty()) {

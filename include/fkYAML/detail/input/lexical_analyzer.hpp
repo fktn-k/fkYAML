@@ -743,12 +743,8 @@ private:
     void determine_plain_scalar_range(str_view& token) {
         str_view sv {m_token_begin_itr, m_end_itr};
 
-        str_view check_filter {"\n :"};
-        if (m_state & flow_context_bit) {
-            check_filter = "\n :{}[],";
-        }
-
-        std::size_t pos = sv.find_first_of(check_filter);
+        constexpr str_view filter = "\n :{}[],";
+        std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             token = sv;
             m_cur_itr = m_end_itr;
@@ -814,7 +810,7 @@ private:
             case ']':
             case ',':
                 // This check is enabled only in a flow context.
-                ends_loop = true;
+                ends_loop = (m_state & flow_context_bit);
                 break;
             default:   // LCOV_EXCL_LINE
                 break; // LCOV_EXCL_LINE
@@ -824,7 +820,7 @@ private:
                 break;
             }
 
-            pos = sv.find_first_of(check_filter, pos + 1);
+            pos = sv.find_first_of(filter, pos + 1);
         } while (pos != str_view::npos);
 
         token = sv.substr(0, pos);

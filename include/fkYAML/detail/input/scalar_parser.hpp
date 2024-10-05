@@ -85,7 +85,8 @@ private:
             return token;
         }
 
-        std::size_t pos = token.find_first_of("\'\n");
+        constexpr str_view filter = "\'\n";
+        std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
         }
@@ -110,7 +111,7 @@ private:
                 process_line_folding(token, pos);
             }
 
-            pos = token.find_first_of("\'\n");
+            pos = token.find_first_of(filter);
         } while (pos != str_view::npos);
 
         if (!token.empty()) {
@@ -125,7 +126,8 @@ private:
             return token;
         }
 
-        std::size_t pos = token.find_first_of("\\\n");
+        constexpr str_view filter = "\\\n";
+        std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
         }
@@ -160,7 +162,7 @@ private:
                 process_line_folding(token, pos);
             }
 
-            pos = token.find_first_of("\\\n");
+            pos = token.find_first_of(filter);
         } while (pos != str_view::npos);
 
         if (!token.empty()) {
