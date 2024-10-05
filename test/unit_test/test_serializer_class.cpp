@@ -50,9 +50,14 @@ TEST_CASE("Serializer_IntegerNode") {
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializeClassTest_FloatNumberNode", "[SerializeClassTest]") {
+TEST_CASE("SerializeClassTest_FloatNode", "[SerializeClassTest]") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
+        node_str_pair_t(0.0, "0.0"),
+        node_str_pair_t(-2.0, "-2.0"),
+        node_str_pair_t(2.0, "2.0"),
+        node_str_pair_t(-2.10, "-2.1"),
+        node_str_pair_t(2.10, "2.1"),
         node_str_pair_t(3.14, "3.14"),
         node_str_pair_t(-53.97, "-53.97"),
         node_str_pair_t(std::numeric_limits<fkyaml::node::float_number_type>::infinity(), ".inf"),
