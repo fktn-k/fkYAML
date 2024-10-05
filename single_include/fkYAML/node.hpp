@@ -9570,6 +9570,13 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
     std::ostringstream oss;
     oss << f;
     s = oss.str();
+
+    // If `f` is actually an integer, ".0" must be appended. The result would cause roundtrip issue otherwise.
+    // https://github.com/fktn-k/fkYAML/issues/405
+    FloatType diff = f - std::floor(f);
+    if (diff < std::numeric_limits<FloatType>::min()) {
+        s += ".0";
+    }
 }
 
 FK_YAML_DETAIL_NAMESPACE_END
