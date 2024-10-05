@@ -665,26 +665,14 @@ private:
             return;
         case '\"':
             needs_last_double_quote = true;
-            m_token_begin_itr = ++m_cur_itr;
+            ++m_token_begin_itr;
             token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
-            break;
+            determine_double_quoted_scalar_range(token.str);
+            return;
         default:
             token.type = lexical_token_t::PLAIN_SCALAR;
             determine_plain_scalar_range(token.str);
             return;
-        }
-
-        bool is_value_buff_used = extract_string_token(needs_last_double_quote);
-
-        if (is_value_buff_used) {
-            token.str = str_view {m_value_buffer.begin(), m_value_buffer.end()};
-        }
-        else {
-            token.str = str_view {m_token_begin_itr, m_cur_itr};
-
-            // If extract_string_token() didn't use m_value_buffer to store mutated scalar value, m_cur_itr is at
-            // the last quotation mark, which will cause infinite loops from the next get_next_token() call.
-            ++m_cur_itr;
         }
     }
 
@@ -692,29 +680,69 @@ private:
         str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\'');
-        if (pos != str_view::npos) {
-            do {
-                if (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
-                    // closing single quote is found.
-                    token = {m_token_begin_itr, pos};
-                    for (const auto c : token) {
-                        if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                            handle_unescaped_control_char(c);
-                        }
+        while (pos != str_view::npos) {
+            if (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
+                // closing single quote is found.
+                token = {m_token_begin_itr, pos};
+                for (const auto c : token) {
+                    if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                        handle_unescaped_control_char(c);
                     }
-                    m_cur_itr = sv.begin() + (pos + 1);
-                    return;
                 }
+                m_cur_itr = sv.begin() + (pos + 1);
+                return;
+            }
 
-                // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
-                // escaped single quotation mark. Skip the second one which would otherwise be detected as a closing
-                // single quotation mark in the next loop.
-                pos = sv.find('\'', pos + 2);
-            } while (pos != str_view::npos);
+            // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
+            // escaped single quotation mark. Skip the second one which would otherwise be detected as a closing
+            // single quotation mark in the next loop.
+            pos = sv.find('\'', pos + 2);
         }
 
         m_cur_itr = m_end_itr; // update for error information
         emit_error("Invalid end of input buffer in a single-quoted scalar token.");
+    }
+
+    void determine_double_quoted_scalar_range(str_view& token) {
+        str_view sv {m_token_begin_itr, m_end_itr};
+
+        std::size_t pos = sv.find('\"');
+        while (pos != str_view::npos) {
+            bool is_closed = true;
+            if (pos > 0) {
+                // Double quotation marks can be escaped by a preceding backslash and the number of backslashes matters
+                // to determine if the found double quotation mark is escaped since the backslash itself can also be
+                // escaped:
+                // * odd number of backslashes  -> double quotation mark IS escaped (e.g., "\\\"")
+                // * even number of backslashes -> double quotation mark IS NOT escaped (e.g., "\\"")
+                uint32_t backslash_counts = 0;
+                const char* p = m_token_begin_itr + (pos - 1);
+                do {
+                    if (*p-- != '\\') {
+                        break;
+                    }
+                    ++backslash_counts;
+                } while (p != m_token_begin_itr);
+                is_closed = ((backslash_counts & 1u) == 0); // true: even, false: odd
+            }
+
+            if (is_closed) {
+                // closing double quote is found.
+                token = {m_token_begin_itr, pos};
+                for (const auto c : token) {
+                    if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                        handle_unescaped_control_char(c);
+                    }
+                }
+                m_cur_itr = sv.begin() + (pos + 1);
+                return;
+            }
+
+            pos = sv.find('\"', pos + 1);
+        }
+
+        m_cur_itr = m_end_itr; // update for error information
+        emit_error("Invalid end of input buffer in a double-quoted scalar token.");
     }
 
     void determine_plain_scalar_range(str_view& token) {

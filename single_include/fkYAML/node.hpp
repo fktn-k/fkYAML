@@ -3845,30 +3845,14 @@ private:
             return;
         case '\"':
             needs_last_double_quote = true;
-            m_token_begin_itr = ++m_cur_itr;
+            ++m_token_begin_itr;
             token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
-            break;
+            determine_double_quoted_scalar_range(token.str);
+            return;
         default:
             token.type = lexical_token_t::PLAIN_SCALAR;
-            if ((m_state & flow_context_bit) == 0) {
-                determine_plain_scalar_range(token.str);
-                return;
-            }
-            break;
-        }
-
-        bool is_value_buff_used = extract_string_token(needs_last_double_quote);
-
-        if (is_value_buff_used) {
-            token.str = str_view {m_value_buffer.begin(), m_value_buffer.end()};
-        }
-        else {
-            token.str = str_view {m_token_begin_itr, m_cur_itr};
-            if (token.type == lexical_token_t::DOUBLE_QUOTED_SCALAR) {
-                // If extract_string_token() didn't use m_value_buffer to store mutated scalar value, m_cur_itr is at
-                // the last quotation mark, which will cause infinite loops from the next get_next_token() call.
-                ++m_cur_itr;
-            }
+            determine_plain_scalar_range(token.str);
+            return;
         }
     }
 
@@ -3876,35 +3860,78 @@ private:
         str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\'');
-        if (pos != str_view::npos) {
-            do {
-                if (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
-                    // closing single quote is found.
-                    token = {m_token_begin_itr, pos};
-                    for (const auto c : token) {
-                        if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                            handle_unescaped_control_char(c);
-                        }
+        while (pos != str_view::npos) {
+            if (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
+                // closing single quote is found.
+                token = {m_token_begin_itr, pos};
+                for (const auto c : token) {
+                    if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                        handle_unescaped_control_char(c);
                     }
-                    m_cur_itr = sv.begin() + (pos + 1);
-                    return;
                 }
+                m_cur_itr = sv.begin() + (pos + 1);
+                return;
+            }
 
-                // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
-                // escaped single quotation mark. Skip the second one which would otherwise be detected as a closing
-                // single quotation mark in the next loop.
-                pos = sv.find('\'', pos + 2);
-            } while (pos != str_view::npos);
+            // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
+            // escaped single quotation mark. Skip the second one which would otherwise be detected as a closing
+            // single quotation mark in the next loop.
+            pos = sv.find('\'', pos + 2);
         }
 
         m_cur_itr = m_end_itr; // update for error information
         emit_error("Invalid end of input buffer in a single-quoted scalar token.");
     }
 
+    void determine_double_quoted_scalar_range(str_view& token) {
+        str_view sv {m_token_begin_itr, m_end_itr};
+
+        std::size_t pos = sv.find('\"');
+        while (pos != str_view::npos) {
+            bool is_closed = true;
+            if (pos > 0) {
+                // Double quotation marks can be escaped by a preceding backslash and the number of backslashes matters
+                // to determine if the found double quotation mark is escaped since the backslash itself can also be
+                // escaped:
+                // * odd number of backslashes  -> double quotation mark IS escaped (e.g., "\\\"")
+                // * even number of backslashes -> double quotation mark IS NOT escaped (e.g., "\\"")
+                uint32_t backslash_counts = 0;
+                const char* p = m_token_begin_itr + (pos - 1);
+                do {
+                    if (*p-- != '\\') {
+                        break;
+                    }
+                    ++backslash_counts;
+                } while (p != m_token_begin_itr);
+                is_closed = ((backslash_counts & 1u) == 0); // true: even, false: odd
+            }
+
+            if (is_closed) {
+                // closing double quote is found.
+                token = {m_token_begin_itr, pos};
+                for (const auto c : token) {
+                    if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                        handle_unescaped_control_char(c);
+                    }
+                }
+                m_cur_itr = sv.begin() + (pos + 1);
+                return;
+            }
+
+            pos = sv.find('\"', pos + 1);
+        }
+
+        m_cur_itr = m_end_itr; // update for error information
+        emit_error("Invalid end of input buffer in a double-quoted scalar token.");
+    }
+
     void determine_plain_scalar_range(str_view& token) {
         str_view sv {m_token_begin_itr, m_end_itr};
 
         str_view check_filter {"\n :"};
+        if (m_state & flow_context_bit) {
+            check_filter = "\n :{}[],";
+        }
 
         std::size_t pos = sv.find_first_of(check_filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
@@ -3933,6 +3960,7 @@ private:
 
                 // Allow a space in a plain scalar only if the space is surrounded by non-space characters, but not
                 // followed by the comment prefix " #".
+                // Also, flow indicators are not allowed to be followed after a space in a flow context.
                 // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                 switch (sv[pos + 1]) {
                 case ' ':
@@ -3940,6 +3968,17 @@ private:
                 case '\n':
                 case '#':
                     ends_loop = true;
+                    break;
+                case ':':
+                    // " :" is permitted in a plain style string token, but not when followed by a space.
+                    ends_loop = (pos < sv.size() - 2) && (sv[pos + 2] == ' ');
+                    break;
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                case ',':
+                    ends_loop = (m_state & flow_context_bit);
                     break;
                 default:
                     break;
@@ -3957,6 +3996,14 @@ private:
                         break;
                     }
                 }
+                break;
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+                // This check is enabled only in a flow context.
+                ends_loop = true;
                 break;
             default:   // LCOV_EXCL_LINE
                 break; // LCOV_EXCL_LINE
@@ -4064,76 +4111,6 @@ private:
         }
     }
 
-    /// @brief Check if the given character is allowed in a plain scalar token inside a flow context.
-    /// @param c The character to be checked.
-    /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_plain_flow(char c, bool& /*unused*/) {
-        switch (c) {
-        case '\n':
-            return false;
-
-        case ' ': {
-            // Allow a space in an unquoted string only if the space is surrounded by non-space characters.
-            // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-            char next = *(m_cur_itr + 1);
-
-            // These characters are permitted when not inside a flow collection, and not inside an implicit key.
-            // TODO: Support detection of implicit key context for this check.
-            switch (next) {
-            case '{':
-            case '}':
-            case '[':
-            case ']':
-            case ',':
-                return false;
-            }
-
-            // " :" is permitted in a plain style string token, but not when followed by a space.
-            if (next == ':') {
-                char peeked = *(m_cur_itr + 2);
-                if (peeked == ' ') {
-                    return false;
-                }
-            }
-
-            switch (next) {
-            case ' ':
-            case '\n':
-            case '#':
-            case '\\':
-                return false;
-            }
-
-            return true;
-        }
-
-        case ':': {
-            char next = *(m_cur_itr + 1);
-
-            // A colon as a key separator must be followed by
-            // * a white space or
-            // * a newline code.
-            switch (next) {
-            case ' ':
-            case '\t':
-            case '\n':
-                return false;
-            }
-            return true;
-        }
-
-        case '{':
-        case '}':
-        case '[':
-        case ']':
-        case ',':
-            return false;
-
-        default:         // LCOV_EXCL_LINE
-            return true; // LCOV_EXCL_LINE
-        }
-    }
-
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
     /// @return true if mutated scalar contents is stored in m_value_buffer, false otherwise.
     bool extract_string_token(bool needs_last_double_quote) {
@@ -4141,18 +4118,8 @@ private:
         // * double quoted
         // * plain (flow)
 
-        std::string check_filters {"\n"};
-        bool (lexical_analyzer::*pfn_is_allowed)(char, bool&) = nullptr;
-
-        if (needs_last_double_quote) {
-            check_filters.append("\"\\");
-            pfn_is_allowed = &lexical_analyzer::is_allowed_double;
-        }
-        else {
-            // plain scalar inside flow contexts
-            check_filters.append(" :{}[],");
-            pfn_is_allowed = &lexical_analyzer::is_allowed_plain_flow;
-        }
+        FK_YAML_ASSERT(needs_last_double_quote);
+        std::string check_filters {"\n\"\\"};
 
         // scan the contents of a string scalar token.
 
@@ -4163,7 +4130,7 @@ private:
             if FK_YAML_LIKELY (num_bytes == 1) {
                 auto ret = check_filters.find(current);
                 if (ret != std::string::npos) {
-                    bool is_allowed = (this->*pfn_is_allowed)(current, is_value_buffer_used);
+                    bool is_allowed = is_allowed_double(current, is_value_buffer_used);
                     if (!is_allowed) {
                         return is_value_buffer_used;
                     }
@@ -5852,6 +5819,9 @@ private:
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
             token = parse_single_quoted_scalar(token);
             break;
+        case lexical_token_t::DOUBLE_QUOTED_SCALAR:
+            token = parse_double_quoted_scalar(token);
+            break;
         case lexical_token_t::PLAIN_SCALAR:
         default:
             break;
@@ -5879,8 +5849,10 @@ private:
         do {
             if (token[pos] == '\'') {
                 // unescape escaped single quote. ('' -> ')
+                FK_YAML_ASSERT(pos + 1 < token.size());
                 m_buffer.append(token.begin(), token.begin() + (pos + 1));
                 token.remove_prefix(pos + 2); // move next to the escaped single quote.
+                pos = token.find_first_of("\'\n");
                 continue;
             }
 
@@ -5925,6 +5897,89 @@ private:
         }
 
         return {m_buffer};
+    }
+
+    str_view parse_double_quoted_scalar(str_view token) {
+        if (token.empty()) {
+            return token;
+        }
+
+        std::size_t pos = token.find_first_of("\\\n");
+        if (pos == str_view::npos) {
+            return token;
+        }
+
+        m_use_owned_buffer = true;
+
+        if (m_buffer.capacity() < token.size()) {
+            m_buffer.reserve(token.size());
+        }
+
+        do {
+            if (token[pos] == '\\') {
+                FK_YAML_ASSERT(pos + 1 < token.size());
+                if (token[pos + 1] != '\n') {
+                    m_buffer.append(token.begin(), token.begin() + pos);
+                    token.remove_prefix(pos);
+                    const char* p_escape_begin = token.begin();
+                    bool is_valid_escaping = yaml_escaper::unescape(p_escape_begin, token.end(), m_buffer);
+                    if FK_YAML_UNLIKELY (!is_valid_escaping) {
+                        throw parse_error(
+                            "Unsupported escape sequence is found in a double quoted scalar.", m_line, m_indent);
+                    }
+
+                    // `p_escape_begin` points to the last element of the escape sequence.
+                    token.remove_prefix((p_escape_begin - token.begin()) + 1);
+                    pos = token.find_first_of("\\\n");
+                    continue;
+                }
+            }
+
+            process_line_folding(token, pos);
+
+            pos = token.find_first_of("\\\n");
+        } while (pos != str_view::npos);
+
+        if (!token.empty()) {
+            m_buffer.append(token.begin(), token.size());
+        }
+
+        return {m_buffer};
+    }
+
+    void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
+        // remove trailing spaces before a newline.
+        std::size_t last_non_space_pos = token.substr(0, newline_pos).find_last_not_of(" \t");
+        if (last_non_space_pos == str_view::npos) {
+            m_buffer.append(token.begin(), newline_pos);
+        }
+        else {
+            m_buffer.append(token.begin(), last_non_space_pos + 1);
+        }
+        token.remove_prefix(newline_pos + 1); // move next to the LF
+
+        uint32_t empty_line_counts = 0;
+        do {
+            std::size_t non_space_pos = token.find_first_not_of(" \t");
+            if (non_space_pos == str_view::npos) {
+                // Line folding ignores trailing spaces.
+                token.remove_prefix(token.size());
+                break;
+            }
+            else if (token[non_space_pos] != '\n') {
+                token.remove_prefix(non_space_pos);
+                break;
+            }
+
+            ++empty_line_counts;
+        } while (true);
+
+        if (empty_line_counts > 0) {
+            m_buffer.append(empty_line_counts, '\n');
+        }
+        else {
+            m_buffer.push_back(' ');
+        }
     }
 
     node_type decide_value_type(lexical_token_t lex_type, tag_t tag_type, str_view token) const noexcept {

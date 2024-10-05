@@ -330,58 +330,58 @@ TEST_CASE("LexicalAnalzer_BlockSequenceEntryPrefix") {
 }
 
 TEST_CASE("LexicalAnalyzer_PlainScalar") {
-    using value_pair_t = std::pair<fkyaml::detail::str_view, fkyaml::detail::str_view>;
-    auto value_pair = GENERATE(
-        value_pair_t("test", "test"),
-        value_pair_t("nop", "nop"),
-        value_pair_t("none", "none"),
-        value_pair_t("?test", "?test"),
-        value_pair_t(".NET", ".NET"),
-        value_pair_t(".on", ".on"),
-        value_pair_t(".n", ".n"),
-        value_pair_t("-t", "-t"),
-        value_pair_t("-foo", "-foo"),
-        value_pair_t("-.test", "-.test"),
-        value_pair_t("?", "?"),
-        value_pair_t("--foo", "--foo"),
-        value_pair_t("+123", "+123"),
-        value_pair_t("1.2.3", "1.2.3"),
-        value_pair_t("foo,bar", "foo,bar"),
-        value_pair_t("foo[bar", "foo[bar"),
-        value_pair_t("foo]bar", "foo]bar"),
-        value_pair_t("foo{bar", "foo{bar"),
-        value_pair_t("foo}bar", "foo}bar"),
-        value_pair_t("foo:bar", "foo:bar"),
-        value_pair_t("foo bar", "foo bar"),
-        value_pair_t("foo\"bar", "foo\"bar"),
-        value_pair_t("foo\'s bar", "foo\'s bar"),
-        value_pair_t("foo\\bar", "foo\\bar"),
-        value_pair_t("nullValue", "nullValue"),
-        value_pair_t("NullValue", "NullValue"),
-        value_pair_t("NULL_VALUE", "NULL_VALUE"),
-        value_pair_t("~Value", "~Value"),
-        value_pair_t("trueValue", "trueValue"),
-        value_pair_t("TrueValue", "TrueValue"),
-        value_pair_t("TRUE_VALUE", "TRUE_VALUE"),
-        value_pair_t("falseValue", "falseValue"),
-        value_pair_t("FalseValue", "FalseValue"),
-        value_pair_t("FALSE_VALUE", "FALSE_VALUE"),
-        value_pair_t(".infValue", ".infValue"),
-        value_pair_t(".InfValue", ".InfValue"),
-        value_pair_t(".INF_VALUE", ".INF_VALUE"),
-        value_pair_t("-.infValue", "-.infValue"),
-        value_pair_t("-.InfValue", "-.InfValue"),
-        value_pair_t("-.INF_VALUE", "-.INF_VALUE"),
-        value_pair_t(".nanValue", ".nanValue"),
-        value_pair_t(".NaNValue", ".NaNValue"),
-        value_pair_t(".NAN_VALUE", ".NAN_VALUE"));
+    auto input = GENERATE(
+        fkyaml::detail::str_view("test"),
+        fkyaml::detail::str_view("nop"),
+        fkyaml::detail::str_view("none"),
+        fkyaml::detail::str_view("?test"),
+        fkyaml::detail::str_view(".NET"),
+        fkyaml::detail::str_view(".on"),
+        fkyaml::detail::str_view(".n"),
+        fkyaml::detail::str_view("-t"),
+        fkyaml::detail::str_view("-foo"),
+        fkyaml::detail::str_view("-.test"),
+        fkyaml::detail::str_view("?"),
+        fkyaml::detail::str_view("--foo"),
+        fkyaml::detail::str_view("+123"),
+        fkyaml::detail::str_view("1.2.3"),
+        fkyaml::detail::str_view("foo,bar"),
+        fkyaml::detail::str_view("foo[bar"),
+        fkyaml::detail::str_view("foo]bar"),
+        fkyaml::detail::str_view("foo{bar"),
+        fkyaml::detail::str_view("foo}bar"),
+        fkyaml::detail::str_view("foo:bar"),
+        fkyaml::detail::str_view("foo bar"),
+        fkyaml::detail::str_view("foo\"bar"),
+        fkyaml::detail::str_view("foo\'s bar"),
+        fkyaml::detail::str_view("foo\\bar"),
+        fkyaml::detail::str_view("nullValue"),
+        fkyaml::detail::str_view("NullValue"),
+        fkyaml::detail::str_view("NULL_VALUE"),
+        fkyaml::detail::str_view("~Value"),
+        fkyaml::detail::str_view("trueValue"),
+        fkyaml::detail::str_view("TrueValue"),
+        fkyaml::detail::str_view("TRUE_VALUE"),
+        fkyaml::detail::str_view("falseValue"),
+        fkyaml::detail::str_view("FalseValue"),
+        fkyaml::detail::str_view("FALSE_VALUE"),
+        fkyaml::detail::str_view(".infValue"),
+        fkyaml::detail::str_view(".InfValue"),
+        fkyaml::detail::str_view(".INF_VALUE"),
+        fkyaml::detail::str_view("-.infValue"),
+        fkyaml::detail::str_view("-.InfValue"),
+        fkyaml::detail::str_view("-.INF_VALUE"),
+        fkyaml::detail::str_view(".nanValue"),
+        fkyaml::detail::str_view(".NaNValue"),
+        fkyaml::detail::str_view(".NAN_VALUE"));
 
-    fkyaml::detail::lexical_analyzer lexer(value_pair.first);
+    fkyaml::detail::lexical_analyzer lexer(input);
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
-    REQUIRE(token.str == value_pair.second);
+    REQUIRE(token.str.begin() == input.begin());
+    REQUIRE(token.str.end() == input.end());
 }
 
 TEST_CASE("LexicalAnalyzer_SingleQuotedScalar") {
@@ -415,33 +415,34 @@ TEST_CASE("LexicalAnalyzer_SingleQuotedScalar") {
 }
 
 TEST_CASE("LexicalAnalyzer_DoubleQuotedScalar") {
-    using value_pair_t = std::pair<fkyaml::detail::str_view, fkyaml::detail::str_view>;
-    auto value_pair = GENERATE(
-        value_pair_t("\"\"", ""),
-        value_pair_t("\"foo bar\"", "foo bar"),
-        value_pair_t("\"foo\tbar\"", "foo\tbar"),
-        value_pair_t("\"foo's bar\"", "foo's bar"),
-        value_pair_t("\"foo:bar\"", "foo:bar"),
-        value_pair_t("\"foo,bar\"", "foo,bar"),
-        value_pair_t("\"foo]bar\"", "foo]bar"),
-        value_pair_t("\"foo}bar\"", "foo}bar"),
-        value_pair_t("\"\\x30\\x2B\\x6d\"", "0+m"),
+    auto input = GENERATE(
+        fkyaml::detail::str_view("\"\""),
+        fkyaml::detail::str_view("\"\\\"\""),
+        fkyaml::detail::str_view("\"foo bar\""),
+        fkyaml::detail::str_view("\"foo\tbar\""),
+        fkyaml::detail::str_view("\"foo's bar\""),
+        fkyaml::detail::str_view("\"foo:bar\""),
+        fkyaml::detail::str_view("\"foo,bar\""),
+        fkyaml::detail::str_view("\"foo]bar\""),
+        fkyaml::detail::str_view("\"foo}bar\""),
+        fkyaml::detail::str_view("\"\\x30\\x2B\\x6d\""),
 
-        value_pair_t("\"foo\nbar\"", "foo bar"),
-        value_pair_t("\"foo \t\n \tbar\"", "foo bar"),
-        value_pair_t("\"foo\n\n \t\nbar\"", "foo\n\nbar"),
-        value_pair_t("\"\nfoo\n\n \t\nbar\"", " foo\n\nbar"),
-        value_pair_t("\"foo\nbar\n\"", "foo bar "),
-        value_pair_t("\"foo\\\nbar\"", "foobar"),
-        value_pair_t("\"foo \t\\\nbar\"", "foo \tbar"),
-        value_pair_t("\"\\\n  foo \t\\\n\tbar\t  \t\\\n\"", "foo \tbar\t  \t"));
+        fkyaml::detail::str_view("\"foo\nbar\""),
+        fkyaml::detail::str_view("\"foo \t\n \tbar\""),
+        fkyaml::detail::str_view("\"foo\n\n \t\nbar\""),
+        fkyaml::detail::str_view("\"\nfoo\n\n \t\nbar\""),
+        fkyaml::detail::str_view("\"foo\nbar\n\""),
+        fkyaml::detail::str_view("\"foo\\\nbar\""),
+        fkyaml::detail::str_view("\"foo \t\\\nbar\""),
+        fkyaml::detail::str_view("\"\\\n  foo \t\\\n\tbar\t  \t\\\n\""));
 
-    fkyaml::detail::lexical_analyzer lexer(value_pair.first);
+    fkyaml::detail::lexical_analyzer lexer(input);
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR);
-    REQUIRE(token.str == value_pair.second);
+    REQUIRE(token.str.begin() == input.begin() + 1);
+    REQUIRE(token.str.end() == input.end() - 1);
 }
 
 TEST_CASE("LexicalAnalyzer_MultiByteCharString") {
@@ -504,87 +505,46 @@ TEST_CASE("LexicalAnalyzer_MultiByteCharString") {
 TEST_CASE("LexicalAnalyzer_EscapedUnicodeCharacter") {
     using value_pair_t = std::pair<fkyaml::detail::str_view, std::string>;
     using char_traits_t = std::char_traits<char>;
-    auto value_pair = GENERATE(
-        value_pair_t("\"\\x00\"", {char_traits_t::to_char_type(0x00)}),
-        value_pair_t("\"\\x40\"", {char_traits_t::to_char_type(0x40)}),
-        value_pair_t("\"\\x7F\"", {char_traits_t::to_char_type(0x7F)}),
-        value_pair_t("\"\\u0000\"", {char_traits_t::to_char_type(0x00)}),
-        value_pair_t("\"\\u0040\"", {char_traits_t::to_char_type(0x40)}),
-        value_pair_t("\"\\u007F\"", {char_traits_t::to_char_type(0x7F)}),
-        value_pair_t("\"\\u0080\"", {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x80)}),
-        value_pair_t("\"\\u0400\"", {char_traits_t::to_char_type(0xD0), char_traits_t::to_char_type(0x80)}),
-        value_pair_t("\"\\u07FF\"", {char_traits_t::to_char_type(0xDF), char_traits_t::to_char_type(0xBF)}),
-        value_pair_t(
-            "\"\\u0800\"",
-            {char_traits_t::to_char_type(0xE0), char_traits_t::to_char_type(0xA0), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(
-            "\"\\u8000\"",
-            {char_traits_t::to_char_type(0xE8), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(
-            "\"\\uFFFF\"",
-            {char_traits_t::to_char_type(0xEF), char_traits_t::to_char_type(0xBF), char_traits_t::to_char_type(0xBF)}),
-        value_pair_t("\"\\U00000000\"", {char_traits_t::to_char_type(0x00)}),
-        value_pair_t("\"\\U00000040\"", {char_traits_t::to_char_type(0x40)}),
-        value_pair_t("\"\\U0000007F\"", {char_traits_t::to_char_type(0x7F)}),
-        value_pair_t("\"\\U00000080\"", {char_traits_t::to_char_type(0xC2), char_traits_t::to_char_type(0x80)}),
-        value_pair_t("\"\\U00000400\"", {char_traits_t::to_char_type(0xD0), char_traits_t::to_char_type(0x80)}),
-        value_pair_t("\"\\U000007FF\"", {char_traits_t::to_char_type(0xDF), char_traits_t::to_char_type(0xBF)}),
-        value_pair_t(
-            "\"\\U00000800\"",
-            {char_traits_t::to_char_type(0xE0), char_traits_t::to_char_type(0xA0), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(
-            "\"\\U00008000\"",
-            {char_traits_t::to_char_type(0xE8), char_traits_t::to_char_type(0x80), char_traits_t::to_char_type(0x80)}),
-        value_pair_t(
-            "\"\\U0000FFFF\"",
-            {char_traits_t::to_char_type(0xEF), char_traits_t::to_char_type(0xBF), char_traits_t::to_char_type(0xBF)}),
-        value_pair_t(
-            "\"\\U00010000\"",
-            {char_traits_t::to_char_type(0xF0),
-             char_traits_t::to_char_type(0x90),
-             char_traits_t::to_char_type(0x80),
-             char_traits_t::to_char_type(0x80)}),
-        value_pair_t(
-            "\"\\U00080000\"",
-            {char_traits_t::to_char_type(0xF2),
-             char_traits_t::to_char_type(0x80),
-             char_traits_t::to_char_type(0x80),
-             char_traits_t::to_char_type(0x80)}),
-        value_pair_t(
-            "\"\\U0010FFFF\"",
-            {char_traits_t::to_char_type(0xF4),
-             char_traits_t::to_char_type(0x8F),
-             char_traits_t::to_char_type(0xBF),
-             char_traits_t::to_char_type(0xBF)}));
+    auto input = GENERATE(
+        fkyaml::detail::str_view("\"\\x00\""),
+        fkyaml::detail::str_view("\"\\x40\""),
+        fkyaml::detail::str_view("\"\\x7F\""),
+        fkyaml::detail::str_view("\"\\u0000\""),
+        fkyaml::detail::str_view("\"\\u0040\""),
+        fkyaml::detail::str_view("\"\\u007F\""),
+        fkyaml::detail::str_view("\"\\u0080\""),
+        fkyaml::detail::str_view("\"\\u0400\""),
+        fkyaml::detail::str_view("\"\\u07FF\""),
+        fkyaml::detail::str_view("\"\\u0800\""),
+        fkyaml::detail::str_view("\"\\u8000\""),
+        fkyaml::detail::str_view("\"\\uFFFF\""),
+        fkyaml::detail::str_view("\"\\U00000000\""),
+        fkyaml::detail::str_view("\"\\U00000040\""),
+        fkyaml::detail::str_view("\"\\U0000007F\""),
+        fkyaml::detail::str_view("\"\\U00000080\""),
+        fkyaml::detail::str_view("\"\\U00000400\""),
+        fkyaml::detail::str_view("\"\\U000007FF\""),
+        fkyaml::detail::str_view("\"\\U00000800\""),
+        fkyaml::detail::str_view("\"\\U00008000\""),
+        fkyaml::detail::str_view("\"\\U0000FFFF\""),
+        fkyaml::detail::str_view("\"\\U00010000\""),
+        fkyaml::detail::str_view("\"\\U00080000\""),
+        fkyaml::detail::str_view("\"\\U0010FFFF\""));
 
-    fkyaml::detail::lexical_analyzer lexer(value_pair.first);
+    fkyaml::detail::lexical_analyzer lexer(input);
     fkyaml::detail::lexical_token token;
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR);
-    REQUIRE(token.str == value_pair.second);
+    REQUIRE(token.str.begin() == input.begin() + 1);
+    REQUIRE(token.str.end() == input.end() - 1);
 }
 
-TEST_CASE("LexicalAnalyzer_InvalidString") {
-    SECTION("parse error") {
-        auto buffer = GENERATE(
-            fkyaml::detail::str_view("\"test"),
-            fkyaml::detail::str_view("\'test"),
-            fkyaml::detail::str_view("\"\\xw\""),
-            fkyaml::detail::str_view("\"\\x+\""),
-            fkyaml::detail::str_view("\"\\x=\""),
-            fkyaml::detail::str_view("\"\\x^\""),
-            fkyaml::detail::str_view("\"\\x{\""),
-            fkyaml::detail::str_view("\"\\Q\""));
+TEST_CASE("LexicalAnalyzer_UnclosedQuotedString") {
+    auto buffer = GENERATE(fkyaml::detail::str_view("\"test"), fkyaml::detail::str_view("\'test"));
 
-        fkyaml::detail::lexical_analyzer lexer(buffer);
-        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
-    }
-
-    SECTION("invalid encoding") {
-        fkyaml::detail::lexical_analyzer lexer("\"\\U00110000\"");
-        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::invalid_encoding);
-    }
+    fkyaml::detail::lexical_analyzer lexer(buffer);
+    REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
 }
 
 TEST_CASE("LexicalAnalyzer_UnescapedControlCharacter") {

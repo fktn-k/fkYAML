@@ -69,6 +69,9 @@ private:
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
             token = parse_single_quoted_scalar(token);
             break;
+        case lexical_token_t::DOUBLE_QUOTED_SCALAR:
+            token = parse_double_quoted_scalar(token);
+            break;
         case lexical_token_t::PLAIN_SCALAR:
         default:
             break;
@@ -96,8 +99,10 @@ private:
         do {
             if (token[pos] == '\'') {
                 // unescape escaped single quote. ('' -> ')
+                FK_YAML_ASSERT(pos + 1 < token.size());
                 m_buffer.append(token.begin(), token.begin() + (pos + 1));
                 token.remove_prefix(pos + 2); // move next to the escaped single quote.
+                pos = token.find_first_of("\'\n");
                 continue;
             }
 
@@ -142,6 +147,89 @@ private:
         }
 
         return {m_buffer};
+    }
+
+    str_view parse_double_quoted_scalar(str_view token) {
+        if (token.empty()) {
+            return token;
+        }
+
+        std::size_t pos = token.find_first_of("\\\n");
+        if (pos == str_view::npos) {
+            return token;
+        }
+
+        m_use_owned_buffer = true;
+
+        if (m_buffer.capacity() < token.size()) {
+            m_buffer.reserve(token.size());
+        }
+
+        do {
+            if (token[pos] == '\\') {
+                FK_YAML_ASSERT(pos + 1 < token.size());
+                if (token[pos + 1] != '\n') {
+                    m_buffer.append(token.begin(), token.begin() + pos);
+                    token.remove_prefix(pos);
+                    const char* p_escape_begin = token.begin();
+                    bool is_valid_escaping = yaml_escaper::unescape(p_escape_begin, token.end(), m_buffer);
+                    if FK_YAML_UNLIKELY (!is_valid_escaping) {
+                        throw parse_error(
+                            "Unsupported escape sequence is found in a double quoted scalar.", m_line, m_indent);
+                    }
+
+                    // `p_escape_begin` points to the last element of the escape sequence.
+                    token.remove_prefix((p_escape_begin - token.begin()) + 1);
+                    pos = token.find_first_of("\\\n");
+                    continue;
+                }
+            }
+
+            process_line_folding(token, pos);
+
+            pos = token.find_first_of("\\\n");
+        } while (pos != str_view::npos);
+
+        if (!token.empty()) {
+            m_buffer.append(token.begin(), token.size());
+        }
+
+        return {m_buffer};
+    }
+
+    void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
+        // remove trailing spaces before a newline.
+        std::size_t last_non_space_pos = token.substr(0, newline_pos).find_last_not_of(" \t");
+        if (last_non_space_pos == str_view::npos) {
+            m_buffer.append(token.begin(), newline_pos);
+        }
+        else {
+            m_buffer.append(token.begin(), last_non_space_pos + 1);
+        }
+        token.remove_prefix(newline_pos + 1); // move next to the LF
+
+        uint32_t empty_line_counts = 0;
+        do {
+            std::size_t non_space_pos = token.find_first_not_of(" \t");
+            if (non_space_pos == str_view::npos) {
+                // Line folding ignores trailing spaces.
+                token.remove_prefix(token.size());
+                break;
+            }
+            else if (token[non_space_pos] != '\n') {
+                token.remove_prefix(non_space_pos);
+                break;
+            }
+
+            ++empty_line_counts;
+        } while (true);
+
+        if (empty_line_counts > 0) {
+            m_buffer.append(empty_line_counts, '\n');
+        }
+        else {
+            m_buffer.push_back(' ');
+        }
     }
 
     node_type decide_value_type(lexical_token_t lex_type, tag_t tag_type, str_view token) const noexcept {
