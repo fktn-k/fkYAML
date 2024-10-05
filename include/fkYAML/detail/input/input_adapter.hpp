@@ -44,7 +44,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -244,7 +244,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -259,7 +259,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -342,7 +342,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -357,7 +357,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -427,7 +427,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_16BE};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -440,7 +440,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -504,7 +504,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -935,7 +935,7 @@ inline iterator_input_adapter<ItrType> create_iterator_input_adapter(
 
 } // anonymous namespace
 
-/// @brief A factory method for iterator_input_adapter objects with ieterator values.
+/// @brief A factory method for iterator_input_adapter objects with iterator values.
 /// @tparam ItrType An iterator type.
 /// @param begin The beginning of iterators.
 /// @param end The end of iterators.
@@ -985,7 +985,7 @@ struct container_input_adapter_factory {};
 template <typename ContainerType>
 struct container_input_adapter_factory<
     ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>> {
-    /// Whether or not ContainerType is a contiguous container.
+    /// Whether ContainerType is a contiguous container.
     static constexpr bool is_contiguous = is_contiguous_container<ContainerType>::value;
 
     /// A type for resulting input adapter object.

@@ -761,7 +761,7 @@ inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
 
 /// @brief Converts a scalar into a floating point value.
 /// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
-/// @tparam FloatType The output floatint point value type.
+/// @tparam FloatType The output floating point value type.
 /// @param begin The iterator to the first element of the scalar.
 /// @param end The iterator to the past-the-end element of the scalar.
 /// @param f The output floating point value holder.

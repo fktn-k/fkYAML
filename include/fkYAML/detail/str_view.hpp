@@ -92,7 +92,7 @@ public:
     /// @brief Construction from a null pointer is forbidden.
     basic_str_view(std::nullptr_t) = delete;
 
-    /// @brief Constructs a basic_str_view object from a poineter to a character sequence and its size.
+    /// @brief Constructs a basic_str_view object from a pointer to a character sequence and its size.
     /// @param p_str A pointer to a character sequence. (May or may not be null-terminated.)
     /// @param len The length of a character sequence.
     basic_str_view(const value_type* p_str, size_type len) noexcept
@@ -264,7 +264,7 @@ public:
     }
 
     /// @brief Copys the referenced character sequence values from `pos` by `n` size.
-    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the lenth.
+    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the length.
     /// @param p_str The pointer to a character sequence buffer for output.
     /// @param n The number of elements to write into `p_str`.
     /// @param pos The offset of the beginning position to copy values.
@@ -279,7 +279,7 @@ public:
     }
 
     /// @brief Constructs a sub basic_str_view object from `pos` by `n` size.
-    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the lenth.
+    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the length.
     /// @param pos The offset of the beginning position.
     /// @param n The number of elements to the end of a new sub basic_str_view object.
     /// @return A newly created sub basic_str_view object.
@@ -340,7 +340,7 @@ public:
 
     /// @brief Compares the referenced character sequence with `s` character sequence.
     /// @param s The pointer to a character sequence to compare with.
-    /// @return The lexicolographical comparison result. The values are same as std::strncmp().
+    /// @return The lexicographical comparison result. The values are same as std::strncmp().
     int compare(const CharT* s) const {
         return compare(basic_str_view(s));
     }

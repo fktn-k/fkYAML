@@ -24,7 +24,7 @@ public:
         m_end = buffer.end();
     }
 
-    /// @brief Update the set of the current position informations.
+    /// @brief Update the set of the current position information.
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(const char* p_current) {

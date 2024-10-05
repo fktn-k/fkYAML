@@ -458,7 +458,7 @@ private:
                             // foo: !!map
                             //   !!str 123: true
                             //   ^
-                            //   this !!str tag overwrites the preceeding !!map tag.
+                            //   this !!str tag overwrites the preceding !!map tag.
                             // ```
                             *mp_current_node = basic_node_type::mapping();
                             apply_directive_set(*mp_current_node);
@@ -469,7 +469,7 @@ private:
                     }
 
                     if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                        // a key separator preceeding block sequence entries
+                        // a key separator preceding block sequence entries
                         *mp_current_node = basic_node_type::sequence();
                         apply_directive_set(*mp_current_node);
                         apply_node_properties(*mp_current_node);
@@ -601,7 +601,7 @@ private:
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if FK_YAML_UNLIKELY (!is_indent_valid) {
-                            throw parse_error("Detected invalid indentaion.", line, indent);
+                            throw parse_error("Detected invalid indentation.", line, indent);
                         }
 
                         pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
@@ -615,7 +615,7 @@ private:
                     }
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
-                    throw parse_error("Flow sequence begininng is found without separated with a comma.", line, indent);
+                    throw parse_error("Flow sequence beginning is found without separated with a comma.", line, indent);
                 }
 
                 ++m_flow_context_depth;
@@ -748,7 +748,7 @@ private:
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if FK_YAML_UNLIKELY (!is_indent_valid) {
-                            throw parse_error("Detected invalid indentaion.", line, indent);
+                            throw parse_error("Detected invalid indentation.", line, indent);
                         }
 
                         pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
@@ -762,7 +762,7 @@ private:
                     }
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
-                    throw parse_error("Flow mapping begininng is found without separated with a comma.", line, indent);
+                    throw parse_error("Flow mapping beginning is found without separated with a comma.", line, indent);
                 }
 
                 ++m_flow_context_depth;
@@ -998,7 +998,7 @@ private:
                     });
                 bool is_indent_valid = (target_itr != m_context_stack.rend());
                 if FK_YAML_UNLIKELY (!is_indent_valid) {
-                    throw parse_error("Detected invalid indentaion.", line, indent);
+                    throw parse_error("Detected invalid indentation.", line, indent);
                 }
 
                 pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));

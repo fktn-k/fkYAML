@@ -267,7 +267,7 @@ namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-n
 {
 #endif
 
-/// @brief A blobal object to represent ADL friendly from_node functor.
+/// @brief A global object to represent ADL friendly from_node functor.
 // NOLINTNEXTLINE(misc-definitions-in-headers)
 FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail::from_node_fn>::value;
 

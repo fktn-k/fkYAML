@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
-#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP_
+#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP_
 
 #include <algorithm>
 #include <cctype>
@@ -35,12 +35,12 @@ namespace {
 
 // whether the current context is flow(1) or block(0)
 const uint32_t flow_context_bit = 1u << 0u;
-// whether the curent document part is directive(1) or content(0)
+// whether the current document part is directive(1) or content(0)
 const uint32_t document_directive_bit = 1u << 1u;
 
 } // anonymous namespace
 
-/// @brief A class which lexically analizes YAML formatted inputs.
+/// @brief A class which lexically analyzes YAML formatted inputs.
 class lexical_analyzer {
 private:
     enum class block_style_indicator_t {
@@ -49,7 +49,7 @@ private:
     };
 
     enum class chomping_indicator_t {
-        STRIP, //!< excludes final line breaks and traiing empty lines indicated by `-`.
+        STRIP, //!< excludes final line breaks and trailing empty lines indicated by `-`.
         KEEP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
         CLIP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
     };
@@ -97,7 +97,7 @@ public:
                 scan_scalar(token);
                 return token;
             }
-        case ':': { // key separater
+        case ':': { // key separator
             if (++m_cur_itr == m_end_itr) {
                 token.type = lexical_token_t::KEY_SEPARATOR;
                 return token;
@@ -128,7 +128,7 @@ public:
             token.type = lexical_token_t::KEY_SEPARATOR;
             return token;
         }
-        case ',': // value separater
+        case ',': // value separator
             ++m_cur_itr;
             token.type = lexical_token_t::VALUE_SEPARATOR;
             return token;
@@ -695,7 +695,7 @@ private:
         case '\n': {
             is_value_buffer_used = true;
 
-            // discard trailing white spaces which preceeds the line break in the current line.
+            // discard trailing white spaces which precedes the line break in the current line.
             auto before_trailing_spaces_itr = m_cur_itr - 1;
             bool ends_loop = false;
             while (before_trailing_spaces_itr != m_token_begin_itr) {
@@ -773,7 +773,7 @@ private:
         case '\n': {
             is_value_buffer_used = true;
 
-            // discard trailing white spaces which preceeds the line break in the current line.
+            // discard trailing white spaces which precedes the line break in the current line.
             auto before_trailing_spaces_itr = m_cur_itr - 1;
             bool ends_loop = false;
             while (before_trailing_spaces_itr != m_token_begin_itr) {
@@ -972,7 +972,7 @@ private:
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
     /// @return true if mutated scalar contents is stored in m_value_buffer, false otherwise.
     bool extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
-        // change behaviors depending on the type of a comming string scalar token.
+        // change behaviors depending on the type of a coming string scalar token.
         // * single quoted
         // * double quoted
         // * plain
@@ -1437,4 +1437,4 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP_ */

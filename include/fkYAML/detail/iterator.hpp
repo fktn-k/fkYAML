@@ -24,7 +24,7 @@ struct sequence_iterator_tag {};
 /// @brief A tag which tells Iterator will contain mapping value iterator.
 struct mapping_iterator_tag {};
 
-/// @brief The template definitions of type informations used in @ref Iterator class
+/// @brief The template definitions of type information used in @ref Iterator class
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 struct iterator_traits {
@@ -246,7 +246,7 @@ public:
         return *this;
     }
 
-    /// @brief A post-increment opretor of the iterator class.
+    /// @brief A post-increment operator of the iterator class.
     /// @return iterator An iterator object which has been incremented.
     iterator operator++(int) & noexcept {
         auto result = *this;

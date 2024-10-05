@@ -17,8 +17,8 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 enum class lexical_token_t {
     END_OF_BUFFER,         //!< the end of input buffer.
     EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
-    KEY_SEPARATOR,         //!< the key separater `:`
-    VALUE_SEPARATOR,       //!< the value separater `,`
+    KEY_SEPARATOR,         //!< the key separator `:`
+    VALUE_SEPARATOR,       //!< the value separator `,`
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
     ALIAS_PREFIX,          //!< the character for alias prefix `*`
     YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.

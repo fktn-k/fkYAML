@@ -78,7 +78,7 @@ private:
     }
 
     /// @brief Serialize the directives if any is applied to the node.
-    /// @param node The targe node.
+    /// @param node The target node.
     /// @param str A string to hold serialization result.
     /// @return bool true if any directive is serialized, false otherwise.
     bool serialize_directives(const BasicNodeType& node, std::string& str) {
@@ -289,7 +289,7 @@ private:
 
     /// @brief Append an anchor property if it's available. Do nothing otherwise.
     /// @param node The target node which is possibly an anchor node.
-    /// @param prepends_space Whether or not to prepend a space before an anchor property.
+    /// @param prepends_space Whether to prepend a space before an anchor property.
     /// @param str A string to hold serialization result.
     /// @return true if an anchor property has been appended, false otherwise.
     bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const {
@@ -305,7 +305,7 @@ private:
 
     /// @brief Append an alias property if it's available. Do nothing otherwise.
     /// @param node The target node which is possibly an alias node.
-    /// @param prepends_space Whether or not to prepend a space before an alias property.
+    /// @param prepends_space Whether to prepend a space before an alias property.
     /// @param str A string to hold serialization result.
     /// @return true if an alias property has been appended, false otherwise.
     bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const {
@@ -336,7 +336,7 @@ private:
 
     /// @brief Get a string value from the given node and, if necessary, escape its contents.
     /// @param[in] node The target string YAML node.
-    /// @param[out] is_escaped Whether or not the contents of an ouput string has been escaped.
+    /// @param[out] is_escaped Whether the contents of an output string has been escaped.
     /// @return The (escaped) string node value.
     typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
         FK_YAML_ASSERT(node.is_string());

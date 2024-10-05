@@ -23,7 +23,7 @@ template <typename BasicNodeType, typename = enable_if_t<is_basic_node<BasicNode
 struct document_metainfo {
     /// The YAML version used for the YAML document.
     yaml_version_type version {yaml_version_type::VERSION_1_2};
-    /// Whether or not the YAML version has been specified.
+    /// Whether the YAML version has been specified.
     bool is_version_specified {false};
     /// The prefix of the primary handle.
     std::string primary_handle_prefix {};
@@ -31,7 +31,7 @@ struct document_metainfo {
     std::string secondary_handle_prefix {};
     /// The map of handle-prefix pairs.
     std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
-    /// The map of anchor node which allowes for key duplication.
+    /// The map of anchor node which allows for key duplication.
     std::multimap<std::string /*anchor name*/, BasicNodeType> anchor_table {};
 };
 

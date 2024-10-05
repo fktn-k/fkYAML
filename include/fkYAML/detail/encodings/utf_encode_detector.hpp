@@ -23,7 +23,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @brief Detect an encoding type for UTF-8 expected inputs.
 /// @note This function doesn't support the case where the first character is null.
 /// @param[in] bytes 4 bytes of an input character sequence.
-/// @param[out] has_bom Whether or not the input contains a BOM.
+/// @param[out] has_bom Whether the input contains a BOM.
 /// @return A detected encoding type.
 inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept {
     has_bom = false;
