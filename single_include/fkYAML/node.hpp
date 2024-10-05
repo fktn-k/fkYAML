@@ -3834,25 +3834,27 @@ private:
     /// @param token The token into which the scan result is written.
     /// @return lexical_token_t The lexical token type for strings.
     void scan_scalar(lexical_token& token) {
-        m_value_buffer.clear();
-
-        bool needs_last_double_quote = false;
         switch (*m_token_begin_itr) {
         case '\'':
             ++m_token_begin_itr;
             token.type = lexical_token_t::SINGLE_QUOTED_SCALAR;
             determine_single_quoted_scalar_range(token.str);
-            return;
+            break;
         case '\"':
-            needs_last_double_quote = true;
             ++m_token_begin_itr;
             token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
             determine_double_quoted_scalar_range(token.str);
-            return;
+            break;
         default:
             token.type = lexical_token_t::PLAIN_SCALAR;
             determine_plain_scalar_range(token.str);
-            return;
+            break;
+        }
+
+        for (const auto c : token.str) {
+            if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                handle_unescaped_control_char(c);
+            }
         }
     }
 
@@ -3861,14 +3863,10 @@ private:
 
         std::size_t pos = sv.find('\'');
         while (pos != str_view::npos) {
-            if (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
+            FK_YAML_ASSERT(pos < sv.size());
+            if FK_YAML_LIKELY (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
                 // closing single quote is found.
                 token = {m_token_begin_itr, pos};
-                for (const auto c : token) {
-                    if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                        handle_unescaped_control_char(c);
-                    }
-                }
                 m_cur_itr = sv.begin() + (pos + 1);
                 return;
             }
@@ -3888,8 +3886,10 @@ private:
 
         std::size_t pos = sv.find('\"');
         while (pos != str_view::npos) {
+            FK_YAML_ASSERT(pos < sv.size());
+
             bool is_closed = true;
-            if (pos > 0) {
+            if FK_YAML_LIKELY (pos > 0) {
                 // Double quotation marks can be escaped by a preceding backslash and the number of backslashes matters
                 // to determine if the found double quotation mark is escaped since the backslash itself can also be
                 // escaped:
@@ -3909,11 +3909,6 @@ private:
             if (is_closed) {
                 // closing double quote is found.
                 token = {m_token_begin_itr, pos};
-                for (const auto c : token) {
-                    if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                        handle_unescaped_control_char(c);
-                    }
-                }
                 m_cur_itr = sv.begin() + (pos + 1);
                 return;
             }
@@ -3936,17 +3931,13 @@ private:
         std::size_t pos = sv.find_first_of(check_filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             token = sv;
-            for (const auto c : token) {
-                if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                    handle_unescaped_control_char(c);
-                }
-            }
             m_cur_itr = m_end_itr;
             return;
         }
 
         bool ends_loop = false;
         do {
+            FK_YAML_ASSERT(pos < sv.size());
             switch (sv[pos]) {
             case '\n':
                 ends_loop = true;
@@ -3985,7 +3976,7 @@ private:
                 }
                 break;
             case ':':
-                if FK_YAML_LIKELY (pos < sv.size() - 1) {
+                if FK_YAML_LIKELY (pos + 1 < sv.size()) {
                     switch (sv[pos + 1]) {
                     case ' ':
                     case '\t':
@@ -4017,148 +4008,7 @@ private:
         } while (pos != str_view::npos);
 
         token = sv.substr(0, pos);
-        for (const auto c : token) {
-            if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                handle_unescaped_control_char(c);
-            }
-        }
         m_cur_itr = token.end();
-    }
-
-    /// @brief Check if the given character is allowed in a double-quoted scalar token.
-    /// @param c The character to be checked.
-    /// @param is_value_buffer_used true is assigned when mutated scalar contents is written into m_value_buffer.
-    /// @return true if the given character is allowed, false otherwise.
-    bool is_allowed_double(char c, bool& is_value_buffer_used) {
-        switch (c) {
-        case '\n': {
-            is_value_buffer_used = true;
-
-            // discard trailing white spaces which precedes the line break in the current line.
-            auto before_trailing_spaces_itr = m_cur_itr - 1;
-            bool ends_loop = false;
-            while (before_trailing_spaces_itr != m_token_begin_itr) {
-                switch (*before_trailing_spaces_itr) {
-                case ' ':
-                case '\t':
-                    --before_trailing_spaces_itr;
-                    break;
-                default:
-                    ends_loop = true;
-                    break;
-                }
-
-                if (ends_loop) {
-                    break;
-                }
-            }
-            m_value_buffer.append(m_token_begin_itr, before_trailing_spaces_itr + 1);
-
-            // move to the beginning of the next line.
-            ++m_cur_itr;
-
-            // apply line folding according to the number of following empty lines.
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t line_after_line_break = m_pos_tracker.get_lines_read();
-            skip_white_spaces_and_newline_codes();
-            m_pos_tracker.update_position(m_cur_itr);
-            uint32_t trailing_empty_lines = m_pos_tracker.get_lines_read() - line_after_line_break;
-            if (trailing_empty_lines > 0) {
-                m_value_buffer.append(trailing_empty_lines, '\n');
-            }
-            else {
-                m_value_buffer.push_back(' ');
-            }
-
-            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
-            return true;
-        }
-
-        case '\"':
-            if (is_value_buffer_used) {
-                m_value_buffer.append(m_token_begin_itr, m_cur_itr++);
-            }
-            return false;
-
-        case '\\':
-            is_value_buffer_used = true;
-
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-
-            // Handle escaped characters.
-            // See https://yaml.org/spec/1.2.2/#57-escaped-characters for more details.
-
-            c = *(m_cur_itr + 1);
-            if (c != '\n') {
-                bool is_valid_escaping = yaml_escaper::unescape(m_cur_itr, m_end_itr, m_value_buffer);
-                if FK_YAML_UNLIKELY (!is_valid_escaping) {
-                    emit_error("Unsupported escape sequence is found in a string token.");
-                }
-
-                m_token_begin_itr = m_cur_itr + 1;
-                return true;
-            }
-
-            // move until the next non-space character is found.
-            m_cur_itr += 2;
-            skip_white_spaces();
-
-            m_token_begin_itr = (m_cur_itr == m_end_itr || *m_cur_itr == '\"') ? m_cur_itr-- : m_cur_itr;
-            return true;
-
-        default:         // LCOV_EXCL_LINE
-            return true; // LCOV_EXCL_LINE
-        }
-    }
-
-    /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
-    /// @return true if mutated scalar contents is stored in m_value_buffer, false otherwise.
-    bool extract_string_token(bool needs_last_double_quote) {
-        // change behaviors depending on the type of a coming string scalar token.
-        // * double quoted
-        // * plain (flow)
-
-        FK_YAML_ASSERT(needs_last_double_quote);
-        std::string check_filters {"\n\"\\"};
-
-        // scan the contents of a string scalar token.
-
-        bool is_value_buffer_used = false;
-        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
-            char current = *m_cur_itr;
-            uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(current));
-            if FK_YAML_LIKELY (num_bytes == 1) {
-                auto ret = check_filters.find(current);
-                if (ret != std::string::npos) {
-                    bool is_allowed = is_allowed_double(current, is_value_buffer_used);
-                    if (!is_allowed) {
-                        return is_value_buffer_used;
-                    }
-
-                    continue;
-                }
-
-                // Handle unescaped control characters.
-                if FK_YAML_UNLIKELY (static_cast<uint8_t>(current) <= 0x1F) {
-                    handle_unescaped_control_char(current);
-                    continue;
-                }
-
-                continue;
-            }
-
-            // Multi-byte characters are already validated while creating an input handler.
-            // So just advance the iterator.
-            m_cur_itr += num_bytes - 1;
-        }
-
-        // Handle the end of input buffer.
-
-        if FK_YAML_UNLIKELY (needs_last_double_quote) {
-            emit_error("Invalid end of input buffer in a double-quoted string token.");
-        }
-
-        return is_value_buffer_used;
     }
 
     /// @brief Scan a block style string token either in the literal or folded style.
@@ -5847,46 +5697,17 @@ private:
         }
 
         do {
+            FK_YAML_ASSERT(pos < token.size());
+            FK_YAML_ASSERT(token[pos] == '\'' || token[pos] == '\n');
+
             if (token[pos] == '\'') {
                 // unescape escaped single quote. ('' -> ')
                 FK_YAML_ASSERT(pos + 1 < token.size());
                 m_buffer.append(token.begin(), token.begin() + (pos + 1));
                 token.remove_prefix(pos + 2); // move next to the escaped single quote.
-                pos = token.find_first_of("\'\n");
-                continue;
-            }
-
-            // process line folding
-
-            // discard trailing white spaces which precedes the line break in the current line.
-            std::size_t last_non_space_pos = token.substr(0, pos).find_last_not_of(" \t");
-            if (last_non_space_pos == str_view::npos) {
-                m_buffer.append(token.begin(), pos);
             }
             else {
-                m_buffer.append(token.begin(), last_non_space_pos + 1);
-            }
-            token.remove_prefix(pos + 1); // move next to the LF
-
-            uint32_t empty_line_counts = 0;
-            do {
-                std::size_t non_space_pos = token.find_first_not_of(" \t");
-                if (non_space_pos == str_view::npos || token[non_space_pos] != '\n') {
-                    if (non_space_pos == str_view::npos) {
-                        non_space_pos = token.size();
-                    }
-                    token.remove_prefix(non_space_pos);
-                    break;
-                }
-
-                ++empty_line_counts;
-            } while (true);
-
-            if (empty_line_counts > 0) {
-                m_buffer.append(empty_line_counts, '\n');
-            }
-            else {
-                m_buffer.push_back(' ');
+                process_line_folding(token, pos);
             }
 
             pos = token.find_first_of("\'\n");
@@ -5916,6 +5737,9 @@ private:
         }
 
         do {
+            FK_YAML_ASSERT(pos < token.size());
+            FK_YAML_ASSERT(token[pos] == '\\' || token[pos] == '\n');
+
             if (token[pos] == '\\') {
                 FK_YAML_ASSERT(pos + 1 < token.size());
                 if (token[pos + 1] != '\n') {
@@ -5930,12 +5754,11 @@ private:
 
                     // `p_escape_begin` points to the last element of the escape sequence.
                     token.remove_prefix((p_escape_begin - token.begin()) + 1);
-                    pos = token.find_first_of("\\\n");
-                    continue;
                 }
             }
-
-            process_line_folding(token, pos);
+            else {
+                process_line_folding(token, pos);
+            }
 
             pos = token.find_first_of("\\\n");
         } while (pos != str_view::npos);
@@ -5948,7 +5771,7 @@ private:
     }
 
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
-        // remove trailing spaces before a newline.
+        // discard trailing white spaces which precedes the line break in the current line.
         std::size_t last_non_space_pos = token.substr(0, newline_pos).find_last_not_of(" \t");
         if (last_non_space_pos == str_view::npos) {
             m_buffer.append(token.begin(), newline_pos);

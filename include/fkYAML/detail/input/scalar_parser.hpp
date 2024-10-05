@@ -97,46 +97,17 @@ private:
         }
 
         do {
+            FK_YAML_ASSERT(pos < token.size());
+            FK_YAML_ASSERT(token[pos] == '\'' || token[pos] == '\n');
+
             if (token[pos] == '\'') {
                 // unescape escaped single quote. ('' -> ')
                 FK_YAML_ASSERT(pos + 1 < token.size());
                 m_buffer.append(token.begin(), token.begin() + (pos + 1));
                 token.remove_prefix(pos + 2); // move next to the escaped single quote.
-                pos = token.find_first_of("\'\n");
-                continue;
-            }
-
-            // process line folding
-
-            // discard trailing white spaces which precedes the line break in the current line.
-            std::size_t last_non_space_pos = token.substr(0, pos).find_last_not_of(" \t");
-            if (last_non_space_pos == str_view::npos) {
-                m_buffer.append(token.begin(), pos);
             }
             else {
-                m_buffer.append(token.begin(), last_non_space_pos + 1);
-            }
-            token.remove_prefix(pos + 1); // move next to the LF
-
-            uint32_t empty_line_counts = 0;
-            do {
-                std::size_t non_space_pos = token.find_first_not_of(" \t");
-                if (non_space_pos == str_view::npos || token[non_space_pos] != '\n') {
-                    if (non_space_pos == str_view::npos) {
-                        non_space_pos = token.size();
-                    }
-                    token.remove_prefix(non_space_pos);
-                    break;
-                }
-
-                ++empty_line_counts;
-            } while (true);
-
-            if (empty_line_counts > 0) {
-                m_buffer.append(empty_line_counts, '\n');
-            }
-            else {
-                m_buffer.push_back(' ');
+                process_line_folding(token, pos);
             }
 
             pos = token.find_first_of("\'\n");
@@ -166,6 +137,9 @@ private:
         }
 
         do {
+            FK_YAML_ASSERT(pos < token.size());
+            FK_YAML_ASSERT(token[pos] == '\\' || token[pos] == '\n');
+
             if (token[pos] == '\\') {
                 FK_YAML_ASSERT(pos + 1 < token.size());
                 if (token[pos + 1] != '\n') {
@@ -180,12 +154,11 @@ private:
 
                     // `p_escape_begin` points to the last element of the escape sequence.
                     token.remove_prefix((p_escape_begin - token.begin()) + 1);
-                    pos = token.find_first_of("\\\n");
-                    continue;
                 }
             }
-
-            process_line_folding(token, pos);
+            else {
+                process_line_folding(token, pos);
+            }
 
             pos = token.find_first_of("\\\n");
         } while (pos != str_view::npos);
@@ -198,7 +171,7 @@ private:
     }
 
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
-        // remove trailing spaces before a newline.
+        // discard trailing white spaces which precedes the line break in the current line.
         std::size_t last_non_space_pos = token.substr(0, newline_pos).find_last_not_of(" \t");
         if (last_non_space_pos == str_view::npos) {
             m_buffer.append(token.begin(), newline_pos);
