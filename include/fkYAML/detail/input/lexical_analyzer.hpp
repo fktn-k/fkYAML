@@ -318,7 +318,6 @@ private:
     lexical_token_t scan_directive() {
         FK_YAML_ASSERT(*m_cur_itr == '%');
 
-        m_value_buffer.clear();
         m_token_begin_itr = ++m_cur_itr;
 
         bool ends_loop = false;
@@ -1082,8 +1081,6 @@ private:
     const char* m_end_itr {};
     /// The current position tracker of the input buffer.
     mutable position_tracker m_pos_tracker {};
-    /// A temporal buffer to store a string to be parsed to an actual token value.
-    std::string m_value_buffer {};
     /// The last yaml version.
     str_view m_yaml_version {};
     /// The last tag handle.
