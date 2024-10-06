@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP
+#define FK_YAML_DETAIL_META_NODE_TRAITS_HPP
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/meta/detect.hpp>
@@ -84,7 +84,7 @@ using from_node_function_t = decltype(T::from_node(std::declval<Args>()...));
 /// @tparam T A type which provides to_node function.
 /// @tparam Args Argument types passed to to_node function.
 template <typename T, typename... Args>
-using to_node_funcion_t = decltype(T::to_node(std::declval<Args>()...));
+using to_node_function_t = decltype(T::to_node(std::declval<Args>()...));
 
 ///////////////////////////////////////////////////
 //   basic_node conversion API detection traits
@@ -125,7 +125,7 @@ struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>> {
     using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
-    static constexpr bool value = is_detected_exact<void, to_node_funcion_t, converter, BasicNodeType&, T>::value;
+    static constexpr bool value = is_detected_exact<void, to_node_function_t, converter, BasicNodeType&, T>::value;
 };
 
 ///////////////////////////////////////
@@ -158,4 +158,4 @@ struct is_node_compatible_type : is_node_compatible_type_impl<BasicNodeType, Com
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP */

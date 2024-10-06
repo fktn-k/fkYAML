@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_YAML_VERSION_TYPE_HPP_
-#define FK_YAML_YAML_VERSION_TYPE_HPP_
+#ifndef FK_YAML_YAML_VERSION_TYPE_HPP
+#define FK_YAML_YAML_VERSION_TYPE_HPP
 
 #include <cstdint>
 
@@ -33,4 +33,4 @@ inline const char* to_string(yaml_version_type t) noexcept {
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_YAML_VERSION_TYPE_HPP_ */
+#endif /* FK_YAML_YAML_VERSION_TYPE_HPP */

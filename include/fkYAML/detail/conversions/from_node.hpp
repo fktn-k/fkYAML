@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
 
 #include <limits>
 #include <map>
@@ -267,7 +267,7 @@ namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-n
 {
 #endif
 
-/// @brief A blobal object to represent ADL friendly from_node functor.
+/// @brief A global object to represent ADL friendly from_node functor.
 // NOLINTNEXTLINE(misc-definitions-in-headers)
 FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail::from_node_fn>::value;
 
@@ -277,4 +277,4 @@ FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP */

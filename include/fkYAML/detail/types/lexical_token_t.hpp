@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
+#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -17,8 +17,8 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 enum class lexical_token_t {
     END_OF_BUFFER,         //!< the end of input buffer.
     EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
-    KEY_SEPARATOR,         //!< the key separater `:`
-    VALUE_SEPARATOR,       //!< the value separater `,`
+    KEY_SEPARATOR,         //!< the key separator `:`
+    VALUE_SEPARATOR,       //!< the value separator `,`
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
     ALIAS_PREFIX,          //!< the character for alias prefix `*`
     YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
@@ -40,4 +40,4 @@ enum class lexical_token_t {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP */

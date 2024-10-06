@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
-#define FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
+#ifndef FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP
+#define FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP
 
 #include <cstddef>
 #include <type_traits>
@@ -176,4 +176,4 @@ using std::remove_cvref_t;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_ */
+#endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP */

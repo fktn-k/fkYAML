@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_
-#define FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP
+#define FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP
 
 #include <memory>
 #include <string>
@@ -175,4 +175,4 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP */

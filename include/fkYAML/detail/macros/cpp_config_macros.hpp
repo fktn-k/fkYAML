@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_
-#define FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_
+#ifndef FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP
+#define FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP
 
 // This file is assumed to be included only by version_macros.hpp file.
 // To avoid redundant inclusion, do not include version_macros.hpp file as the other files do.
@@ -126,4 +126,4 @@
 #define FK_YAML_UNLIKELY(expr) (!!(expr))
 #endif
 
-#endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */
+#endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP */

@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP
 
 #include <array>
 #include <cstdint>
@@ -284,4 +284,4 @@ inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint3
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP */

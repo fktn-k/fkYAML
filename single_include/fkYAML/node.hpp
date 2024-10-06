@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_NODE_HPP_
-#define FK_YAML_NODE_HPP_
+#ifndef FK_YAML_NODE_HPP
+#define FK_YAML_NODE_HPP
 
 #include <algorithm>
 #include <cstdint>
@@ -76,8 +76,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_
-#define FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_
+#ifndef FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP
+#define FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP
 
 // This file is assumed to be included only by version_macros.hpp file.
 // To avoid redundant inclusion, do not include version_macros.hpp file as the other files do.
@@ -196,7 +196,7 @@
 #define FK_YAML_UNLIKELY(expr) (!!(expr))
 #endif
 
-#endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP_ */
+#endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP */
 
 
 #endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)
@@ -210,8 +210,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ASSERT_HPP_
-#define FK_YAML_DETAIL_ASSERT_HPP_
+#ifndef FK_YAML_DETAIL_ASSERT_HPP
+#define FK_YAML_DETAIL_ASSERT_HPP
 
 // if FK_YAML_ASSERT is not user-defined. apply the default assert impl.
 #ifndef FK_YAML_ASSERT
@@ -223,7 +223,7 @@
 #endif
 #endif
 
-#endif /* FK_YAML_DETAIL_ASSERT_HPP_ */
+#endif /* FK_YAML_DETAIL_ASSERT_HPP */
 
 // #include <fkYAML/detail/document_metainfo.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -234,8 +234,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_
-#define FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_
+#ifndef FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP
+#define FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP
 
 #include <string>
 #include <map>
@@ -251,8 +251,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_NODE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP
+#define FK_YAML_DETAIL_META_NODE_TRAITS_HPP
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -265,8 +265,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_DETECT_HPP_
-#define FK_YAML_DETAIL_META_DETECT_HPP_
+#ifndef FK_YAML_DETAIL_META_DETECT_HPP
+#define FK_YAML_DETAIL_META_DETECT_HPP
 
 #include <type_traits>
 
@@ -281,8 +281,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
-#define FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_
+#ifndef FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP
+#define FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP
 
 #include <cstddef>
 #include <type_traits>
@@ -452,7 +452,7 @@ using std::remove_cvref_t;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP_ */
+#endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -514,7 +514,7 @@ using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_DETECT_HPP_ */
+#endif /* FK_YAML_DETAIL_META_DETECT_HPP */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -527,8 +527,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
+#define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
 
 #include <iterator>
 #include <limits>
@@ -554,7 +554,7 @@ struct is_comparable : std::false_type {};
 /// @brief A partial specialization of is_comparable if T and U are comparable types.
 /// @tparam Comparator An object type to compare T and U objects.
 /// @tparam T A type for comparison.
-/// @tparam U Ther other type for comparison.
+/// @tparam U The other type for comparison.
 template <typename Comparator, typename T, typename U>
 struct is_comparable<
     Comparator, T, U,
@@ -686,7 +686,7 @@ using head_type = typename get_head_type<Types...>::type;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -759,7 +759,7 @@ using from_node_function_t = decltype(T::from_node(std::declval<Args>()...));
 /// @tparam T A type which provides to_node function.
 /// @tparam Args Argument types passed to to_node function.
 template <typename T, typename... Args>
-using to_node_funcion_t = decltype(T::to_node(std::declval<Args>()...));
+using to_node_function_t = decltype(T::to_node(std::declval<Args>()...));
 
 ///////////////////////////////////////////////////
 //   basic_node conversion API detection traits
@@ -800,7 +800,7 @@ struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>> {
     using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
-    static constexpr bool value = is_detected_exact<void, to_node_funcion_t, converter, BasicNodeType&, T>::value;
+    static constexpr bool value = is_detected_exact<void, to_node_function_t, converter, BasicNodeType&, T>::value;
 };
 
 ///////////////////////////////////////
@@ -833,7 +833,7 @@ struct is_node_compatible_type : is_node_compatible_type_impl<BasicNodeType, Com
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP */
 
 // #include <fkYAML/yaml_version_type.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -844,8 +844,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_YAML_VERSION_TYPE_HPP_
-#define FK_YAML_YAML_VERSION_TYPE_HPP_
+#ifndef FK_YAML_YAML_VERSION_TYPE_HPP
+#define FK_YAML_YAML_VERSION_TYPE_HPP
 
 #include <cstdint>
 
@@ -872,7 +872,7 @@ inline const char* to_string(yaml_version_type t) noexcept {
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_YAML_VERSION_TYPE_HPP_ */
+#endif /* FK_YAML_YAML_VERSION_TYPE_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -882,7 +882,7 @@ template <typename BasicNodeType, typename = enable_if_t<is_basic_node<BasicNode
 struct document_metainfo {
     /// The YAML version used for the YAML document.
     yaml_version_type version {yaml_version_type::VERSION_1_2};
-    /// Whether or not the YAML version has been specified.
+    /// Whether the YAML version has been specified.
     bool is_version_specified {false};
     /// The prefix of the primary handle.
     std::string primary_handle_prefix {};
@@ -890,13 +890,13 @@ struct document_metainfo {
     std::string secondary_handle_prefix {};
     /// The map of handle-prefix pairs.
     std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
-    /// The map of anchor node which allowes for key duplication.
+    /// The map of anchor node which allows for key duplication.
     std::multimap<std::string /*anchor name*/, BasicNodeType> anchor_table {};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_ */
+#endif /* FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP */
 
 // #include <fkYAML/detail/input/deserializer.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -907,8 +907,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
-#define FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP
+#define FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP
 
 #include <algorithm>
 #include <deque>
@@ -930,8 +930,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // types. So, some implementations don't follow the convensions in the standard C++ functions. For example, octals must
 // begin with "0o" (not "0"), which is specified in the YAML spec 1.2.
 
-#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
-#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
+#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
+#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
 
 #include <cmath>
 #include <cstring>
@@ -1682,7 +1682,7 @@ inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
 
 /// @brief Converts a scalar into a floating point value.
 /// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
-/// @tparam FloatType The output floatint point value type.
+/// @tparam FloatType The output floating point value type.
 /// @param begin The iterator to the first element of the scalar.
 /// @param end The iterator to the past-the-end element of the scalar.
 /// @param f The output floating point value holder.
@@ -1750,7 +1750,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_ */
+#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP */
 
 // #include <fkYAML/detail/document_metainfo.hpp>
 
@@ -1763,8 +1763,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
-#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
+#define FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
 
 #include <algorithm>
 #include <cctype>
@@ -1783,8 +1783,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
+#define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
 
 #include <cctype>
 #include <string>
@@ -1900,7 +1900,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP */
 
 // #include <fkYAML/detail/encodings/utf_encodings.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -1911,8 +1911,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP
 
 #include <array>
 #include <cstdint>
@@ -1928,8 +1928,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_EXCEPTION_HPP_
-#define FK_YAML_EXCEPTION_HPP_
+#ifndef FK_YAML_EXCEPTION_HPP
+#define FK_YAML_EXCEPTION_HPP
 
 #include <array>
 #include <initializer_list>
@@ -1947,8 +1947,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_STRING_FORMATTER_HPP_
-#define FK_YAML_DETAIL_STRING_FORMATTER_HPP_
+#ifndef FK_YAML_DETAIL_STRING_FORMATTER_HPP
+#define FK_YAML_DETAIL_STRING_FORMATTER_HPP
 
 #include <cstdarg>
 #include <cstdio>
@@ -1983,7 +1983,7 @@ inline std::string format(const char* fmt, ...) {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_STRING_FORMATTER_HPP_ */
+#endif /* FK_YAML_DETAIL_STRING_FORMATTER_HPP */
 
 // #include <fkYAML/detail/types/node_t.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -1994,8 +1994,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_TYPES_NODE_T_HPP_
-#define FK_YAML_DETAIL_TYPES_NODE_T_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_NODE_T_HPP
+#define FK_YAML_DETAIL_TYPES_NODE_T_HPP
 
 #include <cstdint>
 #include <string>
@@ -2011,8 +2011,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_NODE_TYPE_HPP_
-#define FK_YAML_NODE_TYPE_HPP_
+#ifndef FK_YAML_NODE_TYPE_HPP
+#define FK_YAML_NODE_TYPE_HPP
 
 #include <cstdint>
 
@@ -2054,7 +2054,7 @@ inline const char* to_string(node_type t) noexcept {
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_TYPE_HPP_ */
+#endif /* FK_YAML_NODE_TYPE_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -2135,7 +2135,7 @@ inline node_type convert_to_node_type(node_t t) {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -2305,7 +2305,7 @@ private:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_EXCEPTION_HPP_ */
+#endif /* FK_YAML_EXCEPTION_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -2577,7 +2577,7 @@ inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint3
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP */
 
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -2588,8 +2588,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP
+#define FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP
 
 #include <string>
 
@@ -2926,7 +2926,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP */
 
 // #include <fkYAML/detail/input/position_tracker.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -2937,8 +2937,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_
-#define FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP
+#define FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP
 
 #include <algorithm>
 
@@ -2953,8 +2953,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_STR_VIEW_HPP_
-#define FK_YAML_DETAIL_STR_VIEW_HPP_
+#ifndef FK_YAML_DETAIL_STR_VIEW_HPP
+#define FK_YAML_DETAIL_STR_VIEW_HPP
 
 #include <limits>
 #include <string>
@@ -3043,7 +3043,7 @@ public:
     /// @brief Construction from a null pointer is forbidden.
     basic_str_view(std::nullptr_t) = delete;
 
-    /// @brief Constructs a basic_str_view object from a poineter to a character sequence and its size.
+    /// @brief Constructs a basic_str_view object from a pointer to a character sequence and its size.
     /// @param p_str A pointer to a character sequence. (May or may not be null-terminated.)
     /// @param len The length of a character sequence.
     basic_str_view(const value_type* p_str, size_type len) noexcept
@@ -3215,7 +3215,7 @@ public:
     }
 
     /// @brief Copys the referenced character sequence values from `pos` by `n` size.
-    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the lenth.
+    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the length.
     /// @param p_str The pointer to a character sequence buffer for output.
     /// @param n The number of elements to write into `p_str`.
     /// @param pos The offset of the beginning position to copy values.
@@ -3230,7 +3230,7 @@ public:
     }
 
     /// @brief Constructs a sub basic_str_view object from `pos` by `n` size.
-    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the lenth.
+    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the length.
     /// @param pos The offset of the beginning position.
     /// @param n The number of elements to the end of a new sub basic_str_view object.
     /// @return A newly created sub basic_str_view object.
@@ -3291,7 +3291,7 @@ public:
 
     /// @brief Compares the referenced character sequence with `s` character sequence.
     /// @param s The pointer to a character sequence to compare with.
-    /// @return The lexicolographical comparison result. The values are same as std::strncmp().
+    /// @return The lexicographical comparison result. The values are same as std::strncmp().
     int compare(const CharT* s) const {
         return compare(basic_str_view(s));
     }
@@ -3909,7 +3909,7 @@ using u32str_view = basic_str_view<char32_t>;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_STR_VIEW_HPP_ */
+#endif /* FK_YAML_DETAIL_STR_VIEW_HPP */
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -3922,7 +3922,7 @@ public:
         m_end = buffer.end();
     }
 
-    /// @brief Update the set of the current position informations.
+    /// @brief Update the set of the current position information.
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(const char* p_current) {
@@ -3985,7 +3985,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -4000,8 +4000,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
+#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -4012,8 +4012,8 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 enum class lexical_token_t {
     END_OF_BUFFER,         //!< the end of input buffer.
     EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
-    KEY_SEPARATOR,         //!< the key separater `:`
-    VALUE_SEPARATOR,       //!< the value separater `,`
+    KEY_SEPARATOR,         //!< the key separator `:`
+    VALUE_SEPARATOR,       //!< the value separator `,`
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
     ALIAS_PREFIX,          //!< the character for alias prefix `*`
     YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
@@ -4035,7 +4035,7 @@ enum class lexical_token_t {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP */
 
 // #include <fkYAML/exception.hpp>
 
@@ -4051,12 +4051,12 @@ namespace {
 
 // whether the current context is flow(1) or block(0)
 const uint32_t flow_context_bit = 1u << 0u;
-// whether the curent document part is directive(1) or content(0)
+// whether the current document part is directive(1) or content(0)
 const uint32_t document_directive_bit = 1u << 1u;
 
 } // anonymous namespace
 
-/// @brief A class which lexically analizes YAML formatted inputs.
+/// @brief A class which lexically analyzes YAML formatted inputs.
 class lexical_analyzer {
 private:
     enum class block_style_indicator_t {
@@ -4065,7 +4065,7 @@ private:
     };
 
     enum class chomping_indicator_t {
-        STRIP, //!< excludes final line breaks and traiing empty lines indicated by `-`.
+        STRIP, //!< excludes final line breaks and trailing empty lines indicated by `-`.
         KEEP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
         CLIP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
     };
@@ -4113,7 +4113,7 @@ public:
                 scan_scalar(token);
                 return token;
             }
-        case ':': { // key separater
+        case ':': { // key separator
             if (++m_cur_itr == m_end_itr) {
                 token.type = lexical_token_t::KEY_SEPARATOR;
                 return token;
@@ -4144,7 +4144,7 @@ public:
             token.type = lexical_token_t::KEY_SEPARATOR;
             return token;
         }
-        case ',': // value separater
+        case ',': // value separator
             ++m_cur_itr;
             token.type = lexical_token_t::VALUE_SEPARATOR;
             return token;
@@ -4711,7 +4711,7 @@ private:
         case '\n': {
             is_value_buffer_used = true;
 
-            // discard trailing white spaces which preceeds the line break in the current line.
+            // discard trailing white spaces which precedes the line break in the current line.
             auto before_trailing_spaces_itr = m_cur_itr - 1;
             bool ends_loop = false;
             while (before_trailing_spaces_itr != m_token_begin_itr) {
@@ -4789,7 +4789,7 @@ private:
         case '\n': {
             is_value_buffer_used = true;
 
-            // discard trailing white spaces which preceeds the line break in the current line.
+            // discard trailing white spaces which precedes the line break in the current line.
             auto before_trailing_spaces_itr = m_cur_itr - 1;
             bool ends_loop = false;
             while (before_trailing_spaces_itr != m_token_begin_itr) {
@@ -4988,7 +4988,7 @@ private:
     /// @brief Extracts a string token, either plain, single-quoted or double-quoted, from the input buffer.
     /// @return true if mutated scalar contents is stored in m_value_buffer, false otherwise.
     bool extract_string_token(bool needs_last_single_quote, bool needs_last_double_quote) {
-        // change behaviors depending on the type of a comming string scalar token.
+        // change behaviors depending on the type of a coming string scalar token.
         // * single quoted
         // * double quoted
         // * plain
@@ -5453,7 +5453,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP */
 
 // #include <fkYAML/detail/input/tag_resolver.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -5464,8 +5464,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_
-#define FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP
+#define FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP
 
 #include <memory>
 #include <string>
@@ -5486,8 +5486,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP_
-#define FK_YAML_DETAIL_INPUT_TAG_T_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP
+#define FK_YAML_DETAIL_INPUT_TAG_T_HPP
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -5497,7 +5497,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @brief Definition of YAML directive sets.
 enum class tag_t {
     NON_SPECIFIC,    //!< Represents a non-specific tag.
-    CUSTOM_TAG,      //!< Represents a cumstom tag
+    CUSTOM_TAG,      //!< Represents a custom tag
     SEQUENCE,        //!< Represents a sequence tag.
     MAPPING,         //!< Represents a mapping tag.
     NULL_VALUE,      //!< Represents a null value tag.
@@ -5509,7 +5509,7 @@ enum class tag_t {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_TAG_T_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_TAG_T_HPP */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -5671,7 +5671,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP */
 
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -5682,8 +5682,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP
+#define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP
 
 #include <array>
 #include <string>
@@ -5780,7 +5780,7 @@ struct is_contiguous_container<std::vector<T, Alloc>> : std::true_type {};
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -5793,8 +5793,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
-#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
+#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
 
 #include <cstring>
 #include <string>
@@ -6097,7 +6097,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -6110,8 +6110,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_NODE_ATTRS_HPP_
-#define FK_YAML_DETAIL_NODE_ATTRS_HPP_
+#ifndef FK_YAML_DETAIL_NODE_ATTRS_HPP
+#define FK_YAML_DETAIL_NODE_ATTRS_HPP
 
 #include <cstdint>
 #include <limits>
@@ -6240,7 +6240,7 @@ inline void set_anchor_offset(uint32_t offset, node_attr_t& attrs) noexcept {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_NODE_ATTRS_HPP_ */
+#endif /* FK_YAML_DETAIL_NODE_ATTRS_HPP */
 
 // #include <fkYAML/detail/node_property.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -6251,8 +6251,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_NODE_PROPERTY_HPP_
-#define FK_YAML_DETAIL_NODE_PROPERTY_HPP_
+#ifndef FK_YAML_DETAIL_NODE_PROPERTY_HPP
+#define FK_YAML_DETAIL_NODE_PROPERTY_HPP
 
 #include <string>
 
@@ -6270,7 +6270,7 @@ struct node_property {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP_ */
+#endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP */
 
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 
@@ -6708,7 +6708,7 @@ private:
                             // foo: !!map
                             //   !!str 123: true
                             //   ^
-                            //   this !!str tag overwrites the preceeding !!map tag.
+                            //   this !!str tag overwrites the preceding !!map tag.
                             // ```
                             *mp_current_node = basic_node_type::mapping();
                             apply_directive_set(*mp_current_node);
@@ -6719,7 +6719,7 @@ private:
                     }
 
                     if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                        // a key separator preceeding block sequence entries
+                        // a key separator preceding block sequence entries
                         *mp_current_node = basic_node_type::sequence();
                         apply_directive_set(*mp_current_node);
                         apply_node_properties(*mp_current_node);
@@ -6851,7 +6851,7 @@ private:
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if FK_YAML_UNLIKELY (!is_indent_valid) {
-                            throw parse_error("Detected invalid indentaion.", line, indent);
+                            throw parse_error("Detected invalid indentation.", line, indent);
                         }
 
                         pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
@@ -6865,7 +6865,7 @@ private:
                     }
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
-                    throw parse_error("Flow sequence begininng is found without separated with a comma.", line, indent);
+                    throw parse_error("Flow sequence beginning is found without separated with a comma.", line, indent);
                 }
 
                 ++m_flow_context_depth;
@@ -6998,7 +6998,7 @@ private:
                             });
                         bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if FK_YAML_UNLIKELY (!is_indent_valid) {
-                            throw parse_error("Detected invalid indentaion.", line, indent);
+                            throw parse_error("Detected invalid indentation.", line, indent);
                         }
 
                         pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
@@ -7012,7 +7012,7 @@ private:
                     }
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
-                    throw parse_error("Flow mapping begininng is found without separated with a comma.", line, indent);
+                    throw parse_error("Flow mapping beginning is found without separated with a comma.", line, indent);
                 }
 
                 ++m_flow_context_depth;
@@ -7248,7 +7248,7 @@ private:
                     });
                 bool is_indent_valid = (target_itr != m_context_stack.rend());
                 if FK_YAML_UNLIKELY (!is_indent_valid) {
-                    throw parse_error("Detected invalid indentaion.", line, indent);
+                    throw parse_error("Detected invalid indentation.", line, indent);
                 }
 
                 pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
@@ -7548,7 +7548,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP */
 
 // #include <fkYAML/detail/input/input_adapter.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -7559,8 +7559,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
-#define FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP
+#define FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP
 
 #include <array>
 #include <cstdio>
@@ -7582,8 +7582,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP
 
 #include <cstdint>
 #include <istream>
@@ -7599,8 +7599,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -7619,7 +7619,7 @@ enum class utf_encode_t {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP */
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -7633,7 +7633,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @brief Detect an encoding type for UTF-8 expected inputs.
 /// @note This function doesn't support the case where the first character is null.
 /// @param[in] bytes 4 bytes of an input character sequence.
-/// @param[out] has_bom Whether or not the input contains a BOM.
+/// @param[out] has_bom Whether the input contains a BOM.
 /// @return A detected encoding type.
 inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept {
     has_bom = false;
@@ -7942,7 +7942,7 @@ struct stream_utf_encode_detector {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP */
 
 // #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 
@@ -7975,7 +7975,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -8175,7 +8175,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -8190,7 +8190,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -8273,7 +8273,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -8288,7 +8288,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -8358,7 +8358,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_16BE};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -8371,7 +8371,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -8435,7 +8435,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -8783,7 +8783,7 @@ private:
                 if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
-            };
+            }
 
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
@@ -8866,7 +8866,7 @@ inline iterator_input_adapter<ItrType> create_iterator_input_adapter(
 
 } // anonymous namespace
 
-/// @brief A factory method for iterator_input_adapter objects with ieterator values.
+/// @brief A factory method for iterator_input_adapter objects with iterator values.
 /// @tparam ItrType An iterator type.
 /// @param begin The beginning of iterators.
 /// @param end The end of iterators.
@@ -8916,7 +8916,7 @@ struct container_input_adapter_factory {};
 template <typename ContainerType>
 struct container_input_adapter_factory<
     ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>> {
-    /// Whether or not ContainerType is a contiguous container.
+    /// Whether ContainerType is a contiguous container.
     static constexpr bool is_contiguous = is_contiguous_container<ContainerType>::value;
 
     /// A type for resulting input adapter object.
@@ -8967,7 +8967,7 @@ inline stream_input_adapter input_adapter(std::istream& stream) {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP */
 
 // #include <fkYAML/detail/iterator.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -8978,8 +8978,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ITERATOR_HPP_
-#define FK_YAML_DETAIL_ITERATOR_HPP_
+#ifndef FK_YAML_DETAIL_ITERATOR_HPP
+#define FK_YAML_DETAIL_ITERATOR_HPP
 
 #include <cstddef>
 #include <iterator>
@@ -8999,7 +8999,7 @@ struct sequence_iterator_tag {};
 /// @brief A tag which tells Iterator will contain mapping value iterator.
 struct mapping_iterator_tag {};
 
-/// @brief The template definitions of type informations used in @ref Iterator class
+/// @brief The template definitions of type information used in @ref Iterator class
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 struct iterator_traits {
@@ -9221,7 +9221,7 @@ public:
         return *this;
     }
 
-    /// @brief A post-increment opretor of the iterator class.
+    /// @brief A post-increment operator of the iterator class.
     /// @return iterator An iterator object which has been incremented.
     iterator operator++(int) & noexcept {
         auto result = *this;
@@ -9364,7 +9364,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ITERATOR_HPP_ */
+#endif /* FK_YAML_DETAIL_ITERATOR_HPP */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -9385,8 +9385,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_
-#define FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_
+#ifndef FK_YAML_DETAIL_NODE_REF_STORAGE_HPP
+#define FK_YAML_DETAIL_NODE_REF_STORAGE_HPP
 
 #include <initializer_list>
 #include <type_traits>
@@ -9465,7 +9465,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_NODE_REF_STORAGE_HPP_ */
+#endif /* FK_YAML_DETAIL_NODE_REF_STORAGE_HPP */
 
 // #include <fkYAML/detail/output/serializer.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -9476,8 +9476,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
-#define FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_
+#ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP
+#define FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP
 
 #include <cmath>
 #include <sstream>
@@ -9495,8 +9495,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef TO__string_HPP_
-#define TO__string_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_STRING_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_TO_STRING_HPP
 
 #include <cmath>
 #include <limits>
@@ -9581,7 +9581,7 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* TO__string_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_STRING_HPP */
 
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 
@@ -9651,7 +9651,7 @@ private:
     }
 
     /// @brief Serialize the directives if any is applied to the node.
-    /// @param node The targe node.
+    /// @param node The target node.
     /// @param str A string to hold serialization result.
     /// @return bool true if any directive is serialized, false otherwise.
     bool serialize_directives(const BasicNodeType& node, std::string& str) {
@@ -9862,7 +9862,7 @@ private:
 
     /// @brief Append an anchor property if it's available. Do nothing otherwise.
     /// @param node The target node which is possibly an anchor node.
-    /// @param prepends_space Whether or not to prepend a space before an anchor property.
+    /// @param prepends_space Whether to prepend a space before an anchor property.
     /// @param str A string to hold serialization result.
     /// @return true if an anchor property has been appended, false otherwise.
     bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const {
@@ -9878,7 +9878,7 @@ private:
 
     /// @brief Append an alias property if it's available. Do nothing otherwise.
     /// @param node The target node which is possibly an alias node.
-    /// @param prepends_space Whether or not to prepend a space before an alias property.
+    /// @param prepends_space Whether to prepend a space before an alias property.
     /// @param str A string to hold serialization result.
     /// @return true if an alias property has been appended, false otherwise.
     bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const {
@@ -9909,7 +9909,7 @@ private:
 
     /// @brief Get a string value from the given node and, if necessary, escape its contents.
     /// @param[in] node The target string YAML node.
-    /// @param[out] is_escaped Whether or not the contents of an ouput string has been escaped.
+    /// @param[out] is_escaped Whether the contents of an output string has been escaped.
     /// @return The (escaped) string node value.
     typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
         FK_YAML_ASSERT(node.is_string());
@@ -9926,7 +9926,7 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP_ */
+#endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP */
 
 // #include <fkYAML/detail/types/node_t.hpp>
 
@@ -9939,8 +9939,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
-#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP
+#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP
 
 #include <cstdint>
 
@@ -9981,7 +9981,7 @@ inline yaml_version_type convert_to_yaml_version_type(yaml_version_t t) noexcept
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP */
 
 // #include <fkYAML/exception.hpp>
 
@@ -9996,8 +9996,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_NODE_VALUE_CONVERTER_HPP_
-#define FK_YAML_NODE_VALUE_CONVERTER_HPP_
+#ifndef FK_YAML_NODE_VALUE_CONVERTER_HPP
+#define FK_YAML_NODE_VALUE_CONVERTER_HPP
 
 #include <utility>
 
@@ -10012,8 +10012,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
 
 #include <limits>
 #include <map>
@@ -10279,7 +10279,7 @@ namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-n
 {
 #endif
 
-/// @brief A blobal object to represent ADL friendly from_node functor.
+/// @brief A global object to represent ADL friendly from_node functor.
 // NOLINTNEXTLINE(misc-definitions-in-headers)
 FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail::from_node_fn>::value;
 
@@ -10289,7 +10289,7 @@ FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP */
 
 // #include <fkYAML/detail/conversions/to_node.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -10300,8 +10300,8 @@ FK_YAML_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
 
 #include <utility>
 
@@ -10325,11 +10325,11 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 ///////////////////////////////////
 
 /// @brief The external constructor template for basic_node objects.
-/// @note All the non-specialized instanciations results in compilation error since such instantiations are not
+/// @note All the non-specialized instantiations results in compilation error since such instantiations are not
 /// supported.
 /// @warning All the specialization must call n.m_node_value.destroy() first in the construct function to avoid
 /// memory leak.
-/// @tparam node_type The resulting YAMK node value type.
+/// @tparam node_type The resulting YAML node value type.
 template <node_type>
 struct external_node_constructor;
 
@@ -10513,7 +10513,7 @@ inline void to_node(BasicNodeType& n, T&& s) noexcept {
 }
 
 /// @brief to_node function for BasicNodeType::mapping_type objects.
-/// @tparam BasicNodeType A basid_node template instance type.
+/// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T A mapping node value type.
 /// @param n A basic_node object.
 /// @param m A mapping node value object.
@@ -10627,7 +10627,7 @@ namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-n
 {
 #endif
 
-/// @brief A blobal object to represent ADL friendly to_node functor.
+/// @brief A global object to represent ADL friendly to_node functor.
 // NOLINTNEXTLINE(misc-definitions-in-headers)
 FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::to_node_fn>::value;
 
@@ -10637,7 +10637,7 @@ FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -10677,7 +10677,7 @@ public:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_VALUE_CONVERTER_HPP_ */
+#endif /* FK_YAML_NODE_VALUE_CONVERTER_HPP */
 
 // #include <fkYAML/ordered_map.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -10688,8 +10688,8 @@ FK_YAML_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_ORDERED_MAP_HPP_
-#define FK_YAML_ORDERED_MAP_HPP_
+#ifndef FK_YAML_ORDERED_MAP_HPP
+#define FK_YAML_ORDERED_MAP_HPP
 
 #include <functional>
 #include <initializer_list>
@@ -10856,7 +10856,7 @@ private:
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_ORDERED_MAP_HPP_ */
+#endif /* FK_YAML_ORDERED_MAP_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -10936,7 +10936,7 @@ private:
     using initializer_list_t = std::initializer_list<detail::node_ref_storage<basic_node>>;
 
     /// @brief The actual storage for a YAML node value of the @ref basic_node class.
-    /// @details This union combines the different sotrage types for the YAML value types defined in @ref node_t.
+    /// @details This union combines the different storage types for the YAML value types defined in @ref node_t.
     /// @note Container types are stored as pointers so that the size of this union will not exceed 64 bits by
     /// default.
     union node_value {
@@ -11595,7 +11595,7 @@ public:
             ret = (*(p_this_value->p_mapping) < *(p_other_value->p_mapping));
             break;
         case detail::node_attr_bits::null_bit: // LCOV_EXCL_LINE
-            // Will not come here since null nodes are alyways the same.
+            // Will not come here since null nodes are always the same.
             break; // LCOV_EXCL_LINE
         case detail::node_attr_bits::bool_bit:
             // false < true
@@ -11775,7 +11775,7 @@ public:
         }
     }
 
-    /// @brief Check whether or not this basic_node object has a given key in its inner mapping node value.
+    /// @brief Check whether this basic_node object has a given key in its inner mapping node value.
     /// @tparam KeyType A key type compatible with basic_node.
     /// @param key A key to the target value in the mapping node value.
     /// @return true if the target node is a mapping and has the given key, false otherwise.
@@ -11799,7 +11799,7 @@ public:
         return false;
     }
 
-    /// @brief Check whether or not this basic_node object has a given key in its inner mapping Node value.
+    /// @brief Check whether this basic_node object has a given key in its inner mapping Node value.
     /// @tparam KeyType A key type which is a kind of basic_node template class.
     /// @param[in] key A key to the target value in the YAML mapping node value.
     /// @return true if the YAML node is a mapping and has the given key, false otherwise.
@@ -12014,7 +12014,7 @@ public:
         set_yaml_version_type(detail::convert_to_yaml_version_type(version));
     }
 
-    /// @brief Check whether or not this basic_node object has already had any anchor name.
+    /// @brief Check whether this basic_node object has already had any anchor name.
     /// @return true if ths basic_node has an anchor name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
     bool has_anchor_name() const noexcept {
@@ -12089,7 +12089,7 @@ public:
         m_prop.anchor = std::move(anchor_name);
     }
 
-    /// @brief Check whether or not this basic_node object has already had any tag name.
+    /// @brief Check whether this basic_node object has already had any tag name.
     /// @return true if ths basic_node has a tag name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
     bool has_tag_name() const noexcept {
@@ -12538,4 +12538,4 @@ inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_HPP_ */
+#endif /* FK_YAML_NODE_HPP */

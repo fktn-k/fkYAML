@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_TYPES_NODE_T_HPP_
-#define FK_YAML_DETAIL_TYPES_NODE_T_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_NODE_T_HPP
+#define FK_YAML_DETAIL_TYPES_NODE_T_HPP
 
 #include <cstdint>
 #include <string>
@@ -93,4 +93,4 @@ inline node_type convert_to_node_type(node_t t) {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP */

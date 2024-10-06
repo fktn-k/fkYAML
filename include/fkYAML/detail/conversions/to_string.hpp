@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef TO__string_HPP_
-#define TO__string_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_STRING_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_TO_STRING_HPP
 
 #include <cmath>
 #include <limits>
@@ -89,4 +89,4 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* TO__string_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_STRING_HPP */

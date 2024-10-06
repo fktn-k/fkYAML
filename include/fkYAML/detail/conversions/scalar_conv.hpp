@@ -11,8 +11,8 @@
 // types. So, some implementations don't follow the convensions in the standard C++ functions. For example, octals must
 // begin with "0o" (not "0"), which is specified in the YAML spec 1.2.
 
-#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
-#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_
+#ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
+#define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
 
 #include <cmath>
 #include <cstring>
@@ -761,7 +761,7 @@ inline bool atof_impl(const char* p_begin, const char* p_end, double& f) {
 
 /// @brief Converts a scalar into a floating point value.
 /// @tparam CharItr The type of char iterators. Its value type must be char (maybe cv-qualified).
-/// @tparam FloatType The output floatint point value type.
+/// @tparam FloatType The output floating point value type.
 /// @param begin The iterator to the first element of the scalar.
 /// @param end The iterator to the past-the-end element of the scalar.
 /// @param f The output floating point value holder.
@@ -829,4 +829,4 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP_ */
+#endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP */

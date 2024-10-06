@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_NODE_HPP_
-#define FK_YAML_NODE_HPP_
+#ifndef FK_YAML_NODE_HPP
+#define FK_YAML_NODE_HPP
 
 #include <algorithm>
 #include <cstdint>
@@ -116,7 +116,7 @@ private:
     using initializer_list_t = std::initializer_list<detail::node_ref_storage<basic_node>>;
 
     /// @brief The actual storage for a YAML node value of the @ref basic_node class.
-    /// @details This union combines the different sotrage types for the YAML value types defined in @ref node_t.
+    /// @details This union combines the different storage types for the YAML value types defined in @ref node_t.
     /// @note Container types are stored as pointers so that the size of this union will not exceed 64 bits by
     /// default.
     union node_value {
@@ -775,7 +775,7 @@ public:
             ret = (*(p_this_value->p_mapping) < *(p_other_value->p_mapping));
             break;
         case detail::node_attr_bits::null_bit: // LCOV_EXCL_LINE
-            // Will not come here since null nodes are alyways the same.
+            // Will not come here since null nodes are always the same.
             break; // LCOV_EXCL_LINE
         case detail::node_attr_bits::bool_bit:
             // false < true
@@ -955,7 +955,7 @@ public:
         }
     }
 
-    /// @brief Check whether or not this basic_node object has a given key in its inner mapping node value.
+    /// @brief Check whether this basic_node object has a given key in its inner mapping node value.
     /// @tparam KeyType A key type compatible with basic_node.
     /// @param key A key to the target value in the mapping node value.
     /// @return true if the target node is a mapping and has the given key, false otherwise.
@@ -979,7 +979,7 @@ public:
         return false;
     }
 
-    /// @brief Check whether or not this basic_node object has a given key in its inner mapping Node value.
+    /// @brief Check whether this basic_node object has a given key in its inner mapping Node value.
     /// @tparam KeyType A key type which is a kind of basic_node template class.
     /// @param[in] key A key to the target value in the YAML mapping node value.
     /// @return true if the YAML node is a mapping and has the given key, false otherwise.
@@ -1194,7 +1194,7 @@ public:
         set_yaml_version_type(detail::convert_to_yaml_version_type(version));
     }
 
-    /// @brief Check whether or not this basic_node object has already had any anchor name.
+    /// @brief Check whether this basic_node object has already had any anchor name.
     /// @return true if ths basic_node has an anchor name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
     bool has_anchor_name() const noexcept {
@@ -1269,7 +1269,7 @@ public:
         m_prop.anchor = std::move(anchor_name);
     }
 
-    /// @brief Check whether or not this basic_node object has already had any tag name.
+    /// @brief Check whether this basic_node object has already had any tag name.
     /// @return true if ths basic_node has a tag name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
     bool has_tag_name() const noexcept {
@@ -1718,4 +1718,4 @@ inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_NODE_HPP_ */
+#endif /* FK_YAML_NODE_HPP */
