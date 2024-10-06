@@ -875,7 +875,8 @@ private:
             case lexical_token_t::PLAIN_SCALAR:
             case lexical_token_t::SINGLE_QUOTED_SCALAR:
             case lexical_token_t::DOUBLE_QUOTED_SCALAR:
-            case lexical_token_t::BLOCK_SCALAR: {
+            case lexical_token_t::BLOCK_LITERAL_SCALAR:
+            case lexical_token_t::BLOCK_FOLDED_SCALAR: {
                 bool do_continue = deserialize_scalar(lexer, indent, line, token);
                 if (do_continue) {
                     continue;
@@ -1053,17 +1054,17 @@ private:
     }
 
     /// @brief Creates a YAML scalar node with the retrieved token information by the lexer.
-    /// @param lexer The lexical analyzer to be used.
     /// @param type The type of the last lexical token.
     /// @param indent The last indent size.
     /// @param line The last line.
+    /// @param lexer The lexical analyzer to be used.
     /// @return The created YAML scalar node.
-    basic_node_type create_scalar_node(const lexical_token& token, uint32_t indent, uint32_t line) {
+    basic_node_type create_scalar_node(const lexical_token& token, uint32_t indent, uint32_t line, lexer_type& lexer) {
         lexical_token_t type = token.type;
         FK_YAML_ASSERT(
             type == lexical_token_t::PLAIN_SCALAR || type == lexical_token_t::SINGLE_QUOTED_SCALAR ||
-            type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_SCALAR ||
-            type == lexical_token_t::ALIAS_PREFIX);
+            type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_LITERAL_SCALAR ||
+            type == lexical_token_t::BLOCK_FOLDED_SCALAR || type == lexical_token_t::ALIAS_PREFIX);
 
         if (type == lexical_token_t::ALIAS_PREFIX) {
             if FK_YAML_UNLIKELY (m_needs_tag_impl) {
@@ -1093,7 +1094,22 @@ private:
             tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
         }
 
-        basic_node_type node = scalar_parser_type(line, indent).parse(type, tag_type, token.str);
+        basic_node_type node {};
+        switch (type) {
+        case lexical_token_t::PLAIN_SCALAR:
+        case lexical_token_t::SINGLE_QUOTED_SCALAR:
+        case lexical_token_t::DOUBLE_QUOTED_SCALAR:
+            node = scalar_parser_type(line, indent).parse_flow(type, tag_type, token.str);
+            break;
+        case lexical_token_t::BLOCK_LITERAL_SCALAR:
+        case lexical_token_t::BLOCK_FOLDED_SCALAR:
+            node = scalar_parser_type(line, indent)
+                       .parse_block(type, tag_type, token.str, lexer.get_block_scalar_header());
+            break;
+        default:
+            break;
+        }
+
         apply_directive_set(node);
         apply_node_properties(node);
 
@@ -1107,7 +1123,7 @@ private:
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
     bool deserialize_scalar(lexer_type& lexer, uint32_t& indent, uint32_t& line, lexical_token& token) {
-        basic_node_type node = create_scalar_node(token, indent, line);
+        basic_node_type node = create_scalar_node(token, indent, line, lexer);
 
         if (mp_current_node->is_mapping()) {
             add_new_key(std::move(node), line, indent);

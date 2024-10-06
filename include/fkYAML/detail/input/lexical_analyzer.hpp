@@ -18,6 +18,7 @@
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
+#include <fkYAML/detail/input/block_scalar_header.hpp>
 #include <fkYAML/detail/input/position_tracker.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/str_view.hpp>
@@ -42,18 +43,6 @@ const uint32_t document_directive_bit = 1u << 1u;
 
 /// @brief A class which lexically analyzes YAML formatted inputs.
 class lexical_analyzer {
-private:
-    enum class block_style_indicator_t {
-        LITERAL, //!< keeps newlines inside the block as they are indicated by a pipe `|`.
-        FOLDED,  //!< replaces newlines inside the block with spaces indicated by a right angle bracket `>`.
-    };
-
-    enum class chomping_indicator_t {
-        STRIP, //!< excludes final line breaks and trailing empty lines indicated by `-`.
-        KEEP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
-        CLIP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
-    };
-
 public:
     /// @brief Construct a new lexical_analyzer object.
     /// @tparam InputAdapterType The type of the input adapter.
@@ -237,24 +226,23 @@ public:
             scan_scalar(token);
             return token;
         }
-        case '|': {
-            chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            uint32_t indent = 0;
-            ++m_cur_itr;
-            get_block_style_metadata(chomp_type, indent);
-            scan_block_style_string_token(block_style_indicator_t::LITERAL, chomp_type, indent);
-            token.type = lexical_token_t::BLOCK_SCALAR;
-            token.str = m_value_buffer;
-            return token;
-        }
+        case '|':
         case '>': {
-            chomping_indicator_t chomp_type = chomping_indicator_t::KEEP;
-            uint32_t indent = 0;
-            ++m_cur_itr;
-            get_block_style_metadata(chomp_type, indent);
-            scan_block_style_string_token(block_style_indicator_t::FOLDED, chomp_type, indent);
-            token.type = lexical_token_t::BLOCK_SCALAR;
-            token.str = m_value_buffer;
+            str_view sv {m_token_begin_itr, m_end_itr};
+            std::size_t header_end_pos = sv.find('\n');
+            if (header_end_pos == str_view::npos) {
+                header_end_pos = sv.size();
+            }
+
+            FK_YAML_ASSERT(!sv.empty());
+            token.type = (sv[0] == '|') ? lexical_token_t::BLOCK_LITERAL_SCALAR : lexical_token_t::BLOCK_FOLDED_SCALAR;
+
+            str_view header_line = sv.substr(1, header_end_pos - 1);
+            m_block_scalar_header = convert_to_block_scalar_header(header_line);
+
+            m_token_begin_itr = sv.begin() + (header_end_pos + 1);
+            scan_block_style_string_token(m_block_scalar_header.indent, token.str);
+
             return token;
         }
         default:
@@ -291,6 +279,12 @@ public:
     /// @return str_view A tag prefix.
     str_view get_tag_prefix() const noexcept {
         return m_tag_prefix;
+    }
+
+    /// @brief Get block scalar header information.
+    /// @return block_scalar_header Block scalar header information.
+    block_scalar_header get_block_scalar_header() const noexcept {
+        return m_block_scalar_header;
     }
 
     /// @brief Toggles the context state between flow and block.
@@ -831,198 +825,80 @@ private:
     /// @param style The style of the given token, either literal or folded.
     /// @param chomp The chomping indicator type of the given token, either strip, keep or clip.
     /// @param indent The indent size specified for the given token.
-    void scan_block_style_string_token(block_style_indicator_t style, chomping_indicator_t chomp, uint32_t indent) {
-        m_value_buffer.clear();
+    void scan_block_style_string_token(uint32_t& indent, str_view& token) {
+        str_view sv {m_token_begin_itr, m_end_itr};
 
         // Handle leading all-space lines.
-        for (char current = 0; m_cur_itr != m_end_itr; ++m_cur_itr) {
-            current = *m_cur_itr;
-
-            if (current == ' ') {
-                continue;
-            }
-
-            if (current == '\n') {
-                m_value_buffer.push_back('\n');
-                continue;
-            }
-
-            break;
-        }
-
-        if (m_cur_itr == m_end_itr) {
-            if (chomp != chomping_indicator_t::KEEP) {
-                m_value_buffer.clear();
-            }
+        constexpr str_view space_filter = " \t\n";
+        std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
+        if (first_non_space_pos == str_view::npos) {
+            // empty block scalar
+            indent = 1; // FIXME: this is just a workaround for assertion in scalar_parser.
+            token = sv;
             return;
         }
 
-        m_pos_tracker.update_position(m_cur_itr);
-        uint32_t cur_indent = m_pos_tracker.get_cur_pos_in_line();
-
-        // TODO: preserve and compare the last indentation with `cur_indent`
-        if (indent == 0) {
-            indent = cur_indent;
-        }
-        else if FK_YAML_UNLIKELY (cur_indent < indent) {
-            emit_error("A block style scalar is less indented than the indicated level.");
-        }
-
-        uint32_t chars_in_line = 0;
-        bool is_extra_indented = false;
-        m_token_begin_itr = m_cur_itr;
-        if (cur_indent > indent) {
-            if (style == block_style_indicator_t::FOLDED) {
-                m_value_buffer.push_back('\n');
-                is_extra_indented = true;
+        // get indentation of the first non-space character.
+        std::size_t last_newline_pos = sv.substr(0, first_non_space_pos).find_last_of('\n');
+        if (last_newline_pos == str_view::npos) {
+            // first_non_space_pos in on the first line.
+            uint32_t cur_indent = static_cast<uint32_t>(first_non_space_pos);
+            if (indent == 0) {
+                indent = cur_indent;
+            }
+            else if FK_YAML_UNLIKELY (cur_indent < indent) {
+                emit_error("A block style scalar is less indented than the indicated level.");
             }
 
-            uint32_t diff = cur_indent - indent;
-            m_token_begin_itr -= diff;
-            chars_in_line = diff;
+            last_newline_pos = 0;
+        }
+        else {
+            FK_YAML_ASSERT(last_newline_pos < first_non_space_pos);
+            uint32_t cur_indent = static_cast<uint32_t>(first_non_space_pos - last_newline_pos - 1);
+
+            // TODO: preserve and compare the last indentation with `cur_indent`
+            if (indent == 0) {
+                indent = cur_indent;
+            }
+            else if FK_YAML_UNLIKELY (cur_indent < indent) {
+                emit_error("A block style scalar is less indented than the indicated level.");
+            }
         }
 
-        for (; m_cur_itr != m_end_itr; ++m_cur_itr) {
-            char current = *m_cur_itr;
-            if (current == '\n') {
-                if (style == block_style_indicator_t::LITERAL) {
-                    if (chars_in_line == 0) {
-                        m_value_buffer.push_back('\n');
-                    }
-                    else {
-                        m_value_buffer.append(m_token_begin_itr, m_cur_itr + 1);
-                    }
-                }
-                // block_style_indicator_t::FOLDED
-                else if (chars_in_line == 0) {
-                    // Just append a newline if the current line is empty.
-                    m_value_buffer.push_back('\n');
-                }
-                else if (is_extra_indented) {
-                    // A line being more indented is not folded.
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr + 1);
-                }
-                else {
-                    m_value_buffer.append(m_token_begin_itr, m_cur_itr);
+        last_newline_pos = sv.find('\n', first_non_space_pos + 1);
+        if (last_newline_pos == str_view::npos) {
+            last_newline_pos = sv.size();
+        }
 
-                    // Append a newline if the next line is empty.
-                    bool is_end_of_token = false;
-                    bool is_next_empty = false;
-                    for (uint32_t i = 0; i < indent; i++) {
-                        if (++m_cur_itr == m_end_itr) {
-                            is_end_of_token = true;
-                            break;
-                        }
+        while (last_newline_pos < sv.size()) {
+            std::size_t cur_line_end_pos = sv.find('\n', last_newline_pos + 1);
+            if (cur_line_end_pos == str_view::npos) {
+                cur_line_end_pos = sv.size();
+            }
 
-                        char c = *m_cur_itr;
-                        if (c == ' ') {
-                            continue;
-                        }
-
-                        if (c == '\n') {
-                            is_next_empty = true;
-                            break;
-                        }
-
-                        is_end_of_token = true;
-                        break;
-                    }
-
-                    if (is_end_of_token) {
-                        m_value_buffer.push_back('\n');
-                        chars_in_line = 0;
-                        break;
-                    }
-
-                    if (is_next_empty) {
-                        m_value_buffer.push_back('\n');
-                        chars_in_line = 0;
-                        continue;
-                    }
-
-                    switch (char next = *(m_cur_itr + 1)) {
-                    case '\n':
-                        ++m_cur_itr;
-                        m_value_buffer.push_back(next);
-                        break;
-                    case ' ':
-                        // The next line is more indented, so a newline will be appended in the coming loops.
-                        break;
-                    default:
-                        m_value_buffer.push_back(' ');
-                        break;
-                    }
-                }
-
-                // Reset the values for the next line.
-                m_token_begin_itr = m_cur_itr + 1;
-                chars_in_line = 0;
-                is_extra_indented = false;
-
+            std::size_t cur_line_content_begin_pos = sv.find_first_not_of(' ', last_newline_pos + 1);
+            if (cur_line_content_begin_pos == str_view::npos) {
+                last_newline_pos = cur_line_end_pos;
                 continue;
             }
 
-            // Handle indentation
-            if (chars_in_line == 0) {
-                m_pos_tracker.update_position(m_cur_itr);
-                cur_indent = m_pos_tracker.get_cur_pos_in_line();
-                if (cur_indent < indent) {
-                    if (current != ' ') {
-                        // Interpret less indented non-space characters as the start of the next token.
-                        break;
-                    }
-                    // skip a space if not yet indented enough
-                    continue;
-                }
-
-                if (current == ' ' && style == block_style_indicator_t::FOLDED) {
-                    // A line being more indented is not folded.
-                    m_value_buffer.push_back('\n');
-                    is_extra_indented = true;
-                }
-                m_token_begin_itr = m_cur_itr;
-            }
-
-            ++chars_in_line;
-        }
-
-        if (chars_in_line > 0) {
-            m_value_buffer.append(m_token_begin_itr, m_cur_itr);
-        }
-
-        // Manipulate the trailing line endings chomping indicator type.
-        switch (chomp) {
-        case chomping_indicator_t::STRIP:
-            while (!m_value_buffer.empty()) {
-                // Empty strings are handled above, so no check for the case.
-                char last = m_value_buffer.back();
-                if (last != '\n') {
-                    break;
-                }
-                m_value_buffer.pop_back();
-            }
-            break;
-        case chomping_indicator_t::CLIP: {
-            char last = m_value_buffer.back();
-            if (last != '\n') {
-                // No need to chomp the trailing newlines.
+            FK_YAML_ASSERT(last_newline_pos < cur_line_content_begin_pos);
+            uint32_t cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
+            if (cur_indent < indent && sv[cur_line_content_begin_pos] != '\n') {
+                // Interpret less indented non-space characters as the start of the next token.
                 break;
             }
-            uint32_t buf_size = static_cast<uint32_t>(m_value_buffer.size());
-            while (buf_size > 1) {
-                // Strings with only newlines are handled above, so no check for the case.
-                char second_last = m_value_buffer[buf_size - 2];
-                if (second_last != '\n') {
-                    break;
-                }
-                m_value_buffer.pop_back();
-                --buf_size;
-            }
-            break;
+
+            last_newline_pos = cur_line_end_pos;
         }
-        case chomping_indicator_t::KEEP:
-            break;
+
+        // include last newline character if not all characters have been consumed yet.
+        if (last_newline_pos < sv.size()) {
+            ++last_newline_pos;
         }
+
+        token = sv.substr(0, last_newline_pos);
+        m_cur_itr = token.end();
     }
 
     /// @brief Handle unescaped control characters.
@@ -1099,23 +975,32 @@ private:
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
-    void get_block_style_metadata(chomping_indicator_t& chomp_type, uint32_t& indent) {
-        chomp_type = chomping_indicator_t::CLIP;
-        indent = 0;
+    /// @return
+    block_scalar_header convert_to_block_scalar_header(str_view& line) {
+        constexpr str_view comment_prefix = " #";
+        std::size_t comment_begin_pos = line.find(comment_prefix);
+        if (comment_begin_pos != str_view::npos) {
+            line = line.substr(0, comment_begin_pos);
+        }
 
-        while (m_cur_itr != m_end_itr) {
-            switch (*m_cur_itr) {
+        if (line.empty()) {
+            return {};
+        }
+
+        block_scalar_header header {};
+        for (const char c : line) {
+            switch (c) {
             case '-':
-                if FK_YAML_UNLIKELY (chomp_type != chomping_indicator_t::CLIP) {
+                if FK_YAML_UNLIKELY (header.chomp != chomping_indicator_t::CLIP) {
                     emit_error("Too many block chomping indicators specified.");
                 }
-                chomp_type = chomping_indicator_t::STRIP;
+                header.chomp = chomping_indicator_t::STRIP;
                 break;
             case '+':
-                if FK_YAML_UNLIKELY (chomp_type != chomping_indicator_t::CLIP) {
+                if FK_YAML_UNLIKELY (header.chomp != chomping_indicator_t::CLIP) {
                     emit_error("Too many block chomping indicators specified.");
                 }
-                chomp_type = chomping_indicator_t::KEEP;
+                header.chomp = chomping_indicator_t::KEEP;
                 break;
             case '0':
                 emit_error("An indentation level for a block scalar cannot be 0.");
@@ -1128,26 +1013,20 @@ private:
             case '7':
             case '8':
             case '9':
-                if FK_YAML_UNLIKELY (indent > 0) {
+                if FK_YAML_UNLIKELY (header.indent > 0) {
                     emit_error("Invalid indentation level for a block scalar. It must be between 1 and 9.");
                 }
-                indent = static_cast<char>(*m_cur_itr - '0');
+                header.indent = static_cast<char>(c - '0');
                 break;
             case ' ':
             case '\t':
                 break;
-            case '\n':
-                ++m_cur_itr;
-                return;
-            case '#':
-                skip_until_line_end();
-                return;
             default:
                 emit_error("Invalid character found in a block scalar header.");
             }
-
-            ++m_cur_itr;
         }
+
+        return header;
     }
 
     /// @brief Skip white spaces (half-width spaces and tabs) from the current position.
@@ -1211,6 +1090,8 @@ private:
     str_view m_tag_handle {};
     /// The last tag prefix.
     str_view m_tag_prefix {};
+    /// The last block scalar header.
+    block_scalar_header m_block_scalar_header {};
     /// The beginning position of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)

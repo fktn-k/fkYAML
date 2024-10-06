@@ -12,6 +12,7 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/scalar_conv.hpp>
+#include <fkYAML/detail/input/block_scalar_header.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/input/tag_t.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
@@ -52,19 +53,36 @@ public:
     scalar_parser& operator=(const scalar_parser&) noexcept = default;
     scalar_parser& operator=(scalar_parser&&) noexcept = default;
 
-    basic_node_type parse(lexical_token_t lex_type, tag_t tag_type, str_view token) {
+    basic_node_type parse_flow(lexical_token_t lex_type, tag_t tag_type, str_view token) {
         FK_YAML_ASSERT(
             lex_type == lexical_token_t::PLAIN_SCALAR || lex_type == lexical_token_t::SINGLE_QUOTED_SCALAR ||
-            lex_type == lexical_token_t::DOUBLE_QUOTED_SCALAR || lex_type == lexical_token_t::BLOCK_SCALAR);
+            lex_type == lexical_token_t::DOUBLE_QUOTED_SCALAR);
         FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
 
-        token = parse_scalar_token(lex_type, token);
+        token = parse_flow_scalar_token(lex_type, token);
+        node_type value_type = decide_value_type(lex_type, tag_type, token);
+        return create_scalar_node(value_type, token);
+    }
+
+    basic_node_type parse_block(
+        lexical_token_t lex_type, tag_t tag_type, str_view token, const block_scalar_header& header) {
+        FK_YAML_ASSERT(
+            lex_type == lexical_token_t::BLOCK_LITERAL_SCALAR || lex_type == lexical_token_t::BLOCK_FOLDED_SCALAR);
+        FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
+
+        if (lex_type == lexical_token_t::BLOCK_LITERAL_SCALAR) {
+            token = parse_block_literal_scalar(token, header);
+        }
+        else {
+            token = parse_block_folded_scalar(token, header);
+        }
+
         node_type value_type = decide_value_type(lex_type, tag_type, token);
         return create_scalar_node(value_type, token);
     }
 
 private:
-    str_view parse_scalar_token(lexical_token_t lex_type, str_view token) {
+    str_view parse_flow_scalar_token(lexical_token_t lex_type, str_view token) {
         switch (lex_type) {
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
             token = parse_single_quoted_scalar(token);
@@ -170,6 +188,147 @@ private:
         }
 
         return {m_buffer};
+    }
+
+    str_view parse_block_literal_scalar(str_view token, const block_scalar_header& header) {
+        FK_YAML_ASSERT(header.indent > 0);
+
+        if FK_YAML_UNLIKELY (token.empty()) {
+            return token;
+        }
+
+        m_use_owned_buffer = true;
+        m_buffer.reserve(token.size());
+
+        std::size_t cur_line_begin_pos = 0;
+        do {
+            bool has_newline_at_end = true;
+            std::size_t cur_line_end_pos = token.find('\n', cur_line_begin_pos);
+            if (cur_line_end_pos == str_view::npos) {
+                has_newline_at_end = false;
+                cur_line_end_pos = token.size();
+            }
+
+            std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
+            str_view line = token.substr(cur_line_begin_pos, line_size);
+
+            if (line.size() > header.indent) {
+                m_buffer.append(line.begin() + header.indent, line.end());
+            }
+
+            if (!has_newline_at_end) {
+                break;
+            }
+
+            m_buffer.push_back('\n');
+            cur_line_begin_pos = cur_line_end_pos + 1;
+        } while (cur_line_begin_pos < token.size());
+
+        process_chomping(header.chomp);
+
+        return {m_buffer};
+    }
+
+    str_view parse_block_folded_scalar(str_view token, const block_scalar_header& header) {
+        FK_YAML_ASSERT(header.indent > 0);
+
+        if FK_YAML_UNLIKELY (token.empty()) {
+            return token;
+        }
+
+        m_use_owned_buffer = true;
+        m_buffer.reserve(token.size());
+
+        std::size_t cur_line_begin_pos = 0;
+        bool prev_line_has_content = false;
+        do {
+            bool has_newline_at_end = true;
+            std::size_t cur_line_end_pos = token.find('\n', cur_line_begin_pos);
+            if (cur_line_end_pos == str_view::npos) {
+                has_newline_at_end = false;
+                cur_line_end_pos = token.size();
+            }
+
+            std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
+            str_view line = token.substr(cur_line_begin_pos, line_size);
+
+            if (line.size() <= header.indent) {
+                // empty or less-indented lines are turned into a newline
+                m_buffer.push_back('\n');
+                prev_line_has_content = false;
+                continue;
+            }
+            else {
+                if (prev_line_has_content) {
+                    m_buffer.push_back(' ');
+                    // `prev_line_has_content` is not set to false since the current line also has contents.
+                }
+
+                m_buffer.append(line.begin(), line.end());
+
+                std::size_t non_space_pos = line.find_first_not_of(' ');
+                if (non_space_pos > header.indent && has_newline_at_end) {
+                    // more-indented lines are not folded.
+                    m_buffer.push_back('\n');
+                }
+            }
+
+            if (!has_newline_at_end) {
+                break;
+            }
+
+            cur_line_begin_pos = cur_line_end_pos + 1;
+        } while (cur_line_begin_pos < token.size());
+
+        std::size_t non_break_pos = m_buffer.find_last_not_of('\n');
+        if (non_break_pos != std::string::npos) {
+            // The final content line break are not folded.
+            m_buffer.push_back('\n');
+        }
+
+        process_chomping(header.chomp);
+
+        return {m_buffer};
+    }
+
+    void process_chomping(chomping_indicator_t chomp) {
+        if (!m_buffer.empty()) {
+            switch (chomp) {
+            case chomping_indicator_t::STRIP: {
+                std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
+                if (content_end_pos == std::string::npos) {
+                    // if the scalar has no content line, all lines are considered as trailing empty lines.
+                    m_buffer.clear();
+                    break;
+                }
+
+                // remove all trailing newlines.
+                m_buffer.erase(content_end_pos);
+
+                break;
+            }
+            case chomping_indicator_t::CLIP: {
+                std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
+                if (content_end_pos == std::string::npos) {
+                    // if the scalar has no content line, all lines are considered as trailing empty lines.
+                    m_buffer.clear();
+                    break;
+                }
+
+                if (content_end_pos == m_buffer.size() - 1) {
+                    // no trailing empty lines
+                    break;
+                }
+
+                // remove all trailing empty lines.
+                m_buffer.erase(content_end_pos + 1);
+
+                break;
+            }
+            case chomping_indicator_t::KEEP:
+                break;
+            }
+        }
     }
 
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
