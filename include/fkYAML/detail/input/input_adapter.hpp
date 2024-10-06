@@ -852,7 +852,7 @@ private:
                 if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
-            };
+            }
 
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);

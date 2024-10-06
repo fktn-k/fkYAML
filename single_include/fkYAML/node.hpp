@@ -554,7 +554,7 @@ struct is_comparable : std::false_type {};
 /// @brief A partial specialization of is_comparable if T and U are comparable types.
 /// @tparam Comparator An object type to compare T and U objects.
 /// @tparam T A type for comparison.
-/// @tparam U Ther other type for comparison.
+/// @tparam U The other type for comparison.
 template <typename Comparator, typename T, typename U>
 struct is_comparable<
     Comparator, T, U,
@@ -759,7 +759,7 @@ using from_node_function_t = decltype(T::from_node(std::declval<Args>()...));
 /// @tparam T A type which provides to_node function.
 /// @tparam Args Argument types passed to to_node function.
 template <typename T, typename... Args>
-using to_node_funcion_t = decltype(T::to_node(std::declval<Args>()...));
+using to_node_function_t = decltype(T::to_node(std::declval<Args>()...));
 
 ///////////////////////////////////////////////////
 //   basic_node conversion API detection traits
@@ -800,7 +800,7 @@ struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>> {
     using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
-    static constexpr bool value = is_detected_exact<void, to_node_funcion_t, converter, BasicNodeType&, T>::value;
+    static constexpr bool value = is_detected_exact<void, to_node_function_t, converter, BasicNodeType&, T>::value;
 };
 
 ///////////////////////////////////////
@@ -8783,7 +8783,7 @@ private:
                 if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
-            };
+            }
 
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);

@@ -30,7 +30,7 @@ struct is_comparable : std::false_type {};
 /// @brief A partial specialization of is_comparable if T and U are comparable types.
 /// @tparam Comparator An object type to compare T and U objects.
 /// @tparam T A type for comparison.
-/// @tparam U Ther other type for comparison.
+/// @tparam U The other type for comparison.
 template <typename Comparator, typename T, typename U>
 struct is_comparable<
     Comparator, T, U,
