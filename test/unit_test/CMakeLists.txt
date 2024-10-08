@@ -230,6 +230,7 @@ add_executable(
   test_ordered_map_class.cpp
   test_position_tracker_class.cpp
   test_scalar_conv.cpp
+  test_scalar_parser_class.cpp
   test_scalar_scanner_class.cpp
   test_serializer_class.cpp
   test_str_view_class.cpp

@@ -503,8 +503,6 @@ TEST_CASE("LexicalAnalyzer_MultiByteCharString") {
 }
 
 TEST_CASE("LexicalAnalyzer_EscapedUnicodeCharacter") {
-    using value_pair_t = std::pair<fkyaml::detail::str_view, std::string>;
-    using char_traits_t = std::char_traits<char>;
     auto input = GENERATE(
         fkyaml::detail::str_view("\"\\x00\""),
         fkyaml::detail::str_view("\"\\x40\""),
@@ -597,6 +595,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.begin() == &input[3]);
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::STRIP);
+        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
     }
 
     SECTION("empty literal string scalar with clip chomping") {
@@ -609,6 +608,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.begin() == &input[2]);
         REQUIRE(token.str.end() == &input[0] + 5);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
+        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
     }
 
     SECTION("empty literal string scalar with keep chomping") {
@@ -621,6 +621,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.begin() == &input[3]);
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::KEEP);
+        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
     }
 
     SECTION("literal string scalar with 0 indent level.") {
@@ -831,7 +832,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.begin() == &input[3]);
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::STRIP);
-        REQUIRE(lexer.get_block_scalar_header().indent == 1);
+        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
     }
 
     SECTION("empty folded string scalar with clip chomping") {
@@ -844,7 +845,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.begin() == &input[2]);
         REQUIRE(token.str.end() == &input[0] + 5);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
-        REQUIRE(lexer.get_block_scalar_header().indent == 1);
+        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
     }
 
     SECTION("empty folded string scalar with keep chomping") {
@@ -857,7 +858,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.begin() == &input[3]);
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::KEEP);
-        REQUIRE(lexer.get_block_scalar_header().indent == 1);
+        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
     }
 
     SECTION("folded string scalar with 0 indent level") {

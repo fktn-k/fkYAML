@@ -12,6 +12,7 @@
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/scalar_conv.hpp>
+#include <fkYAML/detail/encodings/yaml_escaper.hpp>
 #include <fkYAML/detail/input/block_scalar_header.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>
 #include <fkYAML/detail/input/tag_t.hpp>
@@ -162,8 +163,9 @@ private:
 
             if (token[pos] == '\\') {
                 FK_YAML_ASSERT(pos + 1 < token.size());
+                m_buffer.append(token.begin(), token.begin() + pos);
+
                 if (token[pos + 1] != '\n') {
-                    m_buffer.append(token.begin(), token.begin() + pos);
                     token.remove_prefix(pos);
                     const char* p_escape_begin = token.begin();
                     bool is_valid_escaping = yaml_escaper::unescape(p_escape_begin, token.end(), m_buffer);
@@ -174,6 +176,13 @@ private:
 
                     // `p_escape_begin` points to the last element of the escape sequence.
                     token.remove_prefix((p_escape_begin - token.begin()) + 1);
+                }
+                else {
+                    std::size_t non_space_pos = token.find_first_not_of(" \t", pos + 2);
+                    if (non_space_pos == str_view::npos) {
+                        non_space_pos = token.size();
+                    }
+                    token.remove_prefix(non_space_pos);
                 }
             }
             else {
@@ -302,8 +311,13 @@ private:
                     break;
                 }
 
-                // remove all trailing newlines.
-                m_buffer.erase(content_end_pos);
+                if (content_end_pos == m_buffer.size() - 1) {
+                    // no last content line break nor trailing empty lines.
+                    break;
+                }
+
+                // remove the last content line break and all trailing empty lines.
+                m_buffer.erase(content_end_pos + 1);
 
                 break;
             }
@@ -321,7 +335,7 @@ private:
                 }
 
                 // remove all trailing empty lines.
-                m_buffer.erase(content_end_pos + 1);
+                m_buffer.erase(content_end_pos + 2);
 
                 break;
             }
@@ -333,7 +347,7 @@ private:
 
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
         // discard trailing white spaces which precedes the line break in the current line.
-        std::size_t last_non_space_pos = token.substr(0, newline_pos).find_last_not_of(" \t");
+        std::size_t last_non_space_pos = token.substr(0, newline_pos + 1).find_last_not_of(" \t");
         if (last_non_space_pos == str_view::npos) {
             m_buffer.append(token.begin(), newline_pos);
         }
@@ -355,6 +369,7 @@ private:
                 break;
             }
 
+            token.remove_prefix(non_space_pos + 1);
             ++empty_line_counts;
         } while (true);
 

@@ -17,7 +17,6 @@
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
-#include <fkYAML/detail/encodings/yaml_escaper.hpp>
 #include <fkYAML/detail/input/block_scalar_header.hpp>
 #include <fkYAML/detail/input/position_tracker.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
@@ -832,7 +831,7 @@ private:
         std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
         if (first_non_space_pos == str_view::npos) {
             // empty block scalar
-            indent = 1; // FIXME: this is just a workaround for assertion in scalar_parser.
+            indent = static_cast<uint32_t>(sv.size());
             token = sv;
             return;
         }
