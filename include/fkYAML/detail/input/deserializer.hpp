@@ -871,13 +871,64 @@ private:
                 }
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
-            case lexical_token_t::ALIAS_PREFIX:
+            case lexical_token_t::ALIAS_PREFIX: {
+                if FK_YAML_UNLIKELY (m_needs_tag_impl) {
+                    throw parse_error("Tag cannot be specified to an alias node", line, indent);
+                }
+
+                const std::string token_str = std::string(token.str.begin(), token.str.end());
+
+                uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
+                if FK_YAML_UNLIKELY (anchor_counts == 0) {
+                    throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
+                }
+
+                basic_node_type node {};
+                node.m_attrs |= detail::node_attr_bits::alias_bit;
+                node.m_prop.anchor = std::move(token_str);
+                detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
+
+                apply_directive_set(node);
+                apply_node_properties(node);
+
+                bool should_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
+                if (should_continue) {
+                    continue;
+                }
+                break;
+            }
             case lexical_token_t::PLAIN_SCALAR:
             case lexical_token_t::SINGLE_QUOTED_SCALAR:
-            case lexical_token_t::DOUBLE_QUOTED_SCALAR:
+            case lexical_token_t::DOUBLE_QUOTED_SCALAR: {
+                tag_t tag_type {tag_t::NONE};
+                if (m_needs_tag_impl) {
+                    tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
+                }
+
+                basic_node_type node = scalar_parser_type(line, indent).parse_flow(token.type, tag_type, token.str);
+                apply_directive_set(node);
+                apply_node_properties(node);
+
+                bool do_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
+                if (do_continue) {
+                    continue;
+                }
+                break;
+            }
             case lexical_token_t::BLOCK_LITERAL_SCALAR:
             case lexical_token_t::BLOCK_FOLDED_SCALAR: {
-                bool do_continue = deserialize_scalar(lexer, indent, line, token);
+                tag_t tag_type {tag_t::NONE};
+                if (m_needs_tag_impl) {
+                    tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
+                }
+
+                basic_node_type node =
+                    scalar_parser_type(line, indent)
+                        .parse_block(token.type, tag_type, token.str, lexer.get_block_scalar_header());
+                apply_directive_set(node);
+                apply_node_properties(node);
+
+                bool do_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
                 if (do_continue) {
                     continue;
                 }
@@ -1053,78 +1104,14 @@ private:
         }
     }
 
-    /// @brief Creates a YAML scalar node with the retrieved token information by the lexer.
-    /// @param type The type of the last lexical token.
-    /// @param indent The last indent size.
-    /// @param line The last line.
-    /// @param lexer The lexical analyzer to be used.
-    /// @return The created YAML scalar node.
-    basic_node_type create_scalar_node(const lexical_token& token, uint32_t indent, uint32_t line, lexer_type& lexer) {
-        lexical_token_t type = token.type;
-        FK_YAML_ASSERT(
-            type == lexical_token_t::PLAIN_SCALAR || type == lexical_token_t::SINGLE_QUOTED_SCALAR ||
-            type == lexical_token_t::DOUBLE_QUOTED_SCALAR || type == lexical_token_t::BLOCK_LITERAL_SCALAR ||
-            type == lexical_token_t::BLOCK_FOLDED_SCALAR || type == lexical_token_t::ALIAS_PREFIX);
-
-        if (type == lexical_token_t::ALIAS_PREFIX) {
-            if FK_YAML_UNLIKELY (m_needs_tag_impl) {
-                throw parse_error("Tag cannot be specified to an alias node", line, indent);
-            }
-
-            const std::string token_str = std::string(token.str.begin(), token.str.end());
-
-            uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
-            if FK_YAML_UNLIKELY (anchor_counts == 0) {
-                throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
-            }
-
-            basic_node_type node {};
-            node.m_attrs |= detail::node_attr_bits::alias_bit;
-            node.m_prop.anchor = std::move(token_str);
-            detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
-
-            apply_directive_set(node);
-            apply_node_properties(node);
-
-            return node;
-        }
-
-        tag_t tag_type {tag_t::NONE};
-        if (m_needs_tag_impl) {
-            tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-        }
-
-        basic_node_type node {};
-        switch (type) {
-        case lexical_token_t::PLAIN_SCALAR:
-        case lexical_token_t::SINGLE_QUOTED_SCALAR:
-        case lexical_token_t::DOUBLE_QUOTED_SCALAR:
-            node = scalar_parser_type(line, indent).parse_flow(type, tag_type, token.str);
-            break;
-        case lexical_token_t::BLOCK_LITERAL_SCALAR:
-        case lexical_token_t::BLOCK_FOLDED_SCALAR:
-            node = scalar_parser_type(line, indent)
-                       .parse_block(type, tag_type, token.str, lexer.get_block_scalar_header());
-            break;
-        default:
-            break;
-        }
-
-        apply_directive_set(node);
-        apply_node_properties(node);
-
-        return node;
-    }
-
     /// @brief Deserialize a detected scalar node.
     /// @param lexer The lexical analyzer to be used.
     /// @param node A detected scalar node by a lexer.
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
     /// @return true if next token has already been got, false otherwise.
-    bool deserialize_scalar(lexer_type& lexer, uint32_t& indent, uint32_t& line, lexical_token& token) {
-        basic_node_type node = create_scalar_node(token, indent, line, lexer);
-
+    bool deserialize_scalar(
+        lexer_type& lexer, basic_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {
         if (mp_current_node->is_mapping()) {
             add_new_key(std::move(node), line, indent);
             return false;
