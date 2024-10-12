@@ -240,7 +240,7 @@ private:
 
     /// @brief Deserializes the YAML directives if specified.
     /// @param lexer The lexical analyzer to be used.
-    /// @param last_type The variable to store the last lexical token type.
+    /// @param last_token Storage for last lexical token type.
     void deserialize_directives(lexer_type& lexer, lexical_token& last_token) {
         bool lacks_end_of_directives_marker = false;
         lexer.set_document_state(true);
@@ -331,7 +331,8 @@ private:
 
     /// @brief Deserializes the YAML nodes recursively.
     /// @param lexer The lexical analyzer to be used.
-    /// @param first_type The first lexical token type.
+    /// @param first_type The first lexical token.
+    /// @param last_type Storage for last lexical token type.
     void deserialize_node(lexer_type& lexer, const lexical_token& first_token, lexical_token_t& last_type) {
         lexical_token token = first_token;
         uint32_t line = lexer.get_lines_processed();
@@ -1104,9 +1105,10 @@ private:
 
     /// @brief Deserialize a detected scalar node.
     /// @param lexer The lexical analyzer to be used.
-    /// @param node A detected scalar node by a lexer.
+    /// @param node A scalar node.
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
+    /// @param token The storage for last lexical token.
     /// @return true if next token has already been got, false otherwise.
     bool deserialize_scalar(
         lexer_type& lexer, basic_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {

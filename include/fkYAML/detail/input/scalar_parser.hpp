@@ -24,6 +24,8 @@
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+/// @brief A parser for YAML scalars.
+/// @tparam BasicNodeType A type of the container for parsed YAML scalars.
 template <typename BasicNodeType>
 class scalar_parser {
     static_assert(is_basic_node<BasicNodeType>::value, "scalar_parser only accepts basic_node<...>");
@@ -42,11 +44,15 @@ private:
     using string_type = typename basic_node_type::string_type;
 
 public:
+    /// @brief Constructs a new scalar_parser object.
+    /// @param line Current line.
+    /// @param indent Current indentation.
     scalar_parser(uint32_t line, uint32_t indent) noexcept
         : m_line(line),
           m_indent(indent) {
     }
 
+    /// @brief Destroys a scalar_parser object.
     ~scalar_parser() noexcept = default;
 
     scalar_parser(const scalar_parser&) noexcept = default;
@@ -54,6 +60,11 @@ public:
     scalar_parser& operator=(const scalar_parser&) noexcept = default;
     scalar_parser& operator=(scalar_parser&&) noexcept = default;
 
+    /// @brief Parses a token into a flow scalar (either plain, single quoted or double quoted)
+    /// @param lex_type Lexical token type for the scalar.
+    /// @param tag_type Tag type for the scalar.
+    /// @param token Scalar contents.
+    /// @return Parsed YAML flow scalar object.
     basic_node_type parse_flow(lexical_token_t lex_type, tag_t tag_type, str_view token) {
         FK_YAML_ASSERT(
             lex_type == lexical_token_t::PLAIN_SCALAR || lex_type == lexical_token_t::SINGLE_QUOTED_SCALAR ||
@@ -65,6 +76,12 @@ public:
         return create_scalar_node(value_type, token);
     }
 
+    /// @brief Parses a token into a block scalar (either literal or folded)
+    /// @param lex_type Lexical token type for the scalar.
+    /// @param tag_type Tag type for the scalar.
+    /// @param token Scalar contents.
+    /// @param header Block scalar header information.
+    /// @return Parsed YAML block scalar object.
     basic_node_type parse_block(
         lexical_token_t lex_type, tag_t tag_type, str_view token, const block_scalar_header& header) {
         FK_YAML_ASSERT(
@@ -83,6 +100,10 @@ public:
     }
 
 private:
+    /// @brief Parses a token into a flow scalar contents.
+    /// @param lex_type Lexical token type for the scalar.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
     str_view parse_flow_scalar_token(lexical_token_t lex_type, str_view token) {
         switch (lex_type) {
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
@@ -99,6 +120,9 @@ private:
         return token;
     }
 
+    /// @brief Parses single quoted scalar contents.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
     str_view parse_single_quoted_scalar(str_view token) noexcept {
         if (token.empty()) {
             return token;
@@ -140,6 +164,9 @@ private:
         return {m_buffer};
     }
 
+    /// @brief Parses double quoted scalar contents.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
     str_view parse_double_quoted_scalar(str_view token) {
         if (token.empty()) {
             return token;
@@ -199,6 +226,10 @@ private:
         return {m_buffer};
     }
 
+    /// @brief Parses block literal scalar contents.
+    /// @param token Scalar contents.
+    /// @param header Block scalar header information.
+    /// @return View into the parsed scalar contents.
     str_view parse_block_literal_scalar(str_view token, const block_scalar_header& header) {
         if FK_YAML_UNLIKELY (token.empty()) {
             return token;
@@ -236,6 +267,10 @@ private:
         return {m_buffer};
     }
 
+    /// @brief Parses block folded scalar contents.
+    /// @param token Scalar contents.
+    /// @param header Block scalar header information.
+    /// @return View into the parsed scalar contents.
     str_view parse_block_folded_scalar(str_view token, const block_scalar_header& header) {
         if FK_YAML_UNLIKELY (token.empty()) {
             return token;
@@ -306,6 +341,8 @@ private:
         return {m_buffer};
     }
 
+    /// @brief Discards final content line break and trailing empty lines depending on the given chomping type.
+    /// @param chomp Chomping method type.
     void process_chomping(chomping_indicator_t chomp) {
         switch (chomp) {
         case chomping_indicator_t::STRIP: {
@@ -349,6 +386,9 @@ private:
         }
     }
 
+    /// @brief Applies line folding to flow scalar contents.
+    /// @param token Flow scalar contents.
+    /// @param newline_pos Position of the target newline code.
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
         // discard trailing white spaces which precedes the line break in the current line.
         std::size_t last_non_space_pos = token.substr(0, newline_pos + 1).find_last_not_of(" \t");
@@ -385,6 +425,11 @@ private:
         }
     }
 
+    /// @brief Decides scalar value type based on the lexical/tag types and scalar contents.
+    /// @param lex_type Lexical token type for the scalar.
+    /// @param tag_type Tag type for the scalar.
+    /// @param token Scalar contents.
+    /// @return Scalar value type.
     node_type decide_value_type(lexical_token_t lex_type, tag_t tag_type, str_view token) const noexcept {
         node_type value_type {node_type::STRING};
         if (lex_type == lexical_token_t::PLAIN_SCALAR) {
@@ -421,6 +466,10 @@ private:
         return value_type;
     }
 
+    /// @brief Creates YAML scalar object based on the value type and contents.
+    /// @param type Scalar value type.
+    /// @param token Scalar contents.
+    /// @return A YAML scalar object.
     basic_node_type create_scalar_node(node_type type, str_view token) {
         basic_node_type node {};
 
@@ -477,9 +526,13 @@ private:
         return node;
     }
 
+    /// Current line
     uint32_t m_line {0};
+    /// Current indentation for the scalar
     uint32_t m_indent {0};
+    /// Whether the parsed contents are stored in an owned buffer.
     bool m_use_owned_buffer {false};
+    /// Owned buffer storage for parsing. This buffer is used when scalar contents need mutation.
     std::string m_buffer {};
 };
 

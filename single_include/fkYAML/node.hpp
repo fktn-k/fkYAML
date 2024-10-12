@@ -1769,14 +1769,18 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+/// @brief Definition of chomping indicator types.
 enum class chomping_indicator_t {
     STRIP, //!< excludes final line breaks and trailing empty lines indicated by `-`.
     CLIP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
     KEEP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
 };
 
+/// @brief Block scalar header information.
 struct block_scalar_header {
+    /// Chomping indicator type.
     chomping_indicator_t chomp {chomping_indicator_t::CLIP};
+    /// Indentation for block scalar contents.
     uint32_t indent {0};
 };
 
@@ -2917,8 +2921,11 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+/// @brief Lexical token information
 struct lexical_token {
+    /// Lexical token type.
     lexical_token_t type {lexical_token_t::END_OF_BUFFER};
+    /// Lexical token contents.
     str_view str {};
 };
 
@@ -2935,8 +2942,7 @@ const uint32_t document_directive_bit = 1u << 1u;
 class lexical_analyzer {
 public:
     /// @brief Construct a new lexical_analyzer object.
-    /// @tparam InputAdapterType The type of the input adapter.
-    /// @param input_adapter An input adapter object.
+    /// @param input_buffer An input buffer.
     explicit lexical_analyzer(str_view input_buffer) noexcept
         : m_input_buffer(input_buffer),
           m_cur_itr(m_input_buffer.begin()),
@@ -3529,6 +3535,8 @@ private:
         }
     }
 
+    /// @brief Determines the range of single quoted scalar by scanning remaining input buffer contents.
+    /// @param token Storage for the range of single quoted scalar.
     void determine_single_quoted_scalar_range(str_view& token) {
         str_view sv {m_token_begin_itr, m_end_itr};
 
@@ -3552,6 +3560,8 @@ private:
         emit_error("Invalid end of input buffer in a single-quoted scalar token.");
     }
 
+    /// @brief Determines the range of double quoted scalar by scanning remaining input buffer contents.
+    /// @param token Storage for the range of double quoted scalar.
     void determine_double_quoted_scalar_range(str_view& token) {
         str_view sv {m_token_begin_itr, m_end_itr};
 
@@ -3591,6 +3601,8 @@ private:
         emit_error("Invalid end of input buffer in a double-quoted scalar token.");
     }
 
+    /// @brief Determines the range of plain scalar by scanning remaining input buffer contents.
+    /// @param token Storage for the range of plain scalar.
     void determine_plain_scalar_range(str_view& token) {
         str_view sv {m_token_begin_itr, m_end_itr};
 
@@ -3829,6 +3841,8 @@ private:
         }
     }
 
+    /// @brief Checks if the given scalar contains no unescaped control characters.
+    /// @param scalar Scalar contents.
     void check_scalar_content(str_view scalar) const {
         for (auto c : scalar) {
             if (0 <= c && c < 0x20) {
@@ -3840,7 +3854,7 @@ private:
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
-    /// @return
+    /// @return Block scalar header information converted from the header line.
     block_scalar_header convert_to_block_scalar_header(str_view& line) {
         constexpr str_view comment_prefix = " #";
         std::size_t comment_begin_pos = line.find(comment_prefix);
@@ -5507,7 +5521,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @brief Definition of YAML directive sets.
+/// @brief Definition of YAML tag types.
 enum class tag_t {
     NONE,            //!< Represents a non-specific tag "?".
     NON_SPECIFIC,    //!< Represents a non-specific tag "!".
@@ -5538,6 +5552,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+/// @brief A parser for YAML scalars.
+/// @tparam BasicNodeType A type of the container for parsed YAML scalars.
 template <typename BasicNodeType>
 class scalar_parser {
     static_assert(is_basic_node<BasicNodeType>::value, "scalar_parser only accepts basic_node<...>");
@@ -5556,11 +5572,15 @@ private:
     using string_type = typename basic_node_type::string_type;
 
 public:
+    /// @brief Constructs a new scalar_parser object.
+    /// @param line Current line.
+    /// @param indent Current indentation.
     scalar_parser(uint32_t line, uint32_t indent) noexcept
         : m_line(line),
           m_indent(indent) {
     }
 
+    /// @brief Destroys a scalar_parser object.
     ~scalar_parser() noexcept = default;
 
     scalar_parser(const scalar_parser&) noexcept = default;
@@ -5568,6 +5588,11 @@ public:
     scalar_parser& operator=(const scalar_parser&) noexcept = default;
     scalar_parser& operator=(scalar_parser&&) noexcept = default;
 
+    /// @brief Parses a token into a flow scalar (either plain, single quoted or double quoted)
+    /// @param lex_type Lexical token type for the scalar.
+    /// @param tag_type Tag type for the scalar.
+    /// @param token Scalar contents.
+    /// @return Parsed YAML flow scalar object.
     basic_node_type parse_flow(lexical_token_t lex_type, tag_t tag_type, str_view token) {
         FK_YAML_ASSERT(
             lex_type == lexical_token_t::PLAIN_SCALAR || lex_type == lexical_token_t::SINGLE_QUOTED_SCALAR ||
@@ -5579,6 +5604,12 @@ public:
         return create_scalar_node(value_type, token);
     }
 
+    /// @brief Parses a token into a block scalar (either literal or folded)
+    /// @param lex_type Lexical token type for the scalar.
+    /// @param tag_type Tag type for the scalar.
+    /// @param token Scalar contents.
+    /// @param header Block scalar header information.
+    /// @return Parsed YAML block scalar object.
     basic_node_type parse_block(
         lexical_token_t lex_type, tag_t tag_type, str_view token, const block_scalar_header& header) {
         FK_YAML_ASSERT(
@@ -5597,6 +5628,10 @@ public:
     }
 
 private:
+    /// @brief Parses a token into a flow scalar contents.
+    /// @param lex_type Lexical token type for the scalar.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
     str_view parse_flow_scalar_token(lexical_token_t lex_type, str_view token) {
         switch (lex_type) {
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
@@ -5613,6 +5648,9 @@ private:
         return token;
     }
 
+    /// @brief Parses single quoted scalar contents.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
     str_view parse_single_quoted_scalar(str_view token) noexcept {
         if (token.empty()) {
             return token;
@@ -5654,6 +5692,9 @@ private:
         return {m_buffer};
     }
 
+    /// @brief Parses double quoted scalar contents.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
     str_view parse_double_quoted_scalar(str_view token) {
         if (token.empty()) {
             return token;
@@ -5713,6 +5754,10 @@ private:
         return {m_buffer};
     }
 
+    /// @brief Parses block literal scalar contents.
+    /// @param token Scalar contents.
+    /// @param header Block scalar header information.
+    /// @return View into the parsed scalar contents.
     str_view parse_block_literal_scalar(str_view token, const block_scalar_header& header) {
         if FK_YAML_UNLIKELY (token.empty()) {
             return token;
@@ -5750,6 +5795,10 @@ private:
         return {m_buffer};
     }
 
+    /// @brief Parses block folded scalar contents.
+    /// @param token Scalar contents.
+    /// @param header Block scalar header information.
+    /// @return View into the parsed scalar contents.
     str_view parse_block_folded_scalar(str_view token, const block_scalar_header& header) {
         if FK_YAML_UNLIKELY (token.empty()) {
             return token;
@@ -5820,6 +5869,8 @@ private:
         return {m_buffer};
     }
 
+    /// @brief Discards final content line break and trailing empty lines depending on the given chomping type.
+    /// @param chomp Chomping method type.
     void process_chomping(chomping_indicator_t chomp) {
         switch (chomp) {
         case chomping_indicator_t::STRIP: {
@@ -5863,6 +5914,9 @@ private:
         }
     }
 
+    /// @brief Applies line folding to flow scalar contents.
+    /// @param token Flow scalar contents.
+    /// @param newline_pos Position of the target newline code.
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
         // discard trailing white spaces which precedes the line break in the current line.
         std::size_t last_non_space_pos = token.substr(0, newline_pos + 1).find_last_not_of(" \t");
@@ -5899,6 +5953,11 @@ private:
         }
     }
 
+    /// @brief Decides scalar value type based on the lexical/tag types and scalar contents.
+    /// @param lex_type Lexical token type for the scalar.
+    /// @param tag_type Tag type for the scalar.
+    /// @param token Scalar contents.
+    /// @return Scalar value type.
     node_type decide_value_type(lexical_token_t lex_type, tag_t tag_type, str_view token) const noexcept {
         node_type value_type {node_type::STRING};
         if (lex_type == lexical_token_t::PLAIN_SCALAR) {
@@ -5935,6 +5994,10 @@ private:
         return value_type;
     }
 
+    /// @brief Creates YAML scalar object based on the value type and contents.
+    /// @param type Scalar value type.
+    /// @param token Scalar contents.
+    /// @return A YAML scalar object.
     basic_node_type create_scalar_node(node_type type, str_view token) {
         basic_node_type node {};
 
@@ -5991,9 +6054,13 @@ private:
         return node;
     }
 
+    /// Current line
     uint32_t m_line {0};
+    /// Current indentation for the scalar
     uint32_t m_indent {0};
+    /// Whether the parsed contents are stored in an owned buffer.
     bool m_use_owned_buffer {false};
+    /// Owned buffer storage for parsing. This buffer is used when scalar contents need mutation.
     std::string m_buffer {};
 };
 
@@ -6690,7 +6757,7 @@ private:
 
     /// @brief Deserializes the YAML directives if specified.
     /// @param lexer The lexical analyzer to be used.
-    /// @param last_type The variable to store the last lexical token type.
+    /// @param last_token Storage for last lexical token type.
     void deserialize_directives(lexer_type& lexer, lexical_token& last_token) {
         bool lacks_end_of_directives_marker = false;
         lexer.set_document_state(true);
@@ -6781,7 +6848,8 @@ private:
 
     /// @brief Deserializes the YAML nodes recursively.
     /// @param lexer The lexical analyzer to be used.
-    /// @param first_type The first lexical token type.
+    /// @param first_type The first lexical token.
+    /// @param last_type Storage for last lexical token type.
     void deserialize_node(lexer_type& lexer, const lexical_token& first_token, lexical_token_t& last_type) {
         lexical_token token = first_token;
         uint32_t line = lexer.get_lines_processed();
@@ -7554,9 +7622,10 @@ private:
 
     /// @brief Deserialize a detected scalar node.
     /// @param lexer The lexical analyzer to be used.
-    /// @param node A detected scalar node by a lexer.
+    /// @param node A scalar node.
     /// @param indent The current indentation width. Can be updated in this function.
     /// @param line The number of processed lines. Can be updated in this function.
+    /// @param token The storage for last lexical token.
     /// @return true if next token has already been got, false otherwise.
     bool deserialize_scalar(
         lexer_type& lexer, basic_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {

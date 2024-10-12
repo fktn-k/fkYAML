@@ -26,8 +26,11 @@
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+/// @brief Lexical token information
 struct lexical_token {
+    /// Lexical token type.
     lexical_token_t type {lexical_token_t::END_OF_BUFFER};
+    /// Lexical token contents.
     str_view str {};
 };
 
@@ -44,8 +47,7 @@ const uint32_t document_directive_bit = 1u << 1u;
 class lexical_analyzer {
 public:
     /// @brief Construct a new lexical_analyzer object.
-    /// @tparam InputAdapterType The type of the input adapter.
-    /// @param input_adapter An input adapter object.
+    /// @param input_buffer An input buffer.
     explicit lexical_analyzer(str_view input_buffer) noexcept
         : m_input_buffer(input_buffer),
           m_cur_itr(m_input_buffer.begin()),
@@ -638,6 +640,8 @@ private:
         }
     }
 
+    /// @brief Determines the range of single quoted scalar by scanning remaining input buffer contents.
+    /// @param token Storage for the range of single quoted scalar.
     void determine_single_quoted_scalar_range(str_view& token) {
         str_view sv {m_token_begin_itr, m_end_itr};
 
@@ -661,6 +665,8 @@ private:
         emit_error("Invalid end of input buffer in a single-quoted scalar token.");
     }
 
+    /// @brief Determines the range of double quoted scalar by scanning remaining input buffer contents.
+    /// @param token Storage for the range of double quoted scalar.
     void determine_double_quoted_scalar_range(str_view& token) {
         str_view sv {m_token_begin_itr, m_end_itr};
 
@@ -700,6 +706,8 @@ private:
         emit_error("Invalid end of input buffer in a double-quoted scalar token.");
     }
 
+    /// @brief Determines the range of plain scalar by scanning remaining input buffer contents.
+    /// @param token Storage for the range of plain scalar.
     void determine_plain_scalar_range(str_view& token) {
         str_view sv {m_token_begin_itr, m_end_itr};
 
@@ -938,6 +946,8 @@ private:
         }
     }
 
+    /// @brief Checks if the given scalar contains no unescaped control characters.
+    /// @param scalar Scalar contents.
     void check_scalar_content(str_view scalar) const {
         for (auto c : scalar) {
             if (0 <= c && c < 0x20) {
@@ -949,7 +959,7 @@ private:
     /// @brief Gets the metadata of a following block style string scalar.
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
-    /// @return
+    /// @return Block scalar header information converted from the header line.
     block_scalar_header convert_to_block_scalar_header(str_view& line) {
         constexpr str_view comment_prefix = " #";
         std::size_t comment_begin_pos = line.find(comment_prefix);

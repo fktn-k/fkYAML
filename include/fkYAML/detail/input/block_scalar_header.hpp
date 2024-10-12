@@ -15,14 +15,18 @@
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+/// @brief Definition of chomping indicator types.
 enum class chomping_indicator_t {
     STRIP, //!< excludes final line breaks and trailing empty lines indicated by `-`.
     CLIP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
     KEEP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
 };
 
+/// @brief Block scalar header information.
 struct block_scalar_header {
+    /// Chomping indicator type.
     chomping_indicator_t chomp {chomping_indicator_t::CLIP};
+    /// Indentation for block scalar contents.
     uint32_t indent {0};
 };
 
