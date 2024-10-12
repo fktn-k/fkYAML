@@ -929,8 +929,7 @@ private:
                 apply_directive_set(node);
                 apply_node_properties(node);
 
-                bool do_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
-                FK_YAML_ASSERT(do_continue);
+                deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
             }
             // these tokens end parsing the current YAML document.

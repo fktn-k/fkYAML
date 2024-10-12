@@ -6,8 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP_
-#define FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP
+#define FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
@@ -55,9 +55,11 @@ public:
     /// @brief Destroys a scalar_parser object.
     ~scalar_parser() noexcept = default;
 
-    scalar_parser(const scalar_parser&) noexcept = default;
+    // std::string's copy constructor/assignment operator may throw a exception.
+    scalar_parser(const scalar_parser&) = default;
+    scalar_parser& operator=(const scalar_parser&) = default;
+
     scalar_parser(scalar_parser&&) noexcept = default;
-    scalar_parser& operator=(const scalar_parser&) noexcept = default;
     scalar_parser& operator=(scalar_parser&&) noexcept = default;
 
     /// @brief Parses a token into a flow scalar (either plain, single quoted or double quoted)
@@ -538,4 +540,4 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP */
