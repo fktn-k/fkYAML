@@ -2968,15 +2968,12 @@ public:
                 return token;
             }
 
-            switch (*m_cur_itr) {
-            case ' ':
+            if (*m_cur_itr == ' ') {
                 token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
                 return token;
-            default:
-                scan_scalar(token);
-                return token;
             }
-        case ':': { // key separator
+            break;
+        case ':': // key separator
             if (++m_cur_itr == m_end_itr) {
                 token.type = lexical_token_t::KEY_SEPARATOR;
                 return token;
@@ -2986,27 +2983,24 @@ public:
             case ' ':
             case '\t':
             case '\n':
-                break;
+                token.type = lexical_token_t::KEY_SEPARATOR;
+                return token;
             case ',':
             case '[':
             case ']':
             case '{':
             case '}':
                 if (m_state & flow_context_bit) {
-                    // the above characters are not "safe" to be followed in a flow context.
+                    // Flow indicators are not "safe" to be followed in a flow context.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                    break;
+                    token.type = lexical_token_t::KEY_SEPARATOR;
+                    return token;
                 }
-                scan_scalar(token);
-                return token;
+                break;
             default:
-                scan_scalar(token);
-                return token;
+                break;
             }
-
-            token.type = lexical_token_t::KEY_SEPARATOR;
-            return token;
-        }
+            break;
         case ',': // value separator
             ++m_cur_itr;
             token.type = lexical_token_t::VALUE_SEPARATOR;
@@ -3041,13 +3035,11 @@ public:
         case '%': // directive prefix
             if (m_state & document_directive_bit) {
                 token.type = scan_directive();
+                return token;
             }
-            else {
-                // The '%' character can be safely used as the first character in document contents.
-                // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
-                scan_scalar(token);
-            }
-            return token;
+            // The '%' character can be safely used as the first character in document contents.
+            // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
+            break;
         case '-': {
             char next = *(m_cur_itr + 1);
             switch (next) {
@@ -3072,8 +3064,7 @@ public:
                 }
             }
 
-            scan_scalar(token);
-            return token;
+            break;
         }
         case '[': // sequence flow begin
             ++m_cur_itr;
@@ -3096,11 +3087,28 @@ public:
         case '`':
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
-        case '\'':
-            scan_scalar(token);
+            ++m_token_begin_itr;
+            token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
+            determine_double_quoted_scalar_range(token.str);
+
+            for (const auto c : token.str) {
+                if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                    handle_unescaped_control_char(c);
+                }
+            }
+
             return token;
-        case '+':
-            scan_scalar(token);
+        case '\'':
+            ++m_token_begin_itr;
+            token.type = lexical_token_t::SINGLE_QUOTED_SCALAR;
+            determine_single_quoted_scalar_range(token.str);
+
+            for (const auto c : token.str) {
+                if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                    handle_unescaped_control_char(c);
+                }
+            }
+
             return token;
         case '.': {
             bool is_available = ((m_end_itr - m_cur_itr) > 2);
@@ -3112,9 +3120,7 @@ public:
                     return token;
                 }
             }
-
-            scan_scalar(token);
-            return token;
+            break;
         }
         case '|':
         case '>': {
@@ -3136,9 +3142,19 @@ public:
             return token;
         }
         default:
-            scan_scalar(token);
-            return token;
+            break;
         }
+
+        token.type = lexical_token_t::PLAIN_SCALAR;
+        determine_plain_scalar_range(token.str);
+
+        for (const auto c : token.str) {
+            if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
+                handle_unescaped_control_char(c);
+            }
+        }
+
+        return token;
     }
 
     /// @brief Get the beginning position of a last token.
@@ -3530,34 +3546,6 @@ private:
         std::size_t invalid_char_pos = tag_uri.find_first_of("{}[],");
         if (invalid_char_pos != str_view::npos) {
             emit_error("Tag shorthand cannot contain flow indicators({}[],).");
-        }
-    }
-
-    /// @brief Scan a scalar token, either plain, single-quoted or double-quoted.
-    /// @param token The token into which the scan result is written.
-    /// @return lexical_token_t The lexical token type for strings.
-    void scan_scalar(lexical_token& token) {
-        switch (*m_token_begin_itr) {
-        case '\'':
-            ++m_token_begin_itr;
-            token.type = lexical_token_t::SINGLE_QUOTED_SCALAR;
-            determine_single_quoted_scalar_range(token.str);
-            break;
-        case '\"':
-            ++m_token_begin_itr;
-            token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
-            determine_double_quoted_scalar_range(token.str);
-            break;
-        default:
-            token.type = lexical_token_t::PLAIN_SCALAR;
-            determine_plain_scalar_range(token.str);
-            break;
-        }
-
-        for (const auto c : token.str) {
-            if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                handle_unescaped_control_char(c);
-            }
         }
     }
 
