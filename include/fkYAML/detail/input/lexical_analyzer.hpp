@@ -199,25 +199,13 @@ public:
             ++m_token_begin_itr;
             token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
             determine_double_quoted_scalar_range(token.str);
-
-            for (const auto c : token.str) {
-                if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                    handle_unescaped_control_char(c);
-                }
-            }
-
+            check_scalar_content(token.str);
             return token;
         case '\'':
             ++m_token_begin_itr;
             token.type = lexical_token_t::SINGLE_QUOTED_SCALAR;
             determine_single_quoted_scalar_range(token.str);
-
-            for (const auto c : token.str) {
-                if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                    handle_unescaped_control_char(c);
-                }
-            }
-
+            check_scalar_content(token.str);
             return token;
         case '.': {
             bool is_available = ((m_end_itr - m_cur_itr) > 2);
@@ -235,13 +223,11 @@ public:
         case '>': {
             str_view sv {m_token_begin_itr, m_end_itr};
             std::size_t header_end_pos = sv.find('\n');
-            if (header_end_pos == str_view::npos) {
-                header_end_pos = sv.size();
-            }
 
             FK_YAML_ASSERT(!sv.empty());
             token.type = (sv[0] == '|') ? lexical_token_t::BLOCK_LITERAL_SCALAR : lexical_token_t::BLOCK_FOLDED_SCALAR;
 
+            FK_YAML_ASSERT(header_end_pos != str_view::npos);
             str_view header_line = sv.substr(1, header_end_pos - 1);
             m_block_scalar_header = convert_to_block_scalar_header(header_line);
 
@@ -256,13 +242,7 @@ public:
 
         token.type = lexical_token_t::PLAIN_SCALAR;
         determine_plain_scalar_range(token.str);
-
-        for (const auto c : token.str) {
-            if FK_YAML_UNLIKELY (0 <= c && c < 0x20) {
-                handle_unescaped_control_char(c);
-            }
-        }
-
+        check_scalar_content(token.str);
         return token;
     }
 
@@ -889,7 +869,7 @@ private:
 
     /// @brief Handle unescaped control characters.
     /// @param c A target character.
-    void handle_unescaped_control_char(char c) {
+    void handle_unescaped_control_char(char c) const {
         FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
 
         switch (c) {
@@ -955,6 +935,14 @@ private:
             emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
         case 0x1F:
             emit_error("Control character U+001F (US) must be escaped to \\u001F.");
+        }
+    }
+
+    void check_scalar_content(str_view scalar) const {
+        for (auto c : scalar) {
+            if (0 <= c && c < 0x20) {
+                handle_unescaped_control_char(c);
+            }
         }
     }
 

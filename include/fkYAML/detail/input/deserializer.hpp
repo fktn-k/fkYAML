@@ -147,7 +147,7 @@ public:
         } while (type != lexical_token_t::END_OF_BUFFER);
 
         return nodes;
-    }
+    } // LCOV_EXCL_LINE
 
 private:
     /// @brief Deserialize a YAML document into a YAML node.
@@ -929,10 +929,8 @@ private:
                 apply_node_properties(node);
 
                 bool do_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
-                if (do_continue) {
-                    continue;
-                }
-                break;
+                FK_YAML_ASSERT(do_continue);
+                continue;
             }
             // these tokens end parsing the current YAML document.
             case lexical_token_t::END_OF_BUFFER: // This handles an empty input.
