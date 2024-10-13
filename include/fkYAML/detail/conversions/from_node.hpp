@@ -9,6 +9,7 @@
 #ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
 #define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
 
+#include <cmath>
 #include <limits>
 #include <map>
 #include <utility>
@@ -195,7 +196,27 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
         throw type_error("The target node value type is not float number type.", n.get_type());
     }
 
-    auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
+    using node_float_type = typename BasicNodeType::float_number_type;
+    auto tmp_float = n.template get_value_ref<const node_float_type&>();
+
+    // check if the value is an infinite number (either positive or negative)
+    if (std::isinf(tmp_float)) {
+        if (tmp_float == std::numeric_limits<node_float_type>::infinity()) {
+            f = std::numeric_limits<FloatType>::infinity();
+            return;
+        }
+
+        f = -1 * std::numeric_limits<FloatType>::infinity();
+        return;
+    }
+
+    // check if the value is not a number
+    if (std::isnan(tmp_float)) {
+        f = std::numeric_limits<FloatType>::quiet_NaN();
+        return;
+    }
+
+    // check if the value is expressible as FloatType.
     if FK_YAML_UNLIKELY (tmp_float < std::numeric_limits<FloatType>::lowest()) {
         throw exception("Floating point value underflow detected.");
     }

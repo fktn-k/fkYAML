@@ -152,6 +152,118 @@ TEST_CASE("Deserializer_FloatingPointNumberKey") {
     }
 }
 
+TEST_CASE("Deserializer_BlockLiteralScalar") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SECTION("not tagged") {
+        std::string input = "foo: |\n"
+                            "  first sentence.\n"
+                            "  second sentence.\n"
+                            "  last sentence.\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "first sentence.\nsecond sentence.\nlast sentence.\n");
+    }
+
+    SECTION("tagged") {
+        std::string input = "foo: !!str |\n"
+                            "  first sentence.\n"
+                            "  second sentence.\n"
+                            "  last sentence.\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.has_tag_name());
+        REQUIRE(foo_node.get_tag_name() == "!!str");
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "first sentence.\nsecond sentence.\nlast sentence.\n");
+    }
+
+    SECTION("mapping key") {
+        std::string input = "? |\n"
+                            "  first sentence.\n"
+                            "  second sentence.\n"
+                            "  last sentence.\n"
+                            ": map value";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("first sentence.\nsecond sentence.\nlast sentence.\n"));
+
+        fkyaml::node& val_node = root["first sentence.\nsecond sentence.\nlast sentence.\n"];
+        REQUIRE(val_node.is_string());
+        REQUIRE(val_node.get_value_ref<std::string&>() == "map value");
+    }
+}
+
+TEST_CASE("Deserializer_BlockFoldedScalar") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SECTION("not tagged") {
+        std::string input = "foo: >\n"
+                            "  first sentence.\n"
+                            "  second sentence.\n"
+                            "  last sentence.\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "first sentence. second sentence. last sentence.\n");
+    }
+
+    SECTION("tagged") {
+        std::string input = "foo: !!str >\n"
+                            "  first sentence.\n"
+                            "  second sentence.\n"
+                            "  last sentence.\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.has_tag_name());
+        REQUIRE(foo_node.get_tag_name() == "!!str");
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.get_value_ref<std::string&>() == "first sentence. second sentence. last sentence.\n");
+    }
+
+    SECTION("mapping key") {
+        std::string input = "? >\n"
+                            "  first sentence.\n"
+                            "  second sentence.\n"
+                            "  last sentence.\n"
+                            ": map value";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("first sentence. second sentence. last sentence.\n"));
+
+        fkyaml::node& val_node = root["first sentence. second sentence. last sentence.\n"];
+        REQUIRE(val_node.is_string());
+        REQUIRE(val_node.get_value_ref<std::string&>() == "map value");
+    }
+}
+
 TEST_CASE("Deserializer_ScalarConversionErrorHandling") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
@@ -2290,8 +2402,10 @@ TEST_CASE("Deserializer_Anchor") {
     }
 
     SECTION("parse alias mapping key") {
-        REQUIRE_NOTHROW(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter("&anchor foo:\n  *anchor : 123")));
+        std::string input = "&anchor foo:\n"
+                            "  bar: false\n"
+                            "  *anchor : 123";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
@@ -2299,8 +2413,13 @@ TEST_CASE("Deserializer_Anchor") {
 
         fkyaml::node& foo_node = root["foo"];
         REQUIRE(foo_node.is_mapping());
-        REQUIRE(foo_node.size() == 1);
+        REQUIRE(foo_node.size() == 2);
+        REQUIRE(foo_node.contains("bar"));
         REQUIRE(foo_node.contains("foo"));
+
+        fkyaml::node& foo_bar_node = foo_node["bar"];
+        REQUIRE(foo_bar_node.is_boolean());
+        REQUIRE(foo_bar_node.get_value<bool>() == false);
 
         fkyaml::node& foo_foo_node = foo_node["foo"];
         REQUIRE(foo_foo_node.is_integer());

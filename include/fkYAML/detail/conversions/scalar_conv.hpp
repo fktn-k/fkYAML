@@ -791,6 +791,11 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
                 return true;
             }
         }
+
+        if (*p_begin == '+') {
+            // Skip the positive sign since it's sometimes not recognized as part of float value.
+            ++p_begin;
+        }
     }
     else if (len == 4) {
         bool is_inf_scalar = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||

@@ -1,4 +1,4 @@
-2024-09-22T12:14:55+09:00
+2024-10-13T01:55:12+09:00
 Running ./build_bm_release/tool/benchmark/benchmarker
 Run on (16 X 3193.88 MHz CPU s)
 CPU Caches:
@@ -6,12 +6,12 @@ CPU Caches:
   L1 Instruction 32 KiB (x8)
   L2 Unified 512 KiB (x8)
   L3 Unified 16384 KiB (x1)
-Load Average: 0.28, 0.23, 0.15
+Load Average: 0.38, 0.40, 0.44
 -------------------------------------------------------------------------------------
 Benchmark                           Time             CPU   Iterations UserCounters...
 -------------------------------------------------------------------------------------
-bm_fkyaml_parse              21801608 ns     21801655 ns           31 bytes_per_second=75.5534Mi/s items_per_second=45.8681/s
-bm_yamlcpp_parse            111770417 ns    111770867 ns            6 bytes_per_second=14.7372Mi/s items_per_second=8.94688/s
-bm_libfyaml_parse            31701073 ns     31701176 ns           25 bytes_per_second=51.9599Mi/s items_per_second=31.5446/s
-bm_rapidyaml_parse_inplace      97463 ns        97463 ns         7205 bytes_per_second=16.5046Gi/s items_per_second=10.2603k/s
-bm_rapidyaml_parse_arena     11288564 ns     11288585 ns           62 bytes_per_second=145.916Mi/s items_per_second=88.5851/s
+bm_fkyaml_parse              19846319 ns     19847303 ns           35 bytes_per_second=82.9931Mi/s items_per_second=50.3847/s
+bm_yamlcpp_parse            115684121 ns    115689950 ns            6 bytes_per_second=14.238Mi/s items_per_second=8.64379/s
+bm_libfyaml_parse            31415418 ns     31416483 ns           24 bytes_per_second=52.4308Mi/s items_per_second=31.8304/s
+bm_rapidyaml_parse_inplace      53018 ns        53020 ns        12756 bytes_per_second=30.339Gi/s items_per_second=18.8607k/s
+bm_rapidyaml_parse_arena     11307118 ns     11307543 ns           61 bytes_per_second=145.672Mi/s items_per_second=88.4365/s

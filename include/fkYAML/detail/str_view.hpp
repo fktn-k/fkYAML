@@ -69,24 +69,42 @@ public:
     static constexpr size_type npos = static_cast<size_type>(-1);
 
     /// Constructs a basic_str_view object.
-    basic_str_view() noexcept = default;
+    constexpr basic_str_view() noexcept = default;
 
     /// Destroys a basic_str_view object.
     ~basic_str_view() noexcept = default;
 
     /// @brief Copy constructs a basic_str_view object.
     /// @param _ A basic_str_view object to copy from.
-    basic_str_view(const basic_str_view&) noexcept = default;
+    constexpr basic_str_view(const basic_str_view&) noexcept = default;
 
     /// @brief Move constructs a basic_str_view object.
     /// @param _ A basic_str_view object to move from.
-    basic_str_view(basic_str_view&&) noexcept = default;
+    constexpr basic_str_view(basic_str_view&&) noexcept = default;
 
     /// @brief Constructs a basic_str_view object from a pointer to a character sequence.
+    /// @note std::char_traits::length() is constexpr from C++17.
     /// @param p_str A pointer to a character sequence. (Must be null-terminated, or an undefined behavior.)
-    basic_str_view(const value_type* p_str) noexcept
+    template <
+        typename CharPtrT,
+        enable_if_t<
+            disjunction<std::is_same<CharPtrT, value_type*>, std::is_same<CharPtrT, const value_type*>>::value, int> =
+            0>
+    FK_YAML_CXX17_CONSTEXPR basic_str_view(CharPtrT p_str) noexcept
         : m_len(traits_type::length(p_str)),
           mp_str(p_str) {
+    }
+
+    /// @brief Constructs a basic_str_view object from a C-style char array.
+    /// @note
+    /// This constructor assumes the last element is the null character ('\0'). If that's not desirable, consider using
+    /// one of the other overloads.
+    /// @tparam N The size of a C-style char array.
+    /// @param str A C-style char array. (Must be null-terminated)
+    template <std::size_t N>
+    constexpr basic_str_view(const value_type (&str)[N]) noexcept
+        : m_len(N - 1),
+          mp_str(&str[0]) {
     }
 
     /// @brief Construction from a null pointer is forbidden.
@@ -95,7 +113,7 @@ public:
     /// @brief Constructs a basic_str_view object from a pointer to a character sequence and its size.
     /// @param p_str A pointer to a character sequence. (May or may not be null-terminated.)
     /// @param len The length of a character sequence.
-    basic_str_view(const value_type* p_str, size_type len) noexcept
+    constexpr basic_str_view(const value_type* p_str, size_type len) noexcept
         : m_len(len),
           mp_str(p_str) {
     }
@@ -114,7 +132,7 @@ public:
             int> = 0>
     basic_str_view(ItrType first, ItrType last) noexcept
         : m_len(last - first),
-          mp_str(m_len > 0 ? &*first : nullptr) {
+          mp_str(&*first) {
     }
 
     /// @brief Constructs a basic_str_view object from a compatible std::basic_string object.

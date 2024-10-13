@@ -33,7 +33,8 @@ enum class lexical_token_t {
     PLAIN_SCALAR,          //!< plain (unquoted) scalars
     SINGLE_QUOTED_SCALAR,  //!< single-quoted scalars
     DOUBLE_QUOTED_SCALAR,  //!< double-quoted scalars
-    BLOCK_SCALAR,          //!< block style scalars
+    BLOCK_LITERAL_SCALAR,  //!< block literal style scalars
+    BLOCK_FOLDED_SCALAR,   //!< block folded style scalars
     END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
     END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
 };

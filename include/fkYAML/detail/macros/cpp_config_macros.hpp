@@ -60,6 +60,13 @@
 #define FK_YAML_INLINE_VAR
 #endif
 
+// switch usage of constexpr keyward depending on active C++ standard.
+#if defined(FK_YAML_HAS_CXX_17)
+#define FK_YAML_CXX17_CONSTEXPR constexpr
+#else
+#define FK_YAML_CXX17_CONSTEXPR
+#endif
+
 // Detect __has_* macros.
 // The following macros replace redundant `defined(__has_*) && __has_*(...)`.
 
