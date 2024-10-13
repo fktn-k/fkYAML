@@ -612,6 +612,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::STRIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("empty literal string scalar with clip chomping") {
@@ -625,6 +628,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 5);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("empty literal string scalar with keep chomping") {
@@ -638,6 +644,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::KEEP);
         REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with 0 indent level.") {
@@ -676,6 +685,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 7);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal scalar with the first line being more indented than the indicated level") {
@@ -691,6 +703,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 18);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar") {
@@ -705,6 +720,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 14);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with implicit indentation and strip chomping") {
@@ -723,6 +741,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 24);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::STRIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with explicit indentation and strip chomping") {
@@ -740,6 +761,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 26);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::STRIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with implicit indentation and clip chomping") {
@@ -758,6 +782,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 23);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with explicit indentation and clip chomping") {
@@ -775,6 +802,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 25);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with clip chomping and no trailing newlines") {
@@ -791,6 +821,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 23);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with implicit indentation and keep chomping") {
@@ -809,6 +842,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 24);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::KEEP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with explicit indentation and keep chomping") {
@@ -826,6 +862,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + 26);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::KEEP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with trailing spaces/tabs after the block scalar header.") {
@@ -841,6 +880,9 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.end() == &input[0] + input.size());
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("literal string scalar with invalid block scalar headers") {
@@ -872,6 +914,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::STRIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("empty folded string scalar with clip chomping") {
@@ -885,6 +930,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + 5);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("empty folded string scalar with keep chomping") {
@@ -898,6 +946,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::KEEP);
         REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("folded string scalar with 0 indent level") {
@@ -928,6 +979,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + 17);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("folded string scalar with the non-first line being more indented than the indicated level") {
@@ -942,6 +996,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + 17);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("folded string scalar") {
@@ -959,6 +1016,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + 20);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("folded string scalar with implicit indentation and strip chomping") {
@@ -975,6 +1035,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + 18);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::STRIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("folded string scalar with implicit indentation and clip chomping") {
@@ -991,6 +1054,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + 18);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("folded string scalar with implicit indentation and keep chomping") {
@@ -1007,6 +1073,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + 18);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::KEEP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("folded string scalar with trailing spaces/tabs/comments after the block scalar header.") {
@@ -1022,6 +1091,9 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.end() == &input[0] + input.size());
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("folded string scalar with invalid block scalar headers") {
