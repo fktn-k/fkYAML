@@ -806,9 +806,13 @@ private:
         constexpr str_view space_filter = " \t\n";
         std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
         if (first_non_space_pos == str_view::npos) {
-            // empty block scalar
+            // empty block scalar with no subsequent tokens.
             indent = static_cast<uint32_t>(sv.size());
             token = sv;
+
+            // Without the following iterator update, lexer cannot reach the end of input buffer and causes infinite
+            // loops from the next loop. (https://github.com/fktn-k/fkYAML/pull/410)
+            m_cur_itr = m_end_itr;
             return;
         }
 
