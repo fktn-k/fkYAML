@@ -15,8 +15,7 @@ TEST_CASE("Deserializer_EmptyInput") {
     fkyaml::node root;
 
     REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(" ")));
-    REQUIRE(root.is_mapping());
-    REQUIRE(root.empty());
+    REQUIRE(root.is_null());
 }
 
 TEST_CASE("Deserializer_KeySeparator") {
@@ -98,6 +97,12 @@ TEST_CASE("Deserializer_BooleanValue") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - False")));
         REQUIRE(root["test"][0].get_value<bool>() == false);
     }
+
+    SECTION("root scalar") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("true")));
+        REQUIRE(root.is_boolean());
+        REQUIRE(root.get_value<bool>() == true);
+    }
 }
 
 TEST_CASE("Deserializer_IntegerKey") {
@@ -124,6 +129,12 @@ TEST_CASE("Deserializer_IntegerKey") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - 123")));
         REQUIRE(root["test"][0].get_value<int>() == 123);
     }
+
+    SECTION("root scalar") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("123")));
+        REQUIRE(root.is_integer());
+        REQUIRE(root.get_value<int>() == 123);
+    }
 }
 
 TEST_CASE("Deserializer_FloatingPointNumberKey") {
@@ -149,6 +160,12 @@ TEST_CASE("Deserializer_FloatingPointNumberKey") {
     SECTION("sequence value.") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("test:\n  - 1.23e-5")));
         REQUIRE(root["test"][0].get_value<double>() == 1.23e-5);
+    }
+
+    SECTION("root scalar") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("3.14")));
+        REQUIRE(root.is_float_number());
+        REQUIRE(root.get_value<double>() == 3.14);
     }
 }
 
@@ -206,6 +223,17 @@ TEST_CASE("Deserializer_BlockLiteralScalar") {
         REQUIRE(val_node.is_string());
         REQUIRE(val_node.get_value_ref<std::string&>() == "map value");
     }
+
+    SECTION("root scalar") {
+        std::string input = "--- |\n"
+                            "  first sentence.\n"
+                            "  second sentence.\n"
+                            "  last sentence.\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_string());
+        REQUIRE(root.get_value_ref<std::string&>() == "first sentence.\nsecond sentence.\nlast sentence.\n");
+    }
 }
 
 TEST_CASE("Deserializer_BlockFoldedScalar") {
@@ -261,6 +289,17 @@ TEST_CASE("Deserializer_BlockFoldedScalar") {
         fkyaml::node& val_node = root["first sentence. second sentence. last sentence.\n"];
         REQUIRE(val_node.is_string());
         REQUIRE(val_node.get_value_ref<std::string&>() == "map value");
+    }
+
+    SECTION("root scalar") {
+        std::string input = "--- >\n"
+                            "  first sentence.\n"
+                            "  second sentence.\n"
+                            "  last sentence.\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_string());
+        REQUIRE(root.get_value_ref<std::string&>() == "first sentence. second sentence. last sentence.\n");
     }
 }
 
@@ -2189,8 +2228,7 @@ TEST_CASE("Deserializer_InvalidDirective") {
     fkyaml::node root;
 
     REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("%INVALID foo bar")));
-    REQUIRE(root.is_mapping());
-    REQUIRE(root.empty());
+    REQUIRE(root.is_null());
 }
 
 TEST_CASE("Deserializer_Anchor") {
