@@ -6765,21 +6765,9 @@ private:
                 }
             }
             break;
-        default: {
-            // root = basic_node_type::mapping();
-            // apply_directive_set(root);
-            // if (found_props && line < lexer.get_lines_processed()) {
-            //     // If node properties and a followed node are on the different line, the properties belong to the
-            //     root
-            //     // node.
-            //     apply_node_properties(root);
-            // }
-            // parse_context context(
-            //     lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING,
-            //     &root);
-            // m_context_stack.emplace_back(std::move(context));
+        default:
+            // Do nothing since current document has no contents.
             break;
-        }
         }
 
         mp_current_node = &root;
@@ -7656,19 +7644,20 @@ private:
 
         // a scalar node
         *mp_current_node = std::move(node_value);
+        if FK_YAML_LIKELY (!m_context_stack.empty()) {
+            if (m_flow_context_depth > 0 ||
+                m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                m_context_stack.pop_back();
+                mp_current_node = m_context_stack.back().p_node;
 
-        if (m_context_stack.empty()) {
-            // single scalar document
-            return;
-        }
-
-        if (m_flow_context_depth > 0 || m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-            m_context_stack.pop_back();
-            mp_current_node = m_context_stack.back().p_node;
-
-            if (m_flow_context_depth > 0) {
-                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+                if (m_flow_context_depth > 0) {
+                    m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+                }
             }
+        }
+        else {
+            // single scalar document.
+            return;
         }
     }
 
@@ -7707,22 +7696,7 @@ private:
             }
 
             if (mp_current_node->is_scalar()) {
-                if (m_context_stack.empty()) {
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                    *mp_current_node = basic_node_type::mapping();
-                    apply_directive_set(*mp_current_node);
-
-                    // apply node properties if any to the root mapping node.
-                    if (!m_root_anchor_name.empty()) {
-                        mp_current_node->add_anchor_name(std::move(m_root_anchor_name));
-                        m_root_anchor_name.clear();
-                    }
-                    if (!m_root_tag_name.empty()) {
-                        mp_current_node->add_tag_name(std::move(m_root_tag_name));
-                        m_root_tag_name.clear();
-                    }
-                }
-                else {
+                if FK_YAML_LIKELY (!m_context_stack.empty()) {
                     parse_context& cur_context = m_context_stack.back();
                     switch (cur_context.state) {
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
@@ -7741,6 +7715,23 @@ private:
 
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                }
+                else {
+                    // root mapping node
+
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    *mp_current_node = basic_node_type::mapping();
+                    apply_directive_set(*mp_current_node);
+
+                    // apply node properties if any to the root mapping node.
+                    if (!m_root_anchor_name.empty()) {
+                        mp_current_node->add_anchor_name(std::move(m_root_anchor_name));
+                        m_root_anchor_name.clear();
+                    }
+                    if (!m_root_tag_name.empty()) {
+                        mp_current_node->add_tag_name(std::move(m_root_tag_name));
+                        m_root_tag_name.clear();
+                    }
                 }
             }
             add_new_key(std::move(node), line, indent);
