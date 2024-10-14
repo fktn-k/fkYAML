@@ -203,19 +203,48 @@ private:
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
             token = lexer.get_next_token();
             break;
-        default: {
+        case lexical_token_t::EXPLICIT_KEY_PREFIX: {
+            // If the explicit key prefix (? ) is detected here, the root node of current document must be a mapping.
+            // Also, tag and anchor if any are associated to the root mapping node.
+            // No get_next_token() call here to handle the token event in the deserialize_node() function.
             root = basic_node_type::mapping();
             apply_directive_set(root);
-            if (found_props && line < lexer.get_lines_processed()) {
-                // If node properties and a followed node are on the different line, the properties belong to the root
-                // node.
-                apply_node_properties(root);
-            }
+            apply_node_properties(root);
             parse_context context(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
             m_context_stack.emplace_back(std::move(context));
             break;
         }
+        case lexical_token_t::BLOCK_LITERAL_SCALAR:
+        case lexical_token_t::BLOCK_FOLDED_SCALAR:
+            // If a block scalar token is detected here, current document contains single scalar.
+            // Do nothing here since the token is handled in the deserialize_node() function.
+            break;
+        case lexical_token_t::PLAIN_SCALAR:
+        case lexical_token_t::SINGLE_QUOTED_SCALAR:
+        case lexical_token_t::DOUBLE_QUOTED_SCALAR:
+        case lexical_token_t::ALIAS_PREFIX:
+            // Defer handling the above token events until the next call on the deserialize_scalar() function since the
+            // meaning depends on subsequent events.
+            if (found_props && line < lexer.get_lines_processed()) {
+                // If node properties and a followed node are on the different line, the properties belong to the root
+                // node.
+                if (m_needs_anchor_impl) {
+                    m_root_anchor_name = std::move(m_anchor_name);
+                    m_needs_anchor_impl = false;
+                    m_anchor_name.clear();
+                }
+
+                if (m_needs_tag_impl) {
+                    m_root_tag_name = std::move(m_tag_name);
+                    m_needs_tag_impl = false;
+                    m_tag_name.clear();
+                }
+            }
+            break;
+        default:
+            // Do nothing since current document has no contents.
+            break;
         }
 
         mp_current_node = &root;
@@ -1092,13 +1121,20 @@ private:
 
         // a scalar node
         *mp_current_node = std::move(node_value);
-        if (m_flow_context_depth > 0 || m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-            m_context_stack.pop_back();
-            mp_current_node = m_context_stack.back().p_node;
+        if FK_YAML_LIKELY (!m_context_stack.empty()) {
+            if (m_flow_context_depth > 0 ||
+                m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                m_context_stack.pop_back();
+                mp_current_node = m_context_stack.back().p_node;
 
-            if (m_flow_context_depth > 0) {
-                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+                if (m_flow_context_depth > 0) {
+                    m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+                }
             }
+        }
+        else {
+            // single scalar document.
+            return;
         }
     }
 
@@ -1137,24 +1173,43 @@ private:
             }
 
             if (mp_current_node->is_scalar()) {
-                parse_context& cur_context = m_context_stack.back();
-                switch (cur_context.state) {
-                case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
-                case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                    break;
-                default:
-                    if FK_YAML_UNLIKELY (cur_context.line == line) {
-                        throw parse_error("Multiple mapping keys are specified on the same line.", line, indent);
+                if FK_YAML_LIKELY (!m_context_stack.empty()) {
+                    parse_context& cur_context = m_context_stack.back();
+                    switch (cur_context.state) {
+                    case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
+                    case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        break;
+                    default:
+                        if FK_YAML_UNLIKELY (cur_context.line == line) {
+                            throw parse_error("Multiple mapping keys are specified on the same line.", line, indent);
+                        }
+                        cur_context.line = line;
+                        cur_context.indent = indent;
+                        cur_context.state = context_state_t::BLOCK_MAPPING;
+                        break;
                     }
-                    cur_context.line = line;
-                    cur_context.indent = indent;
-                    cur_context.state = context_state_t::BLOCK_MAPPING;
-                    break;
-                }
 
-                *mp_current_node = basic_node_type::mapping();
-                apply_directive_set(*mp_current_node);
+                    *mp_current_node = basic_node_type::mapping();
+                    apply_directive_set(*mp_current_node);
+                }
+                else {
+                    // root mapping node
+
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    *mp_current_node = basic_node_type::mapping();
+                    apply_directive_set(*mp_current_node);
+
+                    // apply node properties if any to the root mapping node.
+                    if (!m_root_anchor_name.empty()) {
+                        mp_current_node->add_anchor_name(std::move(m_root_anchor_name));
+                        m_root_anchor_name.clear();
+                    }
+                    if (!m_root_tag_name.empty()) {
+                        mp_current_node->add_tag_name(std::move(m_root_tag_name));
+                        m_root_tag_name.clear();
+                    }
+                }
             }
             add_new_key(std::move(node), line, indent);
         }
@@ -1213,6 +1268,10 @@ private:
     std::string m_anchor_name {};
     /// The last tag name.
     std::string m_tag_name {};
+    /// The root YAML anchor name. (maybe empty and unused)
+    std::string m_root_anchor_name {};
+    /// The root tag name. (maybe empty and unused)
+    std::string m_root_tag_name {};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
