@@ -1,6 +1,49 @@
 # Releases
 
-## [v0.3.12](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.12) (2024-09-21)
+## **fkYAML version 0.3.13**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.13/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.13/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.13/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.13/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.13/node.hpp) (single header)
+
+### Summary
+
+This release includes performance improvements in parsing YAML documents and many bug fixes in both serialization and deserialization functions.  
+In addition, benchmarking has been improved to facilitate comparison with existing YAML libraries by adding variations in data file content.  
+No changes are required for migration.  
+
+### What's Changed
+
+#### :zap: Improvements
+- Refine benchmarking ([\#397](https://github.com/fktn-k/fkYAML/pull/397), [fktn-k](https://github.com/fktn-k))
+  - replaced data files for benchmarking for better comparison against existing YAML libraries
+- Optimized scalar parsing ([\#409](https://github.com/fktn-k/fkYAML/pull/409), [fktn-k](https://github.com/fktn-k))
+  - increased parse speed by about 5MiB/s
+
+#### :bug: Bug Fixes
+- Accept % as first scalar character ([\#399](https://github.com/fktn-k/fkYAML/pull/399), [fktn-k](https://github.com/fktn-k))
+- Fix compile warnings/errors when benchmarker app is compiled with msvc ([\#401](https://github.com/fktn-k/fkYAML/pull/401), [fktn-k](https://github.com/fktn-k))
+- Updated natvis file ([\#402](https://github.com/fktn-k/fkYAML/pull/402), [fktn-k](https://github.com/fktn-k))
+  - fixed broken natvis file contents
+- Fix URI validation for tag shorthands ([\#403](https://github.com/fktn-k/fkYAML/pull/403), [fktn-k](https://github.com/fktn-k))
+- Fix float scalar serialization when a float is actually an integer ([\#407](https://github.com/fktn-k/fkYAML/pull/407), [fktn-k](https://github.com/fktn-k))
+  - reported by [ARessegetesStery](https://github.com/ARessegetesStery) in the issue [\#405](https://github.com/fktn-k/fkYAML/issues/405)
+- Fix infinite loops after parsing final empty block scalar ([\#410](https://github.com/fktn-k/fkYAML/pull/410), [fktn-k](https://github.com/fktn-k))
+- Fix wrong parse result from single scalar document ([\#411](https://github.com/fktn-k/fkYAML/pull/411), [fktn-k](https://github.com/fktn-k))
+
+#### :memo: Documentation
+- Remove header lines for Doxygen ([\#398](https://github.com/fktn-k/fkYAML/pull/398), [fktn-k](https://github.com/fktn-k))
+- Fix some typos in strings and comments ([\#408](https://github.com/fktn-k/fkYAML/pull/408), [sndth](https://github.com/sndth))
+
+**Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.12...v0.3.13
+
+---
+
+## **fkYAML version 0.3.12**
 
 !!! abstract "Release Packages"
 
