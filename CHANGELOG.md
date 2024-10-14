@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.3.13](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.13) (2024-10-14)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.12...v0.3.13)
+
+- Fix wrong parse result from single scalar document [\#411](https://github.com/fktn-k/fkYAML/pull/411) ([fktn-k](https://github.com/fktn-k))
+- Fix infinite loops after parsing final empty block scalar [\#410](https://github.com/fktn-k/fkYAML/pull/410) ([fktn-k](https://github.com/fktn-k))
+- Fix float scalar serialization when a float is actually an integer [\#407](https://github.com/fktn-k/fkYAML/pull/407) ([fktn-k](https://github.com/fktn-k))
+- Fix URI validation for tag shorthands [\#403](https://github.com/fktn-k/fkYAML/pull/403) ([fktn-k](https://github.com/fktn-k))
+- Updated natvis file [\#402](https://github.com/fktn-k/fkYAML/pull/402) ([fktn-k](https://github.com/fktn-k))
+- Fix compile warnings/errors when benchmarker app is compiled with msvc [\#401](https://github.com/fktn-k/fkYAML/pull/401) ([fktn-k](https://github.com/fktn-k))
+- Accept % as first scalar character [\#399](https://github.com/fktn-k/fkYAML/pull/399) ([fktn-k](https://github.com/fktn-k))
+
+- Optimized scalar parsing [\#409](https://github.com/fktn-k/fkYAML/pull/409) ([fktn-k](https://github.com/fktn-k))
+- Fix some typos in strings and comments [\#408](https://github.com/fktn-k/fkYAML/pull/408) ([sndth](https://github.com/sndth))
+- Remove header lines for Doxygen [\#398](https://github.com/fktn-k/fkYAML/pull/398) ([fktn-k](https://github.com/fktn-k))
+- Refine benchmarking [\#397](https://github.com/fktn-k/fkYAML/pull/397) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.12](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.12) (2024-09-21)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.11...v0.3.12)
