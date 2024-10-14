@@ -607,12 +607,12 @@ public:
             return npos;
         }
 
-        for (size_type idx = pos; idx < m_len; ++idx) {
-            const CharT* p_found = traits_type::find(s, n, mp_str[idx]);
+        do {
+            const CharT* p_found = traits_type::find(s, n, mp_str[pos]);
             if (p_found) {
-                return idx;
+                return pos;
             }
-        }
+        } while (++pos < m_len);
 
         return npos;
     }

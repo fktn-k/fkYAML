@@ -20,10 +20,12 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
             value_pair_t("%YAML\t1.1\t", "1.1"),
             value_pair_t("%YAML 1.1\n", "1.1"),
             value_pair_t("%YAML 1.1", "1.1"),
+            value_pair_t("%YAML 1.1 # comment", "1.1"),
             value_pair_t("%YAML 1.2 ", "1.2"),
             value_pair_t("%YAML\t1.2\t", "1.2"),
             value_pair_t("%YAML 1.2\n", "1.2"),
-            value_pair_t("%YAML 1.2", "1.2"));
+            value_pair_t("%YAML 1.2", "1.2"),
+            value_pair_t("%YAML 1.2 # comment", "1.2"));
 
         fkyaml::detail::lexical_analyzer lexer(value_pair.first);
         lexer.set_document_state(true);
@@ -73,7 +75,10 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
     fkyaml::detail::lexical_token token;
 
     SECTION("primary tag handle") {
-        auto input = GENERATE(fkyaml::detail::str_view("%TAG ! foo"), fkyaml::detail::str_view("%TAG\t!\tfoo"));
+        auto input = GENERATE(
+            fkyaml::detail::str_view("%TAG ! foo"),
+            fkyaml::detail::str_view("%TAG\t!\tfoo"),
+            fkyaml::detail::str_view("%TAG ! foo # comment"));
         fkyaml::detail::lexical_analyzer lexer(input);
         lexer.set_document_state(true);
 
@@ -86,7 +91,10 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
     }
 
     SECTION("secondary tag handle") {
-        auto input = GENERATE(fkyaml::detail::str_view("%TAG !! foo"), fkyaml::detail::str_view("%TAG\t!!\tfoo"));
+        auto input = GENERATE(
+            fkyaml::detail::str_view("%TAG !! foo"),
+            fkyaml::detail::str_view("%TAG\t!!\tfoo"),
+            fkyaml::detail::str_view("%TAG !! foo # comment"));
         fkyaml::detail::lexical_analyzer lexer(input);
         lexer.set_document_state(true);
 
@@ -100,7 +108,9 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
 
     SECTION("named tag handle") {
         auto input = GENERATE(
-            fkyaml::detail::str_view("%TAG !va1id-ta9! foo"), fkyaml::detail::str_view("%TAG\t!va1id-ta9!\tfoo"));
+            fkyaml::detail::str_view("%TAG !va1id-ta9! foo"),
+            fkyaml::detail::str_view("%TAG\t!va1id-ta9!\tfoo"),
+            fkyaml::detail::str_view("%TAG !va1id-ta9! foo # comment"));
         fkyaml::detail::lexical_analyzer lexer(input);
         lexer.set_document_state(true);
 
@@ -132,11 +142,14 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
             fkyaml::detail::str_view("%TAG !"),
             fkyaml::detail::str_view("%TAG !!"),
             fkyaml::detail::str_view("%TAG !valid!"),
+            fkyaml::detail::str_view("%TAG !valid! "),
             fkyaml::detail::str_view("%TAG !invalid"),
             fkyaml::detail::str_view("%TAG !invalid bar"),
             fkyaml::detail::str_view("%TAG !invalid\tbar"),
             fkyaml::detail::str_view("%TAG !inv@lid! bar"),
             fkyaml::detail::str_view("%TAG !invalid!tag bar"),
+            fkyaml::detail::str_view("%TAG !invalid ! bar"),
+            fkyaml::detail::str_view("%TAG !invalid\t! bar"),
             fkyaml::detail::str_view("%TAG !invalid"));
 
         fkyaml::detail::lexical_analyzer lexer(input);
@@ -344,6 +357,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         fkyaml::detail::str_view("-foo"),
         fkyaml::detail::str_view("-.test"),
         fkyaml::detail::str_view("?"),
+        fkyaml::detail::str_view("-"),
         fkyaml::detail::str_view("--foo"),
         fkyaml::detail::str_view("+123"),
         fkyaml::detail::str_view("1.2.3"),
@@ -1238,7 +1252,6 @@ TEST_CASE("LexicalAnalyzer_Tag") {
     SECTION("invalid tag names") {
         auto input = GENERATE(
             fkyaml::detail::str_view("!!f!oo tag"),
-            fkyaml::detail::str_view("!<!f!oo> tag"),
             fkyaml::detail::str_view("!<!foo tag"),
             fkyaml::detail::str_view("!<> tag"),
             fkyaml::detail::str_view("!<%f:oo> tag"),
@@ -1255,6 +1268,7 @@ TEST_CASE("LexicalAnalyzer_Tag") {
             fkyaml::detail::str_view("!!foo[ tag"),
             fkyaml::detail::str_view("!!foo] tag"),
             fkyaml::detail::str_view("!!foo, tag"),
+            fkyaml::detail::str_view("!foo!bar! tag"),
             fkyaml::detail::str_view("!foo!bar{ tag"),
             fkyaml::detail::str_view("!foo!bar} tag"),
             fkyaml::detail::str_view("!foo!bar[ tag"),
@@ -1717,7 +1731,7 @@ TEST_CASE("LexicalAnalyzer_BlockMapping") {
     }
 
     SECTION("block mapping with a literal string scalar value") {
-        char input[] = "test: |\n  a block literal scalar.\nfoo: \'bar\'\npi: 3.14";
+        char input[] = "test: |\n  a block literal scalar.\nfoo: \'bar\'\npi: 3.14 # comment";
         fkyaml::detail::lexical_analyzer lexer(input);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
