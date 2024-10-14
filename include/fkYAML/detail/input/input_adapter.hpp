@@ -1,15 +1,13 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
-#define FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP
+#define FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP
 
 #include <array>
 #include <cstdio>
@@ -46,7 +44,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -246,7 +244,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -261,7 +259,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -344,7 +342,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -359,7 +357,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -429,7 +427,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_16BE};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -442,7 +440,7 @@ public:
     iterator_input_adapter() = default;
 
     /// @brief Construct a new iterator_input_adapter object.
-    /// @param begin The beginning of iteraters.
+    /// @param begin The beginning of iterators.
     /// @param end The end of iterators.
     /// @param encode_type The encoding type for this input adapter.
     /// @param is_contiguous Whether iterators are contiguous or not.
@@ -506,7 +504,7 @@ private:
     utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
     /// The normalized owned buffer.
     std::string m_buffer {};
-    /// Whether or not ItrType is a contiguous iterator.
+    /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
 
@@ -854,7 +852,7 @@ private:
                 if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
-            };
+            }
 
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
@@ -937,7 +935,7 @@ inline iterator_input_adapter<ItrType> create_iterator_input_adapter(
 
 } // anonymous namespace
 
-/// @brief A factory method for iterator_input_adapter objects with ieterator values.
+/// @brief A factory method for iterator_input_adapter objects with iterator values.
 /// @tparam ItrType An iterator type.
 /// @param begin The beginning of iterators.
 /// @param end The end of iterators.
@@ -987,7 +985,7 @@ struct container_input_adapter_factory {};
 template <typename ContainerType>
 struct container_input_adapter_factory<
     ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>> {
-    /// Whether or not ContainerType is a contiguous container.
+    /// Whether ContainerType is a contiguous container.
     static constexpr bool is_contiguous = is_contiguous_container<ContainerType>::value;
 
     /// A type for resulting input adapter object.
@@ -1038,4 +1036,4 @@ inline stream_input_adapter input_adapter(std::istream& stream) {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP */

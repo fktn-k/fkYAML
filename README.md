@@ -21,8 +21,8 @@ You can add YAML support into your projects by just including header files where
 - [Community Support](#community-support)
 - [How to use fkYAML](#how-to-use-fkyaml)
 - [How to test fkYAML](#how-to-test-fkYAML)
-- [Benchmarking](#benchmarking)
 - [Supported compilers](#supported-compilers)
+- [Benchmarking](#benchmarking)
 - [License](#license)
 - [Used third-party tools](#used-third-party-tools)
 
@@ -85,22 +85,6 @@ $ cmake --build build --config Debug
 $ ctest -C Debug --test-dir build --output-on-failure
 ```
 
-## Benchmarking
-
-Though experimental, benchmarking scores are now available with [the dedicated benchmarking tool](./tool/benchmark/README.md) for the parsing.  
-On an AMD Ryzen 7 5800H @3.20GHz with g++11.4.0 in Ubuntu22.04 (WSL2), fkYAML parses [the YAML source](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/macos.yml) at a competitive speed compared against other existing YAML libraries for C/C++:
-
-| Benchmark                          | Release (MB/s) |
-| ---------------------------------- | -------------- |
-| fkYAML                             | 41.051         |
-| libfyaml                           | 31.110         |
-| rapidyaml<br>(with mutable buff)   | 147.221        |
-| rapidyaml<br>(with immutable buff) | 144.904        |
-| yaml-cpp                           | 7.397          |
-
-Although [rapidyaml](https://github.com/biojppm/rapidyaml) is in general 4x faster than fkYAML as it focuses on high performance, fkYAML is 30% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also 5.5x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
-Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some real use cases.  
-
 ## Supported compilers
 Currently, the following compilers are known to work and used in GitHub Actions workflows:
 
@@ -152,6 +136,47 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 
 Requests for new compiler supports are welcome.  
 If you encounter a problem regarding compilers, please let us know by [creating an issue](https://github.com/fktn-k/fkYAML/issues/new?assignees=&labels=kind%3A+bug&projects=&template=bug-report.yml) or a PR with the information of your Operating System so that the same situation can be reproduced.  
+
+## Benchmarking
+
+Though efficiency is not everything, speed and memory consumption are very important characteristics for C++ developers. Regarding speed, benchmarking scores are now available with [the dedicated benchmarking tool](./tool/benchmark/README.md) for the parsing.  
+The following tables are created from the benchmarking results in the following environment:
+* CPU: AMD Ryzen 7 5800H @3.20GHz
+* OS: Ubuntu22.04 (WSL2)
+* Compiler: g++11.4.0
+
+### Parsing [ubuntu.yml](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/ubuntu.yml)
+
+| Benchmark                          | processed bytes per second (Release) |
+| ---------------------------------- | ------------------------------------ |
+| fkYAML                             | 55.1393Mi/s                          |
+| libfyaml                           | 34.7645Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 19.6806Gi/s                          |
+| rapidyaml<br>(with immutable buff) | 140.24Mi/s                           |
+| yaml-cpp                           | 8.75716Mi/s                          |
+
+### Parsing [citm_catalog.json](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.json)
+
+| Benchmark                          | processed bytes per second (Release) |
+| ---------------------------------- | ------------------------------------ |
+| fkYAML                             | 82.9931Mi/s                          |
+| libfyaml                           | 52.4308Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 30.339Gi/s                           |
+| rapidyaml<br>(with immutable buff) | 145.672Mi/s                          |
+| yaml-cpp                           | 14.238Mi/s                           |
+
+### Parsing [citm_catalog.yml](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.yml)
+
+| Benchmark                          | processed bytes per second (Release) |
+| ---------------------------------- | ------------------------------------ |
+| fkYAML                             | 35.152Mi/s                           |
+| libfyaml                           | 23.0845Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 31.117Gi/s                           |
+| rapidyaml<br>(with immutable buff) | 66.3046Mi/s                          |
+| yaml-cpp                           | 6.11709Mi/s                          |
+
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) is about 2x faster with immutable buffer and far faster with mutable buff than fkYAML as it focuses on high performance, fkYAML is in general 50% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also about 6x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some use cases since there is no need for string manipulations.  
 
 ## License
 

@@ -1,15 +1,13 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
-#define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_
+#ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
+#define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
 
 #include <iterator>
 #include <limits>
@@ -32,7 +30,7 @@ struct is_comparable : std::false_type {};
 /// @brief A partial specialization of is_comparable if T and U are comparable types.
 /// @tparam Comparator An object type to compare T and U objects.
 /// @tparam T A type for comparison.
-/// @tparam U Ther other type for comparison.
+/// @tparam U The other type for comparison.
 template <typename Comparator, typename T, typename U>
 struct is_comparable<
     Comparator, T, U,
@@ -164,4 +162,4 @@ using head_type = typename get_head_type<Types...>::type;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP_ */
+#endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP */

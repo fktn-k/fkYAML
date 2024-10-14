@@ -3,11 +3,12 @@
 #   Set up benchmarking tool   #
 ################################
 
-# disable building unit tests for Google Benchmark.
+include(FetchContent)
+
+# Google benchmark
+# disable building unit tests.
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
-
-include(FetchContent)
 FetchContent_Declare(
   gbench
   URL https://github.com/google/benchmark/archive/refs/tags/v1.8.4.zip
@@ -32,7 +33,7 @@ endif()
 FetchContent_Declare(
   rapidyaml
   GIT_REPOSITORY https://github.com/biojppm/rapidyaml
-  GIT_TAG v0.6.0
+  GIT_TAG v0.7.2
   GIT_SUBMODULES "ext/c4core"
 )
 FetchContent_MakeAvailable(rapidyaml)
@@ -59,8 +60,21 @@ add_executable(
 target_compile_options(
   benchmarker
   PRIVATE
-    $<$<CONFIG:Debug>:-O1>
-    $<$<CONFIG:Release>:-O2>
+    $<$<CXX_COMPILER_ID:MSVC>:
+      $<$<CONFIG:Debug>:/O1>
+      $<$<CONFIG:Release>:/O2>
+    >
+
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:
+      $<$<CONFIG:Debug>:-O1>
+      $<$<CONFIG:Release>:-O2>
+    >
+)
+
+target_compile_options(
+  ryml
+  PUBLIC
+    $<$<CXX_COMPILER_ID:MSVC>: /wd4819>
 )
 
 target_link_libraries(

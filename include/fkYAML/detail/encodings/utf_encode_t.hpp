@@ -1,15 +1,13 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
-#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_
+#ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
+#define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -27,4 +25,4 @@ enum class utf_encode_t {
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP_ */
+#endif /* FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP */

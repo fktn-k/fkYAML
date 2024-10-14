@@ -1,15 +1,13 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
-#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_
+#ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
+#define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -19,8 +17,8 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 enum class lexical_token_t {
     END_OF_BUFFER,         //!< the end of input buffer.
     EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
-    KEY_SEPARATOR,         //!< the key separater `:`
-    VALUE_SEPARATOR,       //!< the value separater `,`
+    KEY_SEPARATOR,         //!< the key separator `:`
+    VALUE_SEPARATOR,       //!< the value separator `,`
     ANCHOR_PREFIX,         //!< the character for anchor prefix `&`
     ALIAS_PREFIX,          //!< the character for alias prefix `*`
     YAML_VER_DIRECTIVE,    //!< a YAML version directive found. use get_yaml_version() to get a value.
@@ -35,11 +33,12 @@ enum class lexical_token_t {
     PLAIN_SCALAR,          //!< plain (unquoted) scalars
     SINGLE_QUOTED_SCALAR,  //!< single-quoted scalars
     DOUBLE_QUOTED_SCALAR,  //!< double-quoted scalars
-    BLOCK_SCALAR,          //!< block style scalars
+    BLOCK_LITERAL_SCALAR,  //!< block literal style scalars
+    BLOCK_FOLDED_SCALAR,   //!< block folded style scalars
     END_OF_DIRECTIVES,     //!< the end of declaration of directives specified by `---`.
     END_OF_DOCUMENT,       //!< the end of a YAML document specified by `...`.
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP_ */
+#endif /* FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP */

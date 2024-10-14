@@ -1,16 +1,15 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
 
+#include <cmath>
 #include <limits>
 #include <map>
 #include <utility>
@@ -197,7 +196,27 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
         throw type_error("The target node value type is not float number type.", n.get_type());
     }
 
-    auto tmp_float = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
+    using node_float_type = typename BasicNodeType::float_number_type;
+    auto tmp_float = n.template get_value_ref<const node_float_type&>();
+
+    // check if the value is an infinite number (either positive or negative)
+    if (std::isinf(tmp_float)) {
+        if (tmp_float == std::numeric_limits<node_float_type>::infinity()) {
+            f = std::numeric_limits<FloatType>::infinity();
+            return;
+        }
+
+        f = -1 * std::numeric_limits<FloatType>::infinity();
+        return;
+    }
+
+    // check if the value is not a number
+    if (std::isnan(tmp_float)) {
+        f = std::numeric_limits<FloatType>::quiet_NaN();
+        return;
+    }
+
+    // check if the value is expressible as FloatType.
     if FK_YAML_UNLIKELY (tmp_float < std::numeric_limits<FloatType>::lowest()) {
         throw exception("Floating point value underflow detected.");
     }
@@ -269,7 +288,7 @@ namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-n
 {
 #endif
 
-/// @brief A blobal object to represent ADL friendly from_node functor.
+/// @brief A global object to represent ADL friendly from_node functor.
 // NOLINTNEXTLINE(misc-definitions-in-headers)
 FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail::from_node_fn>::value;
 
@@ -279,4 +298,4 @@ FK_YAML_INLINE_VAR constexpr const auto& from_node = detail::static_const<detail
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP */

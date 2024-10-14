@@ -16,7 +16,7 @@ TOOL_SRCS = $(shell find tool -type f -name '*.cpp' | sort)
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 12
+TARGET_PATCH_VERSION := 13
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -177,17 +177,19 @@ build-bm-debug:
 	cmake -B build_bm_debug -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RUN_BENCHMARK=ON
 	cmake --build build_bm_debug --config Debug
 
-bm-debug: build-bm-debug
-	cmake -B build_bm_debug -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_RUN_BENCHMARK=ON
-	cmake --build build_bm_debug --config Debug
-	./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/macos.yml
+bm-debug:
+	BENCHMARK_OUT=./tool/benchmark/results/result_debug_ubuntu_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/cases/ubuntu.yml
+	BENCHMARK_OUT=./tool/benchmark/results/result_debug_citm_catalog_json.txt BENCHMARK_OUT_FORMAT=console ./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/cases/citm_catalog.json
+	BENCHMARK_OUT=./tool/benchmark/results/result_debug_citm_catalog_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/cases/citm_catalog.yml
 
 build-bm-release:
 	cmake -B build_bm_release -S . -DCMAKE_BUILD_TYPE=Release -DFK_YAML_RUN_BENCHMARK=ON
 	cmake --build build_bm_release --config Release
 
-bm-release: build-bm-release
-	./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/macos.yml
+bm-release:
+	BENCHMARK_OUT=./tool/benchmark/results/result_release_ubuntu_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/cases/ubuntu.yml
+	BENCHMARK_OUT=./tool/benchmark/results/result_release_citm_catalog_json.txt BENCHMARK_OUT_FORMAT=console ./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/cases/citm_catalog.json
+	BENCHMARK_OUT=./tool/benchmark/results/result_release_citm_catalog_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/cases/citm_catalog.yml
 
 ###################
 #   Maintenance   #

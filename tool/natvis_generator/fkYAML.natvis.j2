@@ -6,18 +6,18 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
     <!-- Namespace {{ namespace }} -->
     <Type Name="{{ namespace }}::basic_node&lt;*&gt;">
-        <DisplayString Condition="m_node_type == {{ namespace }}::detail::node_t::SEQUENCE">{*(m_node_value.p_sequence)}</DisplayString>
-        <DisplayString Condition="m_node_type == {{ namespace }}::detail::node_t::MAPPING">{*(m_node_value.p_mapping)}</DisplayString>
-        <DisplayString Condition="m_node_type == {{ namespace }}::detail::node_t::NULL_OBJECT">nullptr</DisplayString>
-        <DisplayString Condition="m_node_type == {{ namespace }}::detail::node_t::BOOLEAN">{m_node_value.boolean}</DisplayString>
-        <DisplayString Condition="m_node_type == {{ namespace }}::detail::node_t::INTEGER">{m_node_value.integer}</DisplayString>
-        <DisplayString Condition="m_node_type == {{ namespace }}::detail::node_t::FLOAT_NUMBER">{m_node_value.float_val}</DisplayString>
-        <DisplayString Condition="m_node_type == {{ namespace }}::detail::node_t::STRING">{*(m_node_value.p_string)}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; {{ namespace }}::detail::node_attr_bits::seq_bit">{*(m_node_value.p_sequence)}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; {{ namespace }}::detail::node_attr_bits::map_bit">{*(m_node_value.p_mapping)}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; {{ namespace }}::detail::node_attr_bits::null_bit">nullptr</DisplayString>
+        <DisplayString Condition="m_attrs &amp; {{ namespace }}::detail::node_attr_bits::bool_bit">{m_node_value.boolean}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; {{ namespace }}::detail::node_attr_bits::int_bit">{m_node_value.integer}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; {{ namespace }}::detail::node_attr_bits::float_bit">{m_node_value.float_val}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; {{ namespace }}::detail::node_attr_bits::string_bit">{*(m_node_value.p_string)}</DisplayString>
         <Expand>
-            <ExpandedItem Condition="m_node_type == {{ namespace }}::detail::node_t::SEQUENCE">
+            <ExpandedItem Condition="m_attrs &amp; {{ namespace }}::detail::node_attr_bits::seq_bit">
                 *(m_node_value.p_sequence),view(simple)
             </ExpandedItem>
-            <ExpandedItem Condition="m_node_type == {{ namespace }}::detail::node_t::MAPPING">
+            <ExpandedItem Condition="m_attrs &amp; {{ namespace }}::detail::node_attr_bits::map_bit">
                 *(m_node_value.p_mapping),view(simple)
             </ExpandedItem>
         </Expand>

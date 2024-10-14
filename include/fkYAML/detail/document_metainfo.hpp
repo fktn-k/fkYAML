@@ -1,15 +1,13 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_
-#define FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_
+#ifndef FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP
+#define FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP
 
 #include <string>
 #include <map>
@@ -25,7 +23,7 @@ template <typename BasicNodeType, typename = enable_if_t<is_basic_node<BasicNode
 struct document_metainfo {
     /// The YAML version used for the YAML document.
     yaml_version_type version {yaml_version_type::VERSION_1_2};
-    /// Whether or not the YAML version has been specified.
+    /// Whether the YAML version has been specified.
     bool is_version_specified {false};
     /// The prefix of the primary handle.
     std::string primary_handle_prefix {};
@@ -33,10 +31,10 @@ struct document_metainfo {
     std::string secondary_handle_prefix {};
     /// The map of handle-prefix pairs.
     std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
-    /// The map of anchor node which allowes for key duplication.
+    /// The map of anchor node which allows for key duplication.
     std::multimap<std::string /*anchor name*/, BasicNodeType> anchor_table {};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP_ */
+#endif /* FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP */

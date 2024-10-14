@@ -1,15 +1,13 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_ITERATOR_HPP_
-#define FK_YAML_DETAIL_ITERATOR_HPP_
+#ifndef FK_YAML_DETAIL_ITERATOR_HPP
+#define FK_YAML_DETAIL_ITERATOR_HPP
 
 #include <cstddef>
 #include <iterator>
@@ -26,7 +24,7 @@ struct sequence_iterator_tag {};
 /// @brief A tag which tells Iterator will contain mapping value iterator.
 struct mapping_iterator_tag {};
 
-/// @brief The template definitions of type informations used in @ref Iterator class
+/// @brief The template definitions of type information used in @ref Iterator class
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 struct iterator_traits {
@@ -248,7 +246,7 @@ public:
         return *this;
     }
 
-    /// @brief A post-increment opretor of the iterator class.
+    /// @brief A post-increment operator of the iterator class.
     /// @return iterator An iterator object which has been incremented.
     iterator operator++(int) & noexcept {
         auto result = *this;
@@ -391,4 +389,4 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_ITERATOR_HPP_ */
+#endif /* FK_YAML_DETAIL_ITERATOR_HPP */

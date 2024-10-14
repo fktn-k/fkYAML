@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -50,9 +50,14 @@ TEST_CASE("Serializer_IntegerNode") {
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
-TEST_CASE("SerializeClassTest_FloatNumberNode", "[SerializeClassTest]") {
+TEST_CASE("SerializeClassTest_FloatNode", "[SerializeClassTest]") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
+        node_str_pair_t(0.0, "0.0"),
+        node_str_pair_t(-2.0, "-2.0"),
+        node_str_pair_t(2.0, "2.0"),
+        node_str_pair_t(-2.10, "-2.1"),
+        node_str_pair_t(2.10, "2.1"),
         node_str_pair_t(3.14, "3.14"),
         node_str_pair_t(-53.97, "-53.97"),
         node_str_pair_t(std::numeric_limits<fkyaml::node::float_number_type>::infinity(), ".inf"),

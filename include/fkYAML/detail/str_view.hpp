@@ -1,15 +1,13 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_STR_VIEW_HPP_
-#define FK_YAML_DETAIL_STR_VIEW_HPP_
+#ifndef FK_YAML_DETAIL_STR_VIEW_HPP
+#define FK_YAML_DETAIL_STR_VIEW_HPP
 
 #include <limits>
 #include <string>
@@ -71,33 +69,51 @@ public:
     static constexpr size_type npos = static_cast<size_type>(-1);
 
     /// Constructs a basic_str_view object.
-    basic_str_view() noexcept = default;
+    constexpr basic_str_view() noexcept = default;
 
     /// Destroys a basic_str_view object.
     ~basic_str_view() noexcept = default;
 
     /// @brief Copy constructs a basic_str_view object.
     /// @param _ A basic_str_view object to copy from.
-    basic_str_view(const basic_str_view&) noexcept = default;
+    constexpr basic_str_view(const basic_str_view&) noexcept = default;
 
     /// @brief Move constructs a basic_str_view object.
     /// @param _ A basic_str_view object to move from.
-    basic_str_view(basic_str_view&&) noexcept = default;
+    constexpr basic_str_view(basic_str_view&&) noexcept = default;
 
     /// @brief Constructs a basic_str_view object from a pointer to a character sequence.
+    /// @note std::char_traits::length() is constexpr from C++17.
     /// @param p_str A pointer to a character sequence. (Must be null-terminated, or an undefined behavior.)
-    basic_str_view(const value_type* p_str) noexcept
+    template <
+        typename CharPtrT,
+        enable_if_t<
+            disjunction<std::is_same<CharPtrT, value_type*>, std::is_same<CharPtrT, const value_type*>>::value, int> =
+            0>
+    FK_YAML_CXX17_CONSTEXPR basic_str_view(CharPtrT p_str) noexcept
         : m_len(traits_type::length(p_str)),
           mp_str(p_str) {
+    }
+
+    /// @brief Constructs a basic_str_view object from a C-style char array.
+    /// @note
+    /// This constructor assumes the last element is the null character ('\0'). If that's not desirable, consider using
+    /// one of the other overloads.
+    /// @tparam N The size of a C-style char array.
+    /// @param str A C-style char array. (Must be null-terminated)
+    template <std::size_t N>
+    constexpr basic_str_view(const value_type (&str)[N]) noexcept
+        : m_len(N - 1),
+          mp_str(&str[0]) {
     }
 
     /// @brief Construction from a null pointer is forbidden.
     basic_str_view(std::nullptr_t) = delete;
 
-    /// @brief Constructs a basic_str_view object from a poineter to a character sequence and its size.
+    /// @brief Constructs a basic_str_view object from a pointer to a character sequence and its size.
     /// @param p_str A pointer to a character sequence. (May or may not be null-terminated.)
     /// @param len The length of a character sequence.
-    basic_str_view(const value_type* p_str, size_type len) noexcept
+    constexpr basic_str_view(const value_type* p_str, size_type len) noexcept
         : m_len(len),
           mp_str(p_str) {
     }
@@ -116,7 +132,7 @@ public:
             int> = 0>
     basic_str_view(ItrType first, ItrType last) noexcept
         : m_len(last - first),
-          mp_str(m_len > 0 ? &*first : nullptr) {
+          mp_str(&*first) {
     }
 
     /// @brief Constructs a basic_str_view object from a compatible std::basic_string object.
@@ -266,7 +282,7 @@ public:
     }
 
     /// @brief Copys the referenced character sequence values from `pos` by `n` size.
-    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the lenth.
+    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the length.
     /// @param p_str The pointer to a character sequence buffer for output.
     /// @param n The number of elements to write into `p_str`.
     /// @param pos The offset of the beginning position to copy values.
@@ -281,7 +297,7 @@ public:
     }
 
     /// @brief Constructs a sub basic_str_view object from `pos` by `n` size.
-    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the lenth.
+    /// @warning Throws an fkyaml::out_of_range exception if the given `pos` is bigger than the length.
     /// @param pos The offset of the beginning position.
     /// @param n The number of elements to the end of a new sub basic_str_view object.
     /// @return A newly created sub basic_str_view object.
@@ -342,7 +358,7 @@ public:
 
     /// @brief Compares the referenced character sequence with `s` character sequence.
     /// @param s The pointer to a character sequence to compare with.
-    /// @return The lexicolographical comparison result. The values are same as std::strncmp().
+    /// @return The lexicographical comparison result. The values are same as std::strncmp().
     int compare(const CharT* s) const {
         return compare(basic_str_view(s));
     }
@@ -960,4 +976,4 @@ using u32str_view = basic_str_view<char32_t>;
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_STR_VIEW_HPP_ */
+#endif /* FK_YAML_DETAIL_STR_VIEW_HPP */

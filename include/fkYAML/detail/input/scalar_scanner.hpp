@@ -1,15 +1,13 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
-#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_
+#ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
+#define FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
 
 #include <cstring>
 #include <string>
@@ -47,7 +45,7 @@ public:
     /// @param begin The iterator to the first element of the scalar.
     /// @param end The iterator to the past-the-end element of the scalar.
     /// @return A detected scalar value type.
-    static node_type scan(const char* begin, const char* end) {
+    static node_type scan(const char* begin, const char* end) noexcept {
         if (begin == end) {
             return node_type::STRING;
         }
@@ -132,7 +130,7 @@ private:
     /// @param itr The iterator to the first element of the scalar.
     /// @param len The length of the scalar contents.
     /// @return A detected scalar value type.
-    static node_type scan_possible_number_token(const char* itr, uint32_t len) {
+    static node_type scan_possible_number_token(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
         switch (*itr) {
@@ -161,7 +159,7 @@ private:
     /// @param itr The iterator to the past-the-negative-sign element of the scalar.
     /// @param len The length of the scalar contents left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_negative_number(const char* itr, uint32_t len) {
+    static node_type scan_negative_number(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -175,7 +173,7 @@ private:
     /// @param itr The iterator to the past-the-zero element of the scalar.
     /// @param len The length of the scalar left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_after_zero_at_first(const char* itr, uint32_t len) {
+    static node_type scan_after_zero_at_first(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -207,7 +205,7 @@ private:
     /// @param len The length of the scalar left unscanned.
     /// @param has_decimal_point Whether a decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_decimal_number(const char* itr, uint32_t len, bool has_decimal_point) {
+    static node_type scan_decimal_number(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -240,7 +238,7 @@ private:
     /// @param len The length of the scalar left unscanned.
     /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_after_decimal_point(const char* itr, uint32_t len, bool has_decimal_point) {
+    static node_type scan_after_decimal_point(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -255,7 +253,7 @@ private:
     /// @param len The length of the scalar left unscanned.
     /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_after_exponent(const char* itr, uint32_t len, bool has_decimal_point) {
+    static node_type scan_after_exponent(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
@@ -275,7 +273,7 @@ private:
     /// @param itr The iterator to the octal-number element of the scalar.
     /// @param len The length of the scalar left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_octal_number(const char* itr, uint32_t len) {
+    static node_type scan_octal_number(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
         switch (*itr) {
@@ -297,7 +295,7 @@ private:
     /// @param itr The iterator to the hexadecimal-number element of the scalar.
     /// @param len The length of the scalar left unscanned.
     /// @return A detected scalar value type.
-    static node_type scan_hexadecimal_number(const char* itr, uint32_t len) {
+    static node_type scan_hexadecimal_number(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
         if (is_xdigit(*itr)) {
@@ -309,4 +307,4 @@ private:
 
 FK_YAML_DETAIL_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP_ */
+#endif /* FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP */

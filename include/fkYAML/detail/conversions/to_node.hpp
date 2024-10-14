@@ -1,15 +1,13 @@
-///  _______   __ __   __  _____   __  __  __
-/// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-/// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.12
-/// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-///
-/// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
-/// SPDX-License-Identifier: MIT
-///
-/// @file
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_
-#define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_
+#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
 
 #include <utility>
 
@@ -27,11 +25,11 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 ///////////////////////////////////
 
 /// @brief The external constructor template for basic_node objects.
-/// @note All the non-specialized instanciations results in compilation error since such instantiations are not
+/// @note All the non-specialized instantiations results in compilation error since such instantiations are not
 /// supported.
 /// @warning All the specialization must call n.m_node_value.destroy() first in the construct function to avoid
 /// memory leak.
-/// @tparam node_type The resulting YAMK node value type.
+/// @tparam node_type The resulting YAML node value type.
 template <node_type>
 struct external_node_constructor;
 
@@ -215,7 +213,7 @@ inline void to_node(BasicNodeType& n, T&& s) noexcept {
 }
 
 /// @brief to_node function for BasicNodeType::mapping_type objects.
-/// @tparam BasicNodeType A basid_node template instance type.
+/// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T A mapping node value type.
 /// @param n A basic_node object.
 /// @param m A mapping node value object.
@@ -329,7 +327,7 @@ namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-n
 {
 #endif
 
-/// @brief A blobal object to represent ADL friendly to_node functor.
+/// @brief A global object to represent ADL friendly to_node functor.
 // NOLINTNEXTLINE(misc-definitions-in-headers)
 FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::to_node_fn>::value;
 
@@ -339,4 +337,4 @@ FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::
 
 FK_YAML_NAMESPACE_END
 
-#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP_ */
+#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP */
