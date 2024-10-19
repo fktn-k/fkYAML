@@ -227,7 +227,8 @@ private:
         }
         case 'e':
         case 'E':
-            return (len > 1) ? scan_after_exponent(++itr, --len, has_decimal_point) : node_type::STRING;
+            // some integer(s) required after the exponent
+            return (len > 1) ? scan_after_exponent(++itr, --len) : node_type::STRING;
         default:
             return node_type::STRING;
         }
@@ -245,28 +246,37 @@ private:
             return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
         }
 
+        if (*itr == 'e' || *itr == 'E') {
+            // some integer(s) required after the exponent
+            return (len > 1) ? scan_after_exponent(++itr, --len) : node_type::STRING;
+        }
+
         return node_type::STRING;
     }
 
     /// @brief Detects a scalar value type by scanning the contents right after the exponent prefix ("e" or "E").
     /// @param itr The iterator to the past-the-exponent-prefix element of the scalar.
     /// @param len The length of the scalar left unscanned.
-    /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_after_exponent(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
+    static node_type scan_after_exponent(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
-        if (is_digit(*itr)) {
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
+        char c = *itr;
+        if (c == '+' || c == '-') {
+            if (len == 1) {
+                return node_type::STRING;
+            }
+            ++itr;
+            --len;
         }
 
-        switch (*itr) {
-        case '+':
-        case '-':
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::STRING;
-        default:
-            return node_type::STRING;
+        for (uint32_t i = 0; i < len; i++) {
+            if (!is_digit(*itr++)) {
+                return node_type::STRING;
+            }
         }
+
+        return node_type::FLOAT;
     }
 
     /// @brief Detects a scalar value type by scanning the contents assuming octal numbers.
