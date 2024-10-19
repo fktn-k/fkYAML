@@ -135,7 +135,14 @@ TEST_CASE("ScalarParser_FlowPlainScalar_float") {
             test_data_t("4.5E3", 4.5e3f),
             test_data_t("+4.5E3", 4.5e3f),
             test_data_t("-4.5E3", -4.5e3f),
-            test_data_t("-4.5E-3", -4.5e-3f));
+            test_data_t("-4.5E-3", -4.5e-3f),
+            test_data_t("1e-1", 1e-1f),
+            test_data_t("2E+2", 2e+2f),
+            test_data_t("3e3", 3e3f),
+            test_data_t("1.e3", 1.e3f),
+            test_data_t(".1e-3", .1e-3f),
+            test_data_t("-.1e-3", -.1e-3f),
+            test_data_t("+.1e-3", .1e-3f));
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, test_data.first));
         REQUIRE(node.is_float_number());
