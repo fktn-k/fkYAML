@@ -92,7 +92,7 @@ public:
                 return {itr, false};
             }
         }
-        this->emplace_back(key, value);
+        this->emplace_back(std::forward<KeyType>(key), value);
         return {std::prev(this->end()), true};
     }
 
@@ -104,7 +104,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    mapped_type& at(KeyType&& key) {
+    mapped_type& at(KeyType&& key) { // NOLINT(cppcoreguidelines-missing-std-forward)
         for (auto itr = this->begin(); itr != this->end(); ++itr) {
             if (m_compare(itr->first, key)) {
                 return itr->second;
@@ -121,7 +121,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    const mapped_type& at(KeyType&& key) const {
+    const mapped_type& at(KeyType&& key) const { // NOLINT(cppcoreguidelines-missing-std-forward)
         for (auto itr = this->begin(); itr != this->end(); ++itr) {
             if (m_compare(itr->first, key)) {
                 return itr->second;
@@ -138,7 +138,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    iterator find(KeyType&& key) noexcept {
+    iterator find(KeyType&& key) noexcept { // NOLINT(cppcoreguidelines-missing-std-forward)
         for (auto itr = this->begin(); itr != this->end(); ++itr) {
             if (m_compare(itr->first, key)) {
                 return itr;
@@ -155,7 +155,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    const_iterator find(KeyType&& key) const noexcept {
+    const_iterator find(KeyType&& key) const noexcept { // NOLINT(cppcoreguidelines-missing-std-forward)
         for (auto itr = this->begin(); itr != this->end(); ++itr) {
             if (m_compare(itr->first, key)) {
                 return itr;

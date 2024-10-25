@@ -9,13 +9,15 @@
 #ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
 #define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
 
+#include <cstdint>
+
 #include <fkYAML/detail/macros/version_macros.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of Unicode encoding types
 /// @note Since fkYAML doesn't treat UTF-16/UTF-32 encoded characters per byte, endians do not matter.
-enum class utf_encode_t {
+enum class utf_encode_t : std::uint8_t {
     UTF_8,    //!< UTF-8
     UTF_16BE, //!< UTF-16 Big Endian
     UTF_16LE, //!< UTF-16 Little Endian

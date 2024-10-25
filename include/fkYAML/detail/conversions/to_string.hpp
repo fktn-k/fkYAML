@@ -39,10 +39,10 @@ inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept {
 
 /// @brief Specialization of to_string() for booleans.
 /// @param s A resulting string YAML token.
-/// @param b A boolean source value.
+/// @param v A boolean source value.
 template <>
-inline void to_string(bool b, std::string& s) noexcept {
-    s = b ? "true" : "false";
+inline void to_string(bool v, std::string& s) noexcept {
+    s = v ? "true" : "false";
 }
 
 /// @brief Specialization of to_string() for integers.
@@ -50,8 +50,8 @@ inline void to_string(bool b, std::string& s) noexcept {
 /// @param s A resulting string YAML token.
 /// @param i An integer source value.
 template <typename IntegerType>
-inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept {
-    s = std::to_string(i);
+inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType v, std::string& s) noexcept {
+    s = std::to_string(v);
 }
 
 /// @brief Specialization of to_string() for floating point numbers.
@@ -59,14 +59,14 @@ inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerTy
 /// @param s A resulting string YAML token.
 /// @param f A floating point number source value.
 template <typename FloatType>
-inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept {
-    if (std::isnan(f)) {
+inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType v, std::string& s) noexcept {
+    if (std::isnan(v)) {
         s = ".nan";
         return;
     }
 
-    if (std::isinf(f)) {
-        if (f == std::numeric_limits<FloatType>::infinity()) {
+    if (std::isinf(v)) {
+        if (v == std::numeric_limits<FloatType>::infinity()) {
             s = ".inf";
         }
         else {
@@ -76,12 +76,12 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
     }
 
     std::ostringstream oss;
-    oss << f;
+    oss << v;
     s = oss.str();
 
     // If `f` is actually an integer, ".0" must be appended. The result would cause roundtrip issue otherwise.
     // https://github.com/fktn-k/fkYAML/issues/405
-    FloatType diff = f - std::floor(f);
+    const FloatType diff = v - std::floor(v);
     if (diff < std::numeric_limits<FloatType>::min()) {
         s += ".0";
     }

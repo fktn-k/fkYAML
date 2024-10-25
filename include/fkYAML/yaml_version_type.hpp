@@ -15,7 +15,7 @@
 
 FK_YAML_NAMESPACE_BEGIN
 
-enum class yaml_version_type : std::uint32_t {
+enum class yaml_version_type : std::uint8_t {
     VERSION_1_1, //!< YAML version 1.1
     VERSION_1_2, //!< YAML version 1.2
 };

@@ -427,7 +427,7 @@ public:
     /// @return The resulting basic_node object deserialized from the pair of iterators.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/
     template <typename ItrType>
-    static basic_node deserialize(ItrType&& begin, ItrType&& end) {
+    static basic_node deserialize(ItrType begin, ItrType end) {
         return deserializer_type().deserialize(
             detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
@@ -540,7 +540,7 @@ public:
     /// @return An alias YAML node created from the given anchor node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/alias_of/
     static basic_node alias_of(const basic_node& anchor_node) {
-        using namespace detail::node_attr_bits;
+        constexpr detail::node_attr_t anchor_bit = detail::node_attr_bits::anchor_bit;
 
         if FK_YAML_UNLIKELY (!anchor_node.has_anchor_name() || !(anchor_node.m_attrs & anchor_bit)) {
             throw fkyaml::exception("Cannot create an alias without anchor name.");
@@ -548,7 +548,7 @@ public:
 
         basic_node node = anchor_node;
         node.m_attrs &= ~detail::node_attr_mask::anchoring;
-        node.m_attrs |= alias_bit;
+        node.m_attrs |= detail::node_attr_bits::alias_bit;
         return node;
     } // LCOV_EXCL_LINE
 
@@ -694,7 +694,7 @@ public:
     /// @return true if both types and values are equal, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_eq/
     bool operator==(const basic_node& rhs) const noexcept {
-        detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
+        const detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
         if (this_val_bit != (rhs.get_node_attrs() & detail::node_attr_mask::value)) {
             return false;
         }
@@ -752,8 +752,8 @@ public:
             return false;
         }
 
-        detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
-        detail::node_attr_t other_val_bit = rhs.get_node_attrs() & detail::node_attr_mask::value;
+        const detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
+        const detail::node_attr_t other_val_bit = rhs.get_node_attrs() & detail::node_attr_mask::value;
 
         if (this_val_bit < other_val_bit) {
             return true;
@@ -826,7 +826,7 @@ public:
     /// @return The type of the YAML node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_type/
     node_type get_type() const noexcept {
-        detail::node_attr_t attrs = get_node_attrs();
+        const detail::node_attr_t attrs = get_node_attrs();
         return detail::node_attr_bits::to_node_type(attrs);
     }
 
@@ -1236,7 +1236,7 @@ public:
         m_attrs &= ~detail::node_attr_mask::anchoring;
         m_attrs |= detail::node_attr_bits::anchor_bit;
         mp_meta = p_meta;
-        uint32_t offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
+        auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
         m_prop.anchor = anchor_name;
     }
@@ -1264,7 +1264,7 @@ public:
         m_attrs &= ~detail::node_attr_mask::anchoring;
         m_attrs |= detail::node_attr_bits::anchor_bit;
         mp_meta = p_meta;
-        uint32_t offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
+        auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
         m_prop.anchor = std::move(anchor_name);
     }
@@ -1609,6 +1609,7 @@ private:
     detail::node_attr_t m_attrs {detail::node_attr_bits::default_bits};
     /// The shared set of YAML directives applied to this node.
     mutable std::shared_ptr<detail::document_metainfo<basic_node>> mp_meta {
+        // NOLINTNEXTLINE(bugprone-unhandled-exception-at-new)
         std::shared_ptr<detail::document_metainfo<basic_node>>(new detail::document_metainfo<basic_node>())};
     /// The current node value.
     node_value m_node_value {};
@@ -1682,7 +1683,7 @@ inline namespace yaml_literals {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char* s, std::size_t n) {
-    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 /// @brief The user-defined string literal which deserializes a `char16_t` array into a `node` object.
@@ -1691,7 +1692,7 @@ inline fkyaml::node operator"" _yaml(const char* s, std::size_t n) {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n) {
-    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 /// @brief The user-defined string literal which deserializes a `char32_t` array into a `node` object.
@@ -1700,7 +1701,7 @@ inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n) {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n) {
-    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 #if FK_YAML_HAS_CHAR8_T

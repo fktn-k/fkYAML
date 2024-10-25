@@ -318,8 +318,9 @@ public:
 
         if (ret == 0) {
             using int_limits = std::numeric_limits<int>;
-            difference_type diff =
-                m_len > sv.m_len ? m_len - sv.m_len : difference_type(-1) * difference_type(sv.m_len - m_len);
+            const difference_type diff =
+                m_len > sv.m_len ? m_len - sv.m_len
+                                 : static_cast<difference_type>(-1) * static_cast<difference_type>(sv.m_len - m_len);
 
             if (diff > int_limits::max()) {
                 ret = int_limits::max();
@@ -386,7 +387,7 @@ public:
     /// @brief Checks if this character sequence starts with `sv` characters.
     /// @param sv The character sequence to compare with.
     /// @return true if the character sequence starts with `sv` characters, false otherwise.
-    bool starts_with(basic_str_view sv) const noexcept {
+    bool starts_with(basic_str_view sv) const {
         return substr(0, sv.size()) == sv;
     }
 
@@ -400,7 +401,7 @@ public:
     /// @brief Checks if this character sequence starts with `s` characters.
     /// @param s The character sequence to compare with.
     /// @return true if the character sequence starts with `s` characters, false otherwise.
-    bool starts_with(const CharT* s) const noexcept {
+    bool starts_with(const CharT* s) const {
         return starts_with(basic_str_view(s));
     }
 
@@ -447,6 +448,8 @@ public:
     bool contains(const CharT* s) const noexcept {
         return find(s) != npos;
     }
+
+    // NOLINTBEGIN(bugprone-easily-swappable-parameters)
 
     /// @brief Finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
@@ -520,6 +523,8 @@ public:
         return find(basic_str_view(s), pos);
     }
 
+    // NOLINTEND(bugprone-easily-swappable-parameters)
+
     /// @brief Retrospectively finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
@@ -537,16 +542,13 @@ public:
             return npos;
         }
 
-        size_type idx = pos;
-        if (pos >= m_len) {
-            idx = m_len - 1;
-        }
+        const size_type idx = std::min(m_len - 1, pos);
 
-        do {
-            if (traits_type::eq(mp_str[idx], c)) {
-                return idx;
+        for (size_type i = 0; i <= idx; i++) {
+            if (traits_type::eq(mp_str[idx - i], c)) {
+                return idx - i;
             }
-        } while (idx > 0 && --idx < m_len);
+        }
 
         return npos;
     }
@@ -602,6 +604,7 @@ public:
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     size_type find_first_of(const CharT* s, size_type pos, size_type n) const noexcept {
         if FK_YAML_UNLIKELY (n == 0) {
             return npos;
@@ -829,7 +832,7 @@ inline bool operator==(const std::basic_string<CharT, Traits>& lhs, basic_str_vi
 template <typename CharT, typename Traits, std::size_t N>
 inline bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
     // assume `rhs` is null terminated
-    return lhs == basic_str_view<CharT, Traits>(rhs, N - 1);
+    return lhs == basic_str_view<CharT, Traits>(rhs);
 }
 
 /// @brief An equal-to operator of the basic_str_view class.
@@ -842,7 +845,7 @@ inline bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N])
 template <typename CharT, typename Traits, std::size_t N>
 inline bool operator==(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
     // assume `lhs` is null terminated
-    return basic_str_view<CharT, Traits>(lhs, N - 1) == rhs;
+    return basic_str_view<CharT, Traits>(lhs) == rhs;
 }
 
 /// @brief An not-equal-to operator of the basic_str_view class.

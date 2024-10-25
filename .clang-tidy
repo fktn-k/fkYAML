@@ -3,28 +3,42 @@ Checks: '*,
          -altera-id-dependent-backward-branch,
          -altera-struct-pack-align,
          -altera-unroll-loops,
+         -cert-dcl21-cpp,
          -cppcoreguidelines-avoid-c-arrays,
+         -cppcoreguidelines-avoid-do-while,
          -cppcoreguidelines-avoid-magic-numbers,
          -cppcoreguidelines-macro-usage,
+         -cppcoreguidelines-owning-memory,
          -cppcoreguidelines-pro-bounds-pointer-arithmetic,
          -cppcoreguidelines-pro-type-reinterpret-cast,
          -cppcoreguidelines-pro-type-union-access,
+         -cppcoreguidelines-pro-type-vararg,
          -fuchsia-default-arguments-calls,
+         -fuchsia-default-arguments-declarations,
          -fuchsia-overloaded-operator,
+         -google-explicit-constructor,
          -google-readability-todo,
          -hicpp-avoid-c-arrays,
+         -hicpp-explicit-conversions,
          -hicpp-signed-bitwise,
+         -hicpp-uppercase-literal-suffix,
+         -hicpp-vararg,
          -llvm-header-guard,
          -llvm-include-order,
          -llvmlibc-*,
          -misc-no-recursion,
+         -misc-non-private-member-variables-in-classes,
          -modernize-avoid-c-arrays,
+         -modernize-use-nodiscard,
+         -modernize-type-traits,
          -modernize-use-trailing-return-type,
          -readability-function-cognitive-complexity,
          -readability-identifier-length,
          -readability-implicit-bool-conversion,
          -readability-magic-numbers,
-         -readability-redundant-access-specifiers'
+         -readability-redundant-access-specifiers,
+         -readability-simplify-boolean-expr,
+         -readability-uppercase-literal-suffix'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 CheckOptions:
@@ -39,13 +53,13 @@ CheckOptions:
   - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
   - { key: readability-identifier-naming.ClassMemberPrefix, value: s_ }
   - { key: readability-identifier-naming.PrivateMemberCase, value: lower_case }
-  - { key: readability-identifier-naming.PrivateMemberPrefix, value: m_ }
   - { key: readability-identifier-naming.VariableCase, value: lower_case }
   - { key: readability-identifier-naming.ParameterCase, value: lower_case }
   - { key: readability-identifier-naming.ConstantParameterCase, value: lower_case }
   - { key: readability-identifier-naming.StaticConstantCase, value: UPPER_CASE }
   - { key: readability-identifier-naming.LocalConstantCase, value: lower_case }
   - { key: readability-identifier-naming.ConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.ConstexprVariableCase, value: lower_case }
   - { key: readability-identifier-naming.FunctionCase, value: lower_case }
   - { key: readability-identifier-naming.TemplateParameter, value: CamelCase }
   - { key: readability-identifier-naming.Namespace, value: lower_case }

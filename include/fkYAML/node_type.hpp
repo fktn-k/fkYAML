@@ -15,7 +15,7 @@
 
 FK_YAML_NAMESPACE_BEGIN
 
-enum class node_type : std::uint32_t {
+enum class node_type : std::uint8_t {
     SEQUENCE,    //!< sequence value type
     MAPPING,     //!< mapping value type
     NULL_OBJECT, //!< null value type

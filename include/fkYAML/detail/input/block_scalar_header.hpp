@@ -16,7 +16,7 @@
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of chomping indicator types.
-enum class chomping_indicator_t {
+enum class chomping_indicator_t : std::uint8_t {
     STRIP, //!< excludes final line breaks and trailing empty lines indicated by `-`.
     CLIP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
     KEEP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
