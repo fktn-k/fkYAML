@@ -31,20 +31,16 @@ struct lexical_token {
     /// Lexical token type.
     lexical_token_t type {lexical_token_t::END_OF_BUFFER};
     /// Lexical token contents.
-    str_view str {};
+    str_view str;
 };
-
-namespace {
-
-// whether the current context is flow(1) or block(0)
-const uint32_t flow_context_bit = 1u << 0u;
-// whether the current document part is directive(1) or content(0)
-const uint32_t document_directive_bit = 1u << 1u;
-
-} // anonymous namespace
 
 /// @brief A class which lexically analyzes YAML formatted inputs.
 class lexical_analyzer {
+    // whether the current context is flow(1) or block(0)
+    static constexpr uint32_t flow_context_bit = 1u << 0u;
+    // whether the current document part is directive(1) or content(0)
+    static constexpr uint32_t document_directive_bit = 1u << 1u;
+
 public:
     /// @brief Construct a new lexical_analyzer object.
     /// @param input_buffer An input buffer.
@@ -118,7 +114,7 @@ public:
             return token;
         case '&': { // anchor prefix
             extract_anchor_name(token);
-            bool is_empty = token.str.empty();
+            const bool is_empty = token.str.empty();
             if FK_YAML_UNLIKELY (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
@@ -128,7 +124,7 @@ public:
         }
         case '*': { // alias prefix
             extract_anchor_name(token);
-            bool is_empty = token.str.empty();
+            const bool is_empty = token.str.empty();
             if FK_YAML_UNLIKELY (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
@@ -152,7 +148,7 @@ public:
             // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
             break;
         case '-': {
-            char next = *(m_cur_itr + 1);
+            const char next = *(m_cur_itr + 1);
             switch (next) {
             case ' ':
             case '\t':
@@ -165,9 +161,9 @@ public:
                 break;
             }
 
-            bool is_available = ((m_end_itr - m_cur_itr) > 2);
+            const bool is_available = ((m_end_itr - m_cur_itr) > 2);
             if (is_available) {
-                bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
+                const bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
                 if (is_dir_end) {
                     m_cur_itr += 3;
                     token.type = lexical_token_t::END_OF_DIRECTIVES;
@@ -210,9 +206,9 @@ public:
             check_scalar_content(token.str);
             return token;
         case '.': {
-            bool is_available = ((m_end_itr - m_cur_itr) > 2);
+            const bool is_available = ((m_end_itr - m_cur_itr) > 2);
             if (is_available) {
-                bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
+                const bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
                 if (is_doc_end) {
                     m_cur_itr += 3;
                     token.type = lexical_token_t::END_OF_DOCUMENT;
@@ -223,14 +219,14 @@ public:
         }
         case '|':
         case '>': {
-            str_view sv {m_token_begin_itr, m_end_itr};
-            std::size_t header_end_pos = sv.find('\n');
+            const str_view sv {m_token_begin_itr, m_end_itr};
+            const std::size_t header_end_pos = sv.find('\n');
 
             FK_YAML_ASSERT(!sv.empty());
             token.type = (sv[0] == '|') ? lexical_token_t::BLOCK_LITERAL_SCALAR : lexical_token_t::BLOCK_FOLDED_SCALAR;
 
             FK_YAML_ASSERT(header_end_pos != str_view::npos);
-            str_view header_line = sv.substr(1, header_end_pos - 1);
+            const str_view header_line = sv.substr(1, header_end_pos - 1);
             m_block_scalar_header = convert_to_block_scalar_header(header_line);
 
             m_token_begin_itr = sv.begin() + (header_end_pos + 1);
@@ -333,7 +329,7 @@ private:
             }
         }
 
-        str_view dir_name(m_token_begin_itr, m_cur_itr);
+        const str_view dir_name(m_token_begin_itr, m_cur_itr);
 
         if (dir_name == "TAG") {
             if FK_YAML_UNLIKELY (!ends_loop) {
@@ -397,7 +393,7 @@ private:
                         ends_loop = true;
                         break;
                     }
-                    char next = *(m_cur_itr + 1);
+                    const char next = *(m_cur_itr + 1);
                     if FK_YAML_UNLIKELY (next != ' ' && next != '\t') {
                         emit_error("invalid tag handle is found.");
                     }
@@ -441,6 +437,8 @@ private:
         case '{':
         case '}':
             emit_error("tag prefix must not start with flow indicators (\',\', [], {}).");
+        default:
+            break;
         }
 
         // extract the rest of a tag prefix.
@@ -452,10 +450,12 @@ private:
             case '\n':
                 ends_loop = true;
                 break;
+            default:
+                break;
             }
         } while (!ends_loop && ++m_cur_itr != m_end_itr);
 
-        bool is_valid = uri_encoding::validate(p_tag_prefix_begin, m_cur_itr);
+        const bool is_valid = uri_encoding::validate(p_tag_prefix_begin, m_cur_itr);
         if FK_YAML_UNLIKELY (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
@@ -593,18 +593,18 @@ private:
         token.str = str_view {m_token_begin_itr, m_cur_itr};
 
         if (is_verbatim) {
-            char last = token.str.back();
+            const char last = token.str.back();
             if FK_YAML_UNLIKELY (last != '>') {
                 emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
             }
 
             // only the `TAG` part of the `!<TAG>` for URI validation.
-            str_view tag_body = token.str.substr(2, token.str.size() - 3);
+            const str_view tag_body = token.str.substr(2, token.str.size() - 3);
             if FK_YAML_UNLIKELY (tag_body.empty()) {
                 emit_error("verbatim tag(!<TAG>) must not be empty.");
             }
 
-            bool is_valid_uri = uri_encoding::validate(tag_body.begin(), tag_body.end());
+            const bool is_valid_uri = uri_encoding::validate(tag_body.begin(), tag_body.end());
             if FK_YAML_UNLIKELY (!is_valid_uri) {
                 emit_error("invalid URI character is found in a verbatim tag.");
             }
@@ -613,7 +613,7 @@ private:
         }
 
         if (is_named_handle) {
-            char last = token.str.back();
+            const char last = token.str.back();
             if FK_YAML_UNLIKELY (last == '!') {
                 // Tag shorthand must be followed by a non-empty suffix.
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
@@ -623,18 +623,18 @@ private:
 
         // get the position of last tag prefix character (!) to extract body of tag shorthands.
         // tag shorthand is either primary(!tag), secondary(!!tag) or named(!handle!tag).
-        std::size_t last_tag_prefix_pos = token.str.find_last_of('!');
+        const std::size_t last_tag_prefix_pos = token.str.find_last_of('!');
         FK_YAML_ASSERT(last_tag_prefix_pos != str_view::npos);
 
-        str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
-        bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
+        const str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
+        const bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
         if FK_YAML_UNLIKELY (!is_valid_uri) {
             emit_error("Invalid URI character is found in a named tag handle.");
         }
 
         // Tag shorthands cannot contain flow indicators({}[],).
         // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
-        std::size_t invalid_char_pos = tag_uri.find_first_of("{}[],");
+        const std::size_t invalid_char_pos = tag_uri.find_first_of("{}[],");
         if (invalid_char_pos != str_view::npos) {
             emit_error("Tag shorthand cannot contain flow indicators({}[],).");
         }
@@ -643,7 +643,7 @@ private:
     /// @brief Determines the range of single quoted scalar by scanning remaining input buffer contents.
     /// @param token Storage for the range of single quoted scalar.
     void determine_single_quoted_scalar_range(str_view& token) {
-        str_view sv {m_token_begin_itr, m_end_itr};
+        const str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\'');
         while (pos != str_view::npos) {
@@ -668,7 +668,7 @@ private:
     /// @brief Determines the range of double quoted scalar by scanning remaining input buffer contents.
     /// @param token Storage for the range of double quoted scalar.
     void determine_double_quoted_scalar_range(str_view& token) {
-        str_view sv {m_token_begin_itr, m_end_itr};
+        const str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\"');
         while (pos != str_view::npos) {
@@ -709,7 +709,7 @@ private:
     /// @brief Determines the range of plain scalar by scanning remaining input buffer contents.
     /// @param token Storage for the range of plain scalar.
     void determine_plain_scalar_range(str_view& token) {
-        str_view sv {m_token_begin_itr, m_end_itr};
+        const str_view sv {m_token_begin_itr, m_end_itr};
 
         constexpr str_view filter = "\n :{}[],";
         std::size_t pos = sv.find_first_of(filter);
@@ -800,11 +800,11 @@ private:
     /// @param chomp The chomping indicator type of the given token, either strip, keep or clip.
     /// @param indent The indent size specified for the given token.
     void scan_block_style_string_token(uint32_t& indent, str_view& token) {
-        str_view sv {m_token_begin_itr, m_end_itr};
+        const str_view sv {m_token_begin_itr, m_end_itr};
 
         // Handle leading all-space lines.
         constexpr str_view space_filter = " \t\n";
-        std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
+        const std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
         if (first_non_space_pos == str_view::npos) {
             // empty block scalar with no subsequent tokens.
             indent = static_cast<uint32_t>(sv.size());
@@ -820,19 +820,17 @@ private:
         std::size_t last_newline_pos = sv.substr(0, first_non_space_pos).find_last_of('\n');
         if (last_newline_pos == str_view::npos) {
             // first_non_space_pos in on the first line.
-            uint32_t cur_indent = static_cast<uint32_t>(first_non_space_pos);
+            const auto cur_indent = static_cast<uint32_t>(first_non_space_pos);
             if (indent == 0) {
                 indent = cur_indent;
             }
             else if FK_YAML_UNLIKELY (cur_indent < indent) {
                 emit_error("A block style scalar is less indented than the indicated level.");
             }
-
-            last_newline_pos = 0;
         }
         else {
             FK_YAML_ASSERT(last_newline_pos < first_non_space_pos);
-            uint32_t cur_indent = static_cast<uint32_t>(first_non_space_pos - last_newline_pos - 1);
+            const auto cur_indent = static_cast<uint32_t>(first_non_space_pos - last_newline_pos - 1);
 
             // TODO: preserve and compare the last indentation with `cur_indent`
             if (indent == 0) {
@@ -854,14 +852,14 @@ private:
                 cur_line_end_pos = sv.size();
             }
 
-            std::size_t cur_line_content_begin_pos = sv.find_first_not_of(' ', last_newline_pos + 1);
+            const std::size_t cur_line_content_begin_pos = sv.find_first_not_of(' ', last_newline_pos + 1);
             if (cur_line_content_begin_pos == str_view::npos) {
                 last_newline_pos = cur_line_end_pos;
                 continue;
             }
 
             FK_YAML_ASSERT(last_newline_pos < cur_line_content_begin_pos);
-            uint32_t cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
+            const auto cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
             if (cur_indent < indent && sv[cur_line_content_begin_pos] != '\n') {
                 // Interpret less indented non-space characters as the start of the next token.
                 break;
@@ -947,6 +945,8 @@ private:
             emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
         case 0x1F:
             emit_error("Control character U+001F (US) must be escaped to \\u001F.");
+        default:
+            break;
         }
     }
 
@@ -964,9 +964,9 @@ private:
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
     /// @return Block scalar header information converted from the header line.
-    block_scalar_header convert_to_block_scalar_header(str_view& line) {
+    block_scalar_header convert_to_block_scalar_header(str_view line) {
         constexpr str_view comment_prefix = " #";
-        std::size_t comment_begin_pos = line.find(comment_prefix);
+        const std::size_t comment_begin_pos = line.find(comment_prefix);
         if (comment_begin_pos != str_view::npos) {
             line = line.substr(0, comment_begin_pos);
         }
@@ -1004,7 +1004,7 @@ private:
                 if FK_YAML_UNLIKELY (header.indent > 0) {
                     emit_error("Invalid indentation level for a block scalar. It must be between 1 and 9.");
                 }
-                header.indent = static_cast<char>(c - '0');
+                header.indent = static_cast<uint32_t>(c - '0');
                 break;
             case ' ':
             case '\t':
@@ -1061,7 +1061,7 @@ private:
 
 private:
     /// An input buffer adapter to be analyzed.
-    str_view m_input_buffer {};
+    str_view m_input_buffer;
     /// The iterator to the current character in the input buffer.
     const char* m_cur_itr {};
     /// The iterator to the beginning of the current token.
@@ -1071,11 +1071,11 @@ private:
     /// The current position tracker of the input buffer.
     mutable position_tracker m_pos_tracker {};
     /// The last yaml version.
-    str_view m_yaml_version {};
+    str_view m_yaml_version;
     /// The last tag handle.
-    str_view m_tag_handle {};
+    str_view m_tag_handle;
     /// The last tag prefix.
-    str_view m_tag_prefix {};
+    str_view m_tag_prefix;
     /// The last block scalar header.
     block_scalar_header m_block_scalar_header {};
     /// The beginning position of the last lexical token. (zero origin)

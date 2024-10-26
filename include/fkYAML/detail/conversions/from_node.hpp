@@ -156,7 +156,7 @@ inline void from_node(const BasicNodeType& n, IntegerType& i) {
 
     // under/overflow check.
     using node_int_type = typename BasicNodeType::integer_type;
-    node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
+    const node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
     if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min())) {
         throw exception("Integer value underflow detected.");
     }
@@ -271,8 +271,8 @@ struct from_node_fn {
     /// @param val A target object assigned from the basic_node object.
     /// @return decltype(from_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
     template <typename BasicNodeType, typename T>
-    auto operator()(const BasicNodeType& n, T&& val) const noexcept(noexcept(from_node(n, std::forward<T>(val))))
-        -> decltype(from_node(n, std::forward<T>(val))) {
+    auto operator()(const BasicNodeType& n, T&& val) const
+        noexcept(noexcept(from_node(n, std::forward<T>(val)))) -> decltype(from_node(n, std::forward<T>(val))) {
         return from_node(n, std::forward<T>(val));
     }
 };

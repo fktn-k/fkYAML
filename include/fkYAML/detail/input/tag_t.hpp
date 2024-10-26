@@ -9,12 +9,14 @@
 #ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP
 #define FK_YAML_DETAIL_INPUT_TAG_T_HPP
 
+#include <cstdint>
+
 #include <fkYAML/detail/macros/version_macros.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of YAML tag types.
-enum class tag_t {
+enum class tag_t : std::uint8_t {
     NONE,            //!< Represents a non-specific tag "?".
     NON_SPECIFIC,    //!< Represents a non-specific tag "!".
     CUSTOM_TAG,      //!< Represents a custom tag

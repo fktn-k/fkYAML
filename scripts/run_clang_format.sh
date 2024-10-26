@@ -20,7 +20,7 @@ fi
 # install the clang-format package if not installed yet.
 if [ ! -e "$SCRIPT_DIR"/venv_clang_format/"$VENV_BINARY_DIR"/clang-format ]; then
     "$PYTHON_EXE" -m venv "$SCRIPT_DIR/venv_clang_format"
-    "$SCRIPT_DIR"/venv_clang_format/"$VENV_BINARY_DIR"/pip install clang-format==14.0.0
+    "$SCRIPT_DIR"/venv_clang_format/"$VENV_BINARY_DIR"/pip install clang-format==18.1.3
 fi
 
 for f in $(find "$ROOT_DIR/include" "$ROOT_DIR/test" "$ROOT_DIR/docs/examples" "$ROOT_DIR/tool/benchmark" -type f -name "*.hpp" -o -name "*.cpp" | sort); do

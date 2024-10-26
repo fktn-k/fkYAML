@@ -47,7 +47,7 @@ public:
     /// @brief Constructs a new scalar_parser object.
     /// @param line Current line.
     /// @param indent Current indentation.
-    scalar_parser(uint32_t line, uint32_t indent) noexcept
+    scalar_parser(uint32_t line, uint32_t indent) noexcept // NOLINT(bugprone-easily-swappable-parameters)
         : m_line(line),
           m_indent(indent) {
     }
@@ -74,7 +74,7 @@ public:
         FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
 
         token = parse_flow_scalar_token(lex_type, token);
-        node_type value_type = decide_value_type(lex_type, tag_type, token);
+        const node_type value_type = decide_value_type(lex_type, tag_type, token);
         return create_scalar_node(value_type, token);
     }
 
@@ -97,7 +97,7 @@ public:
             token = parse_block_folded_scalar(token, header);
         }
 
-        node_type value_type = decide_value_type(lex_type, tag_type, token);
+        const node_type value_type = decide_value_type(lex_type, tag_type, token);
         return create_scalar_node(value_type, token);
     }
 
@@ -197,7 +197,7 @@ private:
                 if (token[pos + 1] != '\n') {
                     token.remove_prefix(pos);
                     const char* p_escape_begin = token.begin();
-                    bool is_valid_escaping = yaml_escaper::unescape(p_escape_begin, token.end(), m_buffer);
+                    const bool is_valid_escaping = yaml_escaper::unescape(p_escape_begin, token.end(), m_buffer);
                     if FK_YAML_UNLIKELY (!is_valid_escaping) {
                         throw parse_error(
                             "Unsupported escape sequence is found in a double quoted scalar.", m_line, m_indent);
@@ -249,8 +249,8 @@ private:
                 cur_line_end_pos = token.size();
             }
 
-            std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
-            str_view line = token.substr(cur_line_begin_pos, line_size);
+            const std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
+            const str_view line = token.substr(cur_line_begin_pos, line_size);
 
             if (line.size() > header.indent) {
                 m_buffer.append(line.begin() + header.indent, line.end());
@@ -291,8 +291,8 @@ private:
                 cur_line_end_pos = token.size();
             }
 
-            std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
-            str_view line = token.substr(cur_line_begin_pos, line_size);
+            const std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
+            const str_view line = token.substr(cur_line_begin_pos, line_size);
 
             if (line.size() <= header.indent) {
                 // empty or less-indented lines are turned into a newline
@@ -300,8 +300,8 @@ private:
                 can_be_folded = false;
             }
             else {
-                std::size_t non_space_pos = line.find_first_not_of(' ');
-                bool is_more_indented = (non_space_pos != str_view::npos) && (non_space_pos > header.indent);
+                const std::size_t non_space_pos = line.find_first_not_of(' ');
+                const bool is_more_indented = (non_space_pos != str_view::npos) && (non_space_pos > header.indent);
 
                 if (can_be_folded) {
                     if (is_more_indented) {
@@ -348,7 +348,7 @@ private:
     void process_chomping(chomping_indicator_t chomp) {
         switch (chomp) {
         case chomping_indicator_t::STRIP: {
-            std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
+            const std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
             if (content_end_pos == std::string::npos) {
                 // if the scalar has no content line, all lines are considered as trailing empty lines.
                 m_buffer.clear();
@@ -366,7 +366,7 @@ private:
             break;
         }
         case chomping_indicator_t::CLIP: {
-            std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
+            const std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
             if (content_end_pos == std::string::npos) {
                 // if the scalar has no content line, all lines are considered as trailing empty lines.
                 m_buffer.clear();
@@ -393,7 +393,7 @@ private:
     /// @param newline_pos Position of the target newline code.
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
         // discard trailing white spaces which precedes the line break in the current line.
-        std::size_t last_non_space_pos = token.substr(0, newline_pos + 1).find_last_not_of(" \t");
+        const std::size_t last_non_space_pos = token.substr(0, newline_pos + 1).find_last_not_of(" \t");
         if (last_non_space_pos == str_view::npos) {
             m_buffer.append(token.begin(), newline_pos);
         }
@@ -404,13 +404,13 @@ private:
 
         uint32_t empty_line_counts = 0;
         do {
-            std::size_t non_space_pos = token.find_first_not_of(" \t");
+            const std::size_t non_space_pos = token.find_first_not_of(" \t");
             if (non_space_pos == str_view::npos) {
                 // Line folding ignores trailing spaces.
                 token.remove_prefix(token.size());
                 break;
             }
-            else if (token[non_space_pos] != '\n') {
+            if (token[non_space_pos] != '\n') {
                 token.remove_prefix(non_space_pos);
                 break;
             }
@@ -452,8 +452,6 @@ private:
             value_type = node_type::FLOAT;
             break;
         case tag_t::STRING:
-            value_type = node_type::STRING;
-            break;
         case tag_t::NON_SPECIFIC:
             // scalars with the non-specific tag is resolved to a string tag.
             // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
@@ -478,7 +476,7 @@ private:
         switch (type) {
         case node_type::NULL_OBJECT: {
             std::nullptr_t null = nullptr;
-            bool converted = detail::aton(token.begin(), token.end(), null);
+            const bool converted = detail::aton(token.begin(), token.end(), null);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a null.", m_line, m_indent);
             }
@@ -486,8 +484,8 @@ private:
             break;
         }
         case node_type::BOOLEAN: {
-            boolean_type boolean = static_cast<boolean_type>(false);
-            bool converted = detail::atob(token.begin(), token.end(), boolean);
+            auto boolean = static_cast<boolean_type>(false);
+            const bool converted = detail::atob(token.begin(), token.end(), boolean);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a boolean.", m_line, m_indent);
             }
@@ -496,7 +494,7 @@ private:
         }
         case node_type::INTEGER: {
             integer_type integer = 0;
-            bool converted = detail::atoi(token.begin(), token.end(), integer);
+            const bool converted = detail::atoi(token.begin(), token.end(), integer);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to an integer.", m_line, m_indent);
             }
@@ -505,7 +503,7 @@ private:
         }
         case node_type::FLOAT: {
             float_number_type float_val = 0;
-            bool converted = detail::atof(token.begin(), token.end(), float_val);
+            const bool converted = detail::atof(token.begin(), token.end(), float_val);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a floating point value", m_line, m_indent);
             }
@@ -535,7 +533,7 @@ private:
     /// Whether the parsed contents are stored in an owned buffer.
     bool m_use_owned_buffer {false};
     /// Owned buffer storage for parsing. This buffer is used when scalar contents need mutation.
-    std::string m_buffer {};
+    std::string m_buffer;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

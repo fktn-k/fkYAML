@@ -72,21 +72,21 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
     SECTION("std::string") {
         std::string input_str(input);
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
-        using iterator_type = typename std::string::iterator;
+        using iterator_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
     SECTION("std::u16string") {
         std::u16string input_str(u"test");
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
-        using iterator_type = typename std::u16string::iterator;
+        using iterator_type = typename std::u16string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
     SECTION("std::u32string") {
         std::u32string input_str(U"test");
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
-        using iterator_type = typename std::u32string::iterator;
+        using iterator_type = typename std::u32string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
@@ -94,7 +94,7 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
     SECTION("std::string_view") {
         std::string_view input_str_view(input);
         auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
-        using iterator_type = typename std::string_view::iterator;
+        using iterator_type = typename std::string_view::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
@@ -102,7 +102,7 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
         using namespace std::string_view_literals;
         std::u16string_view input_str_view = u"test"sv;
         auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
-        using iterator_type = typename std::u16string_view::iterator;
+        using iterator_type = typename std::u16string_view::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
@@ -110,7 +110,7 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
         using namespace std::string_view_literals;
         std::u32string_view input_str_view = U"test"sv;
         auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
-        using iterator_type = typename std::u32string_view::iterator;
+        using iterator_type = typename std::u32string_view::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 #endif
@@ -119,7 +119,7 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
     SECTION("std::u8string") {
         std::u8string input_str(u8"test");
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
-        using iterator_type = typename std::u8string::iterator;
+        using iterator_type = typename std::u8string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
@@ -127,7 +127,7 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
         using namespace std::string_view_literals;
         std::u8string_view input_str_view = u8"test"sv;
         auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
-        using iterator_type = typename std::u8string_view::iterator;
+        using iterator_type = typename std::u8string_view::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 #endif
@@ -192,7 +192,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8N") {
     SECTION("iterator_input_adapter with std::string") {
         std::string input = "test source.";
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -283,7 +283,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8BOM") {
             char(0xEFu), char(0xBBu), char(0xBFu), 't', 'e', 's', 't', ' ', 's', 'o', 'u', 'r', 'c', 'e', '.', 0};
         std::string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -368,7 +368,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
     SECTION("iterator_input_adapter with std::string") {
         std::string input {0, 0x61, 0x30, 0x42, char(0xD8u), 0x40, char(0xDCu), 0x0B, 0, 0x52, 0, 0x5A};
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -409,7 +409,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
         char16_t raw_input[] = {0x0061u, 0x3042u, 0xD840u, 0xDC0Bu, 0x0052u, 0x005Au, 0};
         std::u16string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::u16string::iterator;
+        using itr_type = typename std::u16string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -496,7 +496,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
         std::string input {
             char(0xFEu), char(0xFFu), 0, 0x61, 0x30, 0x42, char(0xD8u), 0x40, char(0xDCu), 0x0B, 0, 0x52};
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -536,7 +536,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
         char16_t raw_input[] = {0xFEFFu, 0x0061u, 0x3042u, 0xD840u, 0xDC0Bu, 0x0052u, 0};
         std::u16string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::u16string::iterator;
+        using itr_type = typename std::u16string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -619,7 +619,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
     SECTION("iterator_input_adapter with std::string") {
         std::string input {0x61, 0, 0x42, 0x30, 0x40, char(0xD8u), 0x0B, char(0xDCu), 0x52, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -659,7 +659,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
         char16_t raw_input[] = {0x6100u, 0x4230u, 0x40D8u, 0x0BDCu, 0x5200u, 0};
         std::u16string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::u16string::iterator;
+        using itr_type = typename std::u16string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -745,7 +745,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
         std::string input {
             char(0xFFu), char(0xFEu), 0x61, 0, 0x42, 0x30, 0x40, char(0xD8u), 0x0B, char(0xDCu), 0x52, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -785,7 +785,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
         char16_t raw_input[] = {0xFFFEu, 0x6100u, 0x4230u, 0x40D8u, 0x0BDCu, 0x5200u, 0};
         std::u16string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::u16string::iterator;
+        using itr_type = typename std::u16string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -868,7 +868,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
     SECTION("iterator_input_adapter with std::string") {
         std::string input {0, 0, 0, 0x61, 0, 0, 0x30, 0x42, 0, 0x02, 0, 0x0B};
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -906,7 +906,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
         char32_t raw_input[] = {0x00000061u, 0x00003042u, 0x0002000Bu, 0x00000000};
         std::u32string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::u32string::iterator;
+        using itr_type = typename std::u32string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -986,7 +986,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
     SECTION("iterator_input_adapter with std::string") {
         std::string input {0, 0, char(0xFEu), char(0xFFu), 0, 0, 0, 0x61, 0, 0, 0x30, 0x42, 0, 0x02, 0, 0x0B};
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -1024,7 +1024,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
         char32_t raw_input[] = {0x0000FEFFu, 0x00000061u, 0x00003042u, 0x0002000Bu, 0x00000000};
         std::u32string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::u32string::iterator;
+        using itr_type = typename std::u32string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -1104,7 +1104,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
     SECTION("iterator_input_adapter with std::string") {
         std::string input {0x61, 0, 0, 0, 0x42, 0x30, 0, 0, 0x0B, 0, 0x02, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -1142,7 +1142,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
         char32_t raw_input[] = {0x61000000u, 0x42300000u, 0x0B000200u, 0x00000000};
         std::u32string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::u32string::iterator;
+        using itr_type = typename std::u32string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -1222,7 +1222,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
     SECTION("iterator_input_adapter with std::string") {
         std::string input {char(0xFFu), char(0xFEu), 0, 0, 0x61, 0, 0, 0, 0x42, 0x30, 0, 0, 0x0B, 0, 0x02, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::string::iterator;
+        using itr_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
@@ -1260,7 +1260,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
         char32_t raw_input[] = {0xFFFE0000u, 0x61000000u, 0x42300000u, 0x0B000200u, 0x00000000};
         std::u32string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
-        using itr_type = typename std::u32string::iterator;
+        using itr_type = typename std::u32string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<itr_type>>::value);
 
         fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();

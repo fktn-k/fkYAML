@@ -17,9 +17,9 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct node_property {
     /// The tag name property.
-    std::string tag {};
+    std::string tag;
     /// The anchor name property.
-    std::string anchor {};
+    std::string anchor;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

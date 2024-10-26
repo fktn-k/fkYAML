@@ -26,11 +26,11 @@ struct document_metainfo {
     /// Whether the YAML version has been specified.
     bool is_version_specified {false};
     /// The prefix of the primary handle.
-    std::string primary_handle_prefix {};
+    std::string primary_handle_prefix;
     /// The prefix of the secondary handle.
-    std::string secondary_handle_prefix {};
+    std::string secondary_handle_prefix;
     /// The map of handle-prefix pairs.
-    std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
+    std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map;
     /// The map of anchor node which allows for key duplication.
     std::multimap<std::string /*anchor name*/, BasicNodeType> anchor_table {};
 };

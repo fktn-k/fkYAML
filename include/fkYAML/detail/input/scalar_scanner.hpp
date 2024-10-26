@@ -18,26 +18,6 @@
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-namespace {
-
-/// @brief Check if the given character is a digit.
-/// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a digit, false otherwise.
-inline bool is_digit(char c) {
-    return ('0' <= c && c <= '9');
-}
-
-/// @brief Check if the given character is a hex-digit.
-/// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a hex-digit, false otherwise.
-inline bool is_xdigit(char c) {
-    return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
-}
-
-} // namespace
-
 /// @brief The class which detects a scalar value type by scanning contents.
 class scalar_scanner {
 public:
@@ -50,7 +30,7 @@ public:
             return node_type::STRING;
         }
 
-        uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+        const auto len = static_cast<uint32_t>(std::distance(begin, end));
         if (len > 5) {
             return scan_possible_number_token(begin, len);
         }
@@ -83,7 +63,7 @@ public:
                            : node_type::STRING;
             case '.': {
                 const char* p_from_second = p_begin + 1;
-                bool is_inf_or_nan_scalar =
+                const bool is_inf_or_nan_scalar =
                     (std::strncmp(p_from_second, "inf", 3) == 0) || (std::strncmp(p_from_second, "Inf", 3) == 0) ||
                     (std::strncmp(p_from_second, "INF", 3) == 0) || (std::strncmp(p_from_second, "nan", 3) == 0) ||
                     (std::strncmp(p_from_second, "NaN", 3) == 0) || (std::strncmp(p_from_second, "NAN", 3) == 0);
@@ -93,6 +73,8 @@ public:
                 // maybe a number.
                 break;
             }
+            default:
+                break;
             }
             break;
         case 5:
@@ -109,16 +91,20 @@ public:
             case '-':
                 if (*(p_begin + 1) == '.') {
                     const char* p_from_third = p_begin + 2;
-                    bool is_min_inf_scalar = (std::strncmp(p_from_third, "inf", 3) == 0) ||
-                                             (std::strncmp(p_from_third, "Inf", 3) == 0) ||
-                                             (std::strncmp(p_from_third, "INF", 3) == 0);
-                    if (is_min_inf_scalar) {
+                    const bool is_min_inf = (std::strncmp(p_from_third, "inf", 3) == 0) ||
+                                            (std::strncmp(p_from_third, "Inf", 3) == 0) ||
+                                            (std::strncmp(p_from_third, "INF", 3) == 0);
+                    if (is_min_inf) {
                         return node_type::FLOAT;
                     }
                 }
                 // maybe a number.
                 break;
+            default:
+                break;
             }
+            break;
+        default:
             break;
         }
 
@@ -240,7 +226,7 @@ private:
         FK_YAML_ASSERT(len > 0);
 
         for (uint32_t i = 0; i < len; i++) {
-            char c = *itr++;
+            const char c = *itr++;
 
             if (is_digit(c)) {
                 continue;
@@ -267,7 +253,7 @@ private:
     static node_type scan_after_exponent(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
-        char c = *itr;
+        const char c = *itr;
         if (c == '+' || c == '-') {
             if (len == 1) {
                 // some integer(s) required after the sign.
@@ -319,6 +305,24 @@ private:
             return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::INTEGER;
         }
         return node_type::STRING;
+    }
+
+    /// @brief Check if the given character is a digit.
+    /// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with
+    /// MSVC.
+    /// @param c A character to be checked.
+    /// @return true if the given character is a digit, false otherwise.
+    static bool is_digit(char c) {
+        return ('0' <= c && c <= '9');
+    }
+
+    /// @brief Check if the given character is a hex-digit.
+    /// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with
+    /// MSVC.
+    /// @param c A character to be checked.
+    /// @return true if the given character is a hex-digit, false otherwise.
+    static bool is_xdigit(char c) {
+        return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
     }
 };
 

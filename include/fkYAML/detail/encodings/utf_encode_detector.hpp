@@ -28,53 +28,54 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept {
     has_bom = false;
 
-    uint8_t byte0 = bytes[0];
-    uint8_t byte1 = bytes[1];
-    uint8_t byte2 = bytes[2];
-    uint8_t byte3 = bytes[3];
+    const uint8_t byte0 = bytes[0];
+    const uint8_t byte1 = bytes[1];
+    const uint8_t byte2 = bytes[2];
+    const uint8_t byte3 = bytes[3];
 
     // Check if a BOM exists.
 
-    if (byte0 == uint8_t(0xEFu) && byte1 == uint8_t(0xBBu) && byte2 == uint8_t(0xBFu)) {
+    if (byte0 == static_cast<uint8_t>(0xEFu) && byte1 == static_cast<uint8_t>(0xBBu) &&
+        byte2 == static_cast<uint8_t>(0xBFu)) {
         has_bom = true;
         return utf_encode_t::UTF_8;
     }
 
-    if (byte0 == 0 && byte1 == 0 && byte2 == uint8_t(0xFEu) && byte3 == uint8_t(0xFFu)) {
+    if (byte0 == 0 && byte1 == 0 && byte2 == static_cast<uint8_t>(0xFEu) && byte3 == static_cast<uint8_t>(0xFFu)) {
         has_bom = true;
         return utf_encode_t::UTF_32BE;
     }
 
-    if (byte0 == uint8_t(0xFFu) && byte1 == uint8_t(0xFEu) && byte2 == 0 && byte3 == 0) {
+    if (byte0 == static_cast<uint8_t>(0xFFu) && byte1 == static_cast<uint8_t>(0xFEu) && byte2 == 0 && byte3 == 0) {
         has_bom = true;
         return utf_encode_t::UTF_32LE;
     }
 
-    if (byte0 == uint8_t(0xFEu) && byte1 == uint8_t(0xFFu)) {
+    if (byte0 == static_cast<uint8_t>(0xFEu) && byte1 == static_cast<uint8_t>(0xFFu)) {
         has_bom = true;
         return utf_encode_t::UTF_16BE;
     }
 
-    if (byte0 == uint8_t(0xFFu) && byte1 == uint8_t(0xFEu)) {
+    if (byte0 == static_cast<uint8_t>(0xFFu) && byte1 == static_cast<uint8_t>(0xFEu)) {
         has_bom = true;
         return utf_encode_t::UTF_16LE;
     }
 
     // Test the first character assuming it's an ASCII character.
 
-    if (byte0 == 0 && byte1 == 0 && byte2 == 0 && 0 < byte3 && byte3 < uint8_t(0x80u)) {
+    if (byte0 == 0 && byte1 == 0 && byte2 == 0 && 0 < byte3 && byte3 < static_cast<uint8_t>(0x80u)) {
         return utf_encode_t::UTF_32BE;
     }
 
-    if (0 < byte0 && byte0 < uint8_t(0x80u) && byte1 == 0 && byte2 == 0 && byte3 == 0) {
+    if (0 < byte0 && byte0 < static_cast<uint8_t>(0x80u) && byte1 == 0 && byte2 == 0 && byte3 == 0) {
         return utf_encode_t::UTF_32LE;
     }
 
-    if (byte0 == 0 && 0 < byte1 && byte1 < uint8_t(0x80u)) {
+    if (byte0 == 0 && 0 < byte1 && byte1 < static_cast<uint8_t>(0x80u)) {
         return utf_encode_t::UTF_16BE;
     }
 
-    if (0 < byte0 && byte0 < uint8_t(0x80u) && byte1 == 0) {
+    if (0 < byte0 && byte0 < static_cast<uint8_t>(0x80u) && byte1 == 0) {
         return utf_encode_t::UTF_16LE;
     }
 
@@ -102,11 +103,11 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
         std::array<uint8_t, 4> bytes {};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4 && begin + i != end; i++) {
-            bytes[i] = uint8_t(begin[i]);
+            bytes[i] = uint8_t(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         if (has_bom) {
             // skip reading the BOM.
@@ -147,11 +148,11 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
         std::array<uint8_t, 4> bytes {};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4 && begin + i != end; i++) {
-            bytes[i] = uint8_t(begin[i]);
+            bytes[i] = uint8_t(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_8) {
             throw exception("char8_t characters must be encoded in the UTF-8 format.");
@@ -184,13 +185,16 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
         std::array<uint8_t, 4> bytes {};
         bytes.fill(0xFFu);
         for (int i = 0; i < 2 && begin + i != end; i++) {
-            char16_t elem = begin[i];
-            bytes[i * 2] = uint8_t((elem & 0xFF00u) >> 8);
-            bytes[i * 2 + 1] = uint8_t(elem & 0xFFu);
+            // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
+            const char16_t elem = begin[i];
+            const int idx_base = i * 2;
+            bytes[idx_base] = static_cast<uint8_t>((elem & 0xFF00u) >> 8);
+            bytes[idx_base + 1] = static_cast<uint8_t>(elem & 0xFFu);
+            // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_16BE && encode_type != utf_encode_t::UTF_16LE) {
             throw exception("char16_t characters must be encoded in the UTF-16 format.");
@@ -219,14 +223,14 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
         }
 
         std::array<uint8_t, 4> bytes {};
-        char32_t elem = *begin;
-        bytes[0] = uint8_t((elem & 0xFF000000u) >> 24);
-        bytes[1] = uint8_t((elem & 0x00FF0000u) >> 16);
-        bytes[2] = uint8_t((elem & 0x0000FF00u) >> 8);
-        bytes[3] = uint8_t(elem & 0x000000FFu);
+        const char32_t elem = *begin;
+        bytes[0] = static_cast<uint8_t>((elem & 0xFF000000u) >> 24);
+        bytes[1] = static_cast<uint8_t>((elem & 0x00FF0000u) >> 16);
+        bytes[2] = static_cast<uint8_t>((elem & 0x0000FF00u) >> 8);
+        bytes[3] = static_cast<uint8_t>(elem & 0x000000FFu);
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_32BE && encode_type != utf_encode_t::UTF_32LE) {
             throw exception("char32_t characters must be encoded in the UTF-32 format.");
@@ -251,18 +255,18 @@ struct file_utf_encode_detector {
         bytes.fill(0xFFu);
         for (int i = 0; i < 4; i++) {
             char byte = 0;
-            std::size_t size = std::fread(&byte, sizeof(char), 1, p_file);
+            const std::size_t size = std::fread(&byte, sizeof(char), 1, p_file);
             if (size != sizeof(char)) {
                 break;
             }
-            bytes[i] = uint8_t(byte & 0xFF);
+            bytes[i] = static_cast<uint8_t>(byte & 0xFF); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         // move back to the beginning if a BOM doesn't exist.
-        long offset = 0;
+        long offset = 0; // NOLINT(google-runtime-int)
         if (has_bom) {
             switch (encode_type) {
             case utf_encode_t::UTF_8:
@@ -278,7 +282,7 @@ struct file_utf_encode_detector {
                 break;
             }
         }
-        std::fseek(p_file, offset, SEEK_SET);
+        std::fseek(p_file, offset, SEEK_SET); // NOLINT(cert-err33-c)
 
         return encode_type;
     }
@@ -295,17 +299,17 @@ struct stream_utf_encode_detector {
         for (int i = 0; i < 4; i++) {
             char ch = 0;
             is.read(&ch, 1);
-            std::streamsize size = is.gcount();
+            const std::streamsize size = is.gcount();
             if (size != 1) {
                 // without this, seekg() will fail.
                 is.clear();
                 break;
             }
-            bytes[i] = uint8_t(ch & 0xFF);
+            bytes[i] = static_cast<uint8_t>(ch & 0xFF); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         // move back to the beginning if a BOM doesn't exist.
         std::streamoff offset = 0;

@@ -310,8 +310,8 @@ struct to_node_fn {
     /// @param val A target object assigned to the basic_node object.
     /// @return decltype(to_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
     template <typename BasicNodeType, typename T>
-    auto operator()(BasicNodeType& n, T&& val) const noexcept(noexcept(to_node(n, std::forward<T>(val))))
-        -> decltype(to_node(n, std::forward<T>(val))) {
+    auto operator()(BasicNodeType& n, T&& val) const
+        noexcept(noexcept(to_node(n, std::forward<T>(val)))) -> decltype(to_node(n, std::forward<T>(val))) {
         return to_node(n, std::forward<T>(val));
     }
 };

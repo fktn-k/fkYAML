@@ -10,7 +10,6 @@
 #define FK_YAML_DETAIL_TYPES_NODE_T_HPP
 
 #include <cstdint>
-#include <string>
 
 #include <fkYAML/detail/macros/version_macros.hpp>
 #include <fkYAML/node_type.hpp>
@@ -18,7 +17,7 @@
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of node value types.
-enum class node_t : std::uint32_t {
+enum class node_t : std::uint8_t {
     SEQUENCE,     //!< sequence value type
     MAPPING,      //!< mapping value type
     NULL_OBJECT,  //!< null value type

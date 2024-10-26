@@ -43,9 +43,8 @@ public:
     /// @param val A native data object.
     /// @sa https://fktn-k.github.io/fkYAML/api/node_value_converter/to_node/
     template <typename BasicNodeType, typename TargetType = ValueType>
-    static auto to_node(BasicNodeType& n, TargetType&& val) noexcept(
-        noexcept(::fkyaml::to_node(n, std::forward<TargetType>(val))))
-        -> decltype(::fkyaml::to_node(n, std::forward<TargetType>(val))) {
+    static auto to_node(BasicNodeType& n, TargetType&& val) noexcept(noexcept(::fkyaml::to_node(
+        n, std::forward<TargetType>(val)))) -> decltype(::fkyaml::to_node(n, std::forward<TargetType>(val))) {
         ::fkyaml::to_node(n, std::forward<TargetType>(val));
     }
 };

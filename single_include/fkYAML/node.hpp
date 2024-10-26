@@ -861,7 +861,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_NAMESPACE_BEGIN
 
-enum class yaml_version_type : std::uint32_t {
+enum class yaml_version_type : std::uint8_t {
     VERSION_1_1, //!< YAML version 1.1
     VERSION_1_2, //!< YAML version 1.2
 };
@@ -892,11 +892,11 @@ struct document_metainfo {
     /// Whether the YAML version has been specified.
     bool is_version_specified {false};
     /// The prefix of the primary handle.
-    std::string primary_handle_prefix {};
+    std::string primary_handle_prefix;
     /// The prefix of the secondary handle.
-    std::string secondary_handle_prefix {};
+    std::string secondary_handle_prefix;
     /// The map of handle-prefix pairs.
-    std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
+    std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map;
     /// The map of anchor node which allows for key duplication.
     std::multimap<std::string /*anchor name*/, BasicNodeType> anchor_table {};
 };
@@ -981,7 +981,7 @@ public:
 
         for (; current != end; ++current) {
             if (*current == '%') {
-                bool are_valid_octets = validate_octets(++current, end);
+                const bool are_valid_octets = validate_octets(++current, end);
                 if (!are_valid_octets) {
                     return false;
                 }
@@ -989,7 +989,7 @@ public:
                 continue;
             }
 
-            bool is_allowed_character = validate_character(*current);
+            const bool is_allowed_character = validate_character(*current);
             if (!is_allowed_character) {
                 return false;
             }
@@ -1010,7 +1010,7 @@ private:
             }
 
             // Normalize a character for a-f/A-F comparison
-            int octet = std::tolower(*begin);
+            const int octet = std::tolower(*begin);
 
             if ('0' <= octet && octet <= '9') {
                 continue;
@@ -1029,7 +1029,7 @@ private:
     /// @brief Verify if the given character is allowed as a URI character.
     /// @param c The target character.
     /// @return true if the given character is allowed as a URI character, false otherwise.
-    static bool validate_character(char c) {
+    static bool validate_character(const char c) {
         // Check if the current character is one of reserved/unreserved characters which are allowed for
         // use. See the following links for details:
         // * reserved characters:   https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
@@ -1131,7 +1131,9 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+// NOLINTNEXTLINE(cert-dcl50-cpp)
 inline std::string format(const char* fmt, ...) {
+    // NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
     va_list vl;
     va_start(vl, fmt);
     int size = std::vsnprintf(nullptr, 0, fmt, vl);
@@ -1143,13 +1145,14 @@ inline std::string format(const char* fmt, ...) {
     }
     // LCOV_EXCL_STOP
 
-    std::unique_ptr<char[]> buffer {new char[size + 1] {}};
+    const std::unique_ptr<char[]> buffer {new char[size + 1] {}};
 
     va_start(vl, fmt);
     size = std::vsnprintf(buffer.get(), size + 1, fmt, vl);
     va_end(vl);
+    // NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
 
-    return std::string(buffer.get(), size);
+    return {buffer.get(), static_cast<std::size_t>(size)};
 }
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -1169,7 +1172,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 #define FK_YAML_DETAIL_TYPES_NODE_T_HPP
 
 #include <cstdint>
-#include <string>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -1192,7 +1194,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_NAMESPACE_BEGIN
 
-enum class node_type : std::uint32_t {
+enum class node_type : std::uint8_t {
     SEQUENCE,    //!< sequence value type
     MAPPING,     //!< mapping value type
     NULL_OBJECT, //!< null value type
@@ -1231,7 +1233,7 @@ FK_YAML_NAMESPACE_END
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of node value types.
-enum class node_t : std::uint32_t {
+enum class node_t : std::uint8_t {
     SEQUENCE,     //!< sequence value type
     MAPPING,      //!< mapping value type
     NULL_OBJECT,  //!< null value type
@@ -1338,7 +1340,7 @@ public:
 
 private:
     /// An error message holder.
-    std::string m_error_msg {};
+    std::string m_error_msg;
 };
 
 /// @brief An exception class indicating an encoding error.
@@ -1368,9 +1370,9 @@ public:
     }
 
 private:
-    std::string generate_error_message(const char* msg, const std::initializer_list<uint8_t>& u8) const noexcept {
-        auto itr = u8.begin();
-        auto end_itr = u8.end();
+    static std::string generate_error_message(const char* msg, const std::initializer_list<uint8_t>& u8) noexcept {
+        const auto* itr = u8.begin();
+        const auto* end_itr = u8.end();
         std::string formatted = detail::format("invalid_encoding: %s in=[ 0x%02x", msg, *itr++);
         while (itr != end_itr) {
             formatted += detail::format(", 0x%02x", *itr++);
@@ -1384,18 +1386,22 @@ private:
     /// @param h The first UTF-16 encoded element used for the UTF-8 encoding.
     /// @param l The second UTF-16 encoded element used for the UTF-8 encoding.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16) const noexcept {
+    static std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16) noexcept {
         // uint16_t is large enough for UTF-16 encoded elements.
-        return detail::format("invalid_encoding: %s in=[ 0x%04x, 0x%04x ]", msg, uint16_t(u16[0]), uint16_t(u16[1]));
+        return detail::format(
+            "invalid_encoding: %s in=[ 0x%04x, 0x%04x ]",
+            msg,
+            static_cast<uint16_t>(u16[0]),
+            static_cast<uint16_t>(u16[1]));
     }
 
     /// @brief Generate an error message from the given parameters for the UTF-32 encoding.
     /// @param msg An error message.
     /// @param u32 The UTF-32 encoded element used for the UTF-8 encoding.
     /// @return A genereated error message.
-    std::string generate_error_message(const char* msg, char32_t u32) const noexcept {
+    static std::string generate_error_message(const char* msg, char32_t u32) noexcept {
         // uint32_t is large enough for UTF-32 encoded elements.
-        return detail::format("invalid_encoding: %s in=0x%08x", msg, uint32_t(u32));
+        return detail::format("invalid_encoding: %s in=0x%08x", msg, static_cast<uint32_t>(u32));
     }
 };
 
@@ -1407,7 +1413,7 @@ public:
     }
 
 private:
-    std::string generate_error_message(const char* msg, uint32_t lines, uint32_t cols_in_line) const noexcept {
+    static std::string generate_error_message(const char* msg, uint32_t lines, uint32_t cols_in_line) noexcept {
         return detail::format("parse_error: %s (at line %u, column %u)", msg, lines, cols_in_line);
     }
 };
@@ -1437,7 +1443,7 @@ private:
     /// @param msg An error message.
     /// @param type The type of a source node value.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, node_type type) const noexcept {
+    static std::string generate_error_message(const char* msg, node_type type) noexcept {
         return detail::format("type_error: %s type=%s", msg, to_string(type));
     }
 };
@@ -1453,11 +1459,11 @@ public:
     }
 
 private:
-    std::string generate_error_message(int index) {
+    static std::string generate_error_message(int index) noexcept {
         return detail::format("out_of_range: index %d is out of range", index);
     }
 
-    std::string generate_error_message(const char* key) {
+    static std::string generate_error_message(const char* key) noexcept {
         return detail::format("out_of_range: key \'%s\' is not found.", key);
     }
 };
@@ -1469,7 +1475,7 @@ public:
     }
 
 private:
-    std::string generate_error_message(const char* msg, const char* tag) {
+    static std::string generate_error_message(const char* msg, const char* tag) noexcept {
         return detail::format("invalid_tag: %s tag=%s", msg, tag);
     }
 };
@@ -1497,15 +1503,15 @@ inline uint32_t get_num_bytes(uint8_t first_byte) {
         return 1;
     }
     // The first byte starts with 0b110X'XXXX -> 2-byte character
-    else if ((first_byte & 0xE0) == 0xC0) {
+    if ((first_byte & 0xE0) == 0xC0) {
         return 2;
     }
     // The first byte starts with 0b1110'XXXX -> 3-byte character
-    else if ((first_byte & 0xF0) == 0xE0) {
+    if ((first_byte & 0xF0) == 0xE0) {
         return 3;
     }
     // The first byte starts with 0b1111'0XXX -> 4-byte character
-    else if ((first_byte & 0xF8) == 0xF0) {
+    if ((first_byte & 0xF8) == 0xF0) {
         return 4;
     }
 
@@ -1520,17 +1526,17 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
     switch (byte_array.size()) {
     case 1:
         // U+0000..U+007F
-        return uint8_t(*(byte_array.begin())) <= uint8_t(0x7Fu);
+        return *byte_array.begin() <= 0x7Fu;
     case 2: {
-        auto itr = byte_array.begin();
-        uint8_t first = *itr++;
-        uint8_t second = *itr;
+        const auto* itr = byte_array.begin();
+        const uint8_t first = *itr++;
+        const uint8_t second = *itr;
 
         // U+0080..U+07FF
         //   1st Byte: 0xC2..0xDF
         //   2nd Byte: 0x80..0xBF
-        if (uint8_t(0xC2u) <= first && first <= uint8_t(0xDFu)) {
-            if (0x80 <= second && second <= 0xBF) {
+        if (0xC2u <= first && first <= 0xDFu) {
+            if (0x80u <= second && second <= 0xBFu) {
                 return true;
             }
         }
@@ -1539,18 +1545,18 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         return false;
     }
     case 3: {
-        auto itr = byte_array.begin();
-        uint8_t first = *itr++;
-        uint8_t second = *itr++;
-        uint8_t third = *itr;
+        const auto* itr = byte_array.begin();
+        const uint8_t first = *itr++;
+        const uint8_t second = *itr++;
+        const uint8_t third = *itr;
 
         // U+1000..U+CFFF:
         //   1st Byte: 0xE0..0xEC
         //   2nd Byte: 0x80..0xBF
         //   3rd Byte: 0x80..0xBF
-        if (0xE0 <= first && first <= 0xEC) {
-            if (0x80 <= second && second <= 0xBF) {
-                if (0x80 <= third && third <= 0xBF) {
+        if (0xE0u <= first && first <= 0xECu) {
+            if (0x80u <= second && second <= 0xBFu) {
+                if (0x80u <= third && third <= 0xBFu) {
                     return true;
                 }
             }
@@ -1561,9 +1567,9 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         //   1st Byte: 0xED
         //   2nd Byte: 0x80..0x9F
         //   3rd Byte: 0x80..0xBF
-        if (first == 0xED) {
-            if (0x80 <= second && second <= 0x9F) {
-                if (0x80 <= third && third <= 0xBF) {
+        if (first == 0xEDu) {
+            if (0x80u <= second && second <= 0x9Fu) {
+                if (0x80u <= third && third <= 0xBFu) {
                     return true;
                 }
             }
@@ -1574,9 +1580,9 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         //   1st Byte: 0xEE..0xEF
         //   2nd Byte: 0x80..0xBF
         //   3rd Byte: 0x80..0xBF
-        if (first == 0xEE || first == 0xEF) {
-            if (0x80 <= second && second <= 0xBF) {
-                if (0x80 <= third && third <= 0xBF) {
+        if (first == 0xEEu || first == 0xEFu) {
+            if (0x80u <= second && second <= 0xBFu) {
+                if (0x80u <= third && third <= 0xBFu) {
                     return true;
                 }
             }
@@ -1587,21 +1593,21 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         return false;
     }
     case 4: {
-        auto itr = byte_array.begin();
-        uint8_t first = *itr++;
-        uint8_t second = *itr++;
-        uint8_t third = *itr++;
-        uint8_t fourth = *itr;
+        const auto* itr = byte_array.begin();
+        const uint8_t first = *itr++;
+        const uint8_t second = *itr++;
+        const uint8_t third = *itr++;
+        const uint8_t fourth = *itr;
 
         // U+10000..U+3FFFF:
         //   1st Byte: 0xF0
         //   2nd Byte: 0x90..0xBF
         //   3rd Byte: 0x80..0xBF
         //   4th Byte: 0x80..0xBF
-        if (first == 0xF0) {
-            if (0x90 <= second && second <= 0xBF) {
-                if (0x80 <= third && third <= 0xBF) {
-                    if (0x80 <= fourth && fourth <= 0xBF) {
+        if (first == 0xF0u) {
+            if (0x90u <= second && second <= 0xBFu) {
+                if (0x80u <= third && third <= 0xBFu) {
+                    if (0x80u <= fourth && fourth <= 0xBFu) {
                         return true;
                     }
                 }
@@ -1614,10 +1620,10 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         //   2nd Byte: 0x80..0xBF
         //   3rd Byte: 0x80..0xBF
         //   4th Byte: 0x80..0xBF
-        if (0xF1 <= first && first <= 0xF3) {
-            if (0x80 <= second && second <= 0xBF) {
-                if (0x80 <= third && third <= 0xBF) {
-                    if (0x80 <= fourth && fourth <= 0xBF) {
+        if (0xF1u <= first && first <= 0xF3u) {
+            if (0x80u <= second && second <= 0xBFu) {
+                if (0x80u <= third && third <= 0xBFu) {
+                    if (0x80u <= fourth && fourth <= 0xBFu) {
                         return true;
                     }
                 }
@@ -1630,10 +1636,10 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         //   2nd Byte: 0x80..0x8F
         //   3rd Byte: 0x80..0xBF
         //   4th Byte: 0x80..0xBF
-        if (first == 0xF4) {
-            if (0x80 <= second && second <= 0x8F) {
-                if (0x80 <= third && third <= 0xBF) {
-                    if (0x80 <= fourth && fourth <= 0xBF) {
+        if (first == 0xF4u) {
+            if (0x80u <= second && second <= 0x8Fu) {
+                if (0x80u <= third && third <= 0xBFu) {
+                    if (0x80u <= fourth && fourth <= 0xBFu) {
                         return true;
                     }
                 }
@@ -1654,51 +1660,45 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
 /// @param[out] encoded_size The size of UTF-encoded bytes.
-inline void from_utf16(
+inline void from_utf16( // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size, uint32_t& encoded_size) {
-    if (utf16[0] < char16_t(0x80u)) {
+    if (utf16[0] < 0x80u) {
         utf8[0] = static_cast<uint8_t>(utf16[0] & 0x7Fu);
         consumed_size = 1;
         encoded_size = 1;
-        return;
     }
-    else if (utf16[0] <= char16_t(0x7FFu)) {
-        uint16_t utf8_chunk = static_cast<uint16_t>(0xC080u) | static_cast<uint16_t>((utf16[0] & 0x07C0u) << 2) |
-                              static_cast<uint16_t>(utf16[0] & 0x003Fu);
+    else if (utf16[0] <= 0x7FFu) {
+        const auto utf8_chunk = static_cast<uint16_t>(0xC080u | ((utf16[0] & 0x07C0u) << 2) | (utf16[0] & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF00u) >> 8);
         utf8[1] = static_cast<uint8_t>(utf8_chunk & 0x00FFu);
         consumed_size = 1;
         encoded_size = 2;
-        return;
     }
-    else if (utf16[0] < char16_t(0xD800u) || char16_t(0xE000u) <= utf16[0]) {
-        uint32_t utf8_chunk = static_cast<uint32_t>(0xE08080u) | static_cast<uint32_t>((utf16[0] & 0xF000u) << 4) |
-                              static_cast<uint32_t>((utf16[0] & 0x0FC0u) << 2) |
-                              static_cast<uint32_t>(utf16[0] & 0x003Fu);
+    else if (utf16[0] < 0xD800u || 0xE000u <= utf16[0]) {
+        const auto utf8_chunk = static_cast<uint32_t>(
+            0xE08080u | ((utf16[0] & 0xF000u) << 4) | ((utf16[0] & 0x0FC0u) << 2) | (utf16[0] & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF0000u) >> 16);
         utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF00u) >> 8);
         utf8[2] = static_cast<uint8_t>(utf8_chunk & 0x0000FFu);
         consumed_size = 1;
         encoded_size = 3;
-        return;
     }
-    else if (utf16[0] <= char16_t(0xDBFFu) && char16_t(0xDC00u) <= utf16[1] && utf16[1] <= char16_t(0xDFFFu)) {
-        // for surrogate pairs
-        uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
-        uint32_t utf8_chunk =
-            static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((code_point & 0x1C0000u) << 6) |
-            static_cast<uint32_t>((code_point & 0x03F000u) << 4) |
-            static_cast<uint32_t>((code_point & 0x000FC0u) << 2) | static_cast<uint32_t>(code_point & 0x00003Fu);
+    else if (utf16[0] <= 0xDBFFu && 0xDC00u <= utf16[1] && utf16[1] <= 0xDFFFu) {
+        // surrogate pair
+        const uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
+        const auto utf8_chunk = static_cast<uint32_t>(
+            0xF0808080u | ((code_point & 0x1C0000u) << 6) | ((code_point & 0x03F000u) << 4) |
+            ((code_point & 0x0FC0u) << 2) | (code_point & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
         utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
         utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
         utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
         consumed_size = 2;
         encoded_size = 4;
-        return;
     }
-
-    throw invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
+    else {
+        throw invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
+    }
 }
 
 /// @brief Converts a UTF-32 encoded character to UTF-8 encoded bytes.
@@ -1706,42 +1706,37 @@ inline void from_utf16(
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[in] encoded_size The size of UTF-encoded bytes.
 inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint32_t& encoded_size) {
-    if (utf32 < char32_t(0x80u)) {
+    if (utf32 < 0x80u) {
         utf8[0] = static_cast<uint8_t>(utf32 & 0x007F);
         encoded_size = 1;
-        return;
     }
-    else if (utf32 <= char32_t(0x7FFu)) {
-        uint16_t utf8_chunk = static_cast<uint16_t>(0xC080u) | static_cast<uint16_t>((utf32 & 0x07C0u) << 2) |
-                              static_cast<uint16_t>(utf32 & 0x003Fu);
+    else if (utf32 <= 0x7FFu) {
+        const auto utf8_chunk = static_cast<uint16_t>(0xC080u | ((utf32 & 0x07C0u) << 2) | (utf32 & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF00u) >> 8);
         utf8[1] = static_cast<uint8_t>(utf8_chunk & 0x00FFu);
         encoded_size = 2;
-        return;
     }
-    else if (utf32 <= char32_t(0xFFFFu)) {
-        uint32_t utf8_chunk = static_cast<uint32_t>(0xE08080u) | static_cast<uint32_t>((utf32 & 0xF000u) << 4) |
-                              static_cast<uint32_t>((utf32 & 0x0FC0u) << 2) | static_cast<uint32_t>(utf32 & 0x003F);
+    else if (utf32 <= 0xFFFFu) {
+        const auto utf8_chunk =
+            static_cast<uint32_t>(0xE08080u | ((utf32 & 0xF000u) << 4) | ((utf32 & 0x0FC0u) << 2) | (utf32 & 0x3F));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF0000u) >> 16);
         utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF00u) >> 8);
         utf8[2] = static_cast<uint8_t>(utf8_chunk & 0x0000FFu);
         encoded_size = 3;
-        return;
     }
-    else if (utf32 <= char32_t(0x10FFFFu)) {
-        uint32_t utf8_chunk = static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((utf32 & 0x1C0000u) << 6) |
-                              static_cast<uint32_t>((utf32 & 0x03F000u) << 4) |
-                              static_cast<uint32_t>((utf32 & 0x000FC0u) << 2) |
-                              static_cast<uint32_t>(utf32 & 0x00003Fu);
+    else if (utf32 <= 0x10FFFFu) {
+        const auto utf8_chunk = static_cast<uint32_t>(
+            0xF0808080u | ((utf32 & 0x1C0000u) << 6) | ((utf32 & 0x03F000u) << 4) | ((utf32 & 0x0FC0u) << 2) |
+            (utf32 & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
         utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
         utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
         utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
         encoded_size = 4;
-        return;
     }
-
-    throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+    else {
+        throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+    }
 }
 
 } // namespace utf8
@@ -1770,7 +1765,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of chomping indicator types.
-enum class chomping_indicator_t {
+enum class chomping_indicator_t : std::uint8_t {
     STRIP, //!< excludes final line breaks and trailing empty lines indicated by `-`.
     CLIP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
     KEEP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.
@@ -2129,8 +2124,9 @@ public:
 
         if (ret == 0) {
             using int_limits = std::numeric_limits<int>;
-            difference_type diff =
-                m_len > sv.m_len ? m_len - sv.m_len : difference_type(-1) * difference_type(sv.m_len - m_len);
+            const difference_type diff =
+                m_len > sv.m_len ? m_len - sv.m_len
+                                 : static_cast<difference_type>(-1) * static_cast<difference_type>(sv.m_len - m_len);
 
             if (diff > int_limits::max()) {
                 ret = int_limits::max();
@@ -2197,7 +2193,7 @@ public:
     /// @brief Checks if this character sequence starts with `sv` characters.
     /// @param sv The character sequence to compare with.
     /// @return true if the character sequence starts with `sv` characters, false otherwise.
-    bool starts_with(basic_str_view sv) const noexcept {
+    bool starts_with(basic_str_view sv) const {
         return substr(0, sv.size()) == sv;
     }
 
@@ -2211,7 +2207,7 @@ public:
     /// @brief Checks if this character sequence starts with `s` characters.
     /// @param s The character sequence to compare with.
     /// @return true if the character sequence starts with `s` characters, false otherwise.
-    bool starts_with(const CharT* s) const noexcept {
+    bool starts_with(const CharT* s) const {
         return starts_with(basic_str_view(s));
     }
 
@@ -2258,6 +2254,8 @@ public:
     bool contains(const CharT* s) const noexcept {
         return find(s) != npos;
     }
+
+    // NOLINTBEGIN(bugprone-easily-swappable-parameters)
 
     /// @brief Finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
@@ -2331,6 +2329,8 @@ public:
         return find(basic_str_view(s), pos);
     }
 
+    // NOLINTEND(bugprone-easily-swappable-parameters)
+
     /// @brief Retrospectively finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
@@ -2348,16 +2348,13 @@ public:
             return npos;
         }
 
-        size_type idx = pos;
-        if (pos >= m_len) {
-            idx = m_len - 1;
-        }
+        const size_type idx = std::min(m_len - 1, pos);
 
-        do {
-            if (traits_type::eq(mp_str[idx], c)) {
-                return idx;
+        for (size_type i = 0; i <= idx; i++) {
+            if (traits_type::eq(mp_str[idx - i], c)) {
+                return idx - i;
             }
-        } while (idx > 0 && --idx < m_len);
+        }
 
         return npos;
     }
@@ -2413,6 +2410,7 @@ public:
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     size_type find_first_of(const CharT* s, size_type pos, size_type n) const noexcept {
         if FK_YAML_UNLIKELY (n == 0) {
             return npos;
@@ -2640,7 +2638,7 @@ inline bool operator==(const std::basic_string<CharT, Traits>& lhs, basic_str_vi
 template <typename CharT, typename Traits, std::size_t N>
 inline bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
     // assume `rhs` is null terminated
-    return lhs == basic_str_view<CharT, Traits>(rhs, N - 1);
+    return lhs == basic_str_view<CharT, Traits>(rhs);
 }
 
 /// @brief An equal-to operator of the basic_str_view class.
@@ -2653,7 +2651,7 @@ inline bool operator==(basic_str_view<CharT, Traits> lhs, const CharT (&rhs)[N])
 template <typename CharT, typename Traits, std::size_t N>
 inline bool operator==(const CharT (&lhs)[N], basic_str_view<CharT, Traits> rhs) noexcept {
     // assume `lhs` is null terminated
-    return basic_str_view<CharT, Traits>(lhs, N - 1) == rhs;
+    return basic_str_view<CharT, Traits>(lhs) == rhs;
 }
 
 /// @brief An not-equal-to operator of the basic_str_view class.
@@ -2804,13 +2802,13 @@ public:
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(const char* p_current) {
-        uint32_t diff = static_cast<uint32_t>(p_current - m_last);
+        const auto diff = static_cast<uint32_t>(p_current - m_last);
         if (diff == 0) {
             return;
         }
 
         m_cur_pos += diff;
-        uint32_t prev_lines_read = m_lines_read;
+        const uint32_t prev_lines_read = m_lines_read;
         m_lines_read += static_cast<uint32_t>(std::count(m_last, p_current, '\n'));
         m_last = p_current;
 
@@ -2881,13 +2879,15 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
 #define FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
 
+#include <cstdint>
+
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of lexical token types.
-enum class lexical_token_t {
+enum class lexical_token_t : std::uint8_t {
     END_OF_BUFFER,         //!< the end of input buffer.
     EXPLICIT_KEY_PREFIX,   //!< the character for explicit mapping key prefix `?`.
     KEY_SEPARATOR,         //!< the key separator `:`
@@ -2926,20 +2926,16 @@ struct lexical_token {
     /// Lexical token type.
     lexical_token_t type {lexical_token_t::END_OF_BUFFER};
     /// Lexical token contents.
-    str_view str {};
+    str_view str;
 };
-
-namespace {
-
-// whether the current context is flow(1) or block(0)
-const uint32_t flow_context_bit = 1u << 0u;
-// whether the current document part is directive(1) or content(0)
-const uint32_t document_directive_bit = 1u << 1u;
-
-} // anonymous namespace
 
 /// @brief A class which lexically analyzes YAML formatted inputs.
 class lexical_analyzer {
+    // whether the current context is flow(1) or block(0)
+    static constexpr uint32_t flow_context_bit = 1u << 0u;
+    // whether the current document part is directive(1) or content(0)
+    static constexpr uint32_t document_directive_bit = 1u << 1u;
+
 public:
     /// @brief Construct a new lexical_analyzer object.
     /// @param input_buffer An input buffer.
@@ -3013,7 +3009,7 @@ public:
             return token;
         case '&': { // anchor prefix
             extract_anchor_name(token);
-            bool is_empty = token.str.empty();
+            const bool is_empty = token.str.empty();
             if FK_YAML_UNLIKELY (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
@@ -3023,7 +3019,7 @@ public:
         }
         case '*': { // alias prefix
             extract_anchor_name(token);
-            bool is_empty = token.str.empty();
+            const bool is_empty = token.str.empty();
             if FK_YAML_UNLIKELY (is_empty) {
                 emit_error("anchor name must not be empty.");
             }
@@ -3047,7 +3043,7 @@ public:
             // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
             break;
         case '-': {
-            char next = *(m_cur_itr + 1);
+            const char next = *(m_cur_itr + 1);
             switch (next) {
             case ' ':
             case '\t':
@@ -3060,9 +3056,9 @@ public:
                 break;
             }
 
-            bool is_available = ((m_end_itr - m_cur_itr) > 2);
+            const bool is_available = ((m_end_itr - m_cur_itr) > 2);
             if (is_available) {
-                bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
+                const bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
                 if (is_dir_end) {
                     m_cur_itr += 3;
                     token.type = lexical_token_t::END_OF_DIRECTIVES;
@@ -3105,9 +3101,9 @@ public:
             check_scalar_content(token.str);
             return token;
         case '.': {
-            bool is_available = ((m_end_itr - m_cur_itr) > 2);
+            const bool is_available = ((m_end_itr - m_cur_itr) > 2);
             if (is_available) {
-                bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
+                const bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
                 if (is_doc_end) {
                     m_cur_itr += 3;
                     token.type = lexical_token_t::END_OF_DOCUMENT;
@@ -3118,14 +3114,14 @@ public:
         }
         case '|':
         case '>': {
-            str_view sv {m_token_begin_itr, m_end_itr};
-            std::size_t header_end_pos = sv.find('\n');
+            const str_view sv {m_token_begin_itr, m_end_itr};
+            const std::size_t header_end_pos = sv.find('\n');
 
             FK_YAML_ASSERT(!sv.empty());
             token.type = (sv[0] == '|') ? lexical_token_t::BLOCK_LITERAL_SCALAR : lexical_token_t::BLOCK_FOLDED_SCALAR;
 
             FK_YAML_ASSERT(header_end_pos != str_view::npos);
-            str_view header_line = sv.substr(1, header_end_pos - 1);
+            const str_view header_line = sv.substr(1, header_end_pos - 1);
             m_block_scalar_header = convert_to_block_scalar_header(header_line);
 
             m_token_begin_itr = sv.begin() + (header_end_pos + 1);
@@ -3228,7 +3224,7 @@ private:
             }
         }
 
-        str_view dir_name(m_token_begin_itr, m_cur_itr);
+        const str_view dir_name(m_token_begin_itr, m_cur_itr);
 
         if (dir_name == "TAG") {
             if FK_YAML_UNLIKELY (!ends_loop) {
@@ -3292,7 +3288,7 @@ private:
                         ends_loop = true;
                         break;
                     }
-                    char next = *(m_cur_itr + 1);
+                    const char next = *(m_cur_itr + 1);
                     if FK_YAML_UNLIKELY (next != ' ' && next != '\t') {
                         emit_error("invalid tag handle is found.");
                     }
@@ -3336,6 +3332,8 @@ private:
         case '{':
         case '}':
             emit_error("tag prefix must not start with flow indicators (\',\', [], {}).");
+        default:
+            break;
         }
 
         // extract the rest of a tag prefix.
@@ -3347,10 +3345,12 @@ private:
             case '\n':
                 ends_loop = true;
                 break;
+            default:
+                break;
             }
         } while (!ends_loop && ++m_cur_itr != m_end_itr);
 
-        bool is_valid = uri_encoding::validate(p_tag_prefix_begin, m_cur_itr);
+        const bool is_valid = uri_encoding::validate(p_tag_prefix_begin, m_cur_itr);
         if FK_YAML_UNLIKELY (!is_valid) {
             emit_error("invalid URI character is found in a tag prefix.");
         }
@@ -3488,18 +3488,18 @@ private:
         token.str = str_view {m_token_begin_itr, m_cur_itr};
 
         if (is_verbatim) {
-            char last = token.str.back();
+            const char last = token.str.back();
             if FK_YAML_UNLIKELY (last != '>') {
                 emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
             }
 
             // only the `TAG` part of the `!<TAG>` for URI validation.
-            str_view tag_body = token.str.substr(2, token.str.size() - 3);
+            const str_view tag_body = token.str.substr(2, token.str.size() - 3);
             if FK_YAML_UNLIKELY (tag_body.empty()) {
                 emit_error("verbatim tag(!<TAG>) must not be empty.");
             }
 
-            bool is_valid_uri = uri_encoding::validate(tag_body.begin(), tag_body.end());
+            const bool is_valid_uri = uri_encoding::validate(tag_body.begin(), tag_body.end());
             if FK_YAML_UNLIKELY (!is_valid_uri) {
                 emit_error("invalid URI character is found in a verbatim tag.");
             }
@@ -3508,7 +3508,7 @@ private:
         }
 
         if (is_named_handle) {
-            char last = token.str.back();
+            const char last = token.str.back();
             if FK_YAML_UNLIKELY (last == '!') {
                 // Tag shorthand must be followed by a non-empty suffix.
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
@@ -3518,18 +3518,18 @@ private:
 
         // get the position of last tag prefix character (!) to extract body of tag shorthands.
         // tag shorthand is either primary(!tag), secondary(!!tag) or named(!handle!tag).
-        std::size_t last_tag_prefix_pos = token.str.find_last_of('!');
+        const std::size_t last_tag_prefix_pos = token.str.find_last_of('!');
         FK_YAML_ASSERT(last_tag_prefix_pos != str_view::npos);
 
-        str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
-        bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
+        const str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
+        const bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
         if FK_YAML_UNLIKELY (!is_valid_uri) {
             emit_error("Invalid URI character is found in a named tag handle.");
         }
 
         // Tag shorthands cannot contain flow indicators({}[],).
         // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
-        std::size_t invalid_char_pos = tag_uri.find_first_of("{}[],");
+        const std::size_t invalid_char_pos = tag_uri.find_first_of("{}[],");
         if (invalid_char_pos != str_view::npos) {
             emit_error("Tag shorthand cannot contain flow indicators({}[],).");
         }
@@ -3538,7 +3538,7 @@ private:
     /// @brief Determines the range of single quoted scalar by scanning remaining input buffer contents.
     /// @param token Storage for the range of single quoted scalar.
     void determine_single_quoted_scalar_range(str_view& token) {
-        str_view sv {m_token_begin_itr, m_end_itr};
+        const str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\'');
         while (pos != str_view::npos) {
@@ -3563,7 +3563,7 @@ private:
     /// @brief Determines the range of double quoted scalar by scanning remaining input buffer contents.
     /// @param token Storage for the range of double quoted scalar.
     void determine_double_quoted_scalar_range(str_view& token) {
-        str_view sv {m_token_begin_itr, m_end_itr};
+        const str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\"');
         while (pos != str_view::npos) {
@@ -3604,7 +3604,7 @@ private:
     /// @brief Determines the range of plain scalar by scanning remaining input buffer contents.
     /// @param token Storage for the range of plain scalar.
     void determine_plain_scalar_range(str_view& token) {
-        str_view sv {m_token_begin_itr, m_end_itr};
+        const str_view sv {m_token_begin_itr, m_end_itr};
 
         constexpr str_view filter = "\n :{}[],";
         std::size_t pos = sv.find_first_of(filter);
@@ -3695,11 +3695,11 @@ private:
     /// @param chomp The chomping indicator type of the given token, either strip, keep or clip.
     /// @param indent The indent size specified for the given token.
     void scan_block_style_string_token(uint32_t& indent, str_view& token) {
-        str_view sv {m_token_begin_itr, m_end_itr};
+        const str_view sv {m_token_begin_itr, m_end_itr};
 
         // Handle leading all-space lines.
         constexpr str_view space_filter = " \t\n";
-        std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
+        const std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
         if (first_non_space_pos == str_view::npos) {
             // empty block scalar with no subsequent tokens.
             indent = static_cast<uint32_t>(sv.size());
@@ -3715,19 +3715,17 @@ private:
         std::size_t last_newline_pos = sv.substr(0, first_non_space_pos).find_last_of('\n');
         if (last_newline_pos == str_view::npos) {
             // first_non_space_pos in on the first line.
-            uint32_t cur_indent = static_cast<uint32_t>(first_non_space_pos);
+            const auto cur_indent = static_cast<uint32_t>(first_non_space_pos);
             if (indent == 0) {
                 indent = cur_indent;
             }
             else if FK_YAML_UNLIKELY (cur_indent < indent) {
                 emit_error("A block style scalar is less indented than the indicated level.");
             }
-
-            last_newline_pos = 0;
         }
         else {
             FK_YAML_ASSERT(last_newline_pos < first_non_space_pos);
-            uint32_t cur_indent = static_cast<uint32_t>(first_non_space_pos - last_newline_pos - 1);
+            const auto cur_indent = static_cast<uint32_t>(first_non_space_pos - last_newline_pos - 1);
 
             // TODO: preserve and compare the last indentation with `cur_indent`
             if (indent == 0) {
@@ -3749,14 +3747,14 @@ private:
                 cur_line_end_pos = sv.size();
             }
 
-            std::size_t cur_line_content_begin_pos = sv.find_first_not_of(' ', last_newline_pos + 1);
+            const std::size_t cur_line_content_begin_pos = sv.find_first_not_of(' ', last_newline_pos + 1);
             if (cur_line_content_begin_pos == str_view::npos) {
                 last_newline_pos = cur_line_end_pos;
                 continue;
             }
 
             FK_YAML_ASSERT(last_newline_pos < cur_line_content_begin_pos);
-            uint32_t cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
+            const auto cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
             if (cur_indent < indent && sv[cur_line_content_begin_pos] != '\n') {
                 // Interpret less indented non-space characters as the start of the next token.
                 break;
@@ -3842,6 +3840,8 @@ private:
             emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
         case 0x1F:
             emit_error("Control character U+001F (US) must be escaped to \\u001F.");
+        default:
+            break;
         }
     }
 
@@ -3859,9 +3859,9 @@ private:
     /// @param chomp_type A variable to store the retrieved chomping style type.
     /// @param indent A variable to store the retrieved indent size.
     /// @return Block scalar header information converted from the header line.
-    block_scalar_header convert_to_block_scalar_header(str_view& line) {
+    block_scalar_header convert_to_block_scalar_header(str_view line) {
         constexpr str_view comment_prefix = " #";
-        std::size_t comment_begin_pos = line.find(comment_prefix);
+        const std::size_t comment_begin_pos = line.find(comment_prefix);
         if (comment_begin_pos != str_view::npos) {
             line = line.substr(0, comment_begin_pos);
         }
@@ -3899,7 +3899,7 @@ private:
                 if FK_YAML_UNLIKELY (header.indent > 0) {
                     emit_error("Invalid indentation level for a block scalar. It must be between 1 and 9.");
                 }
-                header.indent = static_cast<char>(c - '0');
+                header.indent = static_cast<uint32_t>(c - '0');
                 break;
             case ' ':
             case '\t':
@@ -3956,7 +3956,7 @@ private:
 
 private:
     /// An input buffer adapter to be analyzed.
-    str_view m_input_buffer {};
+    str_view m_input_buffer;
     /// The iterator to the current character in the input buffer.
     const char* m_cur_itr {};
     /// The iterator to the beginning of the current token.
@@ -3966,11 +3966,11 @@ private:
     /// The current position tracker of the input buffer.
     mutable position_tracker m_pos_tracker {};
     /// The last yaml version.
-    str_view m_yaml_version {};
+    str_view m_yaml_version;
     /// The last tag handle.
-    str_view m_tag_handle {};
+    str_view m_tag_handle;
     /// The last tag prefix.
-    str_view m_tag_prefix {};
+    str_view m_tag_prefix;
     /// The last block scalar header.
     block_scalar_header m_block_scalar_header {};
     /// The beginning position of the last lexical token. (zero origin)
@@ -4019,6 +4019,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
 
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <limits>
 
@@ -4357,7 +4358,7 @@ inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcep
         return false;
     }
 
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const auto len = static_cast<uint32_t>(std::distance(begin, end));
 
     // This path is the most probable case, so check it first.
     if FK_YAML_LIKELY (len == 4) {
@@ -4392,27 +4393,27 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
         return false;
     }
 
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const auto len = static_cast<uint32_t>(std::distance(begin, end));
     const char* p_begin = &*begin;
 
     if (len == 4) {
-        bool is_true_scalar = (std::strncmp(p_begin, "true", 4) == 0) || (std::strncmp(p_begin, "True", 4) == 0) ||
-                              (std::strncmp(p_begin, "TRUE", 4) == 0);
+        const bool is_true = (std::strncmp(p_begin, "true", 4) == 0) || (std::strncmp(p_begin, "True", 4) == 0) ||
+                             (std::strncmp(p_begin, "TRUE", 4) == 0);
 
-        if FK_YAML_LIKELY (is_true_scalar) {
+        if FK_YAML_LIKELY (is_true) {
             boolean = static_cast<BoolType>(true);
         }
-        return is_true_scalar;
+        return is_true;
     }
 
     if (len == 5) {
-        bool is_false_scalar = (std::strncmp(p_begin, "false", 5) == 0) || (std::strncmp(p_begin, "False", 5) == 0) ||
-                               (std::strncmp(p_begin, "FALSE", 5) == 0);
+        const bool is_false = (std::strncmp(p_begin, "false", 5) == 0) || (std::strncmp(p_begin, "False", 5) == 0) ||
+                              (std::strncmp(p_begin, "FALSE", 5) == 0);
 
-        if FK_YAML_LIKELY (is_false_scalar) {
+        if FK_YAML_LIKELY (is_false) {
             boolean = static_cast<BoolType>(false);
         }
-        return is_false_scalar;
+        return is_false;
     }
 
     return false;
@@ -4444,7 +4445,7 @@ inline bool atoi_dec_unchecked(const char* p_begin, const char* p_end, IntType& 
 
     i = 0;
     do {
-        char c = *p_begin;
+        const char c = *p_begin;
         if FK_YAML_UNLIKELY (c < '0' || '9' < c) {
             return false;
         }
@@ -4473,7 +4474,7 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    const auto len = static_cast<std::size_t>(p_end - p_begin);
     if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
         // Overflow will happen.
         return false;
@@ -4516,7 +4517,7 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    const auto len = static_cast<std::size_t>(p_end - p_begin);
     if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
         // Underflow will happen.
         return false;
@@ -4563,14 +4564,14 @@ inline bool atoi_oct(const char* p_begin, const char* p_end, IntType& i) noexcep
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    const auto len = static_cast<std::size_t>(p_end - p_begin);
     if FK_YAML_UNLIKELY (!conv_limits_type::check_if_octs_safe(p_begin, len)) {
         return false;
     }
 
     i = 0;
     do {
-        char c = *p_begin;
+        const char c = *p_begin;
         if FK_YAML_UNLIKELY (c < '0' || '7' < c) {
             return false;
         }
@@ -4602,14 +4603,15 @@ inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcep
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    const auto len = static_cast<std::size_t>(p_end - p_begin);
     if FK_YAML_UNLIKELY (!conv_limits_type::check_if_hexs_safe(p_begin, len)) {
         return false;
     }
 
     i = 0;
     do {
-        char c = *p_begin;
+        // NOLINTBEGIN(bugprone-misplaced-widening-cast)
+        const char c = *p_begin;
         IntType ci = 0;
         if ('0' <= c && c <= '9') {
             ci = IntType(c - '0');
@@ -4624,6 +4626,7 @@ inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcep
             return false;
         }
         i = i * IntType(16) + ci;
+        // NOLINTEND(bugprone-misplaced-widening-cast)
     } while (++p_begin != p_end);
 
     return true;
@@ -4649,11 +4652,11 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
         return false;
     }
 
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const auto len = static_cast<uint32_t>(std::distance(begin, end));
     const char* p_begin = &*begin;
     const char* p_end = p_begin + len;
 
-    char first = *begin;
+    const char first = *begin;
     if (first == '+') {
         return atoi_dec_pos(p_begin + 1, p_end, i);
     }
@@ -4663,7 +4666,7 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
             return false;
         }
 
-        bool success = atoi_dec_neg(p_begin + 1, p_end, i);
+        const bool success = atoi_dec_neg(p_begin + 1, p_end, i);
         if (success) {
             i *= IntType(-1);
         }
@@ -4674,7 +4677,8 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
     if (first != '0') {
         return atoi_dec_pos(p_begin, p_end, i);
     }
-    else if (p_begin + 1 != p_end) {
+
+    if (p_begin + 1 != p_end) {
         switch (*(p_begin + 1)) {
         case 'o':
             return atoi_oct(p_begin + 2, p_end, i);
@@ -4781,18 +4785,17 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
         return false;
     }
 
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const auto len = static_cast<uint32_t>(std::distance(begin, end));
     const char* p_begin = &*begin;
     const char* p_end = p_begin + len;
 
     if (*p_begin == '-' || *p_begin == '+') {
         if (len == 5) {
             const char* p_from_second = p_begin + 1;
-            bool is_inf_scalar = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
-                                 (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
-                                 (std::strncmp(p_from_second, ".INF", 4) == 0);
-
-            if (is_inf_scalar) {
+            const bool is_inf = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
+                                (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
+                                (std::strncmp(p_from_second, ".INF", 4) == 0);
+            if (is_inf) {
                 set_infinity(f, *p_begin == '-' ? FloatType(-1.) : FloatType(1.));
                 return true;
             }
@@ -4804,20 +4807,16 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
         }
     }
     else if (len == 4) {
-        bool is_inf_scalar = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||
-                             (std::strncmp(p_begin, ".INF", 4) == 0);
-        bool is_nan_scalar = false;
-        if (!is_inf_scalar) {
-            is_nan_scalar = (std::strncmp(p_begin, ".nan", 4) == 0) || (std::strncmp(p_begin, ".NaN", 4) == 0) ||
-                            (std::strncmp(p_begin, ".NAN", 4) == 0);
-        }
-
-        if (is_inf_scalar) {
+        const bool is_inf = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||
+                            (std::strncmp(p_begin, ".INF", 4) == 0);
+        if (is_inf) {
             set_infinity(f, FloatType(1.));
             return true;
         }
 
-        if (is_nan_scalar) {
+        const bool is_nan = (std::strncmp(p_begin, ".nan", 4) == 0) || (std::strncmp(p_begin, ".NaN", 4) == 0) ||
+                            (std::strncmp(p_begin, ".NAN", 4) == 0);
+        if (is_nan) {
             set_nan(f);
             return true;
         }
@@ -4883,7 +4882,7 @@ public:
             buff.push_back('\b');
             break;
         case 't':
-        case char(0x09):
+        case '\t':
             buff.push_back('\t');
             break;
         case 'n':
@@ -4899,7 +4898,7 @@ public:
             buff.push_back('\r');
             break;
         case 'e':
-            buff.push_back(char(0x1B));
+            buff.push_back(static_cast<char>(0x1B));
             break;
         case ' ':
             buff.push_back(' ');
@@ -5096,15 +5095,15 @@ public:
                 is_escaped = true;
                 break;
             default:
-                int diff = static_cast<int>(std::distance(begin, end));
+                const std::ptrdiff_t diff = static_cast<int>(std::distance(begin, end));
                 if (diff > 1) {
-                    if (*begin == char(0xC2u) && *(begin + 1) == char(0x85u)) {
+                    if (*begin == static_cast<char>(0xC2u) && *(begin + 1) == static_cast<char>(0x85u)) {
                         escaped += "\\N";
                         std::advance(begin, 1);
                         is_escaped = true;
                         break;
                     }
-                    else if (*begin == char(0xC2u) && *(begin + 1) == char(0xA0u)) {
+                    if (*begin == static_cast<char>(0xC2u) && *(begin + 1) == static_cast<char>(0xA0u)) {
                         escaped += "\\_";
                         std::advance(begin, 1);
                         is_escaped = true;
@@ -5112,13 +5111,15 @@ public:
                     }
 
                     if (diff > 2) {
-                        if (*begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA8u)) {
+                        if (*begin == static_cast<char>(0xE2u) && *(begin + 1) == static_cast<char>(0x80u) &&
+                            *(begin + 2) == static_cast<char>(0xA8u)) {
                             escaped += "\\L";
                             std::advance(begin, 2);
                             is_escaped = true;
                             break;
                         }
-                        if (*begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA9u)) {
+                        if (*begin == static_cast<char>(0xE2u) && *(begin + 1) == static_cast<char>(0x80u) &&
+                            *(begin + 2) == static_cast<char>(0xA9u)) {
                             escaped += "\\P";
                             std::advance(begin, 2);
                             is_escaped = true;
@@ -5137,7 +5138,7 @@ private:
     static bool convert_hexchar_to_byte(char source, uint8_t& byte) {
         if ('0' <= source && source <= '9') {
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            byte = static_cast<uint8_t>(source - char('0'));
+            byte = static_cast<uint8_t>(source - '0');
             return true;
         }
 
@@ -5158,17 +5159,17 @@ private:
     }
 
     static bool extract_codepoint(const char*& begin, const char* end, int bytes_to_read, char32_t& codepoint) {
-        bool has_enough_room = static_cast<int>(std::distance(begin, end)) >= (bytes_to_read - 1);
+        const bool has_enough_room = static_cast<int>(std::distance(begin, end)) >= (bytes_to_read - 1);
         if (!has_enough_room) {
             return false;
         }
 
-        int read_size = bytes_to_read * 2;
+        const int read_size = bytes_to_read * 2;
         uint8_t byte {0};
         codepoint = 0;
 
         for (int i = read_size - 1; i >= 0; i--) {
-            bool is_valid = convert_hexchar_to_byte(*++begin, byte);
+            const bool is_valid = convert_hexchar_to_byte(*++begin, byte);
             if (!is_valid) {
                 return false;
             }
@@ -5217,26 +5218,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-namespace {
-
-/// @brief Check if the given character is a digit.
-/// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a digit, false otherwise.
-inline bool is_digit(char c) {
-    return ('0' <= c && c <= '9');
-}
-
-/// @brief Check if the given character is a hex-digit.
-/// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a hex-digit, false otherwise.
-inline bool is_xdigit(char c) {
-    return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
-}
-
-} // namespace
-
 /// @brief The class which detects a scalar value type by scanning contents.
 class scalar_scanner {
 public:
@@ -5249,7 +5230,7 @@ public:
             return node_type::STRING;
         }
 
-        uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+        const auto len = static_cast<uint32_t>(std::distance(begin, end));
         if (len > 5) {
             return scan_possible_number_token(begin, len);
         }
@@ -5282,7 +5263,7 @@ public:
                            : node_type::STRING;
             case '.': {
                 const char* p_from_second = p_begin + 1;
-                bool is_inf_or_nan_scalar =
+                const bool is_inf_or_nan_scalar =
                     (std::strncmp(p_from_second, "inf", 3) == 0) || (std::strncmp(p_from_second, "Inf", 3) == 0) ||
                     (std::strncmp(p_from_second, "INF", 3) == 0) || (std::strncmp(p_from_second, "nan", 3) == 0) ||
                     (std::strncmp(p_from_second, "NaN", 3) == 0) || (std::strncmp(p_from_second, "NAN", 3) == 0);
@@ -5292,6 +5273,8 @@ public:
                 // maybe a number.
                 break;
             }
+            default:
+                break;
             }
             break;
         case 5:
@@ -5308,16 +5291,20 @@ public:
             case '-':
                 if (*(p_begin + 1) == '.') {
                     const char* p_from_third = p_begin + 2;
-                    bool is_min_inf_scalar = (std::strncmp(p_from_third, "inf", 3) == 0) ||
-                                             (std::strncmp(p_from_third, "Inf", 3) == 0) ||
-                                             (std::strncmp(p_from_third, "INF", 3) == 0);
-                    if (is_min_inf_scalar) {
+                    const bool is_min_inf = (std::strncmp(p_from_third, "inf", 3) == 0) ||
+                                            (std::strncmp(p_from_third, "Inf", 3) == 0) ||
+                                            (std::strncmp(p_from_third, "INF", 3) == 0);
+                    if (is_min_inf) {
                         return node_type::FLOAT;
                     }
                 }
                 // maybe a number.
                 break;
+            default:
+                break;
             }
+            break;
+        default:
             break;
         }
 
@@ -5439,7 +5426,7 @@ private:
         FK_YAML_ASSERT(len > 0);
 
         for (uint32_t i = 0; i < len; i++) {
-            char c = *itr++;
+            const char c = *itr++;
 
             if (is_digit(c)) {
                 continue;
@@ -5466,7 +5453,7 @@ private:
     static node_type scan_after_exponent(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
-        char c = *itr;
+        const char c = *itr;
         if (c == '+' || c == '-') {
             if (len == 1) {
                 // some integer(s) required after the sign.
@@ -5519,6 +5506,24 @@ private:
         }
         return node_type::STRING;
     }
+
+    /// @brief Check if the given character is a digit.
+    /// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with
+    /// MSVC.
+    /// @param c A character to be checked.
+    /// @return true if the given character is a digit, false otherwise.
+    static bool is_digit(char c) {
+        return ('0' <= c && c <= '9');
+    }
+
+    /// @brief Check if the given character is a hex-digit.
+    /// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with
+    /// MSVC.
+    /// @param c A character to be checked.
+    /// @return true if the given character is a hex-digit, false otherwise.
+    static bool is_xdigit(char c) {
+        return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
+    }
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -5537,13 +5542,15 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP
 #define FK_YAML_DETAIL_INPUT_TAG_T_HPP
 
+#include <cstdint>
+
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of YAML tag types.
-enum class tag_t {
+enum class tag_t : std::uint8_t {
     NONE,            //!< Represents a non-specific tag "?".
     NON_SPECIFIC,    //!< Represents a non-specific tag "!".
     CUSTOM_TAG,      //!< Represents a custom tag
@@ -5596,7 +5603,7 @@ public:
     /// @brief Constructs a new scalar_parser object.
     /// @param line Current line.
     /// @param indent Current indentation.
-    scalar_parser(uint32_t line, uint32_t indent) noexcept
+    scalar_parser(uint32_t line, uint32_t indent) noexcept // NOLINT(bugprone-easily-swappable-parameters)
         : m_line(line),
           m_indent(indent) {
     }
@@ -5623,7 +5630,7 @@ public:
         FK_YAML_ASSERT(tag_type != tag_t::SEQUENCE && tag_type != tag_t::MAPPING);
 
         token = parse_flow_scalar_token(lex_type, token);
-        node_type value_type = decide_value_type(lex_type, tag_type, token);
+        const node_type value_type = decide_value_type(lex_type, tag_type, token);
         return create_scalar_node(value_type, token);
     }
 
@@ -5646,7 +5653,7 @@ public:
             token = parse_block_folded_scalar(token, header);
         }
 
-        node_type value_type = decide_value_type(lex_type, tag_type, token);
+        const node_type value_type = decide_value_type(lex_type, tag_type, token);
         return create_scalar_node(value_type, token);
     }
 
@@ -5746,7 +5753,7 @@ private:
                 if (token[pos + 1] != '\n') {
                     token.remove_prefix(pos);
                     const char* p_escape_begin = token.begin();
-                    bool is_valid_escaping = yaml_escaper::unescape(p_escape_begin, token.end(), m_buffer);
+                    const bool is_valid_escaping = yaml_escaper::unescape(p_escape_begin, token.end(), m_buffer);
                     if FK_YAML_UNLIKELY (!is_valid_escaping) {
                         throw parse_error(
                             "Unsupported escape sequence is found in a double quoted scalar.", m_line, m_indent);
@@ -5798,8 +5805,8 @@ private:
                 cur_line_end_pos = token.size();
             }
 
-            std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
-            str_view line = token.substr(cur_line_begin_pos, line_size);
+            const std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
+            const str_view line = token.substr(cur_line_begin_pos, line_size);
 
             if (line.size() > header.indent) {
                 m_buffer.append(line.begin() + header.indent, line.end());
@@ -5840,8 +5847,8 @@ private:
                 cur_line_end_pos = token.size();
             }
 
-            std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
-            str_view line = token.substr(cur_line_begin_pos, line_size);
+            const std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
+            const str_view line = token.substr(cur_line_begin_pos, line_size);
 
             if (line.size() <= header.indent) {
                 // empty or less-indented lines are turned into a newline
@@ -5849,8 +5856,8 @@ private:
                 can_be_folded = false;
             }
             else {
-                std::size_t non_space_pos = line.find_first_not_of(' ');
-                bool is_more_indented = (non_space_pos != str_view::npos) && (non_space_pos > header.indent);
+                const std::size_t non_space_pos = line.find_first_not_of(' ');
+                const bool is_more_indented = (non_space_pos != str_view::npos) && (non_space_pos > header.indent);
 
                 if (can_be_folded) {
                     if (is_more_indented) {
@@ -5897,7 +5904,7 @@ private:
     void process_chomping(chomping_indicator_t chomp) {
         switch (chomp) {
         case chomping_indicator_t::STRIP: {
-            std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
+            const std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
             if (content_end_pos == std::string::npos) {
                 // if the scalar has no content line, all lines are considered as trailing empty lines.
                 m_buffer.clear();
@@ -5915,7 +5922,7 @@ private:
             break;
         }
         case chomping_indicator_t::CLIP: {
-            std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
+            const std::size_t content_end_pos = m_buffer.find_last_not_of('\n');
             if (content_end_pos == std::string::npos) {
                 // if the scalar has no content line, all lines are considered as trailing empty lines.
                 m_buffer.clear();
@@ -5942,7 +5949,7 @@ private:
     /// @param newline_pos Position of the target newline code.
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
         // discard trailing white spaces which precedes the line break in the current line.
-        std::size_t last_non_space_pos = token.substr(0, newline_pos + 1).find_last_not_of(" \t");
+        const std::size_t last_non_space_pos = token.substr(0, newline_pos + 1).find_last_not_of(" \t");
         if (last_non_space_pos == str_view::npos) {
             m_buffer.append(token.begin(), newline_pos);
         }
@@ -5953,13 +5960,13 @@ private:
 
         uint32_t empty_line_counts = 0;
         do {
-            std::size_t non_space_pos = token.find_first_not_of(" \t");
+            const std::size_t non_space_pos = token.find_first_not_of(" \t");
             if (non_space_pos == str_view::npos) {
                 // Line folding ignores trailing spaces.
                 token.remove_prefix(token.size());
                 break;
             }
-            else if (token[non_space_pos] != '\n') {
+            if (token[non_space_pos] != '\n') {
                 token.remove_prefix(non_space_pos);
                 break;
             }
@@ -6001,8 +6008,6 @@ private:
             value_type = node_type::FLOAT;
             break;
         case tag_t::STRING:
-            value_type = node_type::STRING;
-            break;
         case tag_t::NON_SPECIFIC:
             // scalars with the non-specific tag is resolved to a string tag.
             // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
@@ -6027,7 +6032,7 @@ private:
         switch (type) {
         case node_type::NULL_OBJECT: {
             std::nullptr_t null = nullptr;
-            bool converted = detail::aton(token.begin(), token.end(), null);
+            const bool converted = detail::aton(token.begin(), token.end(), null);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a null.", m_line, m_indent);
             }
@@ -6035,8 +6040,8 @@ private:
             break;
         }
         case node_type::BOOLEAN: {
-            boolean_type boolean = static_cast<boolean_type>(false);
-            bool converted = detail::atob(token.begin(), token.end(), boolean);
+            auto boolean = static_cast<boolean_type>(false);
+            const bool converted = detail::atob(token.begin(), token.end(), boolean);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a boolean.", m_line, m_indent);
             }
@@ -6045,7 +6050,7 @@ private:
         }
         case node_type::INTEGER: {
             integer_type integer = 0;
-            bool converted = detail::atoi(token.begin(), token.end(), integer);
+            const bool converted = detail::atoi(token.begin(), token.end(), integer);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to an integer.", m_line, m_indent);
             }
@@ -6054,7 +6059,7 @@ private:
         }
         case node_type::FLOAT: {
             float_number_type float_val = 0;
-            bool converted = detail::atof(token.begin(), token.end(), float_val);
+            const bool converted = detail::atof(token.begin(), token.end(), float_val);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a floating point value", m_line, m_indent);
             }
@@ -6084,7 +6089,7 @@ private:
     /// Whether the parsed contents are stored in an owned buffer.
     bool m_use_owned_buffer {false};
     /// Owned buffer storage for parsing. This buffer is used when scalar contents need mutation.
-    std::string m_buffer {};
+    std::string m_buffer;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -6105,7 +6110,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -6117,18 +6121,15 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
+// #include <fkYAML/detail/str_view.hpp>
+
 // #include <fkYAML/exception.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-namespace /*default prefixes*/
-{
-
-const std::string default_primary_handle_prefix = "!";
-const std::string default_secondary_handle_prefix = "tag:yaml.org,2002:";
-
-} // namespace
+static constexpr str_view default_primary_handle_prefix = "!";
+static constexpr str_view default_secondary_handle_prefix = "tag:yaml.org,2002:";
 
 template <typename BasicNodeType>
 class tag_resolver {
@@ -6140,7 +6141,7 @@ public:
     /// @param tag The input tag name.
     /// @return The type of a node deduced from the given tag name.
     static tag_t resolve_tag(const std::string& tag, const std::shared_ptr<doc_metainfo_type>& directives) {
-        std::string normalized = normalize_tag_name(tag, directives);
+        const std::string normalized = normalize_tag_name(tag, directives);
         return convert_to_tag_type(normalized);
     }
 
@@ -6168,9 +6169,10 @@ private:
         switch (tag[1]) {
         case '!': {
             // handle a secondary tag handle (!!suffix -> !<[secondary][suffix]>)
-            bool is_null_or_empty = !directives || directives->secondary_handle_prefix.empty();
+            const bool is_null_or_empty = !directives || directives->secondary_handle_prefix.empty();
             if (is_null_or_empty) {
-                normalized += default_secondary_handle_prefix + tag.substr(2);
+                normalized.append(default_secondary_handle_prefix.begin(), default_secondary_handle_prefix.end());
+                normalized += tag.substr(2);
             }
             else {
                 normalized += directives->secondary_handle_prefix + tag.substr(2);
@@ -6179,9 +6181,10 @@ private:
         }
         case '<':
             if (tag[2] == '!') {
-                bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
+                const bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
                 if (is_null_or_empty) {
-                    return normalized + default_primary_handle_prefix + tag.substr(3);
+                    normalized.append(default_primary_handle_prefix.begin(), default_primary_handle_prefix.end());
+                    return normalized + tag.substr(3);
                 }
                 return normalized + directives->primary_handle_prefix + tag.substr(3);
             }
@@ -6197,7 +6200,7 @@ private:
                 // there must be a non-empty suffix. (already checked by the lexer.)
                 FK_YAML_ASSERT(tag_end_pos < tag.size() - 1);
 
-                bool is_null_or_empty = !directives || directives->named_handle_map.empty();
+                const bool is_null_or_empty = !directives || directives->named_handle_map.empty();
                 if FK_YAML_UNLIKELY (is_null_or_empty) {
                     throw invalid_tag("named handle has not been registered.", tag.c_str());
                 }
@@ -6214,14 +6217,15 @@ private:
                 // See https://yaml.org/spec/1.2.2/#56-miscellaneous-characters for more details.
 
                 normalized += named_handle_itr->second;
-                normalized.append(tag.begin() + (tag_end_pos + 1), tag.end());
+                normalized.append(tag.begin() + (static_cast<std::ptrdiff_t>(tag_end_pos) + 1), tag.end());
                 break;
             }
 
             // handle a primary tag handle (!suffix -> !<[primary][suffix]>)
-            bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
+            const bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
             if (is_null_or_empty) {
-                normalized += default_primary_handle_prefix + tag.substr(1);
+                normalized.append(default_primary_handle_prefix.begin(), default_primary_handle_prefix.end());
+                normalized += tag.substr(1);
             }
             else {
                 normalized += directives->primary_handle_prefix + tag.substr(1);
@@ -6419,17 +6423,17 @@ using node_attr_t = uint32_t;
 namespace node_attr_mask {
 
 /// The bit mask for node value type bits.
-const node_attr_t value = 0x0000FFFFu;
+constexpr node_attr_t value = 0x0000FFFFu;
 /// The bit mask for node style type bits. (bits are not yet defined.)
-const node_attr_t style = 0x00FF0000u;
+constexpr node_attr_t style = 0x00FF0000u;
 /// The bit mask for node property related bits.
-const node_attr_t props = 0xFF000000u;
+constexpr node_attr_t props = 0xFF000000u;
 /// The bit mask for anchor/alias node type bits.
-const node_attr_t anchoring = 0x03000000u;
+constexpr node_attr_t anchoring = 0x03000000u;
 /// The bit mask for anchor offset value bits.
-const node_attr_t anchor_offset = 0xFC000000u;
+constexpr node_attr_t anchor_offset = 0xFC000000u;
 /// The bit mask for all the bits for node attributes.
-const node_attr_t all = std::numeric_limits<node_attr_t>::max();
+constexpr node_attr_t all = std::numeric_limits<node_attr_t>::max();
 
 } // namespace node_attr_mask
 
@@ -6437,30 +6441,30 @@ const node_attr_t all = std::numeric_limits<node_attr_t>::max();
 namespace node_attr_bits {
 
 /// The sequence node bit.
-const node_attr_t seq_bit = 1u << 0;
+constexpr node_attr_t seq_bit = 1u << 0;
 /// The mapping node bit.
-const node_attr_t map_bit = 1u << 1;
+constexpr node_attr_t map_bit = 1u << 1;
 /// The null scalar node bit.
-const node_attr_t null_bit = 1u << 2;
+constexpr node_attr_t null_bit = 1u << 2;
 /// The boolean scalar node bit.
-const node_attr_t bool_bit = 1u << 3;
+constexpr node_attr_t bool_bit = 1u << 3;
 /// The integer scalar node bit.
-const node_attr_t int_bit = 1u << 4;
+constexpr node_attr_t int_bit = 1u << 4;
 /// The floating point scalar node bit.
-const node_attr_t float_bit = 1u << 5;
+constexpr node_attr_t float_bit = 1u << 5;
 /// The string scalar node bit.
-const node_attr_t string_bit = 1u << 6;
+constexpr node_attr_t string_bit = 1u << 6;
 
 /// A utility bit set to filter scalar node bits.
-const node_attr_t scalar_bits = null_bit | bool_bit | int_bit | float_bit | string_bit;
+constexpr node_attr_t scalar_bits = null_bit | bool_bit | int_bit | float_bit | string_bit;
 
 /// The anchor node bit.
-const node_attr_t anchor_bit = 0x01000000u;
+constexpr node_attr_t anchor_bit = 0x01000000u;
 /// The alias node bit.
-const node_attr_t alias_bit = 0x02000000u;
+constexpr node_attr_t alias_bit = 0x02000000u;
 
 /// A utility bit set for initialization.
-const node_attr_t default_bits = null_bit;
+constexpr node_attr_t default_bits = null_bit;
 
 /// @brief Converts a node_type value to a node_attr_t value.
 /// @param t A type of node value.
@@ -6552,9 +6556,9 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct node_property {
     /// The tag name property.
-    std::string tag {};
+    std::string tag;
     /// The anchor name property.
-    std::string anchor {};
+    std::string anchor;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -6590,7 +6594,7 @@ class basic_deserializer {
     using mapping_type = typename basic_node_type::mapping_type;
 
     /// @brief Definition of state types of parse contexts.
-    enum class context_state_t {
+    enum class context_state_t : std::uint8_t {
         BLOCK_MAPPING,                //!< The underlying node is a block mapping.
         BLOCK_MAPPING_EXPLICIT_KEY,   //!< The underlying node is an explicit block mapping key.
         BLOCK_MAPPING_EXPLICIT_VALUE, //!< The underlying node is an explicit block mapping value.
@@ -6608,16 +6612,22 @@ class basic_deserializer {
         parse_context() = default;
 
         /// @brief Construct a new parse_context object with non-default values for each parameter.
-        /// @param _line The current line. (count from zero)
-        /// @param _indent The indentation width in the current line. (count from zero)
-        /// @param _state The parse context type.
-        /// @param _p_node The underlying node associated to this context.
-        parse_context(uint32_t _line, uint32_t _indent, context_state_t _state, basic_node_type* _p_node)
-            : line(_line),
-              indent(_indent),
-              state(_state),
-              p_node(_p_node) {
+        /// @param line The current line. (count from zero)
+        /// @param indent The indentation width in the current line. (count from zero)
+        /// @param state The parse context type.
+        /// @param p_node The underlying node associated to this context.
+        // // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+        parse_context(uint32_t line, uint32_t indent, context_state_t state, basic_node_type* p_node) noexcept
+            : line(line),
+              indent(indent),
+              state(state),
+              p_node(p_node) {
         }
+
+        parse_context(const parse_context&) noexcept = default;
+        parse_context& operator=(const parse_context&) noexcept = default;
+        parse_context(parse_context&&) noexcept = default;
+        parse_context& operator=(parse_context&&) noexcept = default;
 
         ~parse_context() {
             switch (state) {
@@ -6643,7 +6653,7 @@ class basic_deserializer {
     };
 
     /// @brief Definitions of state types for expected flow token hints.
-    enum class flow_token_state_t {
+    enum class flow_token_state_t : std::uint8_t {
         NEEDS_VALUE_OR_SUFFIX,     //!< Either value or flow suffix (`]` or `}`)
         NEEDS_SEPARATOR_OR_SUFFIX, //!< Either separator (`,`) or flow suffix (`]` or `}`)
     };
@@ -6662,8 +6672,8 @@ public:
     /// @param input_adapter An input adapter object for the input source buffer.
     /// @return basic_node_type A root YAML node deserialized from the source string.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
-    basic_node_type deserialize(InputAdapterType&& input_adapter) {
-        str_view input_view = input_adapter.get_buffer_view();
+    basic_node_type deserialize(InputAdapterType&& input_adapter) { // NOLINT(cppcoreguidelines-missing-std-forward)
+        const str_view input_view = input_adapter.get_buffer_view();
         lexer_type lexer(input_view);
 
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
@@ -6675,8 +6685,9 @@ public:
     /// @param input_adapter An input adapter object for the input source buffer.
     /// @return std::vector<basic_node_type> Root YAML nodes for deserialized YAML documents.
     template <typename InputAdapterType, enable_if_t<is_input_adapter<InputAdapterType>::value, int> = 0>
+    // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
     std::vector<basic_node_type> deserialize_docs(InputAdapterType&& input_adapter) {
-        str_view input_view = input_adapter.get_buffer_view();
+        const str_view input_view = input_adapter.get_buffer_view();
         lexer_type lexer(input_view);
 
         std::vector<basic_node_type> nodes {};
@@ -6706,7 +6717,7 @@ private:
         // parse node properties for root node if any
         uint32_t line = lexer.get_lines_processed();
         uint32_t indent = lexer.get_last_token_begin_pos();
-        bool found_props = deserialize_node_properties(lexer, token, line, indent);
+        const bool found_props = deserialize_node_properties(lexer, token, line, indent);
 
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
@@ -6815,7 +6826,7 @@ private:
         lexer.set_document_state(true);
 
         for (;;) {
-            lexical_token token = lexer.get_next_token();
+            const lexical_token token = lexer.get_next_token();
 
             switch (token.type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
@@ -6831,39 +6842,39 @@ private:
                 lacks_end_of_directives_marker = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
-                str_view tag_handle_view = lexer.get_tag_handle();
+                const str_view tag_handle_view = lexer.get_tag_handle();
                 switch (tag_handle_view.size()) {
                 case 1 /* ! */: {
-                    bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
+                    const bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
                     if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Primary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    str_view tag_prefix = lexer.get_tag_prefix();
+                    const str_view tag_prefix = lexer.get_tag_prefix();
                     mp_meta->primary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
                 case 2 /* !! */: {
-                    bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
+                    const bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
                     if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Secondary handle cannot be specified more than once.",
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    str_view tag_prefix = lexer.get_tag_prefix();
+                    const str_view tag_prefix = lexer.get_tag_prefix();
                     mp_meta->secondary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
                 default /* !<handle>! */: {
                     std::string tag_handle(tag_handle_view.begin(), tag_handle_view.end());
-                    str_view tag_prefix_view = lexer.get_tag_prefix();
+                    const str_view tag_prefix_view = lexer.get_tag_prefix();
                     std::string tag_prefix(tag_prefix_view.begin(), tag_prefix_view.end());
-                    bool is_already_specified =
+                    const bool is_already_specified =
                         !(mp_meta->named_handle_map.emplace(std::move(tag_handle), std::move(tag_prefix)).second);
                     if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
@@ -6915,7 +6926,7 @@ private:
                     pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
                 }
                 else {
-                    bool needs_to_move_back = indent < m_context_stack.back().indent;
+                    const bool needs_to_move_back = indent < m_context_stack.back().indent;
                     if (needs_to_move_back) {
                         auto target_itr = std::find_if( // LCOV_EXCL_LINE
                             m_context_stack.rbegin(),
@@ -6945,7 +6956,7 @@ private:
                 }
 
                 if (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE) {
-                    sequence_type& seq = mp_current_node->template get_value_ref<sequence_type&>();
+                    auto& seq = mp_current_node->template get_value_ref<sequence_type&>();
                     seq.emplace_back(basic_node_type::mapping());
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, &(seq.back()));
                 }
@@ -6953,7 +6964,7 @@ private:
                 token = lexer.get_next_token();
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
-                    basic_node_type* p_node = new basic_node_type(node_type::SEQUENCE);
+                    auto* p_node = new basic_node_type(node_type::SEQUENCE);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, p_node);
                     mp_current_node = m_context_stack.back().p_node;
                     apply_directive_set(*mp_current_node);
@@ -6977,20 +6988,20 @@ private:
                 continue;
             }
             case lexical_token_t::KEY_SEPARATOR: {
-                bool is_empty_seq = mp_current_node->is_sequence() && mp_current_node->empty();
+                const bool is_empty_seq = mp_current_node->is_sequence() && mp_current_node->empty();
                 if FK_YAML_UNLIKELY (is_empty_seq) {
                     throw parse_error("sequence key should not be empty.", line, indent);
                 }
 
                 // hold the line count of the key separator for later use.
-                uint32_t old_indent = indent;
-                uint32_t old_line = line;
+                const uint32_t old_indent = indent;
+                const uint32_t old_line = line;
 
                 token = lexer.get_next_token();
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
 
-                bool found_props = deserialize_node_properties(lexer, token, line, indent);
+                const bool found_props = deserialize_node_properties(lexer, token, line, indent);
                 if (found_props && line == lexer.get_lines_processed()) {
                     // defer applying node properties for the subsequent node on the same line.
                     continue;
@@ -7003,7 +7014,7 @@ private:
                     continue;
                 }
 
-                bool is_implicit_same_line =
+                const bool is_implicit_same_line =
                     (line == old_line) && (m_context_stack.empty() || old_indent > m_context_stack.back().indent);
                 if (is_implicit_same_line) {
                     // a key separator for an implicit key with its value on the same line.
@@ -7012,7 +7023,7 @@ private:
 
                 if (line > old_line) {
                     if (m_needs_tag_impl) {
-                        tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
+                        const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
                         if (tag_type == tag_t::MAPPING || tag_type == tag_t::CUSTOM_TAG) {
                             // set YAML node properties here to distinguish them from those for the first key node
                             // as shown in the following snippet:
@@ -7045,9 +7056,9 @@ private:
                         line = lexer.get_lines_processed();
                         indent = lexer.get_last_token_begin_pos();
 
-                        bool has_props = deserialize_node_properties(lexer, token, line, indent);
+                        const bool has_props = deserialize_node_properties(lexer, token, line, indent);
                         if (has_props) {
-                            uint32_t line_after_props = lexer.get_lines_processed();
+                            const uint32_t line_after_props = lexer.get_lines_processed();
                             if (line == line_after_props) {
                                 // Skip updating the current indent to avoid stacking a wrong indentation.
                                 //
@@ -7119,7 +7130,7 @@ private:
                 // ```
                 continue;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
-                bool is_further_nested = m_context_stack.back().indent < indent;
+                const bool is_further_nested = m_context_stack.back().indent < indent;
                 if (is_further_nested) {
                     mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
                     mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
@@ -7162,7 +7173,7 @@ private:
                                     return false;
                                 }
                             });
-                        bool is_indent_valid = (target_itr != m_context_stack.rend());
+                        const bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if FK_YAML_UNLIKELY (!is_indent_valid) {
                             throw parse_error("Detected invalid indentation.", line, indent);
                         }
@@ -7235,7 +7246,7 @@ private:
                         }
                     });
 
-                bool is_valid = itr != m_context_stack.rend();
+                const bool is_valid = itr != m_context_stack.rend();
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw parse_error("No corresponding flow sequence beginning is found.", line, indent);
                 }
@@ -7245,7 +7256,7 @@ private:
                 mp_current_node = last_context.p_node;
                 last_context.p_node = nullptr;
                 indent = last_context.indent;
-                context_state_t state = last_context.state;
+                const context_state_t state = last_context.state;
                 m_context_stack.pop_back();
 
                 // handle cases where the flow sequence is a mapping key node.
@@ -7309,7 +7320,7 @@ private:
                                     return false;
                                 }
                             });
-                        bool is_indent_valid = (target_itr != m_context_stack.rend());
+                        const bool is_indent_valid = (target_itr != m_context_stack.rend());
                         if FK_YAML_UNLIKELY (!is_indent_valid) {
                             throw parse_error("Detected invalid indentation.", line, indent);
                         }
@@ -7385,7 +7396,7 @@ private:
                         }
                     });
 
-                bool is_valid = itr != m_context_stack.rend();
+                const bool is_valid = itr != m_context_stack.rend();
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw parse_error("No corresponding flow mapping beginning is found.", line, indent);
                 }
@@ -7395,7 +7406,7 @@ private:
                 mp_current_node = last_context.p_node;
                 last_context.p_node = nullptr;
                 indent = last_context.indent;
-                context_state_t state = last_context.state;
+                const context_state_t state = last_context.state;
                 m_context_stack.pop_back();
 
                 // handle cases where the flow mapping is a mapping key node.
@@ -7446,9 +7457,9 @@ private:
                     throw parse_error("Tag cannot be specified to an alias node", line, indent);
                 }
 
-                const std::string token_str = std::string(token.str.begin(), token.str.end());
+                std::string token_str = std::string(token.str.begin(), token.str.end());
 
-                uint32_t anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
+                const auto anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
                 if FK_YAML_UNLIKELY (anchor_counts == 0) {
                     throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
                 }
@@ -7461,7 +7472,7 @@ private:
                 apply_directive_set(node);
                 apply_node_properties(node);
 
-                bool should_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
+                const bool should_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
                 if (should_continue) {
                     continue;
                 }
@@ -7479,7 +7490,7 @@ private:
                 apply_directive_set(node);
                 apply_node_properties(node);
 
-                bool do_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
+                const bool do_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
                 if (do_continue) {
                     continue;
                 }
@@ -7528,6 +7539,7 @@ private:
     /// @param line The variable to store the line of either the first property or the last non-property token.
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     bool deserialize_node_properties(lexer_type& lexer, lexical_token& last_token, uint32_t& line, uint32_t& indent) {
         m_needs_anchor_impl = m_needs_tag_impl = false;
 
@@ -7583,7 +7595,7 @@ private:
         } while (!ends_loop);
 
         last_token = token;
-        bool prop_specified = m_needs_anchor_impl || m_needs_tag_impl;
+        const bool prop_specified = m_needs_anchor_impl || m_needs_tag_impl;
         if (!prop_specified) {
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
@@ -7608,7 +7620,7 @@ private:
                         // the target node is a block mapping key node with the same indentation.
                         return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
                     });
-                bool is_indent_valid = (target_itr != m_context_stack.rend());
+                const bool is_indent_valid = (target_itr != m_context_stack.rend());
                 if FK_YAML_UNLIKELY (!is_indent_valid) {
                     throw parse_error("Detected invalid indentation.", line, indent);
                 }
@@ -7639,7 +7651,7 @@ private:
         }
 
         mp_current_node = &(itr.first->second);
-        parse_context& key_context = m_context_stack.back();
+        const parse_context& key_context = m_context_stack.back();
         m_context_stack.emplace_back(
             key_context.line, key_context.indent, context_state_t::MAPPING_VALUE, mp_current_node);
     }
@@ -7805,13 +7817,13 @@ private:
     /// A flag to determine the need for a value separator or a flow suffix to follow.
     flow_token_state_t m_flow_token_state {flow_token_state_t::NEEDS_VALUE_OR_SUFFIX};
     /// The last YAML anchor name.
-    std::string m_anchor_name {};
+    std::string m_anchor_name;
     /// The last tag name.
-    std::string m_tag_name {};
+    std::string m_tag_name;
     /// The root YAML anchor name. (maybe empty and unused)
-    std::string m_root_anchor_name {};
+    std::string m_root_anchor_name;
     /// The root tag name. (maybe empty and unused)
-    std::string m_root_tag_name {};
+    std::string m_root_tag_name;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -7870,6 +7882,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
 #define FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
 
+#include <cstdint>
+
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
 
@@ -7877,7 +7891,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of Unicode encoding types
 /// @note Since fkYAML doesn't treat UTF-16/UTF-32 encoded characters per byte, endians do not matter.
-enum class utf_encode_t {
+enum class utf_encode_t : std::uint8_t {
     UTF_8,    //!< UTF-8
     UTF_16BE, //!< UTF-16 Big Endian
     UTF_16LE, //!< UTF-16 Little Endian
@@ -7906,53 +7920,54 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 inline utf_encode_t detect_encoding_type(const std::array<uint8_t, 4>& bytes, bool& has_bom) noexcept {
     has_bom = false;
 
-    uint8_t byte0 = bytes[0];
-    uint8_t byte1 = bytes[1];
-    uint8_t byte2 = bytes[2];
-    uint8_t byte3 = bytes[3];
+    const uint8_t byte0 = bytes[0];
+    const uint8_t byte1 = bytes[1];
+    const uint8_t byte2 = bytes[2];
+    const uint8_t byte3 = bytes[3];
 
     // Check if a BOM exists.
 
-    if (byte0 == uint8_t(0xEFu) && byte1 == uint8_t(0xBBu) && byte2 == uint8_t(0xBFu)) {
+    if (byte0 == static_cast<uint8_t>(0xEFu) && byte1 == static_cast<uint8_t>(0xBBu) &&
+        byte2 == static_cast<uint8_t>(0xBFu)) {
         has_bom = true;
         return utf_encode_t::UTF_8;
     }
 
-    if (byte0 == 0 && byte1 == 0 && byte2 == uint8_t(0xFEu) && byte3 == uint8_t(0xFFu)) {
+    if (byte0 == 0 && byte1 == 0 && byte2 == static_cast<uint8_t>(0xFEu) && byte3 == static_cast<uint8_t>(0xFFu)) {
         has_bom = true;
         return utf_encode_t::UTF_32BE;
     }
 
-    if (byte0 == uint8_t(0xFFu) && byte1 == uint8_t(0xFEu) && byte2 == 0 && byte3 == 0) {
+    if (byte0 == static_cast<uint8_t>(0xFFu) && byte1 == static_cast<uint8_t>(0xFEu) && byte2 == 0 && byte3 == 0) {
         has_bom = true;
         return utf_encode_t::UTF_32LE;
     }
 
-    if (byte0 == uint8_t(0xFEu) && byte1 == uint8_t(0xFFu)) {
+    if (byte0 == static_cast<uint8_t>(0xFEu) && byte1 == static_cast<uint8_t>(0xFFu)) {
         has_bom = true;
         return utf_encode_t::UTF_16BE;
     }
 
-    if (byte0 == uint8_t(0xFFu) && byte1 == uint8_t(0xFEu)) {
+    if (byte0 == static_cast<uint8_t>(0xFFu) && byte1 == static_cast<uint8_t>(0xFEu)) {
         has_bom = true;
         return utf_encode_t::UTF_16LE;
     }
 
     // Test the first character assuming it's an ASCII character.
 
-    if (byte0 == 0 && byte1 == 0 && byte2 == 0 && 0 < byte3 && byte3 < uint8_t(0x80u)) {
+    if (byte0 == 0 && byte1 == 0 && byte2 == 0 && 0 < byte3 && byte3 < static_cast<uint8_t>(0x80u)) {
         return utf_encode_t::UTF_32BE;
     }
 
-    if (0 < byte0 && byte0 < uint8_t(0x80u) && byte1 == 0 && byte2 == 0 && byte3 == 0) {
+    if (0 < byte0 && byte0 < static_cast<uint8_t>(0x80u) && byte1 == 0 && byte2 == 0 && byte3 == 0) {
         return utf_encode_t::UTF_32LE;
     }
 
-    if (byte0 == 0 && 0 < byte1 && byte1 < uint8_t(0x80u)) {
+    if (byte0 == 0 && 0 < byte1 && byte1 < static_cast<uint8_t>(0x80u)) {
         return utf_encode_t::UTF_16BE;
     }
 
-    if (0 < byte0 && byte0 < uint8_t(0x80u) && byte1 == 0) {
+    if (0 < byte0 && byte0 < static_cast<uint8_t>(0x80u) && byte1 == 0) {
         return utf_encode_t::UTF_16LE;
     }
 
@@ -7980,11 +7995,11 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
         std::array<uint8_t, 4> bytes {};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4 && begin + i != end; i++) {
-            bytes[i] = uint8_t(begin[i]);
+            bytes[i] = uint8_t(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         if (has_bom) {
             // skip reading the BOM.
@@ -8025,11 +8040,11 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
         std::array<uint8_t, 4> bytes {};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4 && begin + i != end; i++) {
-            bytes[i] = uint8_t(begin[i]);
+            bytes[i] = uint8_t(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_8) {
             throw exception("char8_t characters must be encoded in the UTF-8 format.");
@@ -8062,13 +8077,16 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
         std::array<uint8_t, 4> bytes {};
         bytes.fill(0xFFu);
         for (int i = 0; i < 2 && begin + i != end; i++) {
-            char16_t elem = begin[i];
-            bytes[i * 2] = uint8_t((elem & 0xFF00u) >> 8);
-            bytes[i * 2 + 1] = uint8_t(elem & 0xFFu);
+            // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
+            const char16_t elem = begin[i];
+            const int idx_base = i * 2;
+            bytes[idx_base] = static_cast<uint8_t>((elem & 0xFF00u) >> 8);
+            bytes[idx_base + 1] = static_cast<uint8_t>(elem & 0xFFu);
+            // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_16BE && encode_type != utf_encode_t::UTF_16LE) {
             throw exception("char16_t characters must be encoded in the UTF-16 format.");
@@ -8097,14 +8115,14 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
         }
 
         std::array<uint8_t, 4> bytes {};
-        char32_t elem = *begin;
-        bytes[0] = uint8_t((elem & 0xFF000000u) >> 24);
-        bytes[1] = uint8_t((elem & 0x00FF0000u) >> 16);
-        bytes[2] = uint8_t((elem & 0x0000FF00u) >> 8);
-        bytes[3] = uint8_t(elem & 0x000000FFu);
+        const char32_t elem = *begin;
+        bytes[0] = static_cast<uint8_t>((elem & 0xFF000000u) >> 24);
+        bytes[1] = static_cast<uint8_t>((elem & 0x00FF0000u) >> 16);
+        bytes[2] = static_cast<uint8_t>((elem & 0x0000FF00u) >> 8);
+        bytes[3] = static_cast<uint8_t>(elem & 0x000000FFu);
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         if FK_YAML_UNLIKELY (encode_type != utf_encode_t::UTF_32BE && encode_type != utf_encode_t::UTF_32LE) {
             throw exception("char32_t characters must be encoded in the UTF-32 format.");
@@ -8129,18 +8147,18 @@ struct file_utf_encode_detector {
         bytes.fill(0xFFu);
         for (int i = 0; i < 4; i++) {
             char byte = 0;
-            std::size_t size = std::fread(&byte, sizeof(char), 1, p_file);
+            const std::size_t size = std::fread(&byte, sizeof(char), 1, p_file);
             if (size != sizeof(char)) {
                 break;
             }
-            bytes[i] = uint8_t(byte & 0xFF);
+            bytes[i] = static_cast<uint8_t>(byte & 0xFF); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         // move back to the beginning if a BOM doesn't exist.
-        long offset = 0;
+        long offset = 0; // NOLINT(google-runtime-int)
         if (has_bom) {
             switch (encode_type) {
             case utf_encode_t::UTF_8:
@@ -8156,7 +8174,7 @@ struct file_utf_encode_detector {
                 break;
             }
         }
-        std::fseek(p_file, offset, SEEK_SET);
+        std::fseek(p_file, offset, SEEK_SET); // NOLINT(cert-err33-c)
 
         return encode_type;
     }
@@ -8173,17 +8191,17 @@ struct stream_utf_encode_detector {
         for (int i = 0; i < 4; i++) {
             char ch = 0;
             is.read(&ch, 1);
-            std::streamsize size = is.gcount();
+            const std::streamsize size = is.gcount();
             if (size != 1) {
                 // without this, seekg() will fail.
                 is.clear();
                 break;
             }
-            bytes[i] = uint8_t(ch & 0xFF);
+            bytes[i] = static_cast<uint8_t>(ch & 0xFF); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
-        utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
+        const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         // move back to the beginning if a BOM doesn't exist.
         std::streamoff offset = 0;
@@ -8288,30 +8306,30 @@ private:
 
         IterType current = m_begin;
         while (current != m_end) {
-            uint8_t first = uint8_t(*current++);
-            uint32_t num_bytes = utf8::get_num_bytes(first);
+            const auto first = static_cast<uint8_t>(*current++);
+            const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 2: {
-                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
             }
             case 3: {
-                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
             }
             case 4: {
-                std::initializer_list<uint8_t> bytes {
+                const std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
@@ -8324,7 +8342,8 @@ private:
         }
 
         IterType cr_or_end_itr = std::find(m_begin, m_end, '\r');
-        if (cr_or_end_itr == m_end && m_is_contiguous) {
+        const bool is_contiguous_no_cr = (cr_or_end_itr == m_end) && m_is_contiguous;
+        if (is_contiguous_no_cr) {
             // The input iterators (begin, end) can be used as-is during parsing.
             return str_view {m_begin, m_end};
         }
@@ -8370,11 +8389,12 @@ private:
         IterType current = m_begin;
         while (current != m_end || encoded_buf_size != 0) {
             while (current != m_end && encoded_buf_size < 2) {
-                char16_t utf16 = static_cast<char16_t>(uint8_t(*current++) << shift_bits[0]);
+                auto utf16 = static_cast<char16_t>(uint8_t(*current++) << shift_bits[0]);
                 utf16 |= static_cast<char16_t>(uint8_t(*current++) << shift_bits[1]);
 
                 // skip appending CRs.
                 if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -8420,7 +8440,7 @@ private:
 
         IterType current = m_begin;
         while (current != m_end) {
-            char32_t utf32 = static_cast<char32_t>(*current++ << shift_bits[0]);
+            auto utf32 = static_cast<char32_t>(*current++ << shift_bits[0]);
             utf32 |= static_cast<char32_t>(*current++ << shift_bits[1]);
             utf32 |= static_cast<char32_t>(*current++ << shift_bits[2]);
             utf32 |= static_cast<char32_t>(*current++ << shift_bits[3]);
@@ -8442,7 +8462,7 @@ private:
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
-    std::string m_buffer {};
+    std::string m_buffer;
     /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
@@ -8484,30 +8504,30 @@ public:
     str_view get_buffer_view() {
         IterType current = m_begin;
         while (current != m_end) {
-            uint8_t first = static_cast<uint8_t>(*current++);
-            uint32_t num_bytes = utf8::get_num_bytes(first);
+            const auto first = static_cast<uint8_t>(*current++);
+            const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 2: {
-                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
             }
             case 3: {
-                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
             }
             case 4: {
-                std::initializer_list<uint8_t> bytes {
+                const std::initializer_list<uint8_t> bytes {
                     first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
@@ -8523,7 +8543,7 @@ public:
         current = m_begin;
 
         while (current != m_end) {
-            char c = char(*current++);
+            const auto c = static_cast<char>(*current++);
             if FK_YAML_LIKELY (c != '\r') {
                 m_buffer.push_back(c);
             }
@@ -8540,7 +8560,7 @@ private:
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
-    std::string m_buffer {};
+    std::string m_buffer;
     /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
@@ -8578,7 +8598,7 @@ public:
     /// @brief Get view into the input buffer contents.
     /// @return View into the input buffer contents.
     str_view get_buffer_view() {
-        int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
+        const int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
         uint32_t encoded_buf_size {0};
@@ -8593,11 +8613,10 @@ public:
         while (current != m_end || encoded_buf_size != 0) {
             while (current != m_end && encoded_buf_size < 2) {
                 char16_t utf16 = *current++;
-                utf16 = char16_t(
-                    static_cast<uint16_t>((utf16 & 0x00FFu) << shift_bits) |
-                    static_cast<uint16_t>((utf16 & 0xFF00u) >> shift_bits));
+                utf16 = static_cast<char16_t>(((utf16 & 0x00FFu) << shift_bits) | ((utf16 & 0xFF00u) >> shift_bits));
 
                 if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -8625,7 +8644,7 @@ private:
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_16BE};
     /// The normalized owned buffer.
-    std::string m_buffer {};
+    std::string m_buffer;
     /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
@@ -8678,14 +8697,12 @@ public:
 
         IterType current = m_begin;
         while (current != m_end) {
-            char32_t tmp = *current++;
-            char32_t utf32 = char32_t(
-                static_cast<uint32_t>((tmp & 0xFF000000u) >> shift_bits[0]) |
-                static_cast<uint32_t>((tmp & 0x00FF0000u) >> shift_bits[1]) |
-                static_cast<uint32_t>((tmp & 0x0000FF00u) << shift_bits[2]) |
-                static_cast<uint32_t>((tmp & 0x000000FFu) << shift_bits[3]));
+            const char32_t tmp = *current++;
+            const auto utf32 = static_cast<char32_t>(
+                ((tmp & 0xFF000000u) >> shift_bits[0]) | ((tmp & 0x00FF0000u) >> shift_bits[1]) |
+                ((tmp & 0x0000FF00u) << shift_bits[2]) | ((tmp & 0x000000FFu) << shift_bits[3]));
 
-            if FK_YAML_UNLIKELY (utf32 != char32_t(0x0000000Du)) {
+            if FK_YAML_UNLIKELY (utf32 != static_cast<char32_t>(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
                 m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
             }
@@ -8702,7 +8719,7 @@ private:
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_32BE};
     /// The normalized owned buffer.
-    std::string m_buffer {};
+    std::string m_buffer;
     /// Whether ItrType is a contiguous iterator.
     bool m_is_contiguous {false};
 };
@@ -8755,7 +8772,7 @@ private:
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         char tmp_buf[256] {};
-        std::size_t buf_size = sizeof(tmp_buf) / sizeof(tmp_buf[0]);
+        constexpr std::size_t buf_size = sizeof(tmp_buf) / sizeof(tmp_buf[0]);
         std::size_t read_size = 0;
         while ((read_size = std::fread(&tmp_buf[0], sizeof(char), buf_size, m_file)) > 0) {
             char* p_current = &tmp_buf[0];
@@ -8778,30 +8795,34 @@ private:
         auto current = m_buffer.begin();
         auto end = m_buffer.end();
         while (current != end) {
-            uint8_t first = static_cast<uint8_t>(*current++);
-            uint32_t num_bytes = utf8::get_num_bytes(first);
+            const auto first = static_cast<uint8_t>(*current++);
+            const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 2: {
-                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {first, static_cast<uint8_t>(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
             }
             case 3: {
-                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {
+                    first, static_cast<uint8_t>(*current++), static_cast<uint8_t>(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
             }
             case 4: {
-                std::initializer_list<uint8_t> bytes {
-                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {
+                    first,
+                    static_cast<uint8_t>(*current++),
+                    static_cast<uint8_t>(*current++),
+                    static_cast<uint8_t>(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
@@ -8837,10 +8858,11 @@ private:
 
         while (std::feof(m_file) == 0) {
             while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2) {
-                char16_t utf16 = char16_t(
-                    static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
-                    static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
-                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
+                const auto utf16 = static_cast<char16_t>(
+                    (static_cast<uint8_t>(chars[0]) << shift_bits[0]) |
+                    (static_cast<uint8_t>(chars[1]) << shift_bits[1]));
+                if FK_YAML_LIKELY (utf16 != static_cast<char16_t>(0x000Du)) {
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -8881,16 +8903,14 @@ private:
         uint32_t utf8_buf_size {0};
 
         while (std::feof(m_file) == 0) {
-            std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
+            const std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
             if (size != 4) {
                 break;
             }
 
-            char32_t utf32 = char32_t(
-                static_cast<uint32_t>(uint8_t(chars[0]) << shift_bits[0]) |
-                static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
-                static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
-                static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
+            const auto utf32 = static_cast<char32_t>(
+                (static_cast<uint8_t>(chars[0]) << shift_bits[0]) | (static_cast<uint8_t>(chars[1]) << shift_bits[1]) |
+                (static_cast<uint8_t>(chars[2]) << shift_bits[2]) | (static_cast<uint8_t>(chars[3]) << shift_bits[3]));
 
             if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
@@ -8907,7 +8927,7 @@ private:
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
-    std::string m_buffer {};
+    std::string m_buffer;
 };
 
 /// @brief An input adapter for streams
@@ -8957,7 +8977,7 @@ private:
         char tmp_buf[256] {};
         do {
             m_istream->read(&tmp_buf[0], 256);
-            std::size_t read_size = static_cast<std::size_t>(m_istream->gcount());
+            const auto read_size = static_cast<std::size_t>(m_istream->gcount());
 
             char* p_current = &tmp_buf[0];
             char* p_end = p_current + read_size;
@@ -8979,30 +8999,34 @@ private:
         auto current = m_buffer.begin();
         auto end = m_buffer.end();
         while (current != end) {
-            uint8_t first = static_cast<uint8_t>(*current++);
-            uint32_t num_bytes = utf8::get_num_bytes(first);
+            const auto first = static_cast<uint8_t>(*current++);
+            const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 2: {
-                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {first, static_cast<uint8_t>(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
             }
             case 3: {
-                std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {
+                    first, static_cast<uint8_t>(*current++), static_cast<uint8_t>(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
                 break;
             }
             case 4: {
-                std::initializer_list<uint8_t> bytes {
-                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                bool is_valid = utf8::validate(bytes);
+                const std::initializer_list<uint8_t> bytes {
+                    first,
+                    static_cast<uint8_t>(*current++),
+                    static_cast<uint8_t>(*current++),
+                    static_cast<uint8_t>(*current++)};
+                const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
                 }
@@ -9039,16 +9063,17 @@ private:
         do {
             while (encoded_buf_size < 2) {
                 m_istream->read(&chars[0], 2);
-                std::streamsize size = m_istream->gcount();
+                const std::streamsize size = m_istream->gcount();
                 if (size != 2) {
                     break;
                 }
 
-                char16_t utf16 = char16_t(
-                    static_cast<uint16_t>(uint8_t(chars[0]) << shift_bits[0]) |
-                    static_cast<uint16_t>(uint8_t(chars[1]) << shift_bits[1]));
+                const auto utf16 = static_cast<char16_t>(
+                    (static_cast<uint8_t>(chars[0]) << shift_bits[0]) |
+                    (static_cast<uint8_t>(chars[1]) << shift_bits[1]));
 
-                if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
+                if FK_YAML_LIKELY (utf16 != static_cast<char16_t>(0x000Du)) {
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
@@ -9090,16 +9115,14 @@ private:
 
         do {
             m_istream->read(&chars[0], 4);
-            std::streamsize size = m_istream->gcount();
+            const std::streamsize size = m_istream->gcount();
             if (size != 4) {
                 break;
             }
 
-            char32_t utf32 = char32_t(
-                static_cast<uint32_t>(uint8_t(chars[0]) << shift_bits[0]) |
-                static_cast<uint32_t>(uint8_t(chars[1]) << shift_bits[1]) |
-                static_cast<uint32_t>(uint8_t(chars[2]) << shift_bits[2]) |
-                static_cast<uint32_t>(uint8_t(chars[3]) << shift_bits[3]));
+            const auto utf32 = static_cast<char32_t>(
+                (static_cast<uint8_t>(chars[0]) << shift_bits[0]) | (static_cast<uint8_t>(chars[1]) << shift_bits[1]) |
+                (static_cast<uint8_t>(chars[2]) << shift_bits[2]) | (static_cast<uint8_t>(chars[3]) << shift_bits[3]));
 
             if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
@@ -9116,23 +9139,24 @@ private:
     /// The encoding type for this input adapter.
     utf_encode_t m_encode_type {utf_encode_t::UTF_8};
     /// The normalized owned buffer.
-    std::string m_buffer {};
+    std::string m_buffer;
 };
 
 /////////////////////////////////
 //   input_adapter providers   //
 /////////////////////////////////
 
-namespace {
-
+/// @brief A concrete factory method for iterator_input_adapter objects with iterators.
+/// @tparam ItrType An iterator type.
+/// @param begin The beginning of iterators.
+/// @param end The end of iterators.
+/// @param is_contiguous Whether iterators refer to a contiguous byte array.
+/// @return An iterator_input_adapter object for the target iterator type.
 template <typename ItrType>
-inline iterator_input_adapter<ItrType> create_iterator_input_adapter(
-    ItrType begin, ItrType end, bool is_contiguous) noexcept {
-    utf_encode_t encode_type = utf_encode_detector<ItrType>::detect(begin, end);
+inline iterator_input_adapter<ItrType> create_iterator_input_adapter(ItrType begin, ItrType end, bool is_contiguous) {
+    const utf_encode_t encode_type = utf_encode_detector<ItrType>::detect(begin, end);
     return iterator_input_adapter<ItrType>(begin, end, encode_type, is_contiguous);
 }
-
-} // anonymous namespace
 
 /// @brief A factory method for iterator_input_adapter objects with iterator values.
 /// @tparam ItrType An iterator type.
@@ -9148,7 +9172,7 @@ inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
     // Getting distance between begin and (end - 1) avoids dereferencing an invalid sentinel.
     bool is_contiguous = false;
     if (is_random_access_itr) {
-        ptrdiff_t size = static_cast<ptrdiff_t>(std::distance(begin, end - 1));
+        const auto size = static_cast<ptrdiff_t>(std::distance(begin, end - 1));
 
         using CharPtr = remove_cvref_t<typename std::iterator_traits<ItrType>::pointer>;
         CharPtr p_begin = &*begin;
@@ -9207,7 +9231,7 @@ struct container_input_adapter_factory<
 /// @return input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type
 template <typename ContainerType>
 inline typename input_adapter_factory::container_input_adapter_factory<ContainerType>::adapter_type input_adapter(
-    ContainerType&& container) {
+    const ContainerType& container) {
     return input_adapter_factory::container_input_adapter_factory<ContainerType>::create(container);
 }
 
@@ -9218,7 +9242,8 @@ inline file_input_adapter input_adapter(std::FILE* file) {
     if FK_YAML_UNLIKELY (!file) {
         throw fkyaml::exception("Invalid FILE object pointer.");
     }
-    utf_encode_t encode_type = file_utf_encode_detector::detect(file);
+
+    const utf_encode_t encode_type = file_utf_encode_detector::detect(file);
     return file_input_adapter(file, encode_type);
 }
 
@@ -9229,7 +9254,8 @@ inline stream_input_adapter input_adapter(std::istream& stream) {
     if FK_YAML_UNLIKELY (!stream.good()) {
         throw fkyaml::exception("Invalid stream.");
     }
-    utf_encode_t encode_type = stream_utf_encode_detector::detect(stream);
+
+    const utf_encode_t encode_type = stream_utf_encode_detector::detect(stream);
     return stream_input_adapter(stream, encode_type);
 }
 
@@ -9300,7 +9326,7 @@ struct iterator_traits<const ValueType> {
 };
 
 /// @brief Definitions of iterator types for iterators internally held.
-enum class iterator_t {
+enum class iterator_t : std::uint8_t {
     SEQUENCE, //!< sequence iterator type.
     MAPPING,  //!< mapping iterator type.
 };
@@ -9343,8 +9369,7 @@ private:
 public:
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
-    iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept
-        : m_inner_iterator_type(iterator_t::SEQUENCE) {
+    iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept {
         m_iterator_holder.sequence_iterator = itr;
     }
 
@@ -9682,19 +9707,19 @@ public:
     /// @brief Construct a new node ref storage object with an rvalue basic_node object.
     /// @param n An rvalue basic_node object.
     explicit node_ref_storage(node_type&& n) noexcept(std::is_nothrow_move_constructible<node_type>::value)
-        : owned_value(std::move(n)) {
+        : m_owned_value(std::move(n)) {
     }
 
     /// @brief Construct a new node ref storage object with an lvalue basic_node object.
     /// @param n An lvalue basic_node object.
     explicit node_ref_storage(const node_type& n) noexcept
-        : value_ref(&n) {
+        : m_value_ref(&n) {
     }
 
     /// @brief Construct a new node ref storage object with a std::initializer_list object.
     /// @param init A std::initializer_list object.
     node_ref_storage(std::initializer_list<node_ref_storage> init)
-        : owned_value(init) {
+        : m_owned_value(init) {
     }
 
     /// @brief Construct a new node ref storage object with variadic template arguments
@@ -9702,7 +9727,7 @@ public:
     /// @param args Arguments to construct a basic_node object.
     template <typename... Args, enable_if_t<std::is_constructible<node_type, Args...>::value, int> = 0>
     node_ref_storage(Args&&... args)
-        : owned_value(std::forward<Args>(args)...) {
+        : m_owned_value(std::forward<Args>(args)...) {
     }
 
     // allow only move construct/assignment
@@ -9711,24 +9736,26 @@ public:
     node_ref_storage& operator=(const node_ref_storage&) = delete;
     node_ref_storage& operator=(node_ref_storage&&) = default;
 
+    ~node_ref_storage() = default;
+
 public:
     /// @brief An arrow operator for node_ref_storage objects.
     /// @return const node_type* A constant pointer to a basic_node object.
     const node_type* operator->() const noexcept {
-        return value_ref ? value_ref : &owned_value;
+        return m_value_ref ? m_value_ref : &m_owned_value;
     }
 
     /// @brief Releases a basic_node object internally held.
     /// @return node_type A basic_node object internally held.
     node_type release() const noexcept {
-        return value_ref ? *value_ref : std::move(owned_value);
+        return m_value_ref ? *m_value_ref : std::move(m_owned_value);
     }
 
 private:
     /// A storage for a basic_node object given with rvalue reference.
-    mutable node_type owned_value = nullptr;
+    mutable node_type m_owned_value = nullptr;
     /// A pointer to a basic_node object given with lvalue reference.
-    const node_type* value_ref = nullptr;
+    const node_type* m_value_ref = nullptr;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -9799,10 +9826,10 @@ inline void to_string(std::nullptr_t /*unused*/, std::string& s) noexcept {
 
 /// @brief Specialization of to_string() for booleans.
 /// @param s A resulting string YAML token.
-/// @param b A boolean source value.
+/// @param v A boolean source value.
 template <>
-inline void to_string(bool b, std::string& s) noexcept {
-    s = b ? "true" : "false";
+inline void to_string(bool v, std::string& s) noexcept {
+    s = v ? "true" : "false";
 }
 
 /// @brief Specialization of to_string() for integers.
@@ -9810,8 +9837,8 @@ inline void to_string(bool b, std::string& s) noexcept {
 /// @param s A resulting string YAML token.
 /// @param i An integer source value.
 template <typename IntegerType>
-inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType i, std::string& s) noexcept {
-    s = std::to_string(i);
+inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerType v, std::string& s) noexcept {
+    s = std::to_string(v);
 }
 
 /// @brief Specialization of to_string() for floating point numbers.
@@ -9819,14 +9846,14 @@ inline enable_if_t<is_non_bool_integral<IntegerType>::value> to_string(IntegerTy
 /// @param s A resulting string YAML token.
 /// @param f A floating point number source value.
 template <typename FloatType>
-inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType f, std::string& s) noexcept {
-    if (std::isnan(f)) {
+inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType v, std::string& s) noexcept {
+    if (std::isnan(v)) {
         s = ".nan";
         return;
     }
 
-    if (std::isinf(f)) {
-        if (f == std::numeric_limits<FloatType>::infinity()) {
+    if (std::isinf(v)) {
+        if (v == std::numeric_limits<FloatType>::infinity()) {
             s = ".inf";
         }
         else {
@@ -9836,12 +9863,12 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
     }
 
     std::ostringstream oss;
-    oss << f;
+    oss << v;
     s = oss.str();
 
     // If `f` is actually an integer, ".0" must be appended. The result would cause roundtrip issue otherwise.
     // https://github.com/fktn-k/fkYAML/issues/405
-    FloatType diff = f - std::floor(f);
+    const FloatType diff = v - std::floor(v);
     if (diff < std::numeric_limits<FloatType>::min()) {
         s += ".0";
     }
@@ -9888,7 +9915,7 @@ public:
     std::string serialize_docs(const std::vector<BasicNodeType>& docs) {
         std::string str {};
 
-        uint32_t size = static_cast<uint32_t>(docs.size());
+        const auto size = static_cast<uint32_t>(docs.size());
         for (uint32_t i = 0; i < size; i++) {
             serialize_document(docs[i], str);
             if (i + 1 < size) {
@@ -9902,10 +9929,10 @@ public:
 
 private:
     void serialize_document(const BasicNodeType& node, std::string& str) {
-        bool dirs_serialized = serialize_directives(node, str);
+        const bool dirs_serialized = serialize_directives(node, str);
 
         // the root node cannot be an alias node.
-        bool root_has_props = node.is_anchor() || node.has_tag_name();
+        const bool root_has_props = node.is_anchor() || node.has_tag_name();
 
         if (root_has_props) {
             if (dirs_serialized) {
@@ -9982,7 +10009,7 @@ private:
                 insert_indentation(cur_indent, str);
                 str += "-";
 
-                bool is_appended = try_append_alias(seq_item, true, str);
+                const bool is_appended = try_append_alias(seq_item, true, str);
                 if (is_appended) {
                     str += "\n";
                     continue;
@@ -9991,7 +10018,7 @@ private:
                 try_append_anchor(seq_item, true, str);
                 try_append_tag(seq_item, true, str);
 
-                bool is_scalar = seq_item.is_scalar();
+                const bool is_scalar = seq_item.is_scalar();
                 if (is_scalar) {
                     str += " ";
                     serialize_node(seq_item, cur_indent, str);
@@ -10013,17 +10040,17 @@ private:
                     str += " ";
                 }
                 else {
-                    bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
-                    bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
+                    const bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
+                    const bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
                     if (is_anchor_appended || is_tag_appended) {
                         str += " ";
                     }
 
-                    bool is_container = !itr.key().is_scalar();
+                    const bool is_container = !itr.key().is_scalar();
                     if (is_container) {
                         str += "? ";
                     }
-                    uint32_t indent = static_cast<uint32_t>(get_cur_indent(str));
+                    const auto indent = static_cast<uint32_t>(get_cur_indent(str));
                     serialize_node(itr.key(), indent, str);
                     if (is_container) {
                         // a newline code is already inserted in the above serialize_node() call.
@@ -10042,7 +10069,7 @@ private:
                 try_append_anchor(*itr, true, str);
                 try_append_tag(*itr, true, str);
 
-                bool is_scalar = itr->is_scalar();
+                const bool is_scalar = itr->is_scalar();
                 if (is_scalar) {
                     str += " ";
                     serialize_node(*itr, cur_indent, str);
@@ -10072,7 +10099,7 @@ private:
             break;
         case node_type::STRING: {
             bool is_escaped = false;
-            typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
+            auto str_val = get_string_node_value(node, is_escaped);
 
             if (is_escaped) {
                 // There's no other token type with escapes than strings.
@@ -10086,7 +10113,7 @@ private:
             // The next line is intentionally excluded from the LCOV coverage target since the next line is somehow
             // misrecognized as it has a binary branch. Possibly begin() or end() has some conditional branch(es)
             // internally. Confirmed with LCOV 1.14 on Ubuntu22.04.
-            node_type type_if_plain =
+            const node_type type_if_plain =
                 scalar_scanner::scan(str_val.c_str(), str_val.c_str() + str_val.size()); // LCOV_EXCL_LINE
 
             if (type_if_plain != node_type::STRING) {
@@ -10108,12 +10135,12 @@ private:
     /// @param s The target string object.
     /// @return The current indentation width.
     std::size_t get_cur_indent(const std::string& s) const noexcept {
-        bool is_empty = s.empty();
+        const bool is_empty = s.empty();
         if (is_empty) {
             return 0;
         }
 
-        std::size_t last_lf_pos = s.rfind('\n');
+        const std::size_t last_lf_pos = s.rfind('\n');
         return (last_lf_pos != std::string::npos) ? s.size() - last_lf_pos - 1 : s.size();
     }
 
@@ -10182,8 +10209,7 @@ private:
     typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
         FK_YAML_ASSERT(node.is_string());
 
-        using string_type = typename BasicNodeType::string_type;
-        const string_type& s = node.template get_value_ref<const string_type&>();
+        const auto& s = node.template get_value_ref<const typename BasicNodeType::string_type&>();
         return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
     } // LCOV_EXCL_LINE
 
@@ -10220,7 +10246,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of YAML version types.
-enum class yaml_version_t : std::uint32_t {
+enum class yaml_version_t : std::uint8_t {
     VER_1_1, //!< YAML version 1.1
     VER_1_2, //!< YAML version 1.2
 };
@@ -10230,9 +10256,8 @@ inline yaml_version_t convert_from_yaml_version_type(yaml_version_type t) noexce
     case yaml_version_type::VERSION_1_1:
         return yaml_version_t::VER_1_1;
     case yaml_version_type::VERSION_1_2:
+    default:
         return yaml_version_t::VER_1_2;
-    default:                            // LCOV_EXCL_LINE
-        return yaml_version_t::VER_1_2; // LCOV_EXCL_LINE
     }
 }
 
@@ -10241,9 +10266,8 @@ inline yaml_version_type convert_to_yaml_version_type(yaml_version_t t) noexcept
     case yaml_version_t::VER_1_1:
         return yaml_version_type::VERSION_1_1;
     case yaml_version_t::VER_1_2:
+    default:
         return yaml_version_type::VERSION_1_2;
-    default:                                   // LCOV_EXCL_LINE
-        return yaml_version_type::VERSION_1_2; // LCOV_EXCL_LINE
     }
 }
 
@@ -10436,7 +10460,7 @@ inline void from_node(const BasicNodeType& n, IntegerType& i) {
 
     // under/overflow check.
     using node_int_type = typename BasicNodeType::integer_type;
-    node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
+    const node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
     if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min())) {
         throw exception("Integer value underflow detected.");
     }
@@ -10551,8 +10575,8 @@ struct from_node_fn {
     /// @param val A target object assigned from the basic_node object.
     /// @return decltype(from_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
     template <typename BasicNodeType, typename T>
-    auto operator()(const BasicNodeType& n, T&& val) const noexcept(noexcept(from_node(n, std::forward<T>(val))))
-        -> decltype(from_node(n, std::forward<T>(val))) {
+    auto operator()(const BasicNodeType& n, T&& val) const
+        noexcept(noexcept(from_node(n, std::forward<T>(val)))) -> decltype(from_node(n, std::forward<T>(val))) {
         return from_node(n, std::forward<T>(val));
     }
 };
@@ -10899,8 +10923,8 @@ struct to_node_fn {
     /// @param val A target object assigned to the basic_node object.
     /// @return decltype(to_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
     template <typename BasicNodeType, typename T>
-    auto operator()(BasicNodeType& n, T&& val) const noexcept(noexcept(to_node(n, std::forward<T>(val))))
-        -> decltype(to_node(n, std::forward<T>(val))) {
+    auto operator()(BasicNodeType& n, T&& val) const
+        noexcept(noexcept(to_node(n, std::forward<T>(val)))) -> decltype(to_node(n, std::forward<T>(val))) {
         return to_node(n, std::forward<T>(val));
     }
 };
@@ -10957,9 +10981,8 @@ public:
     /// @param val A native data object.
     /// @sa https://fktn-k.github.io/fkYAML/api/node_value_converter/to_node/
     template <typename BasicNodeType, typename TargetType = ValueType>
-    static auto to_node(BasicNodeType& n, TargetType&& val) noexcept(
-        noexcept(::fkyaml::to_node(n, std::forward<TargetType>(val))))
-        -> decltype(::fkyaml::to_node(n, std::forward<TargetType>(val))) {
+    static auto to_node(BasicNodeType& n, TargetType&& val) noexcept(noexcept(::fkyaml::to_node(
+        n, std::forward<TargetType>(val)))) -> decltype(::fkyaml::to_node(n, std::forward<TargetType>(val))) {
         ::fkyaml::to_node(n, std::forward<TargetType>(val));
     }
 };
@@ -11066,7 +11089,7 @@ public:
                 return {itr, false};
             }
         }
-        this->emplace_back(key, value);
+        this->emplace_back(std::forward<KeyType>(key), value);
         return {std::prev(this->end()), true};
     }
 
@@ -11078,7 +11101,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    mapped_type& at(KeyType&& key) {
+    mapped_type& at(KeyType&& key) { // NOLINT(cppcoreguidelines-missing-std-forward)
         for (auto itr = this->begin(); itr != this->end(); ++itr) {
             if (m_compare(itr->first, key)) {
                 return itr->second;
@@ -11095,7 +11118,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    const mapped_type& at(KeyType&& key) const {
+    const mapped_type& at(KeyType&& key) const { // NOLINT(cppcoreguidelines-missing-std-forward)
         for (auto itr = this->begin(); itr != this->end(); ++itr) {
             if (m_compare(itr->first, key)) {
                 return itr->second;
@@ -11112,7 +11135,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    iterator find(KeyType&& key) noexcept {
+    iterator find(KeyType&& key) noexcept { // NOLINT(cppcoreguidelines-missing-std-forward)
         for (auto itr = this->begin(); itr != this->end(); ++itr) {
             if (m_compare(itr->first, key)) {
                 return itr;
@@ -11129,7 +11152,7 @@ public:
     template <
         typename KeyType,
         detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
-    const_iterator find(KeyType&& key) const noexcept {
+    const_iterator find(KeyType&& key) const noexcept { // NOLINT(cppcoreguidelines-missing-std-forward)
         for (auto itr = this->begin(); itr != this->end(); ++itr) {
             if (m_compare(itr->first, key)) {
                 return itr;
@@ -11536,7 +11559,7 @@ public:
     /// @return The resulting basic_node object deserialized from the pair of iterators.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/
     template <typename ItrType>
-    static basic_node deserialize(ItrType&& begin, ItrType&& end) {
+    static basic_node deserialize(ItrType begin, ItrType end) {
         return deserializer_type().deserialize(
             detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
@@ -11649,7 +11672,7 @@ public:
     /// @return An alias YAML node created from the given anchor node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/alias_of/
     static basic_node alias_of(const basic_node& anchor_node) {
-        using namespace detail::node_attr_bits;
+        constexpr detail::node_attr_t anchor_bit = detail::node_attr_bits::anchor_bit;
 
         if FK_YAML_UNLIKELY (!anchor_node.has_anchor_name() || !(anchor_node.m_attrs & anchor_bit)) {
             throw fkyaml::exception("Cannot create an alias without anchor name.");
@@ -11657,7 +11680,7 @@ public:
 
         basic_node node = anchor_node;
         node.m_attrs &= ~detail::node_attr_mask::anchoring;
-        node.m_attrs |= alias_bit;
+        node.m_attrs |= detail::node_attr_bits::alias_bit;
         return node;
     } // LCOV_EXCL_LINE
 
@@ -11803,7 +11826,7 @@ public:
     /// @return true if both types and values are equal, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_eq/
     bool operator==(const basic_node& rhs) const noexcept {
-        detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
+        const detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
         if (this_val_bit != (rhs.get_node_attrs() & detail::node_attr_mask::value)) {
             return false;
         }
@@ -11861,8 +11884,8 @@ public:
             return false;
         }
 
-        detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
-        detail::node_attr_t other_val_bit = rhs.get_node_attrs() & detail::node_attr_mask::value;
+        const detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
+        const detail::node_attr_t other_val_bit = rhs.get_node_attrs() & detail::node_attr_mask::value;
 
         if (this_val_bit < other_val_bit) {
             return true;
@@ -11935,7 +11958,7 @@ public:
     /// @return The type of the YAML node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_type/
     node_type get_type() const noexcept {
-        detail::node_attr_t attrs = get_node_attrs();
+        const detail::node_attr_t attrs = get_node_attrs();
         return detail::node_attr_bits::to_node_type(attrs);
     }
 
@@ -12345,7 +12368,7 @@ public:
         m_attrs &= ~detail::node_attr_mask::anchoring;
         m_attrs |= detail::node_attr_bits::anchor_bit;
         mp_meta = p_meta;
-        uint32_t offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
+        auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
         m_prop.anchor = anchor_name;
     }
@@ -12373,7 +12396,7 @@ public:
         m_attrs &= ~detail::node_attr_mask::anchoring;
         m_attrs |= detail::node_attr_bits::anchor_bit;
         mp_meta = p_meta;
-        uint32_t offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
+        auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
         m_prop.anchor = std::move(anchor_name);
     }
@@ -12718,6 +12741,7 @@ private:
     detail::node_attr_t m_attrs {detail::node_attr_bits::default_bits};
     /// The shared set of YAML directives applied to this node.
     mutable std::shared_ptr<detail::document_metainfo<basic_node>> mp_meta {
+        // NOLINTNEXTLINE(bugprone-unhandled-exception-at-new)
         std::shared_ptr<detail::document_metainfo<basic_node>>(new detail::document_metainfo<basic_node>())};
     /// The current node value.
     node_value m_node_value {};
@@ -12791,7 +12815,7 @@ inline namespace yaml_literals {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char* s, std::size_t n) {
-    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 /// @brief The user-defined string literal which deserializes a `char16_t` array into a `node` object.
@@ -12800,7 +12824,7 @@ inline fkyaml::node operator"" _yaml(const char* s, std::size_t n) {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n) {
-    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 /// @brief The user-defined string literal which deserializes a `char32_t` array into a `node` object.
@@ -12809,7 +12833,7 @@ inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n) {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n) {
-    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 #if FK_YAML_HAS_CHAR8_T
