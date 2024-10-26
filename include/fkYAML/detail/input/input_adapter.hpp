@@ -125,8 +125,8 @@ private:
         }
 
         IterType cr_or_end_itr = std::find(m_begin, m_end, '\r');
-        const bool contains_crs = cr_or_end_itr != m_end;
-        if (!contains_crs && m_is_contiguous) {
+        const bool is_contiguous_no_cr = (cr_or_end_itr == m_end) && m_is_contiguous;
+        if (is_contiguous_no_cr) {
             // The input iterators (begin, end) can be used as-is during parsing.
             return str_view {m_begin, m_end};
         }
