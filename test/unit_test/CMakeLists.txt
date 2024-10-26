@@ -116,18 +116,18 @@ target_compile_options(
     >
     # GNU
     $<$<CXX_COMPILER_ID:GNU>:
-      -Wall -Wextra -Werror -pedantic -Wpedantic --all-warnings --extra-warnings
+      -Wall -Wextra -Werror -pedantic -Wpedantic -Wdeprecated --all-warnings --extra-warnings
       -Wno-deprecated-declarations # for testing deprecated functions
       -Wno-self-move # necessary to build the detail::iterator class test
     >
     # Clang
     $<$<CXX_COMPILER_ID:Clang>:
-      -Wall -Wextra -Werror -pedantic
+      -Wall -Wextra -Werror -pedantic -Wdeprecated
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
       -Wno-deprecated-declarations # for testing deprecated functions
     >
     $<$<CXX_COMPILER_ID:AppleClang>:
-      -Wall -Wextra -Werror -pedantic
+      -Wall -Wextra -Werror -pedantic -Wdeprecated
       -Wno-deprecated-declarations # for testing deprecated functions
     >
     # IntelLLVM
