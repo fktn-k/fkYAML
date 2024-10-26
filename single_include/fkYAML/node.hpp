@@ -12809,6 +12809,13 @@ inline namespace literals {
 /// @brief namespace for user-defined literals for YAML node objects.
 inline namespace yaml_literals {
 
+// Whitespace before the literal operator identifier is deprecated in C++23 or better but required in C++11.
+// Ignore the warning as a workaround. https://github.com/fktn-k/fkYAML/pull/417
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
+#endif
+
 /// @brief The user-defined string literal which deserializes a `char` array into a `node` object.
 /// @param s An input `char` array.
 /// @param n The size of `s`.
@@ -12844,6 +12851,11 @@ inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n) {
 inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
     return fkyaml::node::deserialize((const char8_t*)s, (const char8_t*)s + n);
 }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
 #endif
 
 } // namespace yaml_literals
