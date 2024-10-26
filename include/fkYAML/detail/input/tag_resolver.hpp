@@ -22,13 +22,13 @@
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+static constexpr str_view default_primary_handle_prefix = "!";
+static constexpr str_view default_secondary_handle_prefix = "tag:yaml.org,2002:";
+
 template <typename BasicNodeType>
 class tag_resolver {
     static_assert(is_basic_node<BasicNodeType>::value, "tag_resolver only accepts basic_node<...>.");
     using doc_metainfo_type = document_metainfo<BasicNodeType>;
-
-    static constexpr str_view default_primary_handle_prefix = "!";
-    static constexpr str_view default_secondary_handle_prefix = "tag:yaml.org,2002:";
 
 public:
     /// @brief Resolve the input tag name into an expanded tag name prepended with a registered prefix.
