@@ -444,7 +444,7 @@ inline bool atoi_dec_unchecked(const char* p_begin, const char* p_end, IntType& 
             return false;
         }
         // Overflow is intentional when the IntType is signed.
-        i = i * IntType(10) + IntType(c - '0');
+        i = i * static_cast<IntType>(10) + static_cast<IntType>(c - '0');
     } while (++p_begin != p_end);
 
     return true;
@@ -569,7 +569,7 @@ inline bool atoi_oct(const char* p_begin, const char* p_end, IntType& i) noexcep
         if FK_YAML_UNLIKELY (c < '0' || '7' < c) {
             return false;
         }
-        i = i * IntType(8) + IntType(c - '0');
+        i = i * static_cast<IntType>(8) + static_cast<IntType>(c - '0');
     } while (++p_begin != p_end);
 
     return true;
@@ -608,18 +608,18 @@ inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcep
         const char c = *p_begin;
         IntType ci = 0;
         if ('0' <= c && c <= '9') {
-            ci = IntType(c - '0');
+            ci = static_cast<IntType>(c - '0');
         }
         else if ('A' <= c && c <= 'F') {
-            ci = IntType(c - 'A' + 10);
+            ci = static_cast<IntType>(c - 'A' + 10);
         }
         else if ('a' <= c && c <= 'f') {
-            ci = IntType(c - 'a' + 10);
+            ci = static_cast<IntType>(c - 'a' + 10);
         }
         else {
             return false;
         }
-        i = i * IntType(16) + ci;
+        i = i * static_cast<IntType>(16) + ci;
         // NOLINTEND(bugprone-misplaced-widening-cast)
     } while (++p_begin != p_end);
 
@@ -662,7 +662,7 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
 
         const bool success = atoi_dec_neg(p_begin + 1, p_end, i);
         if (success) {
-            i *= IntType(-1);
+            i *= static_cast<IntType>(-1);
         }
 
         return success;
@@ -790,7 +790,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
                                 (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
                                 (std::strncmp(p_from_second, ".INF", 4) == 0);
             if (is_inf) {
-                set_infinity(f, *p_begin == '-' ? FloatType(-1.) : FloatType(1.));
+                set_infinity(f, *p_begin == '-' ? static_cast<FloatType>(-1.) : static_cast<FloatType>(1.));
                 return true;
             }
         }
@@ -804,7 +804,7 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
         const bool is_inf = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||
                             (std::strncmp(p_begin, ".INF", 4) == 0);
         if (is_inf) {
-            set_infinity(f, FloatType(1.));
+            set_infinity(f, static_cast<FloatType>(1.));
             return true;
         }
 

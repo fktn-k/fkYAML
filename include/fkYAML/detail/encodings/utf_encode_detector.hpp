@@ -103,7 +103,7 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
         std::array<uint8_t, 4> bytes {};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4 && begin + i != end; i++) {
-            bytes[i] = uint8_t(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+            bytes[i] = static_cast<uint8_t>(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
