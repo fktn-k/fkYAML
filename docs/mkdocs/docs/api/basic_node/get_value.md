@@ -16,7 +16,24 @@ T get_value() const noexcept(
 Explicit type conversion between the internally stored YAML node value and a compatible value which is [copy-constructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible) and [default-constructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible).  
 The conversion relies on the [`node_value_converter`](../node_value_converter/index.md)::[`from_node`](../node_value_converter/from_node.md).  
 This API makes a copy of the value.  
-If the copying costs a lot, or if you need an address of the original value, then it is more suitable to call [`get_value_ref`](get_value_ref.md) instead.  
+If the copying costs a lot, or if you need an address of the original value, then you should call [`get_value_ref`](get_value_ref.md) instead.  
+
+If the YAML node value is a null, boolean, integer or floating point, this function internally executes type conversion according to the following rules which all depend on the template paramter type `T`:
+* If the YAML node value is a **null** (node_type::NULL_OBJECT), the value can be converted to:
+    * `false` (boolean)
+    * `0` (integer)
+    * `0.0` (floating point)
+* If the YAML node value is a **boolean** (node_type::BOOLEAN), the value can be converted to:
+    * `1 /*true*/` or `0 /*false*/` (integer)
+    * `1.0 /*true*/` or `0.0 /*false*/` (floating point)
+* If the YAML node value is a **integer** (node_type::INTEGER), the value can be converted to:
+    * `true /*non-0*/` or `false /*0*/` (boolean)
+    * `static_cast`ed floating point value (floating point)
+* If the YAML node value is a **floating point** (node_type::FLOAT), the value can be converted to:
+    * `true /*non-0*/` or `false /*0*/` (boolean)
+    * `static_cast`ed integer value (integer)
+
+Note that those scalar type cannot be converted to a sequence, mapping, string scalar and throws a [`type_error`](../exception/type_error.md).
 
 ## **Template Parameters**
 

@@ -11,16 +11,22 @@
 
 int main() {
     // create a YAML node.
-    fkyaml::node n = 123;
+    fkyaml::node n = 1.23;
     fkyaml::node n2 = "foo";
 
-    // get references to the value.
-    auto int_val = n.get_value<int>();
+    // get the node value (value gets copied).
+    auto float_val = n.get_value<float>();
     auto str_val = n2.get_value<std::string>();
 
-    // print the values
-    std::cout << int_val << std::endl;
+    std::cout << float_val << std::endl;
     std::cout << str_val << std::endl;
+
+    // Numeric scalar value can be converted to other numeric types inside get_value().
+    auto bool_val = n.get_value<bool>();
+    auto int_val = n.get_value<int>();
+
+    std::cout << std::boolalpha << bool_val << std::endl;
+    std::cout << int_val << std::endl;
 
     // specifying incompatible type throws an exception
     try {

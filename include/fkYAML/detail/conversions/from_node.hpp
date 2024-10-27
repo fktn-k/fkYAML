@@ -80,6 +80,14 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_ty
     }
 }
 
+/// @brief from node function for mappings whose key and value are of both compatible types.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatibleKeyType Mapping key type compatible with BasicNodeType.
+/// @tparam CompatibleValueType Mapping value type compatible with BasicNodeType.
+/// @tparam Compare Comparator type for mapping keys.
+/// @tparam Allocator Allocator type for destination mapping object.
+/// @param n A node object.
+/// @param m Mapping container object to store converted key/value objects.
 template <
     typename BasicNodeType, typename CompatibleKeyType, typename CompatibleValueType, typename Compare,
     typename Allocator,
@@ -100,10 +108,10 @@ inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, Compat
     }
 }
 
-/// @brief from_node function for null node values.
+/// @brief from_node function for nullptr.
 /// @tparam BasicNodeType A basic_node template instance type.
-/// @param n A basic_node object.
-/// @param null A null node value object.
+/// @param n A node object.
+/// @param null Storage for a null value.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
 inline void from_node(const BasicNodeType& n, std::nullptr_t& null) {
     // to ensure the target node value type is null.
@@ -113,118 +121,221 @@ inline void from_node(const BasicNodeType& n, std::nullptr_t& null) {
     null = nullptr;
 }
 
-/// @brief from_node function for BasicNodeType::boolean_type objects.
+/// @brief from_node function for booleans.
 /// @tparam BasicNodeType A basic_node template instance type.
-/// @param n A basic_node object.
-/// @param b A boolean node value object.
+/// @param n A node object.
+/// @param b Storage for a boolean value.
 template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::boolean_type& b) {
-    if FK_YAML_UNLIKELY (!n.is_boolean()) {
-        throw type_error("The target node value type is not boolean type.", n.get_type());
+inline void from_node(const BasicNodeType& n, bool& b) {
+    switch (n.get_type()) {
+    case node_type::NULL_OBJECT:
+        // nullptr is converted to false just as C++ implicitly does.
+        b = false;
+        break;
+    case node_type::BOOLEAN:
+        b = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>());
+        break;
+    case node_type::INTEGER:
+        // true: non-zero, false: zero
+        b = (n.template get_value_ref<const typename BasicNodeType::integer_type&>() != 0);
+        break;
+    case node_type::FLOAT:
+        // true: non-zero, false: zero
+        using float_type = typename BasicNodeType::float_number_type;
+        b = (n.template get_value_ref<const float_type&>() != static_cast<float_type>(0.));
+        break;
+    case node_type::SEQUENCE:
+    case node_type::MAPPING:
+    case node_type::STRING:
+    default:
+        throw type_error("The target node value type is not compatible with boolean type.", n.get_type());
     }
-    b = n.template get_value_ref<const typename BasicNodeType::boolean_type&>();
 }
 
-/// @brief from_node function for BasicNodeType::integer_type objects.
+/// @brief Helper struct for node-to-int conversion.
 /// @tparam BasicNodeType A basic_node template instance type.
-/// @param n A basic_node object.
-/// @param i An integer node value object.
-template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::integer_type& i) {
-    if FK_YAML_UNLIKELY (!n.is_integer()) {
-        throw type_error("The target node value type is not integer type.", n.get_type());
-    }
-    i = n.template get_value_ref<const typename BasicNodeType::integer_type&>();
-}
-
-/// @brief from_node function for other integer objects. (i.e., not BasicNodeType::integer_type)
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam IntegerType An integer value type.
-/// @param n A basic_node object.
-/// @param i An integer node value object.
+/// @tparam IntType Target integer value type (same as BasicNodeType::integer_type)
 template <
-    typename BasicNodeType, typename IntegerType,
-    enable_if_t<
-        conjunction<
-            is_non_bool_integral<IntegerType>,
-            negation<std::is_same<IntegerType, typename BasicNodeType::integer_type>>>::value,
-        int> = 0>
-inline void from_node(const BasicNodeType& n, IntegerType& i) {
-    if FK_YAML_UNLIKELY (!n.is_integer()) {
-        throw type_error("The target node value type is not integer type.", n.get_type());
+    typename BasicNodeType, typename IntType, bool = std::is_same<typename BasicNodeType::integer_type, IntType>::value>
+struct from_node_int_helper {
+    /// @brief Convert node's integer value to the target integer type.
+    /// @param n A node object.
+    /// @return An integer value converted from the node's integer value.
+    static IntType convert(const BasicNodeType& n) {
+        return n.template get_value_ref<const typename BasicNodeType::integer_type&>();
     }
+};
 
-    // under/overflow check.
-    using node_int_type = typename BasicNodeType::integer_type;
-    const node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
-    if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntegerType>::min())) {
-        throw exception("Integer value underflow detected.");
-    }
-    if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntegerType>::max()) < tmp_int) {
-        throw exception("Integer value overflow detected.");
-    }
-
-    i = static_cast<IntegerType>(tmp_int);
-}
-
-/// @brief from_node function for BasicNodeType::float_number_type objects.
+/// @brief Helper struct for node-to-int conversion if IntType is not the node's integer value type.
 /// @tparam BasicNodeType A basic_node template instance type.
-/// @param n A basic_node object.
-/// @param f A float number node value object.
-template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::float_number_type& f) {
-    if FK_YAML_UNLIKELY (!n.is_float_number()) {
-        throw type_error("The target node value type is not float number type.", n.get_type());
-    }
-    f = n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
-}
+/// @tparam IntType Target integer value type (different from BasicNodeType::integer_type)
+template <typename BasicNodeType, typename IntType>
+struct from_node_int_helper<BasicNodeType, IntType, false> {
+    /// @brief Convert node's integer value to non-uint64_t integer types.
+    /// @param n A node object.
+    /// @return An integer value converted from the node's integer value.
+    static IntType convert(const BasicNodeType& n) {
+        using node_int_type = typename BasicNodeType::integer_type;
+        const node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
 
-/// @brief from_node function for other float number objects. (i.e., not BasicNodeType::float_number_type)
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam FloatType A float number value type.
-/// @param n A basic_node object.
-/// @param f A float number node value object.
-template <
-    typename BasicNodeType, typename FloatType,
-    enable_if_t<
-        conjunction<
-            std::is_floating_point<FloatType>,
-            negation<std::is_same<FloatType, typename BasicNodeType::float_number_type>>>::value,
-        int> = 0>
-inline void from_node(const BasicNodeType& n, FloatType& f) {
-    if FK_YAML_UNLIKELY (!n.is_float_number()) {
-        throw type_error("The target node value type is not float number type.", n.get_type());
-    }
-
-    using node_float_type = typename BasicNodeType::float_number_type;
-    auto tmp_float = n.template get_value_ref<const node_float_type&>();
-
-    // check if the value is an infinite number (either positive or negative)
-    if (std::isinf(tmp_float)) {
-        if (tmp_float == std::numeric_limits<node_float_type>::infinity()) {
-            f = std::numeric_limits<FloatType>::infinity();
-            return;
+        // under/overflow check.
+        if (std::is_same<IntType, uint64_t>::value) {
+            if FK_YAML_UNLIKELY (tmp_int < 0) {
+                throw exception("Integer value underflow detected.");
+            }
+        }
+        else {
+            if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntType>::min())) {
+                throw exception("Integer value underflow detected.");
+            }
+            if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntType>::max()) < tmp_int) {
+                throw exception("Integer value overflow detected.");
+            }
         }
 
-        f = -1 * std::numeric_limits<FloatType>::infinity();
-        return;
+        return static_cast<IntType>(tmp_int);
     }
+};
 
-    // check if the value is not a number
-    if (std::isnan(tmp_float)) {
-        f = std::numeric_limits<FloatType>::quiet_NaN();
-        return;
-    }
+/// @brief from_node function for integers.
+/// @note If node's value is null, boolean, or float, such a value is converted into an integer internally.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam IntegerType An integer value type.
+/// @param n A node object.
+/// @param i Storage for an integer value.
+template <
+    typename BasicNodeType, typename IntegerType,
+    enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_non_bool_integral<IntegerType>>::value, int> = 0>
+inline void from_node(const BasicNodeType& n, IntegerType& i) {
+    switch (n.get_type()) {
+    case node_type::NULL_OBJECT:
+        // nullptr is interpreted as 0
+        i = static_cast<IntegerType>(0);
+        break;
+    case node_type::BOOLEAN:
+        i = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>())
+                ? static_cast<IntegerType>(1)
+                : static_cast<IntegerType>(0);
+        break;
+    case node_type::INTEGER:
+        i = from_node_int_helper<BasicNodeType, IntegerType>::convert(n);
+        break;
+    case node_type::FLOAT: {
+        // int64_t should be safe to express integer part values of possible floating point types.
+        const auto tmp_int =
+            static_cast<int64_t>(n.template get_value_ref<const typename BasicNodeType::float_number_type&>());
 
-    // check if the value is expressible as FloatType.
-    if FK_YAML_UNLIKELY (tmp_float < std::numeric_limits<FloatType>::lowest()) {
-        throw exception("Floating point value underflow detected.");
-    }
-    if FK_YAML_UNLIKELY (std::numeric_limits<FloatType>::max() < tmp_float) {
-        throw exception("Floating point value overflow detected.");
-    }
+        // under/overflow check.
+        if (std::is_same<IntegerType, uint64_t>::value) {
+            if FK_YAML_UNLIKELY (tmp_int < 0) {
+                throw exception("Integer value underflow detected.");
+            }
+        }
+        else {
+            if FK_YAML_UNLIKELY (tmp_int < static_cast<int64_t>(std::numeric_limits<IntegerType>::min())) {
+                throw exception("Integer value underflow detected.");
+            }
+            if FK_YAML_UNLIKELY (static_cast<int64_t>(std::numeric_limits<IntegerType>::max()) < tmp_int) {
+                throw exception("Integer value overflow detected.");
+            }
+        }
 
-    f = static_cast<FloatType>(tmp_float);
+        i = static_cast<IntegerType>(tmp_int);
+        break;
+    }
+    case node_type::SEQUENCE:
+    case node_type::MAPPING:
+    case node_type::STRING:
+    default:
+        throw type_error("The target node value type is not compatible with integer type.", n.get_type());
+    }
+}
+
+/// @brief Helper struct for node-to-float conversion if FloatType is the node's floating point value type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam FloatType Target floating point value type (same as the BasicNodeType::float_number_type)
+template <
+    typename BasicNodeType, typename FloatType,
+    bool = std::is_same<typename BasicNodeType::float_number_type, FloatType>::value>
+struct from_node_float_helper {
+    /// @brief Convert node's floating point value to the target floating point type.
+    /// @param n A node object.
+    /// @return A floating point value converted from the node's floating point value.
+    static FloatType convert(const BasicNodeType& n) {
+        return n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
+    }
+};
+
+/// @brief Helper struct for node-to-float conversion if IntType is not the node's floating point value type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam FloatType Target floating point value type (different from BasicNodeType::float_number_type)
+template <typename BasicNodeType, typename FloatType>
+struct from_node_float_helper<BasicNodeType, FloatType, false> {
+    /// @brief Convert node's floating point value to the target floating point type.
+    /// @param n A node object.
+    /// @return A floating point value converted from the node's floating point value.
+    static FloatType convert(const BasicNodeType& n) {
+        using node_float_type = typename BasicNodeType::float_number_type;
+        auto tmp_float = n.template get_value_ref<const node_float_type&>();
+
+        // check if the value is an infinite number (either positive or negative)
+        if (std::isinf(tmp_float)) {
+            if (tmp_float == std::numeric_limits<node_float_type>::infinity()) {
+                return std::numeric_limits<FloatType>::infinity();
+            }
+
+            return static_cast<FloatType>(-1.) * std::numeric_limits<FloatType>::infinity();
+        }
+
+        // check if the value is not a number
+        if (std::isnan(tmp_float)) {
+            return std::numeric_limits<FloatType>::quiet_NaN();
+        }
+
+        // check if the value is expressible as FloatType.
+        if FK_YAML_UNLIKELY (tmp_float < std::numeric_limits<FloatType>::lowest()) {
+            throw exception("Floating point value underflow detected.");
+        }
+        if FK_YAML_UNLIKELY (std::numeric_limits<FloatType>::max() < tmp_float) {
+            throw exception("Floating point value overflow detected.");
+        }
+
+        return static_cast<FloatType>(tmp_float);
+    }
+};
+
+/// @brief from_node function for floating point values.
+/// @note If node's value is null, boolean, or integer, such a value is converted into a floating point internally.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam FloatType A floating point value type.
+/// @param n A node object.
+/// @param f Storage for a float point value.
+template <
+    typename BasicNodeType, typename FloatType,
+    enable_if_t<conjunction<is_basic_node<BasicNodeType>, std::is_floating_point<FloatType>>::value, int> = 0>
+inline void from_node(const BasicNodeType& n, FloatType& f) {
+    switch (n.get_type()) {
+    case node_type::NULL_OBJECT:
+        // nullptr is interpreted as 0.0
+        f = static_cast<FloatType>(0.);
+        break;
+    case node_type::BOOLEAN:
+        f = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>())
+                ? static_cast<FloatType>(1.)
+                : static_cast<FloatType>(0.);
+        break;
+    case node_type::INTEGER:
+        f = static_cast<FloatType>(n.template get_value_ref<const typename BasicNodeType::integer_type&>());
+        break;
+    case node_type::FLOAT:
+        f = from_node_float_helper<BasicNodeType, FloatType>::convert(n);
+        break;
+    case node_type::SEQUENCE:
+    case node_type::MAPPING:
+    case node_type::STRING:
+    default:
+        throw type_error("The target node value type is not compatible with float number type.", n.get_type());
+    }
 }
 
 /// @brief from_node function for BasicNodeType::string_type objects.
