@@ -94,7 +94,7 @@ private:
 
             switch (num_bytes) {
             case 2: {
-                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
+                const std::initializer_list<uint8_t> bytes {first, static_cast<uint8_t>(*current++)};
                 const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -102,7 +102,8 @@ private:
                 break;
             }
             case 3: {
-                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
+                const std::initializer_list<uint8_t> bytes {
+                    first, static_cast<uint8_t>(*current++), static_cast<uint8_t>(*current++)};
                 const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -111,7 +112,10 @@ private:
             }
             case 4: {
                 const std::initializer_list<uint8_t> bytes {
-                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
+                    first,
+                    static_cast<uint8_t>(*current++),
+                    static_cast<uint8_t>(*current++),
+                    static_cast<uint8_t>(*current++)};
                 const bool is_valid = utf8::validate(bytes);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
@@ -172,8 +176,8 @@ private:
         IterType current = m_begin;
         while (current != m_end || encoded_buf_size != 0) {
             while (current != m_end && encoded_buf_size < 2) {
-                auto utf16 = static_cast<char16_t>(uint8_t(*current++) << shift_bits[0]);
-                utf16 |= static_cast<char16_t>(uint8_t(*current++) << shift_bits[1]);
+                auto utf16 = static_cast<char16_t>(static_cast<uint8_t>(*current++) << shift_bits[0]);
+                utf16 |= static_cast<char16_t>(static_cast<uint8_t>(*current++) << shift_bits[1]);
 
                 // skip appending CRs.
                 if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
