@@ -10479,7 +10479,7 @@ struct from_node_int_helper {
 /// @tparam IntType Target integer value type (different from BasicNodeType::integer_type)
 template <typename BasicNodeType, typename IntType>
 struct from_node_int_helper<BasicNodeType, IntType, false> {
-    /// @brief Convert node's integer value to the target integer type.
+    /// @brief Convert node's integer value to non-uint64_t integer types.
     /// @param n A node object.
     /// @return An integer value converted from the node's integer value.
     static IntType convert(const BasicNodeType& n) {
@@ -10487,11 +10487,18 @@ struct from_node_int_helper<BasicNodeType, IntType, false> {
         const node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
 
         // under/overflow check.
-        if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntType>::min())) {
-            throw exception("Integer value underflow detected.");
+        if (std::is_same<IntType, uint64_t>::value) {
+            if FK_YAML_UNLIKELY (tmp_int < 0) {
+                throw exception("Integer value underflow detected.");
+            }
         }
-        if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntType>::max()) < tmp_int) {
-            throw exception("Integer value overflow detected.");
+        else {
+            if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntType>::min())) {
+                throw exception("Integer value underflow detected.");
+            }
+            if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntType>::max()) < tmp_int) {
+                throw exception("Integer value overflow detected.");
+            }
         }
 
         return static_cast<IntType>(tmp_int);
@@ -10527,11 +10534,18 @@ inline void from_node(const BasicNodeType& n, IntegerType& i) {
             static_cast<int64_t>(n.template get_value_ref<const typename BasicNodeType::float_number_type&>());
 
         // under/overflow check.
-        if FK_YAML_UNLIKELY (tmp_int < static_cast<int64_t>(std::numeric_limits<IntegerType>::min())) {
-            throw exception("Integer value underflow detected.");
+        if (std::is_same<IntegerType, uint64_t>::value) {
+            if FK_YAML_UNLIKELY (tmp_int < 0) {
+                throw exception("Integer value underflow detected.");
+            }
         }
-        if FK_YAML_UNLIKELY (static_cast<int64_t>(std::numeric_limits<IntegerType>::max()) < tmp_int) {
-            throw exception("Integer value overflow detected.");
+        else {
+            if FK_YAML_UNLIKELY (tmp_int < static_cast<int64_t>(std::numeric_limits<IntegerType>::min())) {
+                throw exception("Integer value underflow detected.");
+            }
+            if FK_YAML_UNLIKELY (static_cast<int64_t>(std::numeric_limits<IntegerType>::max()) < tmp_int) {
+                throw exception("Integer value overflow detected.");
+            }
         }
 
         i = static_cast<IntegerType>(tmp_int);
@@ -10599,6 +10613,7 @@ struct from_node_float_helper<BasicNodeType, FloatType, false> {
 };
 
 /// @brief from_node function for floating point values.
+/// @note If node's value is null, boolean, or integer, such a value is converted into a floating point internally.
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam FloatType A floating point value type.
 /// @param n A node object.

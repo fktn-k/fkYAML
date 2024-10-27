@@ -2502,6 +2502,7 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(node.get_value<uint8_t>() == 123);
             REQUIRE(node.get_value<uint16_t>() == 123);
             REQUIRE(node.get_value<uint32_t>() == 123);
+            REQUIRE(node.get_value<uint64_t>() == 123);
         }
 
         SECTION("non-integer compatible types") {
@@ -2534,6 +2535,7 @@ TEST_CASE("Node_GetValue") {
         SECTION("underflowable integer type") {
             fkyaml::node negative_int_node(std::numeric_limits<fkyaml::node::integer_type>::min());
             REQUIRE_THROWS_AS(negative_int_node.get_value<int8_t>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(negative_int_node.get_value<uint64_t>(), fkyaml::exception);
         }
 
         SECTION("overflowable integer type") {
@@ -2570,6 +2572,7 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(node.get_value<uint8_t>() == 3);
             REQUIRE(node.get_value<uint16_t>() == 3);
             REQUIRE(node.get_value<uint32_t>() == 3);
+            REQUIRE(node.get_value<uint64_t>() == 3);
             REQUIRE(node.get_value<int8_t>() == 3);
             REQUIRE(node.get_value<int16_t>() == 3);
             REQUIRE(node.get_value<int32_t>() == 3);
@@ -2587,6 +2590,7 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(node.get_value<uint8_t>() == 0);
             REQUIRE(node.get_value<uint16_t>() == 0);
             REQUIRE(node.get_value<uint32_t>() == 0);
+            REQUIRE(node.get_value<uint64_t>() == 0);
             REQUIRE(node.get_value<int8_t>() == 0);
             REQUIRE(node.get_value<int16_t>() == 0);
             REQUIRE(node.get_value<int32_t>() == 0);
@@ -2614,6 +2618,7 @@ TEST_CASE("Node_GetValue") {
         SECTION("invalid float-to-int conversion") {
             node = -3.14;
             REQUIRE_THROWS_AS(node.get_value<uint32_t>(), fkyaml::exception);
+            REQUIRE_THROWS_AS(node.get_value<uint64_t>(), fkyaml::exception);
 
             node = 256.0;
             REQUIRE_THROWS_AS(node.get_value<int8_t>(), fkyaml::exception);
