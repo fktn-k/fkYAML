@@ -275,6 +275,7 @@
 #ifndef FK_YAML_DETAIL_META_DETECT_HPP
 #define FK_YAML_DETAIL_META_DETECT_HPP
 
+#include <iterator>
 #include <type_traits>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
@@ -296,6 +297,10 @@
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
+
+#ifdef FK_YAML_HAS_CXX_14
+#include <utility>
+#endif
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -353,16 +358,80 @@ using remove_pointer_t = typename std::remove_pointer<T>::type;
 template <typename T>
 using remove_reference_t = typename std::remove_reference<T>::type;
 
+template <typename T, T... I>
+struct integer_sequence {
+    using value_type = T;
+    static constexpr std::size_t size() noexcept {
+        return sizeof...(I);
+    }
+};
+
+#if !FK_YAML_HAS_BUILTIN(__make_integer_seq) && !FK_YAML_HAS_BUILTIN(__integer_pack)
+
+namespace make_int_seq_impl {
+
+template <typename IntSeq0, typename IntSeq1>
+struct merger;
+
+template <typename T, T... Ints0, T... Ints1>
+struct merger<integer_sequence<T, Ints0...>, integer_sequence<T, Ints1...>> {
+    using type = integer_sequence<T, Ints0..., (sizeof...(Ints0) + Ints1)...>;
+};
+
+template <typename T, std::size_t Num>
+struct generator {
+    using type =
+        typename merger<typename generator<T, Num / 2>::type, typename generator<T, Num - Num / 2>::type>::type;
+};
+
+template <typename T>
+struct generator<T, 0> {
+    using type = integer_sequence<T>;
+};
+
+template <typename T>
+struct generator<T, 1> {
+    using type = integer_sequence<T, 0>;
+};
+
+} // namespace make_int_seq_impl
+
+#endif
+
+template <typename T, T Num>
+using make_integer_sequence
+#if FK_YAML_HAS_BUILTIN(__make_integer_seq)
+    = __make_integer_seq<integer_sequence, T, Num>;
+#elif FK_YAML_HAS_BUILTIN(__integer_pack)
+    = integer_sequence<T, __integer_pack(Num)...>;
 #else
+    = make_int_seq_impl::generator<T, Num>::type;
+#endif
+
+template <std::size_t... Idx>
+using index_sequence = integer_sequence<std::size_t, Idx...>;
+
+template <std::size_t Num>
+using make_index_sequence = make_integer_sequence<std::size_t, Num>;
+
+template <typename... Types>
+using index_sequence_for = make_index_sequence<sizeof...(Types)>;
+
+#else // !defined(FK_YAML_HAS_CXX_14)
 
 using std::add_pointer_t;
 using std::enable_if_t;
+using std::index_sequence;
+using std::index_sequence_for;
+using std::integer_sequence;
 using std::is_null_pointer;
+using std::make_index_sequence;
+using std::make_integer_sequence;
 using std::remove_cv_t;
 using std::remove_pointer_t;
 using std::remove_reference_t;
 
-#endif
+#endif // !defined(FK_YAML_HAS_CXX_14)
 
 #ifndef FK_YAML_HAS_CXX_17
 
@@ -432,7 +501,7 @@ struct make_void {
 template <typename... Types>
 using void_t = typename make_void<Types...>::type;
 
-#else
+#else // !defined(FK_YAML_HAS_CXX_17)
 
 using std::bool_constant;
 using std::conjunction;
@@ -440,7 +509,7 @@ using std::disjunction;
 using std::negation;
 using std::void_t;
 
-#endif
+#endif // !defined(FK_YAML_HAS_CXX_17)
 
 #ifndef FK_YAML_HAS_CXX_20
 
@@ -518,6 +587,122 @@ using detected_t = typename detector_impl::detector<nonesuch, void, Op, Args...>
 /// @tparam Args Argument types passed to desired operation.
 template <typename Expected, template <typename...> class Op, typename... Args>
 using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
+
+/// @brief namespace for member type detections of aliases and functions.
+namespace detect {
+
+/// @brief The type which represents `iterator` member type.
+/// @tparam T A target type.
+template <typename T>
+using iterator_t = typename T::iterator;
+
+/// @brief The type which represents `key_type` member type.
+/// @tparam T A target type.
+template <typename T>
+using key_type_t = typename T::key_type;
+
+/// @brief The type which represents `mapped_type` member type.
+/// @tparam T A target type.
+template <typename T>
+using mapped_type_t = typename T::mapped_type;
+
+/// @brief The type which represents `value_type` member type.
+/// @tparam T A target type.
+template <typename T>
+using value_type_t = typename T::value_type;
+
+/// @brief The type which represents `difference_type` member type.
+/// @tparam T A target type.
+template <typename T>
+using difference_type_t = typename T::difference_type;
+
+/// @brief The type which represents `pointer` member type.
+/// @tparam T A target type.
+template <typename T>
+using pointer_t = typename T::pointer;
+
+/// @brief The type which represents `reference` member type.
+/// @tparam T A target type.
+template <typename T>
+using reference_t = typename T::reference;
+
+/// @brief The type which represents `iterator_category` member type.
+/// @tparam T A target type.
+template <typename T>
+using iterator_category_t = typename T::iterator_category;
+
+/// @brief The type which represents `container_type` member type.
+/// @tparam T A target type.
+template <typename T>
+using container_type_t = typename T::container_type;
+
+/// @brief The type which represents emplace member function.
+/// @tparam T A target type.
+template <typename T, typename... Args>
+using emplace_fn_t = decltype(std::declval<T>().emplace(std::declval<Args>()...));
+
+/// @brief The type which represents reserve member function.
+/// @tparam T A target type.
+template <typename T>
+using reserve_fn_t = decltype(std::declval<T>().reserve(std::declval<typename T::size_type>()));
+
+/// @brief Type traits to check if T has `iterator` member type.
+/// @tparam T A target type.
+template <typename T>
+using has_iterator = is_detected<iterator_t, T>;
+
+/// @brief Type traits to check if T has `key_type` member type.
+/// @tparam T A target type.
+template <typename T>
+using has_key_type = is_detected<key_type_t, T>;
+
+/// @brief Type traits to check if T has `mapped_type` member type.
+/// @tparam T A target type.
+template <typename T>
+using has_mapped_type = is_detected<mapped_type_t, T>;
+
+/// @brief Type traits to check if T has `value_type` member type.
+/// @tparam T A target type.
+template <typename T>
+using has_value_type = is_detected<value_type_t, T>;
+
+/// @brief Type traits to check if T is a std::iterator_traits like type.
+/// @tparam T A target type.
+template <typename T>
+struct is_iterator_traits : conjunction<
+                                is_detected<difference_type_t, T>, has_value_type<T>, is_detected<pointer_t, T>,
+                                is_detected<reference_t, T>, is_detected<iterator_category_t, T>> {};
+
+/// @brief Type traits to check if T has `container_type` member type.
+/// @tparam T A target type.
+template <typename T>
+using has_container_type = is_detected<container_type_t, T>;
+
+/// @brief Type traits to check if T has emplace member function.
+/// @tparam T A target type.
+template <typename T, typename... Args>
+using has_emplace = is_detected<emplace_fn_t, T, Args...>;
+
+/// @brief Type traits to check if T has reserve member function.
+/// @tparam T A target type.
+template <typename T>
+using has_reserve = is_detected<reserve_fn_t, T>;
+
+// fallback to these STL functions.
+using std::begin;
+using std::end;
+
+/// @brief Type traits to check if begin/end functions can be called on a T object.
+/// @tparam T A target type.
+template <typename T, typename = void>
+struct has_begin_end : std::false_type {};
+
+/// @brief Type traits to check if begin/end functions can be called on a T object.
+/// @tparam T A target type.
+template <typename T>
+struct has_begin_end<T, void_t<decltype(begin(std::declval<T>()), end(std::declval<T>()))>> : std::true_type {};
+
+} // namespace detect
 
 FK_YAML_DETAIL_NAMESPACE_END
 
@@ -10311,11 +10496,11 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
 #define FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
 
+#include <array>
 #include <cmath>
 #include <limits>
-#include <map>
 #include <utility>
-#include <vector>
+#include <valarray>
 
 // #include <fkYAML/detail/macros/version_macros.hpp>
 
@@ -10330,65 +10515,157 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 
 
+#ifdef FK_YAML_HAS_CXX_17
+#include <optional>
+#endif
+
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 ///////////////////
 //   from_node   //
 ///////////////////
 
-/// @brief from_node function for BasicNodeType::sequence_type objects.
+// utility type traits and functors
+
+/// @brief Utility traits type alias to detect constructible associative container types from a mapping node, e.g.,
+/// std::map or std::unordered_map.
+/// @tparam T A target type for detection.
+template <typename T>
+using is_constructible_mapping_type =
+    conjunction<detect::has_key_type<T>, detect::has_mapped_type<T>, detect::has_value_type<T>>;
+
+/// @brief Utility traits type alias to detect constructible container types from a sequence node, e.g., std::vector or
+/// std::list.
 /// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T A target type for detection.
+template <typename BasicNodeType, typename T>
+using is_constructible_sequence_type = conjunction<
+    negation<is_basic_node<T>>, detect::has_iterator<T>, detect::is_iterator_traits<typename T::iterator>,
+    detect::has_begin_end<T>, negation<std::is_same<T, typename BasicNodeType::mapping_type>>,
+    negation<is_constructible_mapping_type<T>>>;
+
+/// @brief Utility traits type alias to detect a sequence container adapter type, e.g., std::stack or std::queue.
+/// @tparam T A target type for detection.
+template <typename T>
+using is_sequence_container_adapter = conjunction<
+    negation<is_basic_node<T>>, detect::has_container_type<T>, detect::has_value_type<T>,
+    negation<detect::has_key_type<T>>>;
+
+/// @brief Helper struct for reserve() member function call switch for types which do not have reserve function.
+/// @tparam ContainerType A container type.
+template <typename ContainerType, typename = void>
+struct call_reserve_if_available {
+    /// @brief Do nothing since ContainerType does not have reserve function.
+    /// @param
+    /// @param
+    static void call(ContainerType& /*unused*/, typename ContainerType::size_type /*unused*/) {
+    }
+};
+
+/// @brief Helper struct for reserve() member function call switch for types which have reserve function.
+/// @tparam ContainerType A container type.
+template <typename ContainerType>
+struct call_reserve_if_available<ContainerType, enable_if_t<detect::has_reserve<ContainerType>::value>> {
+    /// @brief Call reserve function on the ContainerType object with a given size.
+    /// @param c A container object.
+    /// @param n A size to reserve.
+    static void call(ContainerType& c, typename ContainerType::size_type n) {
+        c.reserve(n);
+    }
+};
+
+// from_node() implementations
+
+/// @brief from_node function for std::array objects whose element type must be a basic_node template instance type or a
+/// compatible type. This function is necessary since insert function is not implemented for std::array.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T Element type of std::array.
+/// @tparam N Size of std::array.
 /// @param n A basic_node object.
-/// @param s A sequence node value object.
-template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::sequence_type& s) {
+/// @param arr A std::array object.
+template <typename BasicNodeType, typename T, std::size_t N>
+inline auto from_node(const BasicNodeType& n, std::array<T, N>& arr) -> decltype(n.template get_value<T>(), void()) {
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
-    s = n.template get_value_ref<const typename BasicNodeType::sequence_type&>();
+
+    std::size_t count = std::min(n.size(), N);
+    for (std::size_t i = 0; i < count; i++) {
+        arr.at(i) = n.at(i).template get_value<T>();
+    }
 }
 
-/// @brief from_node function for objects of the std::vector of compatible types.
+/// @brief from_node function for std::valarray objects whose element type must be a basic_node template instance type
+/// or a compatible type. This function is necessary since insert function is not implemented for std::valarray.
 /// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam CompatibleValueType A compatible type for BasicNodeType.
+/// @tparam T Element type of std::valarray.
 /// @param n A basic_node object.
-/// @param s A vector of compatible type objects.
+/// @param va A std::valarray object.
+template <typename BasicNodeType, typename T>
+inline auto from_node(const BasicNodeType& n, std::valarray<T>& va) -> decltype(n.template get_value<T>(), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value type is not sequence type.", n.get_type());
+    }
+
+    std::size_t count = n.size();
+    va.resize(count);
+    for (std::size_t i = 0; i < count; i++) {
+        va[i] = n.at(i).template get_value<T>();
+    }
+}
+
+/// @brief from_node function for container objects of only keys or values, e.g., std::vector or std::set, whose element
+/// type must be a basic_node template instance type or a compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatSeqType A container type.
+/// @param n A basic_node object.
+/// @param s A container object.
 template <
-    typename BasicNodeType, typename CompatibleValueType,
+    typename BasicNodeType, typename CompatSeqType,
     enable_if_t<
         conjunction<
-            is_basic_node<BasicNodeType>, negation<is_basic_node<CompatibleValueType>>,
-            has_from_node<BasicNodeType, CompatibleValueType>,
-            negation<std::is_same<std::vector<CompatibleValueType>, typename BasicNodeType::sequence_type>>>::value,
+            is_basic_node<BasicNodeType>, is_constructible_sequence_type<BasicNodeType, CompatSeqType>,
+            negation<std::is_constructible<typename BasicNodeType::string_type, CompatSeqType>>>::value,
         int> = 0>
-inline void from_node(const BasicNodeType& n, std::vector<CompatibleValueType>& s) {
+inline auto from_node(const BasicNodeType& n, CompatSeqType& s)
+    -> decltype(n.template get_value<typename CompatSeqType::value_type>(), void()) {
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value is not sequence type.", n.get_type());
     }
 
-    s.reserve(n.size());
+    // call reserve function first if it's available (like std::vector).
+    call_reserve_if_available<CompatSeqType>::call(s, n.size());
+
+    // transform a sequence node into a destination type object by calling insert function.
+    using std::end;
+    std::transform(n.begin(), n.end(), std::inserter(s, end(s)), [](const BasicNodeType& elem) {
+        return elem.template get_value<typename CompatSeqType::value_type>();
+    });
+}
+
+/// @brief from_node function for sequence container adapter objects, e.g., std::stack or std::queue, whose element type
+/// must be either a basic_node template instance type or a compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam SeqContainerAdapter A sequence container adapter type.
+/// @param n A node object.
+/// @param ca A sequence container adapter object.
+template <
+    typename BasicNodeType, typename SeqContainerAdapter,
+    enable_if_t<
+        conjunction<is_basic_node<BasicNodeType>, is_sequence_container_adapter<SeqContainerAdapter>>::value, int> = 0>
+inline auto from_node(const BasicNodeType& n, SeqContainerAdapter& ca)
+    -> decltype(n.template get_value<typename SeqContainerAdapter::value_type>(), ca.emplace(std::declval<typename SeqContainerAdapter::value_type>()), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value is not sequence type.", n.get_type());
+    }
 
     for (const auto& elem : n) {
-        s.emplace_back(elem.template get_value<CompatibleValueType>());
+        // container adapter classes commonly have emplace function.
+        ca.emplace(elem.template get_value<typename SeqContainerAdapter::value_type>());
     }
 }
 
-/// @brief from_node function for BasicNodeType::mapping_type objects.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @param n A basic_node object.
-/// @param m A mapping node value object.
-template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_type& m) {
-    if FK_YAML_UNLIKELY (!n.is_mapping()) {
-        throw type_error("The target node value type is not mapping type.", n.get_type());
-    }
-
-    for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
-        m.emplace(pair.first, pair.second);
-    }
-}
-
-/// @brief from node function for mappings whose key and value are of both compatible types.
+/// @brief from_node function for mappings whose key and value are of both compatible types.
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam CompatibleKeyType Mapping key type compatible with BasicNodeType.
 /// @tparam CompatibleValueType Mapping value type compatible with BasicNodeType.
@@ -10396,23 +10673,23 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::mapping_ty
 /// @tparam Allocator Allocator type for destination mapping object.
 /// @param n A node object.
 /// @param m Mapping container object to store converted key/value objects.
-template <
-    typename BasicNodeType, typename CompatibleKeyType, typename CompatibleValueType, typename Compare,
-    typename Allocator,
-    enable_if_t<
-        conjunction<
-            is_basic_node<BasicNodeType>, negation<is_basic_node<CompatibleKeyType>>,
-            negation<is_basic_node<CompatibleValueType>>, has_from_node<BasicNodeType, CompatibleKeyType>,
-            has_from_node<BasicNodeType, CompatibleValueType>>::value,
-        int> = 0>
-inline void from_node(const BasicNodeType& n, std::map<CompatibleKeyType, CompatibleValueType, Compare, Allocator>& m) {
+template <typename BasicNodeType, typename CompatMapType, enable_if_t<is_constructible_mapping_type<CompatMapType>::value, int> = 0>
+inline auto from_node(const BasicNodeType& n, CompatMapType& m)
+    -> decltype(
+        std::declval<const BasicNodeType&>().template get_value<typename CompatMapType::key_type>(),
+        std::declval<const BasicNodeType&>().template get_value<typename CompatMapType::mapped_type>(),
+        m.emplace(std::declval<typename CompatMapType::key_type>(), std::declval<typename CompatMapType::mapped_type>()),
+        void()) {
     if FK_YAML_UNLIKELY (!n.is_mapping()) {
         throw type_error("The target node value type is not mapping type.", n.get_type());
     }
 
-    for (auto pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
+    call_reserve_if_available<CompatMapType>::call(m, n.size());
+
+    for (const auto& pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
         m.emplace(
-            pair.first.template get_value<CompatibleKeyType>(), pair.second.template get_value<CompatibleValueType>());
+            pair.first.template get_value<typename CompatMapType::key_type>(),
+            pair.second.template get_value<typename CompatMapType::mapped_type>());
     }
 }
 
@@ -10679,6 +10956,74 @@ inline void from_node(const BasicNodeType& n, CompatibleStringType& s) {
     }
     s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
 }
+
+/// @brief from_node function for std::pair objects whose element types must be either a basic_node template instance
+/// type or a compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T The first type of the std::pair.
+/// @tparam U The second type of the std::pair.
+/// @param n A basic_node object.
+/// @param p A std::pair object.
+template <typename BasicNodeType, typename T, typename U, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+inline auto from_node(const BasicNodeType& n, std::pair<T, U>& p)
+    -> decltype(std::declval<const BasicNodeType&>().template get_value<T>(), std::declval<const BasicNodeType&>().template get_value<U>(), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value type is not sequence type.", n.get_type());
+    }
+
+    p = {n.at(0).template get_value<T>(), n.at(1).template get_value<U>()};
+}
+
+/// @brief concrete implementation of from_node function for std::tuple objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam ...Types The value types of std::tuple.
+/// @tparam ...Idx Index sequence values for std::tuples value types.
+/// @param n A basic_node object
+/// @param _ Index sequence values (unused).
+/// @return A std::tuple object converted from the sequence node values.
+template <typename BasicNodeType, typename... Types, std::size_t... Idx>
+inline std::tuple<Types...> from_node_tuple_impl(const BasicNodeType& n, index_sequence<Idx...> /*unused*/) {
+    return std::make_tuple(n.at(Idx).template get_value<Types>()...);
+}
+
+/// @brief from_node function for std::tuple objects whose value types must all be either a basic_node template instance
+/// type or a compatible type
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam ...Types Value types of std::tuple.
+/// @param n A basic_node object.
+/// @param t A std::tuple object.
+template <typename BasicNodeType, typename... Types, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+inline void from_node(const BasicNodeType& n, std::tuple<Types...>& t) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value type is not sequence type.", n.get_type());
+    }
+
+    // Types... must be explicitly specified; the retun type would otherwise be std::tuple with no value types.
+    t = from_node_tuple_impl<BasicNodeType, Types...>(n, index_sequence_for<Types...> {});
+}
+
+#ifdef FK_YAML_HAS_CXX_17
+
+/// @brief from_node function for std::optional objects whose value type must be either a basic_node template instance
+/// type or a compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T A value type of the std::optional.
+/// @param n A basic_node object.
+/// @param o A std::optional object.
+template <typename BasicNodeType, typename T, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+inline auto from_node(const BasicNodeType& n, std::optional<T>& o) -> decltype(n.template get_value<T>(), void()) {
+    try {
+        o.emplace(n.template get_value<T>());
+    }
+    catch (const std::exception& /*unused*/) {
+        // Any exception derived from std::exception is interpreted as a conversion failure in some way
+        // since user-defined from_node function may throw a different object from a fkyaml::type_error.
+        // and std::exception is usually the base class of user-defined exception types.
+        o = std::nullopt;
+    }
+}
+
+#endif // defined(FK_YAML_HAS_CXX_17)
 
 /// @brief A function object to call from_node functions.
 /// @note User-defined specialization is available by providing implementation **OUTSIDE** fkyaml namespace.
@@ -12559,20 +12904,17 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value/
     template <
         typename T, typename ValueType = detail::remove_cvref_t<T>,
-        detail::enable_if_t<
-            detail::conjunction<
-                std::is_default_constructible<ValueType>, detail::has_from_node<basic_node, ValueType>>::value,
-            int> = 0>
-    T get_value() const noexcept(noexcept(
-        ConverterType<ValueType, void>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>()))) {
+        detail::enable_if_t<std::is_default_constructible<ValueType>::value, int> = 0>
+    T get_value() const noexcept(
+        noexcept(std::declval<const basic_node>().template get_value_impl<ValueType>(std::declval<ValueType&>()))) {
         auto ret = ValueType();
         if (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            ConverterType<ValueType, void>::from_node(itr->second, ret);
+            itr->second.get_value_impl(ret);
         }
         else {
-            ConverterType<ValueType, void>::from_node(*this, ret);
+            get_value_impl(ret);
         }
         return ret;
     }
@@ -12730,6 +13072,17 @@ private:
             return itr->second.m_attrs;
         }
         return m_attrs;
+    }
+
+    template <
+        typename ValueType, detail::enable_if_t<detail::negation<detail::is_basic_node<ValueType>>::value, int> = 0>
+    void get_value_impl(ValueType& v) const noexcept(noexcept(ConverterType<ValueType, void>::from_node(*this, v))) {
+        ConverterType<ValueType, void>::from_node(*this, v);
+    }
+
+    template <typename ValueType, detail::enable_if_t<detail::is_basic_node<ValueType>::value, int> = 0>
+    void get_value_impl(ValueType& v) const {
+        v = *this;
     }
 
     /// @brief Returns reference to the sequence node value.
@@ -12977,5 +13330,72 @@ inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
 } // namespace literals
 
 FK_YAML_NAMESPACE_END
+
+namespace std {
+
+template <
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
+struct hash<fkyaml::basic_node<
+    SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>> {
+    using node_t = fkyaml::basic_node<
+        SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>;
+
+    std::size_t operator()(const node_t& n) const {
+        using boolean_type = typename node_t::boolean_type;
+        using integer_type = typename node_t::integer_type;
+        using float_number_type = typename node_t::float_number_type;
+        using string_type = typename node_t::string_type;
+
+        const auto type = n.get_type();
+
+        std::size_t seed = 0;
+        hash_combine(seed, std::hash<uint8_t>()(static_cast<uint8_t>(type)));
+
+        switch (type) {
+        case fkyaml::node_type::SEQUENCE:
+            hash_combine(seed, n.size());
+            for (const auto& elem : n) {
+                hash_combine(seed, operator()(elem));
+            }
+            return seed;
+
+        case fkyaml::node_type::MAPPING:
+            hash_combine(seed, n.size());
+            for (auto itr = n.begin(), end_itr = n.end(); itr != end_itr; ++itr) {
+                hash_combine(seed, operator()(itr.key()));
+                hash_combine(seed, operator()(itr.value()));
+            }
+            return seed;
+
+        case fkyaml::node_type::NULL_OBJECT:
+            hash_combine(seed, 0);
+            return seed;
+        case fkyaml::node_type::BOOLEAN:
+            hash_combine(seed, std::hash<boolean_type>()(n.template get_value<boolean_type>()));
+            return seed;
+        case fkyaml::node_type::INTEGER:
+            hash_combine(seed, std::hash<integer_type>()(n.template get_value<integer_type>()));
+            return seed;
+        case fkyaml::node_type::FLOAT:
+            hash_combine(seed, std::hash<float_number_type>()(n.template get_value<float_number_type>()));
+            return seed;
+        case fkyaml::node_type::STRING:
+            hash_combine(seed, std::hash<string_type>()(n.template get_value<string_type>()));
+            return seed;
+        default:
+            return 0;
+        }
+    }
+
+private:
+    // taken from boost::hash_combine
+    static void hash_combine(std::size_t& seed, std::size_t v) {
+        seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+};
+
+} // namespace std
 
 #endif /* FK_YAML_NODE_HPP */

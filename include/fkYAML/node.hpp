@@ -1312,20 +1312,17 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value/
     template <
         typename T, typename ValueType = detail::remove_cvref_t<T>,
-        detail::enable_if_t<
-            detail::conjunction<
-                std::is_default_constructible<ValueType>, detail::has_from_node<basic_node, ValueType>>::value,
-            int> = 0>
-    T get_value() const noexcept(noexcept(
-        ConverterType<ValueType, void>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>()))) {
+        detail::enable_if_t<std::is_default_constructible<ValueType>::value, int> = 0>
+    T get_value() const noexcept(
+        noexcept(std::declval<const basic_node>().template get_value_impl<ValueType>(std::declval<ValueType&>()))) {
         auto ret = ValueType();
         if (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            ConverterType<ValueType, void>::from_node(itr->second, ret);
+            itr->second.get_value_impl(ret);
         }
         else {
-            ConverterType<ValueType, void>::from_node(*this, ret);
+            get_value_impl(ret);
         }
         return ret;
     }
@@ -1483,6 +1480,17 @@ private:
             return itr->second.m_attrs;
         }
         return m_attrs;
+    }
+
+    template <
+        typename ValueType, detail::enable_if_t<detail::negation<detail::is_basic_node<ValueType>>::value, int> = 0>
+    void get_value_impl(ValueType& v) const noexcept(noexcept(ConverterType<ValueType, void>::from_node(*this, v))) {
+        ConverterType<ValueType, void>::from_node(*this, v);
+    }
+
+    template <typename ValueType, detail::enable_if_t<detail::is_basic_node<ValueType>::value, int> = 0>
+    void get_value_impl(ValueType& v) const {
+        v = *this;
     }
 
     /// @brief Returns reference to the sequence node value.
@@ -1730,5 +1738,72 @@ inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
 } // namespace literals
 
 FK_YAML_NAMESPACE_END
+
+namespace std {
+
+template <
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
+struct hash<fkyaml::basic_node<
+    SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>> {
+    using node_t = fkyaml::basic_node<
+        SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>;
+
+    std::size_t operator()(const node_t& n) const {
+        using boolean_type = typename node_t::boolean_type;
+        using integer_type = typename node_t::integer_type;
+        using float_number_type = typename node_t::float_number_type;
+        using string_type = typename node_t::string_type;
+
+        const auto type = n.get_type();
+
+        std::size_t seed = 0;
+        hash_combine(seed, std::hash<uint8_t>()(static_cast<uint8_t>(type)));
+
+        switch (type) {
+        case fkyaml::node_type::SEQUENCE:
+            hash_combine(seed, n.size());
+            for (const auto& elem : n) {
+                hash_combine(seed, operator()(elem));
+            }
+            return seed;
+
+        case fkyaml::node_type::MAPPING:
+            hash_combine(seed, n.size());
+            for (auto itr = n.begin(), end_itr = n.end(); itr != end_itr; ++itr) {
+                hash_combine(seed, operator()(itr.key()));
+                hash_combine(seed, operator()(itr.value()));
+            }
+            return seed;
+
+        case fkyaml::node_type::NULL_OBJECT:
+            hash_combine(seed, 0);
+            return seed;
+        case fkyaml::node_type::BOOLEAN:
+            hash_combine(seed, std::hash<boolean_type>()(n.template get_value<boolean_type>()));
+            return seed;
+        case fkyaml::node_type::INTEGER:
+            hash_combine(seed, std::hash<integer_type>()(n.template get_value<integer_type>()));
+            return seed;
+        case fkyaml::node_type::FLOAT:
+            hash_combine(seed, std::hash<float_number_type>()(n.template get_value<float_number_type>()));
+            return seed;
+        case fkyaml::node_type::STRING:
+            hash_combine(seed, std::hash<string_type>()(n.template get_value<string_type>()));
+            return seed;
+        default:
+            return 0;
+        }
+    }
+
+private:
+    // taken from boost::hash_combine
+    static void hash_combine(std::size_t& seed, std::size_t v) {
+        seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+};
+
+} // namespace std
 
 #endif /* FK_YAML_NODE_HPP */
