@@ -13384,8 +13384,8 @@ struct hash<fkyaml::basic_node<
         case fkyaml::node_type::STRING:
             hash_combine(seed, std::hash<string_type>()(n.template get_value<string_type>()));
             return seed;
-        default:
-            return 0;
+        default:      // LCOV_EXCL_LINE
+            return 0; // LCOV_EXCL_LINE
         }
     }
 

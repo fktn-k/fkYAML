@@ -2616,6 +2616,17 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(umap_compat.at("test") == 123);
             REQUIRE(umap_compat.find("foo") != umap_compat.end());
             REQUIRE(umap_compat.at("foo") == -456);
+
+            fkyaml::node various_type_nodes = {
+                {nullptr, nullptr},
+                {true, nullptr},
+                {123, nullptr},
+                {3.14, nullptr},
+                {"foo", nullptr},
+                {{{"foo", "bar"}}, nullptr},
+                {{"foo", "bar"}, nullptr},
+            };
+            auto umap = various_type_nodes.get_value<std::unordered_map<fkyaml::node, std::nullptr_t>>();
         }
 
         SECTION("mapping value (std::unordered_multimap)") {
@@ -2646,6 +2657,14 @@ TEST_CASE("Node_GetValue") {
 
         SECTION("non-mapping values") {
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::sequence_type>(), fkyaml::type_error);
+            using array_t = std::array<int, 2>;
+            REQUIRE_THROWS_AS(node.get_value<array_t>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<std::valarray<double>>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<std::stack<int>>(), fkyaml::type_error);
+            using pair_t = std::pair<bool, int>;
+            REQUIRE_THROWS_AS(node.get_value<pair_t>(), fkyaml::type_error);
+            using tuple_t = std::tuple<bool, int, float>;
+            REQUIRE_THROWS_AS(node.get_value<tuple_t>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<std::nullptr_t>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::boolean_type>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::integer_type>(), fkyaml::type_error);
