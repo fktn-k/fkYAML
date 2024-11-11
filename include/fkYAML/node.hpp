@@ -1484,7 +1484,8 @@ private:
 
     template <
         typename ValueType, detail::enable_if_t<detail::negation<detail::is_basic_node<ValueType>>::value, int> = 0>
-    void get_value_impl(ValueType& v) const noexcept(noexcept(ConverterType<ValueType, void>::from_node(*this, v))) {
+    void get_value_impl(ValueType& v) const
+        noexcept(noexcept(ConverterType<ValueType, void>::from_node(std::declval<const basic_node&>(), v))) {
         ConverterType<ValueType, void>::from_node(*this, v);
     }
 
@@ -1745,6 +1746,7 @@ template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
     template <typename, typename = void> class ConverterType>
+// NOLINTNEXTLINE(cert-dcl58-cpp)
 struct hash<fkyaml::basic_node<
     SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>> {
     using node_t = fkyaml::basic_node<
@@ -1799,8 +1801,9 @@ struct hash<fkyaml::basic_node<
 
 private:
     // taken from boost::hash_combine
+    FK_YAML_NO_SANITIZE("unsigned-shift-base", "unsigned-integer-overflow")
     static void hash_combine(std::size_t& seed, std::size_t v) {
-        seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= v + 0x9e3779b9 + (seed << 6u) + (seed >> 2u);
     }
 };
 

@@ -88,6 +88,19 @@
 #define FK_YAML_HAS_CPP_ATTRIBUTE(attr) (0)
 #endif
 
+#ifdef __has_feature
+#define FK_YAML_HAS_FEATURE(feat) __has_feature(feat)
+#else
+#define FK_YAML_HAS_FEATURE(feat) (0)
+#endif
+
+// switch usage of the no_sanitize attribute only when Clang sanitizer is active.
+#if defined(__clang__) && FK_YAML_HAS_FEATURE(address_sanitizer)
+#define FK_YAML_NO_SANITIZE(...) __attribute__((no_sanitize(__VA_ARGS__)))
+#else
+#define FK_YAML_NO_SANITIZE(...)
+#endif
+
 #if FK_YAML_HAS_INCLUDE(<version>)
 // <version> is available since C++20
 #include <version>

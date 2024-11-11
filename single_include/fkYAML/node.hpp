@@ -158,6 +158,19 @@
 #define FK_YAML_HAS_CPP_ATTRIBUTE(attr) (0)
 #endif
 
+#ifdef __has_feature
+#define FK_YAML_HAS_FEATURE(feat) __has_feature(feat)
+#else
+#define FK_YAML_HAS_FEATURE(feat) (0)
+#endif
+
+// switch usage of the no_sanitize attribute only when Clang sanitizer is active.
+#if defined(__clang__) && FK_YAML_HAS_FEATURE(address_sanitizer)
+#define FK_YAML_NO_SANITIZE(...) __attribute__((no_sanitize(__VA_ARGS__)))
+#else
+#define FK_YAML_NO_SANITIZE(...)
+#endif
+
 #if FK_YAML_HAS_INCLUDE(<version>)
 // <version> is available since C++20
 #include <version>
@@ -401,11 +414,15 @@ struct generator<T, 1> {
 template <typename T, T Num>
 using make_integer_sequence
 #if FK_YAML_HAS_BUILTIN(__make_integer_seq)
+    // clang defines built-in __make_integer_seq to generate an integer sequence.
     = __make_integer_seq<integer_sequence, T, Num>;
 #elif FK_YAML_HAS_BUILTIN(__integer_pack)
+    // GCC or other compilers may implement built-in __integer_pack to generate an
+    // integer sequence.
     = integer_sequence<T, __integer_pack(Num)...>;
 #else
-    = make_int_seq_impl::generator<T, Num>::type;
+    // fallback to the library implementation of make_integer_sequence.
+    = typename make_int_seq_impl::generator<T, Num>::type;
 #endif
 
 template <std::size_t... Idx>
@@ -10660,8 +10677,9 @@ inline auto from_node(const BasicNodeType& n, SeqContainerAdapter& ca)
     }
 
     for (const auto& elem : n) {
-        // container adapter classes commonly have emplace function.
-        ca.emplace(elem.template get_value<typename SeqContainerAdapter::value_type>());
+        // container adapter classes commonly have push function.
+        // emplace function cannot be used in case SeqContainerAdapter::container_type is std::vector<bool> in C++11.
+        ca.push(elem.template get_value<typename SeqContainerAdapter::value_type>());
     }
 }
 
@@ -13076,7 +13094,8 @@ private:
 
     template <
         typename ValueType, detail::enable_if_t<detail::negation<detail::is_basic_node<ValueType>>::value, int> = 0>
-    void get_value_impl(ValueType& v) const noexcept(noexcept(ConverterType<ValueType, void>::from_node(*this, v))) {
+    void get_value_impl(ValueType& v) const
+        noexcept(noexcept(ConverterType<ValueType, void>::from_node(std::declval<const basic_node&>(), v))) {
         ConverterType<ValueType, void>::from_node(*this, v);
     }
 
@@ -13337,6 +13356,7 @@ template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
     template <typename, typename = void> class ConverterType>
+// NOLINTNEXTLINE(cert-dcl58-cpp)
 struct hash<fkyaml::basic_node<
     SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>> {
     using node_t = fkyaml::basic_node<
@@ -13391,8 +13411,9 @@ struct hash<fkyaml::basic_node<
 
 private:
     // taken from boost::hash_combine
+    FK_YAML_NO_SANITIZE("unsigned-shift-base", "unsigned-integer-overflow")
     static void hash_combine(std::size_t& seed, std::size_t v) {
-        seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= v + 0x9e3779b9 + (seed << 6u) + (seed >> 2u);
     }
 };
 

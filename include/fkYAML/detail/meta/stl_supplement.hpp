@@ -117,11 +117,15 @@ struct generator<T, 1> {
 template <typename T, T Num>
 using make_integer_sequence
 #if FK_YAML_HAS_BUILTIN(__make_integer_seq)
+    // clang defines built-in __make_integer_seq to generate an integer sequence.
     = __make_integer_seq<integer_sequence, T, Num>;
 #elif FK_YAML_HAS_BUILTIN(__integer_pack)
+    // GCC or other compilers may implement built-in __integer_pack to generate an
+    // integer sequence.
     = integer_sequence<T, __integer_pack(Num)...>;
 #else
-    = make_int_seq_impl::generator<T, Num>::type;
+    // fallback to the library implementation of make_integer_sequence.
+    = typename make_int_seq_impl::generator<T, Num>::type;
 #endif
 
 template <std::size_t... Idx>

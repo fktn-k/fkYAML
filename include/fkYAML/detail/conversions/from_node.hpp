@@ -167,8 +167,9 @@ inline auto from_node(const BasicNodeType& n, SeqContainerAdapter& ca)
     }
 
     for (const auto& elem : n) {
-        // container adapter classes commonly have emplace function.
-        ca.emplace(elem.template get_value<typename SeqContainerAdapter::value_type>());
+        // container adapter classes commonly have push function.
+        // emplace function cannot be used in case SeqContainerAdapter::container_type is std::vector<bool> in C++11.
+        ca.push(elem.template get_value<typename SeqContainerAdapter::value_type>());
     }
 }
 
