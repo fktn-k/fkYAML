@@ -10,7 +10,38 @@
 #include <fkYAML/node.hpp>
 
 int main() {
-    // create a YAML node.
+    // create sequence nodes.
+    fkyaml::node seq = {true, false};
+    fkyaml::node seq2 = {123, 3.14, "foo"};
+
+    // get the node values
+    // to std::vector
+    auto bool_vec = seq.get_value<std::vector<bool>>();
+    for (auto b : bool_vec) {
+        std::cout << std::boolalpha << b << " ";
+    }
+    std::cout << "\n\n";
+    // to std::tuple
+    auto tpl = seq2.get_value<std::tuple<int, float, std::string>>();
+    std::cout << std::get<0>(tpl) << " ";
+    std::cout << std::get<1>(tpl) << " ";
+    std::cout << std::get<2>(tpl) << "\n\n";
+
+    // create a mapping node.
+    fkyaml::node map = {
+        {0, "foo"},
+        {1, "bar"},
+        {2, "baz"},
+    };
+    // get the node values
+    // to std::unordered_map
+    auto umap = map.get_value<std::unordered_map<uint32_t, std::string>>();
+    for (auto& p : umap) {
+        std::cout << p.first << " : " << p.second << std::endl;
+    }
+    std::cout << std::endl;
+
+    // create scalar nodes.
     fkyaml::node n = 1.23;
     fkyaml::node n2 = "foo";
 

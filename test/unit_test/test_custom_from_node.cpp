@@ -6,7 +6,9 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
+#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <catch2/catch.hpp>
@@ -30,8 +32,12 @@ struct color {
     int value;
 };
 
-bool operator<(const color& lhs, const color& rhs) {
+bool operator<(const color& lhs, const color& rhs) noexcept {
     return lhs.value < rhs.value;
+}
+
+bool operator==(const color& lhs, const color& rhs) noexcept {
+    return lhs.value == rhs.value;
 }
 
 void from_node(const fkyaml::node& node, color& color) {
@@ -44,6 +50,10 @@ struct rgb {
     int b;
 };
 
+bool operator==(const rgb& lhs, const rgb& rhs) noexcept {
+    return (lhs.r == rhs.r) && (lhs.g == rhs.g) && (lhs.b == rhs.b);
+}
+
 void from_node(const fkyaml::node& node, rgb& rgb) {
     rgb.r = node["r"].get_value<int>();
     rgb.g = node["g"].get_value<int>();
@@ -51,6 +61,25 @@ void from_node(const fkyaml::node& node, rgb& rgb) {
 }
 
 } // namespace test
+
+// std::hash specialization for std::unordered_map
+namespace std {
+
+template <>
+struct hash<test::color> {
+    std::size_t operator()(const test::color& c) const noexcept {
+        return std::hash<int>()(c.value);
+    }
+};
+
+template <>
+struct hash<test::rgb> {
+    std::size_t operator()(const test::rgb& rgb) const noexcept {
+        return hash<int>()(rgb.r) ^ (hash<int>()(rgb.g) << 1) ^ (hash<int>()(rgb.b) << 2);
+    }
+};
+
+} // namespace std
 
 TEST_CASE("FromNode_UserDefinedType") {
     std::string input = "title: Robinson Crusoe\n"
@@ -125,6 +154,8 @@ TEST_CASE("FromNode_UserDefinedTypeMap") {
     REQUIRE(colors.at(test::color {0x586776}).r == 0x58);
     REQUIRE(colors.at(test::color {0x586776}).g == 0x67);
     REQUIRE(colors.at(test::color {0x586776}).b == 0x76);
+
+    auto colors_umap = node["colors"].get_value<std::unordered_map<test::color, test::rgb>>();
 }
 
 TEST_CASE("FromNode_UserDefinedTypeMapError") {
