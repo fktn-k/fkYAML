@@ -13,7 +13,7 @@
 #include <cctype>
 #include <cstdlib>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>

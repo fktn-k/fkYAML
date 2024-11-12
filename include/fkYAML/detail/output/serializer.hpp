@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/conversions/to_string.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>

@@ -12,7 +12,7 @@
 #include <array>
 #include <cstdint>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/exception.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN

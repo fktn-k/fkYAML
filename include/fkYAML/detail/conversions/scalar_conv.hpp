@@ -19,7 +19,7 @@
 #include <cstring>
 #include <limits>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 
 #if FK_YAML_HAS_TO_CHARS

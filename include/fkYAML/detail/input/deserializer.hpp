@@ -13,7 +13,7 @@
 #include <deque>
 #include <vector>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
 #include <fkYAML/detail/input/scalar_parser.hpp>

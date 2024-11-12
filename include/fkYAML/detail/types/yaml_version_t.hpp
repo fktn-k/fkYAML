@@ -11,7 +11,7 @@
 
 #include <cstdint>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/yaml_version_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN

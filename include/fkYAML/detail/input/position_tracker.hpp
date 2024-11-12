@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/str_view.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN

@@ -16,7 +16,7 @@
 #include <iterator>
 #include <string>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/encodings/utf_encode_detector.hpp>
 #include <fkYAML/detail/encodings/utf_encode_t.hpp>

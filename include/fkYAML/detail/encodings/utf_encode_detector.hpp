@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <istream>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>

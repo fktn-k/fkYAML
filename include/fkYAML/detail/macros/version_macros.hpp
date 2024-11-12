@@ -45,6 +45,4 @@
     } /* namespace detail */                                                                                           \
     FK_YAML_NAMESPACE_END
 
-#include <fkYAML/detail/macros/cpp_config_macros.hpp>
-
 #endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)

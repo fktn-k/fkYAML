@@ -11,7 +11,7 @@
 
 #include <utility>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/conversions/from_node.hpp>
 #include <fkYAML/detail/conversions/to_node.hpp>
 
