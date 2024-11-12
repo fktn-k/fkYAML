@@ -13,7 +13,7 @@
 #include <limits>
 #include <type_traits>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/meta/detect.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 

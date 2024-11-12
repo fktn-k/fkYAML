@@ -19,6 +19,18 @@
 #include <type_traits>
 #include <vector>
 
+// #include <fkYAML/detail/macros/define_macros.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_MACROS_DEFINE_MACROS_HPP
+#define FK_YAML_DETAIL_MACROS_DEFINE_MACROS_HPP
+
 // #include <fkYAML/detail/macros/version_macros.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -66,6 +78,8 @@
 #define FK_YAML_DETAIL_NAMESPACE_END                                                                                   \
     } /* namespace detail */                                                                                           \
     FK_YAML_NAMESPACE_END
+
+#endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)
 
 // #include <fkYAML/detail/macros/cpp_config_macros.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -219,7 +233,7 @@
 #endif /* FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP */
 
 
-#endif // !defined(FK_YAML_VERCHECK_SUCCEEDED)
+#endif /* FK_YAML_DETAIL_MACROS_DEFINE_MACROS_HPP */
 
 // #include <fkYAML/detail/assert.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -260,7 +274,7 @@
 #include <string>
 #include <map>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -274,7 +288,7 @@
 #ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP
 #define FK_YAML_DETAIL_META_NODE_TRAITS_HPP
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/detect.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -291,7 +305,7 @@
 #include <iterator>
 #include <type_traits>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -308,7 +322,7 @@
 #include <cstddef>
 #include <type_traits>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 #ifdef FK_YAML_HAS_CXX_14
@@ -743,7 +757,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <limits>
 #include <type_traits>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/detect.hpp>
 
@@ -897,17 +911,60 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_TYPE_TRAITS_HPP */
 
+// #include <fkYAML/fkyaml_fwd.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_FKYAML_FWD_HPP
+#define FK_YAML_FKYAML_FWD_HPP
+
+#include <cstdint>
+#include <map>
+#include <string>
+#include <vector>
+
+// #include <fkYAML/detail/macros/version_macros.hpp>
+
 
 FK_YAML_NAMESPACE_BEGIN
 
-// forward declaration for basic_node<...>
+/// @brief An ADL friendly converter between basic_node objects and native data objects.
+/// @tparam ValueType A target data type.
+/// @sa https://fktn-k.github.io/fkYAML/api/node_value_converter/
+template <typename ValueType, typename = void>
+class node_value_converter;
+
+/// @brief A class to store value of YAML nodes.
+/// @sa https://fktn-k.github.io/fkYAML/api/basic_node/
 template <
-    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
-    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
-    template <typename, typename> class ConverterType>
+    template <typename, typename...> class SequenceType = std::vector,
+    template <typename, typename, typename...> class MappingType = std::map, typename BooleanType = bool,
+    typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
+    template <typename, typename = void> class ConverterType = node_value_converter>
 class basic_node;
 
+/// @brief default YAML node value container.
+/// @sa https://fktn-k.github.io/fkYAML/api/basic_node/node/
+using node = basic_node<>;
+
+/// @brief A minimal map-like container which preserves insertion order.
+/// @tparam Key A type for keys.
+/// @tparam Value A type for values.
+/// @tparam IgnoredCompare A placeholder for key comparison. This will be ignored.
+/// @tparam Allocator A class for allocators.
+/// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
+template <typename Key, typename Value, typename IgnoredCompare, typename Allocator>
+class ordered_map;
+
 FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_FKYAML_FWD_HPP */
+
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -1058,7 +1115,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <cstdint>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -1123,7 +1180,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <deque>
 #include <vector>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/document_metainfo.hpp>
 
@@ -1143,7 +1200,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <cctype>
 #include <cstdlib>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/assert.hpp>
 
@@ -1162,7 +1219,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <cctype>
 #include <string>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -1290,7 +1347,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <array>
 #include <cstdint>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/exception.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -1309,7 +1366,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <stdexcept>
 #include <string>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/string_formatter.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -1328,7 +1385,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <memory>
 #include <string>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -1375,7 +1432,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <cstdint>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/node_type.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -1391,7 +1448,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <cstdint>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -1961,7 +2018,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <cstdint>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -1999,7 +2056,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <algorithm>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/str_view.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -2016,7 +2073,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <limits>
 #include <string>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -3083,7 +3140,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <cstdint>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -4199,7 +4256,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP
 #define FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/assert.hpp>
 
@@ -4225,7 +4282,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <cstring>
 #include <limits>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/type_traits.hpp>
 
@@ -5057,7 +5114,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <string>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/assert.hpp>
 
@@ -5411,7 +5468,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <cstring>
 #include <string>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/assert.hpp>
 
@@ -5746,7 +5803,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <cstdint>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -6313,7 +6370,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <memory>
 #include <string>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/assert.hpp>
 
@@ -6500,7 +6557,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <type_traits>
 #include <vector>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/detect.hpp>
 
@@ -6611,7 +6668,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <cstdint>
 #include <limits>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/node_type.hpp>
 
@@ -6751,7 +6808,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <string>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -8051,7 +8108,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <iterator>
 #include <string>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/assert.hpp>
 
@@ -8070,7 +8127,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <cstdint>
 #include <istream>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -8086,7 +8143,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <cstdint>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -9484,7 +9541,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <cstddef>
 #include <iterator>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -9891,7 +9948,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <type_traits>
 #include <utility>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -9985,7 +10042,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <string>
 #include <vector>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/conversions/to_string.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -10005,7 +10062,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <sstream>
 #include <type_traits>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
@@ -10444,7 +10501,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <cstdint>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/yaml_version_type.hpp>
 
@@ -10499,7 +10556,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <utility>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/conversions/from_node.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -10519,7 +10576,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <utility>
 #include <valarray>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -11096,7 +11153,7 @@ FK_YAML_NAMESPACE_END
 
 #include <utility>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -11487,7 +11544,7 @@ FK_YAML_NAMESPACE_END
 #include <utility>
 #include <vector>
 
-// #include <fkYAML/detail/macros/version_macros.hpp>
+// #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/meta/type_traits.hpp>
 
@@ -11654,10 +11711,9 @@ FK_YAML_NAMESPACE_BEGIN
 /// @brief A class to store value of YAML nodes.
 /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/
 template <
-    template <typename, typename...> class SequenceType = std::vector,
-    template <typename, typename, typename...> class MappingType = std::map, typename BooleanType = bool,
-    typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
-    template <typename, typename = void> class ConverterType = node_value_converter>
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
 class basic_node {
 public:
     /// @brief A type for iterators of basic_node containers.
@@ -13286,10 +13342,6 @@ inline std::istream& operator>>(
         deserialize(is);
     return is;
 }
-
-/// @brief default YAML node value container.
-/// @sa https://fktn-k.github.io/fkYAML/api/basic_node/node/
-using node = basic_node<>;
 
 /// @brief namespace for user-defined literals for the fkYAML library.
 inline namespace literals {

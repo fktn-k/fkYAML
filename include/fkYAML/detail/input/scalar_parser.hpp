@@ -9,7 +9,7 @@
 #ifndef FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP
 #define FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/scalar_conv.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>

@@ -12,7 +12,7 @@
 #include <cstddef>
 #include <type_traits>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 
 #ifdef FK_YAML_HAS_CXX_14
 #include <utility>

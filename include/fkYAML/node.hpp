@@ -19,7 +19,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/deserializer.hpp>
@@ -44,10 +44,9 @@ FK_YAML_NAMESPACE_BEGIN
 /// @brief A class to store value of YAML nodes.
 /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/
 template <
-    template <typename, typename...> class SequenceType = std::vector,
-    template <typename, typename, typename...> class MappingType = std::map, typename BooleanType = bool,
-    typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
-    template <typename, typename = void> class ConverterType = node_value_converter>
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
 class basic_node {
 public:
     /// @brief A type for iterators of basic_node containers.
@@ -1676,10 +1675,6 @@ inline std::istream& operator>>(
         deserialize(is);
     return is;
 }
-
-/// @brief default YAML node value container.
-/// @sa https://fktn-k.github.io/fkYAML/api/basic_node/node/
-using node = basic_node<>;
 
 /// @brief namespace for user-defined literals for the fkYAML library.
 inline namespace literals {
