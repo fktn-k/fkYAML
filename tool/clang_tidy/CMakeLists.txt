@@ -17,6 +17,9 @@ message(STATUS "Found clang-tidy. version: ${CLANG_TIDY_VERSION} path: ${CLANG_T
 ####################################
 
 set(HELPER_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_helper.cpp")
+# clear the contents written previously to the file.
+file(WRITE ${HELPER_FILE_PATH} "")
+
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/include/fkYAML/*.hpp)
 foreach(SRC_FILE ${SRC_FILES})
   file(RELATIVE_PATH REL_SRC_FILE "${PROJECT_SOURCE_DIR}/include" ${SRC_FILE})
