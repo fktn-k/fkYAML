@@ -20,7 +20,8 @@ This function converts a [fkyaml::basic_node](./index.md) to either
    ConverterType<ValueType>::from_node(*this, ret);
    return ret;
    ```
-   This library implements conversions from a node to a number of STL container types and scalar types. (see the notes down below)
+   This library implements conversions from a node to a number of STL container types and scalar types. (see the notes down below)  
+   Note that ValueType cannot be either a reference, pointer or C-style array type except `std::nullptr_t`.  
 2. a [fkyaml::basic_node](./index.md) object  
    The function is equivalent to executing  
    ```cpp

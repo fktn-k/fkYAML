@@ -23,8 +23,7 @@ This API makes no copies.
 
 ***ReferenceType***
 :   reference type to the target YAML node value.  
-    This must be a reference to [`sequence_type`](sequence_type.md), [`mapping_type`](mapping_type.md), [`boolean_type`](boolean_type.md), [`integer_type`](integer_type.md), [`float_number_type`](float_number_type.md) or [`string_type`](string_type.md).  
-    The above restriction is enforced by a static assertion.
+    This must be a (const) reference type to [`sequence_type`](sequence_type.md), [`mapping_type`](mapping_type.md), [`boolean_type`](boolean_type.md), [`integer_type`](integer_type.md), [`float_number_type`](float_number_type.md) or [`string_type`](string_type.md).  
 
 ## **Return Value**
 
