@@ -1,5 +1,58 @@
 # Releases
 
+## **fkYAML version 0.3.14**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/node.hpp) (single header)
+    * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/node.hpp) (single header)
+
+### Summary
+This release adds the new header file *fkyaml_fwd.hpp* which provides the library's namespace macros and forward declarations of the library's API classes. With the file, you can reduce the compile time cost of including the full library header if some source files do not actually use the library features.  
+Furthermore, conversions of YAML nodes into arbitrary types have been much improved and a lot more STL container and scalar types have been supported for that purpose. See [the API documentation page](https://fktn-k.github.io/fkYAML/api/basic_node/get_value/) for more details.  
+Other changes are related to minor bug fixes in YAML scalar parsing and maintenance fixes for CI.  
+
+### What's Changed
+
+#### :sparkles: New Features
+- Numeric scalar conversions inside basic\_node::get\_value API ([\#419](https://github.com/fktn-k/fkYAML/pull/419), [fktn-k](https://github.com/fktn-k))
+  - Suggested by [ARessegetesStery](https://github.com/ARessegetesStery) in the issue [\#366](https://github.com/fktn-k/fkYAML/issues/366)
+  - Automatic value conversions among null, boolean, integer and floating-point scalar values inside [fkyaml::basic_node::get_value()](../api/basic_node/get_value.md) API calls
+- Add forward declaration header ([\#422](https://github.com/fktn-k/fkYAML/pull/422), [fktn-k](https://github.com/fktn-k))
+  - Suggested by [abcminiuser](https://github.com/abcminiuser) in the duscussion [\#420](https://github.com/fktn-k/fkYAML/discussions/420)
+  - This new header provides the fkYAML namespace macros and forward declarations of fkYAML API classes.
+  - This file is available both in the [include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/include) and [single_include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/single_include) directories.
+
+#### :zap: Improvements
+- Support more STL types in from\_node ([\#421](https://github.com/fktn-k/fkYAML/pull/421), [fktn-k](https://github.com/fktn-k))
+  - YAML node objects can now be converted into a lot more STL container types.
+  - See [the API documentation page](https://fktn-k.github.io/fkYAML/api/basic_node/get_value/) for more details.
+- Clarify type restrictions of get\_value\(\) & get\_value\_ref\(\) APIs ([\#424](https://github.com/fktn-k/fkYAML/pull/424), [fktn-k](https://github.com/fktn-k))
+  - get_value calls with unsupported types (reference, pointer and C-style array types) now emits an explicit error message.
+- Use std::unreachable\(\) or similar compiler specific extensions for dead but necessary code ([\#425](https://github.com/fktn-k/fkYAML/pull/425), [fktn-k](https://github.com/fktn-k))
+  - Exclude detail::unreachable\(\) from coverage target ([\#426](https://github.com/fktn-k/fkYAML/pull/426), [fktn-k](https://github.com/fktn-k))
+
+#### :bug: Bug Fixes
+- Fix wrong scalar value type detection from floating point value token ([\#414](https://github.com/fktn-k/fkYAML/pull/414), [fktn-k](https://github.com/fktn-k))
+  - reported by [ebertolazzi](https://github.com/ebertolazzi) in the issue [\#413](https://github.com/fktn-k/fkYAML/issues/413)
+- Disable -Wdeprecated-literal-operator warnings ([\#417](https://github.com/fktn-k/fkYAML/pull/417), [fktn-k](https://github.com/fktn-k))
+  - reported by [ebertolazzi](https://github.com/ebertolazzi) in the issue [\#413](https://github.com/fktn-k/fkYAML/issues/413)
+
+#### :robot: CI
+- Update GA workflow jobs for ubuntu24.04 ([\#415](https://github.com/fktn-k/fkYAML/pull/415), [fktn-k](https://github.com/fktn-k))
+- GA workflow jobs with more AppleClang versions on macOS ([\#416](https://github.com/fktn-k/fkYAML/pull/416), [fktn-k](https://github.com/fktn-k))
+- Fix somehow shadowed clang-tidy warnings ([\#418](https://github.com/fktn-k/fkYAML/pull/418), [fktn-k](https://github.com/fktn-k))
+- Fix duplicate include error if clang-tidy helper file already exists ([\#423](https://github.com/fktn-k/fkYAML/pull/423), [fktn-k](https://github.com/fktn-k))
+
+### Full Changelog
+https://github.com/fktn-k/fkYAML/compare/v0.3.13...v0.3.14
+
+---
+
 ## **fkYAML version 0.3.13**
 
 !!! abstract "Release Packages"
