@@ -12972,15 +12972,22 @@ public:
 
     /// @brief Get the node value object converted into a given type.
     /// @note This function requires T objects to be default constructible.
-    /// @tparam T A compatible value type which might be cv-qualified or a reference type.
-    /// @tparam ValueType A compatible value type, without cv-qualifiers and reference by default.
+    /// @tparam T A compatible value type which might be cv-qualified.
+    /// @tparam ValueType A compatible value type with cv-qualifiers removed by default.
     /// @return A compatible native data value converted from the basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value/
     template <
-        typename T, typename ValueType = detail::remove_cvref_t<T>,
+        typename T, typename ValueType = detail::remove_cv_t<T>,
         detail::enable_if_t<std::is_default_constructible<ValueType>::value, int> = 0>
     T get_value() const noexcept(
         noexcept(std::declval<const basic_node>().template get_value_impl<ValueType>(std::declval<ValueType&>()))) {
+        // emit a compile error if T is either a reference, pointer or C-style array type.
+        static_assert(
+            !std::is_reference<T>::value,
+            "get_value() cannot be called with reference types. you might want to call get_value_ref().");
+        static_assert(!std::is_pointer<T>::value, "get_value() cannot be called with pointer types.");
+        static_assert(!std::is_array<T>::value, "get_value() cannot be called with C-style array types.");
+
         auto ret = ValueType();
         if (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
