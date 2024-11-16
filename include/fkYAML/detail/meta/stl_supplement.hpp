@@ -247,6 +247,9 @@ using std::remove_cvref_t;
 #endif
 
 /// @brief A wrapper function to call std::unreachable() (since C++23) or similar compiler specific extensions.
+/// @note This function is implemented only for better code optimization against dead code and thus excluded from
+/// coverage report.
+// LCOV_EXCL_START
 [[noreturn]] inline void unreachable() {
     // use compiler specific extensions if possible.
     // undefined behavior should be raised by an empty function with noreturn attribute.
@@ -259,6 +262,7 @@ using std::remove_cvref_t;
     __builtin_unreachable();
 #endif
 }
+// LCOV_EXCL_STOP
 
 FK_YAML_DETAIL_NAMESPACE_END
 
