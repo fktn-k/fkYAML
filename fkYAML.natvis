@@ -4,26 +4,26 @@
 <!-- Edit ./tools/natvis_generator/fkYAML.natvis.j2 -->
 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-    <!-- Namespace fkyaml::v0_3_13 -->
-    <Type Name="fkyaml::v0_3_13::basic_node&lt;*&gt;">
-        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_13::detail::node_attr_bits::seq_bit">{*(m_node_value.p_sequence)}</DisplayString>
-        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_13::detail::node_attr_bits::map_bit">{*(m_node_value.p_mapping)}</DisplayString>
-        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_13::detail::node_attr_bits::null_bit">nullptr</DisplayString>
-        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_13::detail::node_attr_bits::bool_bit">{m_node_value.boolean}</DisplayString>
-        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_13::detail::node_attr_bits::int_bit">{m_node_value.integer}</DisplayString>
-        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_13::detail::node_attr_bits::float_bit">{m_node_value.float_val}</DisplayString>
-        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_13::detail::node_attr_bits::string_bit">{*(m_node_value.p_string)}</DisplayString>
+    <!-- Namespace fkyaml::v0_3_14 -->
+    <Type Name="fkyaml::v0_3_14::basic_node&lt;*&gt;">
+        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_14::detail::node_attr_bits::seq_bit">{*(m_node_value.p_sequence)}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_14::detail::node_attr_bits::map_bit">{*(m_node_value.p_mapping)}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_14::detail::node_attr_bits::null_bit">nullptr</DisplayString>
+        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_14::detail::node_attr_bits::bool_bit">{m_node_value.boolean}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_14::detail::node_attr_bits::int_bit">{m_node_value.integer}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_14::detail::node_attr_bits::float_bit">{m_node_value.float_val}</DisplayString>
+        <DisplayString Condition="m_attrs &amp; fkyaml::v0_3_14::detail::node_attr_bits::string_bit">{*(m_node_value.p_string)}</DisplayString>
         <Expand>
-            <ExpandedItem Condition="m_attrs &amp; fkyaml::v0_3_13::detail::node_attr_bits::seq_bit">
+            <ExpandedItem Condition="m_attrs &amp; fkyaml::v0_3_14::detail::node_attr_bits::seq_bit">
                 *(m_node_value.p_sequence),view(simple)
             </ExpandedItem>
-            <ExpandedItem Condition="m_attrs &amp; fkyaml::v0_3_13::detail::node_attr_bits::map_bit">
+            <ExpandedItem Condition="m_attrs &amp; fkyaml::v0_3_14::detail::node_attr_bits::map_bit">
                 *(m_node_value.p_mapping),view(simple)
             </ExpandedItem>
         </Expand>
     </Type>
 
-    <Type Name="std::pair&lt;*, fkyaml::v0_3_13::basic_node&lt;*&gt;&gt;" IncludeView="MapHelper">
+    <Type Name="std::pair&lt;*, fkyaml::v0_3_14::basic_node&lt;*&gt;&gt;" IncludeView="MapHelper">
         <DisplayString>{second}</DisplayString>
         <Expand>
             <ExpandedItem>second</ExpandedItem>
