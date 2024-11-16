@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -9,12 +9,14 @@
 #ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP
 #define FK_YAML_DETAIL_INPUT_TAG_T_HPP
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <cstdint>
+
+#include <fkYAML/detail/macros/define_macros.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of YAML tag types.
-enum class tag_t {
+enum class tag_t : std::uint8_t {
     NONE,            //!< Represents a non-specific tag "?".
     NON_SPECIFIC,    //!< Represents a non-specific tag "!".
     CUSTOM_TAG,      //!< Represents a custom tag

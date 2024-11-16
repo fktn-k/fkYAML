@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,7 +12,7 @@
 #include <cstddef>
 #include <iterator>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/exception.hpp>
 
@@ -57,7 +57,7 @@ struct iterator_traits<const ValueType> {
 };
 
 /// @brief Definitions of iterator types for iterators internally held.
-enum class iterator_t {
+enum class iterator_t : std::uint8_t {
     SEQUENCE, //!< sequence iterator type.
     MAPPING,  //!< mapping iterator type.
 };
@@ -100,8 +100,7 @@ private:
 public:
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
-    iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept
-        : m_inner_iterator_type(iterator_t::SEQUENCE) {
+    iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept {
         m_iterator_holder.sequence_iterator = itr;
     }
 

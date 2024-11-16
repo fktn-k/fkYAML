@@ -10,7 +10,7 @@ set ROOT_PATH=%SCRIPT_PATH%\..
 
 if not exist .\venv_clang_format\Scripts\clang-format.exe (
     python -m venv .\venv_clang_format
-    .\venv_clang_format\Scripts\pip.exe install clang-format==14.0.0
+    .\venv_clang_format\Scripts\pip.exe install clang-format==18.1.3
 )
 
 for /r %ROOT_PATH%\include %%f in (*.hpp) do (

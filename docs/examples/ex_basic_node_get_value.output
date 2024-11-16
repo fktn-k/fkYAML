@@ -1,3 +1,13 @@
-123
+true false 
+
+123 3.14 foo
+
+2 : baz
+1 : bar
+0 : foo
+
+1.23
 foo
-type_error: The target node value type is not float number type. type=STRING
+true
+1
+type_error: The target node value type is not compatible with float number type. type=STRING

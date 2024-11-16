@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/string_formatter.hpp>
 #include <fkYAML/detail/types/node_t.hpp>
 
@@ -47,7 +47,7 @@ public:
 
 private:
     /// An error message holder.
-    std::string m_error_msg {};
+    std::string m_error_msg;
 };
 
 /// @brief An exception class indicating an encoding error.
@@ -77,9 +77,9 @@ public:
     }
 
 private:
-    std::string generate_error_message(const char* msg, const std::initializer_list<uint8_t>& u8) const noexcept {
-        auto itr = u8.begin();
-        auto end_itr = u8.end();
+    static std::string generate_error_message(const char* msg, const std::initializer_list<uint8_t>& u8) noexcept {
+        const auto* itr = u8.begin();
+        const auto* end_itr = u8.end();
         std::string formatted = detail::format("invalid_encoding: %s in=[ 0x%02x", msg, *itr++);
         while (itr != end_itr) {
             formatted += detail::format(", 0x%02x", *itr++);
@@ -93,18 +93,22 @@ private:
     /// @param h The first UTF-16 encoded element used for the UTF-8 encoding.
     /// @param l The second UTF-16 encoded element used for the UTF-8 encoding.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16) const noexcept {
+    static std::string generate_error_message(const char* msg, std::array<char16_t, 2> u16) noexcept {
         // uint16_t is large enough for UTF-16 encoded elements.
-        return detail::format("invalid_encoding: %s in=[ 0x%04x, 0x%04x ]", msg, uint16_t(u16[0]), uint16_t(u16[1]));
+        return detail::format(
+            "invalid_encoding: %s in=[ 0x%04x, 0x%04x ]",
+            msg,
+            static_cast<uint16_t>(u16[0]),
+            static_cast<uint16_t>(u16[1]));
     }
 
     /// @brief Generate an error message from the given parameters for the UTF-32 encoding.
     /// @param msg An error message.
     /// @param u32 The UTF-32 encoded element used for the UTF-8 encoding.
     /// @return A genereated error message.
-    std::string generate_error_message(const char* msg, char32_t u32) const noexcept {
+    static std::string generate_error_message(const char* msg, char32_t u32) noexcept {
         // uint32_t is large enough for UTF-32 encoded elements.
-        return detail::format("invalid_encoding: %s in=0x%08x", msg, uint32_t(u32));
+        return detail::format("invalid_encoding: %s in=0x%08x", msg, static_cast<uint32_t>(u32));
     }
 };
 
@@ -116,7 +120,7 @@ public:
     }
 
 private:
-    std::string generate_error_message(const char* msg, uint32_t lines, uint32_t cols_in_line) const noexcept {
+    static std::string generate_error_message(const char* msg, uint32_t lines, uint32_t cols_in_line) noexcept {
         return detail::format("parse_error: %s (at line %u, column %u)", msg, lines, cols_in_line);
     }
 };
@@ -146,7 +150,7 @@ private:
     /// @param msg An error message.
     /// @param type The type of a source node value.
     /// @return A generated error message.
-    std::string generate_error_message(const char* msg, node_type type) const noexcept {
+    static std::string generate_error_message(const char* msg, node_type type) noexcept {
         return detail::format("type_error: %s type=%s", msg, to_string(type));
     }
 };
@@ -162,11 +166,11 @@ public:
     }
 
 private:
-    std::string generate_error_message(int index) {
+    static std::string generate_error_message(int index) noexcept {
         return detail::format("out_of_range: index %d is out of range", index);
     }
 
-    std::string generate_error_message(const char* key) {
+    static std::string generate_error_message(const char* key) noexcept {
         return detail::format("out_of_range: key \'%s\' is not found.", key);
     }
 };
@@ -178,7 +182,7 @@ public:
     }
 
 private:
-    std::string generate_error_message(const char* msg, const char* tag) {
+    static std::string generate_error_message(const char* msg, const char* tag) noexcept {
         return detail::format("invalid_tag: %s tag=%s", msg, tag);
     }
 };

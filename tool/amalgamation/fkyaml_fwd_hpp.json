@@ -1,0 +1,10 @@
+{
+    "project": "fkYAML",
+    "target": "single_include/fkYAML/fkyaml_fwd.hpp",
+    "sources": [
+        "include/fkYAML/fkyaml_fwd.hpp"
+    ],
+    "include_paths": [
+        "include"
+    ]
+}

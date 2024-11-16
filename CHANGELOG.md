@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.3.14](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.14) (2024-11-16)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.13...v0.3.14)
+
+- Disable -Wdeprecated-literal-operator warnings [\#417](https://github.com/fktn-k/fkYAML/pull/417) ([fktn-k](https://github.com/fktn-k))
+- Fix wrong scalar value type detection from floating point value token [\#414](https://github.com/fktn-k/fkYAML/pull/414) ([fktn-k](https://github.com/fktn-k))
+
+- Exclude detail::unreachable\(\) from coverage target [\#426](https://github.com/fktn-k/fkYAML/pull/426) ([fktn-k](https://github.com/fktn-k))
+- Use std::unreachable\(\) or similar compiler specific extensions for dead but necessary code [\#425](https://github.com/fktn-k/fkYAML/pull/425) ([fktn-k](https://github.com/fktn-k))
+- Clarify type restrictions of get\_value\(\) & get\_value\_ref\(\) APIs [\#424](https://github.com/fktn-k/fkYAML/pull/424) ([fktn-k](https://github.com/fktn-k))
+- Fix duplicate include error if clang-tidy helper file already exists [\#423](https://github.com/fktn-k/fkYAML/pull/423) ([fktn-k](https://github.com/fktn-k))
+- Add forward declaration header [\#422](https://github.com/fktn-k/fkYAML/pull/422) ([fktn-k](https://github.com/fktn-k))
+- Support more STL types in from\_node [\#421](https://github.com/fktn-k/fkYAML/pull/421) ([fktn-k](https://github.com/fktn-k))
+- Numeric scalar conversions inside basic\_node::get\_value API [\#419](https://github.com/fktn-k/fkYAML/pull/419) ([fktn-k](https://github.com/fktn-k))
+- Fix somehow shadowed clang-tidy warnings [\#418](https://github.com/fktn-k/fkYAML/pull/418) ([fktn-k](https://github.com/fktn-k))
+- GA workflow jobs with more AppleClang versions on macOS [\#416](https://github.com/fktn-k/fkYAML/pull/416) ([fktn-k](https://github.com/fktn-k))
+- Update GA workflow jobs for ubuntu24.04 [\#415](https://github.com/fktn-k/fkYAML/pull/415) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.13](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.13) (2024-10-14)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.12...v0.3.13)

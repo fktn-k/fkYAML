@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,7 +12,7 @@
 #include <array>
 #include <cstdint>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/exception.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -33,15 +33,15 @@ inline uint32_t get_num_bytes(uint8_t first_byte) {
         return 1;
     }
     // The first byte starts with 0b110X'XXXX -> 2-byte character
-    else if ((first_byte & 0xE0) == 0xC0) {
+    if ((first_byte & 0xE0) == 0xC0) {
         return 2;
     }
     // The first byte starts with 0b1110'XXXX -> 3-byte character
-    else if ((first_byte & 0xF0) == 0xE0) {
+    if ((first_byte & 0xF0) == 0xE0) {
         return 3;
     }
     // The first byte starts with 0b1111'0XXX -> 4-byte character
-    else if ((first_byte & 0xF8) == 0xF0) {
+    if ((first_byte & 0xF8) == 0xF0) {
         return 4;
     }
 
@@ -56,17 +56,17 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
     switch (byte_array.size()) {
     case 1:
         // U+0000..U+007F
-        return uint8_t(*(byte_array.begin())) <= uint8_t(0x7Fu);
+        return *byte_array.begin() <= 0x7Fu;
     case 2: {
-        auto itr = byte_array.begin();
-        uint8_t first = *itr++;
-        uint8_t second = *itr;
+        const auto* itr = byte_array.begin();
+        const uint8_t first = *itr++;
+        const uint8_t second = *itr;
 
         // U+0080..U+07FF
         //   1st Byte: 0xC2..0xDF
         //   2nd Byte: 0x80..0xBF
-        if (uint8_t(0xC2u) <= first && first <= uint8_t(0xDFu)) {
-            if (0x80 <= second && second <= 0xBF) {
+        if (0xC2u <= first && first <= 0xDFu) {
+            if (0x80u <= second && second <= 0xBFu) {
                 return true;
             }
         }
@@ -75,18 +75,18 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         return false;
     }
     case 3: {
-        auto itr = byte_array.begin();
-        uint8_t first = *itr++;
-        uint8_t second = *itr++;
-        uint8_t third = *itr;
+        const auto* itr = byte_array.begin();
+        const uint8_t first = *itr++;
+        const uint8_t second = *itr++;
+        const uint8_t third = *itr;
 
         // U+1000..U+CFFF:
         //   1st Byte: 0xE0..0xEC
         //   2nd Byte: 0x80..0xBF
         //   3rd Byte: 0x80..0xBF
-        if (0xE0 <= first && first <= 0xEC) {
-            if (0x80 <= second && second <= 0xBF) {
-                if (0x80 <= third && third <= 0xBF) {
+        if (0xE0u <= first && first <= 0xECu) {
+            if (0x80u <= second && second <= 0xBFu) {
+                if (0x80u <= third && third <= 0xBFu) {
                     return true;
                 }
             }
@@ -97,9 +97,9 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         //   1st Byte: 0xED
         //   2nd Byte: 0x80..0x9F
         //   3rd Byte: 0x80..0xBF
-        if (first == 0xED) {
-            if (0x80 <= second && second <= 0x9F) {
-                if (0x80 <= third && third <= 0xBF) {
+        if (first == 0xEDu) {
+            if (0x80u <= second && second <= 0x9Fu) {
+                if (0x80u <= third && third <= 0xBFu) {
                     return true;
                 }
             }
@@ -110,9 +110,9 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         //   1st Byte: 0xEE..0xEF
         //   2nd Byte: 0x80..0xBF
         //   3rd Byte: 0x80..0xBF
-        if (first == 0xEE || first == 0xEF) {
-            if (0x80 <= second && second <= 0xBF) {
-                if (0x80 <= third && third <= 0xBF) {
+        if (first == 0xEEu || first == 0xEFu) {
+            if (0x80u <= second && second <= 0xBFu) {
+                if (0x80u <= third && third <= 0xBFu) {
                     return true;
                 }
             }
@@ -123,21 +123,21 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         return false;
     }
     case 4: {
-        auto itr = byte_array.begin();
-        uint8_t first = *itr++;
-        uint8_t second = *itr++;
-        uint8_t third = *itr++;
-        uint8_t fourth = *itr;
+        const auto* itr = byte_array.begin();
+        const uint8_t first = *itr++;
+        const uint8_t second = *itr++;
+        const uint8_t third = *itr++;
+        const uint8_t fourth = *itr;
 
         // U+10000..U+3FFFF:
         //   1st Byte: 0xF0
         //   2nd Byte: 0x90..0xBF
         //   3rd Byte: 0x80..0xBF
         //   4th Byte: 0x80..0xBF
-        if (first == 0xF0) {
-            if (0x90 <= second && second <= 0xBF) {
-                if (0x80 <= third && third <= 0xBF) {
-                    if (0x80 <= fourth && fourth <= 0xBF) {
+        if (first == 0xF0u) {
+            if (0x90u <= second && second <= 0xBFu) {
+                if (0x80u <= third && third <= 0xBFu) {
+                    if (0x80u <= fourth && fourth <= 0xBFu) {
                         return true;
                     }
                 }
@@ -150,10 +150,10 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         //   2nd Byte: 0x80..0xBF
         //   3rd Byte: 0x80..0xBF
         //   4th Byte: 0x80..0xBF
-        if (0xF1 <= first && first <= 0xF3) {
-            if (0x80 <= second && second <= 0xBF) {
-                if (0x80 <= third && third <= 0xBF) {
-                    if (0x80 <= fourth && fourth <= 0xBF) {
+        if (0xF1u <= first && first <= 0xF3u) {
+            if (0x80u <= second && second <= 0xBFu) {
+                if (0x80u <= third && third <= 0xBFu) {
+                    if (0x80u <= fourth && fourth <= 0xBFu) {
                         return true;
                     }
                 }
@@ -166,10 +166,10 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         //   2nd Byte: 0x80..0x8F
         //   3rd Byte: 0x80..0xBF
         //   4th Byte: 0x80..0xBF
-        if (first == 0xF4) {
-            if (0x80 <= second && second <= 0x8F) {
-                if (0x80 <= third && third <= 0xBF) {
-                    if (0x80 <= fourth && fourth <= 0xBF) {
+        if (first == 0xF4u) {
+            if (0x80u <= second && second <= 0x8Fu) {
+                if (0x80u <= third && third <= 0xBFu) {
+                    if (0x80u <= fourth && fourth <= 0xBFu) {
                         return true;
                     }
                 }
@@ -180,8 +180,8 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         // The rest of byte combinations are invalid.
         return false;
     }
-    default:          // LCOV_EXCL_LINE
-        return false; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -190,51 +190,45 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
 /// @param[out] encoded_size The size of UTF-encoded bytes.
-inline void from_utf16(
+inline void from_utf16( // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size, uint32_t& encoded_size) {
-    if (utf16[0] < char16_t(0x80u)) {
+    if (utf16[0] < 0x80u) {
         utf8[0] = static_cast<uint8_t>(utf16[0] & 0x7Fu);
         consumed_size = 1;
         encoded_size = 1;
-        return;
     }
-    else if (utf16[0] <= char16_t(0x7FFu)) {
-        uint16_t utf8_chunk = static_cast<uint16_t>(0xC080u) | static_cast<uint16_t>((utf16[0] & 0x07C0u) << 2) |
-                              static_cast<uint16_t>(utf16[0] & 0x003Fu);
+    else if (utf16[0] <= 0x7FFu) {
+        const auto utf8_chunk = static_cast<uint16_t>(0xC080u | ((utf16[0] & 0x07C0u) << 2) | (utf16[0] & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF00u) >> 8);
         utf8[1] = static_cast<uint8_t>(utf8_chunk & 0x00FFu);
         consumed_size = 1;
         encoded_size = 2;
-        return;
     }
-    else if (utf16[0] < char16_t(0xD800u) || char16_t(0xE000u) <= utf16[0]) {
-        uint32_t utf8_chunk = static_cast<uint32_t>(0xE08080u) | static_cast<uint32_t>((utf16[0] & 0xF000u) << 4) |
-                              static_cast<uint32_t>((utf16[0] & 0x0FC0u) << 2) |
-                              static_cast<uint32_t>(utf16[0] & 0x003Fu);
+    else if (utf16[0] < 0xD800u || 0xE000u <= utf16[0]) {
+        const auto utf8_chunk = static_cast<uint32_t>(
+            0xE08080u | ((utf16[0] & 0xF000u) << 4) | ((utf16[0] & 0x0FC0u) << 2) | (utf16[0] & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF0000u) >> 16);
         utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF00u) >> 8);
         utf8[2] = static_cast<uint8_t>(utf8_chunk & 0x0000FFu);
         consumed_size = 1;
         encoded_size = 3;
-        return;
     }
-    else if (utf16[0] <= char16_t(0xDBFFu) && char16_t(0xDC00u) <= utf16[1] && utf16[1] <= char16_t(0xDFFFu)) {
-        // for surrogate pairs
-        uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
-        uint32_t utf8_chunk =
-            static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((code_point & 0x1C0000u) << 6) |
-            static_cast<uint32_t>((code_point & 0x03F000u) << 4) |
-            static_cast<uint32_t>((code_point & 0x000FC0u) << 2) | static_cast<uint32_t>(code_point & 0x00003Fu);
+    else if (utf16[0] <= 0xDBFFu && 0xDC00u <= utf16[1] && utf16[1] <= 0xDFFFu) {
+        // surrogate pair
+        const uint32_t code_point = 0x10000u + ((utf16[0] & 0x03FFu) << 10) + (utf16[1] & 0x03FFu);
+        const auto utf8_chunk = static_cast<uint32_t>(
+            0xF0808080u | ((code_point & 0x1C0000u) << 6) | ((code_point & 0x03F000u) << 4) |
+            ((code_point & 0x0FC0u) << 2) | (code_point & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
         utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
         utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
         utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
         consumed_size = 2;
         encoded_size = 4;
-        return;
     }
-
-    throw invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
+    else {
+        throw invalid_encoding("Invalid UTF-16 encoding detected.", utf16);
+    }
 }
 
 /// @brief Converts a UTF-32 encoded character to UTF-8 encoded bytes.
@@ -242,42 +236,37 @@ inline void from_utf16(
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[in] encoded_size The size of UTF-encoded bytes.
 inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint32_t& encoded_size) {
-    if (utf32 < char32_t(0x80u)) {
+    if (utf32 < 0x80u) {
         utf8[0] = static_cast<uint8_t>(utf32 & 0x007F);
         encoded_size = 1;
-        return;
     }
-    else if (utf32 <= char32_t(0x7FFu)) {
-        uint16_t utf8_chunk = static_cast<uint16_t>(0xC080u) | static_cast<uint16_t>((utf32 & 0x07C0u) << 2) |
-                              static_cast<uint16_t>(utf32 & 0x003Fu);
+    else if (utf32 <= 0x7FFu) {
+        const auto utf8_chunk = static_cast<uint16_t>(0xC080u | ((utf32 & 0x07C0u) << 2) | (utf32 & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF00u) >> 8);
         utf8[1] = static_cast<uint8_t>(utf8_chunk & 0x00FFu);
         encoded_size = 2;
-        return;
     }
-    else if (utf32 <= char32_t(0xFFFFu)) {
-        uint32_t utf8_chunk = static_cast<uint32_t>(0xE08080u) | static_cast<uint32_t>((utf32 & 0xF000u) << 4) |
-                              static_cast<uint32_t>((utf32 & 0x0FC0u) << 2) | static_cast<uint32_t>(utf32 & 0x003F);
+    else if (utf32 <= 0xFFFFu) {
+        const auto utf8_chunk =
+            static_cast<uint32_t>(0xE08080u | ((utf32 & 0xF000u) << 4) | ((utf32 & 0x0FC0u) << 2) | (utf32 & 0x3F));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF0000u) >> 16);
         utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF00u) >> 8);
         utf8[2] = static_cast<uint8_t>(utf8_chunk & 0x0000FFu);
         encoded_size = 3;
-        return;
     }
-    else if (utf32 <= char32_t(0x10FFFFu)) {
-        uint32_t utf8_chunk = static_cast<uint32_t>(0xF0808080u) | static_cast<uint32_t>((utf32 & 0x1C0000u) << 6) |
-                              static_cast<uint32_t>((utf32 & 0x03F000u) << 4) |
-                              static_cast<uint32_t>((utf32 & 0x000FC0u) << 2) |
-                              static_cast<uint32_t>(utf32 & 0x00003Fu);
+    else if (utf32 <= 0x10FFFFu) {
+        const auto utf8_chunk = static_cast<uint32_t>(
+            0xF0808080u | ((utf32 & 0x1C0000u) << 6) | ((utf32 & 0x03F000u) << 4) | ((utf32 & 0x0FC0u) << 2) |
+            (utf32 & 0x3Fu));
         utf8[0] = static_cast<uint8_t>((utf8_chunk & 0xFF000000u) >> 24);
         utf8[1] = static_cast<uint8_t>((utf8_chunk & 0x00FF0000u) >> 16);
         utf8[2] = static_cast<uint8_t>((utf8_chunk & 0x0000FF00u) >> 8);
         utf8[3] = static_cast<uint8_t>(utf8_chunk & 0x000000FFu);
         encoded_size = 4;
-        return;
     }
-
-    throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+    else {
+        throw invalid_encoding("Invalid UTF-32 encoding detected.", utf32);
+    }
 }
 
 } // namespace utf8

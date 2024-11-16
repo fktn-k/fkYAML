@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/str_view.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -28,13 +28,13 @@ public:
     /// @note This function doesn't support cases where cur_pos has moved backward from the last call.
     /// @param cur_pos The iterator to the current element of the buffer.
     void update_position(const char* p_current) {
-        uint32_t diff = static_cast<uint32_t>(p_current - m_last);
+        const auto diff = static_cast<uint32_t>(p_current - m_last);
         if (diff == 0) {
             return;
         }
 
         m_cur_pos += diff;
-        uint32_t prev_lines_read = m_lines_read;
+        const uint32_t prev_lines_read = m_lines_read;
         m_lines_read += static_cast<uint32_t>(std::count(m_last, p_current, '\n'));
         m_last = p_current;
 

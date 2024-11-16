@@ -66,8 +66,8 @@ You can also override the implementation by defining the following preprocessor 
 ## Language Supports
 
 The fkYAML library targets C++11, but also supports some features introduced in later C++ standards.  
-For those new features, the library implements some preprocessor checks to determine the C++ standard based on preprocessor macros such as `__cplusplus`, `_HAS_CXX14` or `_MSVC_LANG`.  
-By defining any of the following symbols, the internal check is overridden and the provided C++ standard is unconditionally assumed.  
+For those new features, the library implements some preprocessor checks to determine the active C++ standard based on preprocessor macros `__cplusplus` and `_MSVC_LANG`.  
+By defining any of the following macros, the internal check is overridden and the provided C++ standard is unconditionally assumed.  
 This can be helpful for compilers that only implement parts of the standard and the standard would be detected incorrectly.  
 
 | Name               | Description                               |
@@ -76,6 +76,7 @@ This can be helpful for compilers that only implement parts of the standard and 
 | FK_YAML_HAS_CXX_14 | supports C++14 features.                  |
 | FK_YAML_HAS_CXX_17 | supports C++17 features.                  |
 | FK_YAML_HAS_CXX_20 | supports C++20 features.                  |
+| FK_YAML_HAS_CXX_23 | supports C++23 features.                  |
 
 ??? Example annotate "Example: force the fkYAML library to use a specific C++ standard"
 

@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -19,7 +19,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/deserializer.hpp>
@@ -44,10 +44,9 @@ FK_YAML_NAMESPACE_BEGIN
 /// @brief A class to store value of YAML nodes.
 /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/
 template <
-    template <typename, typename...> class SequenceType = std::vector,
-    template <typename, typename, typename...> class MappingType = std::map, typename BooleanType = bool,
-    typename IntegerType = std::int64_t, typename FloatNumberType = double, typename StringType = std::string,
-    template <typename, typename = void> class ConverterType = node_value_converter>
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
 class basic_node {
 public:
     /// @brief A type for iterators of basic_node containers.
@@ -149,8 +148,8 @@ private:
             case detail::node_attr_bits::string_bit:
                 p_string = create_object<string_type>();
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -276,8 +275,8 @@ public:
             case detail::node_attr_bits::string_bit:
                 m_node_value.p_string = create_object<string_type>(*(rhs.m_node_value.p_string));
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
         }
     }
@@ -322,8 +321,8 @@ public:
                 m_node_value.p_string = rhs.m_node_value.p_string;
                 rhs.m_node_value.p_string = nullptr;
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -427,7 +426,7 @@ public:
     /// @return The resulting basic_node object deserialized from the pair of iterators.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/
     template <typename ItrType>
-    static basic_node deserialize(ItrType&& begin, ItrType&& end) {
+    static basic_node deserialize(ItrType begin, ItrType end) {
         return deserializer_type().deserialize(
             detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
     }
@@ -540,7 +539,7 @@ public:
     /// @return An alias YAML node created from the given anchor node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/alias_of/
     static basic_node alias_of(const basic_node& anchor_node) {
-        using namespace detail::node_attr_bits;
+        constexpr detail::node_attr_t anchor_bit = detail::node_attr_bits::anchor_bit;
 
         if FK_YAML_UNLIKELY (!anchor_node.has_anchor_name() || !(anchor_node.m_attrs & anchor_bit)) {
             throw fkyaml::exception("Cannot create an alias without anchor name.");
@@ -548,7 +547,7 @@ public:
 
         basic_node node = anchor_node;
         node.m_attrs &= ~detail::node_attr_mask::anchoring;
-        node.m_attrs |= alias_bit;
+        node.m_attrs |= detail::node_attr_bits::alias_bit;
         return node;
     } // LCOV_EXCL_LINE
 
@@ -694,7 +693,7 @@ public:
     /// @return true if both types and values are equal, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_eq/
     bool operator==(const basic_node& rhs) const noexcept {
-        detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
+        const detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
         if (this_val_bit != (rhs.get_node_attrs() & detail::node_attr_mask::value)) {
             return false;
         }
@@ -728,8 +727,8 @@ public:
         case detail::node_attr_bits::string_bit:
             ret = (*(this_node_value_ptr->p_string) == *(other_node_value_ptr->p_string));
             break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
 
         return ret;
@@ -752,8 +751,8 @@ public:
             return false;
         }
 
-        detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
-        detail::node_attr_t other_val_bit = rhs.get_node_attrs() & detail::node_attr_mask::value;
+        const detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
+        const detail::node_attr_t other_val_bit = rhs.get_node_attrs() & detail::node_attr_mask::value;
 
         if (this_val_bit < other_val_bit) {
             return true;
@@ -776,7 +775,7 @@ public:
             break;
         case detail::node_attr_bits::null_bit: // LCOV_EXCL_LINE
             // Will not come here since null nodes are always the same.
-            break; // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         case detail::node_attr_bits::bool_bit:
             // false < true
             ret = (!p_this_value->boolean && p_other_value->boolean);
@@ -790,8 +789,8 @@ public:
         case detail::node_attr_bits::string_bit:
             ret = (*(p_this_value->p_string) < *(p_other_value->p_string));
             break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
 
         return ret;
@@ -826,7 +825,7 @@ public:
     /// @return The type of the YAML node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_type/
     node_type get_type() const noexcept {
-        detail::node_attr_t attrs = get_node_attrs();
+        const detail::node_attr_t attrs = get_node_attrs();
         return detail::node_attr_bits::to_node_type(attrs);
     }
 
@@ -1236,7 +1235,7 @@ public:
         m_attrs &= ~detail::node_attr_mask::anchoring;
         m_attrs |= detail::node_attr_bits::anchor_bit;
         mp_meta = p_meta;
-        uint32_t offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
+        auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
         m_prop.anchor = anchor_name;
     }
@@ -1264,7 +1263,7 @@ public:
         m_attrs &= ~detail::node_attr_mask::anchoring;
         m_attrs |= detail::node_attr_bits::anchor_bit;
         mp_meta = p_meta;
-        uint32_t offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
+        auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
         m_prop.anchor = std::move(anchor_name);
     }
@@ -1306,26 +1305,30 @@ public:
 
     /// @brief Get the node value object converted into a given type.
     /// @note This function requires T objects to be default constructible.
-    /// @tparam T A compatible value type which might be cv-qualified or a reference type.
-    /// @tparam ValueType A compatible value type, without cv-qualifiers and reference by default.
+    /// @tparam T A compatible value type which might be cv-qualified.
+    /// @tparam ValueType A compatible value type with cv-qualifiers removed by default.
     /// @return A compatible native data value converted from the basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value/
     template <
-        typename T, typename ValueType = detail::remove_cvref_t<T>,
-        detail::enable_if_t<
-            detail::conjunction<
-                std::is_default_constructible<ValueType>, detail::has_from_node<basic_node, ValueType>>::value,
-            int> = 0>
-    T get_value() const noexcept(noexcept(
-        ConverterType<ValueType, void>::from_node(std::declval<const basic_node&>(), std::declval<ValueType&>()))) {
+        typename T, typename ValueType = detail::remove_cv_t<T>,
+        detail::enable_if_t<std::is_default_constructible<ValueType>::value, int> = 0>
+    T get_value() const noexcept(
+        noexcept(std::declval<const basic_node>().template get_value_impl<ValueType>(std::declval<ValueType&>()))) {
+        // emit a compile error if T is either a reference, pointer or C-style array type.
+        static_assert(
+            !std::is_reference<T>::value,
+            "get_value() cannot be called with reference types. you might want to call get_value_ref().");
+        static_assert(!std::is_pointer<T>::value, "get_value() cannot be called with pointer types.");
+        static_assert(!std::is_array<T>::value, "get_value() cannot be called with C-style array types.");
+
         auto ret = ValueType();
         if (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            ConverterType<ValueType, void>::from_node(itr->second, ret);
+            itr->second.get_value_impl(ret);
         }
         else {
-            ConverterType<ValueType, void>::from_node(*this, ret);
+            get_value_impl(ret);
         }
         return ret;
     }
@@ -1485,6 +1488,18 @@ private:
         return m_attrs;
     }
 
+    template <
+        typename ValueType, detail::enable_if_t<detail::negation<detail::is_basic_node<ValueType>>::value, int> = 0>
+    void get_value_impl(ValueType& v) const
+        noexcept(noexcept(ConverterType<ValueType, void>::from_node(std::declval<const basic_node&>(), v))) {
+        ConverterType<ValueType, void>::from_node(*this, v);
+    }
+
+    template <typename ValueType, detail::enable_if_t<detail::is_basic_node<ValueType>::value, int> = 0>
+    void get_value_impl(ValueType& v) const {
+        v = *this;
+    }
+
     /// @brief Returns reference to the sequence node value.
     /// @throw fkyaml::exception The node value is not a sequence.
     /// @return Reference to the sequence node value.
@@ -1609,6 +1624,7 @@ private:
     detail::node_attr_t m_attrs {detail::node_attr_bits::default_bits};
     /// The shared set of YAML directives applied to this node.
     mutable std::shared_ptr<detail::document_metainfo<basic_node>> mp_meta {
+        // NOLINTNEXTLINE(bugprone-unhandled-exception-at-new)
         std::shared_ptr<detail::document_metainfo<basic_node>>(new detail::document_metainfo<basic_node>())};
     /// The current node value.
     node_value m_node_value {};
@@ -1667,14 +1683,17 @@ inline std::istream& operator>>(
     return is;
 }
 
-/// @brief default YAML node value container.
-/// @sa https://fktn-k.github.io/fkYAML/api/basic_node/node/
-using node = basic_node<>;
-
 /// @brief namespace for user-defined literals for the fkYAML library.
 inline namespace literals {
 /// @brief namespace for user-defined literals for YAML node objects.
 inline namespace yaml_literals {
+
+// Whitespace before the literal operator identifier is deprecated in C++23 or better but required in C++11.
+// Ignore the warning as a workaround. https://github.com/fktn-k/fkYAML/pull/417
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
+#endif
 
 /// @brief The user-defined string literal which deserializes a `char` array into a `node` object.
 /// @param s An input `char` array.
@@ -1682,7 +1701,7 @@ inline namespace yaml_literals {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char* s, std::size_t n) {
-    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 /// @brief The user-defined string literal which deserializes a `char16_t` array into a `node` object.
@@ -1691,7 +1710,7 @@ inline fkyaml::node operator"" _yaml(const char* s, std::size_t n) {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n) {
-    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 /// @brief The user-defined string literal which deserializes a `char32_t` array into a `node` object.
@@ -1700,7 +1719,7 @@ inline fkyaml::node operator"" _yaml(const char16_t* s, std::size_t n) {
 /// @return The resulting `node` object deserialized from `s`.
 /// @sa https://fktn-k.github.io/fkYAML/api/operator_literal_yaml/
 inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n) {
-    return fkyaml::node::deserialize(std::move(s), std::move(s + n));
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 #if FK_YAML_HAS_CHAR8_T
@@ -1711,11 +1730,85 @@ inline fkyaml::node operator"" _yaml(const char32_t* s, std::size_t n) {
 inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
     return fkyaml::node::deserialize((const char8_t*)s, (const char8_t*)s + n);
 }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
 #endif
 
 } // namespace yaml_literals
 } // namespace literals
 
 FK_YAML_NAMESPACE_END
+
+namespace std {
+
+template <
+    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
+    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
+    template <typename, typename = void> class ConverterType>
+// NOLINTNEXTLINE(cert-dcl58-cpp)
+struct hash<fkyaml::basic_node<
+    SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>> {
+    using node_t = fkyaml::basic_node<
+        SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>;
+
+    std::size_t operator()(const node_t& n) const {
+        using boolean_type = typename node_t::boolean_type;
+        using integer_type = typename node_t::integer_type;
+        using float_number_type = typename node_t::float_number_type;
+        using string_type = typename node_t::string_type;
+
+        const auto type = n.get_type();
+
+        std::size_t seed = 0;
+        hash_combine(seed, std::hash<uint8_t>()(static_cast<uint8_t>(type)));
+
+        switch (type) {
+        case fkyaml::node_type::SEQUENCE:
+            hash_combine(seed, n.size());
+            for (const auto& elem : n) {
+                hash_combine(seed, operator()(elem));
+            }
+            return seed;
+
+        case fkyaml::node_type::MAPPING:
+            hash_combine(seed, n.size());
+            for (auto itr = n.begin(), end_itr = n.end(); itr != end_itr; ++itr) {
+                hash_combine(seed, operator()(itr.key()));
+                hash_combine(seed, operator()(itr.value()));
+            }
+            return seed;
+
+        case fkyaml::node_type::NULL_OBJECT:
+            hash_combine(seed, 0);
+            return seed;
+        case fkyaml::node_type::BOOLEAN:
+            hash_combine(seed, std::hash<boolean_type>()(n.template get_value<boolean_type>()));
+            return seed;
+        case fkyaml::node_type::INTEGER:
+            hash_combine(seed, std::hash<integer_type>()(n.template get_value<integer_type>()));
+            return seed;
+        case fkyaml::node_type::FLOAT:
+            hash_combine(seed, std::hash<float_number_type>()(n.template get_value<float_number_type>()));
+            return seed;
+        case fkyaml::node_type::STRING:
+            hash_combine(seed, std::hash<string_type>()(n.template get_value<string_type>()));
+            return seed;
+        default:                           // LCOV_EXCL_LINE
+            fkyaml::detail::unreachable(); // LCOV_EXCL_LINE
+        }
+    }
+
+private:
+    // taken from boost::hash_combine
+    FK_YAML_NO_SANITIZE("unsigned-shift-base", "unsigned-integer-overflow")
+    static void hash_combine(std::size_t& seed, std::size_t v) {
+        seed ^= v + 0x9e3779b9 + (seed << 6u) + (seed >> 2u);
+    }
+};
+
+} // namespace std
 
 #endif /* FK_YAML_NODE_HPP */

@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,7 +12,7 @@
 #include <string>
 #include <map>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/yaml_version_type.hpp>
 
@@ -26,11 +26,11 @@ struct document_metainfo {
     /// Whether the YAML version has been specified.
     bool is_version_specified {false};
     /// The prefix of the primary handle.
-    std::string primary_handle_prefix {};
+    std::string primary_handle_prefix;
     /// The prefix of the secondary handle.
-    std::string secondary_handle_prefix {};
+    std::string secondary_handle_prefix;
     /// The map of handle-prefix pairs.
-    std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map {};
+    std::map<std::string /*handle*/, std::string /*prefix*/> named_handle_map;
     /// The map of anchor node which allows for key duplication.
     std::multimap<std::string /*anchor name*/, BasicNodeType> anchor_table {};
 };

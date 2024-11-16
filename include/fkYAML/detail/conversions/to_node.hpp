@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,7 +11,7 @@
 
 #include <utility>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
@@ -310,8 +310,8 @@ struct to_node_fn {
     /// @param val A target object assigned to the basic_node object.
     /// @return decltype(to_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
     template <typename BasicNodeType, typename T>
-    auto operator()(BasicNodeType& n, T&& val) const noexcept(noexcept(to_node(n, std::forward<T>(val))))
-        -> decltype(to_node(n, std::forward<T>(val))) {
+    auto operator()(BasicNodeType& n, T&& val) const
+        noexcept(noexcept(to_node(n, std::forward<T>(val)))) -> decltype(to_node(n, std::forward<T>(val))) {
         return to_node(n, std::forward<T>(val));
     }
 };

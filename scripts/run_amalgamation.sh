@@ -14,4 +14,5 @@ fi
 
 ROOT_DIR="$(dirname "$0")"/..
 AMALGAMATION_TOOL_DIR="$ROOT_DIR/tool/amalgamation"
-"$PYTHON_EXE" "$AMALGAMATION_TOOL_DIR"/amalgamate.py -c "$AMALGAMATION_TOOL_DIR"/fkYAML.json -s . --verbose=yes
+"$PYTHON_EXE" "$AMALGAMATION_TOOL_DIR"/amalgamate.py -c "$AMALGAMATION_TOOL_DIR"/node_hpp.json -s . --verbose=yes
+"$PYTHON_EXE" "$AMALGAMATION_TOOL_DIR"/amalgamate.py -c "$AMALGAMATION_TOOL_DIR"/fkyaml_fwd_hpp.json -s . --verbose=yes

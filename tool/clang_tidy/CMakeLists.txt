@@ -17,11 +17,13 @@ message(STATUS "Found clang-tidy. version: ${CLANG_TIDY_VERSION} path: ${CLANG_T
 ####################################
 
 set(HELPER_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_helper.cpp")
+# clear the contents written previously to the file.
 file(WRITE ${HELPER_FILE_PATH} "")
+
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/include/fkYAML/*.hpp)
 foreach(SRC_FILE ${SRC_FILES})
   file(RELATIVE_PATH REL_SRC_FILE "${PROJECT_SOURCE_DIR}/include" ${SRC_FILE})
-  file(APPEND ${HELPER_FILE_PATH} "#include <${REL_SRC_FILE}>\n")
+  file(APPEND ${HELPER_FILE_PATH} "#include <${REL_SRC_FILE}> // NOLINT(misc-include-cleaner)\n")
 endforeach()
 file(APPEND ${HELPER_FILE_PATH} "\nint main() { return 0; }\n")
 
@@ -29,7 +31,7 @@ file(APPEND ${HELPER_FILE_PATH} "\nint main() { return 0; }\n")
 #   set options for the clang-tidy tool   #
 ###########################################
 
-set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--header-filter=include/")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 ####################################

@@ -27,7 +27,7 @@ To make changes to the fkYAML project, you need to edit the following files:
 
 ### 1. [`include/fkYAML/**.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/include/fkYAML)
 
-These files are the sources of the fkYAML library and **DO NOT** directly change the single header version under the [`single_include`](https://github.com/fktn-k/fkYAML/tree/develop/single_include/) directory. Alghough amalgamation is automatically executed in the GitHub Actions workflows, you can run the script ([`run_amalgamation.bat`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.bat) for Windows, [`run_amalgamation.sh`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.sh) otherwise) to regenerate [`single_include/fkYAML/node.hpp`](https://github.com/fktn-k/fkYAML/tree/develop/single_include/fkYAML/node.hpp) locally, which will save you from waiting unnecessarily long for the workflow results.  
+These files are the sources of the fkYAML library and **DO NOT** directly change the files under the [`single_include`](https://github.com/fktn-k/fkYAML/tree/develop/single_include/) directory. Alghough amalgamation is automatically executed in the GitHub Actions workflows, you can run the script ([`run_amalgamation.bat`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.bat) for Windows, [`run_amalgamation.sh`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.sh) otherwise) to regenerate [`single_include/fkYAML/node.hpp`](https://github.com/fktn-k/fkYAML/blob/develop/single_include/fkYAML/node.hpp) and [`single_include/fkYAML/fkyaml_fwd.hpp`](https://github.com/fktn-k/fkYAML/blob/develop/single_include/fkYAML/fkyaml_fwd.hpp) locally, which will save us from waiting unnecessarily long for the workflow results.  
 
 **Windows (Command Prompt)**
 ```batch
@@ -41,7 +41,7 @@ cd path/to/fkYAML
 scripts/run_amalgamation.sh
 ```
 
-If you just want to check if amalgamation is needed locally, run the script ([`run_amalgamation.bat`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.bat) for Windows, [`run_amalgamation.sh`](https://github.com/fktn-k/fkYAML/scripts/run_amalgamation.sh) otherwise) with the following commands:  
+If you just want to check if amalgamation is needed locally, run the script ([`check_amalgamation.bat`](https://github.com/fktn-k/fkYAML/blob/develop/scripts/check_amalgamation.bat) for Windows, [`check_amalgamation.sh`](https://github.com/fktn-k/fkYAML/blob/develop/scripts/check_amalgamation.sh) otherwise) with the following commands:  
 
 **Windows (Command Prompt)**
 ```batch
@@ -105,10 +105,10 @@ The commands above will automatically install all the dependencies using [Python
 
 ### 4. Format source files
 
-[GitHub Actions](https://github.com/fktn-k/fkYAML/actions) will test the updated project with the [Clang-Format](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormat.html) tool (14.0.0) once you open a PR or push commits afterwards which include changes in the source files under either [`include`](https://github.com/fktn-k/fkYAML/tree/develop/include) or [`test`](https://github.com/fktn-k/fkYAML/tree/develop/test) directories.  
-Although code formatting is automatically executed in the GitHub Actions workflows, you can run the script files ([`run_clang_format.bat`](https://github.com/fktn-k/fkYAML/scripts/run_clang_format.bat) for Windows, [`run_clang_format.sh`](https://github.com/fktn-k/fkYAML/scripts/run_clang_format.sh) otherwise) to check if your changes follow the rules defined in the [`.clang-format`](https://github.com/fktn-k/fkYAML/tree/develop/.clang-format) file on your local environment in advance.  
+[GitHub Actions](https://github.com/fktn-k/fkYAML/actions) will test the updated project with the [Clang-Format](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.3) tool (18.1.3) once you open a PR or push commits afterwards which include changes in the source files under either [`include`](https://github.com/fktn-k/fkYAML/tree/develop/include) or [`test`](https://github.com/fktn-k/fkYAML/tree/develop/test) directories.  
+Although code formatting is automatically executed in the GitHub Actions workflows, you can run the script files ([`run_clang_format.bat`](https://github.com/fktn-k/fkYAML/blob/develop/scripts/run_clang_format.bat) for Windows, [`run_clang_format.sh`](https://github.com/fktn-k/fkYAML/blob/develop/scripts/run_clang_format.sh) otherwise) to check if your changes follow the rules defined in the [`.clang-format`](https://github.com/fktn-k/fkYAML/blob/develop/.clang-format) file on your local environment in advance.  
 Note that, since the Clang-Format tool does not gurantee backward compatibility especially in its edge cases and its behaviors might therefore vary from version to version, it's highly recommended that you use the above script files to avoid unnecessary confusion for that kind of reason.  
-The scripts uses [the Clang-Format Python distribution](https://pypi.org/project/clang-format/14.0.0/) and installs it using [the Python venv module](https://docs.python.org/3/library/venv.html) if it's not been installed yet.  
+The scripts uses [the Clang-Format Python distribution](https://pypi.org/project/clang-format/18.1.3/) and installs it using [the Python venv module](https://docs.python.org/3/library/venv.html) if it's not been installed yet.  
 You can run the scripts with the following commands:  
 
 **Windows (Command Prompt)**
@@ -128,7 +128,7 @@ scripts/run_clang_format.sh
 When you open a pull request, fkYAML will automatically be built/tested with (1) various combinations of compilers and operating systems and (2) analyzers such as [Valgrind](https://valgrind.org/) and [Clang Sanitizers](https://clang.llvm.org/docs/index.html) to detect runtime issues (e.g., memory leaks), on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
 These can result in failing builds and/or unit tests which run successfully on your local environment.  
 As a policy of this project, however, all the workflow checks must be passed before merging.  
-You can run tests with those tools with the following commands:  
+You can run tests with those tools locally by executing the following commands:  
 
 **Valgrind** (assuming Valgrind is already installed.)
 ```bash

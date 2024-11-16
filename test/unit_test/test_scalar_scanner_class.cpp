@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -69,10 +69,23 @@ TEST_CASE("ScalarScanner_FloatNumberValue") {
         fkyaml::detail::str_view("+.INF"),
         fkyaml::detail::str_view("-1.234"),
         fkyaml::detail::str_view("-21."),
+        fkyaml::detail::str_view("-.123"),
+        fkyaml::detail::str_view("+.123"),
+        fkyaml::detail::str_view(".123"),
         fkyaml::detail::str_view("567.8"),
         fkyaml::detail::str_view("123."),
         fkyaml::detail::str_view("0.24"),
         fkyaml::detail::str_view("0."),
+        fkyaml::detail::str_view("0e1"),
+        fkyaml::detail::str_view("0E+1"),
+        fkyaml::detail::str_view("0e-1"),
+        fkyaml::detail::str_view("1e-1"),
+        fkyaml::detail::str_view("2e+2"),
+        fkyaml::detail::str_view("3e3"),
+        fkyaml::detail::str_view("1.e3"),
+        fkyaml::detail::str_view(".1e-3"),
+        fkyaml::detail::str_view("-.1e-3"),
+        fkyaml::detail::str_view("+.1e-3"),
         fkyaml::detail::str_view("9.8e-3"),
         fkyaml::detail::str_view("3.95E3"),
         fkyaml::detail::str_view("1.863e+3"));
@@ -105,9 +118,16 @@ TEST_CASE("ScalarScanner_StringValue") {
         fkyaml::detail::str_view(".foo"),
         fkyaml::detail::str_view("abc"),
         fkyaml::detail::str_view("0th"),
+        fkyaml::detail::str_view("1st"),
+        fkyaml::detail::str_view("0e"),
+        fkyaml::detail::str_view("0e+"),
+        fkyaml::detail::str_view("0e-"),
+        fkyaml::detail::str_view("0E"),
         fkyaml::detail::str_view("0123"),
         fkyaml::detail::str_view("1.2.3"),
         fkyaml::detail::str_view("1.23e"),
+        fkyaml::detail::str_view("1.23eE"),
+        fkyaml::detail::str_view("1.23E-e"),
         fkyaml::detail::str_view("1.2e-z"),
         fkyaml::detail::str_view("1.non-digit"),
         fkyaml::detail::str_view("-.foo"),

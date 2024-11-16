@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,7 +12,7 @@
 #include <cctype>
 #include <string>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -32,7 +32,7 @@ public:
 
         for (; current != end; ++current) {
             if (*current == '%') {
-                bool are_valid_octets = validate_octets(++current, end);
+                const bool are_valid_octets = validate_octets(++current, end);
                 if (!are_valid_octets) {
                     return false;
                 }
@@ -40,7 +40,7 @@ public:
                 continue;
             }
 
-            bool is_allowed_character = validate_character(*current);
+            const bool is_allowed_character = validate_character(*current);
             if (!is_allowed_character) {
                 return false;
             }
@@ -61,7 +61,7 @@ private:
             }
 
             // Normalize a character for a-f/A-F comparison
-            int octet = std::tolower(*begin);
+            const int octet = std::tolower(*begin);
 
             if ('0' <= octet && octet <= '9') {
                 continue;
@@ -80,7 +80,7 @@ private:
     /// @brief Verify if the given character is allowed as a URI character.
     /// @param c The target character.
     /// @return true if the given character is allowed as a URI character, false otherwise.
-    static bool validate_character(char c) {
+    static bool validate_character(const char c) {
         // Check if the current character is one of reserved/unreserved characters which are allowed for
         // use. See the following links for details:
         // * reserved characters:   https://datatracker.ietf.org/doc/html/rfc3986#section-2.2

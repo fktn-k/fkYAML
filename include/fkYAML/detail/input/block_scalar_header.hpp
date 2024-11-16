@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,12 +11,12 @@
 
 #include <cstdint>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of chomping indicator types.
-enum class chomping_indicator_t {
+enum class chomping_indicator_t : std::uint8_t {
     STRIP, //!< excludes final line breaks and trailing empty lines indicated by `-`.
     CLIP,  //!< preserves final line breaks but excludes trailing empty lines. no indicator means this type.
     KEEP,  //!< preserves final line breaks and trailing empty lines indicated by `+`.

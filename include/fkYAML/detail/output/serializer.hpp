@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/conversions/to_string.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>
@@ -47,7 +47,7 @@ public:
     std::string serialize_docs(const std::vector<BasicNodeType>& docs) {
         std::string str {};
 
-        uint32_t size = static_cast<uint32_t>(docs.size());
+        const auto size = static_cast<uint32_t>(docs.size());
         for (uint32_t i = 0; i < size; i++) {
             serialize_document(docs[i], str);
             if (i + 1 < size) {
@@ -61,10 +61,10 @@ public:
 
 private:
     void serialize_document(const BasicNodeType& node, std::string& str) {
-        bool dirs_serialized = serialize_directives(node, str);
+        const bool dirs_serialized = serialize_directives(node, str);
 
         // the root node cannot be an alias node.
-        bool root_has_props = node.is_anchor() || node.has_tag_name();
+        const bool root_has_props = node.is_anchor() || node.has_tag_name();
 
         if (root_has_props) {
             if (dirs_serialized) {
@@ -141,7 +141,7 @@ private:
                 insert_indentation(cur_indent, str);
                 str += "-";
 
-                bool is_appended = try_append_alias(seq_item, true, str);
+                const bool is_appended = try_append_alias(seq_item, true, str);
                 if (is_appended) {
                     str += "\n";
                     continue;
@@ -150,7 +150,7 @@ private:
                 try_append_anchor(seq_item, true, str);
                 try_append_tag(seq_item, true, str);
 
-                bool is_scalar = seq_item.is_scalar();
+                const bool is_scalar = seq_item.is_scalar();
                 if (is_scalar) {
                     str += " ";
                     serialize_node(seq_item, cur_indent, str);
@@ -172,17 +172,17 @@ private:
                     str += " ";
                 }
                 else {
-                    bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
-                    bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
+                    const bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
+                    const bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
                     if (is_anchor_appended || is_tag_appended) {
                         str += " ";
                     }
 
-                    bool is_container = !itr.key().is_scalar();
+                    const bool is_container = !itr.key().is_scalar();
                     if (is_container) {
                         str += "? ";
                     }
-                    uint32_t indent = static_cast<uint32_t>(get_cur_indent(str));
+                    const auto indent = static_cast<uint32_t>(get_cur_indent(str));
                     serialize_node(itr.key(), indent, str);
                     if (is_container) {
                         // a newline code is already inserted in the above serialize_node() call.
@@ -201,7 +201,7 @@ private:
                 try_append_anchor(*itr, true, str);
                 try_append_tag(*itr, true, str);
 
-                bool is_scalar = itr->is_scalar();
+                const bool is_scalar = itr->is_scalar();
                 if (is_scalar) {
                     str += " ";
                     serialize_node(*itr, cur_indent, str);
@@ -231,7 +231,7 @@ private:
             break;
         case node_type::STRING: {
             bool is_escaped = false;
-            typename BasicNodeType::string_type str_val = get_string_node_value(node, is_escaped);
+            auto str_val = get_string_node_value(node, is_escaped);
 
             if (is_escaped) {
                 // There's no other token type with escapes than strings.
@@ -245,7 +245,7 @@ private:
             // The next line is intentionally excluded from the LCOV coverage target since the next line is somehow
             // misrecognized as it has a binary branch. Possibly begin() or end() has some conditional branch(es)
             // internally. Confirmed with LCOV 1.14 on Ubuntu22.04.
-            node_type type_if_plain =
+            const node_type type_if_plain =
                 scalar_scanner::scan(str_val.c_str(), str_val.c_str() + str_val.size()); // LCOV_EXCL_LINE
 
             if (type_if_plain != node_type::STRING) {
@@ -267,12 +267,12 @@ private:
     /// @param s The target string object.
     /// @return The current indentation width.
     std::size_t get_cur_indent(const std::string& s) const noexcept {
-        bool is_empty = s.empty();
+        const bool is_empty = s.empty();
         if (is_empty) {
             return 0;
         }
 
-        std::size_t last_lf_pos = s.rfind('\n');
+        const std::size_t last_lf_pos = s.rfind('\n');
         return (last_lf_pos != std::string::npos) ? s.size() - last_lf_pos - 1 : s.size();
     }
 
@@ -341,8 +341,7 @@ private:
     typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
         FK_YAML_ASSERT(node.is_string());
 
-        using string_type = typename BasicNodeType::string_type;
-        const string_type& s = node.template get_value_ref<const string_type&>();
+        const auto& s = node.template get_value_ref<const typename BasicNodeType::string_type&>();
         return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
     } // LCOV_EXCL_LINE
 

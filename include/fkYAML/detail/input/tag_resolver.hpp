@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,24 +11,19 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/tag_t.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
+#include <fkYAML/detail/str_view.hpp>
 #include <fkYAML/exception.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-namespace /*default prefixes*/
-{
-
-const std::string default_primary_handle_prefix = "!";
-const std::string default_secondary_handle_prefix = "tag:yaml.org,2002:";
-
-} // namespace
+static constexpr str_view default_primary_handle_prefix = "!";
+static constexpr str_view default_secondary_handle_prefix = "tag:yaml.org,2002:";
 
 template <typename BasicNodeType>
 class tag_resolver {
@@ -40,7 +35,7 @@ public:
     /// @param tag The input tag name.
     /// @return The type of a node deduced from the given tag name.
     static tag_t resolve_tag(const std::string& tag, const std::shared_ptr<doc_metainfo_type>& directives) {
-        std::string normalized = normalize_tag_name(tag, directives);
+        const std::string normalized = normalize_tag_name(tag, directives);
         return convert_to_tag_type(normalized);
     }
 
@@ -68,9 +63,10 @@ private:
         switch (tag[1]) {
         case '!': {
             // handle a secondary tag handle (!!suffix -> !<[secondary][suffix]>)
-            bool is_null_or_empty = !directives || directives->secondary_handle_prefix.empty();
+            const bool is_null_or_empty = !directives || directives->secondary_handle_prefix.empty();
             if (is_null_or_empty) {
-                normalized += default_secondary_handle_prefix + tag.substr(2);
+                normalized.append(default_secondary_handle_prefix.begin(), default_secondary_handle_prefix.end());
+                normalized += tag.substr(2);
             }
             else {
                 normalized += directives->secondary_handle_prefix + tag.substr(2);
@@ -79,9 +75,10 @@ private:
         }
         case '<':
             if (tag[2] == '!') {
-                bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
+                const bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
                 if (is_null_or_empty) {
-                    return normalized + default_primary_handle_prefix + tag.substr(3);
+                    normalized.append(default_primary_handle_prefix.begin(), default_primary_handle_prefix.end());
+                    return normalized + tag.substr(3);
                 }
                 return normalized + directives->primary_handle_prefix + tag.substr(3);
             }
@@ -97,7 +94,7 @@ private:
                 // there must be a non-empty suffix. (already checked by the lexer.)
                 FK_YAML_ASSERT(tag_end_pos < tag.size() - 1);
 
-                bool is_null_or_empty = !directives || directives->named_handle_map.empty();
+                const bool is_null_or_empty = !directives || directives->named_handle_map.empty();
                 if FK_YAML_UNLIKELY (is_null_or_empty) {
                     throw invalid_tag("named handle has not been registered.", tag.c_str());
                 }
@@ -114,14 +111,15 @@ private:
                 // See https://yaml.org/spec/1.2.2/#56-miscellaneous-characters for more details.
 
                 normalized += named_handle_itr->second;
-                normalized.append(tag.begin() + (tag_end_pos + 1), tag.end());
+                normalized.append(tag.begin() + (static_cast<std::ptrdiff_t>(tag_end_pos) + 1), tag.end());
                 break;
             }
 
             // handle a primary tag handle (!suffix -> !<[primary][suffix]>)
-            bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
+            const bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
             if (is_null_or_empty) {
-                normalized += default_primary_handle_prefix + tag.substr(1);
+                normalized.append(default_primary_handle_prefix.begin(), default_primary_handle_prefix.end());
+                normalized += tag.substr(1);
             }
             else {
                 normalized += directives->primary_handle_prefix + tag.substr(1);

@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,7 +12,11 @@
 #include <cstddef>
 #include <type_traits>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
+
+#ifdef FK_YAML_HAS_CXX_14
+#include <utility>
+#endif
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -70,16 +74,84 @@ using remove_pointer_t = typename std::remove_pointer<T>::type;
 template <typename T>
 using remove_reference_t = typename std::remove_reference<T>::type;
 
+template <typename T, T... I>
+struct integer_sequence {
+    using value_type = T;
+    static constexpr std::size_t size() noexcept {
+        return sizeof...(I);
+    }
+};
+
+#if !FK_YAML_HAS_BUILTIN(__make_integer_seq) && !FK_YAML_HAS_BUILTIN(__integer_pack)
+
+namespace make_int_seq_impl {
+
+template <typename IntSeq0, typename IntSeq1>
+struct merger;
+
+template <typename T, T... Ints0, T... Ints1>
+struct merger<integer_sequence<T, Ints0...>, integer_sequence<T, Ints1...>> {
+    using type = integer_sequence<T, Ints0..., (sizeof...(Ints0) + Ints1)...>;
+};
+
+template <typename T, std::size_t Num>
+struct generator {
+    using type =
+        typename merger<typename generator<T, Num / 2>::type, typename generator<T, Num - Num / 2>::type>::type;
+};
+
+template <typename T>
+struct generator<T, 0> {
+    using type = integer_sequence<T>;
+};
+
+template <typename T>
+struct generator<T, 1> {
+    using type = integer_sequence<T, 0>;
+};
+
+} // namespace make_int_seq_impl
+
+#endif
+
+template <typename T, T Num>
+using make_integer_sequence
+#if FK_YAML_HAS_BUILTIN(__make_integer_seq)
+    // clang defines built-in __make_integer_seq to generate an integer sequence.
+    = __make_integer_seq<integer_sequence, T, Num>;
+#elif FK_YAML_HAS_BUILTIN(__integer_pack)
+    // GCC or other compilers may implement built-in __integer_pack to generate an
+    // integer sequence.
+    = integer_sequence<T, __integer_pack(Num)...>;
 #else
+    // fallback to the library implementation of make_integer_sequence.
+    = typename make_int_seq_impl::generator<T, Num>::type;
+#endif
+
+template <std::size_t... Idx>
+using index_sequence = integer_sequence<std::size_t, Idx...>;
+
+template <std::size_t Num>
+using make_index_sequence = make_integer_sequence<std::size_t, Num>;
+
+template <typename... Types>
+using index_sequence_for = make_index_sequence<sizeof...(Types)>;
+
+#else // !defined(FK_YAML_HAS_CXX_14)
 
 using std::add_pointer_t;
 using std::enable_if_t;
+using std::index_sequence;
+using std::index_sequence_for;
+using std::integer_sequence;
 using std::is_null_pointer;
+using std::make_index_sequence;
+using std::make_integer_sequence;
 using std::remove_cv_t;
 using std::remove_pointer_t;
 using std::remove_reference_t;
 
-#endif
+#endif // !defined(FK_YAML_HAS_CXX_14)
 
 #ifndef FK_YAML_HAS_CXX_17
 
@@ -149,7 +221,7 @@ struct make_void {
 template <typename... Types>
 using void_t = typename make_void<Types...>::type;
 
-#else
+#else // !defined(FK_YAML_HAS_CXX_17)
 
 using std::bool_constant;
 using std::conjunction;
@@ -157,7 +229,7 @@ using std::disjunction;
 using std::negation;
 using std::void_t;
 
-#endif
+#endif // !defined(FK_YAML_HAS_CXX_17)
 
 #ifndef FK_YAML_HAS_CXX_20
 
@@ -173,6 +245,24 @@ using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>
 using std::remove_cvref_t;
 
 #endif
+
+/// @brief A wrapper function to call std::unreachable() (since C++23) or similar compiler specific extensions.
+/// @note This function is implemented only for better code optimization against dead code and thus excluded from
+/// coverage report.
+// LCOV_EXCL_START
+[[noreturn]] inline void unreachable() {
+    // use compiler specific extensions if possible.
+    // undefined behavior should be raised by an empty function with noreturn attribute.
+
+#if defined(FK_YAML_HAS_CXX_23) || (defined(__cpp_lib_unreachable) && __cpp_lib_unreachable >= 202202L)
+    std::unreachable();
+#elif defined(_MSC_VER) && !defined(__clang__) // MSVC
+    __assume(false);
+#else
+    __builtin_unreachable();
+#endif
+}
+// LCOV_EXCL_STOP
 
 FK_YAML_DETAIL_NAMESPACE_END
 

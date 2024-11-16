@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -21,11 +21,16 @@
 #define FK_YAML_CPLUSPLUS __cplusplus
 #endif
 
-// C++ language standard detection (__cplusplus is not yet defined for C++23)
+// C++ language standard detection
 // Skip detection if the definitions listed below already exist.
-#if !defined(FK_YAML_HAS_CXX_20) && !defined(FK_YAML_HAS_CXX_17) && !defined(FK_YAML_HAS_CXX_14) &&                    \
-    !defined(FK_YAML_CXX_11)
-#if FK_YAML_CPLUSPLUS >= 202002L
+#if !defined(FK_YAML_HAS_CXX_23) && !defined(FK_YAML_HAS_CXX_20) && !defined(FK_YAML_HAS_CXX_17) &&                    \
+    !defined(FK_YAML_HAS_CXX_14) && !defined(FK_YAML_CXX_11)
+#if FK_YAML_CPLUSPLUS >= 202302L
+#define FK_YAML_HAS_CXX_23
+#define FK_YAML_HAS_CXX_20
+#define FK_YAML_HAS_CXX_17
+#define FK_YAML_HAS_CXX_14
+#elif FK_YAML_CPLUSPLUS >= 202002L
 #define FK_YAML_HAS_CXX_20
 #define FK_YAML_HAS_CXX_17
 #define FK_YAML_HAS_CXX_14
@@ -88,6 +93,19 @@
 #define FK_YAML_HAS_CPP_ATTRIBUTE(attr) (0)
 #endif
 
+#ifdef __has_feature
+#define FK_YAML_HAS_FEATURE(feat) __has_feature(feat)
+#else
+#define FK_YAML_HAS_FEATURE(feat) (0)
+#endif
+
+// switch usage of the no_sanitize attribute only when Clang sanitizer is active.
+#if defined(__clang__) && FK_YAML_HAS_FEATURE(address_sanitizer)
+#define FK_YAML_NO_SANITIZE(...) __attribute__((no_sanitize(__VA_ARGS__)))
+#else
+#define FK_YAML_NO_SANITIZE(...)
+#endif
+
 #if FK_YAML_HAS_INCLUDE(<version>)
 // <version> is available since C++20
 #include <version>
@@ -112,7 +130,7 @@
 #endif
 
 //
-// C++ attribute detections
+// utility macros
 //
 
 // switch usage of [[likely]] C++ attribute which has been available since C++20.

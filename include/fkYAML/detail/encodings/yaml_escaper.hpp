@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/exception.hpp>
@@ -34,7 +34,7 @@ public:
             buff.push_back('\b');
             break;
         case 't':
-        case char(0x09):
+        case '\t':
             buff.push_back('\t');
             break;
         case 'n':
@@ -50,7 +50,7 @@ public:
             buff.push_back('\r');
             break;
         case 'e':
-            buff.push_back(char(0x1B));
+            buff.push_back(static_cast<char>(0x1B));
             break;
         case ' ':
             buff.push_back(' ');
@@ -247,15 +247,15 @@ public:
                 is_escaped = true;
                 break;
             default:
-                int diff = static_cast<int>(std::distance(begin, end));
+                const std::ptrdiff_t diff = static_cast<int>(std::distance(begin, end));
                 if (diff > 1) {
-                    if (*begin == char(0xC2u) && *(begin + 1) == char(0x85u)) {
+                    if (*begin == static_cast<char>(0xC2u) && *(begin + 1) == static_cast<char>(0x85u)) {
                         escaped += "\\N";
                         std::advance(begin, 1);
                         is_escaped = true;
                         break;
                     }
-                    else if (*begin == char(0xC2u) && *(begin + 1) == char(0xA0u)) {
+                    if (*begin == static_cast<char>(0xC2u) && *(begin + 1) == static_cast<char>(0xA0u)) {
                         escaped += "\\_";
                         std::advance(begin, 1);
                         is_escaped = true;
@@ -263,13 +263,15 @@ public:
                     }
 
                     if (diff > 2) {
-                        if (*begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA8u)) {
+                        if (*begin == static_cast<char>(0xE2u) && *(begin + 1) == static_cast<char>(0x80u) &&
+                            *(begin + 2) == static_cast<char>(0xA8u)) {
                             escaped += "\\L";
                             std::advance(begin, 2);
                             is_escaped = true;
                             break;
                         }
-                        if (*begin == char(0xE2u) && *(begin + 1) == char(0x80u) && *(begin + 2) == char(0xA9u)) {
+                        if (*begin == static_cast<char>(0xE2u) && *(begin + 1) == static_cast<char>(0x80u) &&
+                            *(begin + 2) == static_cast<char>(0xA9u)) {
                             escaped += "\\P";
                             std::advance(begin, 2);
                             is_escaped = true;
@@ -288,7 +290,7 @@ private:
     static bool convert_hexchar_to_byte(char source, uint8_t& byte) {
         if ('0' <= source && source <= '9') {
             // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-            byte = static_cast<uint8_t>(source - char('0'));
+            byte = static_cast<uint8_t>(source - '0');
             return true;
         }
 
@@ -309,17 +311,17 @@ private:
     }
 
     static bool extract_codepoint(const char*& begin, const char* end, int bytes_to_read, char32_t& codepoint) {
-        bool has_enough_room = static_cast<int>(std::distance(begin, end)) >= (bytes_to_read - 1);
+        const bool has_enough_room = static_cast<int>(std::distance(begin, end)) >= (bytes_to_read - 1);
         if (!has_enough_room) {
             return false;
         }
 
-        int read_size = bytes_to_read * 2;
+        const int read_size = bytes_to_read * 2;
         uint8_t byte {0};
         codepoint = 0;
 
         for (int i = read_size - 1; i >= 0; i--) {
-            bool is_valid = convert_hexchar_to_byte(*++begin, byte);
+            const bool is_valid = convert_hexchar_to_byte(*++begin, byte);
             if (!is_valid) {
                 return false;
             }

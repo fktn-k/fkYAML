@@ -109,7 +109,33 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        xcode: [ '14.3.1', '15.0.1', '15.1', '15.2', '15.3' ]
+        xcode: [ '14.3.1', '15.0.1', '15.1', '15.2', '15.3', '15.4', '16' ]
+        build_type: [ Debug, Release ]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer
+      JOBS: 2
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -j ${{env.JOBS}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{matrix.build_type}} --output-on-failure -j ${{env.JOBS}}
+
+  xcode_for_macos15:
+    timeout-minutes: 10
+    runs-on: macos-15
+    strategy:
+      matrix:
+        xcode: [ '16' ]
         build_type: [ Debug, Release ]
     env:
       DEVELOPER_DIR: /Applications/Xcode_${{matrix.xcode}}.app/Contents/Developer

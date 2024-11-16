@@ -12,8 +12,8 @@ Although you can just copy, paste and include the header files in your C++ proje
 The followings are possible ways of preparing for the use of fkYAML:  
 
 ### :file_folder: Download a release package
-You can [download the latest package (fkYAML.tgz for UNIX or fkYAML.zip for Windows) from here](https://github.com/fktn-k/fkYAML/releases/latest).  
-The single-header version of the fkYAML package can also be downloaded since v0.3.1 with the name of fkYAML_single_header.{tgz|zip}.  
+You can [download the latest package (fkYAML.tgz or fkYAML.zip) from here](https://github.com/fktn-k/fkYAML/releases/latest).  
+The single-header versions can also be downloaded since v0.3.1 with the name of fkYAML_single_header.{tgz|zip}.  
 After the download gets completed, unzip and put the package in some directory on your machine.  
 The destination path can be whatever you want, and you're all set!
 
@@ -58,7 +58,7 @@ Note that you must execute the CMake `add_subdirectory()` command for the submod
 Let's start with a really simple example.  
 Say you have an example.yaml file and now you want to load the contents.  
 Note that the following example files assumes that you have installed the fkYAML library somewhere on your machine.  
-See [the CMake Integration section]() for the other ways and modify the implementation if necessary.  
+See [the CMake Integration section](./cmake_integration.md) for the other ways and modify the implementation if necessary.  
 Also, make sure the example.yaml file is encoded in either the UTF-8, UTF-16BE/LE or UTF-32BE/LE format.  
 
 ```title="Project Structure"

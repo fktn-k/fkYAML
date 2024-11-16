@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project(
   fkYAML
-  VERSION 0.3.13
+  VERSION 0.3.14
   LANGUAGES CXX)
 
 #############################################################

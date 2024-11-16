@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -12,31 +12,11 @@
 #include <cstring>
 #include <string>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/node_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-namespace {
-
-/// @brief Check if the given character is a digit.
-/// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a digit, false otherwise.
-inline bool is_digit(char c) {
-    return ('0' <= c && c <= '9');
-}
-
-/// @brief Check if the given character is a hex-digit.
-/// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with MSVC.
-/// @param c A character to be checked.
-/// @return true if the given character is a hex-digit, false otherwise.
-inline bool is_xdigit(char c) {
-    return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
-}
-
-} // namespace
 
 /// @brief The class which detects a scalar value type by scanning contents.
 class scalar_scanner {
@@ -50,7 +30,7 @@ public:
             return node_type::STRING;
         }
 
-        uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+        const auto len = static_cast<uint32_t>(std::distance(begin, end));
         if (len > 5) {
             return scan_possible_number_token(begin, len);
         }
@@ -83,7 +63,7 @@ public:
                            : node_type::STRING;
             case '.': {
                 const char* p_from_second = p_begin + 1;
-                bool is_inf_or_nan_scalar =
+                const bool is_inf_or_nan_scalar =
                     (std::strncmp(p_from_second, "inf", 3) == 0) || (std::strncmp(p_from_second, "Inf", 3) == 0) ||
                     (std::strncmp(p_from_second, "INF", 3) == 0) || (std::strncmp(p_from_second, "nan", 3) == 0) ||
                     (std::strncmp(p_from_second, "NaN", 3) == 0) || (std::strncmp(p_from_second, "NAN", 3) == 0);
@@ -93,6 +73,8 @@ public:
                 // maybe a number.
                 break;
             }
+            default:
+                break;
             }
             break;
         case 5:
@@ -109,16 +91,20 @@ public:
             case '-':
                 if (*(p_begin + 1) == '.') {
                     const char* p_from_third = p_begin + 2;
-                    bool is_min_inf_scalar = (std::strncmp(p_from_third, "inf", 3) == 0) ||
-                                             (std::strncmp(p_from_third, "Inf", 3) == 0) ||
-                                             (std::strncmp(p_from_third, "INF", 3) == 0);
-                    if (is_min_inf_scalar) {
+                    const bool is_min_inf = (std::strncmp(p_from_third, "inf", 3) == 0) ||
+                                            (std::strncmp(p_from_third, "Inf", 3) == 0) ||
+                                            (std::strncmp(p_from_third, "INF", 3) == 0);
+                    if (is_min_inf) {
                         return node_type::FLOAT;
                     }
                 }
                 // maybe a number.
                 break;
+            default:
+                break;
             }
+            break;
+        default:
             break;
         }
 
@@ -137,7 +123,10 @@ private:
         case '-':
             return (len > 1) ? scan_negative_number(++itr, --len) : node_type::STRING;
         case '+':
-            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::STRING;
+            return (len > 1) ? scan_decimal_number(++itr, --len) : node_type::STRING;
+        case '.':
+            // some integer(s) required after the decimal point as a floating point value.
+            return (len > 1) ? scan_after_decimal_point(++itr, --len) : node_type::STRING;
         case '0':
             return (len > 1) ? scan_after_zero_at_first(++itr, --len) : node_type::INTEGER;
         case '1':
@@ -149,7 +138,7 @@ private:
         case '7':
         case '8':
         case '9':
-            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::INTEGER;
+            return (len > 1) ? scan_decimal_number(++itr, --len) : node_type::INTEGER;
         default:
             return node_type::STRING;
         }
@@ -163,7 +152,12 @@ private:
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
-            return (len > 1) ? scan_decimal_number(++itr, --len, false) : node_type::INTEGER;
+            return (len > 1) ? scan_decimal_number(++itr, --len) : node_type::INTEGER;
+        }
+
+        if (*itr == '.') {
+            // some integer(s) required after "-." as a floating point value.
+            return (len > 1) ? scan_after_decimal_point(++itr, --len) : node_type::STRING;
         }
 
         return node_type::STRING;
@@ -183,14 +177,13 @@ private:
         }
 
         switch (*itr) {
-        case '.': {
-            if (len == 1) {
-                // 0 is omitted after `0.`.
-                return node_type::FLOAT;
-            }
-            node_type ret = scan_after_decimal_point(++itr, --len, true);
-            return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
-        }
+        case '.':
+            // 0 can be omitted after `0.`.
+            return (len > 1) ? scan_after_decimal_point(++itr, --len) : node_type::FLOAT;
+        case 'e':
+        case 'E':
+            // some integer(s) required after the exponent sign as a floating point value.
+            return (len > 1) ? scan_after_exponent(++itr, --len) : node_type::STRING;
         case 'o':
             return (len > 1) ? scan_octal_number(++itr, --len) : node_type::STRING;
         case 'x':
@@ -203,31 +196,23 @@ private:
     /// @brief Detects a scalar value type by scanning the contents part starting with a decimal.
     /// @param itr The iterator to the beginning decimal element of the scalar.
     /// @param len The length of the scalar left unscanned.
-    /// @param has_decimal_point Whether a decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_decimal_number(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
+    static node_type scan_decimal_number(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
         if (is_digit(*itr)) {
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::INTEGER;
+            return (len > 1) ? scan_decimal_number(++itr, --len) : node_type::INTEGER;
         }
 
         switch (*itr) {
         case '.': {
-            if (has_decimal_point) {
-                // the token has more than one period, e.g., a semantic version `1.2.3`.
-                return node_type::STRING;
-            }
-            if (len == 1) {
-                // 0 is omitted after the decimal point
-                return node_type::FLOAT;
-            }
-            node_type ret = scan_after_decimal_point(++itr, --len, true);
-            return (ret == node_type::STRING) ? node_type::STRING : node_type::FLOAT;
+            // 0 can be omitted after the decimal point
+            return (len > 1) ? scan_after_decimal_point(++itr, --len) : node_type::FLOAT;
         }
         case 'e':
         case 'E':
-            return (len > 1) ? scan_after_exponent(++itr, --len, has_decimal_point) : node_type::STRING;
+            // some integer(s) required after the exponent
+            return (len > 1) ? scan_after_exponent(++itr, --len) : node_type::STRING;
         default:
             return node_type::STRING;
         }
@@ -236,37 +221,55 @@ private:
     /// @brief Detects a scalar value type by scanning the contents right after a decimal point.
     /// @param itr The iterator to the past-the-decimal-point element of the scalar.
     /// @param len The length of the scalar left unscanned.
-    /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_after_decimal_point(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
+    static node_type scan_after_decimal_point(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
-        if (is_digit(*itr)) {
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
+        for (uint32_t i = 0; i < len; i++) {
+            const char c = *itr++;
+
+            if (is_digit(c)) {
+                continue;
+            }
+
+            if (c == 'e' || c == 'E') {
+                if (i == len - 1) {
+                    // some integer(s) required after the exponent
+                    return node_type::STRING;
+                }
+                return scan_after_exponent(itr, len - i - 1);
+            }
+
+            return node_type::STRING;
         }
 
-        return node_type::STRING;
+        return node_type::FLOAT;
     }
 
     /// @brief Detects a scalar value type by scanning the contents right after the exponent prefix ("e" or "E").
     /// @param itr The iterator to the past-the-exponent-prefix element of the scalar.
     /// @param len The length of the scalar left unscanned.
-    /// @param has_decimal_point Whether the decimal point has already been found in the previous part.
     /// @return A detected scalar value type.
-    static node_type scan_after_exponent(const char* itr, uint32_t len, bool has_decimal_point) noexcept {
+    static node_type scan_after_exponent(const char* itr, uint32_t len) noexcept {
         FK_YAML_ASSERT(len > 0);
 
-        if (is_digit(*itr)) {
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::FLOAT;
+        const char c = *itr;
+        if (c == '+' || c == '-') {
+            if (len == 1) {
+                // some integer(s) required after the sign.
+                return node_type::STRING;
+            }
+            ++itr;
+            --len;
         }
 
-        switch (*itr) {
-        case '+':
-        case '-':
-            return (len > 1) ? scan_decimal_number(++itr, --len, has_decimal_point) : node_type::STRING;
-        default:
-            return node_type::STRING;
+        for (uint32_t i = 0; i < len; i++) {
+            if (!is_digit(*itr++)) {
+                return node_type::STRING;
+            }
         }
+
+        return node_type::FLOAT;
     }
 
     /// @brief Detects a scalar value type by scanning the contents assuming octal numbers.
@@ -302,6 +305,24 @@ private:
             return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::INTEGER;
         }
         return node_type::STRING;
+    }
+
+    /// @brief Check if the given character is a digit.
+    /// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with
+    /// MSVC.
+    /// @param c A character to be checked.
+    /// @return true if the given character is a digit, false otherwise.
+    static bool is_digit(char c) {
+        return ('0' <= c && c <= '9');
+    }
+
+    /// @brief Check if the given character is a hex-digit.
+    /// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with
+    /// MSVC.
+    /// @param c A character to be checked.
+    /// @return true if the given character is a hex-digit, false otherwise.
+    static bool is_xdigit(char c) {
+        return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
     }
 };
 

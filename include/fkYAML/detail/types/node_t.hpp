@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10,15 +10,14 @@
 #define FK_YAML_DETAIL_TYPES_NODE_T_HPP
 
 #include <cstdint>
-#include <string>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/node_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Definition of node value types.
-enum class node_t : std::uint32_t {
+enum class node_t : std::uint8_t {
     SEQUENCE,     //!< sequence value type
     MAPPING,      //!< mapping value type
     NULL_OBJECT,  //!< null value type
@@ -44,8 +43,8 @@ inline const char* to_string(node_t t) noexcept {
         return "float";
     case node_t::STRING:
         return "string";
-    default:       // LCOV_EXCL_LINE
-        return ""; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -65,8 +64,8 @@ inline node_t convert_from_node_type(node_type t) {
         return node_t::FLOAT_NUMBER;
     case node_type::STRING:
         return node_t::STRING;
-    default:                        // LCOV_EXCL_LINE
-        return node_t::NULL_OBJECT; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -86,8 +85,8 @@ inline node_type convert_to_node_type(node_t t) {
         return node_type::FLOAT;
     case node_t::STRING:
         return node_type::STRING;
-    default:                           // LCOV_EXCL_LINE
-        return node_type::NULL_OBJECT; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 

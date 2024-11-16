@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -135,7 +135,14 @@ TEST_CASE("ScalarParser_FlowPlainScalar_float") {
             test_data_t("4.5E3", 4.5e3f),
             test_data_t("+4.5E3", 4.5e3f),
             test_data_t("-4.5E3", -4.5e3f),
-            test_data_t("-4.5E-3", -4.5e-3f));
+            test_data_t("-4.5E-3", -4.5e-3f),
+            test_data_t("1e-1", 1e-1f),
+            test_data_t("2E+2", 2e+2f),
+            test_data_t("3e3", 3e3f),
+            test_data_t("1.e3", 1.e3f),
+            test_data_t(".1e-3", .1e-3f),
+            test_data_t("-.1e-3", -.1e-3f),
+            test_data_t("+.1e-3", .1e-3f));
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, test_data.first));
         REQUIRE(node.is_float_number());

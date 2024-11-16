@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -15,10 +15,11 @@
 #define FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
 
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <limits>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 
 #if FK_YAML_HAS_TO_CHARS
@@ -351,7 +352,7 @@ inline bool aton(CharItr begin, CharItr end, std::nullptr_t& /*unused*/) noexcep
         return false;
     }
 
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const auto len = static_cast<uint32_t>(std::distance(begin, end));
 
     // This path is the most probable case, so check it first.
     if FK_YAML_LIKELY (len == 4) {
@@ -386,27 +387,27 @@ inline bool atob(CharItr begin, CharItr end, BoolType& boolean) noexcept {
         return false;
     }
 
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const auto len = static_cast<uint32_t>(std::distance(begin, end));
     const char* p_begin = &*begin;
 
     if (len == 4) {
-        bool is_true_scalar = (std::strncmp(p_begin, "true", 4) == 0) || (std::strncmp(p_begin, "True", 4) == 0) ||
-                              (std::strncmp(p_begin, "TRUE", 4) == 0);
+        const bool is_true = (std::strncmp(p_begin, "true", 4) == 0) || (std::strncmp(p_begin, "True", 4) == 0) ||
+                             (std::strncmp(p_begin, "TRUE", 4) == 0);
 
-        if FK_YAML_LIKELY (is_true_scalar) {
+        if FK_YAML_LIKELY (is_true) {
             boolean = static_cast<BoolType>(true);
         }
-        return is_true_scalar;
+        return is_true;
     }
 
     if (len == 5) {
-        bool is_false_scalar = (std::strncmp(p_begin, "false", 5) == 0) || (std::strncmp(p_begin, "False", 5) == 0) ||
-                               (std::strncmp(p_begin, "FALSE", 5) == 0);
+        const bool is_false = (std::strncmp(p_begin, "false", 5) == 0) || (std::strncmp(p_begin, "False", 5) == 0) ||
+                              (std::strncmp(p_begin, "FALSE", 5) == 0);
 
-        if FK_YAML_LIKELY (is_false_scalar) {
+        if FK_YAML_LIKELY (is_false) {
             boolean = static_cast<BoolType>(false);
         }
-        return is_false_scalar;
+        return is_false;
     }
 
     return false;
@@ -438,12 +439,12 @@ inline bool atoi_dec_unchecked(const char* p_begin, const char* p_end, IntType& 
 
     i = 0;
     do {
-        char c = *p_begin;
+        const char c = *p_begin;
         if FK_YAML_UNLIKELY (c < '0' || '9' < c) {
             return false;
         }
         // Overflow is intentional when the IntType is signed.
-        i = i * IntType(10) + IntType(c - '0');
+        i = i * static_cast<IntType>(10) + static_cast<IntType>(c - '0');
     } while (++p_begin != p_end);
 
     return true;
@@ -467,7 +468,7 @@ inline bool atoi_dec_pos(const char* p_begin, const char* p_end, IntType& i) noe
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    const auto len = static_cast<std::size_t>(p_end - p_begin);
     if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
         // Overflow will happen.
         return false;
@@ -510,7 +511,7 @@ inline bool atoi_dec_neg(const char* p_begin, const char* p_end, IntType& i) noe
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    const auto len = static_cast<std::size_t>(p_end - p_begin);
     if FK_YAML_UNLIKELY (len > conv_limits_type::max_chars_dec) {
         // Underflow will happen.
         return false;
@@ -557,18 +558,18 @@ inline bool atoi_oct(const char* p_begin, const char* p_end, IntType& i) noexcep
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    const auto len = static_cast<std::size_t>(p_end - p_begin);
     if FK_YAML_UNLIKELY (!conv_limits_type::check_if_octs_safe(p_begin, len)) {
         return false;
     }
 
     i = 0;
     do {
-        char c = *p_begin;
+        const char c = *p_begin;
         if FK_YAML_UNLIKELY (c < '0' || '7' < c) {
             return false;
         }
-        i = i * IntType(8) + IntType(c - '0');
+        i = i * static_cast<IntType>(8) + static_cast<IntType>(c - '0');
     } while (++p_begin != p_end);
 
     return true;
@@ -596,28 +597,30 @@ inline bool atoi_hex(const char* p_begin, const char* p_end, IntType& i) noexcep
 
     using conv_limits_type = conv_limits<sizeof(IntType), std::is_signed<IntType>::value>;
 
-    std::size_t len = static_cast<std::size_t>(p_end - p_begin);
+    const auto len = static_cast<std::size_t>(p_end - p_begin);
     if FK_YAML_UNLIKELY (!conv_limits_type::check_if_hexs_safe(p_begin, len)) {
         return false;
     }
 
     i = 0;
     do {
-        char c = *p_begin;
+        // NOLINTBEGIN(bugprone-misplaced-widening-cast)
+        const char c = *p_begin;
         IntType ci = 0;
         if ('0' <= c && c <= '9') {
-            ci = IntType(c - '0');
+            ci = static_cast<IntType>(c - '0');
         }
         else if ('A' <= c && c <= 'F') {
-            ci = IntType(c - 'A' + 10);
+            ci = static_cast<IntType>(c - 'A' + 10);
         }
         else if ('a' <= c && c <= 'f') {
-            ci = IntType(c - 'a' + 10);
+            ci = static_cast<IntType>(c - 'a' + 10);
         }
         else {
             return false;
         }
-        i = i * IntType(16) + ci;
+        i = i * static_cast<IntType>(16) + ci;
+        // NOLINTEND(bugprone-misplaced-widening-cast)
     } while (++p_begin != p_end);
 
     return true;
@@ -643,11 +646,11 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
         return false;
     }
 
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const auto len = static_cast<uint32_t>(std::distance(begin, end));
     const char* p_begin = &*begin;
     const char* p_end = p_begin + len;
 
-    char first = *begin;
+    const char first = *begin;
     if (first == '+') {
         return atoi_dec_pos(p_begin + 1, p_end, i);
     }
@@ -657,9 +660,9 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
             return false;
         }
 
-        bool success = atoi_dec_neg(p_begin + 1, p_end, i);
+        const bool success = atoi_dec_neg(p_begin + 1, p_end, i);
         if (success) {
-            i *= IntType(-1);
+            i *= static_cast<IntType>(-1);
         }
 
         return success;
@@ -668,7 +671,8 @@ inline bool atoi(CharItr begin, CharItr end, IntType& i) noexcept {
     if (first != '0') {
         return atoi_dec_pos(p_begin, p_end, i);
     }
-    else if (p_begin + 1 != p_end) {
+
+    if (p_begin + 1 != p_end) {
         switch (*(p_begin + 1)) {
         case 'o':
             return atoi_oct(p_begin + 2, p_end, i);
@@ -775,19 +779,18 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
         return false;
     }
 
-    uint32_t len = static_cast<uint32_t>(std::distance(begin, end));
+    const auto len = static_cast<uint32_t>(std::distance(begin, end));
     const char* p_begin = &*begin;
     const char* p_end = p_begin + len;
 
     if (*p_begin == '-' || *p_begin == '+') {
         if (len == 5) {
             const char* p_from_second = p_begin + 1;
-            bool is_inf_scalar = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
-                                 (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
-                                 (std::strncmp(p_from_second, ".INF", 4) == 0);
-
-            if (is_inf_scalar) {
-                set_infinity(f, *p_begin == '-' ? FloatType(-1.) : FloatType(1.));
+            const bool is_inf = (std::strncmp(p_from_second, ".inf", 4) == 0) ||
+                                (std::strncmp(p_from_second, ".Inf", 4) == 0) ||
+                                (std::strncmp(p_from_second, ".INF", 4) == 0);
+            if (is_inf) {
+                set_infinity(f, *p_begin == '-' ? static_cast<FloatType>(-1.) : static_cast<FloatType>(1.));
                 return true;
             }
         }
@@ -798,20 +801,16 @@ inline bool atof(CharItr begin, CharItr end, FloatType& f) noexcept(noexcept(ato
         }
     }
     else if (len == 4) {
-        bool is_inf_scalar = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||
-                             (std::strncmp(p_begin, ".INF", 4) == 0);
-        bool is_nan_scalar = false;
-        if (!is_inf_scalar) {
-            is_nan_scalar = (std::strncmp(p_begin, ".nan", 4) == 0) || (std::strncmp(p_begin, ".NaN", 4) == 0) ||
-                            (std::strncmp(p_begin, ".NAN", 4) == 0);
-        }
-
-        if (is_inf_scalar) {
-            set_infinity(f, FloatType(1.));
+        const bool is_inf = (std::strncmp(p_begin, ".inf", 4) == 0) || (std::strncmp(p_begin, ".Inf", 4) == 0) ||
+                            (std::strncmp(p_begin, ".INF", 4) == 0);
+        if (is_inf) {
+            set_infinity(f, static_cast<FloatType>(1.));
             return true;
         }
 
-        if (is_nan_scalar) {
+        const bool is_nan = (std::strncmp(p_begin, ".nan", 4) == 0) || (std::strncmp(p_begin, ".NaN", 4) == 0) ||
+                            (std::strncmp(p_begin, ".NAN", 4) == 0);
+        if (is_nan) {
             set_nan(f);
             return true;
         }

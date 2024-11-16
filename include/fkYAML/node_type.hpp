@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,11 +11,12 @@
 
 #include <cstdint>
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
 
 FK_YAML_NAMESPACE_BEGIN
 
-enum class node_type : std::uint32_t {
+enum class node_type : std::uint8_t {
     SEQUENCE,    //!< sequence value type
     MAPPING,     //!< mapping value type
     NULL_OBJECT, //!< null value type
@@ -41,8 +42,8 @@ inline const char* to_string(node_type t) noexcept {
         return "FLOAT";
     case node_type::STRING:
         return "STRING";
-    default:       // LCOV_EXCL_LINE
-        return ""; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 

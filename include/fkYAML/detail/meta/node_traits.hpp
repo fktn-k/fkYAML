@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.13
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -9,21 +9,11 @@
 #ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP
 #define FK_YAML_DETAIL_META_NODE_TRAITS_HPP
 
-#include <fkYAML/detail/macros/version_macros.hpp>
+#include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/meta/detect.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
-
-FK_YAML_NAMESPACE_BEGIN
-
-// forward declaration for basic_node<...>
-template <
-    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
-    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
-    template <typename, typename> class ConverterType>
-class basic_node;
-
-FK_YAML_NAMESPACE_END
+#include <fkYAML/fkyaml_fwd.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
