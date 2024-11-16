@@ -43,8 +43,8 @@ inline const char* to_string(node_t t) noexcept {
         return "float";
     case node_t::STRING:
         return "string";
-    default:       // LCOV_EXCL_LINE
-        return ""; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -64,8 +64,8 @@ inline node_t convert_from_node_type(node_type t) {
         return node_t::FLOAT_NUMBER;
     case node_type::STRING:
         return node_t::STRING;
-    default:                        // LCOV_EXCL_LINE
-        return node_t::NULL_OBJECT; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -85,8 +85,8 @@ inline node_type convert_to_node_type(node_t t) {
         return node_type::FLOAT;
     case node_t::STRING:
         return node_type::STRING;
-    default:                           // LCOV_EXCL_LINE
-        return node_type::NULL_OBJECT; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 

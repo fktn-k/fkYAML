@@ -148,8 +148,8 @@ private:
             case detail::node_attr_bits::string_bit:
                 p_string = create_object<string_type>();
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -275,8 +275,8 @@ public:
             case detail::node_attr_bits::string_bit:
                 m_node_value.p_string = create_object<string_type>(*(rhs.m_node_value.p_string));
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
         }
     }
@@ -321,8 +321,8 @@ public:
                 m_node_value.p_string = rhs.m_node_value.p_string;
                 rhs.m_node_value.p_string = nullptr;
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -727,8 +727,8 @@ public:
         case detail::node_attr_bits::string_bit:
             ret = (*(this_node_value_ptr->p_string) == *(other_node_value_ptr->p_string));
             break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
 
         return ret;
@@ -775,7 +775,7 @@ public:
             break;
         case detail::node_attr_bits::null_bit: // LCOV_EXCL_LINE
             // Will not come here since null nodes are always the same.
-            break; // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         case detail::node_attr_bits::bool_bit:
             // false < true
             ret = (!p_this_value->boolean && p_other_value->boolean);
@@ -789,8 +789,8 @@ public:
         case detail::node_attr_bits::string_bit:
             ret = (*(p_this_value->p_string) < *(p_other_value->p_string));
             break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
 
         return ret;
@@ -1796,8 +1796,8 @@ struct hash<fkyaml::basic_node<
         case fkyaml::node_type::STRING:
             hash_combine(seed, std::hash<string_type>()(n.template get_value<string_type>()));
             return seed;
-        default:      // LCOV_EXCL_LINE
-            return 0; // LCOV_EXCL_LINE
+        default:                           // LCOV_EXCL_LINE
+            fkyaml::detail::unreachable(); // LCOV_EXCL_LINE
         }
     }
 

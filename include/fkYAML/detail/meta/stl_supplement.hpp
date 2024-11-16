@@ -246,6 +246,20 @@ using std::remove_cvref_t;
 
 #endif
 
+/// @brief A wrapper function to call std::unreachable() (since C++23) or similar compiler specific extensions.
+[[noreturn]] inline void unreachable() {
+    // use compiler specific extensions if possible.
+    // undefined behavior should be raised by an empty function with noreturn attribute.
+
+#if defined(FK_YAML_HAS_CXX_23) || (defined(__cpp_lib_unreachable) && __cpp_lib_unreachable >= 202202L)
+    std::unreachable();
+#elif defined(_MSC_VER) && !defined(__clang__) // MSVC
+    __assume(false);
+#else
+    __builtin_unreachable();
+#endif
+}
+
 FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP */

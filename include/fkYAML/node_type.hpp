@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
 
 FK_YAML_NAMESPACE_BEGIN
 
@@ -41,8 +42,8 @@ inline const char* to_string(node_type t) noexcept {
         return "FLOAT";
     case node_type::STRING:
         return "STRING";
-    default:       // LCOV_EXCL_LINE
-        return ""; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 

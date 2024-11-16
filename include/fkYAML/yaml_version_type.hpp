@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
+#include <fkYAML/detail/meta/stl_supplement.hpp>
 
 FK_YAML_NAMESPACE_BEGIN
 
@@ -26,8 +27,8 @@ inline const char* to_string(yaml_version_type t) noexcept {
         return "VERSION_1_1";
     case yaml_version_type::VERSION_1_2:
         return "VERSION_1_2";
-    default:       // LCOV_EXCL_LINE
-        return ""; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
