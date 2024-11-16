@@ -2373,6 +2373,9 @@ struct string_wrap {
     std::string str;
 };
 
+template <typename T, typename U>
+using get_fn_t = decltype(std::declval<T>().template get<U>());
+
 TEST_CASE("Node_GetValue") {
 
     SECTION("sequence") {
@@ -2966,6 +2969,12 @@ TEST_CASE("Node_GetValue") {
         REQUIRE_FALSE(opt_bool.has_value());
     }
 #endif
+
+    SECTION("unsupported types") {
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int*>::value);
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int[]>::value);
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int&>::value);
+    }
 }
 
 //
