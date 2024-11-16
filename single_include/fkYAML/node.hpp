@@ -105,11 +105,16 @@
 #define FK_YAML_CPLUSPLUS __cplusplus
 #endif
 
-// C++ language standard detection (__cplusplus is not yet defined for C++23)
+// C++ language standard detection
 // Skip detection if the definitions listed below already exist.
-#if !defined(FK_YAML_HAS_CXX_20) && !defined(FK_YAML_HAS_CXX_17) && !defined(FK_YAML_HAS_CXX_14) &&                    \
-    !defined(FK_YAML_CXX_11)
-#if FK_YAML_CPLUSPLUS >= 202002L
+#if !defined(FK_YAML_HAS_CXX_23) && !defined(FK_YAML_HAS_CXX_20) && !defined(FK_YAML_HAS_CXX_17) &&                    \
+    !defined(FK_YAML_HAS_CXX_14) && !defined(FK_YAML_CXX_11)
+#if FK_YAML_CPLUSPLUS >= 202302L
+#define FK_YAML_HAS_CXX_23
+#define FK_YAML_HAS_CXX_20
+#define FK_YAML_HAS_CXX_17
+#define FK_YAML_HAS_CXX_14
+#elif FK_YAML_CPLUSPLUS >= 202002L
 #define FK_YAML_HAS_CXX_20
 #define FK_YAML_HAS_CXX_17
 #define FK_YAML_HAS_CXX_14
@@ -209,7 +214,7 @@
 #endif
 
 //
-// C++ attribute detections
+// utility macros
 //
 
 // switch usage of [[likely]] C++ attribute which has been available since C++20.
@@ -556,6 +561,20 @@ using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>
 using std::remove_cvref_t;
 
 #endif
+
+/// @brief A wrapper function to call std::unreachable() (since C++23) or similar compiler specific extensions.
+[[noreturn]] inline void unreachable() {
+    // use compiler specific extensions if possible.
+    // undefined behavior should be raised by an empty function with noreturn attribute.
+
+#if defined(FK_YAML_HAS_CXX_23) || (defined(__cpp_lib_unreachable) && __cpp_lib_unreachable >= 202202L)
+    std::unreachable();
+#elif defined(_MSC_VER) && !defined(__clang__) // MSVC
+    __assume(false);
+#else
+    __builtin_unreachable();
+#endif
+}
 
 FK_YAML_DETAIL_NAMESPACE_END
 
@@ -1117,6 +1136,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/macros/define_macros.hpp>
 
+// #include <fkYAML/detail/meta/stl_supplement.hpp>
+
 
 FK_YAML_NAMESPACE_BEGIN
 
@@ -1131,8 +1152,8 @@ inline const char* to_string(yaml_version_type t) noexcept {
         return "VERSION_1_1";
     case yaml_version_type::VERSION_1_2:
         return "VERSION_1_2";
-    default:       // LCOV_EXCL_LINE
-        return ""; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -1450,6 +1471,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/macros/define_macros.hpp>
 
+// #include <fkYAML/detail/meta/stl_supplement.hpp>
+
 
 FK_YAML_NAMESPACE_BEGIN
 
@@ -1479,8 +1502,8 @@ inline const char* to_string(node_type t) noexcept {
         return "FLOAT";
     case node_type::STRING:
         return "STRING";
-    default:       // LCOV_EXCL_LINE
-        return ""; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -1518,8 +1541,8 @@ inline const char* to_string(node_t t) noexcept {
         return "float";
     case node_t::STRING:
         return "string";
-    default:       // LCOV_EXCL_LINE
-        return ""; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -1539,8 +1562,8 @@ inline node_t convert_from_node_type(node_type t) {
         return node_t::FLOAT_NUMBER;
     case node_type::STRING:
         return node_t::STRING;
-    default:                        // LCOV_EXCL_LINE
-        return node_t::NULL_OBJECT; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -1560,8 +1583,8 @@ inline node_type convert_to_node_type(node_t t) {
         return node_type::FLOAT;
     case node_t::STRING:
         return node_type::STRING;
-    default:                           // LCOV_EXCL_LINE
-        return node_type::NULL_OBJECT; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -1909,8 +1932,8 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         // The rest of byte combinations are invalid.
         return false;
     }
-    default:          // LCOV_EXCL_LINE
-        return false; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -3934,8 +3957,8 @@ private:
                 // This check is enabled only in a flow context.
                 ends_loop = (m_state & flow_context_bit);
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
 
             if (ends_loop) {
@@ -6334,8 +6357,8 @@ private:
                 node = basic_node_type(std::string(token.begin(), token.end()));
             }
             break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
 
         return node;
@@ -6768,8 +6791,8 @@ inline node_type to_node_type(node_attr_t bits) noexcept {
         return node_type::FLOAT;
     case string_bit:
         return node_type::STRING;
-    default:                           // LCOV_EXCL_LINE
-        return node_type::NULL_OBJECT; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 
@@ -7781,7 +7804,7 @@ private:
             case lexical_token_t::YAML_VER_DIRECTIVE: // LCOV_EXCL_LINE
             case lexical_token_t::TAG_DIRECTIVE:      // LCOV_EXCL_LINE
             case lexical_token_t::INVALID_DIRECTIVE:  // LCOV_EXCL_LINE
-                break;                                // LCOV_EXCL_LINE
+                detail::unreachable();                // LCOV_EXCL_LINE
             }
 
             token = lexer.get_next_token();
@@ -8552,8 +8575,8 @@ public:
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
             return get_buffer_view_utf32();
-        default:       // LCOV_EXCL_LINE
-            return {}; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
     }
 
@@ -9023,8 +9046,8 @@ public:
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
             return get_buffer_view_utf32();
-        default:       // LCOV_EXCL_LINE
-            return {}; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
     }
 
@@ -9226,8 +9249,8 @@ public:
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
             return get_buffer_view_utf32();
-        default:       // LCOV_EXCL_LINE
-            return {}; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
     }
 
@@ -11815,8 +11838,8 @@ private:
             case detail::node_attr_bits::string_bit:
                 p_string = create_object<string_type>();
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -11942,8 +11965,8 @@ public:
             case detail::node_attr_bits::string_bit:
                 m_node_value.p_string = create_object<string_type>(*(rhs.m_node_value.p_string));
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
         }
     }
@@ -11988,8 +12011,8 @@ public:
                 m_node_value.p_string = rhs.m_node_value.p_string;
                 rhs.m_node_value.p_string = nullptr;
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -12394,8 +12417,8 @@ public:
         case detail::node_attr_bits::string_bit:
             ret = (*(this_node_value_ptr->p_string) == *(other_node_value_ptr->p_string));
             break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
 
         return ret;
@@ -12442,7 +12465,7 @@ public:
             break;
         case detail::node_attr_bits::null_bit: // LCOV_EXCL_LINE
             // Will not come here since null nodes are always the same.
-            break; // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         case detail::node_attr_bits::bool_bit:
             // false < true
             ret = (!p_this_value->boolean && p_other_value->boolean);
@@ -12456,8 +12479,8 @@ public:
         case detail::node_attr_bits::string_bit:
             ret = (*(p_this_value->p_string) < *(p_other_value->p_string));
             break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
 
         return ret;
@@ -13463,8 +13486,8 @@ struct hash<fkyaml::basic_node<
         case fkyaml::node_type::STRING:
             hash_combine(seed, std::hash<string_type>()(n.template get_value<string_type>()));
             return seed;
-        default:      // LCOV_EXCL_LINE
-            return 0; // LCOV_EXCL_LINE
+        default:                           // LCOV_EXCL_LINE
+            fkyaml::detail::unreachable(); // LCOV_EXCL_LINE
         }
     }
 

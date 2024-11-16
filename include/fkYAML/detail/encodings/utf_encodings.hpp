@@ -180,8 +180,8 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
         // The rest of byte combinations are invalid.
         return false;
     }
-    default:          // LCOV_EXCL_LINE
-        return false; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 

@@ -978,7 +978,7 @@ private:
             case lexical_token_t::YAML_VER_DIRECTIVE: // LCOV_EXCL_LINE
             case lexical_token_t::TAG_DIRECTIVE:      // LCOV_EXCL_LINE
             case lexical_token_t::INVALID_DIRECTIVE:  // LCOV_EXCL_LINE
-                break;                                // LCOV_EXCL_LINE
+                detail::unreachable();                // LCOV_EXCL_LINE
             }
 
             token = lexer.get_next_token();

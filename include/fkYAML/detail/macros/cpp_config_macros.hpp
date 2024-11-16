@@ -21,11 +21,16 @@
 #define FK_YAML_CPLUSPLUS __cplusplus
 #endif
 
-// C++ language standard detection (__cplusplus is not yet defined for C++23)
+// C++ language standard detection
 // Skip detection if the definitions listed below already exist.
-#if !defined(FK_YAML_HAS_CXX_20) && !defined(FK_YAML_HAS_CXX_17) && !defined(FK_YAML_HAS_CXX_14) &&                    \
-    !defined(FK_YAML_CXX_11)
-#if FK_YAML_CPLUSPLUS >= 202002L
+#if !defined(FK_YAML_HAS_CXX_23) && !defined(FK_YAML_HAS_CXX_20) && !defined(FK_YAML_HAS_CXX_17) &&                    \
+    !defined(FK_YAML_HAS_CXX_14) && !defined(FK_YAML_CXX_11)
+#if FK_YAML_CPLUSPLUS >= 202302L
+#define FK_YAML_HAS_CXX_23
+#define FK_YAML_HAS_CXX_20
+#define FK_YAML_HAS_CXX_17
+#define FK_YAML_HAS_CXX_14
+#elif FK_YAML_CPLUSPLUS >= 202002L
 #define FK_YAML_HAS_CXX_20
 #define FK_YAML_HAS_CXX_17
 #define FK_YAML_HAS_CXX_14
@@ -125,7 +130,7 @@
 #endif
 
 //
-// C++ attribute detections
+// utility macros
 //
 
 // switch usage of [[likely]] C++ attribute which has been available since C++20.

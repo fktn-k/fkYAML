@@ -76,8 +76,8 @@ public:
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
             return get_buffer_view_utf32();
-        default:       // LCOV_EXCL_LINE
-            return {}; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
     }
 
@@ -547,8 +547,8 @@ public:
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
             return get_buffer_view_utf32();
-        default:       // LCOV_EXCL_LINE
-            return {}; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
     }
 
@@ -750,8 +750,8 @@ public:
         case utf_encode_t::UTF_32BE:
         case utf_encode_t::UTF_32LE:
             return get_buffer_view_utf32();
-        default:       // LCOV_EXCL_LINE
-            return {}; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
     }
 

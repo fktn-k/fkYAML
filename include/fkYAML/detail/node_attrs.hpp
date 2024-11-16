@@ -110,8 +110,8 @@ inline node_type to_node_type(node_attr_t bits) noexcept {
         return node_type::FLOAT;
     case string_bit:
         return node_type::STRING;
-    default:                           // LCOV_EXCL_LINE
-        return node_type::NULL_OBJECT; // LCOV_EXCL_LINE
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
     }
 }
 

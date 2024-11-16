@@ -519,8 +519,8 @@ private:
                 node = basic_node_type(std::string(token.begin(), token.end()));
             }
             break;
-        default:   // LCOV_EXCL_LINE
-            break; // LCOV_EXCL_LINE
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
         }
 
         return node;

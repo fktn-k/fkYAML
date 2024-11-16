@@ -780,8 +780,8 @@ private:
                 // This check is enabled only in a flow context.
                 ends_loop = (m_state & flow_context_bit);
                 break;
-            default:   // LCOV_EXCL_LINE
-                break; // LCOV_EXCL_LINE
+            default:                   // LCOV_EXCL_LINE
+                detail::unreachable(); // LCOV_EXCL_LINE
             }
 
             if (ends_loop) {
