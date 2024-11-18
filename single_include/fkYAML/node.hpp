@@ -1348,7 +1348,7 @@ private:
             return true;
         default:
             // alphabets and numbers are also allowed.
-            return std::isalnum(c);
+            return static_cast<bool>(std::isalnum(c));
         }
     }
 };
