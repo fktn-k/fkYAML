@@ -111,6 +111,7 @@ target_compile_options(
       /W4 /WX /EHsc /utf-8 /permissive-
       /wd4709 # comma operator within array index expression
       /wd4996 # for testing deprecated functions
+      /w44800 # https://github.com/fktn-k/fkYAML/issues/429
       $<$<CONFIG:Debug>:/Z7>
       $<$<CONFIG:Release>:/Od>
     >
