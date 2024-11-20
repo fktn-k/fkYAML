@@ -5917,7 +5917,7 @@ public:
 
         token = parse_flow_scalar_token(lex_type, token);
         const node_type value_type = decide_value_type(lex_type, tag_type, token);
-        return create_scalar_node(value_type, token);
+        return create_scalar_node(value_type, tag_type, token);
     }
 
     /// @brief Parses a token into a block scalar (either literal or folded)
@@ -5940,7 +5940,7 @@ public:
         }
 
         const node_type value_type = decide_value_type(lex_type, tag_type, token);
-        return create_scalar_node(value_type, token);
+        return create_scalar_node(value_type, tag_type, token);
     }
 
 private:
@@ -6312,18 +6312,16 @@ private:
     /// @param type Scalar value type.
     /// @param token Scalar contents.
     /// @return A YAML scalar object.
-    basic_node_type create_scalar_node(node_type type, str_view token) {
-        basic_node_type node {};
-
-        switch (type) {
+    basic_node_type create_scalar_node(node_type val_type, tag_t tag_type, str_view token) {
+        switch (val_type) {
         case node_type::NULL_OBJECT: {
             std::nullptr_t null = nullptr;
             const bool converted = detail::aton(token.begin(), token.end(), null);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a null.", m_line, m_indent);
             }
-            // The above `node` variable is already null, so no instance creation is needed.
-            break;
+            // The default basic_node object is a null scalar node.
+            return basic_node_type {};
         }
         case node_type::BOOLEAN: {
             auto boolean = static_cast<boolean_type>(false);
@@ -6331,41 +6329,45 @@ private:
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a boolean.", m_line, m_indent);
             }
-            node = basic_node_type(boolean);
-            break;
+            return basic_node_type(boolean);
         }
         case node_type::INTEGER: {
             integer_type integer = 0;
             const bool converted = detail::atoi(token.begin(), token.end(), integer);
-            if FK_YAML_UNLIKELY (!converted) {
+            if FK_YAML_LIKELY (converted) {
+                return basic_node_type(integer);
+            }
+            if FK_YAML_UNLIKELY (tag_type == tag_t::INTEGER) {
                 throw parse_error("Failed to convert a scalar to an integer.", m_line, m_indent);
             }
-            node = basic_node_type(integer);
-            break;
+
+            // conversion error from a scalar which is not tagged with !!int is recovered by treating it as a string
+            // scalar. See https://github.com/fktn-k/fkYAML/issues/428.
+            return basic_node_type(string_type(token.begin(), token.end()));
         }
         case node_type::FLOAT: {
             float_number_type float_val = 0;
             const bool converted = detail::atof(token.begin(), token.end(), float_val);
-            if FK_YAML_UNLIKELY (!converted) {
+            if FK_YAML_LIKELY (converted) {
+                return basic_node_type(float_val);
+            }
+            if FK_YAML_UNLIKELY (tag_type == tag_t::FLOATING_NUMBER) {
                 throw parse_error("Failed to convert a scalar to a floating point value", m_line, m_indent);
             }
-            node = basic_node_type(float_val);
-            break;
+
+            // conversion error from a scalar which is not tagged with !!float is recovered by treating it as a string
+            // scalar. See https://github.com/fktn-k/fkYAML/issues/428.
+            return basic_node_type(string_type(token.begin(), token.end()));
         }
         case node_type::STRING:
-            if (m_use_owned_buffer) {
-                node = basic_node_type(std::move(m_buffer));
-                m_use_owned_buffer = false;
+            if (!m_use_owned_buffer) {
+                return basic_node_type(string_type(token.begin(), token.end()));
             }
-            else {
-                node = basic_node_type(std::string(token.begin(), token.end()));
-            }
-            break;
+            m_use_owned_buffer = false;
+            return basic_node_type(std::move(m_buffer));
         default:                   // LCOV_EXCL_LINE
             detail::unreachable(); // LCOV_EXCL_LINE
         }
-
-        return node;
     }
 
     /// Current line
