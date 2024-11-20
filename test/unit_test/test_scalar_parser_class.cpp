@@ -204,7 +204,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
     fkyaml::detail::scalar_parser<fkyaml::node> scalar_parser {0, 0};
     fkyaml::detail::tag_t tag_type {fkyaml::detail::tag_t::NONE};
 
-    SECTION("plain: normal contents") {
+    SECTION("plain: single line contents") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::PLAIN_SCALAR};
 
         auto token = GENERATE(
@@ -249,7 +249,11 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
             fkyaml::detail::str_view("-.INF_VALUE"),
             fkyaml::detail::str_view(".nanValue"),
             fkyaml::detail::str_view(".NaNValue"),
-            fkyaml::detail::str_view(".NAN_VALUE"));
+            fkyaml::detail::str_view(".NAN_VALUE"),
+            // fkyaml::node::integer_type(=int64_t) cannot express this value.
+            fkyaml::detail::str_view("0xFFFFFFFFFFFFFFFF0"),
+            // fkyaml::node::float_number_type(=double) cannot express this value.
+            fkyaml::detail::str_view("6E-578"));
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, token));
         REQUIRE(node.is_string());
