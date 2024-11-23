@@ -147,9 +147,7 @@ private:
             newline_pos = token.find('\n');
         } while (newline_pos != str_view::npos);
 
-        if (!token.empty()) {
-            m_buffer.append(token.begin(), token.size());
-        }
+        m_buffer.append(token.begin(), token.size());
 
         return {m_buffer};
     }

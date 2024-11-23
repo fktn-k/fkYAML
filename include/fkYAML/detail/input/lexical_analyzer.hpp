@@ -781,6 +781,10 @@ private:
                                 indent += 2;
                                 cur_itr += 2;
                                 context = 3;
+                                break;
+                            default:
+                                indent_found = true;
+                                break;
                             }
                             break;
                         default:
