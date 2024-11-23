@@ -330,60 +330,188 @@ TEST_CASE("LexicalAnalzer_BlockSequenceEntryPrefix") {
 }
 
 TEST_CASE("LexicalAnalyzer_PlainScalar") {
-    auto input = GENERATE(
-        fkyaml::detail::str_view("test"),
-        fkyaml::detail::str_view("test "),
-        fkyaml::detail::str_view("test:"),
-        fkyaml::detail::str_view("nop"),
-        fkyaml::detail::str_view("none"),
-        fkyaml::detail::str_view("?test"),
-        fkyaml::detail::str_view(".NET"),
-        fkyaml::detail::str_view(".on"),
-        fkyaml::detail::str_view(".n"),
-        fkyaml::detail::str_view("-t"),
-        fkyaml::detail::str_view("-foo"),
-        fkyaml::detail::str_view("-.test"),
-        fkyaml::detail::str_view("?"),
-        fkyaml::detail::str_view("--foo"),
-        fkyaml::detail::str_view("+123"),
-        fkyaml::detail::str_view("1.2.3"),
-        fkyaml::detail::str_view("foo,bar"),
-        fkyaml::detail::str_view("foo[bar"),
-        fkyaml::detail::str_view("foo]bar"),
-        fkyaml::detail::str_view("foo{bar"),
-        fkyaml::detail::str_view("foo}bar"),
-        fkyaml::detail::str_view("foo:bar"),
-        fkyaml::detail::str_view("foo bar"),
-        fkyaml::detail::str_view("foo\"bar"),
-        fkyaml::detail::str_view("foo\'s bar"),
-        fkyaml::detail::str_view("foo\\bar"),
-        fkyaml::detail::str_view("nullValue"),
-        fkyaml::detail::str_view("NullValue"),
-        fkyaml::detail::str_view("NULL_VALUE"),
-        fkyaml::detail::str_view("~Value"),
-        fkyaml::detail::str_view("trueValue"),
-        fkyaml::detail::str_view("TrueValue"),
-        fkyaml::detail::str_view("TRUE_VALUE"),
-        fkyaml::detail::str_view("falseValue"),
-        fkyaml::detail::str_view("FalseValue"),
-        fkyaml::detail::str_view("FALSE_VALUE"),
-        fkyaml::detail::str_view(".infValue"),
-        fkyaml::detail::str_view(".InfValue"),
-        fkyaml::detail::str_view(".INF_VALUE"),
-        fkyaml::detail::str_view("-.infValue"),
-        fkyaml::detail::str_view("-.InfValue"),
-        fkyaml::detail::str_view("-.INF_VALUE"),
-        fkyaml::detail::str_view(".nanValue"),
-        fkyaml::detail::str_view(".NaNValue"),
-        fkyaml::detail::str_view(".NAN_VALUE"));
-
-    fkyaml::detail::lexical_analyzer lexer(input);
     fkyaml::detail::lexical_token token;
 
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
-    REQUIRE(token.str.begin() == input.begin());
-    REQUIRE(token.str.end() == input.begin() + input.find_last_not_of(' ') + 1);
+    SECTION("single line") {
+        auto input = GENERATE(
+            fkyaml::detail::str_view("test"),
+            fkyaml::detail::str_view("test "),
+            fkyaml::detail::str_view("test:"),
+            fkyaml::detail::str_view("nop"),
+            fkyaml::detail::str_view("none"),
+            fkyaml::detail::str_view("?test"),
+            fkyaml::detail::str_view(".NET"),
+            fkyaml::detail::str_view(".on"),
+            fkyaml::detail::str_view(".n"),
+            fkyaml::detail::str_view("-t"),
+            fkyaml::detail::str_view("-foo"),
+            fkyaml::detail::str_view("-.test"),
+            fkyaml::detail::str_view("?"),
+            fkyaml::detail::str_view("--foo"),
+            fkyaml::detail::str_view("+123"),
+            fkyaml::detail::str_view("1.2.3"),
+            fkyaml::detail::str_view("foo,bar"),
+            fkyaml::detail::str_view("foo[bar"),
+            fkyaml::detail::str_view("foo]bar"),
+            fkyaml::detail::str_view("foo{bar"),
+            fkyaml::detail::str_view("foo}bar"),
+            fkyaml::detail::str_view("foo:bar"),
+            fkyaml::detail::str_view("foo bar"),
+            fkyaml::detail::str_view("foo\"bar"),
+            fkyaml::detail::str_view("foo\'s bar"),
+            fkyaml::detail::str_view("foo\\bar"),
+            fkyaml::detail::str_view("nullValue"),
+            fkyaml::detail::str_view("NullValue"),
+            fkyaml::detail::str_view("NULL_VALUE"),
+            fkyaml::detail::str_view("~Value"),
+            fkyaml::detail::str_view("trueValue"),
+            fkyaml::detail::str_view("TrueValue"),
+            fkyaml::detail::str_view("TRUE_VALUE"),
+            fkyaml::detail::str_view("falseValue"),
+            fkyaml::detail::str_view("FalseValue"),
+            fkyaml::detail::str_view("FALSE_VALUE"),
+            fkyaml::detail::str_view(".infValue"),
+            fkyaml::detail::str_view(".InfValue"),
+            fkyaml::detail::str_view(".INF_VALUE"),
+            fkyaml::detail::str_view("-.infValue"),
+            fkyaml::detail::str_view("-.InfValue"),
+            fkyaml::detail::str_view("-.INF_VALUE"),
+            fkyaml::detail::str_view(".nanValue"),
+            fkyaml::detail::str_view(".NaNValue"),
+            fkyaml::detail::str_view(".NAN_VALUE"));
+
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin());
+        REQUIRE(token.str.end() == input.begin() + input.find_last_not_of(' ') + 1);
+    }
+
+    SECTION("multiline without final newline") {
+        fkyaml::detail::str_view input = "  foo\n"
+                                         "   bar\n"
+                                         "     baz";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 2);
+        REQUIRE(token.str.end() == input.end());
+    }
+
+    SECTION("multiline with final newline") {
+        fkyaml::detail::str_view input = "  foo\n"
+                                         "   bar\n"
+                                         "     baz\n";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 2);
+        REQUIRE(token.str.end() == input.end() - 1);
+    }
+
+    SECTION("multiline as a block sequence item") {
+        fkyaml::detail::str_view input = "  - foo\n"
+                                         "   bar\n"
+                                         "     baz";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 4);
+        REQUIRE(token.str.end() == input.end());
+    }
+
+    SECTION("multiline as an explicit mapping key") {
+        fkyaml::detail::str_view input = "  ? foo\n"
+                                         "   bar\n"
+                                         "     baz";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::EXPLICIT_KEY_PREFIX);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 4);
+        REQUIRE(token.str.end() == input.end());
+    }
+
+    SECTION("multiline as an explicit mapping value") {
+        fkyaml::detail::str_view input = "  : foo\n"
+                                         "   bar\n"
+                                         "     baz";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 4);
+        REQUIRE(token.str.end() == input.end());
+    }
+
+    SECTION("multiline as a block sequence item and an explicit mapping value") {
+        fkyaml::detail::str_view input = "  ? - foo\n"
+                                         "     bar\n"
+                                         "     baz";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::EXPLICIT_KEY_PREFIX);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 6);
+        REQUIRE(token.str.end() == input.end());
+    }
+
+    SECTION("multiline with less indented line") {
+        fkyaml::detail::str_view input = "  foo\n"
+                                         "   bar\n"
+                                         " baz";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 2);
+        REQUIRE(token.str.end() == input.end() - 5);
+    }
+
+    SECTION("multiline with equally indented line") {
+        fkyaml::detail::str_view input = "  foo\n"
+                                         "   bar\n"
+                                         "  baz";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 2);
+        REQUIRE(token.str.end() == input.end() - 6);
+    }
+
+    SECTION("multiline with empty line") {
+        fkyaml::detail::str_view input = "  foo\n"
+                                         " \t   \n"
+                                         "   bar\n"
+                                         "\n"
+                                         "   baz";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 2);
+        REQUIRE(token.str.end() == input.end());
+    }
 }
 
 TEST_CASE("LexicalAnalyzer_SingleQuotedScalar") {
