@@ -3980,7 +3980,7 @@ private:
                         // If so, the indent value remains the current one.
                         // Otherwise, the indent value is changed based on the last ocurrence of the above 3.
                         // In any case, multiline plain scalar content must be indented more than the indent value.
-                        str_view line_content_part {line_begin_itr + indent, &sv[pos]};
+                        const str_view line_content_part {line_begin_itr + indent, &sv[pos]};
                         std::size_t key_seq_pos = line_content_part.find(": ");
                         if (key_seq_pos == str_view::npos) {
                             key_seq_pos = line_content_part.find(":\t");
@@ -3989,11 +3989,12 @@ private:
                         if (key_seq_pos == str_view::npos) {
                             constexpr char targets[] = "-?:";
                             FK_YAML_ASSERT(context - 1 < sizeof(targets));
+                            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+                            const char target_char = targets[context - 1];
 
                             // Find the position of the last ocuurence of "- ", "? " or ": ".
-                            str_view line_indent_part {line_begin_itr, indent};
-                            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-                            std::size_t block_seq_item_begin_pos = line_indent_part.find_last_of(targets[context - 1]);
+                            const str_view line_indent_part {line_begin_itr, indent};
+                            const std::size_t block_seq_item_begin_pos = line_indent_part.find_last_of(target_char);
                             FK_YAML_ASSERT(block_seq_item_begin_pos != str_view::npos);
                             indent = static_cast<uint32_t>(block_seq_item_begin_pos);
                         }
@@ -4001,8 +4002,8 @@ private:
                 }
 
                 constexpr str_view space_filter = " \t\n";
-                std::size_t non_space_pos = sv.find_first_not_of(space_filter, pos);
-                std::size_t last_newline_pos = sv.find_last_of('\n', non_space_pos);
+                const std::size_t non_space_pos = sv.find_first_not_of(space_filter, pos);
+                const std::size_t last_newline_pos = sv.find_last_of('\n', non_space_pos);
                 FK_YAML_ASSERT(last_newline_pos != str_view::npos);
 
                 if (non_space_pos == str_view::npos || non_space_pos - last_newline_pos - 1 <= indent) {
