@@ -3992,6 +3992,7 @@ private:
 
                             // Find the position of the last ocuurence of "- ", "? " or ": ".
                             str_view line_indent_part {line_begin_itr, indent};
+                            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
                             std::size_t block_seq_item_begin_pos = line_indent_part.find_last_of(targets[context - 1]);
                             FK_YAML_ASSERT(block_seq_item_begin_pos != str_view::npos);
                             indent = static_cast<uint32_t>(block_seq_item_begin_pos);
