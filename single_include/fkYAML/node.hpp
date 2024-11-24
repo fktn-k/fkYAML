@@ -3901,12 +3901,119 @@ private:
         }
 
         bool ends_loop = false;
+        uint32_t indent = std::numeric_limits<uint32_t>::max();
         do {
             FK_YAML_ASSERT(pos < sv.size());
             switch (sv[pos]) {
-            case '\n':
-                ends_loop = true;
+            case '\n': {
+                if (indent == std::numeric_limits<uint32_t>::max()) {
+                    // get the beginning position of the current line.
+                    const char* cur_itr = m_token_begin_itr;
+                    const char* input_begin_itr = m_input_buffer.begin();
+                    while (cur_itr != input_begin_itr) {
+                        if (*cur_itr == '\n') {
+                            ++cur_itr;
+                            break;
+                        }
+                        --cur_itr;
+                    }
+
+                    const char* line_begin_itr = cur_itr;
+
+                    // get the indentation of the current line.
+                    indent = 0;
+                    bool indent_found = false;
+                    // 0: none, 1: block seq item, 2: explicit map key, 3: explicit map value
+                    uint32_t context = 0;
+                    while (cur_itr != m_token_begin_itr && !indent_found) {
+                        switch (*cur_itr) {
+                        case ' ':
+                        case '\t':
+                            ++indent;
+                            ++cur_itr;
+                            break;
+                        case '-':
+                            switch (*(cur_itr + 1)) {
+                            case ' ':
+                            case '\t':
+                                indent += 2;
+                                cur_itr += 2;
+                                context = 1;
+                                break;
+                            default:
+                                indent_found = true;
+                                break;
+                            }
+                            break;
+                        case '?':
+                            if (*(cur_itr + 1) == ' ') {
+                                indent += 2;
+                                cur_itr += 2;
+                                context = 2;
+                                break;
+                            }
+
+                            indent_found = true;
+                            break;
+                        case ':':
+                            switch (*(cur_itr + 1)) {
+                            case ' ':
+                            case '\t':
+                                indent += 2;
+                                cur_itr += 2;
+                                context = 3;
+                                break;
+                            default:
+                                indent_found = true;
+                                break;
+                            }
+                            break;
+                        default:
+                            indent_found = true;
+                            break;
+                        }
+                    }
+
+                    // If "- ", "? " and/or ": " occur in the first line of this plain scalar content.
+                    if (context > 0) {
+                        // Check if the first line contains the key separator ": ".
+                        // If so, the indent value remains the current one.
+                        // Otherwise, the indent value is changed based on the last ocurrence of the above 3.
+                        // In any case, multiline plain scalar content must be indented more than the indent value.
+                        const str_view line_content_part {line_begin_itr + indent, &sv[pos]};
+                        std::size_t key_seq_pos = line_content_part.find(": ");
+                        if (key_seq_pos == str_view::npos) {
+                            key_seq_pos = line_content_part.find(":\t");
+                        }
+
+                        if (key_seq_pos == str_view::npos) {
+                            constexpr char targets[] = "-?:";
+                            FK_YAML_ASSERT(context - 1 < sizeof(targets));
+                            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+                            const char target_char = targets[context - 1];
+
+                            // Find the position of the last ocuurence of "- ", "? " or ": ".
+                            const str_view line_indent_part {line_begin_itr, indent};
+                            const std::size_t block_seq_item_begin_pos = line_indent_part.find_last_of(target_char);
+                            FK_YAML_ASSERT(block_seq_item_begin_pos != str_view::npos);
+                            indent = static_cast<uint32_t>(block_seq_item_begin_pos);
+                        }
+                    }
+                }
+
+                constexpr str_view space_filter = " \t\n";
+                const std::size_t non_space_pos = sv.find_first_not_of(space_filter, pos);
+                const std::size_t last_newline_pos = sv.find_last_of('\n', non_space_pos);
+                FK_YAML_ASSERT(last_newline_pos != str_view::npos);
+
+                if (non_space_pos == str_view::npos || non_space_pos - last_newline_pos - 1 <= indent) {
+                    ends_loop = true;
+                    break;
+                }
+
+                pos = non_space_pos;
                 break;
+            }
             case ' ':
                 if FK_YAML_UNLIKELY (pos == sv.size() - 1) {
                     // trim trailing space.
@@ -5950,18 +6057,48 @@ private:
     /// @return View into the parsed scalar contents.
     str_view parse_flow_scalar_token(lexical_token_t lex_type, str_view token) {
         switch (lex_type) {
+        case lexical_token_t::PLAIN_SCALAR:
+            token = parse_plain_scalar(token);
+            break;
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
             token = parse_single_quoted_scalar(token);
             break;
         case lexical_token_t::DOUBLE_QUOTED_SCALAR:
             token = parse_double_quoted_scalar(token);
             break;
-        case lexical_token_t::PLAIN_SCALAR:
-        default:
-            break;
+        default:           // LCOV_EXCL_LINE
+            unreachable(); // LCOV_EXCL_LINE
         }
 
         return token;
+    }
+
+    /// @brief Parses plain scalar contents.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
+    str_view parse_plain_scalar(str_view token) noexcept {
+        // plain scalars cannot be empty.
+        FK_YAML_ASSERT(!token.empty());
+
+        std::size_t newline_pos = token.find('\n');
+        if (newline_pos == str_view::npos) {
+            return token;
+        }
+
+        m_use_owned_buffer = true;
+
+        if (m_buffer.capacity() < token.size()) {
+            m_buffer.reserve(token.size());
+        }
+
+        do {
+            process_line_folding(token, newline_pos);
+            newline_pos = token.find('\n');
+        } while (newline_pos != str_view::npos);
+
+        m_buffer.append(token.begin(), token.size());
+
+        return {m_buffer};
     }
 
     /// @brief Parses single quoted scalar contents.

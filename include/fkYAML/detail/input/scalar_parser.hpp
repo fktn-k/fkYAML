@@ -108,18 +108,48 @@ private:
     /// @return View into the parsed scalar contents.
     str_view parse_flow_scalar_token(lexical_token_t lex_type, str_view token) {
         switch (lex_type) {
+        case lexical_token_t::PLAIN_SCALAR:
+            token = parse_plain_scalar(token);
+            break;
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
             token = parse_single_quoted_scalar(token);
             break;
         case lexical_token_t::DOUBLE_QUOTED_SCALAR:
             token = parse_double_quoted_scalar(token);
             break;
-        case lexical_token_t::PLAIN_SCALAR:
-        default:
-            break;
+        default:           // LCOV_EXCL_LINE
+            unreachable(); // LCOV_EXCL_LINE
         }
 
         return token;
+    }
+
+    /// @brief Parses plain scalar contents.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
+    str_view parse_plain_scalar(str_view token) noexcept {
+        // plain scalars cannot be empty.
+        FK_YAML_ASSERT(!token.empty());
+
+        std::size_t newline_pos = token.find('\n');
+        if (newline_pos == str_view::npos) {
+            return token;
+        }
+
+        m_use_owned_buffer = true;
+
+        if (m_buffer.capacity() < token.size()) {
+            m_buffer.reserve(token.size());
+        }
+
+        do {
+            process_line_folding(token, newline_pos);
+            newline_pos = token.find('\n');
+        } while (newline_pos != str_view::npos);
+
+        m_buffer.append(token.begin(), token.size());
+
+        return {m_buffer};
     }
 
     /// @brief Parses single quoted scalar contents.

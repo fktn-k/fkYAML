@@ -260,6 +260,20 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
         REQUIRE(node.get_value_ref<std::string&>() == token);
     }
 
+    SECTION("plain: multiline contents") {
+        fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::PLAIN_SCALAR};
+        using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
+        auto test_data = GENERATE(
+            test_data_t("foo\nbar", "foo bar"),
+            test_data_t("foo\n \tbar", "foo bar"),
+            test_data_t("foo\n\n \t\n bar", "foo\n\nbar"),
+            test_data_t("foo\n        \t\t\t\n bar", "foo\nbar"));
+
+        REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, test_data.first));
+        REQUIRE(node.is_string());
+        REQUIRE(node.get_value_ref<std::string&>() == test_data.second);
+    }
+
     SECTION("single quoted: single line contents") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR};
         using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
