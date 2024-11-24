@@ -90,18 +90,13 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 
 | Compiler                   | Operating System                                                                                               |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| AppleClang 13.0.0.13000029 | [macOS 12](https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md)                 |
-| AppleClang 13.1.6.13160021 | [macOS 12](https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md)                 |
-| AppleClang 14.0.0.14000029 | [macOS 12](https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md)                 |
 | AppleClang 14.0.0.14000029 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
 | AppleClang 14.0.3.14030022 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
-| AppleClang 14.0.3.14030022 | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
 | AppleClang 15.0.0.15000040 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
 | AppleClang 15.0.0.15000040 | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
 | AppleClang 15.0.0.15000100 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
 | AppleClang 15.0.0.15000100 | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
 | AppleClang 15.0.0.15000309 | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
-| AppleClang 16.0.0.16000026 | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
 | AppleClang 16.0.0.16000026 | [macOS 15](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md)                 |
 | Clang 3.5.2                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
 | Clang 3.6.2                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
