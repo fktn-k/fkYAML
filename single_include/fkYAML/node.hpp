@@ -2061,7 +2061,7 @@ enum class chomping_indicator_t : std::uint8_t {
 struct block_scalar_header {
     /// Chomping indicator type.
     chomping_indicator_t chomp {chomping_indicator_t::CLIP};
-    /// Indentation for block scalar contents.
+    /// Content indentation level of a block scalar.
     uint32_t indent {0};
 };
 
@@ -3402,16 +3402,22 @@ public:
         case '>': {
             const str_view sv {m_token_begin_itr, m_end_itr};
             const std::size_t header_end_pos = sv.find('\n');
-
-            FK_YAML_ASSERT(!sv.empty());
-            token.type = (sv[0] == '|') ? lexical_token_t::BLOCK_LITERAL_SCALAR : lexical_token_t::BLOCK_FOLDED_SCALAR;
-
             FK_YAML_ASSERT(header_end_pos != str_view::npos);
+            const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
+
+            if (*m_token_begin_itr == '|') {
+                token.type = lexical_token_t::BLOCK_LITERAL_SCALAR;
+            }
+            else {
+                token.type = lexical_token_t::BLOCK_FOLDED_SCALAR;
+            }
+
             const str_view header_line = sv.substr(1, header_end_pos - 1);
             m_block_scalar_header = convert_to_block_scalar_header(header_line);
 
             m_token_begin_itr = sv.begin() + (header_end_pos + 1);
-            scan_block_style_string_token(m_block_scalar_header.indent, token.str);
+            m_block_scalar_header.indent =
+                determine_block_scalar_content_range(base_indent, m_block_scalar_header.indent, token.str);
 
             return token;
         }
@@ -3480,6 +3486,102 @@ public:
     }
 
 private:
+    uint32_t get_current_indent_level(const char* p_line_end) {
+        // get the beginning position of the current line.
+        const char* cur_itr = p_line_end - 1;
+        const char* input_begin_itr = m_input_buffer.begin();
+        while (cur_itr != input_begin_itr) {
+            if (*cur_itr == '\n') {
+                ++cur_itr;
+                break;
+            }
+            --cur_itr;
+        }
+
+        const char* line_begin_itr = cur_itr;
+
+        // get the indentation of the current line.
+        uint32_t indent = 0;
+        bool indent_found = false;
+        // 0: none, 1: block seq item, 2: explicit map key, 3: explicit map value
+        uint32_t context = 0;
+        while (cur_itr != p_line_end && !indent_found) {
+            switch (*cur_itr) {
+            case ' ':
+                ++indent;
+                ++cur_itr;
+                break;
+            case '-':
+                switch (*(cur_itr + 1)) {
+                case ' ':
+                case '\t':
+                    indent += 2;
+                    cur_itr += 2;
+                    context = 1;
+                    break;
+                default:
+                    indent_found = true;
+                    break;
+                }
+                break;
+            case '?':
+                if (*(cur_itr + 1) == ' ') {
+                    indent += 2;
+                    cur_itr += 2;
+                    context = 2;
+                    break;
+                }
+
+                indent_found = true;
+                break;
+            case ':':
+                switch (*(cur_itr + 1)) {
+                case ' ':
+                case '\t':
+                    indent += 2;
+                    cur_itr += 2;
+                    context = 3;
+                    break;
+                default:
+                    indent_found = true;
+                    break;
+                }
+                break;
+            default:
+                indent_found = true;
+                break;
+            }
+        }
+
+        // If "- ", "? " and/or ": " occur in the first line of this plain scalar content.
+        if (context > 0) {
+            // Check if the first line contains the key separator ": ".
+            // If so, the indent value remains the current one.
+            // Otherwise, the indent value is changed based on the last ocurrence of the above 3.
+            // In any case, multiline plain scalar content must be indented more than the indent value.
+            const str_view line_content_part {line_begin_itr + indent, p_line_end};
+            std::size_t key_sep_pos = line_content_part.find(": ");
+            if (key_sep_pos == str_view::npos) {
+                key_sep_pos = line_content_part.find(":\t");
+            }
+
+            if (key_sep_pos == str_view::npos) {
+                constexpr char targets[] = "-?:";
+                FK_YAML_ASSERT(context - 1 < sizeof(targets));
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+                const char target_char = targets[context - 1];
+
+                // Find the position of the last ocuurence of "- ", "? " or ": ".
+                const str_view line_indent_part {line_begin_itr, indent};
+                const std::size_t block_seq_item_begin_pos = line_indent_part.find_last_of(target_char);
+                FK_YAML_ASSERT(block_seq_item_begin_pos != str_view::npos);
+                indent = static_cast<uint32_t>(block_seq_item_begin_pos);
+            }
+        }
+
+        return indent;
+    }
+
     /// @brief Skip until a newline code or a null character is found.
     void scan_comment() {
         FK_YAML_ASSERT(*m_cur_itr == '#');
@@ -3907,98 +4009,7 @@ private:
             switch (sv[pos]) {
             case '\n': {
                 if (indent == std::numeric_limits<uint32_t>::max()) {
-                    // get the beginning position of the current line.
-                    const char* cur_itr = m_token_begin_itr;
-                    const char* input_begin_itr = m_input_buffer.begin();
-                    while (cur_itr != input_begin_itr) {
-                        if (*cur_itr == '\n') {
-                            ++cur_itr;
-                            break;
-                        }
-                        --cur_itr;
-                    }
-
-                    const char* line_begin_itr = cur_itr;
-
-                    // get the indentation of the current line.
-                    indent = 0;
-                    bool indent_found = false;
-                    // 0: none, 1: block seq item, 2: explicit map key, 3: explicit map value
-                    uint32_t context = 0;
-                    while (cur_itr != m_token_begin_itr && !indent_found) {
-                        switch (*cur_itr) {
-                        case ' ':
-                        case '\t':
-                            ++indent;
-                            ++cur_itr;
-                            break;
-                        case '-':
-                            switch (*(cur_itr + 1)) {
-                            case ' ':
-                            case '\t':
-                                indent += 2;
-                                cur_itr += 2;
-                                context = 1;
-                                break;
-                            default:
-                                indent_found = true;
-                                break;
-                            }
-                            break;
-                        case '?':
-                            if (*(cur_itr + 1) == ' ') {
-                                indent += 2;
-                                cur_itr += 2;
-                                context = 2;
-                                break;
-                            }
-
-                            indent_found = true;
-                            break;
-                        case ':':
-                            switch (*(cur_itr + 1)) {
-                            case ' ':
-                            case '\t':
-                                indent += 2;
-                                cur_itr += 2;
-                                context = 3;
-                                break;
-                            default:
-                                indent_found = true;
-                                break;
-                            }
-                            break;
-                        default:
-                            indent_found = true;
-                            break;
-                        }
-                    }
-
-                    // If "- ", "? " and/or ": " occur in the first line of this plain scalar content.
-                    if (context > 0) {
-                        // Check if the first line contains the key separator ": ".
-                        // If so, the indent value remains the current one.
-                        // Otherwise, the indent value is changed based on the last ocurrence of the above 3.
-                        // In any case, multiline plain scalar content must be indented more than the indent value.
-                        const str_view line_content_part {line_begin_itr + indent, &sv[pos]};
-                        std::size_t key_seq_pos = line_content_part.find(": ");
-                        if (key_seq_pos == str_view::npos) {
-                            key_seq_pos = line_content_part.find(":\t");
-                        }
-
-                        if (key_seq_pos == str_view::npos) {
-                            constexpr char targets[] = "-?:";
-                            FK_YAML_ASSERT(context - 1 < sizeof(targets));
-                            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-                            const char target_char = targets[context - 1];
-
-                            // Find the position of the last ocuurence of "- ", "? " or ": ".
-                            const str_view line_indent_part {line_begin_itr, indent};
-                            const std::size_t block_seq_item_begin_pos = line_indent_part.find_last_of(target_char);
-                            FK_YAML_ASSERT(block_seq_item_begin_pos != str_view::npos);
-                            indent = static_cast<uint32_t>(block_seq_item_begin_pos);
-                        }
-                    }
+                    indent = get_current_indent_level(&sv[pos]);
                 }
 
                 constexpr str_view space_filter = " \t\n";
@@ -4084,49 +4095,45 @@ private:
     }
 
     /// @brief Scan a block style string token either in the literal or folded style.
-    /// @param style The style of the given token, either literal or folded.
-    /// @param chomp The chomping indicator type of the given token, either strip, keep or clip.
-    /// @param indent The indent size specified for the given token.
-    void scan_block_style_string_token(uint32_t& indent, str_view& token) {
+    /// @param base_indent The base indent level of the block scalar.
+    /// @param indicated_indent The indicated indent level in the block scalar header. 0 means it's not indicated.
+    /// @param token Storage for the scanned block scalar range.
+    /// @return The content indentation level of the block scalar.
+    uint32_t determine_block_scalar_content_range(uint32_t base_indent, uint32_t indicated_indent, str_view& token) {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         // Handle leading all-space lines.
         constexpr str_view space_filter = " \t\n";
         const std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
         if (first_non_space_pos == str_view::npos) {
-            // empty block scalar with no subsequent tokens.
-            indent = static_cast<uint32_t>(sv.size());
-            token = sv;
-
             // Without the following iterator update, lexer cannot reach the end of input buffer and causes infinite
             // loops from the next loop. (https://github.com/fktn-k/fkYAML/pull/410)
             m_cur_itr = m_end_itr;
-            return;
+
+            // empty block scalar with no subsequent tokens.
+            token = sv;
+            return static_cast<uint32_t>(sv.size());
         }
 
         // get indentation of the first non-space character.
         std::size_t last_newline_pos = sv.substr(0, first_non_space_pos).find_last_of('\n');
+        uint32_t cur_indent = 0;
+
+        // get indentation level of the first non-empty line.
         if (last_newline_pos == str_view::npos) {
             // first_non_space_pos in on the first line.
-            const auto cur_indent = static_cast<uint32_t>(first_non_space_pos);
-            if (indent == 0) {
-                indent = cur_indent;
-            }
-            else if FK_YAML_UNLIKELY (cur_indent < indent) {
-                emit_error("A block style scalar is less indented than the indicated level.");
-            }
+            cur_indent = static_cast<uint32_t>(first_non_space_pos);
         }
         else {
             FK_YAML_ASSERT(last_newline_pos < first_non_space_pos);
-            const auto cur_indent = static_cast<uint32_t>(first_non_space_pos - last_newline_pos - 1);
+            cur_indent = static_cast<uint32_t>(first_non_space_pos - last_newline_pos - 1);
+        }
 
-            // TODO: preserve and compare the last indentation with `cur_indent`
-            if (indent == 0) {
-                indent = cur_indent;
-            }
-            else if FK_YAML_UNLIKELY (cur_indent < indent) {
-                emit_error("A block style scalar is less indented than the indicated level.");
-            }
+        if (indicated_indent == 0) {
+            indicated_indent = cur_indent - base_indent;
+        }
+        else if FK_YAML_UNLIKELY (cur_indent < base_indent + indicated_indent) {
+            emit_error("The first non-empty line in the block scalar is less indented.");
         }
 
         last_newline_pos = sv.find('\n', first_non_space_pos + 1);
@@ -4134,6 +4141,7 @@ private:
             last_newline_pos = sv.size();
         }
 
+        uint32_t content_indent = base_indent + indicated_indent;
         while (last_newline_pos < sv.size()) {
             std::size_t cur_line_end_pos = sv.find('\n', last_newline_pos + 1);
             if (cur_line_end_pos == str_view::npos) {
@@ -4147,8 +4155,8 @@ private:
             }
 
             FK_YAML_ASSERT(last_newline_pos < cur_line_content_begin_pos);
-            const auto cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
-            if (cur_indent < indent && sv[cur_line_content_begin_pos] != '\n') {
+            cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
+            if (cur_indent < content_indent && sv[cur_line_content_begin_pos] != '\n') {
                 // Interpret less indented non-space characters as the start of the next token.
                 break;
             }
@@ -4163,6 +4171,8 @@ private:
 
         token = sv.substr(0, last_newline_pos);
         m_cur_itr = token.end();
+
+        return content_indent;
     }
 
     /// @brief Handle unescaped control characters.
