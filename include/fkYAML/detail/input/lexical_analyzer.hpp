@@ -976,6 +976,18 @@ private:
             FK_YAML_ASSERT(last_newline_pos < cur_line_content_begin_pos);
             cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
             if (cur_indent < content_indent && sv[cur_line_content_begin_pos] != '\n') {
+                if FK_YAML_UNLIKELY (cur_indent > base_indent) {
+                    // This path assumes an input like the following:
+                    // ```yaml
+                    // foo: |
+                    //   text
+                    //  invalid # this line is less indented than the content indent level (2)
+                    //          # but more indented than the base indent level (0)
+                    // ```
+                    // In such cases, the less indented line cannot be the start of the next token.
+                    emit_error("A content line of the block scalar is less indented.");
+                }
+
                 // Interpret less indented non-space characters as the start of the next token.
                 break;
             }

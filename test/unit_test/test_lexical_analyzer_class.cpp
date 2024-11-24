@@ -895,6 +895,15 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
+    SECTION("a following content line is less indented") {
+        const char input[] = "|\n"
+                             "  foo\n"
+                             " bar";
+
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
     SECTION("less indented literal string scalar") {
         const char input[] = "|2\n"
                              " foo";
@@ -1192,6 +1201,15 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
     SECTION("folded string scalar with 0 indent level") {
         const char input[] = "|0\n"
                              "foo";
+
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("a following content line is less indented") {
+        const char input[] = ">\n"
+                             "  foo\n"
+                             " bar";
 
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
