@@ -909,8 +909,13 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX: {
+                // An alias node must not specify any properties (tag, anchor).
+                // https://yaml.org/spec/1.2.2/#71-alias-nodes
                 if FK_YAML_UNLIKELY (m_needs_tag_impl) {
                     throw parse_error("Tag cannot be specified to an alias node", line, indent);
+                }
+                if FK_YAML_UNLIKELY (m_needs_anchor_impl) {
+                    throw parse_error("Anchor cannot be specified to an alias node.", line, indent);
                 }
 
                 std::string token_str = std::string(token.str.begin(), token.str.end());
