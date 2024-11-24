@@ -2880,6 +2880,11 @@ TEST_CASE("Deserializer_NodeProperties") {
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 
+    SECTION("alias node with anchor") {
+        std::string input = "&anchor foo: &anchor2 *anchor";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
     SECTION("parse anchored child block mapping as a block sequence entry") {
         std::string input = "values:\n"
                             "- &anchor !XXX\n"
