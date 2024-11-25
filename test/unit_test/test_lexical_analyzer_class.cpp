@@ -906,14 +906,14 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
 
     SECTION("a leading empty line contains a tab") {
         const char input[] = "|\n"
-                             "  \t\n"
+                             "  \t \n"
                              "  foo";
         fkyaml::detail::lexical_analyzer lexer(input);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_LITERAL_SCALAR);
         REQUIRE(token.str.begin() == &input[2]);
-        REQUIRE(token.str.end() == &input[0] + 11);
+        REQUIRE(token.str.end() == &input[0] + 12);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
 
@@ -1243,14 +1243,14 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
 
     SECTION("a leading empty line contains a tab") {
         const char input[] = ">\n"
-                             "  \t\n"
+                             "  \t \n"
                              "  foo";
         fkyaml::detail::lexical_analyzer lexer(input);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_FOLDED_SCALAR);
         REQUIRE(token.str.begin() == &input[2]);
-        REQUIRE(token.str.end() == &input[0] + 11);
+        REQUIRE(token.str.end() == &input[0] + 12);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
         REQUIRE(lexer.get_block_scalar_header().indent == 2);
 

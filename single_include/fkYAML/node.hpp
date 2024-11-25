@@ -6300,6 +6300,8 @@ private:
         m_use_owned_buffer = true;
         m_buffer.reserve(token.size());
 
+        constexpr str_view white_space_filter = " \t";
+
         std::size_t cur_line_begin_pos = 0;
         bool has_newline_at_end = true;
         bool can_be_folded = false;
@@ -6312,14 +6314,21 @@ private:
 
             const std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
             const str_view line = token.substr(cur_line_begin_pos, line_size);
+            const bool is_empty = line.find_first_not_of(white_space_filter) == str_view::npos;
 
             if (line.size() <= header.indent) {
-                // empty or less-indented lines are turned into a newline
+                // A less-indented line is turned into a newline.
                 m_buffer.push_back('\n');
                 can_be_folded = false;
             }
+            else if (is_empty) {
+                // more-indented empty lines are not folded.
+                m_buffer.push_back('\n');
+                m_buffer.append(line.begin() + header.indent, line.end());
+                m_buffer.push_back('\n');
+            }
             else {
-                const std::size_t non_space_pos = line.find_first_not_of(' ');
+                const std::size_t non_space_pos = line.find_first_not_of(white_space_filter);
                 const bool is_more_indented = (non_space_pos != str_view::npos) && (non_space_pos > header.indent);
 
                 if (can_be_folded) {
