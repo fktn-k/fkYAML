@@ -922,40 +922,58 @@ private:
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         // Handle leading all-space lines.
-        constexpr str_view space_filter = " \t\n";
-        const std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
-        if (first_non_space_pos == str_view::npos) {
+        uint32_t cur_indent = 0;
+        uint32_t max_leading_indent = 0;
+        const char* cur_itr = m_token_begin_itr;
+        for (bool stop_increment = false; cur_itr != m_end_itr; ++cur_itr) {
+            const char c = *cur_itr;
+            if (c == ' ') {
+                if (!stop_increment) {
+                    ++cur_indent;
+                }
+                continue;
+            }
+            if (c == '\n') {
+                max_leading_indent = std::max(cur_indent, max_leading_indent);
+                cur_indent = 0;
+                stop_increment = false;
+                continue;
+            }
+            if (c == '\t') {
+                // Tabs are not counted as an indent character but still part of an empty line.
+                // See https://yaml.org/spec/1.2.2/#rule-s-indent and https://yaml.org/spec/1.2.2/#64-empty-lines.
+                stop_increment = true;
+                continue;
+            }
+            break;
+        }
+
+        // all the block scalar contents are empty lines, and no subsequent token exists.
+        if FK_YAML_UNLIKELY (cur_itr == m_end_itr) {
             // Without the following iterator update, lexer cannot reach the end of input buffer and causes infinite
             // loops from the next loop. (https://github.com/fktn-k/fkYAML/pull/410)
             m_cur_itr = m_end_itr;
 
-            // empty block scalar with no subsequent tokens.
             token = sv;
-            return static_cast<uint32_t>(sv.size());
+            // If there's no non-empty line, the content indentation level is equal to the number of spaces on the
+            // longest line. https://yaml.org/spec/1.2.2/#8111-block-indentation-indicator
+            return indicated_indent == 0 ? std::max(cur_indent, max_leading_indent) : base_indent + indicated_indent;
         }
 
-        // get indentation of the first non-space character.
-        std::size_t last_newline_pos = sv.substr(0, first_non_space_pos).find_last_of('\n');
-        uint32_t cur_indent = 0;
-
-        // get indentation level of the first non-empty line.
-        if (last_newline_pos == str_view::npos) {
-            // first_non_space_pos in on the first line.
-            cur_indent = static_cast<uint32_t>(first_non_space_pos);
-        }
-        else {
-            FK_YAML_ASSERT(last_newline_pos < first_non_space_pos);
-            cur_indent = static_cast<uint32_t>(first_non_space_pos - last_newline_pos - 1);
+        // Any leading empty line must not contain more spaces than the first non-empty line.
+        if FK_YAML_UNLIKELY (cur_indent < max_leading_indent) {
+            emit_error("Any leading empty line must not be more indented than the first non-empty line.");
         }
 
         if (indicated_indent == 0) {
+            FK_YAML_ASSERT(base_indent < cur_indent);
             indicated_indent = cur_indent - base_indent;
         }
         else if FK_YAML_UNLIKELY (cur_indent < base_indent + indicated_indent) {
             emit_error("The first non-empty line in the block scalar is less indented.");
         }
 
-        last_newline_pos = sv.find('\n', first_non_space_pos + 1);
+        std::size_t last_newline_pos = sv.find('\n', cur_itr - m_token_begin_itr + 1);
         if (last_newline_pos == str_view::npos) {
             last_newline_pos = sv.size();
         }
