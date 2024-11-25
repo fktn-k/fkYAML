@@ -4159,7 +4159,7 @@ private:
             last_newline_pos = sv.size();
         }
 
-        uint32_t content_indent = base_indent + indicated_indent;
+        const uint32_t content_indent = base_indent + indicated_indent;
         while (last_newline_pos < sv.size()) {
             std::size_t cur_line_end_pos = sv.find('\n', last_newline_pos + 1);
             if (cur_line_end_pos == str_view::npos) {
