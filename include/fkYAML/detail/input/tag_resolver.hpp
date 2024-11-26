@@ -22,8 +22,8 @@
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-static constexpr str_view default_primary_handle_prefix = "!";
-static constexpr str_view default_secondary_handle_prefix = "tag:yaml.org,2002:";
+static constexpr str_view default_primary_handle_prefix {"!"};
+static constexpr str_view default_secondary_handle_prefix {"tag:yaml.org,2002:"};
 
 template <typename BasicNodeType>
 class tag_resolver {

@@ -17,9 +17,9 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct node_property {
     /// The tag name property.
-    std::string tag;
+    std::string tag {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
     /// The anchor name property.
-    std::string anchor;
+    std::string anchor {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

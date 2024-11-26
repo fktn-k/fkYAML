@@ -333,7 +333,8 @@ private:
     }
 
     static void unescape_escaped_unicode(char32_t codepoint, std::string& buff) {
-        std::array<uint8_t, 4> encode_buff {};
+        // the inner curly braces are necessary to build with older compilers.
+        std::array<uint8_t, 4> encode_buff {{}};
         uint32_t encoded_size {0};
         utf8::from_utf32(codepoint, encode_buff, encoded_size);
         buff.append(reinterpret_cast<char*>(encode_buff.data()), encoded_size);
