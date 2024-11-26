@@ -849,7 +849,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.begin() == &input[3]);
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::STRIP);
-        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+        REQUIRE(lexer.get_block_scalar_header().indent == 2);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -865,7 +865,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.begin() == &input[2]);
         REQUIRE(token.str.end() == &input[0] + 5);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
-        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+        REQUIRE(lexer.get_block_scalar_header().indent == 2);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -881,7 +881,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.str.begin() == &input[3]);
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::KEEP);
-        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+        REQUIRE(lexer.get_block_scalar_header().indent == 2);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -890,6 +890,41 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
     SECTION("literal string scalar with 0 indent level.") {
         const char input[] = "|0\n"
                              "foo";
+
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("a leading empty line is more indented") {
+        const char input[] = "|\n"
+                             "   \n"
+                             "  foo";
+
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("a leading empty line contains a tab") {
+        const char input[] = "|\n"
+                             "  \t \n"
+                             "  foo";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_LITERAL_SCALAR);
+        REQUIRE(token.str.begin() == &input[2]);
+        REQUIRE(token.str.end() == &input[0] + 12);
+        REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
+        REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("a following content line is less indented") {
+        const char input[] = "|\n"
+                             "  foo\n"
+                             " bar";
 
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -1151,7 +1186,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.begin() == &input[3]);
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::STRIP);
-        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+        REQUIRE(lexer.get_block_scalar_header().indent == 2);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -1167,7 +1202,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.begin() == &input[2]);
         REQUIRE(token.str.end() == &input[0] + 5);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
-        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+        REQUIRE(lexer.get_block_scalar_header().indent == 2);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -1183,15 +1218,50 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.str.begin() == &input[3]);
         REQUIRE(token.str.end() == &input[0] + 6);
         REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::KEEP);
-        REQUIRE(lexer.get_block_scalar_header().indent == 3); // lexer returns content size if empty.
+        REQUIRE(lexer.get_block_scalar_header().indent == 2);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("folded string scalar with 0 indent level") {
-        const char input[] = "|0\n"
+        const char input[] = ">0\n"
                              "foo";
+
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("a leading empty line is more indented") {
+        const char input[] = ">\n"
+                             "   \n"
+                             "  foo";
+
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+
+    SECTION("a leading empty line contains a tab") {
+        const char input[] = ">\n"
+                             "  \t \n"
+                             "  foo";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_FOLDED_SCALAR);
+        REQUIRE(token.str.begin() == &input[2]);
+        REQUIRE(token.str.end() == &input[0] + 12);
+        REQUIRE(lexer.get_block_scalar_header().chomp == fkyaml::detail::chomping_indicator_t::CLIP);
+        REQUIRE(lexer.get_block_scalar_header().indent == 2);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("a following content line is less indented") {
+        const char input[] = ">\n"
+                             "  foo\n"
+                             " bar";
 
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);

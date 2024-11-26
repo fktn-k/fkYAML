@@ -417,7 +417,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
     SECTION("empty literal string scalar with strip chomping") {
         fkyaml::detail::str_view token = "  \n";
         header.chomp = fkyaml::detail::chomping_indicator_t::STRIP;
-        header.indent = 3;
+        header.indent = 2;
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
@@ -427,7 +427,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
     SECTION("empty literal string scalar with clip chomping") {
         fkyaml::detail::str_view token = "  \n";
         header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
-        header.indent = 3;
+        header.indent = 2;
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
@@ -437,11 +437,22 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
     SECTION("empty literal string scalar with keep chomping") {
         fkyaml::detail::str_view token = "  \n";
         header.chomp = fkyaml::detail::chomping_indicator_t::KEEP;
-        header.indent = 3;
+        header.indent = 2;
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
         REQUIRE(node.get_value_ref<std::string&>() == "\n");
+    }
+
+    SECTION("a leading empty line contains a tab") {
+        fkyaml::detail::str_view token = "  \t \n"
+                                         "  foo";
+        header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
+        header.indent = 2;
+
+        REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
+        REQUIRE(node.is_string());
+        REQUIRE(node.get_value_ref<std::string&>() == "\t \nfoo");
     }
 
     SECTION("literal scalar with the first line being more indented than the indicated level") {
@@ -617,6 +628,17 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
         REQUIRE(node.get_value_ref<std::string&>() == "\n");
+    }
+
+    SECTION("a leading empty line contains a tab") {
+        fkyaml::detail::str_view token = "  \t \n"
+                                         "  foo";
+        header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
+        header.indent = 2;
+
+        REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
+        REQUIRE(node.is_string());
+        REQUIRE(node.get_value_ref<std::string&>() == "\n\t \nfoo");
     }
 
     SECTION("folded string scalar with the first line being more indented than the indicated level") {

@@ -26,7 +26,7 @@ enum class chomping_indicator_t : std::uint8_t {
 struct block_scalar_header {
     /// Chomping indicator type.
     chomping_indicator_t chomp {chomping_indicator_t::CLIP};
-    /// Indentation for block scalar contents.
+    /// Content indentation level of a block scalar.
     uint32_t indent {0};
 };
 
