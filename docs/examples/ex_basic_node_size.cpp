@@ -21,7 +21,7 @@ int main() {
             std::cout << n.size() << std::endl;
         }
         catch (const fkyaml::exception& e) {
-            std::cout << "The node does not have a container nor string value." << std::endl;
+            std::cout << e.what() << std::endl;
         }
     }
 
