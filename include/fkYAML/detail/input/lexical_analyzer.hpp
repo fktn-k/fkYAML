@@ -307,17 +307,15 @@ public:
 private:
     uint32_t get_current_indent_level(const char* p_line_end) {
         // get the beginning position of the current line.
-        const char* cur_itr = p_line_end - 1;
-        const char* input_begin_itr = m_input_buffer.begin();
-        while (cur_itr != input_begin_itr) {
-            if (*cur_itr == '\n') {
-                ++cur_itr;
-                break;
-            }
-            --cur_itr;
+        std::size_t line_begin_pos = str_view(m_input_buffer.begin(), p_line_end - 1).find_last_of('\n');
+        if (line_begin_pos == str_view::npos) {
+            line_begin_pos = 0;
         }
-
-        const char* line_begin_itr = cur_itr;
+        else {
+            ++line_begin_pos;
+        }
+        const char* p_line_begin = m_input_buffer.begin() + line_begin_pos;
+        const char* cur_itr = p_line_begin;
 
         // get the indentation of the current line.
         uint32_t indent = 0;
@@ -378,7 +376,7 @@ private:
             // If so, the indent value remains the current one.
             // Otherwise, the indent value is changed based on the last ocurrence of the above 3.
             // In any case, multiline plain scalar content must be indented more than the indent value.
-            const str_view line_content_part {line_begin_itr + indent, p_line_end};
+            const str_view line_content_part {p_line_begin + indent, p_line_end};
             std::size_t key_sep_pos = line_content_part.find(": ");
             if (key_sep_pos == str_view::npos) {
                 key_sep_pos = line_content_part.find(":\t");
@@ -391,7 +389,7 @@ private:
                 const char target_char = targets[context - 1];
 
                 // Find the position of the last ocuurence of "- ", "? " or ": ".
-                const str_view line_indent_part {line_begin_itr, indent};
+                const str_view line_indent_part {p_line_begin, indent};
                 const std::size_t block_seq_item_begin_pos = line_indent_part.find_last_of(target_char);
                 FK_YAML_ASSERT(block_seq_item_begin_pos != str_view::npos);
                 indent = static_cast<uint32_t>(block_seq_item_begin_pos);
