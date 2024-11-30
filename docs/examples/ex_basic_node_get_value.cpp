@@ -7,6 +7,10 @@
 // SPDX-License-Identifier: MIT
 
 #include <iostream>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
 #include <fkYAML/node.hpp>
 
 int main() {
