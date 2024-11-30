@@ -2180,8 +2180,10 @@ public:
     template <
         typename CharPtrT,
         enable_if_t<
-            disjunction<std::is_same<CharPtrT, value_type*>, std::is_same<CharPtrT, const value_type*>>::value, int> =
-            0>
+            conjunction<
+                negation<std::is_array<CharPtrT>>, std::is_pointer<CharPtrT>,
+                disjunction<std::is_same<CharPtrT, value_type*>, std::is_same<CharPtrT, const value_type*>>>::value,
+            int> = 0>
     FK_YAML_CXX17_CONSTEXPR basic_str_view(CharPtrT p_str) noexcept
         : m_len(traits_type::length(p_str)),
           mp_str(p_str) {
@@ -3994,7 +3996,7 @@ private:
     void determine_plain_scalar_range(str_view& token) {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        constexpr str_view filter = "\n :{}[],";
+        constexpr str_view filter {"\n :{}[],"};
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             token = sv;
@@ -4012,7 +4014,7 @@ private:
                     indent = get_current_indent_level(&sv[pos]);
                 }
 
-                constexpr str_view space_filter = " \t\n";
+                constexpr str_view space_filter {" \t\n"};
                 const std::size_t non_space_pos = sv.find_first_not_of(space_filter, pos);
                 const std::size_t last_newline_pos = sv.find_last_of('\n', non_space_pos);
                 FK_YAML_ASSERT(last_newline_pos != str_view::npos);
@@ -4293,7 +4295,7 @@ private:
     /// @param indent A variable to store the retrieved indent size.
     /// @return Block scalar header information converted from the header line.
     block_scalar_header convert_to_block_scalar_header(str_view line) {
-        constexpr str_view comment_prefix = " #";
+        constexpr str_view comment_prefix {" #"};
         const std::size_t comment_begin_pos = line.find(comment_prefix);
         if (comment_begin_pos != str_view::npos) {
             line = line.substr(0, comment_begin_pos);
@@ -5614,7 +5616,8 @@ private:
     }
 
     static void unescape_escaped_unicode(char32_t codepoint, std::string& buff) {
-        std::array<uint8_t, 4> encode_buff {};
+        // the inner curly braces are necessary to build with older compilers.
+        std::array<uint8_t, 4> encode_buff {{}};
         uint32_t encoded_size {0};
         utf8::from_utf32(codepoint, encode_buff, encoded_size);
         buff.append(reinterpret_cast<char*>(encode_buff.data()), encoded_size);
@@ -6049,7 +6052,7 @@ public:
     scalar_parser& operator=(const scalar_parser&) = default;
 
     scalar_parser(scalar_parser&&) noexcept = default;
-    scalar_parser& operator=(scalar_parser&&) noexcept = default;
+    scalar_parser& operator=(scalar_parser&&) noexcept(std::is_nothrow_move_assignable<std::string>::value) = default;
 
     /// @brief Parses a token into a flow scalar (either plain, single quoted or double quoted)
     /// @param lex_type Lexical token type for the scalar.
@@ -6149,7 +6152,7 @@ private:
             return token;
         }
 
-        constexpr str_view filter = "\'\n";
+        constexpr str_view filter {"\'\n"};
         std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
@@ -6193,7 +6196,7 @@ private:
             return token;
         }
 
-        constexpr str_view filter = "\\\n";
+        constexpr str_view filter {"\\\n"};
         std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
@@ -6300,7 +6303,7 @@ private:
         m_use_owned_buffer = true;
         m_buffer.reserve(token.size());
 
-        constexpr str_view white_space_filter = " \t";
+        constexpr str_view white_space_filter {" \t"};
 
         std::size_t cur_line_begin_pos = 0;
         bool has_newline_at_end = true;
@@ -6602,8 +6605,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-static constexpr str_view default_primary_handle_prefix = "!";
-static constexpr str_view default_secondary_handle_prefix = "tag:yaml.org,2002:";
+static constexpr str_view default_primary_handle_prefix {"!"};
+static constexpr str_view default_secondary_handle_prefix {"tag:yaml.org,2002:"};
 
 template <typename BasicNodeType>
 class tag_resolver {
@@ -7030,9 +7033,9 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct node_property {
     /// The tag name property.
-    std::string tag;
+    std::string tag {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
     /// The anchor name property.
-    std::string anchor;
+    std::string anchor {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -8471,7 +8474,8 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
             return utf_encode_t::UTF_8;
         }
 
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = static_cast<uint8_t>(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -8553,7 +8557,8 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
             return utf_encode_t::UTF_16BE;
         }
 
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 2 && begin + i != end; i++) {
             // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -8593,7 +8598,8 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
             return utf_encode_t::UTF_32BE;
         }
 
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         const char32_t elem = *begin;
         bytes[0] = static_cast<uint8_t>((elem & 0xFF000000u) >> 24);
         bytes[1] = static_cast<uint8_t>((elem & 0x00FF0000u) >> 16);
@@ -8622,7 +8628,8 @@ struct file_utf_encode_detector {
     /// @param p_file The input file handle.
     /// @return A detected encoding type.
     static utf_encode_t detect(std::FILE* p_file) noexcept {
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4; i++) {
             char byte = 0;
@@ -8665,7 +8672,8 @@ struct stream_utf_encode_detector {
     /// @param p_file The input file handle.
     /// @return A detected encoding type.
     static utf_encode_t detect(std::istream& is) noexcept {
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4; i++) {
             char ch = 0;

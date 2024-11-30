@@ -813,7 +813,7 @@ private:
     void determine_plain_scalar_range(str_view& token) {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        constexpr str_view filter = "\n :{}[],";
+        constexpr str_view filter {"\n :{}[],"};
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             token = sv;
@@ -831,7 +831,7 @@ private:
                     indent = get_current_indent_level(&sv[pos]);
                 }
 
-                constexpr str_view space_filter = " \t\n";
+                constexpr str_view space_filter {" \t\n"};
                 const std::size_t non_space_pos = sv.find_first_not_of(space_filter, pos);
                 const std::size_t last_newline_pos = sv.find_last_of('\n', non_space_pos);
                 FK_YAML_ASSERT(last_newline_pos != str_view::npos);
@@ -1112,7 +1112,7 @@ private:
     /// @param indent A variable to store the retrieved indent size.
     /// @return Block scalar header information converted from the header line.
     block_scalar_header convert_to_block_scalar_header(str_view line) {
-        constexpr str_view comment_prefix = " #";
+        constexpr str_view comment_prefix {" #"};
         const std::size_t comment_begin_pos = line.find(comment_prefix);
         if (comment_begin_pos != str_view::npos) {
             line = line.substr(0, comment_begin_pos);

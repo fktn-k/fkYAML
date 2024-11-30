@@ -60,7 +60,7 @@ public:
     scalar_parser& operator=(const scalar_parser&) = default;
 
     scalar_parser(scalar_parser&&) noexcept = default;
-    scalar_parser& operator=(scalar_parser&&) noexcept = default;
+    scalar_parser& operator=(scalar_parser&&) noexcept(std::is_nothrow_move_assignable<std::string>::value) = default;
 
     /// @brief Parses a token into a flow scalar (either plain, single quoted or double quoted)
     /// @param lex_type Lexical token type for the scalar.
@@ -160,7 +160,7 @@ private:
             return token;
         }
 
-        constexpr str_view filter = "\'\n";
+        constexpr str_view filter {"\'\n"};
         std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
@@ -204,7 +204,7 @@ private:
             return token;
         }
 
-        constexpr str_view filter = "\\\n";
+        constexpr str_view filter {"\\\n"};
         std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
@@ -311,7 +311,7 @@ private:
         m_use_owned_buffer = true;
         m_buffer.reserve(token.size());
 
-        constexpr str_view white_space_filter = " \t";
+        constexpr str_view white_space_filter {" \t"};
 
         std::size_t cur_line_begin_pos = 0;
         bool has_newline_at_end = true;

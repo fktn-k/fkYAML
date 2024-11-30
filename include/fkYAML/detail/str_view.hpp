@@ -88,8 +88,10 @@ public:
     template <
         typename CharPtrT,
         enable_if_t<
-            disjunction<std::is_same<CharPtrT, value_type*>, std::is_same<CharPtrT, const value_type*>>::value, int> =
-            0>
+            conjunction<
+                negation<std::is_array<CharPtrT>>, std::is_pointer<CharPtrT>,
+                disjunction<std::is_same<CharPtrT, value_type*>, std::is_same<CharPtrT, const value_type*>>>::value,
+            int> = 0>
     FK_YAML_CXX17_CONSTEXPR basic_str_view(CharPtrT p_str) noexcept
         : m_len(traits_type::length(p_str)),
           mp_str(p_str) {
