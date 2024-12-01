@@ -9776,12 +9776,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @brief A tag which tells Iterator will contain sequence value iterator.
-struct sequence_iterator_tag {};
-
-/// @brief A tag which tells Iterator will contain mapping value iterator.
-struct mapping_iterator_tag {};
-
 /// @brief The template definitions of type information used in @ref Iterator class
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
@@ -9858,13 +9852,13 @@ private:
 public:
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
-    iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept {
+    iterator(const typename ValueType::sequence_type::iterator& itr) noexcept {
         m_iterator_holder.sequence_iterator = itr;
     }
 
     /// @brief Construct a new iterator object with mapping iterator object.
     /// @param[in] itr An mapping iterator object.
-    iterator(mapping_iterator_tag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
+    iterator(const typename ValueType::mapping_type::iterator& itr) noexcept
         : m_inner_iterator_type(iterator_t::MAPPING) {
         m_iterator_holder.mapping_iterator = itr;
     }
@@ -13285,12 +13279,12 @@ public:
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->begin()};
+            return {p_node_value->p_sequence->begin()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->begin()};
+            return {p_node_value->p_mapping->begin()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
@@ -13306,12 +13300,12 @@ public:
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->begin()};
+            return {p_node_value->p_sequence->begin()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->begin()};
+            return {p_node_value->p_mapping->begin()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
@@ -13327,12 +13321,12 @@ public:
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->end()};
+            return {p_node_value->p_sequence->end()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->end()};
+            return {p_node_value->p_mapping->end()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
@@ -13348,12 +13342,12 @@ public:
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->end()};
+            return {p_node_value->p_sequence->end()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->end()};
+            return {p_node_value->p_mapping->end()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());

@@ -18,12 +18,6 @@
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @brief A tag which tells Iterator will contain sequence value iterator.
-struct sequence_iterator_tag {};
-
-/// @brief A tag which tells Iterator will contain mapping value iterator.
-struct mapping_iterator_tag {};
-
 /// @brief The template definitions of type information used in @ref Iterator class
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
@@ -100,13 +94,13 @@ private:
 public:
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
-    iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept {
+    iterator(const typename ValueType::sequence_type::iterator& itr) noexcept {
         m_iterator_holder.sequence_iterator = itr;
     }
 
     /// @brief Construct a new iterator object with mapping iterator object.
     /// @param[in] itr An mapping iterator object.
-    iterator(mapping_iterator_tag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
+    iterator(const typename ValueType::mapping_type::iterator& itr) noexcept
         : m_inner_iterator_type(iterator_t::MAPPING) {
         m_iterator_holder.mapping_iterator = itr;
     }
