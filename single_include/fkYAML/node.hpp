@@ -9781,15 +9781,15 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 template <typename ValueType>
 struct iterator_traits {
     /// A type of iterated elements.
-    using value_type = ValueType;
+    using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
-    using difference_type = std::ptrdiff_t;
+    using difference_type = typename ValueType::difference_type;
     /// A type to represent iterator sizes.
-    using size_type = std::size_t;
+    using size_type = typename ValueType::size_type;
     /// A type of an element pointer.
-    using pointer = value_type*;
+    using pointer = typename ValueType::pointer;
     /// A type of reference to an element.
-    using reference = value_type&;
+    using reference = typename ValueType::reference;
 };
 
 /// @brief A specialization of @ref iterator_traits for constant value types.
@@ -9797,15 +9797,15 @@ struct iterator_traits {
 template <typename ValueType>
 struct iterator_traits<const ValueType> {
     /// A type of iterated elements.
-    using value_type = ValueType;
+    using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
-    using difference_type = std::ptrdiff_t;
+    using difference_type = typename ValueType::difference_type;
     /// A type to represent iterator sizes.
-    using size_type = std::size_t;
+    using size_type = typename ValueType::size_type;
     /// A type of a constant element pointer.
-    using pointer = const value_type*;
+    using pointer = typename ValueType::const_pointer;
     /// A type of constant reference to an element.
-    using reference = const value_type&;
+    using reference = typename ValueType::const_reference;
 };
 
 /// @brief Definitions of iterator types for iterators internally held.
@@ -11936,14 +11936,6 @@ template <
     template <typename, typename = void> class ConverterType>
 class basic_node {
 public:
-    /// @brief A type for iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
-    using iterator = fkyaml::detail::iterator<basic_node>;
-
-    /// @brief A type for constant iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
-    using const_iterator = fkyaml::detail::iterator<const basic_node>;
-
     /// @brief A type for sequence basic_node values.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence_type/
     using sequence_type = SequenceType<basic_node, std::allocator<basic_node>>;
@@ -11968,6 +11960,42 @@ public:
     /// @brief A type for string basic_node values.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/string_type/
     using string_type = StringType;
+
+    /// @brief A type of elements in a basic_node container.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using value_type = basic_node;
+
+    /// @brief A type of reference to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using reference = value_type&;
+
+    /// @brief A type of constant reference to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using const_reference = const value_type&;
+
+    /// @brief A type of a pointer to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using pointer = value_type*;
+
+    /// @brief A type of a constant pointer to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using const_pointer = const value_type*;
+
+    /// @brief A type to represent basic_node container sizes.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using size_type = std::size_t;
+
+    /// @brief A type to represent differences between basic_node iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using difference_type = std::ptrdiff_t;
+
+    /// @brief A type for iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
+    using iterator = fkyaml::detail::iterator<basic_node>;
+
+    /// @brief A type for constant iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
+    using const_iterator = fkyaml::detail::iterator<const basic_node>;
 
     /// @brief A helper alias to determine converter type for the given target native data type.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/value_converter_type/

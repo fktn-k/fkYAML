@@ -23,15 +23,15 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 template <typename ValueType>
 struct iterator_traits {
     /// A type of iterated elements.
-    using value_type = ValueType;
+    using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
-    using difference_type = std::ptrdiff_t;
+    using difference_type = typename ValueType::difference_type;
     /// A type to represent iterator sizes.
-    using size_type = std::size_t;
+    using size_type = typename ValueType::size_type;
     /// A type of an element pointer.
-    using pointer = value_type*;
+    using pointer = typename ValueType::pointer;
     /// A type of reference to an element.
-    using reference = value_type&;
+    using reference = typename ValueType::reference;
 };
 
 /// @brief A specialization of @ref iterator_traits for constant value types.
@@ -39,15 +39,15 @@ struct iterator_traits {
 template <typename ValueType>
 struct iterator_traits<const ValueType> {
     /// A type of iterated elements.
-    using value_type = ValueType;
+    using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
-    using difference_type = std::ptrdiff_t;
+    using difference_type = typename ValueType::difference_type;
     /// A type to represent iterator sizes.
-    using size_type = std::size_t;
+    using size_type = typename ValueType::size_type;
     /// A type of a constant element pointer.
-    using pointer = const value_type*;
+    using pointer = typename ValueType::const_pointer;
     /// A type of constant reference to an element.
-    using reference = const value_type&;
+    using reference = typename ValueType::const_reference;
 };
 
 /// @brief Definitions of iterator types for iterators internally held.
