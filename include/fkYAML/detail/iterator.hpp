@@ -62,33 +62,30 @@ template <typename ValueType>
 class iterator {
 public:
     /// A type for iterator traits of instantiated @Iterator template class.
-    using ItrTraitsType = iterator_traits<ValueType>;
+    using iterator_traits_type = iterator_traits<ValueType>;
 
     /// A type for iterator category tag.
     using iterator_category = std::bidirectional_iterator_tag;
     /// A type of iterated element.
-    using value_type = typename ItrTraitsType::value_type;
+    using value_type = typename iterator_traits_type::value_type;
     /// A type to represent differences between iterators.
-    using difference_type = typename ItrTraitsType::difference_type;
+    using difference_type = typename iterator_traits_type::difference_type;
     /// A type to represent container sizes.
-    using size_type = typename ItrTraitsType::size_type;
+    using size_type = typename iterator_traits_type::size_type;
     /// A type of an element pointer.
-    using pointer = typename ItrTraitsType::pointer;
+    using pointer = typename iterator_traits_type::pointer;
     /// A type of reference to an element.
-    using reference = typename ItrTraitsType::reference;
+    using reference = typename iterator_traits_type::reference;
 
 private:
-    /// A type of non-const version of iterated elements.
-    using NonConstValueType = typename std::remove_const<ValueType>::type;
-
-    static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts basic_node<...>");
+    static_assert(is_basic_node<value_type>::value, "iterator class only accepts a basic_node as its value type.");
 
     /// @brief The actual storage for iterators internally held in @ref Iterator.
     struct iterator_holder {
         /// A sequence iterator object.
-        typename NonConstValueType::sequence_type::iterator sequence_iterator {};
+        typename value_type::sequence_type::iterator sequence_iterator {};
         /// A mapping iterator object.
-        typename NonConstValueType::mapping_type::iterator mapping_iterator {};
+        typename value_type::mapping_type::iterator mapping_iterator {};
     };
 
 public:
@@ -357,9 +354,9 @@ public:
         return m_inner_iterator_type;
     }
 
-    /// @brief Get the key string of the YAML mapping node for the current iterator.
-    /// @return const std::string& The key string of the YAML mapping node for the current iterator.
-    const typename ValueType::mapping_type::key_type& key() const {
+    /// @brief Get the mapping key node of the current iterator.
+    /// @return The mapping key node of the current iterator.
+    const typename value_type::mapping_type::key_type& key() const {
         if FK_YAML_UNLIKELY (m_inner_iterator_type == iterator_t::SEQUENCE) {
             throw fkyaml::exception("Cannot retrieve key from non-mapping iterators.");
         }
@@ -367,8 +364,8 @@ public:
         return m_iterator_holder.mapping_iterator->first;
     }
 
-    /// @brief Get the reference of the YAML node for the current iterator.
-    /// @return reference A reference to the YAML node for the current iterator.
+    /// @brief Get reference to the YAML node of the current iterator.
+    /// @return Reference to the YAML node of the current iterator.
     reference value() noexcept {
         return operator*();
     }
