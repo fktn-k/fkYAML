@@ -56,10 +56,30 @@ enum class iterator_t : std::uint8_t {
     MAPPING,  //!< mapping iterator type.
 };
 
+/// @brief The actual storage for iterators internally held in iterator.
+template <typename BasicNodeType>
+struct iterator_holder {
+    static_assert(
+        is_basic_node<BasicNodeType>::value,
+        "iterator_holder class only accepts a basic_node as its template parameter.");
+
+    /// A sequence iterator object.
+    typename BasicNodeType::sequence_type::iterator sequence_iterator {};
+    /// A mapping iterator object.
+    typename BasicNodeType::mapping_type::iterator mapping_iterator {};
+};
+
 /// @brief A class which holds iterators either of sequence or mapping type
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 class iterator {
+    /// @brief The iterator type with ValueType of different const-ness.
+    using other_iterator_type = typename std::conditional<
+        std::is_const<ValueType>::value, iterator<typename std::remove_const<ValueType>::type>,
+        iterator<const ValueType>>::type;
+
+    friend other_iterator_type;
+
 public:
     /// A type for iterator traits of instantiated @Iterator template class.
     using iterator_traits_type = iterator_traits<ValueType>;
@@ -77,104 +97,58 @@ public:
     /// A type of reference to an element.
     using reference = typename iterator_traits_type::reference;
 
-private:
     static_assert(is_basic_node<value_type>::value, "iterator class only accepts a basic_node as its value type.");
 
-    /// @brief The actual storage for iterators internally held in @ref Iterator.
-    struct iterator_holder {
-        /// A sequence iterator object.
-        typename value_type::sequence_type::iterator sequence_iterator {};
-        /// A mapping iterator object.
-        typename value_type::mapping_type::iterator mapping_iterator {};
-    };
-
-public:
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
-    iterator(const typename ValueType::sequence_type::iterator& itr) noexcept {
+    iterator(const typename value_type::sequence_type::iterator& itr) noexcept {
         m_iterator_holder.sequence_iterator = itr;
     }
 
     /// @brief Construct a new iterator object with mapping iterator object.
     /// @param[in] itr An mapping iterator object.
-    iterator(const typename ValueType::mapping_type::iterator& itr) noexcept
+    iterator(const typename value_type::mapping_type::iterator& itr) noexcept
         : m_inner_iterator_type(iterator_t::MAPPING) {
         m_iterator_holder.mapping_iterator = itr;
     }
 
-    /// @brief Copy constructor of the iterator class.
-    /// @param other An iterator object to be copied with.
-    iterator(const iterator& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type) {
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = other.m_iterator_holder.sequence_iterator;
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = other.m_iterator_holder.mapping_iterator;
-            break;
-        }
+    /// @brief Copy constructs an iterator.
+    iterator(const iterator&) = default;
+
+    /// @brief Copy constructs an iterator from another iterator with different const-ness in ValueType.
+    /// @note This copy constructor is not defined if ValueType is not const to avoid const removal from ValueType.
+    /// @tparam OtherIterator The iterator type to copy from.
+    /// @param other An iterator to copy from with different const-ness in ValueType.
+    template <
+        typename OtherIterator,
+        enable_if_t<
+            conjunction<std::is_same<OtherIterator, other_iterator_type>, std::is_const<ValueType>>::value, int> = 0>
+    iterator(const OtherIterator& other) noexcept
+        : m_inner_iterator_type(other.m_inner_iterator_type),
+          m_iterator_holder(other.m_iterator_holder) {
     }
 
-    /// @brief Move constructor of the iterator class.
-    /// @param other An iterator object to be moved from.
-    iterator(iterator&& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type) {
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = std::move(other.m_iterator_holder.sequence_iterator);
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = std::move(other.m_iterator_holder.mapping_iterator);
-            break;
-        }
+    /// @brief A copy assignment operator of the iterator class.
+    iterator& operator=(const iterator&) = default;
+
+    template <
+        typename OtherIterator,
+        enable_if_t<
+            conjunction<std::is_same<OtherIterator, other_iterator_type>, std::is_const<ValueType>>::value, int> = 0>
+    iterator& operator=(const OtherIterator& other) noexcept {
+        m_inner_iterator_type = other.m_inner_iterator_type;
+        m_iterator_holder = other.m_iterator_holder;
+        return *this;
     }
+
+    /// @brief Move constructs an iterator.
+    iterator(iterator&&) = default;
+
+    /// @brief A move assignment operator of the iterator class.
+    iterator& operator=(iterator&&) = default;
 
     /// @brief Destroys an iterator.
     ~iterator() = default;
-
-public:
-    /// @brief A copy assignment operator of the iterator class.
-    /// @param rhs An iterator object to be copied with.
-    /// @return iterator& Reference to this iterator object.
-    iterator& operator=(const iterator& rhs) noexcept {
-        if FK_YAML_UNLIKELY (&rhs == this) {
-            return *this;
-        }
-
-        m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = rhs.m_iterator_holder.sequence_iterator;
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = rhs.m_iterator_holder.mapping_iterator;
-            break;
-        }
-
-        return *this;
-    }
-
-    /// @brief A move assignment operator of the iterator class.
-    /// @param rhs An iterator object to be moved from.
-    /// @return iterator& Reference to this iterator object.
-    iterator& operator=(iterator&& rhs) noexcept {
-        if FK_YAML_UNLIKELY (&rhs == this) {
-            return *this;
-        }
-
-        m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = std::move(rhs.m_iterator_holder.sequence_iterator);
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = std::move(rhs.m_iterator_holder.mapping_iterator);
-            break;
-        }
-
-        return *this;
-    }
 
     /// @brief An arrow operator of the iterator class.
     /// @return pointer A pointer to the BasicNodeType object internally referenced by the actual iterator object.
@@ -286,7 +260,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is equal to the other.
     /// @return false This iterator object is not equal to the other.
-    bool operator==(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator==(const Iterator& rhs) const {
         if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
@@ -303,7 +281,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is not equal to the other.
     /// @return false This iterator object is equal to the other.
-    bool operator!=(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator!=(const Iterator& rhs) const {
         return !operator==(rhs);
     }
 
@@ -311,7 +293,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is less than the other.
     /// @return false This iterator object is not less than the other.
-    bool operator<(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator<(const Iterator& rhs) const {
         if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
@@ -327,7 +313,11 @@ public:
     ///  @param rhs An iterator object to be compared with this iterator object.
     ///  @return true  This iterator object is either less than or equal to the other.
     ///  @return false This iterator object is neither less than nor equal to the other.
-    bool operator<=(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator<=(const Iterator& rhs) const {
         return !rhs.operator<(*this);
     }
 
@@ -335,7 +325,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is greater than the other.
     /// @return false This iterator object is not greater than the other.
-    bool operator>(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator>(const Iterator& rhs) const {
         return !operator<=(rhs);
     }
 
@@ -343,7 +337,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is either greater than or equal to the other.
     /// @return false This iterator object is neither greater than nor equal to the other.
-    bool operator>=(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator>=(const Iterator& rhs) const {
         return !operator<(rhs);
     }
 
@@ -374,7 +372,7 @@ private:
     /// A type of the internally-held iterator.
     iterator_t m_inner_iterator_type {iterator_t::SEQUENCE};
     /// A holder of actual iterators.
-    mutable iterator_holder m_iterator_holder {};
+    iterator_holder<value_type> m_iterator_holder {};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
