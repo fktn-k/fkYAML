@@ -1,20 +1,21 @@
 <small>Defined in header [`<fkYAML/node.hpp>`](https://github.com/fktn-k/fkYAML/blob/develop/include/fkYAML/node.hpp)</small>
 
-# <small>fkyaml::basic_node::</small>begin
+# <small>fkyaml::basic_node::</small>begin, <small>fkyaml::basic_node::</small>cbegin
 
 ```cpp
 iterator begin();
 const_iterator begin() const;
+const_iterator cbegin() const;
 ```
 
-Returns an iterator to the first element of a container node value.  
-Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not have a sequence nor mapping value.  
+Returns an iterator to the first element of a container node.  
+Throws a [`fkyaml::type_error`](../exception/type_error.md) if a basic_node is neither a sequence nor mapping node.  
 
 ![Image from https://en.cppreference.com/w/cpp/iterator/begin](../../img/range-begin-end.svg)
 
 ### **Return Value**
 
-An iterator to the first element of a container node value (either sequence or mapping).
+An iterator to the first element of a container node.
 
 ???+ Example
 
@@ -33,4 +34,5 @@ An iterator to the first element of a container node value (either sequence or m
 * [node](node.md)
 * [iterator](iterator.md)  
 * [const_iterator](const_iterator.md)
-* [end](end.md)
+* [end, cend](end.md)
+* [operator<<](insertion_operator.md)

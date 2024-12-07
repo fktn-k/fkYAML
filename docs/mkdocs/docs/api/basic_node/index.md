@@ -34,17 +34,33 @@ This class provides features to handle YAML nodes.
 
 ## Member Types
 
+### Node Value Types
+| Name                                      | Description                                            |
+| ----------------------------------------- | ------------------------------------------------------ |
+| [sequence_type](sequence_type.md)         | The type used to store sequence node value containers. |
+| [mapping_type](mapping_type.md)           | The type used to store mapping node value containers.  |
+| [boolean_type](boolean_type.md)           | The type used to store boolean node values.            |
+| [integer_type](integer_type.md)           | The type used to store integer node values.            |
+| [float_number_type](float_number_type.md) | The type used to store float number node values.       |
+| [string_type](string_type.md)             | The type used to store string node values.             |
+
+### Container Types
+| Name                                | Description                                                                                               |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| value_type                          | `basic_node`                                                                                              |
+| reference                           | `basic_node&`                                                                                             |
+| const_reference                     | `const basic_node&`                                                                                       |
+| pointer                             | `basic_node*`                                                                                             |
+| const_pointer                       | `const basic_node*`                                                                                       |
+| size_type                           | [`std::size_t`](https://en.cppreference.com/w/cpp/types/size_t)                                           |
+| difference_type                     | [`std::ptrdiff_t`](https://en.cppreference.com/w/cpp/types/ptrdiff_t)                                     |
+| [iterator](iterator.md)             | [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator)          |
+| [const_iterator](const_iterator.md) | constant [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator) |
+
+### Miscellaneous
 | Name                                            | Description                                                         |
 | ----------------------------------------------- | ------------------------------------------------------------------- |
-| [sequence_type](sequence_type.md)               | The type used to store sequence node value containers.              |
-| [mapping_type](mapping_type.md)                 | The type used to store mapping node value containers.               |
-| [boolean_type](boolean_type.md)                 | The type used to store boolean node values.                         |
-| [integer_type](integer_type.md)                 | The type used to store integer node values.                         |
-| [float_number_type](float_number_type.md)       | The type used to store float number node values.                    |
-| [string_type](string_type.md)                   | The type used to store string node values.                          |
 | [value_converter_type](value_converter_type.md) | The type used to convert between node and native data.              |
-| [iterator](iterator.md)                         | The type for non-constant iterators.                                |
-| [const_iterator](const_iterator.md)             | The type for constant iterators.                                    |
 | [node_t](node_t.md)                             | **(DEPRECATED)** The type used to store the internal value type.    |
 | [yaml_version_t](yaml_version_t.md)             | **(DEPRECATED)** The type used to store the enable version of YAML. |
 

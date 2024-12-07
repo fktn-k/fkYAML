@@ -49,14 +49,6 @@ template <
     template <typename, typename = void> class ConverterType>
 class basic_node {
 public:
-    /// @brief A type for iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
-    using iterator = fkyaml::detail::iterator<basic_node>;
-
-    /// @brief A type for constant iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
-    using const_iterator = fkyaml::detail::iterator<const basic_node>;
-
     /// @brief A type for sequence basic_node values.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence_type/
     using sequence_type = SequenceType<basic_node, std::allocator<basic_node>>;
@@ -81,6 +73,42 @@ public:
     /// @brief A type for string basic_node values.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/string_type/
     using string_type = StringType;
+
+    /// @brief A type of elements in a basic_node container.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using value_type = basic_node;
+
+    /// @brief A type of reference to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using reference = value_type&;
+
+    /// @brief A type of constant reference to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using const_reference = const value_type&;
+
+    /// @brief A type of a pointer to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using pointer = value_type*;
+
+    /// @brief A type of a constant pointer to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using const_pointer = const value_type*;
+
+    /// @brief A type to represent basic_node container sizes.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using size_type = std::size_t;
+
+    /// @brief A type to represent differences between basic_node iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using difference_type = std::ptrdiff_t;
+
+    /// @brief A type for iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
+    using iterator = fkyaml::detail::iterator<basic_node>;
+
+    /// @brief A type for constant iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
+    using const_iterator = fkyaml::detail::iterator<const basic_node>;
 
     /// @brief A helper alias to determine converter type for the given target native data type.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/value_converter_type/
@@ -1383,88 +1411,104 @@ public:
         swap(m_prop.anchor, rhs.m_prop.anchor);
     }
 
-    /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return An iterator to the first element of a YAML node value (either sequence or mapping).
+    /// @brief Returns an iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return An iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     iterator begin() {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->begin()};
+            return {p_node_value->p_sequence->begin()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->begin()};
+            return {p_node_value->p_mapping->begin()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
     }
 
-    /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return A constant iterator to the first element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     const_iterator begin() const {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->begin()};
+            return {p_node_value->p_sequence->begin()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->begin()};
+            return {p_node_value->p_mapping->begin()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
     }
 
-    /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a non-const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return An iterator to the past-the end element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the first element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cbegin/
+    const_iterator cbegin() const {
+        return begin();
+    }
+
+    /// @brief Returns an iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if the basic_node value is not of container types.
+    /// @return An iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     iterator end() {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->end()};
+            return {p_node_value->p_sequence->end()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->end()};
+            return {p_node_value->p_mapping->end()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
     }
 
-    /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return A constant iterator to the past-the end element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     const_iterator end() const {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->end()};
+            return {p_node_value->p_sequence->end()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->end()};
+            return {p_node_value->p_mapping->end()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
+    }
+
+    /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the past-the-last element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cend/
+    const_iterator cend() const {
+        return end();
     }
 
 private:

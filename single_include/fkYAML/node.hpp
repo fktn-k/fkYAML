@@ -9776,26 +9776,20 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @brief A tag which tells Iterator will contain sequence value iterator.
-struct sequence_iterator_tag {};
-
-/// @brief A tag which tells Iterator will contain mapping value iterator.
-struct mapping_iterator_tag {};
-
 /// @brief The template definitions of type information used in @ref Iterator class
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 struct iterator_traits {
     /// A type of iterated elements.
-    using value_type = ValueType;
+    using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
-    using difference_type = std::ptrdiff_t;
+    using difference_type = typename ValueType::difference_type;
     /// A type to represent iterator sizes.
-    using size_type = std::size_t;
+    using size_type = typename ValueType::size_type;
     /// A type of an element pointer.
-    using pointer = value_type*;
+    using pointer = typename ValueType::pointer;
     /// A type of reference to an element.
-    using reference = value_type&;
+    using reference = typename ValueType::reference;
 };
 
 /// @brief A specialization of @ref iterator_traits for constant value types.
@@ -9803,15 +9797,15 @@ struct iterator_traits {
 template <typename ValueType>
 struct iterator_traits<const ValueType> {
     /// A type of iterated elements.
-    using value_type = ValueType;
+    using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
-    using difference_type = std::ptrdiff_t;
+    using difference_type = typename ValueType::difference_type;
     /// A type to represent iterator sizes.
-    using size_type = std::size_t;
+    using size_type = typename ValueType::size_type;
     /// A type of a constant element pointer.
-    using pointer = const value_type*;
+    using pointer = typename ValueType::const_pointer;
     /// A type of constant reference to an element.
-    using reference = const value_type&;
+    using reference = typename ValueType::const_reference;
 };
 
 /// @brief Definitions of iterator types for iterators internally held.
@@ -9820,128 +9814,99 @@ enum class iterator_t : std::uint8_t {
     MAPPING,  //!< mapping iterator type.
 };
 
+/// @brief The actual storage for iterators internally held in iterator.
+template <typename BasicNodeType>
+struct iterator_holder {
+    static_assert(
+        is_basic_node<BasicNodeType>::value,
+        "iterator_holder class only accepts a basic_node as its template parameter.");
+
+    /// A sequence iterator object.
+    typename BasicNodeType::sequence_type::iterator sequence_iterator {};
+    /// A mapping iterator object.
+    typename BasicNodeType::mapping_type::iterator mapping_iterator {};
+};
+
 /// @brief A class which holds iterators either of sequence or mapping type
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 class iterator {
+    /// @brief The iterator type with ValueType of different const-ness.
+    using other_iterator_type = typename std::conditional<
+        std::is_const<ValueType>::value, iterator<typename std::remove_const<ValueType>::type>,
+        iterator<const ValueType>>::type;
+
+    friend other_iterator_type;
+
 public:
     /// A type for iterator traits of instantiated @Iterator template class.
-    using ItrTraitsType = iterator_traits<ValueType>;
+    using iterator_traits_type = iterator_traits<ValueType>;
 
     /// A type for iterator category tag.
     using iterator_category = std::bidirectional_iterator_tag;
     /// A type of iterated element.
-    using value_type = typename ItrTraitsType::value_type;
+    using value_type = typename iterator_traits_type::value_type;
     /// A type to represent differences between iterators.
-    using difference_type = typename ItrTraitsType::difference_type;
+    using difference_type = typename iterator_traits_type::difference_type;
     /// A type to represent container sizes.
-    using size_type = typename ItrTraitsType::size_type;
+    using size_type = typename iterator_traits_type::size_type;
     /// A type of an element pointer.
-    using pointer = typename ItrTraitsType::pointer;
+    using pointer = typename iterator_traits_type::pointer;
     /// A type of reference to an element.
-    using reference = typename ItrTraitsType::reference;
+    using reference = typename iterator_traits_type::reference;
 
-private:
-    /// A type of non-const version of iterated elements.
-    using NonConstValueType = typename std::remove_const<ValueType>::type;
+    static_assert(is_basic_node<value_type>::value, "iterator class only accepts a basic_node as its value type.");
 
-    static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts basic_node<...>");
-
-    /// @brief The actual storage for iterators internally held in @ref Iterator.
-    struct iterator_holder {
-        /// A sequence iterator object.
-        typename NonConstValueType::sequence_type::iterator sequence_iterator {};
-        /// A mapping iterator object.
-        typename NonConstValueType::mapping_type::iterator mapping_iterator {};
-    };
-
-public:
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
-    iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept {
+    iterator(const typename value_type::sequence_type::iterator& itr) noexcept {
         m_iterator_holder.sequence_iterator = itr;
     }
 
     /// @brief Construct a new iterator object with mapping iterator object.
     /// @param[in] itr An mapping iterator object.
-    iterator(mapping_iterator_tag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
+    iterator(const typename value_type::mapping_type::iterator& itr) noexcept
         : m_inner_iterator_type(iterator_t::MAPPING) {
         m_iterator_holder.mapping_iterator = itr;
     }
 
-    /// @brief Copy constructor of the iterator class.
-    /// @param other An iterator object to be copied with.
-    iterator(const iterator& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type) {
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = other.m_iterator_holder.sequence_iterator;
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = other.m_iterator_holder.mapping_iterator;
-            break;
-        }
+    /// @brief Copy constructs an iterator.
+    iterator(const iterator&) = default;
+
+    /// @brief Copy constructs an iterator from another iterator with different const-ness in ValueType.
+    /// @note This copy constructor is not defined if ValueType is not const to avoid const removal from ValueType.
+    /// @tparam OtherIterator The iterator type to copy from.
+    /// @param other An iterator to copy from with different const-ness in ValueType.
+    template <
+        typename OtherIterator,
+        enable_if_t<
+            conjunction<std::is_same<OtherIterator, other_iterator_type>, std::is_const<ValueType>>::value, int> = 0>
+    iterator(const OtherIterator& other) noexcept
+        : m_inner_iterator_type(other.m_inner_iterator_type),
+          m_iterator_holder(other.m_iterator_holder) {
     }
 
-    /// @brief Move constructor of the iterator class.
-    /// @param other An iterator object to be moved from.
-    iterator(iterator&& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type) {
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = std::move(other.m_iterator_holder.sequence_iterator);
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = std::move(other.m_iterator_holder.mapping_iterator);
-            break;
-        }
+    /// @brief A copy assignment operator of the iterator class.
+    iterator& operator=(const iterator&) = default;
+
+    template <
+        typename OtherIterator,
+        enable_if_t<
+            conjunction<std::is_same<OtherIterator, other_iterator_type>, std::is_const<ValueType>>::value, int> = 0>
+    iterator& operator=(const OtherIterator& other) noexcept {
+        m_inner_iterator_type = other.m_inner_iterator_type;
+        m_iterator_holder = other.m_iterator_holder;
+        return *this;
     }
+
+    /// @brief Move constructs an iterator.
+    iterator(iterator&&) = default;
+
+    /// @brief A move assignment operator of the iterator class.
+    iterator& operator=(iterator&&) = default;
 
     /// @brief Destroys an iterator.
     ~iterator() = default;
-
-public:
-    /// @brief A copy assignment operator of the iterator class.
-    /// @param rhs An iterator object to be copied with.
-    /// @return iterator& Reference to this iterator object.
-    iterator& operator=(const iterator& rhs) noexcept {
-        if FK_YAML_UNLIKELY (&rhs == this) {
-            return *this;
-        }
-
-        m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = rhs.m_iterator_holder.sequence_iterator;
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = rhs.m_iterator_holder.mapping_iterator;
-            break;
-        }
-
-        return *this;
-    }
-
-    /// @brief A move assignment operator of the iterator class.
-    /// @param rhs An iterator object to be moved from.
-    /// @return iterator& Reference to this iterator object.
-    iterator& operator=(iterator&& rhs) noexcept {
-        if FK_YAML_UNLIKELY (&rhs == this) {
-            return *this;
-        }
-
-        m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = std::move(rhs.m_iterator_holder.sequence_iterator);
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = std::move(rhs.m_iterator_holder.mapping_iterator);
-            break;
-        }
-
-        return *this;
-    }
 
     /// @brief An arrow operator of the iterator class.
     /// @return pointer A pointer to the BasicNodeType object internally referenced by the actual iterator object.
@@ -10053,7 +10018,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is equal to the other.
     /// @return false This iterator object is not equal to the other.
-    bool operator==(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator==(const Iterator& rhs) const {
         if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
@@ -10070,7 +10039,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is not equal to the other.
     /// @return false This iterator object is equal to the other.
-    bool operator!=(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator!=(const Iterator& rhs) const {
         return !operator==(rhs);
     }
 
@@ -10078,7 +10051,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is less than the other.
     /// @return false This iterator object is not less than the other.
-    bool operator<(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator<(const Iterator& rhs) const {
         if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
@@ -10094,7 +10071,11 @@ public:
     ///  @param rhs An iterator object to be compared with this iterator object.
     ///  @return true  This iterator object is either less than or equal to the other.
     ///  @return false This iterator object is neither less than nor equal to the other.
-    bool operator<=(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator<=(const Iterator& rhs) const {
         return !rhs.operator<(*this);
     }
 
@@ -10102,7 +10083,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is greater than the other.
     /// @return false This iterator object is not greater than the other.
-    bool operator>(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator>(const Iterator& rhs) const {
         return !operator<=(rhs);
     }
 
@@ -10110,7 +10095,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is either greater than or equal to the other.
     /// @return false This iterator object is neither greater than nor equal to the other.
-    bool operator>=(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator>=(const Iterator& rhs) const {
         return !operator<(rhs);
     }
 
@@ -10121,9 +10110,9 @@ public:
         return m_inner_iterator_type;
     }
 
-    /// @brief Get the key string of the YAML mapping node for the current iterator.
-    /// @return const std::string& The key string of the YAML mapping node for the current iterator.
-    const typename ValueType::mapping_type::key_type& key() const {
+    /// @brief Get the mapping key node of the current iterator.
+    /// @return The mapping key node of the current iterator.
+    const typename value_type::mapping_type::key_type& key() const {
         if FK_YAML_UNLIKELY (m_inner_iterator_type == iterator_t::SEQUENCE) {
             throw fkyaml::exception("Cannot retrieve key from non-mapping iterators.");
         }
@@ -10131,8 +10120,8 @@ public:
         return m_iterator_holder.mapping_iterator->first;
     }
 
-    /// @brief Get the reference of the YAML node for the current iterator.
-    /// @return reference A reference to the YAML node for the current iterator.
+    /// @brief Get reference to the YAML node of the current iterator.
+    /// @return Reference to the YAML node of the current iterator.
     reference value() noexcept {
         return operator*();
     }
@@ -10141,7 +10130,7 @@ private:
     /// A type of the internally-held iterator.
     iterator_t m_inner_iterator_type {iterator_t::SEQUENCE};
     /// A holder of actual iterators.
-    mutable iterator_holder m_iterator_holder {};
+    iterator_holder<value_type> m_iterator_holder {};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -11942,14 +11931,6 @@ template <
     template <typename, typename = void> class ConverterType>
 class basic_node {
 public:
-    /// @brief A type for iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
-    using iterator = fkyaml::detail::iterator<basic_node>;
-
-    /// @brief A type for constant iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
-    using const_iterator = fkyaml::detail::iterator<const basic_node>;
-
     /// @brief A type for sequence basic_node values.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence_type/
     using sequence_type = SequenceType<basic_node, std::allocator<basic_node>>;
@@ -11974,6 +11955,42 @@ public:
     /// @brief A type for string basic_node values.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/string_type/
     using string_type = StringType;
+
+    /// @brief A type of elements in a basic_node container.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using value_type = basic_node;
+
+    /// @brief A type of reference to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using reference = value_type&;
+
+    /// @brief A type of constant reference to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using const_reference = const value_type&;
+
+    /// @brief A type of a pointer to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using pointer = value_type*;
+
+    /// @brief A type of a constant pointer to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using const_pointer = const value_type*;
+
+    /// @brief A type to represent basic_node container sizes.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using size_type = std::size_t;
+
+    /// @brief A type to represent differences between basic_node iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using difference_type = std::ptrdiff_t;
+
+    /// @brief A type for iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
+    using iterator = fkyaml::detail::iterator<basic_node>;
+
+    /// @brief A type for constant iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
+    using const_iterator = fkyaml::detail::iterator<const basic_node>;
 
     /// @brief A helper alias to determine converter type for the given target native data type.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/value_converter_type/
@@ -13276,88 +13293,104 @@ public:
         swap(m_prop.anchor, rhs.m_prop.anchor);
     }
 
-    /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return An iterator to the first element of a YAML node value (either sequence or mapping).
+    /// @brief Returns an iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return An iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     iterator begin() {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->begin()};
+            return {p_node_value->p_sequence->begin()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->begin()};
+            return {p_node_value->p_mapping->begin()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
     }
 
-    /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return A constant iterator to the first element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     const_iterator begin() const {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->begin()};
+            return {p_node_value->p_sequence->begin()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->begin()};
+            return {p_node_value->p_mapping->begin()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
     }
 
-    /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a non-const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return An iterator to the past-the end element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the first element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cbegin/
+    const_iterator cbegin() const {
+        return begin();
+    }
+
+    /// @brief Returns an iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if the basic_node value is not of container types.
+    /// @return An iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     iterator end() {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->end()};
+            return {p_node_value->p_sequence->end()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->end()};
+            return {p_node_value->p_mapping->end()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
     }
 
-    /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return A constant iterator to the past-the end element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     const_iterator end() const {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->end()};
+            return {p_node_value->p_sequence->end()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->end()};
+            return {p_node_value->p_mapping->end()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
+    }
+
+    /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the past-the-last element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cend/
+    const_iterator cend() const {
+        return end();
     }
 
 private:
