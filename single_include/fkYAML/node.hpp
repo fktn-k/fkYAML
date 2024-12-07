@@ -13293,9 +13293,9 @@ public:
         swap(m_prop.anchor, rhs.m_prop.anchor);
     }
 
-    /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return An iterator to the first element of a YAML node value (either sequence or mapping).
+    /// @brief Returns an iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return An iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     iterator begin() {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
@@ -13314,9 +13314,9 @@ public:
         }
     }
 
-    /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return A constant iterator to the first element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     const_iterator begin() const {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
@@ -13335,9 +13335,17 @@ public:
         }
     }
 
-    /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a non-const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return An iterator to the past-the end element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the first element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cbegin/
+    const_iterator cbegin() const {
+        return begin();
+    }
+
+    /// @brief Returns an iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if the basic_node value is not of container types.
+    /// @return An iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     iterator end() {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
@@ -13356,9 +13364,9 @@ public:
         }
     }
 
-    /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return A constant iterator to the past-the end element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     const_iterator end() const {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
@@ -13375,6 +13383,14 @@ public:
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
+    }
+
+    /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the past-the-last element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cend/
+    const_iterator cend() const {
+        return end();
     }
 
 private:

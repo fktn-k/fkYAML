@@ -3425,6 +3425,46 @@ TEST_CASE("Node_Begin") {
     }
 }
 
+TEST_CASE("Node_ConstBegin") {
+    SECTION("container nodes") {
+        auto node = GENERATE(fkyaml::node::sequence(), fkyaml::node::mapping());
+
+        SECTION("non-const non-alias container node") {
+            REQUIRE_NOTHROW(node.cbegin());
+        }
+
+        SECTION("const non-alias container node") {
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.cbegin());
+        }
+
+        SECTION("non-const alias container node") {
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.cbegin());
+        }
+
+        SECTION("non-const alias container node") {
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.cbegin());
+        }
+    }
+
+    SECTION("scalar nodes") {
+        auto node = GENERATE(fkyaml::node(), fkyaml::node(false), fkyaml::node(0), fkyaml::node(0.0), fkyaml::node(""));
+
+        SECTION("non-const node") {
+            REQUIRE_THROWS_AS(node.cbegin(), fkyaml::type_error);
+        }
+
+        SECTION("const node") {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.cbegin(), fkyaml::type_error);
+        }
+    }
+}
+
 TEST_CASE("Node_End") {
     SECTION("container nodes") {
         auto node = GENERATE(fkyaml::node::sequence(), fkyaml::node::mapping());
@@ -3449,15 +3489,6 @@ TEST_CASE("Node_End") {
             const fkyaml::node alias = fkyaml::node::alias_of(node);
             REQUIRE_NOTHROW(alias.end());
         }
-
-        SECTION("non-const range-based for-loop compatibility") {
-            REQUIRE_NOTHROW(node.end());
-        }
-
-        SECTION("const range-based for-loop compatibility") {
-            const fkyaml::node const_node = node;
-            REQUIRE_NOTHROW(const_node.end());
-        }
     }
 
     SECTION("scalar nodes") {
@@ -3470,6 +3501,46 @@ TEST_CASE("Node_End") {
         SECTION("const throwing node") {
             const fkyaml::node const_node = node;
             REQUIRE_THROWS_AS(const_node.end(), fkyaml::type_error);
+        }
+    }
+}
+
+TEST_CASE("Node_ConstEnd") {
+    SECTION("container nodes") {
+        auto node = GENERATE(fkyaml::node::sequence(), fkyaml::node::mapping());
+
+        SECTION("non-const non-alias container node") {
+            REQUIRE_NOTHROW(node.cend());
+        }
+
+        SECTION("const non-alias container node") {
+            const fkyaml::node const_node = node;
+            REQUIRE_NOTHROW(const_node.cend());
+        }
+
+        SECTION("non-const alias container node") {
+            node.add_anchor_name("anchor_name");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.cend());
+        }
+
+        SECTION("non-const alias container node") {
+            node.add_anchor_name("anchor_name");
+            const fkyaml::node alias = fkyaml::node::alias_of(node);
+            REQUIRE_NOTHROW(alias.cend());
+        }
+    }
+
+    SECTION("scalar nodes") {
+        auto node = GENERATE(fkyaml::node(), fkyaml::node(false), fkyaml::node(0), fkyaml::node(0.0), fkyaml::node(""));
+
+        SECTION("non-const throwing node") {
+            REQUIRE_THROWS_AS(node.cend(), fkyaml::type_error);
+        }
+
+        SECTION("const throwing node") {
+            const fkyaml::node const_node = node;
+            REQUIRE_THROWS_AS(const_node.cend(), fkyaml::type_error);
         }
     }
 }

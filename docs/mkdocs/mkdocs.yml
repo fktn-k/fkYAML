@@ -107,6 +107,8 @@ nav:
           - at: api/basic_node/at.md
           - begin: api/basic_node/begin.md
           - boolean_type: api/basic_node/boolean_type.md
+          - cbegin: api/basic_node/begin.md
+          - cend: api/basic_node/end.md
           - const_iterator: api/basic_node/const_iterator.md
           - contains: api/basic_node/contains.md
           - deserialize: api/basic_node/deserialize.md

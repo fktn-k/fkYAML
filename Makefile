@@ -21,7 +21,7 @@ TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
 # system
-JOBS = $(($(shell grep cpu.cores /proc/cpuinfo | sort -u | sed 's/[^0-9]//g') + 1))
+JOBS = $(($(shell grep cpu.cores /proc/cpuinfo | sort -u | sed 's/[^0-9]//g') - 1))
 
 ###############################################
 #   documentation of the Makefile's targets   #
