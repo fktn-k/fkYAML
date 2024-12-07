@@ -79,10 +79,10 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
     oss << v;
     s = oss.str();
 
-    // If `f` is actually an integer, ".0" must be appended. The result would cause roundtrip issue otherwise.
-    // https://github.com/fktn-k/fkYAML/issues/405
-    const FloatType diff = v - std::floor(v);
-    if (diff < std::numeric_limits<FloatType>::min()) {
+    // If `v` is actually an integer and no scientific notation is used for serialization, ".0" must be appended.
+    // The result would cause a roundtrip issue otherwise. https://github.com/fktn-k/fkYAML/issues/405
+    const std::size_t pos = s.find_first_of(".e");
+    if (pos == std::string::npos) {
         s += ".0";
     }
 }

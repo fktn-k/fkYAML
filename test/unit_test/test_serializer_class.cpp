@@ -60,6 +60,8 @@ TEST_CASE("SerializeClassTest_FloatNode", "[SerializeClassTest]") {
         node_str_pair_t(2.10, "2.1"),
         node_str_pair_t(3.14, "3.14"),
         node_str_pair_t(-53.97, "-53.97"),
+        node_str_pair_t(23000000.0, "2.3e+07"),
+        node_str_pair_t(-23000000.0, "-2.3e+07"),
         node_str_pair_t(std::numeric_limits<fkyaml::node::float_number_type>::infinity(), ".inf"),
         node_str_pair_t(-1 * std::numeric_limits<fkyaml::node::float_number_type>::infinity(), "-.inf"),
         node_str_pair_t(std::nan(""), ".nan"));
