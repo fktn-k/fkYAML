@@ -108,11 +108,15 @@ public:
     using iterator = fkyaml::detail::iterator<basic_node>;
 
     /// @brief A type for constant iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
     using const_iterator = fkyaml::detail::iterator<const basic_node>;
 
+    /// @brief A type for reverse iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/reverse_iterator/
     using reverse_iterator = fkyaml::detail::reverse_iterator<iterator>;
 
+    /// @brief A type for constant reverse iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/reverse_iterator/
     using const_reverse_iterator = fkyaml::detail::reverse_iterator<const_iterator>;
 
     /// @brief A helper alias to determine converter type for the given target native data type.
@@ -1461,7 +1465,7 @@ public:
     /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
     /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
     /// @return A const iterator to the first element of a container node.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cbegin/
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     const_iterator cbegin() const {
         return begin();
     }
@@ -1511,7 +1515,7 @@ public:
     /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
     /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
     /// @return A const iterator to the past-the-last element of a container node.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cend/
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     const_iterator cend() const {
         return end();
     }
@@ -1538,7 +1542,7 @@ public:
     /// mapping).
     /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
     /// @return A const iterator to the reverse-beginning element of a container node.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/crbegin/
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rbegin/
     const_reverse_iterator crbegin() const {
         return rbegin();
     }
@@ -1565,7 +1569,7 @@ public:
     /// (sequence or mapping).
     /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
     /// @return A const iterator to the reverse-end element.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/crend/
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
     const_reverse_iterator crend() const {
         return rend();
     }
