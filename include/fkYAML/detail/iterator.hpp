@@ -99,6 +99,9 @@ public:
 
     static_assert(is_basic_node<value_type>::value, "iterator class only accepts a basic_node as its value type.");
 
+    /// @brief Constructs an iterator object.
+    iterator() = default;
+
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
     iterator(const typename value_type::sequence_type::iterator& itr) noexcept {
@@ -228,7 +231,7 @@ public:
     /// @brief A minus operator of the iterator class.
     /// @param i The difference from this iterator object.
     /// @return iterator An iterator object from which has been subtracted @ i.
-    iterator operator-(difference_type i) noexcept {
+    iterator operator-(difference_type i) const noexcept {
         auto result = *this;
         result -= i;
         return result;
