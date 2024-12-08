@@ -155,11 +155,11 @@ TEST_CASE("ReverseIterator_PreIncrementOperator") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit = sequence.begin();
+    fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit = sequence.end();
     fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit_preincr = ++rit;
     REQUIRE(rit == rit_preincr);
 
-    fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit2 = mapping.begin();
+    fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit2 = mapping.end();
     fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit2_preincr = ++rit2;
     REQUIRE(rit2 == rit2_preincr);
 }
@@ -168,11 +168,11 @@ TEST_CASE("ReverseIterator_PostIncrementOperator") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit = sequence.begin();
+    fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit = sequence.end();
     fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit_postincr = rit++;
     REQUIRE(rit - 1 == rit_postincr);
 
-    fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit2 = mapping.begin();
+    fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit2 = mapping.end();
     fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit2_postincr = rit2++;
     REQUIRE(rit2 - 1 == rit2_postincr);
 }
