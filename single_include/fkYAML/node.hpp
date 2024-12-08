@@ -9784,8 +9784,6 @@ struct iterator_traits {
     using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
     using difference_type = typename ValueType::difference_type;
-    /// A type to represent iterator sizes.
-    using size_type = typename ValueType::size_type;
     /// A type of an element pointer.
     using pointer = typename ValueType::pointer;
     /// A type of reference to an element.
@@ -9800,8 +9798,6 @@ struct iterator_traits<const ValueType> {
     using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
     using difference_type = typename ValueType::difference_type;
-    /// A type to represent iterator sizes.
-    using size_type = typename ValueType::size_type;
     /// A type of a constant element pointer.
     using pointer = typename ValueType::const_pointer;
     /// A type of constant reference to an element.
@@ -9848,14 +9844,15 @@ public:
     using value_type = typename iterator_traits_type::value_type;
     /// A type to represent differences between iterators.
     using difference_type = typename iterator_traits_type::difference_type;
-    /// A type to represent container sizes.
-    using size_type = typename iterator_traits_type::size_type;
     /// A type of an element pointer.
     using pointer = typename iterator_traits_type::pointer;
     /// A type of reference to an element.
     using reference = typename iterator_traits_type::reference;
 
     static_assert(is_basic_node<value_type>::value, "iterator class only accepts a basic_node as its value type.");
+
+    /// @brief Constructs an iterator object.
+    iterator() = default;
 
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
@@ -9986,7 +9983,7 @@ public:
     /// @brief A minus operator of the iterator class.
     /// @param i The difference from this iterator object.
     /// @return iterator An iterator object from which has been subtracted @ i.
-    iterator operator-(difference_type i) noexcept {
+    iterator operator-(difference_type i) const noexcept {
         auto result = *this;
         result -= i;
         return result;
@@ -10699,6 +10696,220 @@ private:
 FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP */
+
+// #include <fkYAML/detail/reverse_iterator.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_REVERSE_ITERATOR_HPP
+#define FK_YAML_DETAIL_REVERSE_ITERATOR_HPP
+
+#include <iterator>
+
+// #include <fkYAML/detail/macros/define_macros.hpp>
+
+// #include <fkYAML/detail/meta/node_traits.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief An iterator adapter class that reverses the direction of a given node iterator.
+/// @tparam Iterator The base iterator type.
+template <typename Iterator>
+class reverse_iterator {
+    static_assert(
+        is_basic_node<typename std::remove_const<typename Iterator::value_type>::type>::value,
+        "reverse_iterator only accepts a basic_node type as the underlying iterator's value type");
+
+public:
+    /// @brief The base iterator type.
+    using iterator_type = Iterator;
+
+    /// @brief The base iterator category.
+    using iterator_category = typename Iterator::iterator_category;
+
+    /// @brief The type of the pointed-to elements by base iterators.
+    using value_type = typename Iterator::value_type;
+
+    /// @brief The type to represent differences between the pointed-to elements by the base iterators.
+    using difference_type = typename Iterator::difference_type;
+
+    /// @brief The type of the pointed-to element pointers by base iterators.
+    using pointer = typename Iterator::pointer;
+
+    /// @brief The type of the pointed-to element references by base iterators.
+    using reference = typename Iterator::reference;
+
+    /// @brief Constructs a reverse_iterator object.
+    reverse_iterator() = default;
+
+    /// @brief Copy constructs a reverse_iterator object.
+    reverse_iterator(const reverse_iterator&) = default;
+
+    /// @brief Copy assignments a reverse_iterator object.
+    reverse_iterator& operator=(const reverse_iterator&) = default;
+
+    /// @brief Move constructs a reverse_iterator object.
+    reverse_iterator(reverse_iterator&&) = default;
+
+    /// @brief Move assignments a reverse_iterator object.
+    reverse_iterator& operator=(reverse_iterator&&) = default;
+
+    /// @brief Constructs a reverse_iterator object with an underlying iterator object.
+    /// @param i A base iterator object.
+    reverse_iterator(const Iterator& i) noexcept
+        : m_current(i) {
+    }
+
+    template <typename U, enable_if_t<negation<std::is_same<U, Iterator>>::value, int> = 0>
+    reverse_iterator(const reverse_iterator<U>& other) noexcept
+        : m_current(other.base()) {
+    }
+
+    template <typename U, enable_if_t<negation<std::is_same<U, Iterator>>::value, int> = 0>
+    reverse_iterator& operator=(const reverse_iterator<U>& other) noexcept {
+        m_current = other.base();
+        return *this;
+    }
+
+    /// @brief Destructs a reverse_iterator object.
+    ~reverse_iterator() = default;
+
+    /// @brief Accesses the underlying iterator object.
+    /// @return The underlying iterator object.
+    Iterator base() const noexcept {
+        return m_current;
+    }
+
+    /// @brief Get reference to the pointed-to element.
+    /// @return Reference to the pointed-to element.
+    reference operator*() const noexcept {
+        Iterator tmp = m_current;
+        return *--tmp;
+    }
+
+    /// @brief Get pointer to the pointed-to element.
+    /// @return Pointer to the pointed-to element.
+    pointer operator->() const noexcept {
+        return &(operator*());
+    }
+
+    /// @brief Pre-increments the underlying iterator object.
+    /// @return Reference to this reverse_iterator object with its underlying iterator incremented.
+    reverse_iterator& operator++() noexcept {
+        --m_current;
+        return *this;
+    }
+
+    /// @brief Post-increments the underlying iterator object.
+    /// @return A reverse_iterator object with the underlying iterator as-is.
+    reverse_iterator operator++(int) & noexcept {
+        auto result = *this;
+        --m_current;
+        return result;
+    }
+
+    /// @brief Pre-decrements the underlying iterator object.
+    /// @return Reference to this reverse_iterator with its underlying iterator decremented.
+    reverse_iterator& operator--() noexcept {
+        ++m_current;
+        return *this;
+    }
+
+    /// @brief Post-decrements the underlying iterator object.
+    /// @return A reverse_iterator object with the underlying iterator as-is.
+    reverse_iterator operator--(int) & noexcept {
+        auto result = *this;
+        ++m_current;
+        return result;
+    }
+
+    /// @brief Advances the underlying iterator object by `n`.
+    /// @param n The distance by which the underlying iterator is advanced.
+    /// @return A reverse_iterator object with the underlying iterator advanced by `n`.
+    reverse_iterator operator+(difference_type n) const noexcept {
+        return reverse_iterator(m_current - n);
+    }
+
+    /// @brief Advances the underlying iterator object by `n`.
+    /// @param n The distance by which the underlying iterator is advanced.
+    /// @return Reference to this reverse_iterator object with the underlying iterator advanced by `n`.
+    reverse_iterator& operator+=(difference_type n) noexcept {
+        m_current -= n;
+        return *this;
+    }
+
+    /// @brief Decrements the underlying iterator object by `n`.
+    /// @param n The distance by which the underlying iterator is decremented.
+    /// @return A reverse_iterator object with the underlying iterator decremented by `n`.
+    reverse_iterator operator-(difference_type n) const noexcept {
+        return reverse_iterator(m_current + n);
+    }
+
+    /// @brief Decrements the underlying iterator object by `n`.
+    /// @param n The distance by which the underlying iterator is decremented.
+    /// @return Reference to this reverse_iterator object with the underlying iterator decremented by `n`.
+    reverse_iterator& operator-=(difference_type n) noexcept {
+        m_current += n;
+        return *this;
+    }
+
+    /// @brief Get the mapping key node of the underlying iterator.
+    /// @return The mapping key node of the underlying iterator.
+    auto key() const -> decltype(std::declval<Iterator>().key()) {
+        Iterator itr = --(base());
+        return itr.key();
+    }
+
+    /// @brief Get reference to the underlying iterator's value.
+    /// @return Reference to the underlying iterator's value.
+    reference value() noexcept {
+        Iterator itr = --(base());
+        return *itr;
+    }
+
+private:
+    Iterator m_current;
+};
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator==(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() == rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator!=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() != rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator<(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() > rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator<=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() >= rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator>(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() < rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator>=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() <= rhs.base();
+}
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_REVERSE_ITERATOR_HPP */
 
 // #include <fkYAML/detail/types/node_t.hpp>
 
@@ -11989,8 +12200,16 @@ public:
     using iterator = fkyaml::detail::iterator<basic_node>;
 
     /// @brief A type for constant iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
     using const_iterator = fkyaml::detail::iterator<const basic_node>;
+
+    /// @brief A type for reverse iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/reverse_iterator/
+    using reverse_iterator = fkyaml::detail::reverse_iterator<iterator>;
+
+    /// @brief A type for constant reverse iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/reverse_iterator/
+    using const_reverse_iterator = fkyaml::detail::reverse_iterator<const_iterator>;
 
     /// @brief A helper alias to determine converter type for the given target native data type.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/value_converter_type/
@@ -13338,7 +13557,7 @@ public:
     /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
     /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
     /// @return A const iterator to the first element of a container node.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cbegin/
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     const_iterator cbegin() const {
         return begin();
     }
@@ -13388,9 +13607,63 @@ public:
     /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
     /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
     /// @return A const iterator to the past-the-last element of a container node.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/cend/
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     const_iterator cend() const {
         return end();
+    }
+
+    /// @brief Returns an iterator to the reverse-beginning (i.e., last) element of a container node (sequence or
+    /// mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return An iterator to the reverse-beginning element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rbegin/
+    reverse_iterator rbegin() {
+        return {end()};
+    }
+
+    /// @brief Returns a const iterator to the reverse-beginning (i.e., last) element of a container node (sequence or
+    /// mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the reverse-beginning element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rbegin/
+    const_reverse_iterator rbegin() const {
+        return {end()};
+    }
+
+    /// @brief Returns a const iterator to the reverse-beginning (i.e., last) element of a container node (sequence or
+    /// mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the reverse-beginning element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rbegin/
+    const_reverse_iterator crbegin() const {
+        return rbegin();
+    }
+
+    /// @brief Returns an iterator to the reverse-end (i.e., one before the first) element of a container node (sequence
+    /// or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return An iterator to the reverse-end element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
+    reverse_iterator rend() {
+        return {begin()};
+    }
+
+    /// @brief Returns a const iterator to the reverse-end (i.e., one before the first) element of a container node
+    /// (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the reverse-end element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
+    const_reverse_iterator rend() const {
+        return {begin()};
+    }
+
+    /// @brief Returns a const iterator to the reverse-end (i.e., one before the first) element of a container node
+    /// (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the reverse-end element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
+    const_reverse_iterator crend() const {
+        return rend();
     }
 
 private:

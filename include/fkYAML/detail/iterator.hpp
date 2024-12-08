@@ -26,8 +26,6 @@ struct iterator_traits {
     using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
     using difference_type = typename ValueType::difference_type;
-    /// A type to represent iterator sizes.
-    using size_type = typename ValueType::size_type;
     /// A type of an element pointer.
     using pointer = typename ValueType::pointer;
     /// A type of reference to an element.
@@ -42,8 +40,6 @@ struct iterator_traits<const ValueType> {
     using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
     using difference_type = typename ValueType::difference_type;
-    /// A type to represent iterator sizes.
-    using size_type = typename ValueType::size_type;
     /// A type of a constant element pointer.
     using pointer = typename ValueType::const_pointer;
     /// A type of constant reference to an element.
@@ -90,14 +86,15 @@ public:
     using value_type = typename iterator_traits_type::value_type;
     /// A type to represent differences between iterators.
     using difference_type = typename iterator_traits_type::difference_type;
-    /// A type to represent container sizes.
-    using size_type = typename iterator_traits_type::size_type;
     /// A type of an element pointer.
     using pointer = typename iterator_traits_type::pointer;
     /// A type of reference to an element.
     using reference = typename iterator_traits_type::reference;
 
     static_assert(is_basic_node<value_type>::value, "iterator class only accepts a basic_node as its value type.");
+
+    /// @brief Constructs an iterator object.
+    iterator() = default;
 
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
@@ -228,7 +225,7 @@ public:
     /// @brief A minus operator of the iterator class.
     /// @param i The difference from this iterator object.
     /// @return iterator An iterator object from which has been subtracted @ i.
-    iterator operator-(difference_type i) noexcept {
+    iterator operator-(difference_type i) const noexcept {
         auto result = *this;
         result -= i;
         return result;
