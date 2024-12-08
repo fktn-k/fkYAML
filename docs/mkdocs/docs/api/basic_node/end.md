@@ -32,7 +32,6 @@ An iterator to the past-the-last element of a container node.
 
 * [basic_node](index.md)
 * [node](node.md)
-* [iterator](iterator.md)  
-* [const_iterator](const_iterator.md)
+* [iterator, const_iterator](iterator.md)  
 * [begin, cbegin](begin.md)
 * [operator<<](insertion_operator.md)

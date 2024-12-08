@@ -14,16 +14,16 @@ int main() {
     // create a container node.
     fkyaml::node sequence_node = {1, 2, 3};
     // get an iterator to the first sequence element.
-    fkyaml::node::iterator it = sequence_node.begin();
-    fkyaml::node::const_iterator end_it = sequence_node.cend();
+    fkyaml::node::reverse_iterator it = sequence_node.rbegin();
+    fkyaml::node::const_reverse_iterator end_it = sequence_node.crend();
 
     // print all the elements.
-    // note `iterator` and `const_iterator` are comparable.
+    // note `reverse_iterator` and `const_reverse_iterator` are comparable.
     for (; it != end_it; ++it) {
         std::cout << *it << std::endl;
     }
 
-    it = sequence_node.begin();
+    it = sequence_node.rbegin();
     try {
         // key() cannot be called on an iterator pointing to a sequence element.
         std::cout << it.key() << std::endl;

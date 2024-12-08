@@ -32,7 +32,6 @@ An iterator to the first element of a container node.
 
 * [basic_node](index.md)
 * [node](node.md)
-* [iterator](iterator.md)  
-* [const_iterator](const_iterator.md)
+* [iterator, const_iterator](iterator.md)  
 * [end, cend](end.md)
 * [operator<<](insertion_operator.md)

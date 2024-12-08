@@ -109,7 +109,10 @@ nav:
           - boolean_type: api/basic_node/boolean_type.md
           - cbegin: api/basic_node/begin.md
           - cend: api/basic_node/end.md
-          - const_iterator: api/basic_node/const_iterator.md
+          - crbegin: api/basic_node/rbegin.md
+          - crend: api/basic_node/rend.md
+          - const_iterator: api/basic_node/iterator.md
+          - const_reverse_iterator: api/basic_node/reverse_iterator.md
           - contains: api/basic_node/contains.md
           - deserialize: api/basic_node/deserialize.md
           - deserialize_docs: api/basic_node/deserialize_docs.md
@@ -141,6 +144,9 @@ nav:
           - mapping: api/basic_node/mapping.md
           - node_t: api/basic_node/node_t.md
           - node: api/basic_node/node.md
+          - rbegin: api/basic_node/rbegin.md
+          - rend: api/basic_node/rend.md
+          - reverse_iterator: api/basic_node/reverse_iterator.md
           - sequence_type: api/basic_node/sequence_type.md
           - sequence: api/basic_node/sequence.md
           - serialize: api/basic_node/serialize.md

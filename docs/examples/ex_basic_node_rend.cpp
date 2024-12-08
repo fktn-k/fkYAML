@@ -6,15 +6,16 @@
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <iomanip>
 #include <iostream>
 #include <fkYAML/node.hpp>
 
 int main() {
-    // create YAML nodes.
-    const fkyaml::node sequence_node = {1, 2, 3};
-    // get an iterator to the first sequence element.
-    fkyaml::node::const_iterator it = sequence_node.begin();
+    // create a sequence node.
+    fkyaml::node n = {"foo", "bar"};
+    // get an iterator to the reverse-end (= one before the first) element.
+    fkyaml::node::reverse_iterator it = n.rend();
+    // decrement the iterator to point to the first element.
+    --it;
     std::cout << *it << std::endl;
     return 0;
 }
