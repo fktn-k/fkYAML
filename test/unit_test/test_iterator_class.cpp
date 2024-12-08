@@ -12,19 +12,19 @@
 
 TEST_CASE("Iterator_SequenceCtor") {
     fkyaml::node sequence = fkyaml::node::sequence();
-    fkyaml::detail::iterator<fkyaml::node> iterator(sequence.begin());
+    fkyaml::detail::iterator<fkyaml::node> iterator(sequence.get_value_ref<fkyaml::node::sequence_type&>().begin());
     REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
 }
 
 TEST_CASE("Iterator_MappingCtor") {
     fkyaml::node mapping = fkyaml::node::mapping();
-    fkyaml::detail::iterator<fkyaml::node> iterator(mapping.begin());
+    fkyaml::detail::iterator<fkyaml::node> iterator(mapping.get_value_ref<fkyaml::node::mapping_type&>().begin());
     REQUIRE(iterator.type() == fkyaml::detail::iterator_t::MAPPING);
 }
 
 TEST_CASE("Iterator_SequenceCopyCtor") {
     fkyaml::node sequence = fkyaml::node::sequence({fkyaml::node()});
-    fkyaml::detail::iterator<fkyaml::node> copied(sequence.get_value_ref<fkyaml::node::sequence_type&>().begin());
+    fkyaml::detail::iterator<fkyaml::node> copied(sequence.begin());
     fkyaml::detail::iterator<fkyaml::node> iterator(copied);
     REQUIRE(iterator.type() == fkyaml::detail::iterator_t::SEQUENCE);
     REQUIRE(iterator->is_null());
@@ -32,7 +32,7 @@ TEST_CASE("Iterator_SequenceCopyCtor") {
 
 TEST_CASE("Iterator_MappingCopyCtor") {
     fkyaml::node mapping = fkyaml::node::mapping({{"test", fkyaml::node()}});
-    fkyaml::detail::iterator<fkyaml::node> copied(mapping.get_value_ref<fkyaml::node::mapping_type&>().begin());
+    fkyaml::detail::iterator<fkyaml::node> copied(mapping.begin());
     fkyaml::detail::iterator<fkyaml::node> iterator(copied);
     REQUIRE(iterator.type() == fkyaml::detail::iterator_t::MAPPING);
     REQUIRE(iterator.key().get_value_ref<const std::string&>() == "test");

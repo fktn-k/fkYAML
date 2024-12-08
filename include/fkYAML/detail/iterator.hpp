@@ -26,8 +26,6 @@ struct iterator_traits {
     using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
     using difference_type = typename ValueType::difference_type;
-    /// A type to represent iterator sizes.
-    using size_type = typename ValueType::size_type;
     /// A type of an element pointer.
     using pointer = typename ValueType::pointer;
     /// A type of reference to an element.
@@ -42,8 +40,6 @@ struct iterator_traits<const ValueType> {
     using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
     using difference_type = typename ValueType::difference_type;
-    /// A type to represent iterator sizes.
-    using size_type = typename ValueType::size_type;
     /// A type of a constant element pointer.
     using pointer = typename ValueType::const_pointer;
     /// A type of constant reference to an element.
@@ -90,8 +86,6 @@ public:
     using value_type = typename iterator_traits_type::value_type;
     /// A type to represent differences between iterators.
     using difference_type = typename iterator_traits_type::difference_type;
-    /// A type to represent container sizes.
-    using size_type = typename iterator_traits_type::size_type;
     /// A type of an element pointer.
     using pointer = typename iterator_traits_type::pointer;
     /// A type of reference to an element.
