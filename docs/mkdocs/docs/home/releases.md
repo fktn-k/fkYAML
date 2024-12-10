@@ -1,5 +1,77 @@
 # Releases
 
+## **fkYAML version 0.4.0**
+
+!!! abstract "Release Packages"
+
+    * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.0/fkYAML.zip)
+    * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.0/fkYAML.tgz)
+    * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.0/fkYAML_single_header.zip)
+    * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.0/fkYAML_single_header.tgz)
+    * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.0/node.hpp) (single header)
+    * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.0/fkyaml_fwd.hpp) (single header)
+
+### Summary
+This release adds new features: parsing multi-line plain scalars & reverse iterations over sequence/mapping node elements.  
+See the related pull requests and documentations for more details.  
+
+A number of bugs (mostly in the deserialization feature) have also been resolved.  
+Note that a breaking change has been made in the way of error handling when deserializing an int or float scalar fail. The library now emits no error on such a scalar and treats it as a string scalar instead.
+
+### What's Changed
+
+#### :boom: Breaking Changes
+- Stop throwing parse\_error on string-to-int/float conversion failures if not forced with tag ([\#431](https://github.com/fktn-k/fkYAML/pull/431), [fktn-k](https://github.com/fktn-k))
+  - reported by [tomwpid](https://github.com/tomwpid) in the issue [\#428](https://github.com/fktn-k/fkYAML/issues/428)
+  - The library used to throw a `fkyaml::parse_error` upon conversion failures from a scalar to an integer or floating point value while parsing a YAML like this:  
+    ```yaml
+    id: 6E-578 # "6E-578" is interpreted as a floating point value but not expressible as a `double`
+               # --> `fkyaml::parse_error` gets thrown due to the conversion failure.
+    ```
+  - Such a conversion failure is now internally recovered by treating the scalar as a string scalar instead.  
+
+#### :sparkles: New Features
+- Support parsing multiline plain scalars ([\#432](https://github.com/fktn-k/fkYAML/pull/432), [fktn-k](https://github.com/fktn-k))
+  - Parsing a YAML which contains multi-line plain (unquoted) scalars are now supported.  
+    ```yaml
+    foo: this is 
+      a multi-line
+        plain scalar # interpreted as "this is a multi-line plain scalar"
+    ```
+- Support reverse iterations over sequence/mapping nodes ([\#440](https://github.com/fktn-k/fkYAML/pull/440), [fktn-k](https://github.com/fktn-k))
+  - You can now iterate over sequence/mapping elements in a reversed order like this:  
+    ```cpp
+    // node is [1, 2, 3]
+    for (auto rit = node.rbegin(); rit != node.rend(); ++rit) {
+        std::cout << *rit << std::endl;
+    }
+    
+    // output:
+    // 3
+    // 2
+    // 1
+    ```
+
+#### :zap: Improvements
+- Resolve the C4800 warning when compiled with MSVC ([\#430](https://github.com/fktn-k/fkYAML/pull/430), [fktn-k](https://github.com/fktn-k))
+  - reported by [tomwpid](https://github.com/tomwpid) in the issue [\#429](https://github.com/fktn-k/fkYAML/issues/429)
+- Make node iterators compatible with different value type const-ness ([\#438](https://github.com/fktn-k/fkYAML/pull/438), [fktn-k](https://github.com/fktn-k))
+  - `fkyaml::node::iterator` and `fkyaml::node::const_iterator` are compatible in constructions, assignments and comparisons.  
+
+#### :bug: Bug Fixes
+- Emit error if an anchor is specified to an alias ([\#434](https://github.com/fktn-k/fkYAML/pull/434), [fktn-k](https://github.com/fktn-k))
+- Fixed bugs in parsing block scalars ([\#435](https://github.com/fktn-k/fkYAML/pull/435), [fktn-k](https://github.com/fktn-k))
+- Fix parsing input which begins with a newline & indentation ([\#437](https://github.com/fktn-k/fkYAML/pull/437), [fktn-k](https://github.com/fktn-k))
+- Fix round-trip issue in float serialization using scientific notation ([\#439](https://github.com/fktn-k/fkYAML/pull/439), [fktn-k](https://github.com/fktn-k))
+  - reported by [dyerbod](https://github.com/dyerbod) in the issue [\#405](https://github.com/fktn-k/fkYAML/issues/405)
+
+#### :robot: CI
+- Update GitHub Actions workflow jobs using macOS related runner images ([\#433](https://github.com/fktn-k/fkYAML/pull/433), [fktn-k](https://github.com/fktn-k))
+- Add more GCC & Clang versions to use in GitHub Actions workflows ([\#436](https://github.com/fktn-k/fkYAML/pull/436), [fktn-k](https://github.com/fktn-k))
+
+### Full Changelog
+https://github.com/fktn-k/fkYAML/compare/v0.3.14...v0.4.0
+
 ## **fkYAML version 0.3.14**
 
 !!! abstract "Release Packages"
@@ -9,7 +81,7 @@
     * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/fkYAML_single_header.zip)
     * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/fkYAML_single_header.tgz)
     * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/node.hpp) (single header)
-    * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/node.hpp) (single header)
+    * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.3.14/fkyaml_fwd.hpp) (single header)
 
 ### Summary
 This release adds the new header file *fkyaml_fwd.hpp* which provides the library's namespace macros and forward declarations of the library's API classes. With the file, you can reduce the compile time cost of including the full library header if some source files do not actually use the library features.  
