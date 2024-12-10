@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.4.0](https://github.com/fktn-k/fkYAML/releases/tag/v0.4.0) (2024-12-10)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.14...v0.4.0)
+
+- Fix round-trip issue in float serialization using scientific notation [\#439](https://github.com/fktn-k/fkYAML/pull/439) ([fktn-k](https://github.com/fktn-k))
+- Fix parsing input which begins with a newline & indentation [\#437](https://github.com/fktn-k/fkYAML/pull/437) ([fktn-k](https://github.com/fktn-k))
+- Fixed bugs in parsing block scalars [\#435](https://github.com/fktn-k/fkYAML/pull/435) ([fktn-k](https://github.com/fktn-k))
+- Emit error if an anchor is specified to an alias [\#434](https://github.com/fktn-k/fkYAML/pull/434) ([fktn-k](https://github.com/fktn-k))
+- Stop throwing parse\_error on string-to-int/float conversion failures if not forced with tag [\#431](https://github.com/fktn-k/fkYAML/pull/431) ([fktn-k](https://github.com/fktn-k))
+- Resolve the C4800 warning when compiled with MSVC [\#430](https://github.com/fktn-k/fkYAML/pull/430) ([fktn-k](https://github.com/fktn-k))
+
+- Support reverse iterations over sequence/mapping nodes [\#440](https://github.com/fktn-k/fkYAML/pull/440) ([fktn-k](https://github.com/fktn-k))
+- Make node iterators compatible with different value type const-ness [\#438](https://github.com/fktn-k/fkYAML/pull/438) ([fktn-k](https://github.com/fktn-k))
+- Add more GCC & Clang versions to use in GitHub Actions workflows [\#436](https://github.com/fktn-k/fkYAML/pull/436) ([fktn-k](https://github.com/fktn-k))
+- Update GitHub Actions workflow jobs using macOS related runner images [\#433](https://github.com/fktn-k/fkYAML/pull/433) ([fktn-k](https://github.com/fktn-k))
+- Support parsing multiline plain scalars [\#432](https://github.com/fktn-k/fkYAML/pull/432) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.3.14](https://github.com/fktn-k/fkYAML/releases/tag/v0.3.14) (2024-11-16)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.13...v0.3.14)

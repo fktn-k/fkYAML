@@ -15,13 +15,13 @@ TOOL_SRCS = $(shell find tool -type f -name '*.cpp' | sort)
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
-TARGET_MINOR_VERSION := 3
-TARGET_PATCH_VERSION := 14
+TARGET_MINOR_VERSION := 4
+TARGET_PATCH_VERSION := 0
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
 # system
-JOBS = $(($(shell grep cpu.cores /proc/cpuinfo | sort -u | sed 's/[^0-9]//g') + 1))
+JOBS = $(($(shell grep cpu.cores /proc/cpuinfo | sort -u | sed 's/[^0-9]//g') - 1))
 
 ###############################################
 #   documentation of the Makefile's targets   #

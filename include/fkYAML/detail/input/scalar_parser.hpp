@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -60,7 +60,7 @@ public:
     scalar_parser& operator=(const scalar_parser&) = default;
 
     scalar_parser(scalar_parser&&) noexcept = default;
-    scalar_parser& operator=(scalar_parser&&) noexcept = default;
+    scalar_parser& operator=(scalar_parser&&) noexcept(std::is_nothrow_move_assignable<std::string>::value) = default;
 
     /// @brief Parses a token into a flow scalar (either plain, single quoted or double quoted)
     /// @param lex_type Lexical token type for the scalar.
@@ -75,7 +75,7 @@ public:
 
         token = parse_flow_scalar_token(lex_type, token);
         const node_type value_type = decide_value_type(lex_type, tag_type, token);
-        return create_scalar_node(value_type, token);
+        return create_scalar_node(value_type, tag_type, token);
     }
 
     /// @brief Parses a token into a block scalar (either literal or folded)
@@ -98,7 +98,7 @@ public:
         }
 
         const node_type value_type = decide_value_type(lex_type, tag_type, token);
-        return create_scalar_node(value_type, token);
+        return create_scalar_node(value_type, tag_type, token);
     }
 
 private:
@@ -108,18 +108,48 @@ private:
     /// @return View into the parsed scalar contents.
     str_view parse_flow_scalar_token(lexical_token_t lex_type, str_view token) {
         switch (lex_type) {
+        case lexical_token_t::PLAIN_SCALAR:
+            token = parse_plain_scalar(token);
+            break;
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
             token = parse_single_quoted_scalar(token);
             break;
         case lexical_token_t::DOUBLE_QUOTED_SCALAR:
             token = parse_double_quoted_scalar(token);
             break;
-        case lexical_token_t::PLAIN_SCALAR:
-        default:
-            break;
+        default:           // LCOV_EXCL_LINE
+            unreachable(); // LCOV_EXCL_LINE
         }
 
         return token;
+    }
+
+    /// @brief Parses plain scalar contents.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
+    str_view parse_plain_scalar(str_view token) noexcept {
+        // plain scalars cannot be empty.
+        FK_YAML_ASSERT(!token.empty());
+
+        std::size_t newline_pos = token.find('\n');
+        if (newline_pos == str_view::npos) {
+            return token;
+        }
+
+        m_use_owned_buffer = true;
+
+        if (m_buffer.capacity() < token.size()) {
+            m_buffer.reserve(token.size());
+        }
+
+        do {
+            process_line_folding(token, newline_pos);
+            newline_pos = token.find('\n');
+        } while (newline_pos != str_view::npos);
+
+        m_buffer.append(token.begin(), token.size());
+
+        return {m_buffer};
     }
 
     /// @brief Parses single quoted scalar contents.
@@ -130,7 +160,7 @@ private:
             return token;
         }
 
-        constexpr str_view filter = "\'\n";
+        constexpr str_view filter {"\'\n"};
         std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
@@ -174,7 +204,7 @@ private:
             return token;
         }
 
-        constexpr str_view filter = "\\\n";
+        constexpr str_view filter {"\\\n"};
         std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
@@ -281,6 +311,8 @@ private:
         m_use_owned_buffer = true;
         m_buffer.reserve(token.size());
 
+        constexpr str_view white_space_filter {" \t"};
+
         std::size_t cur_line_begin_pos = 0;
         bool has_newline_at_end = true;
         bool can_be_folded = false;
@@ -293,14 +325,21 @@ private:
 
             const std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
             const str_view line = token.substr(cur_line_begin_pos, line_size);
+            const bool is_empty = line.find_first_not_of(white_space_filter) == str_view::npos;
 
             if (line.size() <= header.indent) {
-                // empty or less-indented lines are turned into a newline
+                // A less-indented line is turned into a newline.
                 m_buffer.push_back('\n');
                 can_be_folded = false;
             }
+            else if (is_empty) {
+                // more-indented empty lines are not folded.
+                m_buffer.push_back('\n');
+                m_buffer.append(line.begin() + header.indent, line.end());
+                m_buffer.push_back('\n');
+            }
             else {
-                const std::size_t non_space_pos = line.find_first_not_of(' ');
+                const std::size_t non_space_pos = line.find_first_not_of(white_space_filter);
                 const bool is_more_indented = (non_space_pos != str_view::npos) && (non_space_pos > header.indent);
 
                 if (can_be_folded) {
@@ -470,18 +509,16 @@ private:
     /// @param type Scalar value type.
     /// @param token Scalar contents.
     /// @return A YAML scalar object.
-    basic_node_type create_scalar_node(node_type type, str_view token) {
-        basic_node_type node {};
-
-        switch (type) {
+    basic_node_type create_scalar_node(node_type val_type, tag_t tag_type, str_view token) {
+        switch (val_type) {
         case node_type::NULL_OBJECT: {
             std::nullptr_t null = nullptr;
             const bool converted = detail::aton(token.begin(), token.end(), null);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a null.", m_line, m_indent);
             }
-            // The above `node` variable is already null, so no instance creation is needed.
-            break;
+            // The default basic_node object is a null scalar node.
+            return basic_node_type {};
         }
         case node_type::BOOLEAN: {
             auto boolean = static_cast<boolean_type>(false);
@@ -489,41 +526,45 @@ private:
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a boolean.", m_line, m_indent);
             }
-            node = basic_node_type(boolean);
-            break;
+            return basic_node_type(boolean);
         }
         case node_type::INTEGER: {
             integer_type integer = 0;
             const bool converted = detail::atoi(token.begin(), token.end(), integer);
-            if FK_YAML_UNLIKELY (!converted) {
+            if FK_YAML_LIKELY (converted) {
+                return basic_node_type(integer);
+            }
+            if FK_YAML_UNLIKELY (tag_type == tag_t::INTEGER) {
                 throw parse_error("Failed to convert a scalar to an integer.", m_line, m_indent);
             }
-            node = basic_node_type(integer);
-            break;
+
+            // conversion error from a scalar which is not tagged with !!int is recovered by treating it as a string
+            // scalar. See https://github.com/fktn-k/fkYAML/issues/428.
+            return basic_node_type(string_type(token.begin(), token.end()));
         }
         case node_type::FLOAT: {
             float_number_type float_val = 0;
             const bool converted = detail::atof(token.begin(), token.end(), float_val);
-            if FK_YAML_UNLIKELY (!converted) {
+            if FK_YAML_LIKELY (converted) {
+                return basic_node_type(float_val);
+            }
+            if FK_YAML_UNLIKELY (tag_type == tag_t::FLOATING_NUMBER) {
                 throw parse_error("Failed to convert a scalar to a floating point value", m_line, m_indent);
             }
-            node = basic_node_type(float_val);
-            break;
+
+            // conversion error from a scalar which is not tagged with !!float is recovered by treating it as a string
+            // scalar. See https://github.com/fktn-k/fkYAML/issues/428.
+            return basic_node_type(string_type(token.begin(), token.end()));
         }
         case node_type::STRING:
-            if (m_use_owned_buffer) {
-                node = basic_node_type(std::move(m_buffer));
-                m_use_owned_buffer = false;
+            if (!m_use_owned_buffer) {
+                return basic_node_type(string_type(token.begin(), token.end()));
             }
-            else {
-                node = basic_node_type(std::string(token.begin(), token.end()));
-            }
-            break;
+            m_use_owned_buffer = false;
+            return basic_node_type(std::move(m_buffer));
         default:                   // LCOV_EXCL_LINE
             detail::unreachable(); // LCOV_EXCL_LINE
         }
-
-        return node;
     }
 
     /// Current line

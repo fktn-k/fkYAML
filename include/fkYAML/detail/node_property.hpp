@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -17,9 +17,9 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct node_property {
     /// The tag name property.
-    std::string tag;
+    std::string tag {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
     /// The anchor name property.
-    std::string anchor;
+    std::string anchor {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

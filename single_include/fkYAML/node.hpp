@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -22,7 +22,7 @@
 // #include <fkYAML/detail/macros/define_macros.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -34,7 +34,7 @@
 // #include <fkYAML/detail/macros/version_macros.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -42,7 +42,7 @@
 
 // Check version definitions if already defined.
 #if defined(FK_YAML_MAJOR_VERSION) && defined(FK_YAML_MINOR_VERSION) && defined(FK_YAML_PATCH_VERSION)
-#if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 3 || FK_YAML_PATCH_VERSION != 14
+#if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 4 || FK_YAML_PATCH_VERSION != 0
 #warning Already included a different version of the fkYAML library!
 #else
 // define macros to skip defining macros down below.
@@ -53,8 +53,8 @@
 #ifndef FK_YAML_VERCHECK_SUCCEEDED
 
 #define FK_YAML_MAJOR_VERSION 0
-#define FK_YAML_MINOR_VERSION 3
-#define FK_YAML_PATCH_VERSION 14
+#define FK_YAML_MINOR_VERSION 4
+#define FK_YAML_PATCH_VERSION 0
 
 #define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
 
@@ -84,7 +84,7 @@
 // #include <fkYAML/detail/macros/cpp_config_macros.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -243,7 +243,7 @@
 // #include <fkYAML/detail/assert.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -267,7 +267,7 @@
 // #include <fkYAML/detail/document_metainfo.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -284,7 +284,7 @@
 // #include <fkYAML/detail/meta/node_traits.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -298,7 +298,7 @@
 // #include <fkYAML/detail/meta/detect.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -315,7 +315,7 @@
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -767,7 +767,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/type_traits.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -937,7 +937,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/fkyaml_fwd.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1127,7 +1127,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/yaml_version_type.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1192,7 +1192,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/deserializer.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1212,7 +1212,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/lexical_analyzer.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1232,7 +1232,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/uri_encoding.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1348,7 +1348,7 @@ private:
             return true;
         default:
             // alphabets and numbers are also allowed.
-            return std::isalnum(c);
+            return static_cast<bool>(std::isalnum(c));
         }
     }
 };
@@ -1360,7 +1360,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf_encodings.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1377,7 +1377,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1396,7 +1396,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/string_formatter.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1446,7 +1446,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/types/node_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -1462,7 +1462,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/node_type.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2034,7 +2034,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/block_scalar_header.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2061,7 +2061,7 @@ enum class chomping_indicator_t : std::uint8_t {
 struct block_scalar_header {
     /// Chomping indicator type.
     chomping_indicator_t chomp {chomping_indicator_t::CLIP};
-    /// Indentation for block scalar contents.
+    /// Content indentation level of a block scalar.
     uint32_t indent {0};
 };
 
@@ -2072,7 +2072,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/position_tracker.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2088,7 +2088,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/str_view.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -2180,8 +2180,10 @@ public:
     template <
         typename CharPtrT,
         enable_if_t<
-            disjunction<std::is_same<CharPtrT, value_type*>, std::is_same<CharPtrT, const value_type*>>::value, int> =
-            0>
+            conjunction<
+                negation<std::is_array<CharPtrT>>, std::is_pointer<CharPtrT>,
+                disjunction<std::is_same<CharPtrT, value_type*>, std::is_same<CharPtrT, const value_type*>>>::value,
+            int> = 0>
     FK_YAML_CXX17_CONSTEXPR basic_str_view(CharPtrT p_str) noexcept
         : m_len(traits_type::length(p_str)),
           mp_str(p_str) {
@@ -3156,7 +3158,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -3402,16 +3404,22 @@ public:
         case '>': {
             const str_view sv {m_token_begin_itr, m_end_itr};
             const std::size_t header_end_pos = sv.find('\n');
-
-            FK_YAML_ASSERT(!sv.empty());
-            token.type = (sv[0] == '|') ? lexical_token_t::BLOCK_LITERAL_SCALAR : lexical_token_t::BLOCK_FOLDED_SCALAR;
-
             FK_YAML_ASSERT(header_end_pos != str_view::npos);
+            const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
+
+            if (*m_token_begin_itr == '|') {
+                token.type = lexical_token_t::BLOCK_LITERAL_SCALAR;
+            }
+            else {
+                token.type = lexical_token_t::BLOCK_FOLDED_SCALAR;
+            }
+
             const str_view header_line = sv.substr(1, header_end_pos - 1);
             m_block_scalar_header = convert_to_block_scalar_header(header_line);
 
             m_token_begin_itr = sv.begin() + (header_end_pos + 1);
-            scan_block_style_string_token(m_block_scalar_header.indent, token.str);
+            m_block_scalar_header.indent =
+                determine_block_scalar_content_range(base_indent, m_block_scalar_header.indent, token.str);
 
             return token;
         }
@@ -3480,6 +3488,100 @@ public:
     }
 
 private:
+    uint32_t get_current_indent_level(const char* p_line_end) {
+        // get the beginning position of the current line.
+        std::size_t line_begin_pos = str_view(m_input_buffer.begin(), p_line_end - 1).find_last_of('\n');
+        if (line_begin_pos == str_view::npos) {
+            line_begin_pos = 0;
+        }
+        else {
+            ++line_begin_pos;
+        }
+        const char* p_line_begin = m_input_buffer.begin() + line_begin_pos;
+        const char* cur_itr = p_line_begin;
+
+        // get the indentation of the current line.
+        uint32_t indent = 0;
+        bool indent_found = false;
+        // 0: none, 1: block seq item, 2: explicit map key, 3: explicit map value
+        uint32_t context = 0;
+        while (cur_itr != p_line_end && !indent_found) {
+            switch (*cur_itr) {
+            case ' ':
+                ++indent;
+                ++cur_itr;
+                break;
+            case '-':
+                switch (*(cur_itr + 1)) {
+                case ' ':
+                case '\t':
+                    indent += 2;
+                    cur_itr += 2;
+                    context = 1;
+                    break;
+                default:
+                    indent_found = true;
+                    break;
+                }
+                break;
+            case '?':
+                if (*(cur_itr + 1) == ' ') {
+                    indent += 2;
+                    cur_itr += 2;
+                    context = 2;
+                    break;
+                }
+
+                indent_found = true;
+                break;
+            case ':':
+                switch (*(cur_itr + 1)) {
+                case ' ':
+                case '\t':
+                    indent += 2;
+                    cur_itr += 2;
+                    context = 3;
+                    break;
+                default:
+                    indent_found = true;
+                    break;
+                }
+                break;
+            default:
+                indent_found = true;
+                break;
+            }
+        }
+
+        // If "- ", "? " and/or ": " occur in the first line of this plain scalar content.
+        if (context > 0) {
+            // Check if the first line contains the key separator ": ".
+            // If so, the indent value remains the current one.
+            // Otherwise, the indent value is changed based on the last ocurrence of the above 3.
+            // In any case, multiline plain scalar content must be indented more than the indent value.
+            const str_view line_content_part {p_line_begin + indent, p_line_end};
+            std::size_t key_sep_pos = line_content_part.find(": ");
+            if (key_sep_pos == str_view::npos) {
+                key_sep_pos = line_content_part.find(":\t");
+            }
+
+            if (key_sep_pos == str_view::npos) {
+                constexpr char targets[] = "-?:";
+                FK_YAML_ASSERT(context - 1 < sizeof(targets));
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+                const char target_char = targets[context - 1];
+
+                // Find the position of the last ocuurence of "- ", "? " or ": ".
+                const str_view line_indent_part {p_line_begin, indent};
+                const std::size_t block_seq_item_begin_pos = line_indent_part.find_last_of(target_char);
+                FK_YAML_ASSERT(block_seq_item_begin_pos != str_view::npos);
+                indent = static_cast<uint32_t>(block_seq_item_begin_pos);
+            }
+        }
+
+        return indent;
+    }
+
     /// @brief Skip until a newline code or a null character is found.
     void scan_comment() {
         FK_YAML_ASSERT(*m_cur_itr == '#');
@@ -3892,7 +3994,7 @@ private:
     void determine_plain_scalar_range(str_view& token) {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        constexpr str_view filter = "\n :{}[],";
+        constexpr str_view filter {"\n :{}[],"};
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             token = sv;
@@ -3901,12 +4003,28 @@ private:
         }
 
         bool ends_loop = false;
+        uint32_t indent = std::numeric_limits<uint32_t>::max();
         do {
             FK_YAML_ASSERT(pos < sv.size());
             switch (sv[pos]) {
-            case '\n':
-                ends_loop = true;
+            case '\n': {
+                if (indent == std::numeric_limits<uint32_t>::max()) {
+                    indent = get_current_indent_level(&sv[pos]);
+                }
+
+                constexpr str_view space_filter {" \t\n"};
+                const std::size_t non_space_pos = sv.find_first_not_of(space_filter, pos);
+                const std::size_t last_newline_pos = sv.find_last_of('\n', non_space_pos);
+                FK_YAML_ASSERT(last_newline_pos != str_view::npos);
+
+                if (non_space_pos == str_view::npos || non_space_pos - last_newline_pos - 1 <= indent) {
+                    ends_loop = true;
+                    break;
+                }
+
+                pos = non_space_pos;
                 break;
+            }
             case ' ':
                 if FK_YAML_UNLIKELY (pos == sv.size() - 1) {
                     // trim trailing space.
@@ -3977,56 +4095,71 @@ private:
     }
 
     /// @brief Scan a block style string token either in the literal or folded style.
-    /// @param style The style of the given token, either literal or folded.
-    /// @param chomp The chomping indicator type of the given token, either strip, keep or clip.
-    /// @param indent The indent size specified for the given token.
-    void scan_block_style_string_token(uint32_t& indent, str_view& token) {
+    /// @param base_indent The base indent level of the block scalar.
+    /// @param indicated_indent The indicated indent level in the block scalar header. 0 means it's not indicated.
+    /// @param token Storage for the scanned block scalar range.
+    /// @return The content indentation level of the block scalar.
+    uint32_t determine_block_scalar_content_range(uint32_t base_indent, uint32_t indicated_indent, str_view& token) {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         // Handle leading all-space lines.
-        constexpr str_view space_filter = " \t\n";
-        const std::size_t first_non_space_pos = sv.find_first_not_of(space_filter);
-        if (first_non_space_pos == str_view::npos) {
-            // empty block scalar with no subsequent tokens.
-            indent = static_cast<uint32_t>(sv.size());
-            token = sv;
+        uint32_t cur_indent = 0;
+        uint32_t max_leading_indent = 0;
+        const char* cur_itr = m_token_begin_itr;
+        for (bool stop_increment = false; cur_itr != m_end_itr; ++cur_itr) {
+            const char c = *cur_itr;
+            if (c == ' ') {
+                if (!stop_increment) {
+                    ++cur_indent;
+                }
+                continue;
+            }
+            if (c == '\n') {
+                max_leading_indent = std::max(cur_indent, max_leading_indent);
+                cur_indent = 0;
+                stop_increment = false;
+                continue;
+            }
+            if (c == '\t') {
+                // Tabs are not counted as an indent character but still part of an empty line.
+                // See https://yaml.org/spec/1.2.2/#rule-s-indent and https://yaml.org/spec/1.2.2/#64-empty-lines.
+                stop_increment = true;
+                continue;
+            }
+            break;
+        }
 
+        // all the block scalar contents are empty lines, and no subsequent token exists.
+        if FK_YAML_UNLIKELY (cur_itr == m_end_itr) {
             // Without the following iterator update, lexer cannot reach the end of input buffer and causes infinite
             // loops from the next loop. (https://github.com/fktn-k/fkYAML/pull/410)
             m_cur_itr = m_end_itr;
-            return;
+
+            token = sv;
+            // If there's no non-empty line, the content indentation level is equal to the number of spaces on the
+            // longest line. https://yaml.org/spec/1.2.2/#8111-block-indentation-indicator
+            return indicated_indent == 0 ? std::max(cur_indent, max_leading_indent) : base_indent + indicated_indent;
         }
 
-        // get indentation of the first non-space character.
-        std::size_t last_newline_pos = sv.substr(0, first_non_space_pos).find_last_of('\n');
-        if (last_newline_pos == str_view::npos) {
-            // first_non_space_pos in on the first line.
-            const auto cur_indent = static_cast<uint32_t>(first_non_space_pos);
-            if (indent == 0) {
-                indent = cur_indent;
-            }
-            else if FK_YAML_UNLIKELY (cur_indent < indent) {
-                emit_error("A block style scalar is less indented than the indicated level.");
-            }
-        }
-        else {
-            FK_YAML_ASSERT(last_newline_pos < first_non_space_pos);
-            const auto cur_indent = static_cast<uint32_t>(first_non_space_pos - last_newline_pos - 1);
-
-            // TODO: preserve and compare the last indentation with `cur_indent`
-            if (indent == 0) {
-                indent = cur_indent;
-            }
-            else if FK_YAML_UNLIKELY (cur_indent < indent) {
-                emit_error("A block style scalar is less indented than the indicated level.");
-            }
+        // Any leading empty line must not contain more spaces than the first non-empty line.
+        if FK_YAML_UNLIKELY (cur_indent < max_leading_indent) {
+            emit_error("Any leading empty line must not be more indented than the first non-empty line.");
         }
 
-        last_newline_pos = sv.find('\n', first_non_space_pos + 1);
+        if (indicated_indent == 0) {
+            FK_YAML_ASSERT(base_indent < cur_indent);
+            indicated_indent = cur_indent - base_indent;
+        }
+        else if FK_YAML_UNLIKELY (cur_indent < base_indent + indicated_indent) {
+            emit_error("The first non-empty line in the block scalar is less indented.");
+        }
+
+        std::size_t last_newline_pos = sv.find('\n', cur_itr - m_token_begin_itr + 1);
         if (last_newline_pos == str_view::npos) {
             last_newline_pos = sv.size();
         }
 
+        const uint32_t content_indent = base_indent + indicated_indent;
         while (last_newline_pos < sv.size()) {
             std::size_t cur_line_end_pos = sv.find('\n', last_newline_pos + 1);
             if (cur_line_end_pos == str_view::npos) {
@@ -4040,8 +4173,20 @@ private:
             }
 
             FK_YAML_ASSERT(last_newline_pos < cur_line_content_begin_pos);
-            const auto cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
-            if (cur_indent < indent && sv[cur_line_content_begin_pos] != '\n') {
+            cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
+            if (cur_indent < content_indent && sv[cur_line_content_begin_pos] != '\n') {
+                if FK_YAML_UNLIKELY (cur_indent > base_indent) {
+                    // This path assumes an input like the following:
+                    // ```yaml
+                    // foo: |
+                    //   text
+                    //  invalid # this line is less indented than the content indent level (2)
+                    //          # but more indented than the base indent level (0)
+                    // ```
+                    // In such cases, the less indented line cannot be the start of the next token.
+                    emit_error("A content line of the block scalar is less indented.");
+                }
+
                 // Interpret less indented non-space characters as the start of the next token.
                 break;
             }
@@ -4056,6 +4201,8 @@ private:
 
         token = sv.substr(0, last_newline_pos);
         m_cur_itr = token.end();
+
+        return content_indent;
     }
 
     /// @brief Handle unescaped control characters.
@@ -4146,7 +4293,7 @@ private:
     /// @param indent A variable to store the retrieved indent size.
     /// @return Block scalar header information converted from the header line.
     block_scalar_header convert_to_block_scalar_header(str_view line) {
-        constexpr str_view comment_prefix = " #";
+        constexpr str_view comment_prefix {" #"};
         const std::size_t comment_begin_pos = line.find(comment_prefix);
         if (comment_begin_pos != str_view::npos) {
             line = line.substr(0, comment_begin_pos);
@@ -4274,7 +4421,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/scalar_parser.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -4290,7 +4437,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/conversions/scalar_conv.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5130,7 +5277,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5467,7 +5614,8 @@ private:
     }
 
     static void unescape_escaped_unicode(char32_t codepoint, std::string& buff) {
-        std::array<uint8_t, 4> encode_buff {};
+        // the inner curly braces are necessary to build with older compilers.
+        std::array<uint8_t, 4> encode_buff {{}};
         uint32_t encoded_size {0};
         utf8::from_utf32(codepoint, encode_buff, encoded_size);
         buff.append(reinterpret_cast<char*>(encode_buff.data()), encoded_size);
@@ -5483,7 +5631,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/scalar_scanner.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5819,7 +5967,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/tag_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -5902,7 +6050,7 @@ public:
     scalar_parser& operator=(const scalar_parser&) = default;
 
     scalar_parser(scalar_parser&&) noexcept = default;
-    scalar_parser& operator=(scalar_parser&&) noexcept = default;
+    scalar_parser& operator=(scalar_parser&&) noexcept(std::is_nothrow_move_assignable<std::string>::value) = default;
 
     /// @brief Parses a token into a flow scalar (either plain, single quoted or double quoted)
     /// @param lex_type Lexical token type for the scalar.
@@ -5917,7 +6065,7 @@ public:
 
         token = parse_flow_scalar_token(lex_type, token);
         const node_type value_type = decide_value_type(lex_type, tag_type, token);
-        return create_scalar_node(value_type, token);
+        return create_scalar_node(value_type, tag_type, token);
     }
 
     /// @brief Parses a token into a block scalar (either literal or folded)
@@ -5940,7 +6088,7 @@ public:
         }
 
         const node_type value_type = decide_value_type(lex_type, tag_type, token);
-        return create_scalar_node(value_type, token);
+        return create_scalar_node(value_type, tag_type, token);
     }
 
 private:
@@ -5950,18 +6098,48 @@ private:
     /// @return View into the parsed scalar contents.
     str_view parse_flow_scalar_token(lexical_token_t lex_type, str_view token) {
         switch (lex_type) {
+        case lexical_token_t::PLAIN_SCALAR:
+            token = parse_plain_scalar(token);
+            break;
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
             token = parse_single_quoted_scalar(token);
             break;
         case lexical_token_t::DOUBLE_QUOTED_SCALAR:
             token = parse_double_quoted_scalar(token);
             break;
-        case lexical_token_t::PLAIN_SCALAR:
-        default:
-            break;
+        default:           // LCOV_EXCL_LINE
+            unreachable(); // LCOV_EXCL_LINE
         }
 
         return token;
+    }
+
+    /// @brief Parses plain scalar contents.
+    /// @param token Scalar contents.
+    /// @return View into the parsed scalar contents.
+    str_view parse_plain_scalar(str_view token) noexcept {
+        // plain scalars cannot be empty.
+        FK_YAML_ASSERT(!token.empty());
+
+        std::size_t newline_pos = token.find('\n');
+        if (newline_pos == str_view::npos) {
+            return token;
+        }
+
+        m_use_owned_buffer = true;
+
+        if (m_buffer.capacity() < token.size()) {
+            m_buffer.reserve(token.size());
+        }
+
+        do {
+            process_line_folding(token, newline_pos);
+            newline_pos = token.find('\n');
+        } while (newline_pos != str_view::npos);
+
+        m_buffer.append(token.begin(), token.size());
+
+        return {m_buffer};
     }
 
     /// @brief Parses single quoted scalar contents.
@@ -5972,7 +6150,7 @@ private:
             return token;
         }
 
-        constexpr str_view filter = "\'\n";
+        constexpr str_view filter {"\'\n"};
         std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
@@ -6016,7 +6194,7 @@ private:
             return token;
         }
 
-        constexpr str_view filter = "\\\n";
+        constexpr str_view filter {"\\\n"};
         std::size_t pos = token.find_first_of(filter);
         if (pos == str_view::npos) {
             return token;
@@ -6123,6 +6301,8 @@ private:
         m_use_owned_buffer = true;
         m_buffer.reserve(token.size());
 
+        constexpr str_view white_space_filter {" \t"};
+
         std::size_t cur_line_begin_pos = 0;
         bool has_newline_at_end = true;
         bool can_be_folded = false;
@@ -6135,14 +6315,21 @@ private:
 
             const std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
             const str_view line = token.substr(cur_line_begin_pos, line_size);
+            const bool is_empty = line.find_first_not_of(white_space_filter) == str_view::npos;
 
             if (line.size() <= header.indent) {
-                // empty or less-indented lines are turned into a newline
+                // A less-indented line is turned into a newline.
                 m_buffer.push_back('\n');
                 can_be_folded = false;
             }
+            else if (is_empty) {
+                // more-indented empty lines are not folded.
+                m_buffer.push_back('\n');
+                m_buffer.append(line.begin() + header.indent, line.end());
+                m_buffer.push_back('\n');
+            }
             else {
-                const std::size_t non_space_pos = line.find_first_not_of(' ');
+                const std::size_t non_space_pos = line.find_first_not_of(white_space_filter);
                 const bool is_more_indented = (non_space_pos != str_view::npos) && (non_space_pos > header.indent);
 
                 if (can_be_folded) {
@@ -6312,18 +6499,16 @@ private:
     /// @param type Scalar value type.
     /// @param token Scalar contents.
     /// @return A YAML scalar object.
-    basic_node_type create_scalar_node(node_type type, str_view token) {
-        basic_node_type node {};
-
-        switch (type) {
+    basic_node_type create_scalar_node(node_type val_type, tag_t tag_type, str_view token) {
+        switch (val_type) {
         case node_type::NULL_OBJECT: {
             std::nullptr_t null = nullptr;
             const bool converted = detail::aton(token.begin(), token.end(), null);
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a null.", m_line, m_indent);
             }
-            // The above `node` variable is already null, so no instance creation is needed.
-            break;
+            // The default basic_node object is a null scalar node.
+            return basic_node_type {};
         }
         case node_type::BOOLEAN: {
             auto boolean = static_cast<boolean_type>(false);
@@ -6331,41 +6516,45 @@ private:
             if FK_YAML_UNLIKELY (!converted) {
                 throw parse_error("Failed to convert a scalar to a boolean.", m_line, m_indent);
             }
-            node = basic_node_type(boolean);
-            break;
+            return basic_node_type(boolean);
         }
         case node_type::INTEGER: {
             integer_type integer = 0;
             const bool converted = detail::atoi(token.begin(), token.end(), integer);
-            if FK_YAML_UNLIKELY (!converted) {
+            if FK_YAML_LIKELY (converted) {
+                return basic_node_type(integer);
+            }
+            if FK_YAML_UNLIKELY (tag_type == tag_t::INTEGER) {
                 throw parse_error("Failed to convert a scalar to an integer.", m_line, m_indent);
             }
-            node = basic_node_type(integer);
-            break;
+
+            // conversion error from a scalar which is not tagged with !!int is recovered by treating it as a string
+            // scalar. See https://github.com/fktn-k/fkYAML/issues/428.
+            return basic_node_type(string_type(token.begin(), token.end()));
         }
         case node_type::FLOAT: {
             float_number_type float_val = 0;
             const bool converted = detail::atof(token.begin(), token.end(), float_val);
-            if FK_YAML_UNLIKELY (!converted) {
+            if FK_YAML_LIKELY (converted) {
+                return basic_node_type(float_val);
+            }
+            if FK_YAML_UNLIKELY (tag_type == tag_t::FLOATING_NUMBER) {
                 throw parse_error("Failed to convert a scalar to a floating point value", m_line, m_indent);
             }
-            node = basic_node_type(float_val);
-            break;
+
+            // conversion error from a scalar which is not tagged with !!float is recovered by treating it as a string
+            // scalar. See https://github.com/fktn-k/fkYAML/issues/428.
+            return basic_node_type(string_type(token.begin(), token.end()));
         }
         case node_type::STRING:
-            if (m_use_owned_buffer) {
-                node = basic_node_type(std::move(m_buffer));
-                m_use_owned_buffer = false;
+            if (!m_use_owned_buffer) {
+                return basic_node_type(string_type(token.begin(), token.end()));
             }
-            else {
-                node = basic_node_type(std::string(token.begin(), token.end()));
-            }
-            break;
+            m_use_owned_buffer = false;
+            return basic_node_type(std::move(m_buffer));
         default:                   // LCOV_EXCL_LINE
             detail::unreachable(); // LCOV_EXCL_LINE
         }
-
-        return node;
     }
 
     /// Current line
@@ -6385,7 +6574,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/tag_resolver.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6414,8 +6603,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-static constexpr str_view default_primary_handle_prefix = "!";
-static constexpr str_view default_secondary_handle_prefix = "tag:yaml.org,2002:";
+static constexpr str_view default_primary_handle_prefix {"!"};
+static constexpr str_view default_secondary_handle_prefix {"tag:yaml.org,2002:"};
 
 template <typename BasicNodeType>
 class tag_resolver {
@@ -6570,7 +6759,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6683,7 +6872,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/node_attrs.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6824,7 +7013,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/node_property.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -6842,9 +7031,9 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct node_property {
     /// The tag name property.
-    std::string tag;
+    std::string tag {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
     /// The anchor name property.
-    std::string anchor;
+    std::string anchor {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -7739,8 +7928,13 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX: {
+                // An alias node must not specify any properties (tag, anchor).
+                // https://yaml.org/spec/1.2.2/#71-alias-nodes
                 if FK_YAML_UNLIKELY (m_needs_tag_impl) {
                     throw parse_error("Tag cannot be specified to an alias node", line, indent);
+                }
+                if FK_YAML_UNLIKELY (m_needs_anchor_impl) {
+                    throw parse_error("Anchor cannot be specified to an alias node.", line, indent);
                 }
 
                 std::string token_str = std::string(token.str.begin(), token.str.end());
@@ -8119,7 +8313,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/input_adapter.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8142,7 +8336,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf_encode_detector.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8159,7 +8353,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -8278,7 +8472,8 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
             return utf_encode_t::UTF_8;
         }
 
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = static_cast<uint8_t>(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -8360,7 +8555,8 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
             return utf_encode_t::UTF_16BE;
         }
 
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 2 && begin + i != end; i++) {
             // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -8400,7 +8596,8 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
             return utf_encode_t::UTF_32BE;
         }
 
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         const char32_t elem = *begin;
         bytes[0] = static_cast<uint8_t>((elem & 0xFF000000u) >> 24);
         bytes[1] = static_cast<uint8_t>((elem & 0x00FF0000u) >> 16);
@@ -8429,7 +8626,8 @@ struct file_utf_encode_detector {
     /// @param p_file The input file handle.
     /// @return A detected encoding type.
     static utf_encode_t detect(std::FILE* p_file) noexcept {
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4; i++) {
             char byte = 0;
@@ -8472,7 +8670,8 @@ struct stream_utf_encode_detector {
     /// @param p_file The input file handle.
     /// @return A detected encoding type.
     static utf_encode_t detect(std::istream& is) noexcept {
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4; i++) {
             char ch = 0;
@@ -9556,7 +9755,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/iterator.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -9577,26 +9776,18 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-/// @brief A tag which tells Iterator will contain sequence value iterator.
-struct sequence_iterator_tag {};
-
-/// @brief A tag which tells Iterator will contain mapping value iterator.
-struct mapping_iterator_tag {};
-
 /// @brief The template definitions of type information used in @ref Iterator class
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 struct iterator_traits {
     /// A type of iterated elements.
-    using value_type = ValueType;
+    using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
-    using difference_type = std::ptrdiff_t;
-    /// A type to represent iterator sizes.
-    using size_type = std::size_t;
+    using difference_type = typename ValueType::difference_type;
     /// A type of an element pointer.
-    using pointer = value_type*;
+    using pointer = typename ValueType::pointer;
     /// A type of reference to an element.
-    using reference = value_type&;
+    using reference = typename ValueType::reference;
 };
 
 /// @brief A specialization of @ref iterator_traits for constant value types.
@@ -9604,15 +9795,13 @@ struct iterator_traits {
 template <typename ValueType>
 struct iterator_traits<const ValueType> {
     /// A type of iterated elements.
-    using value_type = ValueType;
+    using value_type = typename ValueType::value_type;
     /// A type to represent difference between iterators.
-    using difference_type = std::ptrdiff_t;
-    /// A type to represent iterator sizes.
-    using size_type = std::size_t;
+    using difference_type = typename ValueType::difference_type;
     /// A type of a constant element pointer.
-    using pointer = const value_type*;
+    using pointer = typename ValueType::const_pointer;
     /// A type of constant reference to an element.
-    using reference = const value_type&;
+    using reference = typename ValueType::const_reference;
 };
 
 /// @brief Definitions of iterator types for iterators internally held.
@@ -9621,128 +9810,100 @@ enum class iterator_t : std::uint8_t {
     MAPPING,  //!< mapping iterator type.
 };
 
+/// @brief The actual storage for iterators internally held in iterator.
+template <typename BasicNodeType>
+struct iterator_holder {
+    static_assert(
+        is_basic_node<BasicNodeType>::value,
+        "iterator_holder class only accepts a basic_node as its template parameter.");
+
+    /// A sequence iterator object.
+    typename BasicNodeType::sequence_type::iterator sequence_iterator {};
+    /// A mapping iterator object.
+    typename BasicNodeType::mapping_type::iterator mapping_iterator {};
+};
+
 /// @brief A class which holds iterators either of sequence or mapping type
 /// @tparam ValueType The type of iterated elements.
 template <typename ValueType>
 class iterator {
+    /// @brief The iterator type with ValueType of different const-ness.
+    using other_iterator_type = typename std::conditional<
+        std::is_const<ValueType>::value, iterator<typename std::remove_const<ValueType>::type>,
+        iterator<const ValueType>>::type;
+
+    friend other_iterator_type;
+
 public:
     /// A type for iterator traits of instantiated @Iterator template class.
-    using ItrTraitsType = iterator_traits<ValueType>;
+    using iterator_traits_type = iterator_traits<ValueType>;
 
     /// A type for iterator category tag.
     using iterator_category = std::bidirectional_iterator_tag;
     /// A type of iterated element.
-    using value_type = typename ItrTraitsType::value_type;
+    using value_type = typename iterator_traits_type::value_type;
     /// A type to represent differences between iterators.
-    using difference_type = typename ItrTraitsType::difference_type;
-    /// A type to represent container sizes.
-    using size_type = typename ItrTraitsType::size_type;
+    using difference_type = typename iterator_traits_type::difference_type;
     /// A type of an element pointer.
-    using pointer = typename ItrTraitsType::pointer;
+    using pointer = typename iterator_traits_type::pointer;
     /// A type of reference to an element.
-    using reference = typename ItrTraitsType::reference;
+    using reference = typename iterator_traits_type::reference;
 
-private:
-    /// A type of non-const version of iterated elements.
-    using NonConstValueType = typename std::remove_const<ValueType>::type;
+    static_assert(is_basic_node<value_type>::value, "iterator class only accepts a basic_node as its value type.");
 
-    static_assert(is_basic_node<NonConstValueType>::value, "Iterator only accepts basic_node<...>");
+    /// @brief Constructs an iterator object.
+    iterator() = default;
 
-    /// @brief The actual storage for iterators internally held in @ref Iterator.
-    struct iterator_holder {
-        /// A sequence iterator object.
-        typename NonConstValueType::sequence_type::iterator sequence_iterator {};
-        /// A mapping iterator object.
-        typename NonConstValueType::mapping_type::iterator mapping_iterator {};
-    };
-
-public:
     /// @brief Construct a new iterator object with sequence iterator object.
     /// @param[in] itr An sequence iterator object.
-    iterator(sequence_iterator_tag /* unused */, const typename ValueType::sequence_type::iterator& itr) noexcept {
+    iterator(const typename value_type::sequence_type::iterator& itr) noexcept {
         m_iterator_holder.sequence_iterator = itr;
     }
 
     /// @brief Construct a new iterator object with mapping iterator object.
     /// @param[in] itr An mapping iterator object.
-    iterator(mapping_iterator_tag /* unused */, const typename ValueType::mapping_type::iterator& itr) noexcept
+    iterator(const typename value_type::mapping_type::iterator& itr) noexcept
         : m_inner_iterator_type(iterator_t::MAPPING) {
         m_iterator_holder.mapping_iterator = itr;
     }
 
-    /// @brief Copy constructor of the iterator class.
-    /// @param other An iterator object to be copied with.
-    iterator(const iterator& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type) {
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = other.m_iterator_holder.sequence_iterator;
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = other.m_iterator_holder.mapping_iterator;
-            break;
-        }
+    /// @brief Copy constructs an iterator.
+    iterator(const iterator&) = default;
+
+    /// @brief Copy constructs an iterator from another iterator with different const-ness in ValueType.
+    /// @note This copy constructor is not defined if ValueType is not const to avoid const removal from ValueType.
+    /// @tparam OtherIterator The iterator type to copy from.
+    /// @param other An iterator to copy from with different const-ness in ValueType.
+    template <
+        typename OtherIterator,
+        enable_if_t<
+            conjunction<std::is_same<OtherIterator, other_iterator_type>, std::is_const<ValueType>>::value, int> = 0>
+    iterator(const OtherIterator& other) noexcept
+        : m_inner_iterator_type(other.m_inner_iterator_type),
+          m_iterator_holder(other.m_iterator_holder) {
     }
 
-    /// @brief Move constructor of the iterator class.
-    /// @param other An iterator object to be moved from.
-    iterator(iterator&& other) noexcept
-        : m_inner_iterator_type(other.m_inner_iterator_type) {
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = std::move(other.m_iterator_holder.sequence_iterator);
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = std::move(other.m_iterator_holder.mapping_iterator);
-            break;
-        }
+    /// @brief A copy assignment operator of the iterator class.
+    iterator& operator=(const iterator&) = default;
+
+    template <
+        typename OtherIterator,
+        enable_if_t<
+            conjunction<std::is_same<OtherIterator, other_iterator_type>, std::is_const<ValueType>>::value, int> = 0>
+    iterator& operator=(const OtherIterator& other) noexcept {
+        m_inner_iterator_type = other.m_inner_iterator_type;
+        m_iterator_holder = other.m_iterator_holder;
+        return *this;
     }
+
+    /// @brief Move constructs an iterator.
+    iterator(iterator&&) = default;
+
+    /// @brief A move assignment operator of the iterator class.
+    iterator& operator=(iterator&&) = default;
 
     /// @brief Destroys an iterator.
     ~iterator() = default;
-
-public:
-    /// @brief A copy assignment operator of the iterator class.
-    /// @param rhs An iterator object to be copied with.
-    /// @return iterator& Reference to this iterator object.
-    iterator& operator=(const iterator& rhs) noexcept {
-        if FK_YAML_UNLIKELY (&rhs == this) {
-            return *this;
-        }
-
-        m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = rhs.m_iterator_holder.sequence_iterator;
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = rhs.m_iterator_holder.mapping_iterator;
-            break;
-        }
-
-        return *this;
-    }
-
-    /// @brief A move assignment operator of the iterator class.
-    /// @param rhs An iterator object to be moved from.
-    /// @return iterator& Reference to this iterator object.
-    iterator& operator=(iterator&& rhs) noexcept {
-        if FK_YAML_UNLIKELY (&rhs == this) {
-            return *this;
-        }
-
-        m_inner_iterator_type = rhs.m_inner_iterator_type;
-        switch (m_inner_iterator_type) {
-        case iterator_t::SEQUENCE:
-            m_iterator_holder.sequence_iterator = std::move(rhs.m_iterator_holder.sequence_iterator);
-            break;
-        case iterator_t::MAPPING:
-            m_iterator_holder.mapping_iterator = std::move(rhs.m_iterator_holder.mapping_iterator);
-            break;
-        }
-
-        return *this;
-    }
 
     /// @brief An arrow operator of the iterator class.
     /// @return pointer A pointer to the BasicNodeType object internally referenced by the actual iterator object.
@@ -9822,7 +9983,7 @@ public:
     /// @brief A minus operator of the iterator class.
     /// @param i The difference from this iterator object.
     /// @return iterator An iterator object from which has been subtracted @ i.
-    iterator operator-(difference_type i) noexcept {
+    iterator operator-(difference_type i) const noexcept {
         auto result = *this;
         result -= i;
         return result;
@@ -9854,7 +10015,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is equal to the other.
     /// @return false This iterator object is not equal to the other.
-    bool operator==(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator==(const Iterator& rhs) const {
         if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
@@ -9871,7 +10036,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is not equal to the other.
     /// @return false This iterator object is equal to the other.
-    bool operator!=(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator!=(const Iterator& rhs) const {
         return !operator==(rhs);
     }
 
@@ -9879,7 +10048,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is less than the other.
     /// @return false This iterator object is not less than the other.
-    bool operator<(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator<(const Iterator& rhs) const {
         if FK_YAML_UNLIKELY (m_inner_iterator_type != rhs.m_inner_iterator_type) {
             throw fkyaml::exception("Cannot compare iterators of different container types.");
         }
@@ -9895,7 +10068,11 @@ public:
     ///  @param rhs An iterator object to be compared with this iterator object.
     ///  @return true  This iterator object is either less than or equal to the other.
     ///  @return false This iterator object is neither less than nor equal to the other.
-    bool operator<=(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator<=(const Iterator& rhs) const {
         return !rhs.operator<(*this);
     }
 
@@ -9903,7 +10080,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is greater than the other.
     /// @return false This iterator object is not greater than the other.
-    bool operator>(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator>(const Iterator& rhs) const {
         return !operator<=(rhs);
     }
 
@@ -9911,7 +10092,11 @@ public:
     /// @param rhs An iterator object to be compared with this iterator object.
     /// @return true  This iterator object is either greater than or equal to the other.
     /// @return false This iterator object is neither greater than nor equal to the other.
-    bool operator>=(const iterator& rhs) const {
+    template <
+        typename Iterator,
+        enable_if_t<
+            disjunction<std::is_same<Iterator, iterator>, std::is_same<Iterator, other_iterator_type>>::value, int> = 0>
+    bool operator>=(const Iterator& rhs) const {
         return !operator<(rhs);
     }
 
@@ -9922,9 +10107,9 @@ public:
         return m_inner_iterator_type;
     }
 
-    /// @brief Get the key string of the YAML mapping node for the current iterator.
-    /// @return const std::string& The key string of the YAML mapping node for the current iterator.
-    const typename ValueType::mapping_type::key_type& key() const {
+    /// @brief Get the mapping key node of the current iterator.
+    /// @return The mapping key node of the current iterator.
+    const typename value_type::mapping_type::key_type& key() const {
         if FK_YAML_UNLIKELY (m_inner_iterator_type == iterator_t::SEQUENCE) {
             throw fkyaml::exception("Cannot retrieve key from non-mapping iterators.");
         }
@@ -9932,8 +10117,8 @@ public:
         return m_iterator_holder.mapping_iterator->first;
     }
 
-    /// @brief Get the reference of the YAML node for the current iterator.
-    /// @return reference A reference to the YAML node for the current iterator.
+    /// @brief Get reference to the YAML node of the current iterator.
+    /// @return Reference to the YAML node of the current iterator.
     reference value() noexcept {
         return operator*();
     }
@@ -9942,7 +10127,7 @@ private:
     /// A type of the internally-held iterator.
     iterator_t m_inner_iterator_type {iterator_t::SEQUENCE};
     /// A holder of actual iterators.
-    mutable iterator_holder m_iterator_holder {};
+    iterator_holder<value_type> m_iterator_holder {};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -9962,7 +10147,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/node_ref_storage.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10055,7 +10240,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/output/serializer.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10074,7 +10259,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_string.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10156,10 +10341,10 @@ inline enable_if_t<std::is_floating_point<FloatType>::value> to_string(FloatType
     oss << v;
     s = oss.str();
 
-    // If `f` is actually an integer, ".0" must be appended. The result would cause roundtrip issue otherwise.
-    // https://github.com/fktn-k/fkYAML/issues/405
-    const FloatType diff = v - std::floor(v);
-    if (diff < std::numeric_limits<FloatType>::min()) {
+    // If `v` is actually an integer and no scientific notation is used for serialization, ".0" must be appended.
+    // The result would cause a roundtrip issue otherwise. https://github.com/fktn-k/fkYAML/issues/405
+    const std::size_t pos = s.find_first_of(".e");
+    if (pos == std::string::npos) {
         s += ".0";
     }
 }
@@ -10512,12 +10697,226 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP */
 
+// #include <fkYAML/detail/reverse_iterator.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_REVERSE_ITERATOR_HPP
+#define FK_YAML_DETAIL_REVERSE_ITERATOR_HPP
+
+#include <iterator>
+
+// #include <fkYAML/detail/macros/define_macros.hpp>
+
+// #include <fkYAML/detail/meta/node_traits.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief An iterator adapter class that reverses the direction of a given node iterator.
+/// @tparam Iterator The base iterator type.
+template <typename Iterator>
+class reverse_iterator {
+    static_assert(
+        is_basic_node<typename std::remove_const<typename Iterator::value_type>::type>::value,
+        "reverse_iterator only accepts a basic_node type as the underlying iterator's value type");
+
+public:
+    /// @brief The base iterator type.
+    using iterator_type = Iterator;
+
+    /// @brief The base iterator category.
+    using iterator_category = typename Iterator::iterator_category;
+
+    /// @brief The type of the pointed-to elements by base iterators.
+    using value_type = typename Iterator::value_type;
+
+    /// @brief The type to represent differences between the pointed-to elements by the base iterators.
+    using difference_type = typename Iterator::difference_type;
+
+    /// @brief The type of the pointed-to element pointers by base iterators.
+    using pointer = typename Iterator::pointer;
+
+    /// @brief The type of the pointed-to element references by base iterators.
+    using reference = typename Iterator::reference;
+
+    /// @brief Constructs a reverse_iterator object.
+    reverse_iterator() = default;
+
+    /// @brief Copy constructs a reverse_iterator object.
+    reverse_iterator(const reverse_iterator&) = default;
+
+    /// @brief Copy assignments a reverse_iterator object.
+    reverse_iterator& operator=(const reverse_iterator&) = default;
+
+    /// @brief Move constructs a reverse_iterator object.
+    reverse_iterator(reverse_iterator&&) = default;
+
+    /// @brief Move assignments a reverse_iterator object.
+    reverse_iterator& operator=(reverse_iterator&&) = default;
+
+    /// @brief Constructs a reverse_iterator object with an underlying iterator object.
+    /// @param i A base iterator object.
+    reverse_iterator(const Iterator& i) noexcept
+        : m_current(i) {
+    }
+
+    template <typename U, enable_if_t<negation<std::is_same<U, Iterator>>::value, int> = 0>
+    reverse_iterator(const reverse_iterator<U>& other) noexcept
+        : m_current(other.base()) {
+    }
+
+    template <typename U, enable_if_t<negation<std::is_same<U, Iterator>>::value, int> = 0>
+    reverse_iterator& operator=(const reverse_iterator<U>& other) noexcept {
+        m_current = other.base();
+        return *this;
+    }
+
+    /// @brief Destructs a reverse_iterator object.
+    ~reverse_iterator() = default;
+
+    /// @brief Accesses the underlying iterator object.
+    /// @return The underlying iterator object.
+    Iterator base() const noexcept {
+        return m_current;
+    }
+
+    /// @brief Get reference to the pointed-to element.
+    /// @return Reference to the pointed-to element.
+    reference operator*() const noexcept {
+        Iterator tmp = m_current;
+        return *--tmp;
+    }
+
+    /// @brief Get pointer to the pointed-to element.
+    /// @return Pointer to the pointed-to element.
+    pointer operator->() const noexcept {
+        return &(operator*());
+    }
+
+    /// @brief Pre-increments the underlying iterator object.
+    /// @return Reference to this reverse_iterator object with its underlying iterator incremented.
+    reverse_iterator& operator++() noexcept {
+        --m_current;
+        return *this;
+    }
+
+    /// @brief Post-increments the underlying iterator object.
+    /// @return A reverse_iterator object with the underlying iterator as-is.
+    reverse_iterator operator++(int) & noexcept {
+        auto result = *this;
+        --m_current;
+        return result;
+    }
+
+    /// @brief Pre-decrements the underlying iterator object.
+    /// @return Reference to this reverse_iterator with its underlying iterator decremented.
+    reverse_iterator& operator--() noexcept {
+        ++m_current;
+        return *this;
+    }
+
+    /// @brief Post-decrements the underlying iterator object.
+    /// @return A reverse_iterator object with the underlying iterator as-is.
+    reverse_iterator operator--(int) & noexcept {
+        auto result = *this;
+        ++m_current;
+        return result;
+    }
+
+    /// @brief Advances the underlying iterator object by `n`.
+    /// @param n The distance by which the underlying iterator is advanced.
+    /// @return A reverse_iterator object with the underlying iterator advanced by `n`.
+    reverse_iterator operator+(difference_type n) const noexcept {
+        return reverse_iterator(m_current - n);
+    }
+
+    /// @brief Advances the underlying iterator object by `n`.
+    /// @param n The distance by which the underlying iterator is advanced.
+    /// @return Reference to this reverse_iterator object with the underlying iterator advanced by `n`.
+    reverse_iterator& operator+=(difference_type n) noexcept {
+        m_current -= n;
+        return *this;
+    }
+
+    /// @brief Decrements the underlying iterator object by `n`.
+    /// @param n The distance by which the underlying iterator is decremented.
+    /// @return A reverse_iterator object with the underlying iterator decremented by `n`.
+    reverse_iterator operator-(difference_type n) const noexcept {
+        return reverse_iterator(m_current + n);
+    }
+
+    /// @brief Decrements the underlying iterator object by `n`.
+    /// @param n The distance by which the underlying iterator is decremented.
+    /// @return Reference to this reverse_iterator object with the underlying iterator decremented by `n`.
+    reverse_iterator& operator-=(difference_type n) noexcept {
+        m_current += n;
+        return *this;
+    }
+
+    /// @brief Get the mapping key node of the underlying iterator.
+    /// @return The mapping key node of the underlying iterator.
+    auto key() const -> decltype(std::declval<Iterator>().key()) {
+        Iterator itr = --(base());
+        return itr.key();
+    }
+
+    /// @brief Get reference to the underlying iterator's value.
+    /// @return Reference to the underlying iterator's value.
+    reference value() noexcept {
+        Iterator itr = --(base());
+        return *itr;
+    }
+
+private:
+    Iterator m_current;
+};
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator==(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() == rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator!=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() != rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator<(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() > rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator<=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() >= rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator>(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() < rhs.base();
+}
+
+template <typename IteratorL, typename IteratorR>
+inline bool operator>=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
+    return lhs.base() <= rhs.base();
+}
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_REVERSE_ITERATOR_HPP */
+
 // #include <fkYAML/detail/types/node_t.hpp>
 
 // #include <fkYAML/detail/types/yaml_version_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10572,7 +10971,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/node_value_converter.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -10588,7 +10987,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/conversions/from_node.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11169,7 +11568,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_node.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11556,7 +11955,7 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/ordered_map.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11743,14 +12142,6 @@ template <
     template <typename, typename = void> class ConverterType>
 class basic_node {
 public:
-    /// @brief A type for iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
-    using iterator = fkyaml::detail::iterator<basic_node>;
-
-    /// @brief A type for constant iterators of basic_node containers.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/const_iterator/
-    using const_iterator = fkyaml::detail::iterator<const basic_node>;
-
     /// @brief A type for sequence basic_node values.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/sequence_type/
     using sequence_type = SequenceType<basic_node, std::allocator<basic_node>>;
@@ -11775,6 +12166,50 @@ public:
     /// @brief A type for string basic_node values.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/string_type/
     using string_type = StringType;
+
+    /// @brief A type of elements in a basic_node container.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using value_type = basic_node;
+
+    /// @brief A type of reference to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using reference = value_type&;
+
+    /// @brief A type of constant reference to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using const_reference = const value_type&;
+
+    /// @brief A type of a pointer to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using pointer = value_type*;
+
+    /// @brief A type of a constant pointer to a basic_node element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using const_pointer = const value_type*;
+
+    /// @brief A type to represent basic_node container sizes.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using size_type = std::size_t;
+
+    /// @brief A type to represent differences between basic_node iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/#container-types
+    using difference_type = std::ptrdiff_t;
+
+    /// @brief A type for iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
+    using iterator = fkyaml::detail::iterator<basic_node>;
+
+    /// @brief A type for constant iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/iterator/
+    using const_iterator = fkyaml::detail::iterator<const basic_node>;
+
+    /// @brief A type for reverse iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/reverse_iterator/
+    using reverse_iterator = fkyaml::detail::reverse_iterator<iterator>;
+
+    /// @brief A type for constant reverse iterators of basic_node containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/reverse_iterator/
+    using const_reverse_iterator = fkyaml::detail::reverse_iterator<const_iterator>;
 
     /// @brief A helper alias to determine converter type for the given target native data type.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/value_converter_type/
@@ -13077,88 +13512,158 @@ public:
         swap(m_prop.anchor, rhs.m_prop.anchor);
     }
 
-    /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a non-const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return An iterator to the first element of a YAML node value (either sequence or mapping).
+    /// @brief Returns an iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return An iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     iterator begin() {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->begin()};
+            return {p_node_value->p_sequence->begin()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->begin()};
+            return {p_node_value->p_mapping->begin()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
     }
 
-    /// @brief Returns the first iterator of basic_node values of container types (sequence or mapping) from a const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return A constant iterator to the first element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     const_iterator begin() const {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->begin()};
+            return {p_node_value->p_sequence->begin()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->begin()};
+            return {p_node_value->p_mapping->begin()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
     }
 
-    /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a non-const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return An iterator to the past-the end element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the first element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the first element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
+    const_iterator cbegin() const {
+        return begin();
+    }
+
+    /// @brief Returns an iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if the basic_node value is not of container types.
+    /// @return An iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     iterator end() {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->end()};
+            return {p_node_value->p_sequence->end()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->end()};
+            return {p_node_value->p_mapping->end()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
     }
 
-    /// @brief Returns the last iterator of basic_node values of container types (sequence or mapping) from a const
-    /// basic_node object. Throws exception if the basic_node value is not of container types.
-    /// @return A constant iterator to the past-the end element of a YAML node value (either sequence or mapping).
+    /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     const_iterator end() const {
         switch (get_node_attrs() & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {detail::sequence_iterator_tag(), p_node_value->p_sequence->end()};
+            return {p_node_value->p_sequence->end()};
         }
         case detail::node_attr_bits::map_bit: {
             const node_value* p_node_value = get_node_value_ptr();
             FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {detail::mapping_iterator_tag(), p_node_value->p_mapping->end()};
+            return {p_node_value->p_mapping->end()};
         }
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
+    }
+
+    /// @brief Returns a const iterator to the past-the-last element of a container node (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the past-the-last element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
+    const_iterator cend() const {
+        return end();
+    }
+
+    /// @brief Returns an iterator to the reverse-beginning (i.e., last) element of a container node (sequence or
+    /// mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return An iterator to the reverse-beginning element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rbegin/
+    reverse_iterator rbegin() {
+        return {end()};
+    }
+
+    /// @brief Returns a const iterator to the reverse-beginning (i.e., last) element of a container node (sequence or
+    /// mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the reverse-beginning element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rbegin/
+    const_reverse_iterator rbegin() const {
+        return {end()};
+    }
+
+    /// @brief Returns a const iterator to the reverse-beginning (i.e., last) element of a container node (sequence or
+    /// mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the reverse-beginning element of a container node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rbegin/
+    const_reverse_iterator crbegin() const {
+        return rbegin();
+    }
+
+    /// @brief Returns an iterator to the reverse-end (i.e., one before the first) element of a container node (sequence
+    /// or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return An iterator to the reverse-end element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
+    reverse_iterator rend() {
+        return {begin()};
+    }
+
+    /// @brief Returns a const iterator to the reverse-end (i.e., one before the first) element of a container node
+    /// (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the reverse-end element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
+    const_reverse_iterator rend() const {
+        return {begin()};
+    }
+
+    /// @brief Returns a const iterator to the reverse-end (i.e., one before the first) element of a container node
+    /// (sequence or mapping).
+    /// @throw `type_error` if this basic_node is neither a sequence nor mapping node.
+    /// @return A const iterator to the reverse-end element.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
+    const_reverse_iterator crend() const {
+        return rend();
     }
 
 private:

@@ -6,7 +6,7 @@ include(FetchContent)
 FetchContent_Declare(
   fkYAML
   GIT_REPOSITORY https://github.com/fktn-k/fkYAML.git
-  GIT_TAG v0.3.14)
+  GIT_TAG v0.4.0)
 FetchContent_MakeAvailable(fkYAML)
 
 add_executable(

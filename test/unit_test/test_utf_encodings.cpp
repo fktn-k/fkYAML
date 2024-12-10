@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -238,55 +238,56 @@ TEST_CASE("UTF8_Validate") {
     }
 }
 
+struct utf16_test_params {
+    std::array<char16_t, 2> utf16;
+    std::array<uint8_t, 4> utf8_bytes;
+    std::size_t consumed_size;
+    std::size_t encoded_size;
+};
+
 TEST_CASE("UTF8_FromUTF16") {
     SECTION("valid UTF-16 character(s)") {
-        struct test_params {
-            std::array<char16_t, 2> utf16;
-            std::array<uint8_t, 4> utf8_bytes;
-            std::size_t consumed_size;
-            std::size_t encoded_size;
-        };
         auto params = GENERATE(
-            test_params {{{char16_t(0x00u)}}, {{uint8_t(0x00u)}}, 1, 1},
-            test_params {{{char16_t(0x01u)}}, {{uint8_t(0x01u)}}, 1, 1},
-            test_params {{{char16_t(0x7Eu)}}, {{uint8_t(0x7Eu)}}, 1, 1},
-            test_params {{{char16_t(0x7Fu)}}, {{uint8_t(0x7Fu)}}, 1, 1},
-            test_params {{{char16_t(0x0080u)}}, {{uint8_t(0xC2u), uint8_t(0x80u)}}, 1, 2},
-            test_params {{{char16_t(0x0081u)}}, {{uint8_t(0xC2u), uint8_t(0x81u)}}, 1, 2},
-            test_params {{{char16_t(0x07FEu)}}, {{uint8_t(0xDFu), uint8_t(0xBEu)}}, 1, 2},
-            test_params {{{char16_t(0x07FFu)}}, {{uint8_t(0xDFu), uint8_t(0xBFu)}}, 1, 2},
-            test_params {{{char16_t(0x0800u)}}, {{uint8_t(0xE0u), uint8_t(0xA0u), uint8_t(0x80u)}}, 1, 3},
-            test_params {{{char16_t(0x0801u)}}, {{uint8_t(0xE0u), uint8_t(0xA0u), uint8_t(0x81u)}}, 1, 3},
-            test_params {{{char16_t(0xD7FEu)}}, {{uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xBEu)}}, 1, 3},
-            test_params {{{char16_t(0xD7FFu)}}, {{uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xBFu)}}, 1, 3},
-            test_params {{{char16_t(0xE000u)}}, {{uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x80u)}}, 1, 3},
-            test_params {{{char16_t(0xE001u)}}, {{uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x81u)}}, 1, 3},
-            test_params {
+            utf16_test_params {{{char16_t(0x00u)}}, {{uint8_t(0x00u)}}, 1, 1},
+            utf16_test_params {{{char16_t(0x01u)}}, {{uint8_t(0x01u)}}, 1, 1},
+            utf16_test_params {{{char16_t(0x7Eu)}}, {{uint8_t(0x7Eu)}}, 1, 1},
+            utf16_test_params {{{char16_t(0x7Fu)}}, {{uint8_t(0x7Fu)}}, 1, 1},
+            utf16_test_params {{{char16_t(0x0080u)}}, {{uint8_t(0xC2u), uint8_t(0x80u)}}, 1, 2},
+            utf16_test_params {{{char16_t(0x0081u)}}, {{uint8_t(0xC2u), uint8_t(0x81u)}}, 1, 2},
+            utf16_test_params {{{char16_t(0x07FEu)}}, {{uint8_t(0xDFu), uint8_t(0xBEu)}}, 1, 2},
+            utf16_test_params {{{char16_t(0x07FFu)}}, {{uint8_t(0xDFu), uint8_t(0xBFu)}}, 1, 2},
+            utf16_test_params {{{char16_t(0x0800u)}}, {{uint8_t(0xE0u), uint8_t(0xA0u), uint8_t(0x80u)}}, 1, 3},
+            utf16_test_params {{{char16_t(0x0801u)}}, {{uint8_t(0xE0u), uint8_t(0xA0u), uint8_t(0x81u)}}, 1, 3},
+            utf16_test_params {{{char16_t(0xD7FEu)}}, {{uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xBEu)}}, 1, 3},
+            utf16_test_params {{{char16_t(0xD7FFu)}}, {{uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xBFu)}}, 1, 3},
+            utf16_test_params {{{char16_t(0xE000u)}}, {{uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x80u)}}, 1, 3},
+            utf16_test_params {{{char16_t(0xE001u)}}, {{uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x81u)}}, 1, 3},
+            utf16_test_params {
                 {{char16_t(0xD800u), char16_t(0xDC00u)}},
                 {{uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}},
                 2,
                 4},
-            test_params {
+            utf16_test_params {
                 {{char16_t(0xD801u), char16_t(0xDC00u)}},
                 {{uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x90u), uint8_t(0x80u)}},
                 2,
                 4},
-            test_params {
+            utf16_test_params {
                 {{char16_t(0xD800u), char16_t(0xDC01u)}},
                 {{uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x81u)}},
                 2,
                 4},
-            test_params {
+            utf16_test_params {
                 {{char16_t(0xDBFEu), char16_t(0xDFFFu)}},
                 {{uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xAFu), uint8_t(0xBFu)}},
                 2,
                 4},
-            test_params {
+            utf16_test_params {
                 {{char16_t(0xDBFFu), char16_t(0xDFFEu)}},
                 {{uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBEu)}},
                 2,
                 4},
-            test_params {
+            utf16_test_params {
                 {{char16_t(0xDBFFu), char16_t(0xDFFFu)}},
                 {{uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)}},
                 2,
@@ -319,29 +320,30 @@ TEST_CASE("UTF8_FromUTF16") {
     }
 }
 
+struct utf32_test_params {
+    char32_t utf32;
+    std::array<uint8_t, 4> utf8_bytes;
+    uint32_t size;
+};
+
 TEST_CASE("UTF8_FromUTF32") {
     SECTION("valid UTF-32 character") {
-        struct test_params {
-            char32_t utf32;
-            std::array<uint8_t, 4> utf8_bytes;
-            uint32_t size;
-        };
         auto params = GENERATE(
-            test_params {0x00u, {{uint8_t(0x00u)}}, 1},
-            test_params {0x01u, {{uint8_t(0x01u)}}, 1},
-            test_params {0x7Eu, {{uint8_t(0x7Eu)}}, 1},
-            test_params {0x7Fu, {{uint8_t(0x7Fu)}}, 1},
-            test_params {0x0080u, {{uint8_t(0xC2u), uint8_t(0x80u)}}, 2},
-            test_params {0x0081u, {{uint8_t(0xC2u), uint8_t(0x81u)}}, 2},
-            test_params {0x07FEu, {{uint8_t(0xDFu), uint8_t(0xBEu)}}, 2},
-            test_params {0x07FFu, {{uint8_t(0xDFu), uint8_t(0xBFu)}}, 2},
-            test_params {0x0800u, {{uint8_t(0xE0u), uint8_t(0xA0u), uint8_t(0x80u)}}, 3},
-            test_params {0x0801u, {{uint8_t(0xE0u), uint8_t(0xA0u), uint8_t(0x81u)}}, 3},
-            test_params {0xFFFFu, {{uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xBFu)}}, 3},
-            test_params {0x010000u, {{uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}}, 4},
-            test_params {0x010001u, {{uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x81u)}}, 4},
-            test_params {0x10FFFEu, {{uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBEu)}}, 4},
-            test_params {0x10FFFFu, {{uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)}}, 4});
+            utf32_test_params {0x00u, {{uint8_t(0x00u)}}, 1},
+            utf32_test_params {0x01u, {{uint8_t(0x01u)}}, 1},
+            utf32_test_params {0x7Eu, {{uint8_t(0x7Eu)}}, 1},
+            utf32_test_params {0x7Fu, {{uint8_t(0x7Fu)}}, 1},
+            utf32_test_params {0x0080u, {{uint8_t(0xC2u), uint8_t(0x80u)}}, 2},
+            utf32_test_params {0x0081u, {{uint8_t(0xC2u), uint8_t(0x81u)}}, 2},
+            utf32_test_params {0x07FEu, {{uint8_t(0xDFu), uint8_t(0xBEu)}}, 2},
+            utf32_test_params {0x07FFu, {{uint8_t(0xDFu), uint8_t(0xBFu)}}, 2},
+            utf32_test_params {0x0800u, {{uint8_t(0xE0u), uint8_t(0xA0u), uint8_t(0x80u)}}, 3},
+            utf32_test_params {0x0801u, {{uint8_t(0xE0u), uint8_t(0xA0u), uint8_t(0x81u)}}, 3},
+            utf32_test_params {0xFFFFu, {{uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xBFu)}}, 3},
+            utf32_test_params {0x010000u, {{uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}}, 4},
+            utf32_test_params {0x010001u, {{uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x81u)}}, 4},
+            utf32_test_params {0x10FFFEu, {{uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBEu)}}, 4},
+            utf32_test_params {0x10FFFFu, {{uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)}}, 4});
 
         std::array<uint8_t, 4> utf8_bytes;
         utf8_bytes.fill(0);

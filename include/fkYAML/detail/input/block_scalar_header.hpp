@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -26,7 +26,7 @@ enum class chomping_indicator_t : std::uint8_t {
 struct block_scalar_header {
     /// Chomping indicator type.
     chomping_indicator_t chomp {chomping_indicator_t::CLIP};
-    /// Indentation for block scalar contents.
+    /// Content indentation level of a block scalar.
     uint32_t indent {0};
 };
 

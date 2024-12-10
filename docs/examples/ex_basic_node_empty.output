@@ -1,8 +1,8 @@
 true
 false
 false
-The node does not have a container nor string value.
-The node does not have a container nor string value.
-The node does not have a container nor string value.
-The node does not have a container nor string value.
+type_error: The target node is not of a container type. type=NULL_OBJECT
+type_error: The target node is not of a container type. type=BOOLEAN
+type_error: The target node is not of a container type. type=INTEGER
+type_error: The target node is not of a container type. type=FLOAT
 false

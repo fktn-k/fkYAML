@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -23,19 +23,19 @@
 #define ENABLE_C4996
 #endif
 
+struct test_data_t {
+    test_data_t(std::array<uint8_t, 4> input_, fkyaml::detail::utf_encode_t encode_type_, bool has_bom_)
+        : input(input_),
+          encode_type(encode_type_),
+          has_bom(has_bom_) {
+    }
+
+    std::array<uint8_t, 4> input {{}};
+    fkyaml::detail::utf_encode_t encode_type {fkyaml::detail::utf_encode_t::UTF_8};
+    bool has_bom {false};
+};
+
 TEST_CASE("UTFEncodeDetector_DetectEncodingType") {
-    struct test_data_t {
-        test_data_t(std::array<uint8_t, 4> input_, fkyaml::detail::utf_encode_t encode_type_, bool has_bom_)
-            : input(input_),
-              encode_type(encode_type_),
-              has_bom(has_bom_) {
-        }
-
-        std::array<uint8_t, 4> input {};
-        fkyaml::detail::utf_encode_t encode_type {fkyaml::detail::utf_encode_t::UTF_8};
-        bool has_bom {false};
-    };
-
     auto d = GENERATE(
         test_data_t {{{0xEFu, 0xBBu, 0xBFu, 0x80u}}, fkyaml::detail::utf_encode_t::UTF_8, true},
         test_data_t {{{0xEFu, 0, 0xBFu, 0x80u}}, fkyaml::detail::utf_encode_t::UTF_8, false},

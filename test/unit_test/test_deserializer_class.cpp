@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -731,6 +731,33 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(pi_node.is_float_number());
         REQUIRE(pi_node.get_value<double>() == 3.14);
     }
+
+    // regression test for https://github.com/fktn-k/fkYAML/pull/437
+    SECTION("indented block mapping beginning with a newline") {
+        std::string input = R"(
+    foo: true
+    bar: 123
+    baz: 3.14)";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 3);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("bar"));
+        REQUIRE(root.contains("baz"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_boolean());
+        REQUIRE(foo_node.get_value<bool>() == true);
+
+        fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_integer());
+        REQUIRE(bar_node.get_value<int>() == 123);
+
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_float_number());
+        REQUIRE(baz_node.get_value<double>() == 3.14);
+    };
 
     SECTION("nested block mapping") {
         std::string input = "test:\n"
@@ -2877,6 +2904,11 @@ TEST_CASE("Deserializer_NodeProperties") {
 
     SECTION("alias node with tag") {
         std::string input = "&anchor foo: !!str *anchor";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("alias node with anchor") {
+        std::string input = "&anchor foo: &anchor2 *anchor";
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 

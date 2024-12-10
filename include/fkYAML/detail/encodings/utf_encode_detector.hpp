@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -100,7 +100,8 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
             return utf_encode_t::UTF_8;
         }
 
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4 && begin + i != end; i++) {
             bytes[i] = static_cast<uint8_t>(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -182,7 +183,8 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
             return utf_encode_t::UTF_16BE;
         }
 
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 2 && begin + i != end; i++) {
             // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -222,7 +224,8 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
             return utf_encode_t::UTF_32BE;
         }
 
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         const char32_t elem = *begin;
         bytes[0] = static_cast<uint8_t>((elem & 0xFF000000u) >> 24);
         bytes[1] = static_cast<uint8_t>((elem & 0x00FF0000u) >> 16);
@@ -251,7 +254,8 @@ struct file_utf_encode_detector {
     /// @param p_file The input file handle.
     /// @return A detected encoding type.
     static utf_encode_t detect(std::FILE* p_file) noexcept {
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4; i++) {
             char byte = 0;
@@ -294,7 +298,8 @@ struct stream_utf_encode_detector {
     /// @param p_file The input file handle.
     /// @return A detected encoding type.
     static utf_encode_t detect(std::istream& is) noexcept {
-        std::array<uint8_t, 4> bytes {};
+        // the inner curly braces are necessary for older compilers
+        std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         for (int i = 0; i < 4; i++) {
             char ch = 0;

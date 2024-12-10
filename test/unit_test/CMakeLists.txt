@@ -111,6 +111,7 @@ target_compile_options(
       /W4 /WX /EHsc /utf-8 /permissive-
       /wd4709 # comma operator within array index expression
       /wd4996 # for testing deprecated functions
+      /w44800 # https://github.com/fktn-k/fkYAML/issues/429
       $<$<CONFIG:Debug>:/Z7>
       $<$<CONFIG:Release>:/Od>
     >
@@ -229,6 +230,7 @@ add_executable(
   test_node_type.cpp
   test_ordered_map_class.cpp
   test_position_tracker_class.cpp
+  test_reverse_iterator_class.cpp
   test_scalar_conv.cpp
   test_scalar_parser_class.cpp
   test_scalar_scanner_class.cpp

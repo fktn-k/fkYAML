@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.3.14
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -22,8 +22,8 @@
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-static constexpr str_view default_primary_handle_prefix = "!";
-static constexpr str_view default_secondary_handle_prefix = "tag:yaml.org,2002:";
+static constexpr str_view default_primary_handle_prefix {"!"};
+static constexpr str_view default_secondary_handle_prefix {"tag:yaml.org,2002:"};
 
 template <typename BasicNodeType>
 class tag_resolver {
