@@ -4,11 +4,11 @@
 
 ```cpp
 template <typename T>
-void get_value(T& value_ref) const noexcept(
+void get_value_inplace(T& value_ref) const noexcept(
     noexcept(ConverterType<T>::from_node(std::declval<const basic_node&>(), std::declval<T&>()))); // (1)
 
 template <typename BasicNodeType>
-void get_value(BasicNodeType& value_ref) const; // (2)
+void get_value_inplace(BasicNodeType& value_ref) const; // (2)
 ```
 
 This function converts a [`fkyaml::basic_node`](./index.md) to either of the followings and fills the conversion result into the given `value_ref` parameter.  
