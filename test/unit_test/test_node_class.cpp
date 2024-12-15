@@ -2366,7 +2366,7 @@ TEST_CASE("Node_AddTagName") {
 
 struct not_default_constructible {
     not_default_constructible() = delete;
-    not_default_constructible(int i)
+    explicit not_default_constructible(int i)
         : value(i) {
     }
     not_default_constructible(const not_default_constructible&) = default;
@@ -3676,6 +3676,17 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
         REQUIRE_FALSE(opt_bool_inplace.has_value());
     }
 #endif
+
+    SECTION("from alias node") {
+        fkyaml::node anchor = 123;
+        anchor.add_anchor_name("anchor");
+        fkyaml::node alias = fkyaml::node::alias_of(anchor);
+        REQUIRE(alias.get_value<int>() == 123);
+
+        int int_inplace = 0;
+        alias.get_value_inplace(int_inplace);
+        REQUIRE(int_inplace == 123);
+    }
 
     SECTION("not default constructible type") {
         // get_value() requires its output type to be default constructible
