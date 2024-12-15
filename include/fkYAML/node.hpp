@@ -1376,6 +1376,7 @@ public:
     /// @brief Get the node value object converted into a given type. The conversion result is filled into `value_ref`.
     /// @tparam T A compatible value type.
     /// @param value_ref A storage into which the conversion result is filled.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_inplace/
     template <typename T>
     void get_value_inplace(T& value_ref) const
         noexcept(noexcept(std::declval<const basic_node&>().template get_value_impl<T>(std::declval<T&>()))) {
