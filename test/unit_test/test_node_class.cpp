@@ -2382,7 +2382,7 @@ struct string_wrap {
         str = _str;
         return *this;
     }
-    std::string str;
+    std::string str {};
 };
 
 template <typename T, typename U>
@@ -2471,7 +2471,7 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
             REQUIRE(array_node[1].is_boolean());
             REQUIRE(array_node[1].get_value<bool>() == false);
 
-            std::array<fkyaml::node, 2> array_node_inplace {};
+            std::array<fkyaml::node, 2> array_node_inplace {{}};
             node.get_value_inplace(array_node_inplace);
             REQUIRE(array_node_inplace[0].is_boolean());
             REQUIRE(array_node_inplace[0].get_value<bool>() == true);
@@ -2482,7 +2482,7 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
             REQUIRE(array_bool[0] == true);
             REQUIRE(array_bool[1] == false);
 
-            std::array<bool, 2> array_bool_inplace {};
+            std::array<bool, 2> array_bool_inplace {{}};
             node.get_value_inplace(array_bool_inplace);
             REQUIRE(array_bool_inplace[0] == true);
             REQUIRE(array_bool_inplace[1] == false);
