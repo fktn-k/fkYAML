@@ -11,7 +11,7 @@
 
 struct not_default_constructible {
     not_default_constructible() = delete;
-    not_default_constructible(int v) noexcept
+    explicit not_default_constructible(int v) noexcept
         : value(v) {
     }
     not_default_constructible(const not_default_constructible&) = default;
