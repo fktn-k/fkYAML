@@ -2364,6 +2364,18 @@ TEST_CASE("Node_AddTagName") {
 // test cases for value getters (copy)
 //
 
+struct not_default_constructible {
+    not_default_constructible() = delete;
+    not_default_constructible(int i)
+        : value(i) {
+    }
+    not_default_constructible(const not_default_constructible&) = default;
+    int value;
+};
+inline void from_node(const fkyaml::node& n, not_default_constructible& ndc) noexcept {
+    ndc.value = n.get_value<int>();
+}
+
 struct string_wrap {
     string_wrap() = default;
     string_wrap& operator=(const std::string& _str) {
@@ -2376,10 +2388,53 @@ struct string_wrap {
 template <typename T, typename U>
 using get_fn_t = decltype(std::declval<T>().template get<U>());
 
-TEST_CASE("Node_GetValue") {
-
+TEST_CASE("Node_GetValue_GetValueInplace") {
     SECTION("sequence") {
         fkyaml::node node {true, false};
+
+        SECTION("sequence value (1D C-style array)") {
+            STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int(&)[2]>::value);
+
+            int ints_1d[2] {0, 0};
+            fkyaml::node array_1d {1, 2};
+            array_1d.get_value_inplace(ints_1d);
+            REQUIRE(ints_1d[0] == 1);
+            REQUIRE(ints_1d[1] == 2);
+        }
+
+        SECTION("sequence value (2D C-style array)") {
+            STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int(&)[3][3]>::value);
+
+            int ints_2d[3][3] {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+            fkyaml::node array_2d {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+            array_2d.get_value_inplace(ints_2d);
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    REQUIRE(ints_2d[i][j] == i * 3 + j + 1);
+                }
+            }
+        }
+
+        SECTION("sequence value (3D C-style array)") {
+            STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int(&)[3][3][3]>::value);
+
+            int ints_3d[3][3][3] {
+                {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+                {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+                {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}};
+            fkyaml::node array_3d {
+                {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}},
+                {{10, 11, 12}, {13, 14, 15}, {16, 17, 18}},
+                {{19, 20, 21}, {22, 23, 24}, {25, 26, 27}}};
+            array_3d.get_value_inplace(ints_3d);
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    for (int k = 0; k < 3; k++) {
+                        REQUIRE(ints_3d[i][j][k] == i * 9 + j * 3 + k + 1);
+                    }
+                }
+            }
+        }
 
         SECTION("sequence value (std::vector)") {
             auto vector_node = node.get_value<std::vector<fkyaml::node>>();
@@ -2389,10 +2444,24 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(vector_node[1].is_boolean());
             REQUIRE(vector_node[1].get_value<bool>() == false);
 
+            std::vector<fkyaml::node> vector_node_inplace {};
+            node.get_value_inplace(vector_node_inplace);
+            REQUIRE(vector_node_inplace.size() == 2);
+            REQUIRE(vector_node_inplace[0].is_boolean());
+            REQUIRE(vector_node_inplace[0].get_value<bool>() == true);
+            REQUIRE(vector_node_inplace[1].is_boolean());
+            REQUIRE(vector_node_inplace[1].get_value<bool>() == false);
+
             auto vector_bool = node.get_value<std::vector<bool>>();
             REQUIRE(vector_bool.size() == 2);
             REQUIRE(vector_bool[0] == true);
             REQUIRE(vector_bool[1] == false);
+
+            std::vector<bool> vector_bool_inplace {};
+            node.get_value_inplace(vector_bool_inplace);
+            REQUIRE(vector_bool_inplace.size() == 2);
+            REQUIRE(vector_bool_inplace[0] == true);
+            REQUIRE(vector_bool_inplace[1] == false);
         }
 
         SECTION("sequence value (std::array)") {
@@ -2402,9 +2471,21 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(array_node[1].is_boolean());
             REQUIRE(array_node[1].get_value<bool>() == false);
 
+            std::array<fkyaml::node, 2> array_node_inplace {};
+            node.get_value_inplace(array_node_inplace);
+            REQUIRE(array_node_inplace[0].is_boolean());
+            REQUIRE(array_node_inplace[0].get_value<bool>() == true);
+            REQUIRE(array_node_inplace[1].is_boolean());
+            REQUIRE(array_node_inplace[1].get_value<bool>() == false);
+
             auto array_bool = node.get_value<std::array<bool, 2>>();
             REQUIRE(array_bool[0] == true);
             REQUIRE(array_bool[1] == false);
+
+            std::array<bool, 2> array_bool_inplace {};
+            node.get_value_inplace(array_bool_inplace);
+            REQUIRE(array_bool_inplace[0] == true);
+            REQUIRE(array_bool_inplace[1] == false);
         }
 
         SECTION("sequence value (std::valarray)") {
@@ -2414,9 +2495,21 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(valarray_node[1].is_boolean());
             REQUIRE(valarray_node[1].get_value<bool>() == false);
 
+            std::valarray<fkyaml::node> valarray_node_inplace {};
+            node.get_value_inplace(valarray_node_inplace);
+            REQUIRE(valarray_node_inplace[0].is_boolean());
+            REQUIRE(valarray_node_inplace[0].get_value<bool>() == true);
+            REQUIRE(valarray_node_inplace[1].is_boolean());
+            REQUIRE(valarray_node_inplace[1].get_value<bool>() == false);
+
             auto valarray_bool = node.get_value<std::valarray<bool>>();
             REQUIRE(valarray_bool[0] == true);
             REQUIRE(valarray_bool[1] == false);
+
+            std::valarray<bool> valarray_bool_inplace {};
+            node.get_value_inplace(valarray_bool_inplace);
+            REQUIRE(valarray_bool_inplace[0] == true);
+            REQUIRE(valarray_bool_inplace[1] == false);
         }
 
         SECTION("sequence value (std::deque)") {
@@ -2427,10 +2520,24 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(deque_node[1].is_boolean());
             REQUIRE(deque_node[1].get_value<bool>() == false);
 
+            std::deque<fkyaml::node> deque_node_inplace {};
+            node.get_value_inplace(deque_node_inplace);
+            REQUIRE(deque_node_inplace.size() == 2);
+            REQUIRE(deque_node_inplace[0].is_boolean());
+            REQUIRE(deque_node_inplace[0].get_value<bool>() == true);
+            REQUIRE(deque_node_inplace[1].is_boolean());
+            REQUIRE(deque_node_inplace[1].get_value<bool>() == false);
+
             auto deque_bool = node.get_value<std::deque<bool>>();
             REQUIRE(deque_bool.size() == 2);
             REQUIRE(deque_bool[0] == true);
             REQUIRE(deque_bool[1] == false);
+
+            std::deque<bool> deque_bool_inplace {};
+            node.get_value_inplace(deque_bool_inplace);
+            REQUIRE(deque_bool_inplace.size() == 2);
+            REQUIRE(deque_bool_inplace[0] == true);
+            REQUIRE(deque_bool_inplace[1] == false);
         }
 
         SECTION("sequence value (std::list)") {
@@ -2443,10 +2550,26 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(list_node_itr->is_boolean());
             REQUIRE(list_node_itr->get_value<bool>() == false);
 
+            std::list<fkyaml::node> list_node_inplace {};
+            node.get_value_inplace(list_node_inplace);
+            REQUIRE(list_node_inplace.size() == 2);
+            auto list_node_inplace_itr = list_node_inplace.begin();
+            REQUIRE(list_node_inplace_itr->is_boolean());
+            REQUIRE(list_node_inplace_itr->get_value<bool>() == true);
+            list_node_inplace_itr++;
+            REQUIRE(list_node_inplace_itr->is_boolean());
+            REQUIRE(list_node_inplace_itr->get_value<bool>() == false);
+
             auto list_bool = node.get_value<std::list<bool>>();
             REQUIRE(list_bool.size() == 2);
             REQUIRE(*list_bool.begin() == true);
             REQUIRE(*(std::next(list_bool.begin())) == false);
+
+            std::list<bool> list_bool_inplace {};
+            node.get_value_inplace(list_bool_inplace);
+            REQUIRE(list_bool_inplace.size() == 2);
+            REQUIRE(*list_bool_inplace.begin() == true);
+            REQUIRE(*(std::next(list_bool_inplace.begin())) == false);
         }
 
         SECTION("sequence value (std::set)") {
@@ -2455,10 +2578,22 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(set_node.find(fkyaml::node(true)) != set_node.end());
             REQUIRE(set_node.find(fkyaml::node(false)) != set_node.end());
 
+            std::set<fkyaml::node> set_node_inplace {};
+            node.get_value_inplace(set_node_inplace);
+            REQUIRE(set_node_inplace.size() == 2);
+            REQUIRE(set_node_inplace.find(fkyaml::node(true)) != set_node_inplace.end());
+            REQUIRE(set_node_inplace.find(fkyaml::node(false)) != set_node_inplace.end());
+
             auto set_bool = node.get_value<std::set<bool>>();
             REQUIRE(set_bool.size() == 2);
             REQUIRE(set_bool.find(true) != set_bool.end());
             REQUIRE(set_bool.find(false) != set_bool.end());
+
+            std::set<bool> set_bool_inplace {};
+            node.get_value_inplace(set_bool_inplace);
+            REQUIRE(set_bool_inplace.size() == 2);
+            REQUIRE(set_bool_inplace.find(true) != set_bool_inplace.end());
+            REQUIRE(set_bool_inplace.find(false) != set_bool_inplace.end());
         }
 
         SECTION("sequence value (std::multiset)") {
@@ -2467,10 +2602,22 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(mset_node.find(fkyaml::node(true)) != mset_node.end());
             REQUIRE(mset_node.find(fkyaml::node(false)) != mset_node.end());
 
+            std::multiset<fkyaml::node> mset_node_inplace {};
+            node.get_value_inplace(mset_node_inplace);
+            REQUIRE(mset_node_inplace.size() == 2);
+            REQUIRE(mset_node_inplace.find(fkyaml::node(true)) != mset_node_inplace.end());
+            REQUIRE(mset_node_inplace.find(fkyaml::node(false)) != mset_node_inplace.end());
+
             auto mset_bool = node.get_value<std::multiset<fkyaml::node>>();
             REQUIRE(mset_bool.size() == 2);
             REQUIRE(mset_bool.find(true) != mset_bool.end());
             REQUIRE(mset_bool.find(false) != mset_bool.end());
+
+            std::multiset<fkyaml::node> mset_bool_inplace {};
+            node.get_value_inplace(mset_bool_inplace);
+            REQUIRE(mset_bool_inplace.size() == 2);
+            REQUIRE(mset_bool_inplace.find(true) != mset_bool_inplace.end());
+            REQUIRE(mset_bool_inplace.find(false) != mset_bool_inplace.end());
         }
 
         SECTION("sequence value (std::unordered_set)") {
@@ -2479,10 +2626,22 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(uset_node.find(fkyaml::node(true)) != uset_node.end());
             REQUIRE(uset_node.find(fkyaml::node(false)) != uset_node.end());
 
+            std::unordered_set<fkyaml::node> uset_node_inplace {};
+            node.get_value_inplace(uset_node_inplace);
+            REQUIRE(uset_node_inplace.size() == 2);
+            REQUIRE(uset_node_inplace.find(fkyaml::node(true)) != uset_node_inplace.end());
+            REQUIRE(uset_node_inplace.find(fkyaml::node(false)) != uset_node_inplace.end());
+
             auto uset_bool = node.get_value<std::unordered_set<bool>>();
             REQUIRE(uset_bool.size() == 2);
             REQUIRE(uset_bool.find(true) != uset_bool.end());
             REQUIRE(uset_bool.find(false) != uset_bool.end());
+
+            std::unordered_set<bool> uset_bool_inplace {};
+            node.get_value_inplace(uset_bool_inplace);
+            REQUIRE(uset_bool_inplace.size() == 2);
+            REQUIRE(uset_bool_inplace.find(true) != uset_bool_inplace.end());
+            REQUIRE(uset_bool_inplace.find(false) != uset_bool_inplace.end());
         }
 
         SECTION("sequence value (std::unordered_set)") {
@@ -2491,10 +2650,22 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(umset_node.find(fkyaml::node(true)) != umset_node.end());
             REQUIRE(umset_node.find(fkyaml::node(false)) != umset_node.end());
 
+            std::unordered_multiset<fkyaml::node> umset_node_inplace {};
+            node.get_value_inplace(umset_node_inplace);
+            REQUIRE(umset_node_inplace.size() == 2);
+            REQUIRE(umset_node_inplace.find(fkyaml::node(true)) != umset_node_inplace.end());
+            REQUIRE(umset_node_inplace.find(fkyaml::node(false)) != umset_node_inplace.end());
+
             auto umset_bool = node.get_value<std::unordered_multiset<bool>>();
             REQUIRE(umset_bool.size() == 2);
             REQUIRE(umset_bool.find(true) != umset_bool.end());
             REQUIRE(umset_bool.find(false) != umset_bool.end());
+
+            std::unordered_multiset<bool> umset_bool_inplace {};
+            node.get_value_inplace(umset_bool_inplace);
+            REQUIRE(umset_bool_inplace.size() == 2);
+            REQUIRE(umset_bool_inplace.find(true) != umset_bool_inplace.end());
+            REQUIRE(umset_bool_inplace.find(false) != umset_bool_inplace.end());
         }
 
         SECTION("sequence value (std::stack)") {
@@ -2506,11 +2677,27 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(stack_node.top().is_boolean());
             REQUIRE(stack_node.top().get_value<bool>() == true);
 
+            std::stack<fkyaml::node> stack_node_inplace {};
+            node.get_value_inplace(stack_node_inplace);
+            REQUIRE(stack_node_inplace.size() == 2);
+            REQUIRE(stack_node_inplace.top().is_boolean());
+            REQUIRE(stack_node_inplace.top().get_value<bool>() == false);
+            stack_node_inplace.pop();
+            REQUIRE(stack_node_inplace.top().is_boolean());
+            REQUIRE(stack_node_inplace.top().get_value<bool>() == true);
+
             auto stack_bool = node.get_value<std::stack<bool>>();
             REQUIRE(stack_bool.size() == 2);
             REQUIRE(stack_bool.top() == false);
             stack_bool.pop();
             REQUIRE(stack_bool.top() == true);
+
+            std::stack<bool> stack_bool_inplace {};
+            node.get_value_inplace(stack_bool_inplace);
+            REQUIRE(stack_bool_inplace.size() == 2);
+            REQUIRE(stack_bool_inplace.top() == false);
+            stack_bool_inplace.pop();
+            REQUIRE(stack_bool_inplace.top() == true);
         }
 
         SECTION("sequence value (std::queue)") {
@@ -2522,14 +2709,30 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(queue_node.front().is_boolean());
             REQUIRE(queue_node.front().get_value<bool>() == false);
 
+            std::queue<fkyaml::node> queue_node_inplace {};
+            node.get_value_inplace(queue_node_inplace);
+            REQUIRE(queue_node_inplace.size() == 2);
+            REQUIRE(queue_node_inplace.front().is_boolean());
+            REQUIRE(queue_node_inplace.front().get_value<bool>() == true);
+            queue_node_inplace.pop();
+            REQUIRE(queue_node_inplace.front().is_boolean());
+            REQUIRE(queue_node_inplace.front().get_value<bool>() == false);
+
             auto queue_bool = node.get_value<std::queue<bool>>();
             REQUIRE(queue_bool.size() == 2);
             REQUIRE(queue_bool.front() == true);
             queue_bool.pop();
             REQUIRE(queue_bool.front() == false);
+
+            std::queue<bool> queue_bool_inplace {};
+            node.get_value_inplace(queue_bool_inplace);
+            REQUIRE(queue_bool_inplace.size() == 2);
+            REQUIRE(queue_bool_inplace.front() == true);
+            queue_bool_inplace.pop();
+            REQUIRE(queue_bool_inplace.front() == false);
         }
 
-        SECTION("sequence value (std::queue)") {
+        SECTION("sequence value (std::priority_queue)") {
             auto pqueue_node = node.get_value<std::priority_queue<fkyaml::node>>();
             REQUIRE(pqueue_node.size() == 2);
             REQUIRE(pqueue_node.top().is_boolean());
@@ -2538,11 +2741,27 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(pqueue_node.top().is_boolean());
             REQUIRE(pqueue_node.top().get_value<bool>() == false);
 
+            std::priority_queue<fkyaml::node> pqueue_node_inplace {};
+            node.get_value_inplace(pqueue_node_inplace);
+            REQUIRE(pqueue_node_inplace.size() == 2);
+            REQUIRE(pqueue_node_inplace.top().is_boolean());
+            REQUIRE(pqueue_node_inplace.top().get_value<bool>() == true);
+            pqueue_node_inplace.pop();
+            REQUIRE(pqueue_node_inplace.top().is_boolean());
+            REQUIRE(pqueue_node_inplace.top().get_value<bool>() == false);
+
             auto pqueue_bool = node.get_value<std::priority_queue<bool>>();
             REQUIRE(pqueue_bool.size() == 2);
             REQUIRE(pqueue_bool.top() == true);
             pqueue_bool.pop();
             REQUIRE(pqueue_bool.top() == false);
+
+            std::priority_queue<bool> pqueue_bool_inplace {};
+            node.get_value_inplace(pqueue_bool_inplace);
+            REQUIRE(pqueue_bool_inplace.size() == 2);
+            REQUIRE(pqueue_bool_inplace.top() == true);
+            pqueue_bool_inplace.pop();
+            REQUIRE(pqueue_bool_inplace.top() == false);
         }
 
         SECTION("non-sequence value") {
@@ -2569,12 +2788,30 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(map_node.at("foo").is_integer());
             REQUIRE(map_node.at("foo").get_value<int>() == -456);
 
+            std::map<fkyaml::node, fkyaml::node> map_node_inplace {};
+            node.get_value_inplace(map_node_inplace);
+            REQUIRE(map_node_inplace.size() == 2);
+            REQUIRE(map_node_inplace.find("test") != map_node_inplace.end());
+            REQUIRE(map_node_inplace.at("test").is_integer());
+            REQUIRE(map_node_inplace.at("test").get_value<int>() == 123);
+            REQUIRE(map_node_inplace.find("foo") != map_node_inplace.end());
+            REQUIRE(map_node_inplace.at("foo").is_integer());
+            REQUIRE(map_node_inplace.at("foo").get_value<int>() == -456);
+
             auto map_compat = node.get_value<std::map<std::string, int>>();
             REQUIRE(map_compat.size() == 2);
             REQUIRE(map_compat.find("test") != map_compat.end());
             REQUIRE(map_compat.at("test") == 123);
             REQUIRE(map_compat.find("foo") != map_compat.end());
             REQUIRE(map_compat.at("foo") == -456);
+
+            std::map<std::string, int> map_compat_inplace {};
+            node.get_value_inplace(map_compat_inplace);
+            REQUIRE(map_compat_inplace.size() == 2);
+            REQUIRE(map_compat_inplace.find("test") != map_compat_inplace.end());
+            REQUIRE(map_compat_inplace.at("test") == 123);
+            REQUIRE(map_compat_inplace.find("foo") != map_compat_inplace.end());
+            REQUIRE(map_compat_inplace.at("foo") == -456);
         }
 
         SECTION("mapping value (std::multimap)") {
@@ -2591,6 +2828,20 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(mmap_node_foo_range.first->second.is_integer());
             REQUIRE(mmap_node_foo_range.first->second.get_value<int>() == -456);
 
+            std::multimap<fkyaml::node, fkyaml::node> mmap_node_inplace {};
+            node.get_value_inplace(mmap_node_inplace);
+            REQUIRE(mmap_node_inplace.size() == 2);
+            REQUIRE(mmap_node_inplace.find("test") != mmap_node_inplace.end());
+            auto mmap_node_inplace_test_range = mmap_node_inplace.equal_range("test");
+            REQUIRE(std::distance(mmap_node_inplace_test_range.first, mmap_node_inplace_test_range.second) == 1);
+            REQUIRE(mmap_node_inplace_test_range.first->second.is_integer());
+            REQUIRE(mmap_node_inplace_test_range.first->second.get_value<int>() == 123);
+            REQUIRE(mmap_node_inplace.find("foo") != mmap_node_inplace.end());
+            auto mmap_node_inplace_foo_range = mmap_node_inplace.equal_range("foo");
+            REQUIRE(std::distance(mmap_node_inplace_test_range.first, mmap_node_inplace_test_range.second) == 1);
+            REQUIRE(mmap_node_inplace_foo_range.first->second.is_integer());
+            REQUIRE(mmap_node_inplace_foo_range.first->second.get_value<int>() == -456);
+
             auto mmap_compat = node.get_value<std::multimap<std::string, int>>();
             REQUIRE(mmap_compat.size() == 2);
             REQUIRE(mmap_compat.find("test") != mmap_compat.end());
@@ -2601,6 +2852,18 @@ TEST_CASE("Node_GetValue") {
             auto mmap_compat_foo_range = mmap_compat.equal_range("foo");
             REQUIRE(std::distance(mmap_compat_test_range.first, mmap_compat_test_range.second) == 1);
             REQUIRE(mmap_compat_foo_range.first->second == -456);
+
+            std::multimap<std::string, int> mmap_compat_inplace {};
+            node.get_value_inplace(mmap_compat_inplace);
+            REQUIRE(mmap_compat_inplace.size() == 2);
+            REQUIRE(mmap_compat_inplace.find("test") != mmap_compat_inplace.end());
+            auto mmap_compat_inplace_test_range = mmap_compat_inplace.equal_range("test");
+            REQUIRE(std::distance(mmap_compat_inplace_test_range.first, mmap_compat_inplace_test_range.second) == 1);
+            REQUIRE(mmap_compat_inplace_test_range.first->second == 123);
+            REQUIRE(mmap_compat_inplace.find("foo") != mmap_compat_inplace.end());
+            auto mmap_compat_inplace_foo_range = mmap_compat_inplace.equal_range("foo");
+            REQUIRE(std::distance(mmap_compat_inplace_test_range.first, mmap_compat_inplace_test_range.second) == 1);
+            REQUIRE(mmap_compat_inplace_foo_range.first->second == -456);
         }
 
         SECTION("mapping value (std::unordered_map)") {
@@ -2613,6 +2876,16 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(umap_node.at("foo").is_integer());
             REQUIRE(umap_node.at("foo").get_value<int>() == -456);
 
+            std::unordered_map<fkyaml::node, fkyaml::node> umap_node_inplace {};
+            node.get_value_inplace(umap_node_inplace);
+            REQUIRE(umap_node_inplace.size() == 2);
+            REQUIRE(umap_node_inplace.find("test") != umap_node_inplace.end());
+            REQUIRE(umap_node_inplace.at("test").is_integer());
+            REQUIRE(umap_node_inplace.at("test").get_value<int>() == 123);
+            REQUIRE(umap_node_inplace.find("foo") != umap_node_inplace.end());
+            REQUIRE(umap_node_inplace.at("foo").is_integer());
+            REQUIRE(umap_node_inplace.at("foo").get_value<int>() == -456);
+
             auto umap_compat = node.get_value<std::unordered_map<std::string, int>>();
             REQUIRE(umap_compat.size() == 2);
             REQUIRE(umap_compat.find("test") != umap_compat.end());
@@ -2620,16 +2893,13 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(umap_compat.find("foo") != umap_compat.end());
             REQUIRE(umap_compat.at("foo") == -456);
 
-            fkyaml::node various_type_nodes = {
-                {nullptr, nullptr},
-                {true, nullptr},
-                {123, nullptr},
-                {3.14, nullptr},
-                {"foo", nullptr},
-                {{{"foo", "bar"}}, nullptr},
-                {{"foo", "bar"}, nullptr},
-            };
-            auto umap = various_type_nodes.get_value<std::unordered_map<fkyaml::node, std::nullptr_t>>();
+            std::unordered_map<std::string, int> umap_compat_inplace {};
+            node.get_value_inplace(umap_compat_inplace);
+            REQUIRE(umap_compat_inplace.size() == 2);
+            REQUIRE(umap_compat_inplace.find("test") != umap_compat_inplace.end());
+            REQUIRE(umap_compat_inplace.at("test") == 123);
+            REQUIRE(umap_compat_inplace.find("foo") != umap_compat_inplace.end());
+            REQUIRE(umap_compat_inplace.at("foo") == -456);
         }
 
         SECTION("mapping value (std::unordered_multimap)") {
@@ -2646,6 +2916,20 @@ TEST_CASE("Node_GetValue") {
             REQUIRE(ummap_node_foo_range.first->second.is_integer());
             REQUIRE(ummap_node_foo_range.first->second.get_value<int>() == -456);
 
+            std::unordered_multimap<fkyaml::node, fkyaml::node> ummap_node_inplace {};
+            node.get_value_inplace(ummap_node_inplace);
+            REQUIRE(ummap_node_inplace.size() == 2);
+            REQUIRE(ummap_node_inplace.find("test") != ummap_node_inplace.end());
+            auto ummap_node_inplace_test_range = ummap_node_inplace.equal_range("test");
+            REQUIRE(std::distance(ummap_node_inplace_test_range.first, ummap_node_inplace_test_range.second) == 1);
+            REQUIRE(ummap_node_inplace_test_range.first->second.is_integer());
+            REQUIRE(ummap_node_inplace_test_range.first->second.get_value<int>() == 123);
+            REQUIRE(ummap_node_inplace.find("foo") != ummap_node_inplace.end());
+            auto ummap_node_inplace_foo_range = ummap_node_inplace.equal_range("foo");
+            REQUIRE(std::distance(ummap_node_inplace_test_range.first, ummap_node_inplace_test_range.second) == 1);
+            REQUIRE(ummap_node_inplace_foo_range.first->second.is_integer());
+            REQUIRE(ummap_node_inplace_foo_range.first->second.get_value<int>() == -456);
+
             auto ummap_compat = node.get_value<std::unordered_multimap<std::string, int>>();
             REQUIRE(ummap_compat.size() == 2);
             REQUIRE(ummap_compat.find("test") != ummap_compat.end());
@@ -2656,6 +2940,18 @@ TEST_CASE("Node_GetValue") {
             auto ummap_compat_foo_range = ummap_compat.equal_range("foo");
             REQUIRE(std::distance(ummap_compat_test_range.first, ummap_compat_test_range.second) == 1);
             REQUIRE(ummap_compat_foo_range.first->second == -456);
+
+            std::unordered_multimap<std::string, int> ummap_compat_inplace {};
+            node.get_value_inplace(ummap_compat_inplace);
+            REQUIRE(ummap_compat_inplace.size() == 2);
+            REQUIRE(ummap_compat_inplace.find("test") != ummap_compat_inplace.end());
+            auto ummap_compat_inplace_test_range = ummap_compat_inplace.equal_range("test");
+            REQUIRE(std::distance(ummap_compat_inplace_test_range.first, ummap_compat_inplace_test_range.second) == 1);
+            REQUIRE(ummap_compat_inplace_test_range.first->second == 123);
+            REQUIRE(ummap_compat_inplace.find("foo") != ummap_compat_inplace.end());
+            auto ummap_compat_inplace_foo_range = ummap_compat_inplace.equal_range("foo");
+            REQUIRE(std::distance(ummap_compat_inplace_test_range.first, ummap_compat_inplace_test_range.second) == 1);
+            REQUIRE(ummap_compat_inplace_foo_range.first->second == -456);
         }
 
         SECTION("non-mapping values") {
@@ -2683,21 +2979,72 @@ TEST_CASE("Node_GetValue") {
         SECTION("null type") {
             auto null = node.get_value<std::nullptr_t>();
             REQUIRE(null == nullptr);
+
+            std::nullptr_t null_inplace;
+            node.get_value_inplace(null_inplace);
+            REQUIRE(null_inplace == nullptr);
         }
 
         SECTION("non-null compatible types") {
             REQUIRE(node.get_value<bool>() == false);
+            bool bool_inplace = true;
+            node.get_value_inplace(bool_inplace);
+            REQUIRE(bool_inplace == false);
+
             REQUIRE(node.get_value<uint8_t>() == 0);
+            uint8_t ui8_inplace = 1;
+            node.get_value_inplace(ui8_inplace);
+            REQUIRE(ui8_inplace == 0);
+
             REQUIRE(node.get_value<uint16_t>() == 0);
+            uint16_t ui16_inplace = 1;
+            node.get_value_inplace(ui16_inplace);
+            REQUIRE(ui16_inplace == 0);
+
             REQUIRE(node.get_value<uint32_t>() == 0);
+            uint32_t ui32_inplace = 1;
+            node.get_value_inplace(ui32_inplace);
+            REQUIRE(ui32_inplace == 0);
+
             REQUIRE(node.get_value<uint64_t>() == 0);
+            uint64_t ui64_inplace = 1;
+            node.get_value_inplace(ui64_inplace);
+            REQUIRE(ui64_inplace == 0);
+
             REQUIRE(node.get_value<int8_t>() == 0);
+            int8_t i8_inplace = 1;
+            node.get_value_inplace(i8_inplace);
+            REQUIRE(i8_inplace == 0);
+
             REQUIRE(node.get_value<int16_t>() == 0);
+            int16_t i16_inplace = 1;
+            node.get_value_inplace(i16_inplace);
+            REQUIRE(i16_inplace == 0);
+
             REQUIRE(node.get_value<int32_t>() == 0);
+            int32_t i32_inplace = 1;
+            node.get_value_inplace(i32_inplace);
+            REQUIRE(i32_inplace == 0);
+
             REQUIRE(node.get_value<int64_t>() == 0);
+            int64_t i64_inplace = 1;
+            node.get_value_inplace(i64_inplace);
+            REQUIRE(i64_inplace == 0);
+
             REQUIRE(node.get_value<float>() == 0.f);
+            float float_inplace = 1;
+            node.get_value_inplace(float_inplace);
+            REQUIRE(float_inplace == 0.f);
+
             REQUIRE(node.get_value<double>() == 0.);
+            double double_inplace = 1;
+            node.get_value_inplace(double_inplace);
+            REQUIRE(double_inplace == 0.);
+
             REQUIRE(node.get_value<long double>() == 0.l);
+            long double long_double_inplace = 1;
+            node.get_value_inplace(long_double_inplace);
+            REQUIRE(long_double_inplace == 0.l);
         }
 
         SECTION("non-null incompatible types") {
@@ -2715,32 +3062,127 @@ TEST_CASE("Node_GetValue") {
         SECTION("boolean type") {
             REQUIRE(true_node.get_value<bool>() == true);
             REQUIRE(false_node.get_value<bool>() == false);
+
+            bool true_inplace = false;
+            bool false_inplace = true;
+            true_node.get_value_inplace(true_inplace);
+            false_node.get_value_inplace(false_inplace);
+            REQUIRE(true_inplace == true);
+            REQUIRE(false_inplace == false);
         }
 
-        SECTION("non-boolean compatible types") {
+        SECTION("non-boolean compatible types (true)") {
             REQUIRE(true_node.get_value<uint8_t>() == 1);
-            REQUIRE(true_node.get_value<uint16_t>() == 1);
-            REQUIRE(true_node.get_value<uint32_t>() == 1);
-            REQUIRE(true_node.get_value<uint64_t>() == 1);
-            REQUIRE(true_node.get_value<int8_t>() == 1);
-            REQUIRE(true_node.get_value<int16_t>() == 1);
-            REQUIRE(true_node.get_value<int32_t>() == 1);
-            REQUIRE(true_node.get_value<int64_t>() == 1);
-            REQUIRE(true_node.get_value<float>() == 1.f);
-            REQUIRE(true_node.get_value<double>() == 1.);
-            REQUIRE(true_node.get_value<long double>() == 1.l);
+            uint8_t ui8_inplace = 0;
+            true_node.get_value_inplace(ui8_inplace);
+            REQUIRE(ui8_inplace == 1);
 
+            REQUIRE(true_node.get_value<uint16_t>() == 1);
+            uint16_t ui16_inplace = 0;
+            true_node.get_value_inplace(ui16_inplace);
+            REQUIRE(ui16_inplace == 1);
+
+            REQUIRE(true_node.get_value<uint32_t>() == 1);
+            uint32_t ui32_inplace = 0;
+            true_node.get_value_inplace(ui32_inplace);
+            REQUIRE(ui32_inplace == 1);
+
+            REQUIRE(true_node.get_value<uint64_t>() == 1);
+            uint64_t ui64_inplace = 0;
+            true_node.get_value_inplace(ui64_inplace);
+            REQUIRE(ui64_inplace == 1);
+
+            REQUIRE(true_node.get_value<int8_t>() == 1);
+            int8_t i8_inplace = 0;
+            true_node.get_value_inplace(i8_inplace);
+            REQUIRE(i8_inplace == 1);
+
+            REQUIRE(true_node.get_value<int16_t>() == 1);
+            int16_t i16_inplace = 0;
+            true_node.get_value_inplace(i16_inplace);
+            REQUIRE(i16_inplace == 1);
+
+            REQUIRE(true_node.get_value<int32_t>() == 1);
+            int32_t i32_inplace = 0;
+            true_node.get_value_inplace(i32_inplace);
+            REQUIRE(i32_inplace == 1);
+
+            REQUIRE(true_node.get_value<int64_t>() == 1);
+            int64_t i64_inplace = 0;
+            true_node.get_value_inplace(i64_inplace);
+            REQUIRE(i64_inplace == 1);
+
+            REQUIRE(true_node.get_value<float>() == 1.f);
+            float float_inplace = 0;
+            true_node.get_value_inplace(float_inplace);
+            REQUIRE(float_inplace == 1.f);
+
+            REQUIRE(true_node.get_value<double>() == 1.);
+            double double_inplace = 0;
+            true_node.get_value_inplace(double_inplace);
+            REQUIRE(double_inplace == 1.);
+
+            REQUIRE(true_node.get_value<long double>() == 1.l);
+            long double long_double_inplace = 0;
+            true_node.get_value_inplace(long_double_inplace);
+            REQUIRE(long_double_inplace == 1.l);
+        }
+
+        SECTION("non-boolean compatible types (false)") {
             REQUIRE(false_node.get_value<uint8_t>() == 0);
+            uint8_t ui8_inplace = 1;
+            false_node.get_value_inplace(ui8_inplace);
+            REQUIRE(ui8_inplace == 0);
+
             REQUIRE(false_node.get_value<uint16_t>() == 0);
+            uint16_t ui16_inplace = 1;
+            false_node.get_value_inplace(ui16_inplace);
+            REQUIRE(ui16_inplace == 0);
+
             REQUIRE(false_node.get_value<uint32_t>() == 0);
+            uint32_t ui32_inplace = 1;
+            false_node.get_value_inplace(ui32_inplace);
+            REQUIRE(ui32_inplace == 0);
+
             REQUIRE(false_node.get_value<uint64_t>() == 0);
+            uint64_t ui64_inplace = 1;
+            false_node.get_value_inplace(ui64_inplace);
+            REQUIRE(ui64_inplace == 0);
+
             REQUIRE(false_node.get_value<int8_t>() == 0);
+            int8_t i8_inplace = 1;
+            false_node.get_value_inplace(i8_inplace);
+            REQUIRE(i8_inplace == 0);
+
             REQUIRE(false_node.get_value<int16_t>() == 0);
+            int16_t i16_inplace = 1;
+            false_node.get_value_inplace(i16_inplace);
+            REQUIRE(i16_inplace == 0);
+
             REQUIRE(false_node.get_value<int32_t>() == 0);
+            int32_t i32_inplace = 1;
+            false_node.get_value_inplace(i32_inplace);
+            REQUIRE(i32_inplace == 0);
+
             REQUIRE(false_node.get_value<int64_t>() == 0);
+            int64_t i64_inplace = 1;
+            false_node.get_value_inplace(i64_inplace);
+            REQUIRE(i64_inplace == 0);
+
             REQUIRE(false_node.get_value<float>() == 0.f);
+            float float_inplace = 1;
+            false_node.get_value_inplace(float_inplace);
+            REQUIRE(float_inplace == 0.f);
+
             REQUIRE(false_node.get_value<double>() == 0.);
+            double double_inplace = 1;
+            false_node.get_value_inplace(double_inplace);
+            REQUIRE(double_inplace == 0.);
+
             REQUIRE(false_node.get_value<long double>() == 0.l);
+            long double long_double_inplace = 1;
+            false_node.get_value_inplace(long_double_inplace);
+            REQUIRE(long_double_inplace == 0.l);
         }
 
         SECTION("non-boolean incompatible types") {
@@ -2757,32 +3199,112 @@ TEST_CASE("Node_GetValue") {
 
         SECTION("integer types") {
             REQUIRE(node.get_value<int8_t>() == 123);
+            int8_t i8_inplace = 0;
+            node.get_value_inplace(i8_inplace);
+            REQUIRE(i8_inplace == 123);
+
             REQUIRE(node.get_value<int16_t>() == 123);
+            int16_t i16_inplace = 0;
+            node.get_value_inplace(i16_inplace);
+            REQUIRE(i16_inplace == 123);
+
             REQUIRE(node.get_value<int32_t>() == 123);
+            int32_t i32_inplace = 0;
+            node.get_value_inplace(i32_inplace);
+            REQUIRE(i32_inplace == 123);
+
             REQUIRE(node.get_value<int64_t>() == 123);
+            int64_t i64_inplace = 0;
+            node.get_value_inplace(i64_inplace);
+            REQUIRE(i64_inplace == 123);
+
             REQUIRE(node.get_value<uint8_t>() == 123);
+            uint8_t ui8_inplace = 0;
+            node.get_value_inplace(ui8_inplace);
+            REQUIRE(ui8_inplace == 123);
+
             REQUIRE(node.get_value<uint16_t>() == 123);
+            uint16_t ui16_inplace = 0;
+            node.get_value_inplace(ui16_inplace);
+            REQUIRE(ui16_inplace == 123);
+
             REQUIRE(node.get_value<uint32_t>() == 123);
+            uint32_t ui32_inplace = 0;
+            node.get_value_inplace(ui32_inplace);
+            REQUIRE(ui32_inplace == 123);
+
             REQUIRE(node.get_value<uint64_t>() == 123);
+            uint64_t ui64_inplace = 0;
+            node.get_value_inplace(ui64_inplace);
+            REQUIRE(ui64_inplace == 123);
         }
 
-        SECTION("non-integer compatible types") {
+        SECTION("non-integer compatible types (positive)") {
             REQUIRE(node.get_value<bool>() == true);
-            REQUIRE(node.get_value<float>() == 123.f);
-            REQUIRE(node.get_value<double>() == 123.);
-            REQUIRE(node.get_value<long double>() == 123.l);
+            bool bool_inplace = false;
+            node.get_value_inplace(bool_inplace);
+            REQUIRE(bool_inplace == true);
 
+            REQUIRE(node.get_value<float>() == 123.f);
+            float float_inplace = 0.f;
+            node.get_value_inplace(float_inplace);
+            REQUIRE(float_inplace == 123.f);
+
+            REQUIRE(node.get_value<double>() == 123.);
+            double double_inplace = 0.;
+            node.get_value_inplace(double_inplace);
+            REQUIRE(double_inplace == 123.);
+
+            REQUIRE(node.get_value<long double>() == 123.l);
+            long double long_double_inplace = 0.l;
+            node.get_value_inplace(long_double_inplace);
+            REQUIRE(long_double_inplace == 123.l);
+        }
+
+        SECTION("non-integer compatible types (negative)") {
             node = -123;
             REQUIRE(node.get_value<bool>() == true);
-            REQUIRE(node.get_value<float>() == -123.f);
-            REQUIRE(node.get_value<double>() == -123.);
-            REQUIRE(node.get_value<long double>() == -123.l);
+            bool bool_inplace = false;
+            node.get_value_inplace(bool_inplace);
+            REQUIRE(bool_inplace == true);
 
+            REQUIRE(node.get_value<float>() == -123.f);
+            float float_inplace = 0.f;
+            node.get_value_inplace(float_inplace);
+            REQUIRE(float_inplace == -123.f);
+
+            REQUIRE(node.get_value<double>() == -123.);
+            double double_inplace = 0.;
+            node.get_value_inplace(double_inplace);
+            REQUIRE(double_inplace == -123.);
+
+            REQUIRE(node.get_value<long double>() == -123.l);
+            long double long_double_inplace = 0.l;
+            node.get_value_inplace(long_double_inplace);
+            REQUIRE(long_double_inplace == -123.l);
+        }
+
+        SECTION("non-integer compatible types (zero)") {
             node = 0;
             REQUIRE(node.get_value<bool>() == false);
+            bool bool_inplace = true;
+            node.get_value_inplace(bool_inplace);
+            REQUIRE(bool_inplace == false);
+
             REQUIRE(node.get_value<float>() == 0.f);
+            float float_inplace = 1.f;
+            node.get_value_inplace(float_inplace);
+            REQUIRE(float_inplace == 0.f);
+
             REQUIRE(node.get_value<double>() == 0.);
+            double double_inplace = 1.;
+            node.get_value_inplace(double_inplace);
+            REQUIRE(double_inplace == 0.);
+
             REQUIRE(node.get_value<long double>() == 0.l);
+            long double long_double_inplace = 1.l;
+            node.get_value_inplace(long_double_inplace);
+            REQUIRE(long_double_inplace == 0.l);
         }
 
         SECTION("non-integer incompatible types") {
@@ -2810,52 +3332,178 @@ TEST_CASE("Node_GetValue") {
 
         SECTION("positive float values") {
             REQUIRE(std::abs(node.get_value<float>() - 3.14) < std::numeric_limits<float>::epsilon());
+            float float_inplace = 0.f;
+            node.get_value_inplace(float_inplace);
+            REQUIRE(std::abs(float_inplace - 3.14) < std::numeric_limits<float>::epsilon());
+
             REQUIRE(std::abs(node.get_value<double>() - 3.14) < std::numeric_limits<double>::epsilon());
+            double double_inplace = 0.;
+            node.get_value_inplace(double_inplace);
+            REQUIRE(std::abs(double_inplace - 3.14) < std::numeric_limits<double>::epsilon());
+
             REQUIRE(std::abs(node.get_value<long double>() - 3.14) < std::numeric_limits<long double>::epsilon());
+            long double long_double_inplace = 0.;
+            node.get_value_inplace(long_double_inplace);
+            REQUIRE(std::abs(long_double_inplace - 3.14) < std::numeric_limits<long double>::epsilon());
         }
 
         SECTION("zero float values") {
             node = 0.0;
             REQUIRE(std::abs(node.get_value<float>() - 0.0) < std::numeric_limits<float>::epsilon());
+            float float_inplace = 1.f;
+            node.get_value_inplace(float_inplace);
+            REQUIRE(std::abs(float_inplace - 0.0) < std::numeric_limits<float>::epsilon());
+
             REQUIRE(std::abs(node.get_value<double>() - 0.0) < std::numeric_limits<double>::epsilon());
+            double double_inplace = 1.;
+            node.get_value_inplace(double_inplace);
+            REQUIRE(std::abs(double_inplace - 0.0) < std::numeric_limits<double>::epsilon());
+
             REQUIRE(std::abs(node.get_value<long double>() - 0.0) < std::numeric_limits<long double>::epsilon());
+            long double long_double_inplace = 1.l;
+            node.get_value_inplace(long_double_inplace);
+            REQUIRE(std::abs(long_double_inplace - 0.0) < std::numeric_limits<long double>::epsilon());
         }
 
         SECTION("negative float values") {
             node = -3.14;
             REQUIRE(std::abs(node.get_value<float>() - (-3.14)) < std::numeric_limits<float>::epsilon());
+            float float_inplace = 0.f;
+            node.get_value_inplace(float_inplace);
+            REQUIRE(std::abs(float_inplace - (-3.14)) < std::numeric_limits<float>::epsilon());
+
             REQUIRE(std::abs(node.get_value<double>() - (-3.14)) < std::numeric_limits<double>::epsilon());
+            double double_inplace = 0.;
+            node.get_value_inplace(double_inplace);
+            REQUIRE(std::abs(double_inplace - (-3.14)) < std::numeric_limits<double>::epsilon());
+
             REQUIRE(std::abs(node.get_value<long double>() - (-3.14)) < std::numeric_limits<long double>::epsilon());
+            long double long_double_inplace = 0.;
+            node.get_value_inplace(long_double_inplace);
+            REQUIRE(std::abs(long_double_inplace - (-3.14)) < std::numeric_limits<long double>::epsilon());
         }
 
-        SECTION("non-float compatible types") {
+        SECTION("non-float compatible types (positive)") {
             REQUIRE(node.get_value<bool>() == true);
-            REQUIRE(node.get_value<uint8_t>() == 3);
-            REQUIRE(node.get_value<uint16_t>() == 3);
-            REQUIRE(node.get_value<uint32_t>() == 3);
-            REQUIRE(node.get_value<uint64_t>() == 3);
-            REQUIRE(node.get_value<int8_t>() == 3);
-            REQUIRE(node.get_value<int16_t>() == 3);
-            REQUIRE(node.get_value<int32_t>() == 3);
-            REQUIRE(node.get_value<int64_t>() == 3);
+            bool bool_inplace = false;
+            node.get_value_inplace(bool_inplace);
+            REQUIRE(bool_inplace == true);
 
+            REQUIRE(node.get_value<uint8_t>() == 3);
+            uint8_t ui8_inplace = 0;
+            node.get_value_inplace(ui8_inplace);
+            REQUIRE(ui8_inplace == 3);
+
+            REQUIRE(node.get_value<uint16_t>() == 3);
+            uint16_t ui16_inplace = 0;
+            node.get_value_inplace(ui16_inplace);
+            REQUIRE(ui16_inplace == 3);
+
+            REQUIRE(node.get_value<uint32_t>() == 3);
+            uint32_t ui32_inplace = 0;
+            node.get_value_inplace(ui32_inplace);
+            REQUIRE(ui32_inplace == 3);
+
+            REQUIRE(node.get_value<uint64_t>() == 3);
+            uint64_t ui64_inplace = 0;
+            node.get_value_inplace(ui64_inplace);
+            REQUIRE(ui64_inplace == 3);
+
+            REQUIRE(node.get_value<int8_t>() == 3);
+            int8_t i8_inplace = 0;
+            node.get_value_inplace(i8_inplace);
+            REQUIRE(i8_inplace == 3);
+
+            REQUIRE(node.get_value<int16_t>() == 3);
+            int16_t i16_inplace = 0;
+            node.get_value_inplace(i16_inplace);
+            REQUIRE(i16_inplace == 3);
+
+            REQUIRE(node.get_value<int32_t>() == 3);
+            int32_t i32_inplace = 0;
+            node.get_value_inplace(i32_inplace);
+            REQUIRE(i32_inplace == 3);
+
+            REQUIRE(node.get_value<int64_t>() == 3);
+            int64_t i64_inplace = 0;
+            node.get_value_inplace(i64_inplace);
+            REQUIRE(i64_inplace == 3);
+        }
+
+        SECTION("non-float compatible types (negative)") {
             node = -3.14;
             REQUIRE(node.get_value<bool>() == true);
-            REQUIRE(node.get_value<int8_t>() == -3);
-            REQUIRE(node.get_value<int16_t>() == -3);
-            REQUIRE(node.get_value<int32_t>() == -3);
-            REQUIRE(node.get_value<int64_t>() == -3);
+            bool bool_inplace = false;
+            node.get_value_inplace(bool_inplace);
+            REQUIRE(bool_inplace == true);
 
+            REQUIRE(node.get_value<int8_t>() == -3);
+            int8_t i8_inplace = 0;
+            node.get_value_inplace(i8_inplace);
+            REQUIRE(i8_inplace == -3);
+
+            REQUIRE(node.get_value<int16_t>() == -3);
+            int16_t i16_inplace = 0;
+            node.get_value_inplace(i16_inplace);
+            REQUIRE(i16_inplace == -3);
+
+            REQUIRE(node.get_value<int32_t>() == -3);
+            int32_t i32_inplace = 0;
+            node.get_value_inplace(i32_inplace);
+            REQUIRE(i32_inplace == -3);
+
+            REQUIRE(node.get_value<int64_t>() == -3);
+            int64_t i64_inplace = 0;
+            node.get_value_inplace(i64_inplace);
+            REQUIRE(i64_inplace == -3);
+        }
+
+        SECTION("non-float compatible types (zero)") {
             node = 0.0;
             REQUIRE(node.get_value<bool>() == false);
+            bool bool_inplace = true;
+            node.get_value_inplace(bool_inplace);
+            REQUIRE(bool_inplace == false);
+
             REQUIRE(node.get_value<uint8_t>() == 0);
+            uint8_t ui8_inplace = 1;
+            node.get_value_inplace(ui8_inplace);
+            REQUIRE(ui8_inplace == 0);
+
             REQUIRE(node.get_value<uint16_t>() == 0);
+            uint16_t ui16_inplace = 1;
+            node.get_value_inplace(ui16_inplace);
+            REQUIRE(ui16_inplace == 0);
+
             REQUIRE(node.get_value<uint32_t>() == 0);
+            uint32_t ui32_inplace = 1;
+            node.get_value_inplace(ui32_inplace);
+            REQUIRE(ui32_inplace == 0);
+
             REQUIRE(node.get_value<uint64_t>() == 0);
+            uint64_t ui64_inplace = 1;
+            node.get_value_inplace(ui64_inplace);
+            REQUIRE(ui64_inplace == 0);
+
             REQUIRE(node.get_value<int8_t>() == 0);
+            int8_t i8_inplace = 1;
+            node.get_value_inplace(i8_inplace);
+            REQUIRE(i8_inplace == 0);
+
             REQUIRE(node.get_value<int16_t>() == 0);
+            int16_t i16_inplace = 1;
+            node.get_value_inplace(i16_inplace);
+            REQUIRE(i16_inplace == 0);
+
             REQUIRE(node.get_value<int32_t>() == 0);
+            int32_t i32_inplace = 1;
+            node.get_value_inplace(i32_inplace);
+            REQUIRE(i32_inplace == 0);
+
             REQUIRE(node.get_value<int64_t>() == 0);
+            int64_t i64_inplace = 1;
+            node.get_value_inplace(i64_inplace);
+            REQUIRE(i64_inplace == 0);
         }
 
         SECTION("non-float incompatible types") {
@@ -2893,18 +3541,33 @@ TEST_CASE("Node_GetValue") {
             auto str = node.get_value<std::string>();
             REQUIRE(str.size() == 4);
             REQUIRE(str == "test");
+
+            std::string str_inplace {};
+            node.get_value_inplace(str_inplace);
+            REQUIRE(str_inplace.size() == 4);
+            REQUIRE(str_inplace == "test");
         }
 
         SECTION("string value (string_wrap)") {
             auto str_wrap = node.get_value<string_wrap>();
             REQUIRE(str_wrap.str.size() == 4);
             REQUIRE(str_wrap.str == "test");
+
+            string_wrap str_wrap_inplace {};
+            node.get_value_inplace(str_wrap_inplace);
+            REQUIRE(str_wrap_inplace.str.size() == 4);
+            REQUIRE(str_wrap_inplace.str == "test");
         }
 
         SECTION("string value (fkyaml::detail::str_view)") {
             auto str_view = node.get_value<fkyaml::detail::str_view>();
             REQUIRE(str_view.size() == 4);
             REQUIRE(str_view == "test");
+
+            fkyaml::detail::str_view str_view_inplace {};
+            node.get_value_inplace(str_view_inplace);
+            REQUIRE(str_view_inplace.size() == 4);
+            REQUIRE(str_view_inplace == "test");
         }
 
 #ifdef FK_YAML_HAS_CXX_17
@@ -2912,6 +3575,11 @@ TEST_CASE("Node_GetValue") {
             auto str_view = node.get_value<std::string_view>();
             REQUIRE(str_view.size() == 4);
             REQUIRE(str_view == "test");
+
+            std::string_view str_view_inplace {};
+            node.get_value_inplace(str_view_inplace);
+            REQUIRE(str_view_inplace.size() == 4);
+            REQUIRE(str_view_inplace == "test");
         }
 #endif
 
@@ -2934,9 +3602,21 @@ TEST_CASE("Node_GetValue") {
         REQUIRE(pair_node.second.is_string());
         REQUIRE(pair_node.second.get_value<std::string>() == "test");
 
+        std::pair<fkyaml::node, fkyaml::node> pair_node_inplace {};
+        n.get_value_inplace(pair_node_inplace);
+        REQUIRE(pair_node_inplace.first.is_integer());
+        REQUIRE(pair_node_inplace.first.get_value<int>() == 123);
+        REQUIRE(pair_node_inplace.second.is_string());
+        REQUIRE(pair_node_inplace.second.get_value<std::string>() == "test");
+
         auto pair_val = n.get_value<std::pair<int, std::string>>();
         REQUIRE(pair_val.first == 123);
         REQUIRE(pair_val.second == "test");
+
+        std::pair<int, std::string> pair_val_inplace {};
+        n.get_value_inplace(pair_val_inplace);
+        REQUIRE(pair_val_inplace.first == 123);
+        REQUIRE(pair_val_inplace.second == "test");
     }
 
     SECTION("std::tuple") {
@@ -2950,29 +3630,68 @@ TEST_CASE("Node_GetValue") {
         REQUIRE(std::get<2>(tuple_node).is_boolean());
         REQUIRE(std::get<2>(tuple_node).get_value<bool>() == true);
 
+        std::tuple<fkyaml::node, fkyaml::node, fkyaml::node> tuple_node_inplace {};
+        n.get_value_inplace(tuple_node_inplace);
+        REQUIRE(std::get<0>(tuple_node_inplace).is_integer());
+        REQUIRE(std::get<0>(tuple_node_inplace).get_value<int>() == 123);
+        REQUIRE(std::get<1>(tuple_node_inplace).is_string());
+        REQUIRE(std::get<1>(tuple_node_inplace).get_value<std::string>() == "test");
+        REQUIRE(std::get<2>(tuple_node_inplace).is_boolean());
+        REQUIRE(std::get<2>(tuple_node_inplace).get_value<bool>() == true);
+
         auto tuple_val = n.get_value<std::tuple<int, std::string, bool>>();
         REQUIRE(std::get<0>(tuple_val) == 123);
         REQUIRE(std::get<1>(tuple_val) == "test");
         REQUIRE(std::get<2>(tuple_val) == true);
+
+        std::tuple<int, std::string, bool> tuple_val_inplace {};
+        n.get_value_inplace(tuple_val_inplace);
+        REQUIRE(std::get<0>(tuple_val_inplace) == 123);
+        REQUIRE(std::get<1>(tuple_val_inplace) == "test");
+        REQUIRE(std::get<2>(tuple_val_inplace) == true);
     }
 
 #ifdef FK_YAML_HAS_CXX_17
     SECTION("std::optional") {
         fkyaml::node n {true, false};
+
         auto opt_vec = n.get_value<std::optional<std::vector<bool>>>();
         REQUIRE(opt_vec.has_value());
         REQUIRE(opt_vec.value().size() == 2);
         REQUIRE(opt_vec.value().at(0) == true);
         REQUIRE(opt_vec.value().at(1) == false);
 
+        std::optional<std::vector<bool>> opt_vec_inplace {};
+        n.get_value_inplace(opt_vec_inplace);
+        REQUIRE(opt_vec_inplace.has_value());
+        REQUIRE(opt_vec_inplace.value().size() == 2);
+        REQUIRE(opt_vec_inplace.value().at(0) == true);
+        REQUIRE(opt_vec_inplace.value().at(1) == false);
+
         auto opt_bool = n.get_value<std::optional<bool>>();
         REQUIRE_FALSE(opt_bool.has_value());
+
+        std::optional<bool> opt_bool_inplace {};
+        n.get_value_inplace(opt_bool_inplace);
+        REQUIRE_FALSE(opt_bool_inplace.has_value());
     }
 #endif
 
+    SECTION("not default constructible type") {
+        // get_value() requires its output type to be default constructible
+        STATIC_REQUIRE_FALSE(
+            fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, not_default_constructible>::value);
+
+        // but get_value_inplace() accepts types which are not default constructible.
+        not_default_constructible ndc(0);
+        fkyaml::node int_node = 1;
+        int_node.get_value_inplace(ndc);
+        REQUIRE(ndc.value == 1);
+    }
+
     SECTION("unsupported types") {
         STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int*>::value);
-        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int[]>::value);
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int(&)[2]>::value);
         STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int&>::value);
     }
 }
