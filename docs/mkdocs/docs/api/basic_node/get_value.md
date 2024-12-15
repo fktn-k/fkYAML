@@ -11,7 +11,7 @@ template <typename BasicNodeType>
 BasicNodeType get_value() const; // (2)
 ```
 
-This function converts a [fkyaml::basic_node](./index.md) to either  
+This function converts a [`fkyaml::basic_node`](./index.md) to either  
 
 1. a compatible value ([copy-constructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible) and [default-constructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible))  
    The function is equivalent to executing  
@@ -21,7 +21,8 @@ This function converts a [fkyaml::basic_node](./index.md) to either
    return ret;
    ```
    This library implements conversions from a node to a number of STL container types and scalar types. (see the notes down below)  
-   Note that ValueType cannot be either a reference, pointer or C-style array type except `std::nullptr_t`.  
+   Note that ValueType cannot be either a reference, pointer or C-style array type except `std::nullptr_t` since safe conversion is impossible with such types.  
+   If you want to convert a node into a C-style array, consider using the [`get_value_inplace`](./get_value_inplace.md) function instead.
 2. a [fkyaml::basic_node](./index.md) object  
    The function is equivalent to executing  
    ```cpp
@@ -35,15 +36,15 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
     This library implements conversions from a sequence node to a number of STL container types whose element type is not a key-value pair. The implementation can be used for custom container types, but they need to have both `iterator` member type and `insert()` member function. The test suite confirms successful conversions to the following types.
     
-    * std::vector, std::deque, std::list *(sequence containers)*
-    * std::set, std::multiset *(associative containers for keys)*
-    * std::unordered_set, std::unordered_multiset *(unordered associative containers for keys)*
+    * [std::vector](https://en.cppreference.com/w/cpp/container/vector), [std::deque](https://en.cppreference.com/w/cpp/container/deque), [std::list](https://en.cppreference.com/w/cpp/container/list) *(sequence containers)*
+    * [std::set](https://en.cppreference.com/w/cpp/container/set), [std::multiset](https://en.cppreference.com/w/cpp/container/multiset) *(associative containers for keys)*
+    * [std::unordered_set](https://en.cppreference.com/w/cpp/container/unordered_set), [std::unordered_multiset](https://en.cppreference.com/w/cpp/container/unordered_multiset) *(unordered associative containers for keys)*
 
     And you can also convert to these types which do not have `insert()` member function though.
 
-    * std::array, std::valarray *(sequence containers)*
-    * std::stack, std::queue, std::priority_queue *(sequence container adapters)*
-    * std::pair, std::tuple
+    * [std::array](https://en.cppreference.com/w/cpp/container/array), [std::valarray](https://en.cppreference.com/w/cpp/numeric/valarray) *(sequence containers)*
+    * [std::stack](https://en.cppreference.com/w/cpp/container/stack), [std::queue](https://en.cppreference.com/w/cpp/container/queue), [std::priority_queue](https://en.cppreference.com/w/cpp/container/priority_queue) *(sequence container adapters)*
+    * [std::pair](https://en.cppreference.com/w/cpp/utility/pair), [std::tuple](https://en.cppreference.com/w/cpp/utility/tuple)
 
     Note that the above types cannot be converted from a non-sequence node, which results in throwing a [type_error](../exception/type_error.md).
 
@@ -51,8 +52,8 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
     This library implements conversions from a mapping node to STL container types whose element type is a key-value pair. The implementation can be used for custom container types, but they need to have `key_type`, `mapped_type` and `value_type` member types and `emplace()` member function. The test suite confirms successful conversions to the following types.
 
-    * std::map, std::multimap *(associative containers for key-value pairs)*
-    * std::unordered_map, std::unordered_multi_map *(unordered associative containers for key-value pairs)*
+    * [std::map](https://en.cppreference.com/w/cpp/container/map), [std::multimap](https://en.cppreference.com/w/cpp/container/multimap) *(associative containers for key-value pairs)*
+    * [std::unordered_map](https://en.cppreference.com/w/cpp/container/unordered_map), [std::unordered_multi_map](https://en.cppreference.com/w/cpp/container/unordered_multimap) *(unordered associative containers for key-value pairs)*
 
 ???+ Note "Convert from a Null or Numeric Scalar Node"
 
@@ -78,8 +79,12 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
     String scalar nodes can be converted to STL container types which can be constructible from `const fkyaml::basic_node::string_type&` (`const std::string&` by default). The test suite confirms successful conversions to the following types.
 
-    * std::string
-    * std::string_view (from C++17)
+    * [std::string](https://en.cppreference.com/w/cpp/string/basic_string)
+    * [std::string_view](https://en.cppreference.com/w/cpp/string/basic_string_view) (from C++17)
+
+???+ Note "Convert as an optional value"
+
+    Since C++17, [std::optional](https://en.cppreference.com/w/cpp/utility/optional) can be used as `ValueType` to indicate the conversion result to be optional. In such cases, a returned [std::optional](https://en.cppreference.com/w/cpp/utility/optional) value contains a value only if the conversion was successful, or [`std::nullopt`](https://en.cppreference.com/w/cpp/utility/optional/nullopt) otherwise.
 
 ## **Template Parameters**
 
@@ -112,5 +117,6 @@ A compatible native data value converted from the [basic_node](./index.md) objec
 ## **See Also**
 
 * [basic_node](index.md)
+* [get_value_inplace](get_value_inplace.md)
 * [get_value_ref](get_value_ref.md)
 * [node_value_converter::from_node](../node_value_converter/from_node.md)

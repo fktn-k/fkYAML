@@ -123,6 +123,7 @@ nav:
           - get_tag_name: api/basic_node/get_tag_name.md
           - get_type: api/basic_node/get_type.md
           - get_value: api/basic_node/get_value.md
+          - get_value_inplace: api/basic_node/get_value_inplace.md
           - get_value_ref: api/basic_node/get_value_ref.md
           - get_yaml_version: api/basic_node/get_yaml_version.md
           - get_yaml_version_type: api/basic_node/get_yaml_version_type.md

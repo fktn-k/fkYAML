@@ -63,8 +63,6 @@ using is_sequence_container_adapter = conjunction<
 template <typename ContainerType, typename = void>
 struct call_reserve_if_available {
     /// @brief Do nothing since ContainerType does not have reserve function.
-    /// @param
-    /// @param
     static void call(ContainerType& /*unused*/, typename ContainerType::size_type /*unused*/) {
     }
 };
@@ -83,6 +81,75 @@ struct call_reserve_if_available<ContainerType, enable_if_t<detect::has_reserve<
 
 // from_node() implementations
 
+/// @brief from_node function for C-style 1D arrays whose element type must be a basic_node template instance type or a
+/// compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T Element type of C-style 1D array.
+/// @tparam N Size of the array.
+/// @param n A basic_node object.
+/// @param array An array object.
+template <typename BasicNodeType, typename T, std::size_t N>
+inline auto from_node(const BasicNodeType& n, T (&array)[N])
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value type is not sequence type.", n.get_type());
+    }
+
+    // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+    for (std::size_t i = 0; i < N; i++) {
+        n.at(i).get_value_inplace(array[i]);
+    }
+}
+
+/// @brief from_node function for C-style 2D arrays whose element type must be a basic_node template instance type or a
+/// compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T Element type of C-style 2D array.
+/// @tparam N0 Size of the outer dimension.
+/// @tparam N1 Size of the inner dimension.
+/// @param n A basic_node object.
+/// @param array An array object.
+template <typename BasicNodeType, typename T, std::size_t N0, std::size_t N1>
+inline auto from_node(const BasicNodeType& n, T (&array)[N0][N1])
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value type is not sequence type.", n.get_type());
+    }
+
+    // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+    for (std::size_t i0 = 0; i0 < N0; i0++) {
+        for (std::size_t i1 = 0; i1 < N1; i1++) {
+            n.at(i0).at(i1).get_value_inplace(array[i0][i1]);
+        }
+    }
+}
+
+/// @brief from_node function for C-style 2D arrays whose element type must be a basic_node template instance type or a
+/// compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T Element type of C-style 2D array.
+/// @tparam N0 Size of the outermost dimension.
+/// @tparam N1 Size of the middle dimension.
+/// @tparam N2 Size of the innermost dimension.
+/// @param n A basic_node object.
+/// @param array An array object.
+template <typename BasicNodeType, typename T, std::size_t N0, std::size_t N1, std::size_t N2>
+inline auto from_node(const BasicNodeType& n, T (&array)[N0][N1][N2])
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value type is not sequence type.", n.get_type());
+    }
+
+    // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+    for (std::size_t i0 = 0; i0 < N0; i0++) {
+        for (std::size_t i1 = 0; i1 < N1; i1++) {
+            for (std::size_t i2 = 0; i2 < N2; i2++) {
+                n.at(i0).at(i1).at(i2).get_value_inplace(array[i0][i1][i2]);
+            }
+        }
+    }
+}
+
 /// @brief from_node function for std::array objects whose element type must be a basic_node template instance type or a
 /// compatible type. This function is necessary since insert function is not implemented for std::array.
 /// @tparam BasicNodeType A basic_node template instance type.
@@ -91,14 +158,15 @@ struct call_reserve_if_available<ContainerType, enable_if_t<detect::has_reserve<
 /// @param n A basic_node object.
 /// @param arr A std::array object.
 template <typename BasicNodeType, typename T, std::size_t N>
-inline auto from_node(const BasicNodeType& n, std::array<T, N>& arr) -> decltype(n.template get_value<T>(), void()) {
+inline auto from_node(const BasicNodeType& n, std::array<T, N>& arr)
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
 
-    std::size_t count = std::min(n.size(), N);
-    for (std::size_t i = 0; i < count; i++) {
-        arr.at(i) = n.at(i).template get_value<T>();
+    for (std::size_t i = 0; i < N; i++) {
+        // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+        n.at(i).get_value_inplace(arr.at(i));
     }
 }
 
@@ -109,7 +177,8 @@ inline auto from_node(const BasicNodeType& n, std::array<T, N>& arr) -> decltype
 /// @param n A basic_node object.
 /// @param va A std::valarray object.
 template <typename BasicNodeType, typename T>
-inline auto from_node(const BasicNodeType& n, std::valarray<T>& va) -> decltype(n.template get_value<T>(), void()) {
+inline auto from_node(const BasicNodeType& n, std::valarray<T>& va)
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
@@ -117,7 +186,8 @@ inline auto from_node(const BasicNodeType& n, std::valarray<T>& va) -> decltype(
     std::size_t count = n.size();
     va.resize(count);
     for (std::size_t i = 0; i < count; i++) {
-        va[i] = n.at(i).template get_value<T>();
+        // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+        n.at(i).get_value_inplace(va[i]);
     }
 }
 
@@ -161,7 +231,7 @@ template <
     enable_if_t<
         conjunction<is_basic_node<BasicNodeType>, is_sequence_container_adapter<SeqContainerAdapter>>::value, int> = 0>
 inline auto from_node(const BasicNodeType& n, SeqContainerAdapter& ca)
-    -> decltype(n.template get_value<typename SeqContainerAdapter::value_type>(), ca.emplace(std::declval<typename SeqContainerAdapter::value_type>()), void()) {
+    -> decltype(n.template get_value<typename SeqContainerAdapter::value_type>(), ca.push(std::declval<typename SeqContainerAdapter::value_type>()), void()) {
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value is not sequence type.", n.get_type());
     }
@@ -479,7 +549,9 @@ inline auto from_node(const BasicNodeType& n, std::pair<T, U>& p)
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
 
-    p = {n.at(0).template get_value<T>(), n.at(1).template get_value<U>()};
+    // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+    n.at(0).get_value_inplace(p.first);
+    n.at(1).get_value_inplace(p.second);
 }
 
 /// @brief concrete implementation of from_node function for std::tuple objects.
