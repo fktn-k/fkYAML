@@ -11,6 +11,7 @@
 
 #include <array>
 #include <cmath>
+#include <forward_list>
 #include <limits>
 #include <utility>
 #include <valarray>
@@ -191,6 +192,30 @@ inline auto from_node(const BasicNodeType& n, std::valarray<T>& va)
     }
 }
 
+/// @brief from_node function for std::forward_list objects whose element type must be a basic_node template instance
+/// type or a compatible type. This function is necessary since insert function is not implemented for
+/// std::forward_list.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T Element type of std::forward_list.
+/// @tparam Alloc Allocator type of std::forward_list.
+/// @param n A basic_node object.
+/// @param fl A std::forward_list object.
+template <typename BasicNodeType, typename T, typename Alloc>
+inline auto from_node(const BasicNodeType& n, std::forward_list<T, Alloc>& fl)
+    -> decltype(n.template get_value<T>(), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value is not sequence type.", n.get_type());
+    }
+
+    fl.clear();
+
+    // std::forward_list does not have insert function.
+    auto insert_pos_itr = fl.before_begin();
+    for (const auto& elem : n) {
+        insert_pos_itr = fl.emplace_after(insert_pos_itr, elem.template get_value<T>());
+    }
+}
+
 /// @brief from_node function for container objects of only keys or values, e.g., std::vector or std::set, whose element
 /// type must be a basic_node template instance type or a compatible type.
 /// @tparam BasicNodeType A basic_node template instance type.
@@ -209,6 +234,8 @@ inline auto from_node(const BasicNodeType& n, CompatSeqType& s)
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value is not sequence type.", n.get_type());
     }
+
+    s.clear();
 
     // call reserve function first if it's available (like std::vector).
     call_reserve_if_available<CompatSeqType>::call(s, n.size());
@@ -234,6 +261,11 @@ inline auto from_node(const BasicNodeType& n, SeqContainerAdapter& ca)
     -> decltype(n.template get_value<typename SeqContainerAdapter::value_type>(), ca.push(std::declval<typename SeqContainerAdapter::value_type>()), void()) {
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value is not sequence type.", n.get_type());
+    }
+
+    // clear existing elements manually since clear function is not implemeneted for container adapter classes.
+    while (!ca.empty()) {
+        ca.pop();
     }
 
     for (const auto& elem : n) {
@@ -262,6 +294,7 @@ inline auto from_node(const BasicNodeType& n, CompatMapType& m)
         throw type_error("The target node value type is not mapping type.", n.get_type());
     }
 
+    m.clear();
     call_reserve_if_available<CompatMapType>::call(m, n.size());
 
     for (const auto& pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {

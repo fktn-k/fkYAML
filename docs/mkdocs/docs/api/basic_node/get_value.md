@@ -36,15 +36,26 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
     This library implements conversions from a sequence node to a number of STL container types whose element type is not a key-value pair. The implementation can be used for custom container types, but they need to have both `iterator` member type and `insert()` member function. The test suite confirms successful conversions to the following types.
     
-    * [std::vector](https://en.cppreference.com/w/cpp/container/vector), [std::deque](https://en.cppreference.com/w/cpp/container/deque), [std::list](https://en.cppreference.com/w/cpp/container/list) *(sequence containers)*
-    * [std::set](https://en.cppreference.com/w/cpp/container/set), [std::multiset](https://en.cppreference.com/w/cpp/container/multiset) *(associative containers for keys)*
-    * [std::unordered_set](https://en.cppreference.com/w/cpp/container/unordered_set), [std::unordered_multiset](https://en.cppreference.com/w/cpp/container/unordered_multiset) *(unordered associative containers for keys)*
-
-    And you can also convert to these types which do not have `insert()` member function though.
-
-    * [std::array](https://en.cppreference.com/w/cpp/container/array), [std::valarray](https://en.cppreference.com/w/cpp/numeric/valarray) *(sequence containers)*
-    * [std::stack](https://en.cppreference.com/w/cpp/container/stack), [std::queue](https://en.cppreference.com/w/cpp/container/queue), [std::priority_queue](https://en.cppreference.com/w/cpp/container/priority_queue) *(sequence container adapters)*
-    * [std::pair](https://en.cppreference.com/w/cpp/utility/pair), [std::tuple](https://en.cppreference.com/w/cpp/utility/tuple)
+    * *Sequence Containers*
+        * [std::array](https://en.cppreference.com/w/cpp/container/array)
+        * [std::vector](https://en.cppreference.com/w/cpp/container/vector)
+        * [std::deque](https://en.cppreference.com/w/cpp/container/deque)
+        * [std::forward_list](https://en.cppreference.com/w/cpp/container/forward_list)
+        * [std::list](https://en.cppreference.com/w/cpp/container/list)
+    * *Associative Containers for Keys*
+        * [std::set](https://en.cppreference.com/w/cpp/container/set)
+        * [std::multiset](https://en.cppreference.com/w/cpp/container/multiset)
+    * *Unordered Associative Containers for Keys*
+        * [std::unordered_set](https://en.cppreference.com/w/cpp/container/unordered_set)
+        * [std::unordered_multiset](https://en.cppreference.com/w/cpp/container/unordered_multiset)
+    * *Container Adapters*
+        * [std::stack](https://en.cppreference.com/w/cpp/container/stack)
+        * [std::queue](https://en.cppreference.com/w/cpp/container/queue)
+        * [std::priority_queue](https://en.cppreference.com/w/cpp/container/priority_queue)
+    * *Others*
+        * [std::valarray](https://en.cppreference.com/w/cpp/numeric/valarray)
+        * [std::pair](https://en.cppreference.com/w/cpp/utility/pair)
+        * [std::tuple](https://en.cppreference.com/w/cpp/utility/tuple)
 
     Note that the above types cannot be converted from a non-sequence node, which results in throwing a [type_error](../exception/type_error.md).
 
@@ -52,8 +63,12 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
     This library implements conversions from a mapping node to STL container types whose element type is a key-value pair. The implementation can be used for custom container types, but they need to have `key_type`, `mapped_type` and `value_type` member types and `emplace()` member function. The test suite confirms successful conversions to the following types.
 
-    * [std::map](https://en.cppreference.com/w/cpp/container/map), [std::multimap](https://en.cppreference.com/w/cpp/container/multimap) *(associative containers for key-value pairs)*
-    * [std::unordered_map](https://en.cppreference.com/w/cpp/container/unordered_map), [std::unordered_multi_map](https://en.cppreference.com/w/cpp/container/unordered_multimap) *(unordered associative containers for key-value pairs)*
+    * *Associative Containers for Key-Value Pairs*
+        * [std::map](https://en.cppreference.com/w/cpp/container/map)
+        * [std::multimap](https://en.cppreference.com/w/cpp/container/multimap)
+    * *Unordered Associative Containers for Key-Value Pairs*
+        * [std::unordered_map](https://en.cppreference.com/w/cpp/container/unordered_map)
+        * [std::unordered_multi_map](https://en.cppreference.com/w/cpp/container/unordered_multimap) *(unordered associative containers for key-value pairs)*
 
 ???+ Note "Convert from a Null or Numeric Scalar Node"
 
