@@ -2512,6 +2512,30 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
             REQUIRE(valarray_bool_inplace[1] == false);
         }
 
+        SECTION("sequence value (std::forward_list)") {
+            auto forward_list_node = node.get_value<std::forward_list<fkyaml::node>>();
+            REQUIRE(forward_list_node.begin()->is_boolean());
+            REQUIRE(forward_list_node.begin()->get_value<bool>() == true);
+            REQUIRE((std::next(forward_list_node.begin()))->is_boolean());
+            REQUIRE((std::next(forward_list_node.begin()))->get_value<bool>() == false);
+
+            std::forward_list<fkyaml::node> forward_list_node_inplace {};
+            node.get_value_inplace(forward_list_node_inplace);
+            REQUIRE(forward_list_node_inplace.begin()->is_boolean());
+            REQUIRE(forward_list_node_inplace.begin()->get_value<bool>() == true);
+            REQUIRE((std::next(forward_list_node_inplace.begin()))->is_boolean());
+            REQUIRE((std::next(forward_list_node_inplace.begin()))->get_value<bool>() == false);
+
+            auto forward_list_bool = node.get_value<std::forward_list<bool>>();
+            REQUIRE(*forward_list_bool.begin() == true);
+            REQUIRE(*std::next(forward_list_bool.begin()) == false);
+
+            std::forward_list<bool> forward_list_bool_inplace {};
+            node.get_value_inplace(forward_list_bool_inplace);
+            REQUIRE(*forward_list_bool_inplace.begin() == true);
+            REQUIRE(*std::next(forward_list_bool_inplace.begin()) == false);
+        }
+
         SECTION("sequence value (std::deque)") {
             auto deque_node = node.get_value<std::deque<fkyaml::node>>();
             REQUIRE(deque_node.size() == 2);
@@ -2693,6 +2717,8 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
             REQUIRE(stack_bool.top() == true);
 
             std::stack<bool> stack_bool_inplace {};
+            stack_bool_inplace.push(true);
+            stack_bool_inplace.push(false);
             node.get_value_inplace(stack_bool_inplace);
             REQUIRE(stack_bool_inplace.size() == 2);
             REQUIRE(stack_bool_inplace.top() == false);
@@ -2900,6 +2926,27 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
             REQUIRE(umap_compat_inplace.at("test") == 123);
             REQUIRE(umap_compat_inplace.find("foo") != umap_compat_inplace.end());
             REQUIRE(umap_compat_inplace.at("foo") == -456);
+
+            fkyaml::node mapping {
+                {{123, 456, 789}, nullptr},
+                {{{true, false}}, nullptr},
+                {nullptr, nullptr},
+                {true, nullptr},
+                {123, nullptr},
+                {3.14, nullptr},
+                {"foo", nullptr}};
+            auto umap_various_keys = mapping.get_value<std::unordered_map<fkyaml::node, fkyaml::node>>();
+            REQUIRE(umap_various_keys.size() == 7);
+            REQUIRE(umap_various_keys.find({123, 456, 789}) != umap_various_keys.end());
+            REQUIRE(umap_various_keys.find({{true, false}}) != umap_various_keys.end());
+            REQUIRE(umap_various_keys.find(nullptr) != umap_various_keys.end());
+            REQUIRE(umap_various_keys.find(true) != umap_various_keys.end());
+            REQUIRE(umap_various_keys.find(123) != umap_various_keys.end());
+            REQUIRE(umap_various_keys.find(3.14) != umap_various_keys.end());
+            REQUIRE(umap_various_keys.find("foo") != umap_various_keys.end());
+            for (auto itr : umap_various_keys) {
+                REQUIRE(itr.second.is_null());
+            }
         }
 
         SECTION("mapping value (std::unordered_multimap)") {
@@ -2956,9 +3003,16 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
 
         SECTION("non-mapping values") {
             REQUIRE_THROWS_AS(node.get_value<fkyaml::node::sequence_type>(), fkyaml::type_error);
+            int dummy_array_1d[2] {};
+            REQUIRE_THROWS_AS(node.get_value_inplace(dummy_array_1d), fkyaml::type_error);
+            int dummy_array_2d[2][2] {};
+            REQUIRE_THROWS_AS(node.get_value_inplace(dummy_array_2d), fkyaml::type_error);
+            int dummy_array_3d[2][2][2] {};
+            REQUIRE_THROWS_AS(node.get_value_inplace(dummy_array_3d), fkyaml::type_error);
             using array_t = std::array<int, 2>;
             REQUIRE_THROWS_AS(node.get_value<array_t>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<std::valarray<double>>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.get_value<std::forward_list<int>>(), fkyaml::type_error);
             REQUIRE_THROWS_AS(node.get_value<std::stack<int>>(), fkyaml::type_error);
             using pair_t = std::pair<bool, int>;
             REQUIRE_THROWS_AS(node.get_value<pair_t>(), fkyaml::type_error);
