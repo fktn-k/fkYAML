@@ -6,18 +6,13 @@
 bool is_scalar() const noexcept;
 ```
 
-Tests whether the node value type is one of the followings:  
-* [`node_t::NULL_OBJECT`](node_t.md)
-* [`node_t::BOOLEAN`](node_t.md)
-* [`node_t::INTEGER`](node_t.md)
-* [`node_t::FLOAT_NUMBER`](node_t.md)
-* [`node_t::STRING`](node_t.md)
+Tests whether the node is a scalar node: either a null, boolean, integer, floating point or string node.
 
 ### **Return Value**
 
-`true` if the type is a scalar type, `false` otherwise.  
+`true` if the node is a scalar node, `false` otherwise.  
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_is_scalar.cpp:9"
@@ -30,4 +25,4 @@ Tests whether the node value type is one of the followings:
 
 ### **See Also**
 
-* [node_t](node_t.md)
+* [node_type](../node_type.md)

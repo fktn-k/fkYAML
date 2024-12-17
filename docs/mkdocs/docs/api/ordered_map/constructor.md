@@ -11,16 +11,14 @@ ordered_map(std::initializer_list<value_type> init); // (2)
 Constructs a new ordered_map.  
 You can specify the initial value on constructing an ordered_map with an overloaded constructor.  
 
-## Overload (1)
+## **Parameters**
 
-```cpp
-ordered_map(); // (1)
-```
+***`init`*** [in]
+:   An initializer list of key-value pairs.
 
-Constructs an ordered_map object without an initial value.  
-The content of a newly constructed ordered_map is an empty list of key-value pairs.  
+## Examples
 
-???+ Example
+??? Example "Overload(1): create a default value."
 
     ```cpp
     --8<-- "examples/ex_ordered_map_constructor_noarg.cpp:9"
@@ -31,21 +29,7 @@ The content of a newly constructed ordered_map is an empty list of key-value pai
     --8<-- "examples/ex_ordered_map_constructor_noarg.output"
     ```
 
-## Overload (2)
-
-```cpp
-ordered_map(std::initializer_list<value_type> init); // (2)
-```
-
-Constructs a new ordered_map with an initializer list.  
-The resulting ordered_map object has the same list of key-value pairs as the given initializer list.  
-
-## **Parameters**
-
-***`init`*** [in]
-:   An initializer list of key-value pairs.
-
-???+ Example
+??? Example "Overload(2): create an ordered_map object with an initializer list"
 
     ```cpp
     --8<-- "examples/ex_ordered_map_constructor_initializer_list.cpp:9"

@@ -12,7 +12,7 @@ Tests whether the node is an anchor node.
 
 `true` if the node is an anchor node, `false` otherwise.  
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_is_anchor.cpp:9"

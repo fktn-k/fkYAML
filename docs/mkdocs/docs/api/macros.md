@@ -14,7 +14,7 @@ These macros are available for client applications as the metadata of this libra
 | FK_YAML_MINOR_VERSION | the minor version of the fkYAML library |
 | FK_YAML_PATCH_VERSION | the patch version of the fkYAML library |
 
-??? Example annotate "Example: print the library version"
+??? Example "print the library version"
 
     ```cpp
     --8<-- "examples/ex_macros_versions.cpp:9"
@@ -42,16 +42,16 @@ You can also override the implementation by defining the following preprocessor 
 | ----------------- | ---------------------------------------- |
 | FK_YAML_ASSERT(x) | controls behavior of runtime assertions. |
 
-??? Example annotate "Example: disable runtime assertions"
+??? Example "disable runtime assertions"
 
     ```cpp
-    #define NDEBUG
+    #define FK_YAML_ASSERT(x)
     #include <fkYAML/node.hpp>
 
     // your code from here
     ```
 
-??? Example annotate "Example: override the implementation of runtime assertions"
+??? Example "override the implementation of runtime assertions"
 
     ```cpp
     #include <cstdio>
@@ -66,7 +66,7 @@ You can also override the implementation by defining the following preprocessor 
 ## Language Supports
 
 The fkYAML library targets C++11, but also supports some features introduced in later C++ standards.  
-For those new features, the library implements some preprocessor checks to determine the active C++ standard based on preprocessor macros `__cplusplus` and `_MSVC_LANG`.  
+For such features, the library implements some preprocessor checks to determine the active C++ standard based on preprocessor macros `__cplusplus` or `_MSVC_LANG`.  
 By defining any of the following macros, the internal check is overridden and the provided C++ standard is unconditionally assumed.  
 This can be helpful for compilers that only implement parts of the standard and the standard would be detected incorrectly.  
 
@@ -78,7 +78,7 @@ This can be helpful for compilers that only implement parts of the standard and 
 | FK_YAML_HAS_CXX_20 | supports C++20 features.                  |
 | FK_YAML_HAS_CXX_23 | supports C++23 features.                  |
 
-??? Example annotate "Example: force the fkYAML library to use a specific C++ standard"
+??? Example "force enabling features in specific C++ standard"
 
     ```cpp
     // force fkYAML to use the C++14 standard.

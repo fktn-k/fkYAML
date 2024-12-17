@@ -3,14 +3,10 @@
 # <small>fkyaml::ordered_map::</small>find
 
 ```cpp
-template <
-    typename KeyType,
-    detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+template <typename KeyType>
 iterator find(KeyType&& key) noexcept;
 
-template <
-    typename KeyType,
-    detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+template <typename KeyType>
 const_iterator find(KeyType&& key) const noexcept;
 ```
 
@@ -28,9 +24,11 @@ Find a value with the given key.
 
 ## **Return Value**
 
-An iterator to the target value if found, the result of end() otherwise.  
+A (constant) iterator to the target value if found, the result of end() otherwise.  
 
-???+ Example
+## Examples
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_ordered_map_emplace.cpp:9"

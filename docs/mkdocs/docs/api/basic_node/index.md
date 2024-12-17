@@ -63,6 +63,7 @@ This class provides features to handle YAML nodes.
 | Name                                            | Description                                                         |
 | ----------------------------------------------- | ------------------------------------------------------------------- |
 | [value_converter_type](value_converter_type.md) | The type used to convert between node and native data.              |
+| initializer_list_t                              | The type for initializer lists of `basic_node` values.              |
 | [node_t](node_t.md)                             | **(DEPRECATED)** The type used to store the internal value type.    |
 | [yaml_version_t](yaml_version_t.md)             | **(DEPRECATED)** The type used to store the enable version of YAML. |
 

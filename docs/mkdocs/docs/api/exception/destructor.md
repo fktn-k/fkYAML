@@ -3,7 +3,7 @@
 # <small>fkyaml::exception::</small>(destructor)
 
 ```cpp
-~exception() noexcept;
+~exception();
 ```
 
 Destroy an exception.

@@ -3,38 +3,38 @@
 # <small>fkyaml::basic_node::</small>contains
 
 ```cpp
-template <
-    typename KeyType, detail::enable_if_t<
-                            detail::conjunction<
-                                detail::negation<detail::is_basic_node<detail::remove_cvref_t<KeyType>>>,
-                                detail::is_node_compatible_type<basic_node, detail::remove_cvref_t<KeyType>>>::value,
-                            int> = 0>
-bool contains(KeyType&& key) const; // (1) A compatible key object with basic_node type
+template <typename KeyType>
+bool contains(KeyType&& key) const; // (1)
 
-template <
-    typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-bool contains(KeyType&& key) const; // (2) A basic_node object
+template <typename BasicNodeType>
+bool contains(BasicNodeType&& key) const; // (2)
 ```
 
-Checks if the YAML node has the given key.  
-If the node value is not a mapping, this API will throw an [`fkyaml::type_error`](../exception/type_error.md).  
-The `KeyType` can be a compatible type with [`fkyaml::basic_node`](index.md) or a kind of [`fkyaml::basic_node`](index.md) template class.
+Checks if the YAML node has the given key in the queried mapping.  
+If the node value is not a mapping, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.  
+
+The input parameter `key` must be either a [`basic_node`](index.md) obejct or an object of a compatible type, i.e., a type with which a [`basic_node`](index.md) object can be constructible.  
+Note that the overload (1) internally constructs a temporal [`basic_node`](index.md) object.  
+So, if you use the same key multiple times, for example, in a for loop, consider creating a [`basic_node`](index.md) as a key first for better performance.  
 
 ## **Template Parameters**
 
 ***KeyType***
-:   A type which is compatible with or a kind of [`fkyaml::basic_node`](index.md).
+:   A type with which a [`basic_node`](index.md) object can be constructible.
+
+***BasicNodeType***
+:   A basic_node template instance type.
 
 ## **Parameters**
 
 ***`key`*** [in]
-:   A key to the target value in the YAML mapping node value.
+:   A key to check existence in the queried mapping.
 
 ## **Return Value**
 
-`true` if the YAML node is a mapping and has the given key, `false` otherwise.  
+`true` if the key exists in the queried mapping, `false` otherwise.  
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_contains.cpp:9"

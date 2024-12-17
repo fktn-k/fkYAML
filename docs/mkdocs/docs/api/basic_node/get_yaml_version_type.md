@@ -6,18 +6,18 @@
 yaml_version_type get_yaml_version_type() const noexcept;
 ```
 
-Returns the version of the YAML format applied for the `basic_node` object.  
+Returns the YAML specification version applied to a `basic_node`.  
 
-### **Return Value**
+## **Return Value**
 
-The version of the YAML format applied to the basic_node object.
+The YAML specification version applied to a basic_node.
 
 | YAML version | Return Value                   |
 | ------------ | ------------------------------ |
 | 1.1          | yaml_version_type::VERSION_1_1 |
 | 1.2          | yaml_version_type::VERSION_1_2 |
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_get_yaml_version_type.cpp:9"

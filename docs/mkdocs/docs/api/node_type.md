@@ -36,7 +36,7 @@ This enumeration collects the different YAML value types. They are internally us
     * [`basic_node::float_number_type`](basic_node/float_number_type.md) for float number scalar values
     * [`basic_node::string_type`](basic_node/string_type.md) for string scalar values
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_node_type.cpp:9"

@@ -11,23 +11,20 @@ template <
     template <typename, typename = void> class ConverterType>
 inline void swap(
     basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& lhs,
-    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& rhs) noexcept(noexcept(lhs.swap(rhs))); // (2)
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& rhs) noexcept(noexcept(lhs.swap(rhs))); // (2) non-member function
 ```
 
 Swaps the internally stored data with the given basic_node object.
 
-## Overload (1)
+## **Parameters**
 
-```cpp
-void swap(basic_node& rhs) noexcept; // (1)
-```
+***`lhs`*** [in, out]
+:   A basic_node to swap the contents with.
 
-### **Parameters**
+***`rhs`*** [in, out]
+:   A basic_node to swap the contents with.
 
-***`rhs`*** [in]
-:   A basic_node object to be swapped with.
-
-???+ Example
+??? Example "member function: Swap the contents with another basic_node"
 
     ```cpp
     --8<-- "examples/ex_basic_node_swap_member.cpp:9"
@@ -38,27 +35,7 @@ void swap(basic_node& rhs) noexcept; // (1)
     --8<-- "examples/ex_basic_node_swap_member.output"
     ```
 
-## Overload (2)
-
-```cpp
-template <
-    template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
-    typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
-    template <typename, typename = void> class ConverterType>
-inline void swap(
-    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& lhs,
-    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>& rhs) noexcept(noexcept(lhs.swap(rhs))); // (2)
-```
-
-### **Parameters**
-
-***`lhs`*** [in]
-:   A left-hand-side basic_node object to be swapped with.
-
-***`rhs`***
-:   A right-hand-side basic_node object to be swapped with.
-
-???+ Example
+??? Example "non-member function: Swap the contents between basic_node objects"
 
     ```cpp
     --8<-- "examples/ex_basic_node_swap_std.cpp:9"

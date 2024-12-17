@@ -8,7 +8,7 @@ void set_yaml_version(const yaml_version_t version) noexcept;
 
 !!! warning "Deprecation"
 
-    The function [`#!cpp void set_yaml_version_type(const yaml_version_type)`](set_yaml_version_type.md) replaces the function `#!cpp void set_yaml_version(const basic_node::yaml_version_t)` which has been deprecated in version 0.3.12. It will be removed in version 0.4.0. Please replace calls like  
+    The function [`#!cpp void set_yaml_version_type(const yaml_version_type)`](set_yaml_version_type.md) replaces the function `#!cpp void set_yaml_version(const basic_node::yaml_version_t)` which has been deprecated in version 0.3.12. It will be removed in a future version. Please replace calls like  
     
     ```cpp
     n.set_yaml_version(fkyaml::node::yaml_version_t::VER_1_2);
@@ -20,14 +20,14 @@ void set_yaml_version(const yaml_version_t version) noexcept;
     n.set_yaml_version_type(fkyaml::yaml_version_type::VERSION_1_2);
     ```
 
-Sets a target YAML version to the `basic_node` object.  
+Sets a target YAML specification version to the `basic_node` object.  
 
 ### **Parameters**
 
 ***version*** [in]
 :   A target YAML version.
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_set_yaml_version.cpp:9"

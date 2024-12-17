@@ -8,11 +8,13 @@ using string_type = StringType;
 
 The type used to store integer node values and keys for mapping nodes.  
 
-To store string objects in [`basic_node`](index.md) class, the type is defined by the template parameter `StringType` which chooses the type to use for string objects.  
-If not explicitly specified, the default type `std::string` will be chosen.  
-Note that string objects are stored as pointers to the decided type in a [`basic_node`](index.md) so that the internal storage size will at most be 8 bytes.  
+The type is defined by the template parameter `StringType`.  
+If not explicitly specified, the default type `std::string` is defined.  
+With the decided type, string values are stored directly inside a [`basic_node`](index.md).  
 
-???+ Example
+Note that string objects are stored as a pointer to an allocated memory area on the heap in a [`basic_node`](index.md) so that the internal storage size will at most be 8 bytes.  
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_string_type.cpp:9"

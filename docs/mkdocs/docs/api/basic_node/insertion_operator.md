@@ -6,10 +6,9 @@
 inline std::ostream& operator<<(std::ostream& os, const basic_node& n);
 ```
 
-Extraction operator for basic_node template class.  
-Serializes YAML node values into an output stream.  
-This API is a wrapper of [`basic_node::serialize()`](serialize.md) function to simplify the implementation in the client code.  
-For more detailed descriptions, please visit the reference page for the [`basic_node::serialize()`](serialize.md) function.  
+Serializes a node value into an output stream.  
+This operator is a wrapper of the [`basic_node::serialize()`](serialize.md) function to simplify the implementation in the client code.  
+For details, please visit the documentation of the [`serialize()`](serialize.md) function.  
 
 ## **Template Parameters**
 
@@ -46,7 +45,7 @@ For more detailed descriptions, please visit the reference page for the [`basic_
 
 Reference to the output stream object `os`.  
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_insertion_operator.cpp:9"

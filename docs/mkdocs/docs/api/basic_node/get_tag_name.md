@@ -6,16 +6,17 @@
 const std::string& get_tag_name() const;
 ```
 
-Gets the tag name associated to the YAML node.  
+Gets a tag name associated to the YAML node.  
 Some tag name must be set before calling this API.  
-Calling [`has_tag_name`](has_tag_name.md) to see if the node has any tag name beforehand.
+Call [`has_tag_name`](has_tag_name.md) to see if the node has any tag name beforehand.  
+If no tag name has been set, an [`fkyaml::exception`](../exception/index.md) will be thrown.
 
 ## **Return Value**
 
 The tag name associated to the node.  
-If no tag name has been set, an [`fkyaml::exception`](../exception/index.md) will be thrown.
 
-???+ Example
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_get_tag_name.cpp:9"

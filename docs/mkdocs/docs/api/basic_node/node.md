@@ -6,9 +6,9 @@
 using node = basic_node<>;
 ```
 
-This type is the default specialization of the [basic_node](index.md) class which uses the standard template types.  
+This type is a specialization of the [basic_node](index.md) template class and uses the default template parameter types.  
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_node.cpp:9"

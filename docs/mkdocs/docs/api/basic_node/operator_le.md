@@ -6,20 +6,18 @@
 bool operator<=(const basic_node& rhs) const noexcept;
 ```
 
-Less-than-or-equal-to operator.  
 Check if `this` object is less than or equal to `rhs`.  
-The operator returns the result of `!(rhs < *this)`. (see [`operator<`](operator_lt.md))  
 
 ## **Parameters**
 
 ***`rhs`*** [in]
-:   A `basic_node` object to be compared with `this` object.
+:   A `basic_node` object to compare with.
 
 ## **Return Value**
 
 `true` if `this` is less than or equal to `rhs`, `false` otherwise.
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_operator_le.cpp:9"

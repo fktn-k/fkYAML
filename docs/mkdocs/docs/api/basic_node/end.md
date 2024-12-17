@@ -8,16 +8,16 @@ const_iterator end() const;
 const_iterator cend() const;
 ```
 
-Returns an iterator to the past-the-last element of a container node.  
-Throws a [`fkyaml::type_error`](../exception/type_error.md) if a basic_node is neither a sequence nor mapping node.  
+Returns a (constant) iterator to the past-the-last element of a container node.  
+If a basic_node is neither a sequence nor mapping, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.  
 
 ![Image from https://en.cppreference.com/w/cpp/iterator/end](../../img/range-begin-end.svg)
 
 ### **Return Value**
 
-An iterator to the past-the-last element of a container node.
+A (constant) iterator to the past-the-last element of a container node.
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_end.cpp:9"

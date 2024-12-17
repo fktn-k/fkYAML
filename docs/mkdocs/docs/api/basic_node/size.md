@@ -7,13 +7,13 @@ std::size_t size() const;
 ```
 
 Gets the size of a node value.  
-Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not have a conatiner nor string value.  
+Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node is neither a sequence, mapping nor string value.  
 
 ### **Return Value**
 
 The size of a node value.
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_size.cpp:9"

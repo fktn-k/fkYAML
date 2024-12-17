@@ -6,13 +6,13 @@
 bool is_float_number() const noexcept;
 ```
 
-Tests whether the node value type is [`node_t::FLOAT_NUMBER`](node_t.md).  
+Tests whether the node is a floating point value node.  
 
 ### **Return Value**
 
-`true` if the type is [`node_t::FLOAT_NUMBER`](node_t.md), `false` otherwise.  
+`true` if the node is a floating point value node, `false` otherwise.  
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_is_float_number.cpp:9"
@@ -25,4 +25,4 @@ Tests whether the node value type is [`node_t::FLOAT_NUMBER`](node_t.md).
 
 ### **See Also**
 
-* [node_t](node_t.md)
+* [node_type](../node_type.md)

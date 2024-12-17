@@ -9,17 +9,14 @@ explicit exception(const char* msg) noexcept; // (2)
 ```
 
 Constructs an exception object.   
-You can specify an error message on constructing an exception with an overloaded constructor.  
+You can specify an error message on constructing an object with an overloaded constructor.  
 
-## Overload (1)
+### **Parameters**
 
-```cpp
-exception() = default; // (1)
-```
+***`msg`*** [in]
+:   An error message for the exception. If `nullptr` is given, the resulting error message will be empty.
 
-Constructs an exception object without an error message.
-
-???+ Example
+??? Example "Overload(1): create a default value"
 
     ```cpp
     --8<-- "examples/ex_exception_constructor_noarg.cpp:9"
@@ -30,21 +27,7 @@ Constructs an exception object without an error message.
     --8<-- "examples/ex_exception_constructor_noarg.output"
     ```
 
-## Overloads (2)
-
-```cpp
-explicit exception(const char* msg) noexcept; // (2)
-```
-
-Constructs an exception with a given error message.  
-The given error message can be retrieved by calling [`exception::what()`](what.md) function.  
-
-### **Parameters**
-
-***`msg`*** [in]
-:   An error message for the exception. If `nullptr` is given, the resulting error message will be empty.
-
-???+ Example
+??? Example "Overload(2): create an object with an error message"
 
     ```cpp
     --8<-- "examples/ex_exception_constructor_msg.cpp:9"

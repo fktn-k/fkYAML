@@ -6,13 +6,13 @@
 bool is_integer() const noexcept;
 ```
 
-Tests whether the node value type is [`node_t::INTEGER`](node_t.md).  
+Tests whether the node is an integer node.  
 
 ### **Return Value**
 
-`true` if the type is [`node_t::INTEGER`](node_t.md), `false` otherwise.  
+`true` if the node is an integer node, `false` otherwise.  
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_is_integer.cpp:9"
@@ -25,4 +25,4 @@ Tests whether the node value type is [`node_t::INTEGER`](node_t.md).
 
 ### **See Also**
 
-* [node_t](node_t.md)
+* [node_type](../node_type.md)

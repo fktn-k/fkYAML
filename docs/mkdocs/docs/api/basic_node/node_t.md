@@ -17,7 +17,7 @@ enum class node_t
 
 !!! warning "Deprecation"
 
-    The enum class [`#!cpp fkyaml::node_type`](../node_type.md) replaces the type alias `#!cpp fkyaml::basic_node::node_t` which has been deprecated in version 0.3.12. It will be removed in version 0.4.0. Please replace usages like  
+    The enum class [`#!cpp fkyaml::node_type`](../node_type.md) replaces the type alias `#!cpp fkyaml::basic_node::node_t` which has been deprecated in version 0.3.12. It will be removed in a future version. Please replace usages like  
     
     ```cpp
     fkyaml::node::node_t t;
@@ -29,7 +29,7 @@ enum class node_t
     fkyaml::node_type t;
     ```
 
-This enumeration collects the different YAML value types. They are internally used to distinguish the stored values, and the functions [`is_sequence`](is_sequence.md), [`is_mapping`](is_mapping.md) and [`is_scalar`](is_scalar.md) (with [`is_null`](is_null.md), [`is_boolean`](is_boolean.md), [`is_integer`](is_integer.md), [`is_float_number`](is_float_number.md), [`is_string`](is_string.md)) rely on it.  
+This enumeration collects the different YAML value types.  
 
 !!! Note "Types of scalars"
 
@@ -40,7 +40,7 @@ This enumeration collects the different YAML value types. They are internally us
     * [`float_number_type`](float_number_type.md) for float number scalar values
     * [`string_type`](string_type.md) for string scalar values
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_node_t.cpp:9"

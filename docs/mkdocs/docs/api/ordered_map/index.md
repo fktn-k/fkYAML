@@ -21,12 +21,12 @@ This documentation only describes APIs which are not of the parent class [`std::
 
 ## Template Parameters
 
-| Template parameter | Description                                             | Derived type |
-|--------------------|---------------------------------------------------------|--------------|
-| `Key`              | type for sequence node value containers                 | key_type     |
-| `Value`            | type for mapping node value containers                  | mapped_type  |
-| `IgnoredCompare`   | type for boolean node values                            | -            |
-| `Allocator`        | type for integer node values                            | -            |
+| Template parameter | Description                          | Derived type |
+| ------------------ | ------------------------------------ | ------------ |
+| `Key`              | type for keys                        | key_type     |
+| `Value`            | type for values                      | mapped_type  |
+| `IgnoredCompare`   | placeholder type for key comparisons | -            |
+| `Allocator`        | type for allocators                  | -            |
 
 
 ## Member Types

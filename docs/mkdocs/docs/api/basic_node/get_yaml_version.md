@@ -8,7 +8,7 @@ yaml_version_t get_yaml_version() const noexcept;
 
 !!! warning "Deprecation"
 
-    The function [`#!cpp yaml_version_type get_yaml_version_type()`](set_yaml_version_type.md) replaces the function `#!cpp basic_node::yaml_version_t get_yaml_version()` which has been deprecated in version 0.3.12. It will be removed in version 0.4.0. Please replace calls like  
+    The function [`#!cpp yaml_version_type get_yaml_version_type()`](set_yaml_version_type.md) replaces the function `#!cpp basic_node::yaml_version_t get_yaml_version()` which has been deprecated in version 0.3.12. It will be removed in a future version. Please replace calls like  
     
     ```cpp
     fkyaml::node::yaml_version_t v = n.get_yaml_version();
@@ -19,18 +19,18 @@ yaml_version_t get_yaml_version() const noexcept;
     fkyaml::yaml_version_type v = n.get_yaml_version_type();
     ```
 
-Returns the version of the YAML format applied for the `basic_node` object.  
+Returns the YAML specification version applied for a `basic_node`.  
 
 ### **Return Value**
 
-The version of the YAML format applied to the basic_node object.
+The YAML specification version applied to a basic_node.
 
 | YAML version | Return Value            |
 | ------------ | ----------------------- |
 | 1.1          | yaml_version_t::VER_1_1 |
 | 1.2          | yaml_version_t::VER_1_2 |
 
-???+ Example
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_get_yaml_version.cpp:9"

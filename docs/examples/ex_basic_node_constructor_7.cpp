@@ -10,7 +10,12 @@
 #include <fkYAML/node.hpp>
 
 int main() {
-    fkyaml::node n({true, false});
+    // create a sequence.
+    fkyaml::node n = {true, false};
     std::cout << n << std::endl;
+
+    // create a mapping.
+    fkyaml::node n2 = {{"foo", 1024}};
+    std::cout << n2 << std::endl;
     return 0;
 }

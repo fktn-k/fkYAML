@@ -23,7 +23,7 @@ Note that the contents of the input stream must be encoded in either the UTF-8, 
 
 Reference to the input stream object `is`.  
 
-???+ Example
+??? Example
 
     ```yaml
     --8<-- "examples/input.yaml"
