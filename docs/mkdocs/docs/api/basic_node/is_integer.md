@@ -8,9 +8,11 @@ bool is_integer() const noexcept;
 
 Tests whether the node is an integer node.  
 
-### **Return Value**
+## **Return Value**
 
 `true` if the node is an integer node, `false` otherwise.  
+
+## **Examples**
 
 ??? Example
 
@@ -23,6 +25,6 @@ Tests whether the node is an integer node.
     --8<-- "examples/ex_basic_node_is_integer.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [node_type](../node_type.md)

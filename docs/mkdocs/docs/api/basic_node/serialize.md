@@ -56,6 +56,8 @@ This function serializes the given `node` parameter in the following format.
 
 The resulting string object of the serialization.
 
+## **Examples**
+
 ??? Example
 
     ```cpp

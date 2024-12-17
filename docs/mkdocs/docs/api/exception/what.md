@@ -8,6 +8,12 @@ const char* what() const noexcept;
 
 Returns an error message for an exception. If nothing, a non-null pointer to an empty string will be returned.  
 
+## **Return Value**
+
+An error message for an exception or a non-null pointer to an empty string.
+
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -19,6 +25,6 @@ Returns an error message for an exception. If nothing, a non-null pointer to an 
     --8<-- "examples/ex_exception_what.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [(constructor)](constructor.md)

@@ -36,7 +36,11 @@ Note that the `TargetType` must be default-constructible.
 ***`val`*** [out]
 :   A native data object to which the converted value is assigned.
 
-## Examples
+## **Return Value**
+
+A value of a compatible type converted from a basic_node.
+
+## **Examples**
 
 ??? Example
 

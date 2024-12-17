@@ -29,6 +29,8 @@ Check if `this` object is less than `rhs` according to the following rules:
 
 `true` if `this` is less than `rhs`, `false` otherwise.
 
+## **Examples**
+
 ??? Example
 
     ```cpp

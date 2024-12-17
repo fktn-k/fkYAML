@@ -17,6 +17,8 @@ Compares two `basic_node` objects for inequality.
 
 `true` if either types or values are not equal, `false` otherwise.
 
+## **Examples**
+
 ??? Example
 
     ```cpp

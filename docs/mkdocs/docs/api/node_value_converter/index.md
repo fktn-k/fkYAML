@@ -9,13 +9,13 @@ class node_value_converter;
 
 An ADL friendly converter between [basic_node](../basic_node/index.md) objects and native data objects.
 
-## Template Paramters
+## **Template Paramters**
 
 | Template parameter | Description                          |
 |--------------------|--------------------------------------|
 | `ValueType`        | The default target native data type. |
 
-## Member Functions
+## **Member Functions**
 
 ### Conversions
 

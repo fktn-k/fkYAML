@@ -35,6 +35,8 @@ Swaps the internally stored data with the given basic_node object.
     --8<-- "examples/ex_basic_node_swap_member.output"
     ```
 
+## **Examples**
+
 ??? Example "non-member function: Swap the contents between basic_node objects"
 
     ```cpp

@@ -55,6 +55,8 @@ This function therefore costs a bit more than [`operator[]`](operator[].md) due 
 
 (Constant) reference to the node value which is associated with the given key.
 
+## **Examples**
+
 ??? Example "Access an element with compatible keys"
 
     ```cpp

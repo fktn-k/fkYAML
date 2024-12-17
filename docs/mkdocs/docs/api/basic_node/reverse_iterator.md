@@ -10,7 +10,7 @@ using const_reverse_iterator = detail::reverse_iterator<const_iterator>;
 The types of non-const/const reverse iterators for [`basic_node`](index.md) containers.  
 They satisfies [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator) and are commonly used for sequence and mapping container nodes.  
 
-## Member Types
+## **Member Types**
 
 ### reverse_iterator
 | Type                | Definition                                                                                    |
@@ -32,12 +32,14 @@ They satisfies [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/n
 | `pointer`           | `const basic_node*`                                                                           |
 | `reference`         | `const basic_node&`                                                                           |
 
-## Member Functions
+## **Member Functions**
 
 | Name  | Description                                                                                                                                        |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | key   | Returns const reference to a key node of the current key-value pair.<br>`fkyaml::exception` is thrown if an iterator points to a sequence element. |
 | value | Returns reference to a sequence element if an element points to a sequence element, or a mapping value otherwise.                                  |
+
+## **Examples**
 
 ??? Example
 

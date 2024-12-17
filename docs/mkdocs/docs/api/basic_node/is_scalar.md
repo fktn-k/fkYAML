@@ -8,9 +8,11 @@ bool is_scalar() const noexcept;
 
 Tests whether the node is a scalar node: either a null, boolean, integer, floating point or string node.
 
-### **Return Value**
+## **Return Value**
 
 `true` if the node is a scalar node, `false` otherwise.  
+
+## **Examples**
 
 ??? Example
 
@@ -23,6 +25,6 @@ Tests whether the node is a scalar node: either a null, boolean, integer, floati
     --8<-- "examples/ex_basic_node_is_scalar.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [node_type](../node_type.md)

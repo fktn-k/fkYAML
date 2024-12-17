@@ -17,6 +17,8 @@ The YAML specification version applied to a basic_node.
 | 1.1          | yaml_version_type::VERSION_1_1 |
 | 1.2          | yaml_version_type::VERSION_1_2 |
 
+## **Examples**
+
 ??? Example
 
     ```cpp

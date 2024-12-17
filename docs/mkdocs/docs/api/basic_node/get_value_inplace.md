@@ -50,6 +50,8 @@ See the notes there for details.
 ***`value_ref`*** [out]
 :   A storage into which the conversion result is filled.
 
+## **Examples**
+
 ??? Example
 
     ```cpp

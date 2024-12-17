@@ -8,7 +8,7 @@ class exception : public std::exception;
 
 A basic exception class used in the fkYAML library.
 
-## Derived Classes
+## **Derived Classes**
 
 | Type                                    | Description                                          |
 | --------------------------------------- | ---------------------------------------------------- |
@@ -18,7 +18,7 @@ A basic exception class used in the fkYAML library.
 | [parse_error](parse_error.md)           | The exception indicating an error in parsing.        |
 | [type_error](type_error.md)             | The exception indicating an invalid type conversion. |
 
-## Member Functions
+## **Member Functions**
 
 ### Construction/Destruction
 

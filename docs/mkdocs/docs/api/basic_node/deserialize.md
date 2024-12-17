@@ -37,7 +37,7 @@ Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization pro
     In other words, if an input uses the Windows style as its line break format, there happens a copy of the input contents. So, the Unix style is recommended for better performance.  
     Currently, there is no way to restore the original line break style.  
 
-### **Template Parameters**
+## **Template Parameters**
 
 ***`InputType`***
 :   the type of a compatible input, for instance:
@@ -55,7 +55,7 @@ Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization pro
     * a pair of iterators such as return values of `std::string::begin()` and `std::string::end()`
     * a pair of pointers such as `ptr` and `ptr + len`
 
-### **Parameters**
+## **Parameters**
 
 ***`input`*** [in]
 :   An input source such as streams or arrays.
@@ -66,11 +66,11 @@ Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization pro
 ***`end`*** [in]
 :   An iterator to the past-the-last element of an input sequence
 
-### **Return Value**
+## **Return Value**
 
 The resulting `basic_node` object of deserialization.
 
-## Examples
+## **Examples**
 
 ??? Example "Example (a character array)"
 
@@ -120,7 +120,7 @@ The resulting `basic_node` object of deserialization.
     --8<-- "examples/ex_basic_node_deserialize_iterators.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [deserialize_docs](deserialize_docs.md)

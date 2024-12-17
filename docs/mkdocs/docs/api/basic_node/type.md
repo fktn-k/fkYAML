@@ -22,7 +22,7 @@ node_t type() const noexcept;
 
 Returns the type of the YAML node value.  
 
-### **Return Value**
+## **Return Value**
 
 The type of the YAML node value.
 
@@ -36,6 +36,8 @@ The type of the YAML node value.
 | floating point number | node_t::FLOAT_NUMBER |
 | string                | node_t::STRING       |
 
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -47,6 +49,6 @@ The type of the YAML node value.
     --8<-- "examples/ex_basic_node_type.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [node_t](node_t.md)

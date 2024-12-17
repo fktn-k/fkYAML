@@ -9,9 +9,11 @@ boolean empty() const;
 Tests whether the node value is empty.  
 If a basic_node is neither a sequence, mapping nor string, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.  
 
-### **Return Value**
+## **Return Value**
 
 `true` if the node value is empty, `false` otherwise.
+
+## **Examples**
 
 ??? Example
 

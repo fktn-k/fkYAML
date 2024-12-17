@@ -23,6 +23,8 @@ Note that the contents of the input stream must be encoded in either the UTF-8, 
 
 Reference to the input stream object `is`.  
 
+## **Examples**
+
 ??? Example
 
     ```yaml
@@ -38,7 +40,7 @@ Reference to the input stream object `is`.
     --8<-- "examples/ex_basic_node_extraction_operator.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [deserialize](deserialize.md)

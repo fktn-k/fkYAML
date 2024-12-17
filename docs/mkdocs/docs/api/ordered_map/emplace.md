@@ -24,7 +24,7 @@ Emplaces a new key-value pair if the given key does not exist in the ordered_map
 
 A pair consisting of an iterator to the inserted element or the already-existing element, and a boolean denoting the insertion took place (`true` if insertion happened, `false` otherwise).
 
-## Examples
+## **Examples**
 
 ??? Example
 

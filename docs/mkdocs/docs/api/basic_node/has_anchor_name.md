@@ -12,6 +12,8 @@ Check if the node has an anchor name.
 
 `true` if the node has an anchor name, `false` otherwise.  
 
+## **Examples**
+
 ??? Example
 
     ```cpp

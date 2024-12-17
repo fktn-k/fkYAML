@@ -14,10 +14,10 @@ It can be used by adding `#!cpp _yaml` to a string literal encoded in either UTF
 Calling this operator is equivalent with calling [`#!cpp fkyaml::basic_node::deserialize(s, s + n)`](basic_node/deserialize.md).
 
 This operator is declared in the namespace `fkyaml::literals::yaml_literals`, where both `literals` and `yaml_literals` are [inline namespaces](https://en.cppreference.com/w/cpp/language/namespace#Inline_namespaces).  
-Access to this operator can be gained with:  
+Access to this operator can therefore be gained with one of the followings:  
 
 * `#!cpp using namespace fkyaml::literals;`,
-* `#!cpp using namespace fkyaml::yaml_literals;`, or
+* `#!cpp using namespace fkyaml::yaml_literals;`
 * `#!cpp using namespace fkyaml::literals::yaml_literals;`
 
 ## **Parameters**
@@ -32,6 +32,8 @@ Access to this operator can be gained with:
 ## **Return Value**
 
 The resulting basic_node object deserialized from the input string `s`.  
+
+## **Examples**
 
 ??? Example
 

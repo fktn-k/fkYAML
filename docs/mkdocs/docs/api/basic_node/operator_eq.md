@@ -20,6 +20,8 @@ Compares two `basic_node` objects for equality according to the following rules:
 
 `true` if both basic_node objects are equal, `false` otherwise.
 
+## **Examples**
+
 ??? Example
 
     ```cpp

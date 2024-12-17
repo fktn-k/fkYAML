@@ -26,6 +26,8 @@ Note that mapping values are stored as a pointer to an allocated memory area on 
     using ordered_node = basic_node<std::vector, fkyaml::ordered_map>;
     ```
 
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -37,7 +39,7 @@ Note that mapping values are stored as a pointer to an allocated memory area on 
     --8<-- "examples/ex_basic_node_mapping_type.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [ordered_map](../ordered_map/index.md)

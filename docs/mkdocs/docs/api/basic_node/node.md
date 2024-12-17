@@ -8,6 +8,8 @@ using node = basic_node<>;
 
 This type is a specialization of the [basic_node](index.md) template class and uses the default template parameter types.  
 
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -19,7 +21,7 @@ This type is a specialization of the [basic_node](index.md) template class and u
     --8<-- "examples/ex_basic_node_node.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [operator<<](insertion_operator.md)

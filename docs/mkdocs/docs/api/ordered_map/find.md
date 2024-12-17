@@ -26,7 +26,7 @@ Find a value with the given key.
 
 A (constant) iterator to the target value if found, the result of end() otherwise.  
 
-## Examples
+## **Examples**
 
 ??? Example
 

@@ -27,6 +27,8 @@ Just as the [`serialize()`](serialize.md) function does, fkYAML unconditionally 
 
 The resulting string object of the serialization.
 
+## **Examples**
+
 ??? Example
 
     ```cpp

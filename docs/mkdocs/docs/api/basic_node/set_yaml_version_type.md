@@ -8,10 +8,12 @@ void set_yaml_version_type(const yaml_version_type version) noexcept;
 
 Sets a target YAML specification version to the `basic_node` object.  
 
-### **Parameters**
+## **Parameters**
 
 ***version*** [in]
 :   A target YAML version.
+
+## **Examples**
 
 ??? Example
 

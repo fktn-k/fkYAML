@@ -90,7 +90,7 @@ Available overloads are:
 
         `#!cpp fkyaml::node n {true};` will create a sequence of 1 boolean value, not a boolean value alone. This is because [overload resolution in C++ prioritizes a constructor with a single initializer list argument is prioritized to the others](https://en.cppreference.com/w/cpp/language/overload_resolution). In such cases, change the code to `#! fkyaml::node n(true);` instead.
 
-## Template Parameters
+## **Template Parameters**
 
 ***CompatibleType***
 :   A type such that `ConverterType<U>` has a `to_node` function.
@@ -98,7 +98,7 @@ Available overloads are:
 ***U***
 :   A type referred to by `ValueType` with its topmost cv-qualifiers removed.
 
-## Parameters
+## **Parameters**
 
 ***`type`*** [in]
 :   the type of the value to create
@@ -112,7 +112,7 @@ Available overloads are:
 ***`init`*** [in]
 :   initializer list of basic_node objects
 
-## Examples
+## **Examples**
 
 ??? Example "Overload(1): create a default value"
 

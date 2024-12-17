@@ -19,7 +19,7 @@ This documentation only describes APIs which are not of the parent class [`std::
     However, the above recommendation with a sequence of key-value pair does not work so efficiently on the application layer because it cannot be a direct representation of the deserialization result and could also break the original order when the deserialized node is serialized again.  
     The ordered_map class is thus provided to help resolve those issues.  
 
-## Template Parameters
+## **Template Parameters**
 
 | Template parameter | Description                          | Derived type |
 | ------------------ | ------------------------------------ | ------------ |
@@ -29,7 +29,7 @@ This documentation only describes APIs which are not of the parent class [`std::
 | `Allocator`        | type for allocators                  | -            |
 
 
-## Member Types
+## **Member Types**
 
 | Name           | Description                                     |
 |----------------|-------------------------------------------------|
@@ -42,7 +42,7 @@ This documentation only describes APIs which are not of the parent class [`std::
 | size_type      | The type for size parameters used in the class. |
 | key_compare    | The type for comparison between keys.           |
 
-## Member Functions
+## **Member Functions**
 
 ### Construction/Destruction
 | Name                            | Description                |

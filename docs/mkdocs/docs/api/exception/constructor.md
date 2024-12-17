@@ -11,7 +11,7 @@ explicit exception(const char* msg) noexcept; // (2)
 Constructs an exception object.   
 You can specify an error message on constructing an object with an overloaded constructor.  
 
-### **Parameters**
+## **Parameters**
 
 ***`msg`*** [in]
 :   An error message for the exception. If `nullptr` is given, the resulting error message will be empty.
@@ -26,6 +26,8 @@ You can specify an error message on constructing an object with an overloaded co
     ```bash
     --8<-- "examples/ex_exception_constructor_noarg.output"
     ```
+
+## **Examples**
 
 ??? Example "Overload(2): create an object with an error message"
 

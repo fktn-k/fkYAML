@@ -13,13 +13,15 @@ This type alias is used to determine the target type `T` is convertible from/to 
 
 If you want to convert some type from/to `basic_node`, however, it is recommended to use [`basic_node::get_value`](get_value.md) instead, in order for your program to avoid too much dependency on the fkYAML library implementation.  
 
-### **Template Parameters**
+## **Template Parameters**
 
 ***T***
 : The target native data type.
 
 ***SFINAE***
 : Type for [SFINAE](https://en.cppreference.com/w/cpp/language/sfinae). If you do not need compile-time type checks, pass just `void`.
+
+## **Examples**
 
 ??? Example
 

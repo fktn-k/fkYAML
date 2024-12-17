@@ -30,7 +30,7 @@ Accesses an element with the given key.
 Reference to a `mapped_type` object associated with the given key.  
 Possibly a default value of the `mapped_type` if the ordered_map does not contain the given key.  
 
-## Examples
+## **Examples**
 
 ??? Example
 

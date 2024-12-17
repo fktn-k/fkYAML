@@ -19,7 +19,7 @@ Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization pro
 
 Since this function shares a large portion of internal implementation with the [`deserialize()`](deserialize.md) function, supported unicode encodings and line break formats are the same. Refer to its documentation for details.
 
-### **Template Parameters**
+## **Template Parameters**
 
 ***`InputType`***
 :   the type of a compatible input, for instance:
@@ -37,7 +37,7 @@ Since this function shares a large portion of internal implementation with the [
     * a pair of iterators such as return values of `std::string::begin()` and `std::string::end()`
     * a pair of pointers such as `ptr` and `ptr + len`
 
-### **Parameters**
+## **Parameters**
 
 ***`input`*** [in]
 :   An input source such as streams or arrays.
@@ -48,11 +48,11 @@ Since this function shares a large portion of internal implementation with the [
 ***`end`*** [in]
 :   An iterator to the past-the-last element of an input sequence
 
-### **Return Value**
+## **Return Value**
 
 The resulting `basic_node` objects of deserialization.
 
-## Examples
+## **Examples**
 
 ??? Example "Example (a character array)"
 
@@ -102,7 +102,7 @@ The resulting `basic_node` objects of deserialization.
     --8<-- "examples/ex_basic_node_deserialize_docs_iterators.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [deserialize](deserialize.md)

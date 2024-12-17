@@ -17,6 +17,8 @@ Check if `this` object is greater than or equal to `rhs`.
 
 `true` if `this` is greater than or equal to `rhs`, `false` otherwise.
 
+## **Examples**
+
 ??? Example
 
     ```cpp

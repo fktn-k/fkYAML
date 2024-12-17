@@ -40,6 +40,8 @@ This enumeration collects the different YAML value types.
     * [`float_number_type`](float_number_type.md) for float number scalar values
     * [`string_type`](string_type.md) for string scalar values
 
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -51,7 +53,7 @@ This enumeration collects the different YAML value types.
     --8<-- "examples/ex_basic_node_node_t.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [type](type.md)
 * [is_sequence](is_sequence.md)

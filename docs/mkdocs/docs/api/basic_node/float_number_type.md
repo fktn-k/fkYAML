@@ -17,6 +17,8 @@ The actual type is defined by the template parameter `FloatNumberType`.
 If not explicitly specified, the default type `double` is defined.  
 With the decided type, floating point values are stored directly inside a [`basic_node`](index.md).  
 
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -28,6 +30,6 @@ With the decided type, floating point values are stored directly inside a [`basi
     --8<-- "examples/ex_basic_node_float_number_type.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)

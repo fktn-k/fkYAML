@@ -31,6 +31,8 @@ Reference to `this` basic_node object.
     --8<-- "examples/ex_basic_node_copy_assignment_operator.output"
     ```
 
+## **Examples**
+
 ??? Example "Overload(2): move assignments a basic_node"
 
     ```cpp

@@ -12,6 +12,8 @@ The actual type is defined by the template parameter `IntegerType`.
 If not explicitly specified, the default type `std::int64_t` is defined.  
 With the decided type, integer values are stored directly inside a [`basic_node`](index.md).  
 
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -23,6 +25,6 @@ With the decided type, integer values are stored directly inside a [`basic_node`
     --8<-- "examples/ex_basic_node_integer_type.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)

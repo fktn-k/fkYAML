@@ -27,6 +27,8 @@ This function throws a [`fkyaml::exception`] if the given key does not exist in 
 
 (Constant) reference to a `mapped_type` object associated with the given key.  
 
+## **Examples**
+
 ??? Example
 
     ```cpp

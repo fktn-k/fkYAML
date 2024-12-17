@@ -13,9 +13,11 @@ Throws a [`fkyaml::type_error`](../exception/type_error.md) if a basic_node is n
 
 ![Image from https://en.cppreference.com/w/cpp/iterator/reverse_iterator](../../img/range-rbegin-rend.svg)
 
-### **Return Value**
+## **Return Value**
 
 A (constant) iterator to the reverse-end (= one before the first) element of a container node.
+
+## **Examples**
 
 ??? Example
 
@@ -28,7 +30,7 @@ A (constant) iterator to the reverse-end (= one before the first) element of a c
     --8<-- "examples/ex_basic_node_rend.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [node](node.md)

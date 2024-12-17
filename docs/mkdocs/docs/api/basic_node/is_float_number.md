@@ -8,9 +8,11 @@ bool is_float_number() const noexcept;
 
 Tests whether the node is a floating point value node.  
 
-### **Return Value**
+## **Return Value**
 
 `true` if the node is a floating point value node, `false` otherwise.  
+
+## **Examples**
 
 ??? Example
 
@@ -23,6 +25,6 @@ Tests whether the node is a floating point value node.
     --8<-- "examples/ex_basic_node_is_float_number.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [node_type](../node_type.md)

@@ -13,9 +13,11 @@ If a basic_node is neither a sequence nor mapping, a [`fkyaml::type_error`](../e
 
 ![Image from https://en.cppreference.com/w/cpp/iterator/begin](../../img/range-begin-end.svg)
 
-### **Return Value**
+## **Return Value**
 
 A (constant) iterator to the first element of a container node.
+
+## **Examples**
 
 ??? Example
 

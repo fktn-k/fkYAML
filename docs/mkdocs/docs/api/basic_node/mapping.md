@@ -12,6 +12,8 @@ The factory method which constructs a basic_node with the [`node_type::MAPPING`]
 Calling this function with no arguments will constructs a basic_node with an empty mapping node value.  
 The resulting basic_node has the [`node_type::MAPPING`](../node_type.md) type.  
 
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -24,7 +26,7 @@ The resulting basic_node has the [`node_type::MAPPING`](../node_type.md) type.
     ```
 
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [node_type](../node_type.md)

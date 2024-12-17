@@ -14,6 +14,8 @@ With the decided container type, the type of sequence objects will then be decid
 
 Note that sequence objects are stored as a pointer to an allocated memory area on the heap in a [`basic_node`](index.md) so that the internal storage size will at most be 8 bytes.  
 
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -25,6 +27,6 @@ Note that sequence objects are stored as a pointer to an allocated memory area o
     --8<-- "examples/ex_basic_node_sequence_type.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)

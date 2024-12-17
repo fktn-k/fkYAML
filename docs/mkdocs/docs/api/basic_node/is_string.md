@@ -8,9 +8,11 @@ bool is_string() const noexcept;
 
 Tests whether the node is a string node.  
 
-### **Return Value**
+## **Return Value**
 
 `true` if the node is a string node, `false` otherwise.  
+
+## **Examples**
 
 ??? Example
 
@@ -23,6 +25,6 @@ Tests whether the node is a string node.
     --8<-- "examples/ex_basic_node_is_string.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [node_type](../node_type.md)

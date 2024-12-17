@@ -13,9 +13,11 @@ If a basic_node is neither a sequence nor mapping, a [`fkyaml::type_error`](../e
 
 ![Image from https://en.cppreference.com/w/cpp/iterator/end](../../img/range-begin-end.svg)
 
-### **Return Value**
+## **Return Value**
 
 A (constant) iterator to the past-the-last element of a container node.
+
+## **Examples**
 
 ??? Example
 
@@ -28,7 +30,7 @@ A (constant) iterator to the past-the-last element of a container node.
     --8<-- "examples/ex_basic_node_end.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [node](node.md)

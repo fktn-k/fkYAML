@@ -8,9 +8,11 @@ bool is_alias() const noexcept;
 
 Tests whether the node is an alias node.  
 
-### **Return Value**
+## **Return Value**
 
 `true` if the node is an alias node, `false` otherwise.  
+
+## **Examples**
 
 ??? Example
 
@@ -23,7 +25,7 @@ Tests whether the node is an alias node.
     --8<-- "examples/ex_basic_node_is_alias.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [add_anchor_name](add_anchor_name.md)
 * [alias_of](alias_of.md)

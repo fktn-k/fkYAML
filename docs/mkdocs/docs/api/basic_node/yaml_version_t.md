@@ -26,6 +26,8 @@ enum class yaml_version_t
 
 This enumeration collects the YAML specification versions. It is used as meta data of a basic_node and the functions [`get_yaml_version`](get_yaml_version.md) and [`set_yaml_version`](set_yaml_version.md) rely on it.  
 
+## **Examples**
+
 ??? Example
 
     ```cpp
@@ -37,7 +39,7 @@ This enumeration collects the YAML specification versions. It is used as meta da
     --8<-- "examples/ex_basic_node_yaml_version_t.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [deserialize](deserialize.md)
 * [get_yaml_version](get_yaml_version.md)

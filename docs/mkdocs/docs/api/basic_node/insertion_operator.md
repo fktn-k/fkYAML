@@ -45,6 +45,8 @@ For details, please visit the documentation of the [`serialize()`](serialize.md)
 
 Reference to the output stream object `os`.  
 
+## **Examples**
+
 ??? Example
 
     ```cpp

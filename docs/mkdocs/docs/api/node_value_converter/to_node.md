@@ -34,6 +34,12 @@ This function is usually called by the [`constructors`](../basic_node/constructo
 ***`val`*** [in]
 :   A native data object used for conversion.
 
+## **Return Value**
+
+A basic_node object converted from a value of a compatible type.
+
+## **Examples**
+
 ??? Example
 
     ```cpp

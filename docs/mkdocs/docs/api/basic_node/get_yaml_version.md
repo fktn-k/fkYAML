@@ -21,7 +21,7 @@ yaml_version_t get_yaml_version() const noexcept;
 
 Returns the YAML specification version applied for a `basic_node`.  
 
-### **Return Value**
+## **Return Value**
 
 The YAML specification version applied to a basic_node.
 
@@ -29,6 +29,8 @@ The YAML specification version applied to a basic_node.
 | ------------ | ----------------------- |
 | 1.1          | yaml_version_t::VER_1_1 |
 | 1.2          | yaml_version_t::VER_1_2 |
+
+## **Examples**
 
 ??? Example
 

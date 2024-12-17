@@ -16,6 +16,8 @@ The actual type is defined by the template parameter `BooleanType`.
 If not explicitly specified, the default type `bool` is defined.  
 With the decided type, boolean values are stored directly inside a [`basic_node`](index.md).  
 
+## **Examples**
+
 ??? Example
 
     ```cpp
