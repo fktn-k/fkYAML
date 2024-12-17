@@ -6,13 +6,15 @@
 using integer_type = IntegerType;
 ```
 
-The type used to store boolean node values.  
+The type used to store integer values.  
 
-To store integer objects in [`basic_node`](index.md) class, the type is defined by the template parameter `IntegerType` which chooses the type to use for integer objects.  
-If not explicitly specified, the default type `std::int64_t` will be chosen.  
-With the decided type, integer objects are stored directly inside a [`basic_node`](index.md).  
+The actual type is defined by the template parameter `IntegerType`.  
+If not explicitly specified, the default type `std::int64_t` is defined.  
+With the decided type, integer values are stored directly inside a [`basic_node`](index.md).  
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_integer_type.cpp:9"
@@ -23,6 +25,6 @@ With the decided type, integer objects are stored directly inside a [`basic_node
     --8<-- "examples/ex_basic_node_integer_type.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)

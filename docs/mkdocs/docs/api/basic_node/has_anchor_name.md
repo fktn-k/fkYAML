@@ -6,13 +6,15 @@
 bool has_anchor_name() const noexcept;
 ```
 
-Check if the YAML node has an anchor name.  
+Check if the node has an anchor name.  
 
 ## **Return Value**
 
-`true` if the YAML node has an anchor name, `false` otherwise.  
+`true` if the node has an anchor name, `false` otherwise.  
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_has_anchor_name.cpp:9"

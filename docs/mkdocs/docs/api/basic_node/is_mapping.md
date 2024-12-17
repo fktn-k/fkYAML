@@ -6,13 +6,15 @@
 bool is_mapping() const noexcept;
 ```
 
-Tests whether the node value type is [`node_t::MAPPING`](node_t.md).  
+Tests whether the node is a mapping node.  
 
-### **Return Value**
+## **Return Value**
 
-`true` if the type is [`node_t::MAPPING`](node_t.md), `false` otherwise.  
+`true` if the node is a mapping node, `false` otherwise.  
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_is_mapping.cpp:9"
@@ -23,6 +25,6 @@ Tests whether the node value type is [`node_t::MAPPING`](node_t.md).
     --8<-- "examples/ex_basic_node_is_mapping.output"
     ```
 
-### **See Also**
+## **See Also**
 
-* [node_t](node_t.md)
+* [node_type](../node_type.md)

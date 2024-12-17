@@ -15,7 +15,9 @@ If the basic_node has already had any tag name, the new tag name overwrites the 
 ***`tag_name`*** [in]
 :   A tag name. This should not be empty.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_add_tag_name.cpp:9"

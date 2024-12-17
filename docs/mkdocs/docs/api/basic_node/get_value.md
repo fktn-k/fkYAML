@@ -32,7 +32,7 @@ This function converts a [`fkyaml::basic_node`](./index.md) to either
 Actual conversions rely on the [`node_value_converter`](../node_value_converter/index.md)::[`from_node`](../node_value_converter/from_node.md) function.  
 This API makes a copy of the value, and if the copying costs too much, or if you need an address of the original value, then you should call [`get_value_ref`](get_value_ref.md) instead.  
 
-???+ Note "Convert from a Sequence Node"
+??? Note "Convert from a Sequence Node"
 
     This library implements conversions from a sequence node to a number of STL container types whose element type is not a key-value pair. The implementation can be used for custom container types, but they need to have both `iterator` member type and `insert()` member function. The test suite confirms successful conversions to the following types.
     
@@ -59,7 +59,7 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
     Note that the above types cannot be converted from a non-sequence node, which results in throwing a [type_error](../exception/type_error.md).
 
-???+ Note "Convert from a Mapping Node"
+??? Note "Convert from a Mapping Node"
 
     This library implements conversions from a mapping node to STL container types whose element type is a key-value pair. The implementation can be used for custom container types, but they need to have `key_type`, `mapped_type` and `value_type` member types and `emplace()` member function. The test suite confirms successful conversions to the following types.
 
@@ -70,7 +70,7 @@ This API makes a copy of the value, and if the copying costs too much, or if you
         * [std::unordered_map](https://en.cppreference.com/w/cpp/container/unordered_map)
         * [std::unordered_multi_map](https://en.cppreference.com/w/cpp/container/unordered_multimap) *(unordered associative containers for key-value pairs)*
 
-???+ Note "Convert from a Null or Numeric Scalar Node"
+??? Note "Convert from a Null or Numeric Scalar Node"
 
     If the YAML node value is a null, boolean, integer or floating point, this function internally executes type conversion according to the following rules which all depend on the template paramter type `T`:
 
@@ -90,14 +90,14 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
     Note that those scalar type cannot be converted to a sequence, mapping, string scalar, which results in throwing a [`type_error`](../exception/type_error.md).
 
-???+ Note "Convert from a String Scalar Node"
+??? Note "Convert from a String Scalar Node"
 
     String scalar nodes can be converted to STL container types which can be constructible from `const fkyaml::basic_node::string_type&` (`const std::string&` by default). The test suite confirms successful conversions to the following types.
 
     * [std::string](https://en.cppreference.com/w/cpp/string/basic_string)
     * [std::string_view](https://en.cppreference.com/w/cpp/string/basic_string_view) (from C++17)
 
-???+ Note "Convert as an optional value"
+??? Note "Convert as an optional value"
 
     Since C++17, [std::optional](https://en.cppreference.com/w/cpp/utility/optional) can be used as `ValueType` to indicate the conversion result to be optional. In such cases, a returned [std::optional](https://en.cppreference.com/w/cpp/utility/optional) value contains a value only if the conversion was successful, or [`std::nullopt`](https://en.cppreference.com/w/cpp/utility/optional/nullopt) otherwise.
 
@@ -118,7 +118,9 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
 A compatible native data value converted from the [basic_node](./index.md) object.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_get_value.cpp:9"

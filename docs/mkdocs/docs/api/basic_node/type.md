@@ -8,7 +8,7 @@ node_t type() const noexcept;
 
 !!! warning "Deprecation"
 
-    The function [`#!cpp node_type get_type()`](get_type.md) replaces the function `basic_node::node_t type()` which has been deprecated in version 0.3.12. It will be removed in version 0.4.0. Please replace calls like  
+    The function [`#!cpp node_type get_type()`](get_type.md) replaces the function `basic_node::node_t type()` which has been deprecated in version 0.3.12. It will be removed in a future version. Please replace calls like  
     
     ```cpp
     fkyaml::node::node_t t = n.type();
@@ -20,9 +20,9 @@ node_t type() const noexcept;
     fkyaml::node_type t = n.get_type();
     ```
 
-Returns the type of the YAML node value as a value from the [`node_t`](node_t.md) enumeration.  
+Returns the type of the YAML node value.  
 
-### **Return Value**
+## **Return Value**
 
 The type of the YAML node value.
 
@@ -36,7 +36,9 @@ The type of the YAML node value.
 | floating point number | node_t::FLOAT_NUMBER |
 | string                | node_t::STRING       |
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_type.cpp:9"
@@ -47,6 +49,6 @@ The type of the YAML node value.
     --8<-- "examples/ex_basic_node_type.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [node_t](node_t.md)

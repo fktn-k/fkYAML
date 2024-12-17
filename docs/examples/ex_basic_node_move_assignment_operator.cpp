@@ -10,10 +10,12 @@
 #include <fkYAML/node.hpp>
 
 int main() {
-    fkyaml::node n = {true, false};
-    std::cout << n << std::endl;
+    fkyaml::node n = true;
+    fkyaml::node n2 = 123;
+    n = std::move(n2);
 
-    fkyaml::node n2 = {{"foo", 1024}};
-    std::cout << n2 << std::endl;
+    std::cout << std::boolalpha << n.is_integer() << std::endl;
+    std::cout << n.get_value<std::int64_t>() << std::endl;
+
     return 0;
 }

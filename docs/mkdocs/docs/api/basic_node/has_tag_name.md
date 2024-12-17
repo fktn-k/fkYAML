@@ -6,13 +6,15 @@
 bool has_tag_name() const noexcept;
 ```
 
-Check if the YAML node has a tag name.  
+Check if the node has a tag name.  
 
 ## **Return Value**
 
-`true` if the YAML node has a tag name, `false` otherwise.  
+`true` if the node has a tag name, `false` otherwise.  
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_has_tag_name.cpp:9"

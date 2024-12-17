@@ -7,23 +7,25 @@ static basic_node alias_of(const basic_node& anchor);
 ```
 
 Creates an alias YAML node from an anchor node.  
+If the given anchor node does not have any non-empty anchor name, an [`fkyaml::exception`](../exception/index.md) will be thrown.  
 
 ## **Parameters**
 
 ***anchor*** [in]
 :   A basic_node object with an anchor name.  
-    This node must have some anchor name.  
+    This node must have a non-empty anchor name.  
 
 ## **Return Value**
 
-An alias YAML node which is created from the given anchor node.  
-If the given anchor node does not have any non-empty anchor name, an [`fkyaml::exception`](../exception/index.md) will be thrown.  
+An alias node which refers to the given anchor node.  
 
 !!! Note
 
     If this API throws an exception, the internally stored YAML node value in the given anchor node stays intact.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_alias_of.cpp:9"

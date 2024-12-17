@@ -3,77 +3,61 @@
 # <small>fkyaml::basic_node::</small>at
 
 ```cpp
-template <
-    typename KeyType, detail::enable_if_t<
-                            detail::conjunction<
-                                detail::negation<detail::is_basic_node<KeyType>>,
-                                detail::is_node_compatible_type<basic_node, KeyType>>::value,
-                            int> = 0>
-basic_node& at(KeyType&& key); // (1)
+// (1)
+template <typename KeyType>
+basic_node& at(KeyType&& key);
 
-template <
-    typename KeyType, detail::enable_if_t<
-                            detail::conjunction<
-                                detail::negation<detail::is_basic_node<KeyType>>,
-                                detail::is_node_compatible_type<basic_node, KeyType>>::value,
-                            int> = 0>
-const basic_node& at(KeyType&& key) const; // (2)
+template <typename KeyType>
+const basic_node& at(KeyType&& key) const;
 
-template <
-    typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-basic_node& at(KeyType&& key); // (3)
+// (2)
+template <typename BasicNodeType>
+basic_node& at(BasicNodeType&& key);
 
-template <
-    typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-const basic_node& at(KeyType&& key) const; // (4)
+template <typename BasicNodeType>
+const basic_node& at(BasicNodeType&& key) const;
 ```
 
-Access to a YAML node element with either an index (for sequences) or a key (for mappings).  
-Before accessing the element, this function checks the bounds in the case of a sequence or the existence of a key in the case of a mapping.  
-This function therefore costs a bit more than [`basic_node::operator[]()`](operator[].md) function due to the extra checks.  
-Furthermore, this function may throw the following exceptions:
+Access to an element in a container node with either an index or key value.  
+This function must be called on a container node, or a [`fkyaml::type_error`](../exception/type_error.md) would be thrown.  
 
-* [`fkyaml::type_error`](../exception/type_error.md)
-    * if the queried node is neither a sequence nor a mapping, or
-    * if the queried node is a sequence but the given `key` is not an integer.
-* [`fkyaml::out_of_range`](../exception/out_of_range.md)
-    * if the given key does not exist in the queried mapping, or
-    * if the given index exceeds the size of the queried sequence.
+The input parameter `key` must be either a [`basic_node`](index.md) object or an object of a compatible type, i.e., a type with which a [`basic_node`](index.md) object can be constructible.  
+Note that the overload (1) internally constructs a temporal [`basic_node`](index.md) object.  
+So, if you use the same key multiple times, for example, in a for loop, consider creating a [`basic_node`](index.md) as a key first for better performance.
 
-## Overload (1), (2)  
+Furthermore, unlike the [`operator[]`](operator[].md), this function executes one of the following checks depending on the target node value type.  
 
-```cpp
-template <
-    typename KeyType, detail::enable_if_t<
-                            detail::conjunction<
-                                detail::negation<detail::is_basic_node<KeyType>>,
-                                detail::is_node_compatible_type<basic_node, KeyType>>::value,
-                            int> = 0>
-basic_node& at(KeyType&& key); // (1)
+* For sequence nodes  
+    * Whether `key` is of an integeral type (e.g., `int`, `size_t`) or an integer node.  
+      If not, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.
+    * Whether the value of `key` is more than or equal to the size of the queried sequence.  
+      If not, a [`fkyaml::out_of_range`](../exception/out_of_range.md) will be thrown.
+* For mapping nodes
+    * Whether a given key exists in the target container.  
+      If not, [`fkyaml::out_of_range`](../exception/out_of_range.md) will be thrown.
 
-template <
-    typename KeyType, detail::enable_if_t<
-                            detail::conjunction<
-                                detail::negation<detail::is_basic_node<KeyType>>,
-                                detail::is_node_compatible_type<basic_node, KeyType>>::value,
-                            int> = 0>
-const basic_node& at(KeyType&& key) const; // (2)
-```
+This function therefore costs a bit more than [`operator[]`](operator[].md) due to the above extra checks.  
 
-Accesses to an element in the YAML sequence/mapping node with the given key object of a compatible type with the [`basic_node`](index.md) class, i.e., a type with which a [`basic_node`](index.md) object is constructible.  
-These overloads internally construct a [`basic_node`](index.md) object with `key`.  
+## **Template Parameters**
 
+***KeyType***
+:   A compatible key type.
 
-### **Parameters**
+***BasicNodeType***
+:   A basic_node template instance type.
 
-***`index`*** [in]
-:   An index/key for an element in the YAML sequence/mapping node.  
+## **Parameters**
 
-### **Return Value**
+***`key`*** [in]
+:   A key to a target element in the sequence/mapping node.  
 
-Reference, or constant reference, to the YAML node object associated with the given index/key.  
+## **Return Value**
 
-???+ Example
+(Constant) reference to the node value which is associated with the given key.
+
+## **Examples**
+
+??? Example "Access an element with compatible keys"
 
     ```cpp
     --8<-- "examples/ex_basic_node_at_compatible_type.cpp:9"
@@ -84,37 +68,7 @@ Reference, or constant reference, to the YAML node object associated with the gi
     --8<-- "examples/ex_basic_node_at_compatible_type.output"
     ```
 
-## Overload (3), (4)
-
-```cpp
-template <
-    typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-basic_node& at(KeyType&& key); // (3)
-
-template <
-    typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-const basic_node& at(KeyType&& key) const; // (4)
-```
-
-Accesses to an element in the YAML sequence/mapping node with the given [`basic_node`](index.md) key object.  
-Unlike the overloads (1) and (2) above, these overloads do not internally construct a [`basic_node`](index.md) object.  
-So, these overloads works more effectively when some key objects are used multiple times, for instance, in a for-loop.  
-
-### **Template Parameters**
-
-***KeyType***
-:   A key type which is a kind of the [`basic_node`](index.md) template class.
-
-### **Parameters**
-
-***`key`*** [in]
-:   An index/key for an element in the YAML sequence/mapping node.
-
-### **Return Value**
-
-Reference, or constant reference, to the YAML node object associated with the given index/key.  
-
-???+ Example
+??? Example "Access an element with `basic_node` keys"
 
     ```cpp
     --8<-- "examples/ex_basic_node_at_basic_node.cpp:9"
@@ -128,8 +82,6 @@ Reference, or constant reference, to the YAML node object associated with the gi
 ## **See Also**
 
 * [basic_node](index.md)
-* [size](size.md)
-* [contains](contains.md)
 * [operator[]](operator[].md)
 * [operator<<](insertion_operator.md)
 * [out_of_range](../exception/out_of_range.md)

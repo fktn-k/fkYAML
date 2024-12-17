@@ -8,8 +8,8 @@ static std::string serialize(const basic_node& node);
 
 Serializes YAML node values recursively.  
 Currently, the serialization of mappings and sequences only supports block styles.  
-That means that, even if a deserialized source input contains container nodes written in flow styles, this function forces them to be emitted in block styles.  
-Moreover, fkYAML unconditionally uses LFs as the line break format in serialization outputs, and there is currently no way to change it to use CR+LFs instead.  
+That means that, even if an original YAML document contains container nodes written in the flow style, this function forces them to be emitted in the block style.  
+Moreover, fkYAML unconditionally uses LFs (Unix Style) as the line break format in serialization outputs, and there is currently no way to change it to use CR+LFs (Windows Style) instead.  
 This function serializes the given `node` parameter in the following format.  
 
 ```yaml
@@ -47,16 +47,18 @@ This function serializes the given `node` parameter in the following format.
     <child mapping scalar key>: <child mapping scalar value>
 ```
 
-### **Parameters**
+## **Parameters**
 
 ***`node`*** [in]
 :   A `basic_node` object to be serialized.
 
-### **Return Value**
+## **Return Value**
 
-The resulting string object from the serialization of the `node` object.
+The resulting string object of the serialization.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_serialize.cpp:9"
@@ -67,7 +69,7 @@ The resulting string object from the serialization of the `node` object.
     --8<-- "examples/ex_basic_node_serialize.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [add_anchor_name](add_anchor_name.md)

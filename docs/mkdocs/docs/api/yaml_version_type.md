@@ -15,7 +15,9 @@ This enumeration collects the used versions of YAML specification. It is used as
 * [`get_yaml_version_type()`](basic_node/get_yaml_version_type.md)
 * [`set_yaml_version_type()`](basic_node/set_yaml_version_type.md)
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_yaml_version_type.cpp:9"
@@ -26,7 +28,7 @@ This enumeration collects the used versions of YAML specification. It is used as
     --8<-- "examples/ex_yaml_version_type.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [deserialize](basic_node/deserialize.md)
 * [get_yaml_version_type](basic_node/get_yaml_version_type.md)

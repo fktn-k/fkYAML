@@ -6,17 +6,19 @@
 using boolean_type = BooleanType;
 ```
 
-The type used to store boolean node values.  
+The type used to store boolean values.  
 The YAML specification describes a boolean as a type which differentiates the following literals:
 
 * true, True, TRUE -> `true`
 * false, False, FALSE -> `false`
 
-To store boolean objects in [`basic_node`](index.md) class, the type is defined by the template parameter `BooleanType` which chooses the type to use for boolean objects.  
-If not explicitly specified, the default type `bool` will be chosen.  
-With the decided type, boolean objects are stored directly inside a [`basic_node`](index.md).  
+The actual type is defined by the template parameter `BooleanType`.  
+If not explicitly specified, the default type `bool` is defined.  
+With the decided type, boolean values are stored directly inside a [`basic_node`](index.md).  
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_boolean_type.cpp:9"

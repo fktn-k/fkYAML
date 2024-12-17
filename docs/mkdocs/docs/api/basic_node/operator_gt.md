@@ -6,20 +6,20 @@
 bool operator>(const basic_node& rhs) const noexcept;
 ```
 
-Greater-than operator.  
 Check if `this` object is greater than `rhs`.  
-The operator returns the result of `!(*this <= rhs)`. (see [`operator<=`](operator_le.md))  
 
 ## **Parameters**
 
 ***`rhs`*** [in]
-:   A `basic_node` object to be compared with `this` object.
+:   A `basic_node` object to compare with.
 
 ## **Return Value**
 
 `true` if `this` is greater than `rhs`, `false` otherwise.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_operator_gt.cpp:9"

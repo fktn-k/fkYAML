@@ -7,13 +7,15 @@ boolean empty() const;
 ```
 
 Tests whether the node value is empty.  
-Throws a [`fkyaml::exception`](../exception/index.md) if a basic_node does not have a conatiner nor string value.  
+If a basic_node is neither a sequence, mapping nor string, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.  
 
-### **Return Value**
+## **Return Value**
 
 `true` if the node value is empty, `false` otherwise.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_empty.cpp:9"

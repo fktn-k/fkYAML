@@ -8,11 +8,15 @@ using sequence_type = SequenceType<basic_node>;
 
 The type used to store sequence node values.  
 
-To store sequence objects in [`basic_node`](index.md) class, the type is defined by the template parameter `SequenceType` which chooses the type to use for sequence objects.  
-If not explicitly specified, the default type `std::vector` will be chosen.  
-Note that sequence objects are stored as pointers to the decided type in a [`basic_node`](index.md) so that the internal storage size will at most be 8 bytes.  
+The type is defined by the template parameter `SequenceType`.  
+If not explicitly specified, the default type `std::vector` is defined.  
+With the decided container type, the type of sequence objects will then be decided in the form of `SequenceType<basic_node>` with which sequence objects are stored inside a [`basic_node`](index.md).  
 
-???+ Example
+Note that sequence objects are stored as a pointer to an allocated memory area on the heap in a [`basic_node`](index.md) so that the internal storage size will at most be 8 bytes.  
+
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_sequence_type.cpp:9"
@@ -23,6 +27,6 @@ Note that sequence objects are stored as pointers to the decided type in a [`bas
     --8<-- "examples/ex_basic_node_sequence_type.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)

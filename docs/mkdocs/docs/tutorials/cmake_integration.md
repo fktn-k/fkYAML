@@ -14,7 +14,7 @@ To use fkYAML from a CMake project, you can locate it directly with [`find_packa
 Note that this method requires a release package to be installed somewhere on your machine.  
 The package configuration file, `fkYAMLConfig.cmake`, can be used either from an install tree or directly out of the build tree.  
 
-???+ Example
+??? Example
 
     ```cmake title="CMakeLists.txt"
     cmake_minimum_required(VERSION 3.8)
@@ -30,7 +30,7 @@ The package configuration file, `fkYAMLConfig.cmake`, can be used either from an
 
 To embed the library directory into an existing CMake project, place the entire source tree in a subdirectory and call [`add_subdirectory()`](https://cmake.org/cmake/help/latest/command/add_subdirectory.html) in your `CMakeLists.txt` file.  
 
-???+ Example
+??? Example
 
     ```cmake title="CMakeLists.txt"
     cmake_minimum_required(VERSION 3.8)
@@ -46,7 +46,7 @@ To embed the library directory into an existing CMake project, place the entire 
 
 Since CMake v3.11, [`FetchContent`](https://cmake.org/cmake/help/latest/module/FetchContent.html) is available which automatically downloads a release as a dependency during configuration.  
 
-???+ Example
+??? Example
 
     ```cmake title="CMakeLists.txt"
     cmake_minimum_required(VERSION 3.11)

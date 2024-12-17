@@ -15,7 +15,9 @@ If the basic_node has already had any anchor name, the new anchor name overwrite
 ***`anchor_name`*** [in]
 :   An anchor name. This should not be empty.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_add_anchor_name.cpp:9"

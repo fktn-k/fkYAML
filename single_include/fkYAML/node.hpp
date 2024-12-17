@@ -1692,8 +1692,13 @@ private:
 };
 
 /// @brief An exception class indicating an error in parsing.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/parse_error/
 class parse_error : public exception {
 public:
+    /// @brief Constructs a new parse_error object with an error message and counts of lines and colums at the error.
+    /// @param[in] msg An error message.
+    /// @param[in] lines Count of lines.
+    /// @param[in] cols_in_line Count of colums.
     explicit parse_error(const char* msg, uint32_t lines, uint32_t cols_in_line) noexcept
         : exception(generate_error_message(msg, lines, cols_in_line).c_str()) {
     }
@@ -1734,12 +1739,18 @@ private:
     }
 };
 
+/// @brief An exception class indicating an out-of-range error.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/out_of_range/
 class out_of_range : public exception {
 public:
+    /// @brief Construct a new out_of_range object with an invalid index value.
+    /// @param[in] index An invalid index value.
     explicit out_of_range(int index) noexcept
         : exception(generate_error_message(index).c_str()) {
     }
 
+    /// @brief Construct a new out_of_range object with invalid key contents.
+    /// @param[in] key Invalid key contents
     explicit out_of_range(const char* key) noexcept
         : exception(generate_error_message(key).c_str()) {
     }
@@ -1754,8 +1765,13 @@ private:
     }
 };
 
+/// @brief An exception class indicating an invalid tag.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/invalid_tag/
 class invalid_tag : public exception {
 public:
+    /// @brief Constructs a new invalid_tag object with an error message and invalid tag contents.
+    /// @param[in] msg An error message.
+    /// @param[in] tag Invalid tag contents.
     explicit invalid_tag(const char* msg, const char* tag)
         : exception(generate_error_message(msg, tag).c_str()) {
     }
@@ -12095,21 +12111,36 @@ template <
     typename Allocator = std::allocator<std::pair<const Key, Value>>>
 class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator> {
 public:
-    /// A type for keys.
+    /// @brief A type for keys.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using key_type = Key;
-    /// A type for values.
+
+    /// @brief A type for values.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using mapped_type = Value;
-    /// A type for internal key-value containers.
+
+    /// @brief A type for internal key-value containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using Container = std::vector<std::pair<const Key, Value>, Allocator>;
-    /// A type for key-value pairs.
+
+    /// @brief A type for key-value pairs.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using value_type = typename Container::value_type;
-    /// A type for non-const iterators.
+
+    /// @brief A type for non-const iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using iterator = typename Container::iterator;
-    /// A type for const iterators.
+
+    /// @brief A type for const iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using const_iterator = typename Container::const_iterator;
-    /// A type for size parameters used in this class.
+
+    /// @brief A type for size parameters used in this class.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using size_type = typename Container::size_type;
-    /// A type for comparison between keys.
+
+    /// @brief A type for comparison between keys.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using key_compare = std::equal_to<Key>;
 
 public:

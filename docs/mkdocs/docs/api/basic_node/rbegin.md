@@ -8,16 +8,18 @@ const_reverse_iterator rbegin() const;
 const_reverse_iterator crbegin() const;
 ```
 
-Returns an iterator to the reverse-beginning (= last) element of a container node.  
+Returns a (constant) iterator to the reverse-beginning (= last) element of a container node.  
 Throws a [`fkyaml::type_error`](../exception/type_error.md) if a basic_node is neither a sequence nor mapping node.  
 
 ![Image from https://en.cppreference.com/w/cpp/iterator/reverse_iterator](../../img/range-rbegin-rend.svg)
 
-### **Return Value**
+## **Return Value**
 
-A (constant) reverse iterator to the reverse-beginning (= last) element of a container node.
+A (constant) iterator to the reverse-beginning (= last) element of a container node.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_rbegin.cpp:9"
@@ -28,7 +30,7 @@ A (constant) reverse iterator to the reverse-beginning (= last) element of a con
     --8<-- "examples/ex_basic_node_rbegin.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [node](node.md)

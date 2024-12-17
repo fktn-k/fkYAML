@@ -10,7 +10,7 @@ using iterator = detail::iterator<const basic_node>;
 The types of non-const/const iterators for [`basic_node`](index.md) containers.  
 They satisfies [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator) and are commonly used for sequence and mapping container nodes.  
 
-## Member Types
+## **Member Types**
 
 * iterator  
   | Type                | Definition                                                                                    |
@@ -29,14 +29,16 @@ They satisfies [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/n
   | `difference_type`   | [`std::ptrdiff_t`](https://en.cppreference.com/w/cpp/types/ptrdiff_t)                         |
   | `iterator_category` | [`std::bidirectional_iterator_tag`](https://en.cppreference.com/w/cpp/iterator/iterator_tags) |
 
-## Member Functions
+## **Member Functions**
 
 | Name  | Description                                                                                                                                        |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | key   | Returns const reference to a key node of the current key-value pair.<br>`fkyaml::exception` is thrown if an iterator points to a sequence element. |
 | value | Returns reference to a sequence element if an element points to a sequence element, or a mapping value otherwise.                                  |
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_iterator.cpp:9"

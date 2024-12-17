@@ -8,16 +8,18 @@ const_iterator begin() const;
 const_iterator cbegin() const;
 ```
 
-Returns an iterator to the first element of a container node.  
-Throws a [`fkyaml::type_error`](../exception/type_error.md) if a basic_node is neither a sequence nor mapping node.  
+Returns a (constant) iterator to the first element of a container node.  
+If a basic_node is neither a sequence nor mapping, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.  
 
 ![Image from https://en.cppreference.com/w/cpp/iterator/begin](../../img/range-begin-end.svg)
 
-### **Return Value**
+## **Return Value**
 
-An iterator to the first element of a container node.
+A (constant) iterator to the first element of a container node.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_begin.cpp:9"

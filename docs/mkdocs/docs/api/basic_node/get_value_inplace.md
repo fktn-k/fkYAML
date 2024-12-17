@@ -29,7 +29,7 @@ This function shares internal implementation with the [`get_value`](./get_value.
 Thus, all the STL container & scalar types which are supported by that function, is also supported by this function as well.  
 See the notes there for details.
 
-???+ Note "Difference from `get_value()`"
+??? Note "Difference from `get_value()`"
 
     One crutial difference from the [`get_value`](./get_value.md) function is, this function does not require the template parameter type `T` to be [default-constructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible) since no instantiation of `T` is necessary inside the function to return the conversion result anymore.  
     So, you might prefer this function, for example, if you already created a `T` object as a member variable and want to assign a node value to it.  
@@ -45,7 +45,14 @@ See the notes there for details.
 ***BasicNodeType***
 :   A basic_node template instance type.  
 
-???+ Example
+### **Parameters**
+
+***`value_ref`*** [out]
+:   A storage into which the conversion result is filled.
+
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_get_value_inplace.cpp:9"

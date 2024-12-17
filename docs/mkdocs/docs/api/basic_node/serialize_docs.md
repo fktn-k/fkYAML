@@ -8,7 +8,7 @@ static std::string serialize_docs(const std::vector<basic_node>& docs);
 
 Serializes YAML documents into a string.  
 This function serializes the given `docs` parameter with the separation line (...) between YAML documents.  
-Regarding the serialization of each document, see the documentation for the [`serialize()`](serialize.md) function which this function calls internally.  
+Regarding the serialization of each document, see the documentation for the [`serialize()`](serialize.md) function with which this function shares internal implementation.  
 Just as the [`serialize()`](serialize.md) function does, fkYAML unconditionally uses LFs as the line break format in serialization outputs, and there is currently no way to change it to use CR+LFs instead.  
 
 ```yaml
@@ -18,16 +18,18 @@ Just as the [`serialize()`](serialize.md) function does, fkYAML unconditionally 
 # the last document end marker (...) is omitted since it's redundant.
 ```
 
-### **Parameters**
+## **Parameters**
 
 ***`docs`*** [in]
 :   `basic_node` objects to be serialized.
 
-### **Return Value**
+## **Return Value**
 
-The resulting string object from the serialization of the `docs` object.
+The resulting string object of the serialization.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_serialize_docs.cpp:9"
@@ -38,7 +40,7 @@ The resulting string object from the serialization of the `docs` object.
     --8<-- "examples/ex_basic_node_serialize_docs.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
 * [add_anchor_name](add_anchor_name.md)

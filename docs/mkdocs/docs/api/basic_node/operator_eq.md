@@ -6,22 +6,23 @@
 bool operator==(const basic_node& rhs) const noexcept;
 ```
 
-Equal-to operator.  
-Compares two `basic_node` objects for equality according to the following rules:  
+Compares two `basic_node` objects for equality according to the following rules:
 
-* Two `basic_node` objects are equal if they are of the same [`node_t`](node_t.md) type and their stored values are the same according to their respective `operator==`.
-* Two `basic_node` objects are always equal if both of them are of the [`node_t::NULL_OBJECT`](node_t.md) type.
+* Two `basic_node` objects are equal if they are of the same [`node_type`](../node_type.md) type and their stored values are the same according to their respective `operator==`.
+* Two `basic_node` objects are always equal if both of them are of the [`node_type::NULL_OBJECT`](../node_type.md) type.
 
 ## **Parameters**
 
 ***`rhs`*** [in]
-:   A `basic_node` object to be compared with `this` object.
+:   A `basic_node` object to compare with.
 
 ## **Return Value**
 
-`true` if both types and values are equal, `false` otherwise.
+`true` if both basic_node objects are equal, `false` otherwise.
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_operator_eq.cpp:9"

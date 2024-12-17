@@ -16,7 +16,7 @@ class basic_node;
 
 This class provides features to handle YAML nodes.
 
-## Template Paramters
+## **Template Paramters**
 
 | Template parameter | Description                                                  | Default                                                              | Derived type                                      |
 |--------------------|--------------------------------------------------------------|----------------------------------------------------------------------|---------------------------------------------------|
@@ -28,11 +28,11 @@ This class provides features to handle YAML nodes.
 | `StringType`       | type for string node values                                  | [std::string](https://en.cppreference.com/w/cpp/string/basic_string) | [`string_type`](string_type.md)                   |
 | `ConverterType`    | type for converters between <br> nodes and native data types | [node_value_converter](../node_value_converter/index.md)             | [`value_converter_type`](value_converter_type.md) |
 
-## Specializations
+## **Specializations**
 
 * [node](node.md) - default specialization
 
-## Member Types
+## **Member Types**
 
 ### Node Value Types
 | Name                                      | Description                                            |
@@ -63,10 +63,11 @@ This class provides features to handle YAML nodes.
 | Name                                            | Description                                                         |
 | ----------------------------------------------- | ------------------------------------------------------------------- |
 | [value_converter_type](value_converter_type.md) | The type used to convert between node and native data.              |
+| initializer_list_t                              | The type for initializer lists of `basic_node` values.              |
 | [node_t](node_t.md)                             | **(DEPRECATED)** The type used to store the internal value type.    |
 | [yaml_version_t](yaml_version_t.md)             | **(DEPRECATED)** The type used to store the enable version of YAML. |
 
-## Member Functions
+## **Member Functions**
 
 ### Construction/Destruction
 | Name                            |          | Description                                                   |

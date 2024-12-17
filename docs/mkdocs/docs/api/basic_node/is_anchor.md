@@ -8,11 +8,13 @@ bool is_anchor() const noexcept;
 
 Tests whether the node is an anchor node.  
 
-### **Return Value**
+## **Return Value**
 
 `true` if the node is an anchor node, `false` otherwise.  
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_is_anchor.cpp:9"
@@ -23,6 +25,6 @@ Tests whether the node is an anchor node.
     --8<-- "examples/ex_basic_node_is_anchor.output"
     ```
 
-### **See Also**
+## **See Also**
 
 * [add_anchor_name](add_anchor_name.md)

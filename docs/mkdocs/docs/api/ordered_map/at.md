@@ -3,19 +3,15 @@
 # <small>fkyaml::ordered_map::</small>at
 
 ```cpp
-template <
-    typename KeyType,
-    detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+template <typename KeyType>
 mapped_type& at(KeyType&& key) noexcept;
 
-template <
-    typename KeyType,
-    detail::enable_if_t<detail::is_usable_as_key_type<key_compare, key_type, KeyType>::value, int> = 0>
+template <typename KeyType>
 const mapped_type& at(KeyType&& key) const
 ```
 
 Accesses an element with the given key.  
-This API throws a [`fkyaml::exception`] if the given key does not exist in the ordered_map object.  
+This function throws a [`fkyaml::exception`] if the given key does not exist in the ordered_map object.  
 
 ## **Template Parameters**
 
@@ -29,9 +25,11 @@ This API throws a [`fkyaml::exception`] if the given key does not exist in the o
 
 ## **Return Value**
 
-Reference, or constant reference, to a `mapped_type` object associated with the given key.  
+(Constant) reference to a `mapped_type` object associated with the given key.  
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_ordered_map_at.cpp:9"

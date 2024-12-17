@@ -10,9 +10,11 @@ static basic_node sequence(sequence_type&& seq);
 
 The factory method which constructs a basic_node with the [`node_t::SEQUENCE`](node_t.md) type from a sequence node value.  
 Calling this API with no arguments will constructs a basic_node with an empty sequence node value.  
-The resulting basic_node has the [`node_t::SEQUENCE`](node_t.md) type.  
+The resulting basic_node has the [`node_type::SEQUENCE`](../node_type.md) type.  
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_sequence.cpp:9"
@@ -23,9 +25,8 @@ The resulting basic_node has the [`node_t::SEQUENCE`](node_t.md) type.
     --8<-- "examples/ex_basic_node_sequence.output"
     ```
 
-
-### **See Also**
+## **See Also**
 
 * [basic_node](index.md)
-* [node_t](node_t.md)
+* [node_type](../node_type.md)
 * [operator<<](insertion_operator.md)

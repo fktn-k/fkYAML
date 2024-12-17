@@ -6,13 +6,15 @@
 bool is_null() const noexcept;
 ```
 
-Tests whether the node value type is [`node_t::NULL_OBJECT`](node_t.md).  
+Tests whether the node is a null node.  
 
-### **Return Value**
+## **Return Value**
 
-`true` if the type is [`node_t::NULL_OBJECT`](node_t.md), `false` otherwise.  
+`true` if the node is a null node, `false` otherwise.  
 
-???+ Example
+## **Examples**
+
+??? Example
 
     ```cpp
     --8<-- "examples/ex_basic_node_is_null.cpp:9"
@@ -23,6 +25,6 @@ Tests whether the node value type is [`node_t::NULL_OBJECT`](node_t.md).
     --8<-- "examples/ex_basic_node_is_null.output"
     ```
 
-### **See Also**
+## **See Also**
 
-* [node_t](node_t.md)
+* [node_type](../node_type.md)
