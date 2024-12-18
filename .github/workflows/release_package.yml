@@ -61,20 +61,20 @@ jobs:
     - name: install zip
       run: sudo apt-get install zip
 
-    - name: Create minimum tar.gz & zip archives
+    - name: Create minimum tgz & zip archives
       working-directory: ${{github.workspace}}
-      run: | # create a tar.gz archive which contains minimum required files to be used as a CMake project (e.g., using FetchContent).
+      run: | # create a tgz archive which contains minimum required files to be used as a CMake project (e.g., using FetchContent).
         mkdir fkYAML_min
         cp -vr CMakeLists.txt fkYAML.natvis LICENSE.txt README.md include single_include ./fkYAML_min
-        tar czvf fkYAML_min.tar.gz ./fkYAML_min
+        tar czvf fkYAML_min.tgz ./fkYAML_min
         zip -r fkYAML_min.zip ./fkYAML_min
         rm -rf ./fkYAML_min
 
-    - name: Upload the minimum archive (tar.gz)
+    - name: Upload the minimum archive (tgz)
       uses: actions/upload-artifact@v4
       with:
-        name: fkYAML_min.tar.gz
-        path: '${{github.workspace}}/fkYAML_min.tar.gz'
+        name: fkYAML_min.tgz
+        path: '${{github.workspace}}/fkYAML_min.tgz'
 
     - name: Upload the minimum archive (zip)
       uses: actions/upload-artifact@v4
