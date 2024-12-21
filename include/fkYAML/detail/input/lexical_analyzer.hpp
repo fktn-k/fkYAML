@@ -893,30 +893,33 @@ private:
     str_view determine_block_scalar_content_range(
         uint32_t base_indent, uint32_t indicated_indent, uint32_t& content_indent) {
         const str_view sv {m_token_begin_itr, m_end_itr};
+        const std::size_t remain_input_len = sv.size();
 
         // Handle leading all-space lines.
         uint32_t cur_indent = 0;
         uint32_t max_leading_indent = 0;
         const char* cur_itr = m_token_begin_itr;
-        for (bool stop_increment = false; cur_itr != m_end_itr; ++cur_itr) {
-            const char c = *cur_itr;
-            if (c == ' ') {
-                if (!stop_increment) {
+        bool stop_increment = false;
+
+        while (cur_itr != m_end_itr) {
+            switch (*cur_itr++) {
+            case ' ':
+                if FK_YAML_LIKELY (!stop_increment) {
                     ++cur_indent;
                 }
                 continue;
-            }
-            if (c == '\n') {
-                max_leading_indent = std::max(cur_indent, max_leading_indent);
-                cur_indent = 0;
-                stop_increment = false;
-                continue;
-            }
-            if (c == '\t') {
+            case '\t':
                 // Tabs are not counted as an indent character but still part of an empty line.
                 // See https://yaml.org/spec/1.2.2/#rule-s-indent and https://yaml.org/spec/1.2.2/#64-empty-lines.
                 stop_increment = true;
                 continue;
+            case '\n':
+                max_leading_indent = std::max(cur_indent, max_leading_indent);
+                cur_indent = 0;
+                stop_increment = false;
+                continue;
+            default:
+                break;
             }
             break;
         }
@@ -949,14 +952,14 @@ private:
 
         std::size_t last_newline_pos = sv.find('\n', cur_itr - m_token_begin_itr + 1);
         if (last_newline_pos == str_view::npos) {
-            last_newline_pos = sv.size();
+            last_newline_pos = remain_input_len;
         }
 
         content_indent = base_indent + indicated_indent;
-        while (last_newline_pos < sv.size()) {
+        while (last_newline_pos < remain_input_len) {
             std::size_t cur_line_end_pos = sv.find('\n', last_newline_pos + 1);
             if (cur_line_end_pos == str_view::npos) {
-                cur_line_end_pos = sv.size();
+                cur_line_end_pos = remain_input_len;
             }
 
             const std::size_t cur_line_content_begin_pos = sv.find_first_not_of(' ', last_newline_pos + 1);
@@ -988,7 +991,7 @@ private:
         }
 
         // include last newline character if not all characters have been consumed yet.
-        if (last_newline_pos < sv.size()) {
+        if (last_newline_pos < remain_input_len) {
             ++last_newline_pos;
         }
 
