@@ -4195,85 +4195,85 @@ private:
         return sv.substr(0, last_newline_pos);
     }
 
-    /// @brief Handle unescaped control characters.
-    /// @param c A target character.
-    void handle_unescaped_control_char(char c) const {
-        FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
-
-        switch (c) {
-        // 0x00(NULL) has already been handled above.
-        case 0x01:
-            emit_error("Control character U+0001 (SOH) must be escaped to \\u0001.");
-        case 0x02:
-            emit_error("Control character U+0002 (STX) must be escaped to \\u0002.");
-        case 0x03:
-            emit_error("Control character U+0003 (ETX) must be escaped to \\u0003.");
-        case 0x04:
-            emit_error("Control character U+0004 (EOT) must be escaped to \\u0004.");
-        case 0x05:
-            emit_error("Control character U+0005 (ENQ) must be escaped to \\u0005.");
-        case 0x06:
-            emit_error("Control character U+0006 (ACK) must be escaped to \\u0006.");
-        case 0x07:
-            emit_error("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
-        case 0x08:
-            emit_error("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
-        case 0x09: // HT
-            // horizontal tabs (\t) are safe to use without escaping.
-            break;
-        // 0x0A(LF) has already been handled above.
-        case 0x0B:
-            emit_error("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
-        case 0x0C:
-            emit_error("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
-        // 0x0D(CR) has already been handled above.
-        case 0x0E:
-            emit_error("Control character U+000E (SO) must be escaped to \\u000E.");
-        case 0x0F:
-            emit_error("Control character U+000F (SI) must be escaped to \\u000F.");
-        case 0x10:
-            emit_error("Control character U+0010 (DLE) must be escaped to \\u0010.");
-        case 0x11:
-            emit_error("Control character U+0011 (DC1) must be escaped to \\u0011.");
-        case 0x12:
-            emit_error("Control character U+0012 (DC2) must be escaped to \\u0012.");
-        case 0x13:
-            emit_error("Control character U+0013 (DC3) must be escaped to \\u0013.");
-        case 0x14:
-            emit_error("Control character U+0014 (DC4) must be escaped to \\u0014.");
-        case 0x15:
-            emit_error("Control character U+0015 (NAK) must be escaped to \\u0015.");
-        case 0x16:
-            emit_error("Control character U+0016 (SYN) must be escaped to \\u0016.");
-        case 0x17:
-            emit_error("Control character U+0017 (ETB) must be escaped to \\u0017.");
-        case 0x18:
-            emit_error("Control character U+0018 (CAN) must be escaped to \\u0018.");
-        case 0x19:
-            emit_error("Control character U+0019 (EM) must be escaped to \\u0019.");
-        case 0x1A:
-            emit_error("Control character U+001A (SUB) must be escaped to \\u001A.");
-        case 0x1B:
-            emit_error("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
-        case 0x1C:
-            emit_error("Control character U+001C (FS) must be escaped to \\u001C.");
-        case 0x1D:
-            emit_error("Control character U+001D (GS) must be escaped to \\u001D.");
-        case 0x1E:
-            emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
-        case 0x1F:
-            emit_error("Control character U+001F (US) must be escaped to \\u001F.");
-        default:
-            break;
-        }
-    }
-
     /// @brief Checks if the given scalar contains no unescaped control characters.
     /// @param scalar Scalar contents.
     void check_scalar_content(const str_view& scalar) const {
-        for (auto c : scalar) {
-            if (0 <= c && c < 0x20) {
-                handle_unescaped_control_char(c);
+        const char* p_current = scalar.begin();
+        const char* p_end = scalar.end();
+
+        while (p_current != p_end) {
+            const uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(*p_current));
+            if (num_bytes > 1) {
+                // Multibyte characters are already checked in the input_adapter module.
+                p_current += num_bytes;
+                continue;
+            }
+
+            switch (*p_current++) {
+            // 0x00(NULL) has already been handled above.
+            case 0x01:
+                emit_error("Control character U+0001 (SOH) must be escaped to \\u0001.");
+            case 0x02:
+                emit_error("Control character U+0002 (STX) must be escaped to \\u0002.");
+            case 0x03:
+                emit_error("Control character U+0003 (ETX) must be escaped to \\u0003.");
+            case 0x04:
+                emit_error("Control character U+0004 (EOT) must be escaped to \\u0004.");
+            case 0x05:
+                emit_error("Control character U+0005 (ENQ) must be escaped to \\u0005.");
+            case 0x06:
+                emit_error("Control character U+0006 (ACK) must be escaped to \\u0006.");
+            case 0x07:
+                emit_error("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
+            case 0x08:
+                emit_error("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
+            case 0x09: // HT
+                // horizontal tabs (\t) are safe to use without escaping.
+                break;
+            // 0x0A(LF) has already been handled above.
+            case 0x0B:
+                emit_error("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
+            case 0x0C:
+                emit_error("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
+            // 0x0D(CR) has already been handled above.
+            case 0x0E:
+                emit_error("Control character U+000E (SO) must be escaped to \\u000E.");
+            case 0x0F:
+                emit_error("Control character U+000F (SI) must be escaped to \\u000F.");
+            case 0x10:
+                emit_error("Control character U+0010 (DLE) must be escaped to \\u0010.");
+            case 0x11:
+                emit_error("Control character U+0011 (DC1) must be escaped to \\u0011.");
+            case 0x12:
+                emit_error("Control character U+0012 (DC2) must be escaped to \\u0012.");
+            case 0x13:
+                emit_error("Control character U+0013 (DC3) must be escaped to \\u0013.");
+            case 0x14:
+                emit_error("Control character U+0014 (DC4) must be escaped to \\u0014.");
+            case 0x15:
+                emit_error("Control character U+0015 (NAK) must be escaped to \\u0015.");
+            case 0x16:
+                emit_error("Control character U+0016 (SYN) must be escaped to \\u0016.");
+            case 0x17:
+                emit_error("Control character U+0017 (ETB) must be escaped to \\u0017.");
+            case 0x18:
+                emit_error("Control character U+0018 (CAN) must be escaped to \\u0018.");
+            case 0x19:
+                emit_error("Control character U+0019 (EM) must be escaped to \\u0019.");
+            case 0x1A:
+                emit_error("Control character U+001A (SUB) must be escaped to \\u001A.");
+            case 0x1B:
+                emit_error("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
+            case 0x1C:
+                emit_error("Control character U+001C (FS) must be escaped to \\u001C.");
+            case 0x1D:
+                emit_error("Control character U+001D (GS) must be escaped to \\u001D.");
+            case 0x1E:
+                emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
+            case 0x1F:
+                emit_error("Control character U+001F (US) must be escaped to \\u001F.");
+            default:
+                break;
             }
         }
     }
