@@ -151,34 +151,34 @@ The following tables are created from the benchmarking results in the following 
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 55.1393Mi/s                          |
-| libfyaml                           | 34.7645Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 19.6806Gi/s                          |
-| rapidyaml<br>(with immutable buff) | 140.24Mi/s                           |
-| yaml-cpp                           | 8.75716Mi/s                          |
+| fkYAML                             | 60.1886Mi/s                          |
+| libfyaml                           | 34.9689Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 19.4415Gi/s                          |
+| rapidyaml<br>(with immutable buff) | 139.381Mi/s                          |
+| yaml-cpp                           | 8.8139Mi/s                           |
 
 ### Parsing [citm_catalog.json](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.json)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 82.9931Mi/s                          |
-| libfyaml                           | 52.4308Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 30.339Gi/s                           |
-| rapidyaml<br>(with immutable buff) | 145.672Mi/s                          |
-| yaml-cpp                           | 14.238Mi/s                           |
+| fkYAML                             | 91.1523Mi/s                          |
+| libfyaml                           | 51.8156Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 29.7284Gi/s                          |
+| rapidyaml<br>(with immutable buff) | 140.764Mi/s                          |
+| yaml-cpp                           | 14.8521Mi/s                          |
 
 ### Parsing [citm_catalog.yml](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.yml)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 35.152Mi/s                           |
-| libfyaml                           | 23.0845Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 31.117Gi/s                           |
-| rapidyaml<br>(with immutable buff) | 66.3046Mi/s                          |
-| yaml-cpp                           | 6.11709Mi/s                          |
+| fkYAML                             | 36.0492Mi/s                          |
+| libfyaml                           | 21.547Mi/s                           |
+| rapidyaml<br>(with mutable buff)   | 22.6904Gi/s                          |
+| rapidyaml<br>(with immutable buff) | 64.3972Mi/s                          |
+| yaml-cpp                           | 6.2337Mi/s                           |
 
-Although [rapidyaml](https://github.com/biojppm/rapidyaml) is about 2x faster with immutable buffer and far faster with mutable buff than fkYAML as it focuses on high performance, fkYAML is in general 50% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also about 6x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
-Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some use cases since there is no need for string manipulations.  
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) is about 2x faster with immutable buffers and far faster with mutable buffers than fkYAML as it focuses on high performance, fkYAML is in general 70% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also about 6x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some use cases since there is no need for string manipulations upon data queries.  
 
 ## License
 
