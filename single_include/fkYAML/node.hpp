@@ -3982,7 +3982,7 @@ private:
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         // flow indicators are checked only within a flow context.
-        str_view filter = (m_state & flow_context_bit) ? "\n :{}[]," : "\n :";
+        const str_view filter = (m_state & flow_context_bit) ? "\n :{}[]," : "\n :";
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             check_scalar_content(sv);
