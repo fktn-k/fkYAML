@@ -79,7 +79,7 @@ public:
         m_last_token_begin_line = m_pos_tracker.get_lines_read();
 
         if (m_cur_itr == m_end_itr) {
-            return {};
+            return {lexical_token_t::END_OF_BUFFER};
         }
 
         switch (*m_cur_itr) {
@@ -782,7 +782,8 @@ private:
     str_view determine_plain_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        constexpr str_view filter {"\n :{}[],"};
+        // flow indicators are checked only within a flow context.
+        str_view filter = (m_state & flow_context_bit) ? "\n :{}[]," : "\n :";
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             check_scalar_content(sv);
@@ -865,7 +866,7 @@ private:
             case ']':
             case ',':
                 // This check is enabled only in a flow context.
-                ends_loop = (m_state & flow_context_bit);
+                ends_loop = true;
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
