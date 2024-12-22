@@ -390,26 +390,9 @@ private:
         do {
             switch (token.type) {
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
-                uint32_t pop_num = 0;
-                if (indent == 0) {
-                    pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
-                }
-                else {
-                    const bool needs_to_move_back = indent < m_context_stack.back().indent;
-                    if (needs_to_move_back) {
-                        auto target_itr = std::find_if( // LCOV_EXCL_LINE
-                            m_context_stack.rbegin(),
-                            m_context_stack.rend(),
-                            [indent](const parse_context& c) { return indent > c.indent; });
-                        pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
-                    }
-                }
-                if (pop_num > 0) {
-                    for (uint32_t i = 0; i < pop_num; i++) {
-                        // move back to the previous container node.
-                        m_context_stack.pop_back();
-                    }
-                    mp_current_node = m_context_stack.back().p_node;
+                const bool needs_to_move_back = indent == 0 || indent < m_context_stack.back().indent;
+                if (needs_to_move_back) {
+                    pop_to_parent_node(line, indent, [indent](const parse_context& c) { return indent > c.indent; });
                 }
 
                 if FK_YAML_UNLIKELY (mp_current_node->is_null()) {
@@ -566,7 +549,9 @@ private:
                         // qux:
                         // # -> {foo: null, bar: {baz: null}, qux: null}
                         // ```
-                        pop_to_parent_block_mapping(line, indent);
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
+                        });
                     }
 
                     // defer checking the existence of a key separator after the following scalar until the next
@@ -634,40 +619,20 @@ private:
                 if (m_flow_context_depth == 0) {
                     lexer.set_context_state(true);
 
-                    uint32_t pop_num = 0;
-                    if (indent == 0) {
-                        pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
-                    }
-                    else if (indent <= m_context_stack.back().indent) {
-                        auto target_itr = std::find_if( // LCOV_EXCL_LINE
-                            m_context_stack.rbegin(),
-                            m_context_stack.rend(),
-                            [indent](const parse_context& c) {
-                                if (indent != c.indent) {
-                                    return false;
-                                }
+                    if (indent <= m_context_stack.back().indent) {
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            if (indent != c.indent) {
+                                return false;
+                            }
 
-                                switch (c.state) {
-                                case context_state_t::BLOCK_MAPPING:
-                                case context_state_t::MAPPING_VALUE:
-                                    return true;
-                                default:
-                                    return false;
-                                }
-                            });
-                        const bool is_indent_valid = (target_itr != m_context_stack.rend());
-                        if FK_YAML_UNLIKELY (!is_indent_valid) {
-                            throw parse_error("Detected invalid indentation.", line, indent);
-                        }
-
-                        pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
-                    }
-                    if (pop_num > 0) {
-                        for (uint32_t i = 0; i < pop_num; i++) {
-                            // move back to the previous container node.
-                            m_context_stack.pop_back();
-                        }
-                        mp_current_node = m_context_stack.back().p_node;
+                            switch (c.state) {
+                            case context_state_t::BLOCK_MAPPING:
+                            case context_state_t::MAPPING_VALUE:
+                                return true;
+                            default:
+                                return false;
+                            }
+                        });
                     }
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
@@ -781,40 +746,20 @@ private:
                 if (m_flow_context_depth == 0) {
                     lexer.set_context_state(true);
 
-                    uint32_t pop_num = 0;
-                    if (indent == 0) {
-                        pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
-                    }
-                    else if (indent <= m_context_stack.back().indent) {
-                        auto target_itr = std::find_if( // LCOV_EXCL_LINE
-                            m_context_stack.rbegin(),
-                            m_context_stack.rend(),
-                            [indent](const parse_context& c) {
-                                if (indent != c.indent) {
-                                    return false;
-                                }
+                    if (indent <= m_context_stack.back().indent) {
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            if (indent != c.indent) {
+                                return false;
+                            }
 
-                                switch (c.state) {
-                                case context_state_t::BLOCK_MAPPING:
-                                case context_state_t::MAPPING_VALUE:
-                                    return true;
-                                default:
-                                    return false;
-                                }
-                            });
-                        const bool is_indent_valid = (target_itr != m_context_stack.rend());
-                        if FK_YAML_UNLIKELY (!is_indent_valid) {
-                            throw parse_error("Detected invalid indentation.", line, indent);
-                        }
-
-                        pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
-                    }
-                    if (pop_num > 0) {
-                        for (uint32_t i = 0; i < pop_num; i++) {
-                            // move back to the previous container node.
-                            m_context_stack.pop_back();
-                        }
-                        mp_current_node = m_context_stack.back().p_node;
+                            switch (c.state) {
+                            case context_state_t::BLOCK_MAPPING:
+                            case context_state_t::MAPPING_VALUE:
+                                return true;
+                            default:
+                                return false;
+                            }
+                        });
                     }
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
@@ -1097,7 +1042,9 @@ private:
     /// @param indent The indentation width in the current line where the key is found.
     void add_new_key(basic_node_type&& key, const uint32_t line, const uint32_t indent) {
         if (m_flow_context_depth == 0 && indent <= m_context_stack.back().indent) {
-            pop_to_parent_block_mapping(line, indent);
+            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
+            });
         }
         else if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
             throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
@@ -1242,33 +1189,32 @@ private:
     }
 
     /// @brief Pops parent contexts to a block mapping with the given indentation.
+    /// @tparam Pred Functor type to test parent contexts.
     /// @param line The current line count.
     /// @param indent The indentation level of the target parent block mapping.
-    void pop_to_parent_block_mapping(uint32_t line, uint32_t indent) {
+    template <typename Pred>
+    void pop_to_parent_node(uint32_t line, uint32_t indent, Pred&& pred) {
+        FK_YAML_ASSERT(!m_context_stack.empty());
+
         uint32_t pop_num = 0;
         if (indent == 0) {
             pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
         }
         else {
-            auto target_itr =
-                std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
-                    // the target node is a block mapping key node with the same indentation.
-                    return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
-                });
-            const bool is_indent_valid = (target_itr != m_context_stack.rend());
+            auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
+            const bool is_indent_valid = (itr != m_context_stack.rend());
             if FK_YAML_UNLIKELY (!is_indent_valid) {
                 throw parse_error("Detected invalid indentation.", line, indent);
             }
 
-            pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
+            pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
         }
-        if (pop_num > 0) {
-            // move back to the parent block mapping.
-            for (uint32_t i = 0; i < pop_num; i++) {
-                m_context_stack.pop_back();
-            }
-            mp_current_node = m_context_stack.back().p_node;
+
+        // move back to the parent block mapping.
+        for (uint32_t i = 0; i < pop_num; i++) {
+            m_context_stack.pop_back();
         }
+        mp_current_node = m_context_stack.back().p_node;
     }
 
     /// @brief Set YAML directive properties to the given node.
