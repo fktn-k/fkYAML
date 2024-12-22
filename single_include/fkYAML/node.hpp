@@ -1962,7 +1962,7 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
 /// @param[out] encoded_size The size of UTF-encoded bytes.
-inline void from_utf16( // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+inline void from_utf16(
     std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size, uint32_t& encoded_size) {
     if (utf16[0] < 0x80u) {
         utf8[0] = static_cast<uint8_t>(utf16[0] & 0x7Fu);
@@ -2559,8 +2559,6 @@ public:
         return find(s) != npos;
     }
 
-    // NOLINTBEGIN(bugprone-easily-swappable-parameters)
-
     /// @brief Finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
@@ -2632,8 +2630,6 @@ public:
     size_type find(const CharT* s, size_type pos = 0) const noexcept {
         return find(basic_str_view(s), pos);
     }
-
-    // NOLINTEND(bugprone-easily-swappable-parameters)
 
     /// @brief Retrospectively finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
@@ -2714,7 +2710,6 @@ public:
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
-    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     size_type find_first_of(const CharT* s, size_type pos, size_type n) const noexcept {
         if FK_YAML_UNLIKELY (n == 0) {
             return npos;
@@ -6030,7 +6025,7 @@ public:
     /// @brief Constructs a new scalar_parser object.
     /// @param line Current line.
     /// @param indent Current indentation.
-    scalar_parser(uint32_t line, uint32_t indent) noexcept // NOLINT(bugprone-easily-swappable-parameters)
+    scalar_parser(uint32_t line, uint32_t indent) noexcept
         : m_line(line),
           m_indent(indent) {
     }
@@ -7084,7 +7079,6 @@ class basic_deserializer {
         /// @param indent The indentation width in the current line. (count from zero)
         /// @param state The parse context type.
         /// @param p_node The underlying node associated to this context.
-        // // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
         parse_context(uint32_t line, uint32_t indent, context_state_t state, basic_node_type* p_node) noexcept
             : line(line),
               indent(indent),
@@ -7983,7 +7977,6 @@ private:
     /// @param line The variable to store the line of either the first property or the last non-property token.
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
-    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     bool deserialize_node_properties(lexer_type& lexer, lexical_token& last_token, uint32_t& line, uint32_t& indent) {
         m_needs_anchor_impl = m_needs_tag_impl = false;
 

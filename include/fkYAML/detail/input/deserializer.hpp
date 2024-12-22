@@ -72,7 +72,6 @@ class basic_deserializer {
         /// @param indent The indentation width in the current line. (count from zero)
         /// @param state The parse context type.
         /// @param p_node The underlying node associated to this context.
-        // // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
         parse_context(uint32_t line, uint32_t indent, context_state_t state, basic_node_type* p_node) noexcept
             : line(line),
               indent(indent),
@@ -971,7 +970,6 @@ private:
     /// @param line The variable to store the line of either the first property or the last non-property token.
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
-    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     bool deserialize_node_properties(lexer_type& lexer, lexical_token& last_token, uint32_t& line, uint32_t& indent) {
         m_needs_anchor_impl = m_needs_tag_impl = false;
 

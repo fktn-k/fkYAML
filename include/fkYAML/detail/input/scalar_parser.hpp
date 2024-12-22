@@ -47,7 +47,7 @@ public:
     /// @brief Constructs a new scalar_parser object.
     /// @param line Current line.
     /// @param indent Current indentation.
-    scalar_parser(uint32_t line, uint32_t indent) noexcept // NOLINT(bugprone-easily-swappable-parameters)
+    scalar_parser(uint32_t line, uint32_t indent) noexcept
         : m_line(line),
           m_indent(indent) {
     }
