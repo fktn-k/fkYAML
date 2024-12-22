@@ -1063,7 +1063,6 @@ TEST_CASE("Deserializer_BlockMapping") {
     }
 
     // // regression test for https://github.com/fktn-k/fkYAML/issues/449
-    // FIXME: not passing
     SECTION("missing the \":\" mapping value indicator after key (root)") {
         std::string input = "1:\n"
                             "1";
@@ -1083,8 +1082,9 @@ TEST_CASE("Deserializer_BlockMapping") {
     SECTION("block mapping which contains empty mapping values") {
         std::string input = "foo:\n"
                             "bar:\n"
-                            "  baz:\n"
-                            "qux:\n";
+                            "  foo:\n"
+                            "  bar:\n"
+                            "baz:\n";
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
 
@@ -1092,14 +1092,16 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root.size() == 3);
         REQUIRE(root.contains("foo"));
         REQUIRE(root.contains("bar"));
-        REQUIRE(root.contains("qux"));
+        REQUIRE(root.contains("baz"));
 
         REQUIRE(root["foo"].is_null());
         REQUIRE(root["bar"].is_mapping());
-        REQUIRE(root["bar"].size() == 1);
-        REQUIRE(root["bar"].contains("baz"));
-        REQUIRE(root["bar"]["baz"].is_null());
-        REQUIRE(root["qux"].is_null());
+        REQUIRE(root["bar"].size() == 2);
+        REQUIRE(root["bar"].contains("foo"));
+        REQUIRE(root["bar"].contains("bar"));
+        REQUIRE(root["bar"]["foo"].is_null());
+        REQUIRE(root["bar"]["bar"].is_null());
+        REQUIRE(root["baz"].is_null());
     }
 }
 

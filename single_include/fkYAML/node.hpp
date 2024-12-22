@@ -7451,6 +7451,10 @@ private:
                     throw parse_error("sequence key should not be empty.", line, indent);
                 }
 
+                if (m_flow_context_depth > 0) {
+                    break;
+                }
+
                 // hold the line count of the key separator for later use.
                 const uint32_t old_indent = indent;
                 const uint32_t old_line = line;
@@ -7467,10 +7471,6 @@ private:
 
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
-
-                if (m_flow_context_depth > 0) {
-                    continue;
-                }
 
                 const bool is_implicit_same_line =
                     (line == old_line) && (m_context_stack.empty() || old_indent > m_context_stack.back().indent);
@@ -7545,8 +7545,9 @@ private:
                         continue;
                     }
 
-                    if (m_flow_context_depth == 0 && m_context_stack.back().state == context_state_t::MAPPING_VALUE &&
-                        indent <= m_context_stack.back().indent) {
+                    if (indent <= m_context_stack.back().indent) {
+                        FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::MAPPING_VALUE);
+
                         // Mapping values can be omitted and are considered to be null.
                         // ```yaml
                         // foo:
@@ -7556,7 +7557,7 @@ private:
                         // # -> {foo: null, bar: {baz: null}, qux: null}
                         // ```
                         pop_to_parent_node(line, indent, [indent](const parse_context& c) {
-                            return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
+                            return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
                         });
                     }
 
@@ -7627,14 +7628,10 @@ private:
 
                     if (indent <= m_context_stack.back().indent) {
                         pop_to_parent_node(line, indent, [indent](const parse_context& c) {
-                            if (indent != c.indent) {
-                                return false;
-                            }
-
                             switch (c.state) {
                             case context_state_t::BLOCK_MAPPING:
                             case context_state_t::MAPPING_VALUE:
-                                return true;
+                                return indent == c.indent;
                             default:
                                 return false;
                             }
@@ -7754,14 +7751,10 @@ private:
 
                     if (indent <= m_context_stack.back().indent) {
                         pop_to_parent_node(line, indent, [indent](const parse_context& c) {
-                            if (indent != c.indent) {
-                                return false;
-                            }
-
                             switch (c.state) {
                             case context_state_t::BLOCK_MAPPING:
                             case context_state_t::MAPPING_VALUE:
-                                return true;
+                                return indent == c.indent;
                             default:
                                 return false;
                             }
@@ -7910,11 +7903,8 @@ private:
                 apply_directive_set(node);
                 apply_node_properties(node);
 
-                const bool should_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
-                if (should_continue) {
-                    continue;
-                }
-                break;
+                deserialize_scalar(lexer, std::move(node), indent, line, token);
+                continue;
             }
             case lexical_token_t::PLAIN_SCALAR:
             case lexical_token_t::SINGLE_QUOTED_SCALAR:
@@ -7928,11 +7918,8 @@ private:
                 apply_directive_set(node);
                 apply_node_properties(node);
 
-                const bool do_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
-                if (do_continue) {
-                    continue;
-                }
-                break;
+                deserialize_scalar(lexer, std::move(node), indent, line, token);
+                continue;
             }
             case lexical_token_t::BLOCK_LITERAL_SCALAR:
             case lexical_token_t::BLOCK_FOLDED_SCALAR: {
@@ -8046,10 +8033,12 @@ private:
     /// @param line The line where the key is found.
     /// @param indent The indentation width in the current line where the key is found.
     void add_new_key(basic_node_type&& key, const uint32_t line, const uint32_t indent) {
-        if (m_flow_context_depth == 0 && indent <= m_context_stack.back().indent) {
-            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
-                return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
-            });
+        if (m_flow_context_depth == 0) {
+            if (indent <= m_context_stack.back().indent) {
+                pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                    return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
+                });
+            }
         }
         else if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
             throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
@@ -8113,11 +8102,13 @@ private:
     /// @param line The number of processed lines. Can be updated in this function.
     /// @param token The storage for last lexical token.
     /// @return true if next token has already been got, false otherwise.
-    bool deserialize_scalar(
+    void deserialize_scalar(
         lexer_type& lexer, basic_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {
         token = lexer.get_next_token();
         if (mp_current_node->is_mapping()) {
-            if (token.type != lexical_token_t::KEY_SEPARATOR || line != lexer.get_lines_processed()) {
+            const bool is_key_sep_followed =
+                (token.type == lexical_token_t::KEY_SEPARATOR) && (line == lexer.get_lines_processed());
+            if FK_YAML_UNLIKELY (!is_key_sep_followed) {
                 throw parse_error(
                     "The \":\" mapping value indicator must be followed after a mapping key.",
                     lexer.get_lines_processed(),
@@ -8126,7 +8117,7 @@ private:
             add_new_key(std::move(node), line, indent);
         }
         else if (token.type == lexical_token_t::KEY_SEPARATOR) {
-            if (line != lexer.get_lines_processed()) {
+            if FK_YAML_UNLIKELY (line != lexer.get_lines_processed()) {
                 // This path is for explicit mapping key separator like:
                 //
                 // ```yaml
@@ -8141,7 +8132,7 @@ private:
                 }
                 indent = lexer.get_last_token_begin_pos();
                 line = lexer.get_lines_processed();
-                return true;
+                return;
             }
 
             if (mp_current_node->is_scalar()) {
@@ -8188,9 +8179,9 @@ private:
         else {
             assign_node_value(std::move(node), line, indent);
         }
+
         indent = lexer.get_last_token_begin_pos();
         line = lexer.get_lines_processed();
-        return true;
     }
 
     /// @brief Pops parent contexts to a block mapping with the given indentation.
@@ -8206,7 +8197,9 @@ private:
             pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
         }
         else {
+            // LCOV_EXCL_START
             auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
+            // LCOV_EXCL_STOP
             const bool is_indent_valid = (itr != m_context_stack.rend());
             if FK_YAML_UNLIKELY (!is_indent_valid) {
                 throw parse_error("Detected invalid indentation.", line, indent);
