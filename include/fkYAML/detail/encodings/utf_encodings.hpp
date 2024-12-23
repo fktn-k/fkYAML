@@ -190,7 +190,7 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
 /// @param[out] encoded_size The size of UTF-encoded bytes.
-inline void from_utf16( // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+inline void from_utf16(
     std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size, uint32_t& encoded_size) {
     if (utf16[0] < 0x80u) {
         utf8[0] = static_cast<uint8_t>(utf16[0] & 0x7Fu);

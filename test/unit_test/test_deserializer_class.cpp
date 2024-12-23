@@ -1061,6 +1061,48 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(qux_2_node.is_string());
         REQUIRE(qux_2_node.get_value_ref<std::string&>() == "b");
     }
+
+    // // regression test for https://github.com/fktn-k/fkYAML/issues/449
+    SECTION("missing the \":\" mapping value indicator after key (root)") {
+        std::string input = "1:\n"
+                            "1";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    // regression test for https://github.com/fktn-k/fkYAML/issues/449
+    SECTION("missing the \":\" mapping value indicator after key (nested)") {
+        std::string input = "abc:\n"
+                            "  def: ghi\n"
+                            "  jkl mno";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("block mapping which contains empty mapping values") {
+        std::string input = "foo:\n"
+                            "bar:\n"
+                            "  foo:\n"
+                            "  bar:\n"
+                            "baz:\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 3);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("bar"));
+        REQUIRE(root.contains("baz"));
+
+        REQUIRE(root["foo"].is_null());
+        REQUIRE(root["bar"].is_mapping());
+        REQUIRE(root["bar"].size() == 2);
+        REQUIRE(root["bar"].contains("foo"));
+        REQUIRE(root["bar"].contains("bar"));
+        REQUIRE(root["bar"]["foo"].is_null());
+        REQUIRE(root["bar"]["bar"].is_null());
+        REQUIRE(root["baz"].is_null());
+    }
 }
 
 TEST_CASE("Deserializer_FlowContainerKey") {

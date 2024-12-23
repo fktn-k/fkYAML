@@ -451,8 +451,6 @@ public:
         return find(s) != npos;
     }
 
-    // NOLINTBEGIN(bugprone-easily-swappable-parameters)
-
     /// @brief Finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
@@ -524,8 +522,6 @@ public:
     size_type find(const CharT* s, size_type pos = 0) const noexcept {
         return find(basic_str_view(s), pos);
     }
-
-    // NOLINTEND(bugprone-easily-swappable-parameters)
 
     /// @brief Retrospectively finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
@@ -606,7 +602,6 @@ public:
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
-    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     size_type find_first_of(const CharT* s, size_type pos, size_type n) const noexcept {
         if FK_YAML_UNLIKELY (n == 0) {
             return npos;
