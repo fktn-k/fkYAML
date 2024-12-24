@@ -8039,6 +8039,15 @@ private:
                     return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
                 });
             }
+            else if (mp_current_node->is_mapping() && !mp_current_node->empty()) {
+                // bad indentation like the following YAML:
+                // ```yaml
+                // foo: true
+                //   baz: 123
+                // # ^
+                // ```
+                throw parse_error("bad indentation of a mapping entry.", line, indent);
+            }
         }
         else if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
             throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);

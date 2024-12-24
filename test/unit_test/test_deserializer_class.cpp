@@ -2104,6 +2104,43 @@ TEST_CASE("Deserializer_FlowMapping") {
     }
 }
 
+TEST_CASE("Deserializer_BadIndentation") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SECTION("implicit mapping entries") {
+        std::string input = "abc: def ghi\n"
+                            "  jkl: mno";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("nested implicit mapping entry") {
+        std::string input = "abc:\n"
+                            "  def: ghi\n"
+                            "    jkl: mno";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    // regression test for https://github.com/fktn-k/fkYAML/issues/449
+    SECTION("implicit mapping entries with a value on a separate line") {
+        std::string input = "abc:\n"
+                            "  def ghi\n"
+                            "  jkl: mno";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("explicit mapping entry with an implicit mapping as its key") {
+        std::string input = "? abc: def\n"
+                            "    def: ghi\n"
+                            ": jkl: mno";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+}
+
 TEST_CASE("Deserializer_InputWithComment") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
