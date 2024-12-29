@@ -1279,7 +1279,7 @@ private:
             throw parse_error("Detected invalid indentation.", line, indent);
         }
 
-        uint32_t pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
+        const auto pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
 
         // move back to the parent block mapping.
         for (uint32_t i = 0; i < pop_num; i++) {
