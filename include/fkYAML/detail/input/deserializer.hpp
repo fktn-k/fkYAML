@@ -656,6 +656,16 @@ private:
                     });
                 }
                 else if (parent_indent < indent) {
+                    if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE) {
+                        // bad indentation like the following YAML:
+                        // ```yaml
+                        // - "foo"
+                        //   - bar
+                        // # ^
+                        // ```
+                        throw parse_error("bad indentation of a mapping entry.", line, indent);
+                    }
+
                     *mp_current_node = basic_node_type::sequence();
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
                     apply_directive_set(*mp_current_node);
