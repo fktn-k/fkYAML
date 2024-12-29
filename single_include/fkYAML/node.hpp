@@ -7650,7 +7650,7 @@ private:
                     // # ^ (here)
                     // # -> {foo: [null, bar]}
                     // ```
-                    pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                    pop_to_parent_node(line, indent, [](const parse_context& c) {
                         return c.state == context_state_t::BLOCK_SEQUENCE;
                     });
                 }
