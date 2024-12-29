@@ -592,10 +592,7 @@ private:
                 }
 
                 // handle explicit mapping key separators.
-
-                while (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-                    m_context_stack.pop_back();
-                }
+                FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY);
 
                 basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
@@ -655,7 +652,7 @@ private:
                         return c.state == context_state_t::BLOCK_SEQUENCE && indent == c.indent;
                     });
                 }
-                else if (parent_indent < indent) {
+                else /*parent_indent < indent*/ {
                     if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE) {
                         // bad indentation like the following YAML:
                         // ```yaml
@@ -1091,12 +1088,7 @@ private:
     /// @param indent The indentation width in the current line where the key is found.
     void add_new_key(basic_node_type&& key, const uint32_t line, const uint32_t indent) {
         if (m_flow_context_depth == 0) {
-            if (indent <= m_context_stack.back().indent) {
-                pop_to_parent_node(line, indent, [indent](const parse_context& c) {
-                    return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
-                });
-            }
-            else if (mp_current_node->is_mapping() && !mp_current_node->empty()) {
+            if FK_YAML_UNLIKELY (m_context_stack.back().indent < indent) {
                 // bad indentation like the following YAML:
                 // ```yaml
                 // foo: true
@@ -1105,15 +1097,21 @@ private:
                 // ```
                 throw parse_error("bad indentation of a mapping entry.", line, indent);
             }
-        }
-        else if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
-            throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
-        }
 
-        if (mp_current_node->is_sequence()) {
-            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
-            mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
-            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
+            });
+        }
+        else {
+            if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+                throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
+            }
+
+            if (mp_current_node->is_sequence()) {
+                mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
+                mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
+                m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+            }
         }
 
         auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
@@ -1131,44 +1129,35 @@ private:
     /// @param node_value A rvalue basic_node_type object to be assigned to the current node.
     void assign_node_value(basic_node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
-            if (m_flow_context_depth > 0) {
-                if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
-                    // Flow sequence entries are not allowed to be empty.
-                    // ```yaml
-                    // [foo,,bar]
-                    // ```
-                    throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
-                }
+            FK_YAML_ASSERT(m_flow_context_depth > 0);
 
-                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+            if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+                // Flow sequence entries are not allowed to be empty.
+                // ```yaml
+                // [foo,,bar]
+                // ```
+                throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
             }
 
             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
-
-            if (m_flow_context_depth == 0) {
-                FK_YAML_ASSERT(!m_context_stack.empty());
-                FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY);
-                m_context_stack.pop_back();
-            }
+            m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             return;
         }
 
         // a scalar node
         *mp_current_node = std::move(node_value);
-        if FK_YAML_LIKELY (!m_context_stack.empty()) {
-            if (m_flow_context_depth > 0 ||
-                m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-                m_context_stack.pop_back();
-                mp_current_node = m_context_stack.back().p_node;
-
-                if (m_flow_context_depth > 0) {
-                    m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
-                }
-            }
-        }
-        else {
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
             // single scalar document.
             return;
+        }
+
+        if FK_YAML_LIKELY (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+            m_context_stack.pop_back();
+            mp_current_node = m_context_stack.back().p_node;
+
+            if (m_flow_context_depth > 0) {
+                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+            }
         }
     }
 

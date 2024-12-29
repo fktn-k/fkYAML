@@ -161,7 +161,7 @@ update-version: fkYAML.natvis update-project-version update-sources update-git-t
 # pre-requisites: lcov
 lcov-coverage:
 	cmake -B build_coverage -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_CODE_COVERAGE=ON
-	cmake --build build_coverage --config Debug --target generate_test_coverage -j $(JOBS)
+	cmake --build build_coverage --config Debug --target generate_test_coverage
 
 # pre-requisites: genhtml lcov
 html-coverage: lcov-coverage
