@@ -315,15 +315,6 @@ TEST_CASE("Deserializer_ScalarConversionErrorHandling") {
     REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
 }
 
-TEST_CASE("Deserializer_InvalidIndentation") {
-    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
-    fkyaml::node root;
-
-    REQUIRE_THROWS_AS(
-        root = deserializer.deserialize(fkyaml::detail::input_adapter("foo:\n  bar: baz\n qux: true")),
-        fkyaml::parse_error);
-}
-
 TEST_CASE("Deserializer_DuplicateKeys") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
@@ -702,6 +693,27 @@ TEST_CASE("Deserializer_BlockSequence") {
         fkyaml::node& foo_baz_node = foo_node["baz"];
         REQUIRE(foo_baz_node.is_boolean());
         REQUIRE(foo_baz_node.get_value<bool>() == true);
+    }
+
+    SECTION("empty block sequence entries") {
+        std::string input = "- -\n"
+                            "  - 123\n"
+                            "  -\n"
+                            "-\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+
+        fkyaml::node& root_0 = root[0];
+        REQUIRE(root_0.is_sequence());
+        REQUIRE(root_0.size() == 3);
+        REQUIRE(root_0[0].is_null());
+        REQUIRE(root_0[1].is_integer());
+        REQUIRE(root_0[1].get_value<int>() == 123);
+        REQUIRE(root_0[2].is_null());
+
+        REQUIRE(root[1].is_null());
     }
 }
 
@@ -1622,6 +1634,42 @@ TEST_CASE("Deserializer_ExplicitBlockMapping") {
         REQUIRE(root_2_bazfalse_456_seqmapkey_0_qux789_mapkey_node.is_float_number());
         REQUIRE(root_2_bazfalse_456_seqmapkey_0_qux789_mapkey_node.get_value<double>() == 1.41);
     }
+
+    SECTION("nested explicit mapping keys in various ways") {
+        std::string input = "foo:\n"
+                            "  ? ? foo\n"
+                            "    : bar\n"
+                            "  : ? baz\n"
+                            "    : - ? qux\n"
+                            "        : 123\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.size() == 1);
+        fkyaml::node map_key = {{"foo", "bar"}};
+        REQUIRE(foo_node.contains(map_key));
+
+        fkyaml::node& foo_inner_node = foo_node[map_key];
+        REQUIRE(foo_inner_node.is_mapping());
+        REQUIRE(foo_inner_node.size() == 1);
+        REQUIRE(foo_inner_node.contains("baz"));
+
+        fkyaml::node& foo_inner_baz_node = foo_inner_node["baz"];
+        REQUIRE(foo_inner_baz_node.is_sequence());
+        REQUIRE(foo_inner_baz_node.size() == 1);
+
+        fkyaml::node& foo_inner_baz_0_node = foo_inner_baz_node[0];
+        REQUIRE(foo_inner_baz_0_node.is_mapping());
+        REQUIRE(foo_inner_baz_0_node.size() == 1);
+        REQUIRE(foo_inner_baz_0_node.contains("qux"));
+        REQUIRE(foo_inner_baz_0_node["qux"].is_integer());
+        REQUIRE(foo_inner_baz_0_node["qux"].get_value<int>() == 123);
+    }
 }
 
 TEST_CASE("Deserializer_FlowSequence") {
@@ -2101,6 +2149,65 @@ TEST_CASE("Deserializer_FlowMapping") {
         fkyaml::node& foo_node = root["foo"];
         REQUIRE(foo_node.is_mapping());
         REQUIRE(foo_node.empty());
+    }
+}
+
+TEST_CASE("Deserializer_BadIndentation") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SECTION("implicit mapping entries") {
+        std::string input = "abc: def ghi\n"
+                            "  jkl: mno";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("nested implicit mapping entry with too much indentation") {
+        std::string input = "abc:\n"
+                            "  def: ghi\n"
+                            "    jkl: mno";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("nested implicit mapping entry with less indentation") {
+        std::string input = "foo:\n"
+                            "  bar: baz\n"
+                            " qux: true";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    // regression test for https://github.com/fktn-k/fkYAML/issues/449
+    SECTION("implicit mapping entries with a value on a separate line") {
+        std::string input = "abc:\n"
+                            "  def ghi\n"
+                            "  jkl: mno";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("explicit mapping entry with an implicit mapping as its key") {
+        std::string input = "? abc: def\n"
+                            "    def: ghi\n"
+                            ": jkl: mno";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("block sequence entries") {
+        std::string input = "- \"abc\"\n"
+                            " - def";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("nested block sequence entries") {
+        std::string input = "- - \"abc\"\n"
+                            "    - def\n";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 }
 
