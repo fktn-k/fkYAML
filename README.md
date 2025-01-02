@@ -184,7 +184,7 @@ Note that, since fkYAML deserializes scalars into native booleans or integers du
 
 This project is distributed under the [MIT License](https://opensource.org/license/mit/):  
 
-Copyright (c) 2023-2024 Kensuke Fukutani  
+Copyright (c) 2023-2025 Kensuke Fukutani  
 
 Permission is hereby granted, free of charge, to any person obtaining a copy  
 of this software and associated documentation files (the "Software"), to deal  

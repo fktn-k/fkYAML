@@ -23,6 +23,6 @@ if [ ! -e "$SCRIPT_DIR"/venv_clang_format/"$VENV_BINARY_DIR"/clang-format ]; the
     "$SCRIPT_DIR"/venv_clang_format/"$VENV_BINARY_DIR"/pip install clang-format==18.1.3
 fi
 
-for f in $(find "$ROOT_DIR/include" "$ROOT_DIR/test" "$ROOT_DIR/docs/examples" "$ROOT_DIR/tool/benchmark" -type f -name "*.hpp" -o -name "*.cpp" | sort); do
+for f in $(find "$ROOT_DIR/include" "$ROOT_DIR/tests" "$ROOT_DIR/examples" "$ROOT_DIR/tools/benchmark" -type f -name "*.hpp" -o -name "*.cpp" | sort); do
     "$SCRIPT_DIR"/venv_clang_format/"$VENV_BINARY_DIR"/clang-format "$f" -i
 done

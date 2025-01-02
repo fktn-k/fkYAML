@@ -110,7 +110,7 @@ endif()
 ###########################
 
 if(FK_YAML_BUILD_EXAMPLES)
-  add_subdirectory(docs/examples)
+  add_subdirectory(examples)
 endif()
 
 ############################
@@ -119,16 +119,16 @@ endif()
 
 # Configure clang-tidy if enabled.
 if(FK_YAML_RUN_CLANG_TIDY)
-  add_subdirectory(tool/clang_tidy)
+  add_subdirectory(tools/clang_tidy)
 endif()
 
 # Configure include-what-you-use if enabled.
 if(FK_YAML_RUN_IWYU)
-  add_subdirectory(tool/iwyu)
+  add_subdirectory(tools/iwyu)
 endif()
 
 if(FK_YAML_RUN_BENCHMARK)
-  add_subdirectory(tool/benchmark)
+  add_subdirectory(tools/benchmark)
 endif()
 
 #################################
@@ -143,7 +143,7 @@ if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
   add_subdirectory(${CATCH2_ROOT_DIR})
   include(CTest)
   enable_testing()
-  add_subdirectory(test)
+  add_subdirectory(tests)
 
   # Set the unit test app project as the Visual Studio startup project
   # if the target compiler is some version of Microsoft Visual C++ and
