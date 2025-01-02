@@ -7,8 +7,8 @@ on:
       - develop
     paths:
       - .github/workflows/publish_docs.yml
-      - docs/examples/**
-      - docs/mkdocs/**
+      - examples/**
+      - docs/**
   workflow_dispatch:
 
 # no cancellation during uploads to avoid broken publications
@@ -37,7 +37,7 @@ jobs:
           cmake --build ${{github.workspace}}/build --config Debug
 
       - name: Build documentation
-        run: make -C docs/mkdocs build
+        run: make build-docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -45,7 +45,7 @@ jobs:
       - name: Upload API documents
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{github.workspace}}/docs/mkdocs/site
+          path: ${{github.workspace}}/docs/site
 
   deploy:
     if: github.repository == 'fktn-k/fkYAML'
