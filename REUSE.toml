@@ -16,7 +16,7 @@ SPDX-FileCopyrightText = ["2017 Georg Sauthoff <mail@gms.tf>", "2022, Alexander 
 SPDX-License-Identifier = "GPL-3.0-only"
 
 [[annotations]]
-path = "tool/amalgamation/**"
+path = "tools/amalgamation/**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2012 Erik Edlund <erik.edlund@32767.se>"
 SPDX-License-Identifier = "BSD-3-Clause"
