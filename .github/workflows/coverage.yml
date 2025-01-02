@@ -9,7 +9,7 @@ on:
       - .github/workflows/coverage.yml
       - cmake/**
       - include/**
-      - test/**
+      - tests/**
       - CMakeLists.txt
       - Makefile
   # to grant pull-requests write permission to fork repos as well
@@ -18,7 +18,7 @@ on:
       - .github/workflows/coverage.yml
       - cmake/**
       - include/**
-      - test/**
+      - tests/**
       - CMakeLists.txt
       - Makefile
   workflow_dispatch:
