@@ -3,8 +3,8 @@
 /.vs/
 
 # documentation
-/docs/mkdocs/site/
-/docs/mkdocs/venv/
+/docs/site/
+/docs/venv/
 
 # natvis generator
 /tools/natvis_generator/venv/

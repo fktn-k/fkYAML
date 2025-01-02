@@ -102,10 +102,10 @@ examples:
 	cmake --build build_examples --config Debug
 
 build-docs: examples
-	@$(MAKE) -C ./docs/mkdocs build
+	@$(MAKE) -C ./docs build
 
 serve-docs: examples
-	@$(MAKE) -C ./docs/mkdocs serve
+	@$(MAKE) -C ./docs serve
 
 ###############
 #   Version   #

@@ -110,7 +110,7 @@ endif()
 ###########################
 
 if(FK_YAML_BUILD_EXAMPLES)
-  add_subdirectory(docs/examples)
+  add_subdirectory(examples)
 endif()
 
 ############################
