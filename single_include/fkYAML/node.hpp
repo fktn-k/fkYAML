@@ -10530,6 +10530,12 @@ private:
                     serialize_node(seq_item, cur_indent, str);
                     str += "\n";
                 }
+                else if (seq_item.is_sequence() && seq_item.size() == 0) {
+                    str += " []\n";
+                }
+                else if (seq_item.is_mapping() && seq_item.size() == 0) {
+                    str += " {}\n";
+                }
                 else {
                     str += "\n";
                     serialize_node(seq_item, cur_indent + 2, str);
@@ -10580,6 +10586,12 @@ private:
                     str += " ";
                     serialize_node(*itr, cur_indent, str);
                     str += "\n";
+                }
+                else if (itr->is_sequence() && itr->size() == 0) {
+                    str += " []\n";
+                }
+                else if (itr->is_mapping() && itr->size() == 0) {
+                    str += " {}\n";
                 }
                 else {
                     str += "\n";
