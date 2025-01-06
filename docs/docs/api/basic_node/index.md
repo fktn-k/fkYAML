@@ -66,6 +66,8 @@ This class provides features to handle YAML nodes.
 | initializer_list_t                              | The type for initializer lists of `basic_node` values.              |
 | [node_t](node_t.md)                             | **(DEPRECATED)** The type used to store the internal value type.    |
 | [yaml_version_t](yaml_version_t.md)             | **(DEPRECATED)** The type used to store the enable version of YAML. |
+| [map_range](map_range.md)                       | The helper type for the `map_items()` function.                     |
+| [const_map_range](map_range.md)                 | The helper type for the `map_items()` function.                     |
 
 ## **Member Functions**
 
@@ -107,16 +109,17 @@ This class provides features to handle YAML nodes.
 | [get_value_ref](get_value_ref.md)         |          | converts a basic_node into reference to a target type.                  |
 
 ### Iterators
-| Name                 | Description                                                                  |
-| -------------------- | ---------------------------------------------------------------------------- |
-| [begin](begin.md)    | returns a (const) iterator to the beginning of mapping/sequence              |
-| [cbegin](begin.md)   | returns a const iterator to the beginning of mapping/sequence                |
-| [end](end.md)        | returns a (const) iterator to the past-the-last of mapping/sequence          |
-| [cend](end.md)       | returns a const iterator to the past-the-last of mapping/sequence            |
-| [rbegin](rbegin.md)  | returns a (const) iterator to the first of reversed mapping/sequence         |
-| [crbegin](rbegin.md) | returns a const iterator to the first of reversed mapping/sequence           |
-| [rend](rend.md)      | returns a (const) iterator to the past-the-last of reversed mapping/sequence |
-| [crend](rend.md)     | returns a const iterator to the past-the-last of reversed mapping/sequence   |
+| Name                      | Description                                                                                                |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [begin](begin.md)         | returns a (const) iterator to the beginning of mapping/sequence                                            |
+| [cbegin](begin.md)        | returns a const iterator to the beginning of mapping/sequence                                              |
+| [end](end.md)             | returns a (const) iterator to the past-the-last of mapping/sequence                                        |
+| [cend](end.md)            | returns a const iterator to the past-the-last of mapping/sequence                                          |
+| [rbegin](rbegin.md)       | returns a (const) iterator to the first of reversed mapping/sequence                                       |
+| [crbegin](rbegin.md)      | returns a const iterator to the first of reversed mapping/sequence                                         |
+| [rend](rend.md)           | returns a (const) iterator to the past-the-last of reversed mapping/sequence                               |
+| [crend](rend.md)          | returns a const iterator to the past-the-last of reversed mapping/sequence                                 |
+| [map_items](map_items.md) | returns a range of mapping entries, allowing access to iterator member functions in range-based for loops. |
 
 ### Inspection for Container Node Values
 | Name                    | Description                                            |

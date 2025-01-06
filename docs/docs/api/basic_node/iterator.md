@@ -36,6 +36,12 @@ They satisfies [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/n
 | key   | Returns const reference to a key node of the current key-value pair.<br>`fkyaml::exception` is thrown if an iterator points to a sequence element. |
 | value | Returns reference to a sequence element if an element points to a sequence element, or a mapping value otherwise.                                  |
 
+## **Non-Member Functions**
+
+| Name               | Description                                                                                                                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| get<std::size_t I> | Returns reference to a key (if I == 0) or a value (if I == 1) mainly for structured binding support.<br>`fkyaml::exception` is thrown if an iterator points to a sequence element. |
+
 ## **Examples**
 
 ??? Example

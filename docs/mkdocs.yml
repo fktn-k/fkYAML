@@ -111,6 +111,7 @@ nav:
       - value_converter_type: api/basic_node/value_converter_type.md
       - node_t: api/basic_node/node_t.md
       - yaml_version_t: api/basic_node/yaml_version_t.md
+      - 'map_range, const_map_range': api/basic_node/map_range.md
     - (constructor): api/basic_node/constructor.md
     - (destructor): api/basic_node/destructor.md
     - operators:
@@ -153,6 +154,7 @@ nav:
     - is_sequence: api/basic_node/is_sequence.md
     - is_string: api/basic_node/is_string.md
     - mapping: api/basic_node/mapping.md
+    - map_items: api/basic_node/map_items.md
     - node: api/basic_node/node.md
     - 'rbegin, crbegin': api/basic_node/rbegin.md
     - 'rend, crend': api/basic_node/rend.md
