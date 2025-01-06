@@ -1,0 +1,3 @@
+key: bar, value: true
+key: foo, value: 123
+type_error: map_items() cannot be called on a non-mapping node. type=SEQUENCE

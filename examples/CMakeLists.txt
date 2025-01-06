@@ -25,8 +25,6 @@ target_compile_options(
     >
 )
 
-# FIXME: change build instructions according to the changes in their paths.
-
 ###############################
 #   Build tutorial projects   #
 ###############################
@@ -37,4 +35,4 @@ add_subdirectory(tutorials)
 #   Build example codes   #
 ###########################
 
-
+add_subdirectory(apis)
