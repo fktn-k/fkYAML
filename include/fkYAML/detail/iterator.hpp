@@ -160,7 +160,7 @@ public:
 
     /// @brief A dereference operator of the iterator class.
     /// @return reference Reference to the Node object internally referenced by the actual iterator object.
-    reference operator*() noexcept {
+    reference operator*() const noexcept {
         if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return *(m_iterator_holder.sequence_iterator);
         }
@@ -361,7 +361,7 @@ public:
 
     /// @brief Get reference to the YAML node of the current iterator.
     /// @return Reference to the YAML node of the current iterator.
-    reference value() noexcept {
+    reference value() const noexcept {
         return operator*();
     }
 
@@ -372,6 +372,29 @@ private:
     iterator_holder<value_type> m_iterator_holder {};
 };
 
+template <std::size_t I, typename ValueType, enable_if_t<I == 0, int> = 0>
+inline auto get(const iterator<ValueType>& i) -> decltype(i.key()) {
+    return i.key();
+}
+
+template <std::size_t I, typename ValueType, enable_if_t<I == 1, int> = 0>
+inline auto get(const iterator<ValueType>& i) -> decltype(i.value()) {
+    return i.value();
+}
+
 FK_YAML_DETAIL_NAMESPACE_END
+
+namespace std {
+
+template <typename ValueType>
+class tuple_size<::fkyaml::detail::iterator<ValueType>> : public integral_constant<size_t, 2> {};
+
+template <size_t N, typename ValueType>
+class tuple_element<N, ::fkyaml::detail::iterator<ValueType>> {
+public:
+    using type = decltype(get<N>(std::declval<::fkyaml::detail::iterator<ValueType>>()));
+};
+
+} // namespace std
 
 #endif /* FK_YAML_DETAIL_ITERATOR_HPP */

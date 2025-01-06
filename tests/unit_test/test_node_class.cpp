@@ -4489,6 +4489,64 @@ TEST_CASE("Node_ConstReverseEnd") {
     }
 }
 
+TEST_CASE("Node_MapItems") {
+    int i = 0;
+    fkyaml::node keys[2] = {"bar", "foo"};
+    fkyaml::node values[2] = {-456, 123};
+
+    SECTION("non-const version") {
+        fkyaml::node map = {{"foo", 123}, {"bar", -456}};
+
+        for (auto& entry : map.map_items()) {
+            REQUIRE(entry.key() == keys[i]);
+            REQUIRE(entry.value() == values[i]);
+            ++i;
+        }
+
+        i = 0;
+        for (const auto& entry : map.map_items()) {
+            REQUIRE(entry.key() == keys[i]);
+            REQUIRE(entry.value() == values[i]);
+            ++i;
+        }
+    }
+
+    SECTION("const version") {
+        const fkyaml::node c_map = {{"foo", 123}, {"bar", -456}};
+
+        for (const auto& c_entry : c_map.map_items()) {
+            REQUIRE(c_entry.key() == keys[i]);
+            REQUIRE(c_entry.value() == values[i]);
+            ++i;
+        }
+    }
+
+    SECTION("not mapping") {
+        auto non_mapping = GENERATE(
+            fkyaml::node::sequence(),
+            fkyaml::node(nullptr),
+            fkyaml::node(true),
+            fkyaml::node(123),
+            fkyaml::node(3.14),
+            fkyaml::node("foo"));
+        const auto const_non_mapping = non_mapping;
+        REQUIRE_THROWS_AS(non_mapping.map_items(), fkyaml::type_error);
+        REQUIRE_THROWS_AS(const_non_mapping.map_items(), fkyaml::type_error);
+    }
+
+#if defined(__cpp_structured_bindings) && __cpp_structured_bindings >= 201606L
+    SECTION("structured bindings") {
+        fkyaml::node map = {{"foo", 123}, {"bar", -456}};
+
+        for (auto& [key, value] : map.map_items()) {
+            REQUIRE(key == keys[i]);
+            REQUIRE(value == values[i]);
+            ++i;
+        }
+    }
+#endif
+}
+
 //
 // test cases for swap
 //
