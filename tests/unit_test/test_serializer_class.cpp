@@ -30,6 +30,36 @@ TEST_CASE("Serializer_MappingNode") {
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
 }
 
+TEST_CASE("Serializer_EmptyCollectionNode") {
+    auto seq = fkyaml::node::sequence();
+    auto map = fkyaml::node::mapping();
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+
+    SECTION("child sequence item is an empty sequence node") {
+        seq.get_value_ref<fkyaml::node::sequence_type&>().emplace_back(fkyaml::node::sequence());
+        std::string expected = "- []\n";
+        REQUIRE(serializer.serialize(seq) == expected);
+    }
+
+    SECTION("child sequence item is an empty mapping node") {
+        seq.get_value_ref<fkyaml::node::sequence_type&>().emplace_back(fkyaml::node::mapping());
+        std::string expected = "- {}\n";
+        REQUIRE(serializer.serialize(seq) == expected);
+    }
+
+    SECTION("mapping value is an empty sequence node") {
+        map["foo"] = seq;
+        std::string expected = "foo: []\n";
+        REQUIRE(serializer.serialize(map) == expected);
+    }
+
+    SECTION("mapping value is an empty mapping node") {
+        map["foo"] = fkyaml::node::mapping();
+        std::string expected = "foo: {}\n";
+        REQUIRE(serializer.serialize(map) == expected);
+    }
+}
+
 TEST_CASE("Serializer_NullNode") {
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     fkyaml::node node;
