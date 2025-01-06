@@ -155,16 +155,22 @@ private:
                     str += " ";
                     serialize_node(seq_item, cur_indent, str);
                     str += "\n";
+                    continue;
                 }
-                else if (seq_item.is_sequence() && seq_item.size() == 0) {
-                    str += " []\n";
-                }
-                else if (seq_item.is_mapping() && seq_item.size() == 0) {
-                    str += " {}\n";
-                }
-                else {
+
+                const bool is_empty = seq_item.empty();
+                if (!is_empty) {
                     str += "\n";
                     serialize_node(seq_item, cur_indent + 2, str);
+                    continue;
+                }
+
+                // an empty sequence or mapping
+                if (seq_item.is_sequence()) {
+                    str += " []\n";
+                }
+                else /*seq_item.is_mapping()*/ {
+                    str += " {}\n";
                 }
             }
             break;
@@ -212,16 +218,22 @@ private:
                     str += " ";
                     serialize_node(*itr, cur_indent, str);
                     str += "\n";
+                    continue;
                 }
-                else if (itr->is_sequence() && itr->size() == 0) {
-                    str += " []\n";
-                }
-                else if (itr->is_mapping() && itr->size() == 0) {
-                    str += " {}\n";
-                }
-                else {
+
+                const bool is_empty = itr->empty();
+                if (!is_empty) {
                     str += "\n";
                     serialize_node(*itr, cur_indent + 2, str);
+                    continue;
+                }
+
+                // an empty sequence or mapping
+                if (itr->is_sequence()) {
+                    str += " []\n";
+                }
+                else /*itr->is_mapping()*/ {
+                    str += " {}\n";
                 }
             }
             break;
