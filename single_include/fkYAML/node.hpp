@@ -9949,7 +9949,7 @@ public:
 
     /// @brief A dereference operator of the iterator class.
     /// @return reference Reference to the Node object internally referenced by the actual iterator object.
-    reference operator*() noexcept {
+    reference operator*() const noexcept {
         if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return *(m_iterator_holder.sequence_iterator);
         }
@@ -10150,7 +10150,7 @@ public:
 
     /// @brief Get reference to the YAML node of the current iterator.
     /// @return Reference to the YAML node of the current iterator.
-    reference value() noexcept {
+    reference value() const noexcept {
         return operator*();
     }
 
@@ -10161,9 +10161,160 @@ private:
     iterator_holder<value_type> m_iterator_holder {};
 };
 
+template <std::size_t I, typename ValueType, enable_if_t<I == 0, int> = 0>
+inline auto get(const iterator<ValueType>& i) -> decltype(i.key()) {
+    return i.key();
+}
+
+template <std::size_t I, typename ValueType, enable_if_t<I == 1, int> = 0>
+inline auto get(const iterator<ValueType>& i) -> decltype(i.value()) {
+    return i.value();
+}
+
 FK_YAML_DETAIL_NAMESPACE_END
 
+namespace std {
+
+template <typename ValueType>
+class tuple_size<::fkyaml::detail::iterator<ValueType>> : public integral_constant<size_t, 2> {};
+
+template <size_t N, typename ValueType>
+class tuple_element<N, ::fkyaml::detail::iterator<ValueType>> {
+public:
+    using type = decltype(get<N>(std::declval<::fkyaml::detail::iterator<ValueType>>()));
+};
+
+} // namespace std
+
 #endif /* FK_YAML_DETAIL_ITERATOR_HPP */
+
+// #include <fkYAML/detail/map_range_proxy.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_MAP_RANGE_PROXY_HPP
+#define FK_YAML_DETAIL_MAP_RANGE_PROXY_HPP
+
+// #include <fkYAML/detail/macros/define_macros.hpp>
+
+// #include <fkYAML/detail/meta/node_traits.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+template <typename Iterator>
+class map_iterator_proxy {
+public:
+    using value_type = Iterator;
+    using difference_type = std::ptrdiff_t;
+    using reference = value_type&;
+    using pointer = value_type*;
+    using iterator_category = std::forward_iterator_tag;
+
+    map_iterator_proxy() = default;
+
+    map_iterator_proxy(const Iterator& i) noexcept
+        : m_base_iterator(i) {
+    }
+
+    map_iterator_proxy(const map_iterator_proxy&) = default;
+    map_iterator_proxy& operator=(const map_iterator_proxy&) = default;
+    map_iterator_proxy(map_iterator_proxy&&) = default;
+    map_iterator_proxy& operator=(map_iterator_proxy&&) = default;
+
+    ~map_iterator_proxy() = default;
+
+    reference operator*() noexcept {
+        return m_base_iterator;
+    }
+
+    pointer operator->() noexcept {
+        return &m_base_iterator;
+    }
+
+    map_iterator_proxy& operator++() noexcept {
+        ++m_base_iterator;
+        return *this;
+    }
+
+    map_iterator_proxy operator++(int) & noexcept {
+        auto result = *this;
+        ++(*this);
+        return result;
+    }
+
+    bool operator==(const map_iterator_proxy& rhs) const noexcept {
+        return m_base_iterator == rhs.m_base_iterator;
+    }
+
+    bool operator!=(const map_iterator_proxy& rhs) const noexcept {
+        return m_base_iterator != rhs.m_base_iterator;
+    }
+
+    typename Iterator::reference key() const {
+        return m_base_iterator.key();
+    }
+
+    typename Iterator::reference value() const noexcept {
+        return m_base_iterator.value();
+    }
+
+private:
+    Iterator m_base_iterator {};
+};
+
+template <typename BasicNodeType>
+class map_range_proxy {
+    static_assert(
+        is_basic_node<remove_cv_t<BasicNodeType>>::value,
+        "map_range_proxy only accepts a basic_node type as its template parameter.");
+
+public:
+    using iterator = map_iterator_proxy<typename std::conditional<
+        std::is_const<BasicNodeType>::value, typename BasicNodeType::const_iterator,
+        typename BasicNodeType::iterator>::type>;
+
+    using const_iterator = map_iterator_proxy<typename BasicNodeType::const_iterator>;
+
+    map_range_proxy(BasicNodeType& map) noexcept
+        : mp_map(&map) {
+    }
+
+    map_range_proxy(const map_range_proxy&) = default;
+    map_range_proxy& operator=(const map_range_proxy&) = default;
+    map_range_proxy(map_range_proxy&&) = default;
+    map_range_proxy& operator=(map_range_proxy&&) = default;
+
+    ~map_range_proxy() = default;
+
+    iterator begin() noexcept {
+        return {mp_map->begin()};
+    }
+
+    const_iterator begin() const noexcept {
+        return {mp_map->cbegin()};
+    }
+
+    iterator end() noexcept {
+        return {mp_map->end()};
+    }
+
+    const_iterator end() const noexcept {
+        return {mp_map->cend()};
+    }
+
+private:
+    BasicNodeType* mp_map {nullptr};
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_MAP_RANGE_PROXY_HPP */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -10549,27 +10700,30 @@ private:
             }
             break;
         case node_type::MAPPING:
-            for (auto itr = node.begin(); itr != node.end(); ++itr) {
+            for (auto itr : node.map_items()) {
                 insert_indentation(cur_indent, str);
 
-                bool is_appended = try_append_alias(itr.key(), false, str);
+                // serialize a mapping key node.
+                const auto& key_node = itr.key();
+
+                bool is_appended = try_append_alias(key_node, false, str);
                 if (is_appended) {
                     // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
                     str += " ";
                 }
                 else {
-                    const bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
-                    const bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
+                    const bool is_anchor_appended = try_append_anchor(key_node, false, str);
+                    const bool is_tag_appended = try_append_tag(key_node, is_anchor_appended, str);
                     if (is_anchor_appended || is_tag_appended) {
                         str += " ";
                     }
 
-                    const bool is_container = !itr.key().is_scalar();
+                    const bool is_container = !key_node.is_scalar();
                     if (is_container) {
                         str += "? ";
                     }
                     const auto indent = static_cast<uint32_t>(get_cur_indent(str));
-                    serialize_node(itr.key(), indent, str);
+                    serialize_node(key_node, indent, str);
                     if (is_container) {
                         // a newline code is already inserted in the above serialize_node() call.
                         insert_indentation(indent - 2, str);
@@ -10578,19 +10732,22 @@ private:
 
                 str += ":";
 
-                is_appended = try_append_alias(*itr, true, str);
+                // serialize a mapping value node.
+                const auto& value_node = itr.value();
+
+                is_appended = try_append_alias(value_node, true, str);
                 if (is_appended) {
                     str += "\n";
                     continue;
                 }
 
-                try_append_anchor(*itr, true, str);
-                try_append_tag(*itr, true, str);
+                try_append_anchor(value_node, true, str);
+                try_append_tag(value_node, true, str);
 
                 const bool is_scalar = itr->is_scalar();
                 if (is_scalar) {
                     str += " ";
-                    serialize_node(*itr, cur_indent, str);
+                    serialize_node(value_node, cur_indent, str);
                     str += "\n";
                     continue;
                 }
@@ -10598,15 +10755,15 @@ private:
                 const bool is_empty = itr->empty();
                 if (!is_empty) {
                     str += "\n";
-                    serialize_node(*itr, cur_indent + 2, str);
+                    serialize_node(value_node, cur_indent + 2, str);
                     continue;
                 }
 
                 // an empty sequence or mapping
-                if (itr->is_sequence()) {
+                if (value_node.is_sequence()) {
                     str += " []\n";
                 }
-                else /*itr->is_mapping()*/ {
+                else /*value_node.is_mapping()*/ {
                     str += " {}\n";
                 }
             }
@@ -12401,6 +12558,12 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/yaml_version_t/
     using yaml_version_t = detail::yaml_version_t;
 
+    /// @brief A type for mapping range objects for the map_items() function.
+    using map_range = fkyaml::detail::map_range_proxy<basic_node>;
+
+    /// @brief A type for constant mapping range objects for the map_items() function.
+    using const_map_range = fkyaml::detail::map_range_proxy<const basic_node>;
+
 private:
     template <node_type>
     friend struct fkyaml::detail::external_node_constructor;
@@ -13859,6 +14022,20 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
     const_reverse_iterator crend() const {
         return rend();
+    }
+
+    map_range map_items() {
+        if FK_YAML_UNLIKELY (!is_mapping()) {
+            throw type_error("map_items() cannot be called on a non-mapping node.", get_type());
+        }
+        return {*this};
+    }
+
+    const_map_range map_items() const {
+        if FK_YAML_UNLIKELY (!is_mapping()) {
+            throw type_error("map_items() cannot be called on a non-mapping node.", get_type());
+        }
+        return {*this};
     }
 
 private:

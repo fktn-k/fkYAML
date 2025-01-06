@@ -175,27 +175,30 @@ private:
             }
             break;
         case node_type::MAPPING:
-            for (auto itr = node.begin(); itr != node.end(); ++itr) {
+            for (auto itr : node.map_items()) {
                 insert_indentation(cur_indent, str);
 
-                bool is_appended = try_append_alias(itr.key(), false, str);
+                // serialize a mapping key node.
+                const auto& key_node = itr.key();
+
+                bool is_appended = try_append_alias(key_node, false, str);
                 if (is_appended) {
                     // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
                     str += " ";
                 }
                 else {
-                    const bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
-                    const bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
+                    const bool is_anchor_appended = try_append_anchor(key_node, false, str);
+                    const bool is_tag_appended = try_append_tag(key_node, is_anchor_appended, str);
                     if (is_anchor_appended || is_tag_appended) {
                         str += " ";
                     }
 
-                    const bool is_container = !itr.key().is_scalar();
+                    const bool is_container = !key_node.is_scalar();
                     if (is_container) {
                         str += "? ";
                     }
                     const auto indent = static_cast<uint32_t>(get_cur_indent(str));
-                    serialize_node(itr.key(), indent, str);
+                    serialize_node(key_node, indent, str);
                     if (is_container) {
                         // a newline code is already inserted in the above serialize_node() call.
                         insert_indentation(indent - 2, str);
@@ -204,19 +207,22 @@ private:
 
                 str += ":";
 
-                is_appended = try_append_alias(*itr, true, str);
+                // serialize a mapping value node.
+                const auto& value_node = itr.value();
+
+                is_appended = try_append_alias(value_node, true, str);
                 if (is_appended) {
                     str += "\n";
                     continue;
                 }
 
-                try_append_anchor(*itr, true, str);
-                try_append_tag(*itr, true, str);
+                try_append_anchor(value_node, true, str);
+                try_append_tag(value_node, true, str);
 
                 const bool is_scalar = itr->is_scalar();
                 if (is_scalar) {
                     str += " ";
-                    serialize_node(*itr, cur_indent, str);
+                    serialize_node(value_node, cur_indent, str);
                     str += "\n";
                     continue;
                 }
@@ -224,15 +230,15 @@ private:
                 const bool is_empty = itr->empty();
                 if (!is_empty) {
                     str += "\n";
-                    serialize_node(*itr, cur_indent + 2, str);
+                    serialize_node(value_node, cur_indent + 2, str);
                     continue;
                 }
 
                 // an empty sequence or mapping
-                if (itr->is_sequence()) {
+                if (value_node.is_sequence()) {
                     str += " []\n";
                 }
-                else /*itr->is_mapping()*/ {
+                else /*value_node.is_mapping()*/ {
                     str += " {}\n";
                 }
             }
