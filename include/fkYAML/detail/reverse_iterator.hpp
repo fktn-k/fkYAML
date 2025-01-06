@@ -64,11 +64,18 @@ public:
         : m_current(i) {
     }
 
+    /// @brief Copy constructs a reverse_iterator object with a compatible reverse_iterator object.
+    /// @tparam U A compatible iterator type with Iterator.
+    /// @param other A compatible reverse_iterator object.
     template <typename U, enable_if_t<negation<std::is_same<U, Iterator>>::value, int> = 0>
     reverse_iterator(const reverse_iterator<U>& other) noexcept
         : m_current(other.base()) {
     }
 
+    /// @brief Copy assigns a reverse_iterator object with a compatible reverse_iterator object.
+    /// @tparam U A compatible iterator type with Iterator.
+    /// @param other A compatible reverse_iterator object.
+    /// @return Reference to this reverse_iterator object.
     template <typename U, enable_if_t<negation<std::is_same<U, Iterator>>::value, int> = 0>
     reverse_iterator& operator=(const reverse_iterator<U>& other) noexcept {
         m_current = other.base();
@@ -172,34 +179,71 @@ public:
     }
 
 private:
+    ///
     Iterator m_current;
 };
 
+/// @brief Check equality between reverse_iterator objects.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if the two reverse_iterator objects are equal, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator==(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() == rhs.base();
 }
 
+/// @brief Check inequality between reverse_iterator objects.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if the two reverse_iterator objects are not equal, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator!=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() != rhs.base();
 }
 
+/// @brief Check if `lhs` is less than `rhs`.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if `lhs` is less than `rhs`, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator<(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() > rhs.base();
 }
 
+/// @brief Check if `lhs` is less than or equal to `rhs`.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if `lhs` is less than or equal to `rhs`, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator<=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() >= rhs.base();
 }
 
+/// @brief Check if `lhs` is greater than `rhs`.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if `lhs` is greater than `rhs`, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator>(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() < rhs.base();
 }
 
+/// @brief Check if `lhs` is greater than or equal to `rhs`.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if `lhs` is greater than or equal to `rhs`, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator>=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() <= rhs.base();

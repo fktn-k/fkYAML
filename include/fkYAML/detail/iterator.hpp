@@ -372,11 +372,21 @@ private:
     iterator_holder<value_type> m_iterator_holder {};
 };
 
+/// @brief Get reference to a mapping key node.
+/// @tparam ValueType The iterator value type.
+/// @tparam I The element index.
+/// @param i An iterator object.
+/// @return Reference to a mapping key node.
 template <std::size_t I, typename ValueType, enable_if_t<I == 0, int> = 0>
 inline auto get(const iterator<ValueType>& i) -> decltype(i.key()) {
     return i.key();
 }
 
+/// @brief Get reference to a mapping value node.
+/// @tparam ValueType The iterator value type.
+/// @tparam I The element index
+/// @param i An iterator object.
+/// @return Reference to a mapping value node.
 template <std::size_t I, typename ValueType, enable_if_t<I == 1, int> = 0>
 inline auto get(const iterator<ValueType>& i) -> decltype(i.value()) {
     return i.value();
@@ -393,15 +403,19 @@ namespace std {
 #pragma clang diagnostic ignored "-Wmismatched-tags"
 #endif
 
+/// @brief Parcial pecialization of std::tuple_size for iterator class.
+/// @tparam ValueType The iterator value type.
 template <typename ValueType>
 // NOLINTNEXTLINE(cert-dcl58-cpp)
-struct tuple_size<::fkyaml::detail::iterator<ValueType>> : public integral_constant<size_t, 2> {};
+struct tuple_size<::fkyaml::detail::iterator<ValueType>> : integral_constant<size_t, 2> {};
 
-template <size_t N, typename ValueType>
+/// @brief Parcial specialization of std::tuple_element for iterator class.
+/// @tparam ValueType The iterator value type.
+/// @tparam I The element index.
+template <size_t I, typename ValueType>
 // NOLINTNEXTLINE(cert-dcl58-cpp)
-struct tuple_element<N, ::fkyaml::detail::iterator<ValueType>> {
-public:
-    using type = decltype(get<N>(std::declval<::fkyaml::detail::iterator<ValueType>>()));
+struct tuple_element<I, ::fkyaml::detail::iterator<ValueType>> {
+    using type = decltype(get<I>(std::declval<::fkyaml::detail::iterator<ValueType>>()));
 };
 
 #ifdef __clang__
