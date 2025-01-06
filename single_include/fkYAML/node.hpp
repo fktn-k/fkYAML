@@ -10175,14 +10175,27 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 namespace std {
 
+#ifdef __clang__
+// clang emits warnings against mixed usage of class/struct for tuple_size/tuple_element.
+// see also: https://groups.google.com/a/isocpp.org/g/std-discussion/c/QC-AMb5oO1w
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
+
 template <typename ValueType>
-class tuple_size<::fkyaml::detail::iterator<ValueType>> : public integral_constant<size_t, 2> {};
+// NOLINTNEXTLINE(cert-dcl58-cpp)
+struct tuple_size<::fkyaml::detail::iterator<ValueType>> : public integral_constant<size_t, 2> {};
 
 template <size_t N, typename ValueType>
-class tuple_element<N, ::fkyaml::detail::iterator<ValueType>> {
+// NOLINTNEXTLINE(cert-dcl58-cpp)
+struct tuple_element<N, ::fkyaml::detail::iterator<ValueType>> {
 public:
     using type = decltype(get<N>(std::declval<::fkyaml::detail::iterator<ValueType>>()));
 };
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 } // namespace std
 
