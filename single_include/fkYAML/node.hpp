@@ -12559,9 +12559,11 @@ public:
     using yaml_version_t = detail::yaml_version_t;
 
     /// @brief A type for mapping range objects for the map_items() function.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_range/
     using map_range = fkyaml::detail::map_range_proxy<basic_node>;
 
     /// @brief A type for constant mapping range objects for the map_items() function.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_range/
     using const_map_range = fkyaml::detail::map_range_proxy<const basic_node>;
 
 private:
@@ -14024,6 +14026,10 @@ public:
         return rend();
     }
 
+    /// @brief Returns a range of mapping entries.
+    /// @throw `type_error` if this basic_node is not a mapping.
+    /// @return A range of mapping entries.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_items/
     map_range map_items() {
         if FK_YAML_UNLIKELY (!is_mapping()) {
             throw type_error("map_items() cannot be called on a non-mapping node.", get_type());
@@ -14031,6 +14037,10 @@ public:
         return {*this};
     }
 
+    /// @brief Returns a const range of mapping entries.
+    /// @throw `type_error` if this basic_node is not a mapping.
+    /// @return A const range of mapping entries.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_items/
     const_map_range map_items() const {
         if FK_YAML_UNLIKELY (!is_mapping()) {
             throw type_error("map_items() cannot be called on a non-mapping node.", get_type());
