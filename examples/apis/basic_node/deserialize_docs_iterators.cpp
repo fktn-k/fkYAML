@@ -15,7 +15,7 @@
 
 int main() {
     // deserialize a YAML string.
-    char input[] = R"(
+    std::string input = R"(
     %YAML 1.2
     ---
     foo: true
