@@ -137,6 +137,10 @@ private:
     void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
         switch (node.get_type()) {
         case node_type::SEQUENCE:
+			if (node.size() == 0) {
+				str += "[]\n";
+				return;
+			}
             for (const auto& seq_item : node) {
                 insert_indentation(cur_indent, str);
                 str += "-";
@@ -175,6 +179,10 @@ private:
             }
             break;
         case node_type::MAPPING:
+			if (node.size() == 0) {
+				str += "{}\n";
+				return;
+			}
             for (auto itr : node.map_items()) {
                 insert_indentation(cur_indent, str);
 
@@ -228,19 +236,13 @@ private:
                 }
 
                 const bool is_empty = itr->empty();
-                if (!is_empty) {
-                    str += "\n";
-                    serialize_node(value_node, cur_indent + 2, str);
-                    continue;
+                if (is_empty) {
+                    str += " ";
                 }
-
-                // an empty sequence or mapping
-                if (value_node.is_sequence()) {
-                    str += " []\n";
-                }
-                else /*value_node.is_mapping()*/ {
-                    str += " {}\n";
-                }
+				else {
+					str += "\n";
+				}
+                serialize_node(value_node, cur_indent + 2, str);
             }
             break;
         case node_type::NULL_OBJECT:
