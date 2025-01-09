@@ -21,8 +21,8 @@ on:
       - cmake/**
       - include/**
       - single_include/**
-      - test/**
-      - tool/**
+      - tests/**
+      - tools/**
       - .clang-tidy
       - CMakeLists.txt
       - Makefile

@@ -58,6 +58,16 @@ TEST_CASE("Serializer_EmptyCollectionNode") {
         std::string expected = "foo: {}\n";
         REQUIRE(serializer.serialize(map) == expected);
     }
+
+    SECTION("root empty sequence") {
+        std::string expected = "[]\n";
+        REQUIRE(serializer.serialize(seq) == expected);
+    }
+
+    SECTION("root empty mapping") {
+        std::string expected = "{}\n";
+        REQUIRE(serializer.serialize(map) == expected);
+    }
 }
 
 TEST_CASE("Serializer_NullNode") {
