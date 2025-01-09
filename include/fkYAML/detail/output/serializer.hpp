@@ -239,9 +239,9 @@ private:
                 if (is_empty) {
                     str += " ";
                 }
-				else {
-					str += "\n";
-				}
+                else {
+                    str += "\n";
+                }
                 serialize_node(value_node, cur_indent + 2, str);
             }
             break;
