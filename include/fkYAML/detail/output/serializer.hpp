@@ -137,10 +137,10 @@ private:
     void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
         switch (node.get_type()) {
         case node_type::SEQUENCE:
-			if (node.size() == 0) {
-				str += "[]\n";
-				return;
-			}
+            if (node.size() == 0) {
+                str += "[]\n";
+                return;
+            }
             for (const auto& seq_item : node) {
                 insert_indentation(cur_indent, str);
                 str += "-";
@@ -179,10 +179,10 @@ private:
             }
             break;
         case node_type::MAPPING:
-			if (node.size() == 0) {
-				str += "{}\n";
-				return;
-			}
+            if (node.size() == 0) {
+                str += "{}\n";
+                return;
+            }
             for (auto itr : node.map_items()) {
                 insert_indentation(cur_indent, str);
 
