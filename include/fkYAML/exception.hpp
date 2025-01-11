@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_EXCEPTION_HPP
@@ -113,8 +113,13 @@ private:
 };
 
 /// @brief An exception class indicating an error in parsing.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/parse_error/
 class parse_error : public exception {
 public:
+    /// @brief Constructs a new parse_error object with an error message and counts of lines and colums at the error.
+    /// @param[in] msg An error message.
+    /// @param[in] lines Count of lines.
+    /// @param[in] cols_in_line Count of colums.
     explicit parse_error(const char* msg, uint32_t lines, uint32_t cols_in_line) noexcept
         : exception(generate_error_message(msg, lines, cols_in_line).c_str()) {
     }
@@ -155,12 +160,18 @@ private:
     }
 };
 
+/// @brief An exception class indicating an out-of-range error.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/out_of_range/
 class out_of_range : public exception {
 public:
+    /// @brief Construct a new out_of_range object with an invalid index value.
+    /// @param[in] index An invalid index value.
     explicit out_of_range(int index) noexcept
         : exception(generate_error_message(index).c_str()) {
     }
 
+    /// @brief Construct a new out_of_range object with invalid key contents.
+    /// @param[in] key Invalid key contents
     explicit out_of_range(const char* key) noexcept
         : exception(generate_error_message(key).c_str()) {
     }
@@ -175,8 +186,13 @@ private:
     }
 };
 
+/// @brief An exception class indicating an invalid tag.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/invalid_tag/
 class invalid_tag : public exception {
 public:
+    /// @brief Constructs a new invalid_tag object with an error message and invalid tag contents.
+    /// @param[in] msg An error message.
+    /// @param[in] tag Invalid tag contents.
     explicit invalid_tag(const char* msg, const char* tag)
         : exception(generate_error_message(msg, tag).c_str()) {
     }

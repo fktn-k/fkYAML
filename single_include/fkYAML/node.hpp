@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_NODE_HPP
@@ -22,10 +22,10 @@
 // #include <fkYAML/detail/macros/define_macros.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_MACROS_DEFINE_MACROS_HPP
@@ -34,15 +34,15 @@
 // #include <fkYAML/detail/macros/version_macros.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 // Check version definitions if already defined.
 #if defined(FK_YAML_MAJOR_VERSION) && defined(FK_YAML_MINOR_VERSION) && defined(FK_YAML_PATCH_VERSION)
-#if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 4 || FK_YAML_PATCH_VERSION != 0
+#if FK_YAML_MAJOR_VERSION != 0 || FK_YAML_MINOR_VERSION != 4 || FK_YAML_PATCH_VERSION != 1
 #warning Already included a different version of the fkYAML library!
 #else
 // define macros to skip defining macros down below.
@@ -54,7 +54,7 @@
 
 #define FK_YAML_MAJOR_VERSION 0
 #define FK_YAML_MINOR_VERSION 4
-#define FK_YAML_PATCH_VERSION 0
+#define FK_YAML_PATCH_VERSION 1
 
 #define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
 
@@ -84,10 +84,10 @@
 // #include <fkYAML/detail/macros/cpp_config_macros.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP
@@ -243,10 +243,10 @@
 // #include <fkYAML/detail/assert.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ASSERT_HPP
@@ -267,10 +267,10 @@
 // #include <fkYAML/detail/document_metainfo.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_DOCUMENT_METAINFO_HPP
@@ -284,10 +284,10 @@
 // #include <fkYAML/detail/meta/node_traits.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_META_NODE_TRAITS_HPP
@@ -298,10 +298,10 @@
 // #include <fkYAML/detail/meta/detect.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_META_DETECT_HPP
@@ -315,10 +315,10 @@
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_META_STL_SUPPLEMENT_HPP
@@ -767,10 +767,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/type_traits.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
@@ -937,10 +937,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/fkyaml_fwd.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_FKYAML_FWD_HPP
@@ -1127,10 +1127,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/yaml_version_type.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_YAML_VERSION_TYPE_HPP
@@ -1192,10 +1192,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/deserializer.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP
@@ -1212,10 +1212,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/lexical_analyzer.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
@@ -1232,10 +1232,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/uri_encoding.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
@@ -1360,10 +1360,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf_encodings.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODINGS_HPP
@@ -1377,10 +1377,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/exception.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_EXCEPTION_HPP
@@ -1396,10 +1396,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/string_formatter.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_STRING_FORMATTER_HPP
@@ -1446,10 +1446,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/types/node_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_TYPES_NODE_T_HPP
@@ -1462,10 +1462,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/node_type.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_NODE_TYPE_HPP
@@ -1692,8 +1692,13 @@ private:
 };
 
 /// @brief An exception class indicating an error in parsing.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/parse_error/
 class parse_error : public exception {
 public:
+    /// @brief Constructs a new parse_error object with an error message and counts of lines and colums at the error.
+    /// @param[in] msg An error message.
+    /// @param[in] lines Count of lines.
+    /// @param[in] cols_in_line Count of colums.
     explicit parse_error(const char* msg, uint32_t lines, uint32_t cols_in_line) noexcept
         : exception(generate_error_message(msg, lines, cols_in_line).c_str()) {
     }
@@ -1734,12 +1739,18 @@ private:
     }
 };
 
+/// @brief An exception class indicating an out-of-range error.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/out_of_range/
 class out_of_range : public exception {
 public:
+    /// @brief Construct a new out_of_range object with an invalid index value.
+    /// @param[in] index An invalid index value.
     explicit out_of_range(int index) noexcept
         : exception(generate_error_message(index).c_str()) {
     }
 
+    /// @brief Construct a new out_of_range object with invalid key contents.
+    /// @param[in] key Invalid key contents
     explicit out_of_range(const char* key) noexcept
         : exception(generate_error_message(key).c_str()) {
     }
@@ -1754,8 +1765,13 @@ private:
     }
 };
 
+/// @brief An exception class indicating an invalid tag.
+/// @sa https://fktn-k.github.io/fkYAML/api/exception/invalid_tag/
 class invalid_tag : public exception {
 public:
+    /// @brief Constructs a new invalid_tag object with an error message and invalid tag contents.
+    /// @param[in] msg An error message.
+    /// @param[in] tag Invalid tag contents.
     explicit invalid_tag(const char* msg, const char* tag)
         : exception(generate_error_message(msg, tag).c_str()) {
     }
@@ -1946,7 +1962,7 @@ inline bool validate(const std::initializer_list<uint8_t>& byte_array) noexcept 
 /// @param[out] utf8 UTF-8 encoded bytes.
 /// @param[out] consumed_size The number of UTF-16 encoded characters used for the conversion.
 /// @param[out] encoded_size The size of UTF-encoded bytes.
-inline void from_utf16( // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+inline void from_utf16(
     std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size, uint32_t& encoded_size) {
     if (utf16[0] < 0x80u) {
         utf8[0] = static_cast<uint8_t>(utf16[0] & 0x7Fu);
@@ -2034,10 +2050,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/block_scalar_header.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_BLOCK_SCALAR_HEADER_HPP
@@ -2072,10 +2088,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/position_tracker.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_POSITION_TRACKER_HPP
@@ -2088,10 +2104,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/str_view.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_STR_VIEW_HPP
@@ -2543,8 +2559,6 @@ public:
         return find(s) != npos;
     }
 
-    // NOLINTBEGIN(bugprone-easily-swappable-parameters)
-
     /// @brief Finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
@@ -2616,8 +2630,6 @@ public:
     size_type find(const CharT* s, size_type pos = 0) const noexcept {
         return find(basic_str_view(s), pos);
     }
-
-    // NOLINTEND(bugprone-easily-swappable-parameters)
 
     /// @brief Retrospectively finds the beginning position of `sv` characters in this referenced character sequence.
     /// @param sv The character sequence to compare with.
@@ -2698,7 +2710,6 @@ public:
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
-    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     size_type find_first_of(const CharT* s, size_type pos, size_type n) const noexcept {
         if FK_YAML_UNLIKELY (n == 0) {
             return npos;
@@ -3158,10 +3169,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_TYPES_LEXICAL_TOKEN_T_HPP
@@ -3211,6 +3222,23 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Lexical token information
 struct lexical_token {
+    lexical_token() = default;
+
+    lexical_token(lexical_token_t t, str_view s) noexcept
+        : type(t),
+          str(s) {
+    }
+
+    lexical_token(lexical_token_t t) noexcept
+        : type(t) {
+    }
+
+    lexical_token(const lexical_token&) = default;
+    lexical_token& operator=(const lexical_token&) = default;
+    lexical_token(lexical_token&&) = default;
+    lexical_token& operator=(lexical_token&&) = default;
+    ~lexical_token() = default;
+
     /// Lexical token type.
     lexical_token_t type {lexical_token_t::END_OF_BUFFER};
     /// Lexical token contents.
@@ -3245,36 +3273,29 @@ public:
         m_last_token_begin_line = m_pos_tracker.get_lines_read();
 
         if (m_cur_itr == m_end_itr) {
-            return {};
+            return {lexical_token_t::END_OF_BUFFER};
         }
-
-        lexical_token token {};
-        token.type = lexical_token_t::PLAIN_SCALAR;
 
         switch (*m_cur_itr) {
         case '?':
             if (++m_cur_itr == m_end_itr) {
-                token.str = str_view {m_token_begin_itr, m_end_itr};
-                return token;
+                return {lexical_token_t::PLAIN_SCALAR, {m_token_begin_itr, 1}};
             }
 
             if (*m_cur_itr == ' ') {
-                token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
-                return token;
+                return {lexical_token_t::EXPLICIT_KEY_PREFIX};
             }
             break;
         case ':': // key separator
             if (++m_cur_itr == m_end_itr) {
-                token.type = lexical_token_t::KEY_SEPARATOR;
-                return token;
+                return {lexical_token_t::KEY_SEPARATOR};
             }
 
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
             case '\n':
-                token.type = lexical_token_t::KEY_SEPARATOR;
-                return token;
+                return {lexical_token_t::KEY_SEPARATOR};
             case ',':
             case '[':
             case ']':
@@ -3283,8 +3304,7 @@ public:
                 if (m_state & flow_context_bit) {
                     // Flow indicators are not "safe" to be followed in a flow context.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                    token.type = lexical_token_t::KEY_SEPARATOR;
-                    return token;
+                    return {lexical_token_t::KEY_SEPARATOR};
                 }
                 break;
             default:
@@ -3293,109 +3313,72 @@ public:
             break;
         case ',': // value separator
             ++m_cur_itr;
-            token.type = lexical_token_t::VALUE_SEPARATOR;
-            return token;
-        case '&': { // anchor prefix
-            extract_anchor_name(token);
-            const bool is_empty = token.str.empty();
-            if FK_YAML_UNLIKELY (is_empty) {
-                emit_error("anchor name must not be empty.");
-            }
-
-            token.type = lexical_token_t::ANCHOR_PREFIX;
-            return token;
-        }
-        case '*': { // alias prefix
-            extract_anchor_name(token);
-            const bool is_empty = token.str.empty();
-            if FK_YAML_UNLIKELY (is_empty) {
-                emit_error("anchor name must not be empty.");
-            }
-
-            token.type = lexical_token_t::ALIAS_PREFIX;
-            return token;
-        }
-        case '!':
-            extract_tag_name(token);
-            token.type = lexical_token_t::TAG_PREFIX;
-            return token;
+            return {lexical_token_t::VALUE_SEPARATOR};
+        case '&': // anchor prefix
+            return {lexical_token_t::ANCHOR_PREFIX, extract_anchor_name()};
+        case '*': // alias prefix
+            return {lexical_token_t::ALIAS_PREFIX, extract_anchor_name()};
+        case '!': // tag prefix
+            return {lexical_token_t::TAG_PREFIX, extract_tag_name()};
         case '#': // comment prefix
             scan_comment();
             return get_next_token();
         case '%': // directive prefix
             if (m_state & document_directive_bit) {
-                token.type = scan_directive();
-                return token;
+                return {scan_directive()};
             }
             // The '%' character can be safely used as the first character in document contents.
             // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
             break;
-        case '-': {
-            const char next = *(m_cur_itr + 1);
-            switch (next) {
+        case '-':
+            switch (*(m_cur_itr + 1)) {
             case ' ':
             case '\t':
             case '\n':
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
-                token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
-                return token;
+                return {lexical_token_t::SEQUENCE_BLOCK_PREFIX};
             default:
                 break;
             }
 
-            const bool is_available = ((m_end_itr - m_cur_itr) > 2);
-            if (is_available) {
+            if ((m_end_itr - m_cur_itr) > 2) {
                 const bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
                 if (is_dir_end) {
                     m_cur_itr += 3;
-                    token.type = lexical_token_t::END_OF_DIRECTIVES;
-                    return token;
+                    return {lexical_token_t::END_OF_DIRECTIVES};
                 }
             }
 
             break;
-        }
         case '[': // sequence flow begin
             ++m_cur_itr;
-            token.type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
-            return token;
+            return {lexical_token_t::SEQUENCE_FLOW_BEGIN};
         case ']': // sequence flow end
             ++m_cur_itr;
-            token.type = lexical_token_t::SEQUENCE_FLOW_END;
-            return token;
+            return {lexical_token_t::SEQUENCE_FLOW_END};
         case '{': // mapping flow begin
             ++m_cur_itr;
-            token.type = lexical_token_t::MAPPING_FLOW_BEGIN;
-            return token;
+            return {lexical_token_t::MAPPING_FLOW_BEGIN};
         case '}': // mapping flow end
             ++m_cur_itr;
-            token.type = lexical_token_t::MAPPING_FLOW_END;
-            return token;
+            return {lexical_token_t::MAPPING_FLOW_END};
         case '@':
             emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
         case '`':
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
             ++m_token_begin_itr;
-            token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
-            determine_double_quoted_scalar_range(token.str);
-            check_scalar_content(token.str);
-            return token;
+            return {lexical_token_t::DOUBLE_QUOTED_SCALAR, determine_double_quoted_scalar_range()};
         case '\'':
             ++m_token_begin_itr;
-            token.type = lexical_token_t::SINGLE_QUOTED_SCALAR;
-            determine_single_quoted_scalar_range(token.str);
-            check_scalar_content(token.str);
-            return token;
+            return {lexical_token_t::SINGLE_QUOTED_SCALAR, determine_single_quoted_scalar_range()};
         case '.': {
-            const bool is_available = ((m_end_itr - m_cur_itr) > 2);
-            if (is_available) {
+            if ((m_end_itr - m_cur_itr) > 2) {
                 const bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
                 if (is_doc_end) {
                     m_cur_itr += 3;
-                    token.type = lexical_token_t::END_OF_DOCUMENT;
-                    return token;
+                    return {lexical_token_t::END_OF_DOCUMENT};
                 }
             }
             break;
@@ -3407,30 +3390,23 @@ public:
             FK_YAML_ASSERT(header_end_pos != str_view::npos);
             const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
 
-            if (*m_token_begin_itr == '|') {
-                token.type = lexical_token_t::BLOCK_LITERAL_SCALAR;
-            }
-            else {
-                token.type = lexical_token_t::BLOCK_FOLDED_SCALAR;
-            }
-
+            const lexical_token_t type = *m_token_begin_itr == '|' ? lexical_token_t::BLOCK_LITERAL_SCALAR
+                                                                   : lexical_token_t::BLOCK_FOLDED_SCALAR;
             const str_view header_line = sv.substr(1, header_end_pos - 1);
             m_block_scalar_header = convert_to_block_scalar_header(header_line);
 
             m_token_begin_itr = sv.begin() + (header_end_pos + 1);
-            m_block_scalar_header.indent =
-                determine_block_scalar_content_range(base_indent, m_block_scalar_header.indent, token.str);
 
-            return token;
+            return {
+                type,
+                determine_block_scalar_content_range(
+                    base_indent, m_block_scalar_header.indent, m_block_scalar_header.indent)};
         }
         default:
             break;
         }
 
-        token.type = lexical_token_t::PLAIN_SCALAR;
-        determine_plain_scalar_range(token.str);
-        check_scalar_content(token.str);
-        return token;
+        return {lexical_token_t::PLAIN_SCALAR, determine_plain_scalar_range()};
     }
 
     /// @brief Get the beginning position of a last token.
@@ -3778,8 +3754,8 @@ private:
     }
 
     /// @brief Extracts an anchor name from the input.
-    /// @param token The token into which the extraction result is written.
-    void extract_anchor_name(lexical_token& token) {
+    /// @return The extracted anchor name.
+    str_view extract_anchor_name() {
         FK_YAML_ASSERT(*m_cur_itr == '&' || *m_cur_itr == '*');
 
         m_token_begin_itr = ++m_cur_itr;
@@ -3808,18 +3784,21 @@ private:
             }
         }
 
-        token.str = str_view {m_token_begin_itr, m_cur_itr};
+        if FK_YAML_UNLIKELY (m_token_begin_itr == m_cur_itr) {
+            emit_error("anchor name must not be empty.");
+        }
+
+        return {m_token_begin_itr, m_cur_itr};
     }
 
     /// @brief Extracts a tag name from the input.
-    /// @param token The token into which the extraction result is written.
-    void extract_tag_name(lexical_token& token) {
+    /// @return A tag name.
+    str_view extract_tag_name() {
         FK_YAML_ASSERT(*m_cur_itr == '!');
 
         if (++m_cur_itr == m_end_itr) {
             // Just "!" is a non-specific tag.
-            token.str = str_view {m_token_begin_itr, m_end_itr};
-            return;
+            return {m_token_begin_itr, m_end_itr};
         }
 
         bool is_verbatim = false;
@@ -3829,8 +3808,7 @@ private:
         case ' ':
         case '\n':
             // Just "!" is a non-specific tag.
-            token.str = str_view {m_token_begin_itr, m_cur_itr};
-            return;
+            return {m_token_begin_itr, m_cur_itr};
         case '!':
             // Secondary tag handles (!!suffix)
             break;
@@ -3873,16 +3851,16 @@ private:
             }
         } while (!ends_loop);
 
-        token.str = str_view {m_token_begin_itr, m_cur_itr};
+        str_view tag_name {m_token_begin_itr, m_cur_itr};
 
         if (is_verbatim) {
-            const char last = token.str.back();
+            const char last = tag_name.back();
             if FK_YAML_UNLIKELY (last != '>') {
                 emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
             }
 
             // only the `TAG` part of the `!<TAG>` for URI validation.
-            const str_view tag_body = token.str.substr(2, token.str.size() - 3);
+            const str_view tag_body = tag_name.substr(2, tag_name.size() - 3);
             if FK_YAML_UNLIKELY (tag_body.empty()) {
                 emit_error("verbatim tag(!<TAG>) must not be empty.");
             }
@@ -3892,11 +3870,11 @@ private:
                 emit_error("invalid URI character is found in a verbatim tag.");
             }
 
-            return;
+            return tag_name;
         }
 
         if (is_named_handle) {
-            const char last = token.str.back();
+            const char last = tag_name.back();
             if FK_YAML_UNLIKELY (last == '!') {
                 // Tag shorthand must be followed by a non-empty suffix.
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
@@ -3906,10 +3884,10 @@ private:
 
         // get the position of last tag prefix character (!) to extract body of tag shorthands.
         // tag shorthand is either primary(!tag), secondary(!!tag) or named(!handle!tag).
-        const std::size_t last_tag_prefix_pos = token.str.find_last_of('!');
+        const std::size_t last_tag_prefix_pos = tag_name.find_last_of('!');
         FK_YAML_ASSERT(last_tag_prefix_pos != str_view::npos);
 
-        const str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
+        const str_view tag_uri = tag_name.substr(last_tag_prefix_pos + 1);
         const bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
         if FK_YAML_UNLIKELY (!is_valid_uri) {
             emit_error("Invalid URI character is found in a named tag handle.");
@@ -3921,11 +3899,13 @@ private:
         if (invalid_char_pos != str_view::npos) {
             emit_error("Tag shorthand cannot contain flow indicators({}[],).");
         }
+
+        return tag_name;
     }
 
     /// @brief Determines the range of single quoted scalar by scanning remaining input buffer contents.
-    /// @param token Storage for the range of single quoted scalar.
-    void determine_single_quoted_scalar_range(str_view& token) {
+    /// @return A single quoted scalar.
+    str_view determine_single_quoted_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\'');
@@ -3933,9 +3913,10 @@ private:
             FK_YAML_ASSERT(pos < sv.size());
             if FK_YAML_LIKELY (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
                 // closing single quote is found.
-                token = {m_token_begin_itr, pos};
-                m_cur_itr = sv.begin() + (pos + 1);
-                return;
+                m_cur_itr = m_token_begin_itr + (pos + 1);
+                str_view single_quoted_scalar {m_token_begin_itr, pos};
+                check_scalar_content(single_quoted_scalar);
+                return single_quoted_scalar;
             }
 
             // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
@@ -3949,8 +3930,8 @@ private:
     }
 
     /// @brief Determines the range of double quoted scalar by scanning remaining input buffer contents.
-    /// @param token Storage for the range of double quoted scalar.
-    void determine_double_quoted_scalar_range(str_view& token) {
+    /// @return A double quoted scalar.
+    str_view determine_double_quoted_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\"');
@@ -3977,9 +3958,10 @@ private:
 
             if (is_closed) {
                 // closing double quote is found.
-                token = {m_token_begin_itr, pos};
-                m_cur_itr = sv.begin() + (pos + 1);
-                return;
+                m_cur_itr = m_token_begin_itr + (pos + 1);
+                str_view double_quoted_salar {m_token_begin_itr, pos};
+                check_scalar_content(double_quoted_salar);
+                return double_quoted_salar;
             }
 
             pos = sv.find('\"', pos + 1);
@@ -3990,16 +3972,17 @@ private:
     }
 
     /// @brief Determines the range of plain scalar by scanning remaining input buffer contents.
-    /// @param token Storage for the range of plain scalar.
-    void determine_plain_scalar_range(str_view& token) {
+    /// @return A plain scalar.
+    str_view determine_plain_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        constexpr str_view filter {"\n :{}[],"};
+        // flow indicators are checked only within a flow context.
+        const str_view filter = (m_state & flow_context_bit) ? "\n :{}[]," : "\n :";
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
-            token = sv;
+            check_scalar_content(sv);
             m_cur_itr = m_end_itr;
-            return;
+            return sv;
         }
 
         bool ends_loop = false;
@@ -4077,7 +4060,7 @@ private:
             case ']':
             case ',':
                 // This check is enabled only in a flow context.
-                ends_loop = (m_state & flow_context_bit);
+                ends_loop = true;
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -4090,8 +4073,10 @@ private:
             pos = sv.find_first_of(filter, pos + 1);
         } while (pos != str_view::npos);
 
-        token = sv.substr(0, pos);
-        m_cur_itr = token.end();
+        str_view plain_scalar = sv.substr(0, pos);
+        check_scalar_content(plain_scalar);
+        m_cur_itr = plain_scalar.end();
+        return plain_scalar;
     }
 
     /// @brief Scan a block style string token either in the literal or folded style.
@@ -4099,32 +4084,36 @@ private:
     /// @param indicated_indent The indicated indent level in the block scalar header. 0 means it's not indicated.
     /// @param token Storage for the scanned block scalar range.
     /// @return The content indentation level of the block scalar.
-    uint32_t determine_block_scalar_content_range(uint32_t base_indent, uint32_t indicated_indent, str_view& token) {
+    str_view determine_block_scalar_content_range(
+        uint32_t base_indent, uint32_t indicated_indent, uint32_t& content_indent) {
         const str_view sv {m_token_begin_itr, m_end_itr};
+        const std::size_t remain_input_len = sv.size();
 
         // Handle leading all-space lines.
         uint32_t cur_indent = 0;
         uint32_t max_leading_indent = 0;
         const char* cur_itr = m_token_begin_itr;
-        for (bool stop_increment = false; cur_itr != m_end_itr; ++cur_itr) {
-            const char c = *cur_itr;
-            if (c == ' ') {
-                if (!stop_increment) {
+        bool stop_increment = false;
+
+        while (cur_itr != m_end_itr) {
+            switch (*cur_itr++) {
+            case ' ':
+                if FK_YAML_LIKELY (!stop_increment) {
                     ++cur_indent;
                 }
                 continue;
-            }
-            if (c == '\n') {
-                max_leading_indent = std::max(cur_indent, max_leading_indent);
-                cur_indent = 0;
-                stop_increment = false;
-                continue;
-            }
-            if (c == '\t') {
+            case '\t':
                 // Tabs are not counted as an indent character but still part of an empty line.
                 // See https://yaml.org/spec/1.2.2/#rule-s-indent and https://yaml.org/spec/1.2.2/#64-empty-lines.
                 stop_increment = true;
                 continue;
+            case '\n':
+                max_leading_indent = std::max(cur_indent, max_leading_indent);
+                cur_indent = 0;
+                stop_increment = false;
+                continue;
+            default:
+                break;
             }
             break;
         }
@@ -4135,10 +4124,11 @@ private:
             // loops from the next loop. (https://github.com/fktn-k/fkYAML/pull/410)
             m_cur_itr = m_end_itr;
 
-            token = sv;
             // If there's no non-empty line, the content indentation level is equal to the number of spaces on the
             // longest line. https://yaml.org/spec/1.2.2/#8111-block-indentation-indicator
-            return indicated_indent == 0 ? std::max(cur_indent, max_leading_indent) : base_indent + indicated_indent;
+            content_indent =
+                indicated_indent == 0 ? std::max(cur_indent, max_leading_indent) : base_indent + indicated_indent;
+            return sv;
         }
 
         // Any leading empty line must not contain more spaces than the first non-empty line.
@@ -4156,14 +4146,14 @@ private:
 
         std::size_t last_newline_pos = sv.find('\n', cur_itr - m_token_begin_itr + 1);
         if (last_newline_pos == str_view::npos) {
-            last_newline_pos = sv.size();
+            last_newline_pos = remain_input_len;
         }
 
-        const uint32_t content_indent = base_indent + indicated_indent;
-        while (last_newline_pos < sv.size()) {
+        content_indent = base_indent + indicated_indent;
+        while (last_newline_pos < remain_input_len) {
             std::size_t cur_line_end_pos = sv.find('\n', last_newline_pos + 1);
             if (cur_line_end_pos == str_view::npos) {
-                cur_line_end_pos = sv.size();
+                cur_line_end_pos = remain_input_len;
             }
 
             const std::size_t cur_line_content_begin_pos = sv.find_first_not_of(' ', last_newline_pos + 1);
@@ -4195,95 +4185,93 @@ private:
         }
 
         // include last newline character if not all characters have been consumed yet.
-        if (last_newline_pos < sv.size()) {
+        if (last_newline_pos < remain_input_len) {
             ++last_newline_pos;
         }
 
-        token = sv.substr(0, last_newline_pos);
-        m_cur_itr = token.end();
-
-        return content_indent;
-    }
-
-    /// @brief Handle unescaped control characters.
-    /// @param c A target character.
-    void handle_unescaped_control_char(char c) const {
-        FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
-
-        switch (c) {
-        // 0x00(NULL) has already been handled above.
-        case 0x01:
-            emit_error("Control character U+0001 (SOH) must be escaped to \\u0001.");
-        case 0x02:
-            emit_error("Control character U+0002 (STX) must be escaped to \\u0002.");
-        case 0x03:
-            emit_error("Control character U+0003 (ETX) must be escaped to \\u0003.");
-        case 0x04:
-            emit_error("Control character U+0004 (EOT) must be escaped to \\u0004.");
-        case 0x05:
-            emit_error("Control character U+0005 (ENQ) must be escaped to \\u0005.");
-        case 0x06:
-            emit_error("Control character U+0006 (ACK) must be escaped to \\u0006.");
-        case 0x07:
-            emit_error("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
-        case 0x08:
-            emit_error("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
-        case 0x09: // HT
-            // horizontal tabs (\t) are safe to use without escaping.
-            break;
-        // 0x0A(LF) has already been handled above.
-        case 0x0B:
-            emit_error("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
-        case 0x0C:
-            emit_error("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
-        // 0x0D(CR) has already been handled above.
-        case 0x0E:
-            emit_error("Control character U+000E (SO) must be escaped to \\u000E.");
-        case 0x0F:
-            emit_error("Control character U+000F (SI) must be escaped to \\u000F.");
-        case 0x10:
-            emit_error("Control character U+0010 (DLE) must be escaped to \\u0010.");
-        case 0x11:
-            emit_error("Control character U+0011 (DC1) must be escaped to \\u0011.");
-        case 0x12:
-            emit_error("Control character U+0012 (DC2) must be escaped to \\u0012.");
-        case 0x13:
-            emit_error("Control character U+0013 (DC3) must be escaped to \\u0013.");
-        case 0x14:
-            emit_error("Control character U+0014 (DC4) must be escaped to \\u0014.");
-        case 0x15:
-            emit_error("Control character U+0015 (NAK) must be escaped to \\u0015.");
-        case 0x16:
-            emit_error("Control character U+0016 (SYN) must be escaped to \\u0016.");
-        case 0x17:
-            emit_error("Control character U+0017 (ETB) must be escaped to \\u0017.");
-        case 0x18:
-            emit_error("Control character U+0018 (CAN) must be escaped to \\u0018.");
-        case 0x19:
-            emit_error("Control character U+0019 (EM) must be escaped to \\u0019.");
-        case 0x1A:
-            emit_error("Control character U+001A (SUB) must be escaped to \\u001A.");
-        case 0x1B:
-            emit_error("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
-        case 0x1C:
-            emit_error("Control character U+001C (FS) must be escaped to \\u001C.");
-        case 0x1D:
-            emit_error("Control character U+001D (GS) must be escaped to \\u001D.");
-        case 0x1E:
-            emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
-        case 0x1F:
-            emit_error("Control character U+001F (US) must be escaped to \\u001F.");
-        default:
-            break;
-        }
+        m_cur_itr = m_token_begin_itr + last_newline_pos;
+        return sv.substr(0, last_newline_pos);
     }
 
     /// @brief Checks if the given scalar contains no unescaped control characters.
     /// @param scalar Scalar contents.
-    void check_scalar_content(str_view scalar) const {
-        for (auto c : scalar) {
-            if (0 <= c && c < 0x20) {
-                handle_unescaped_control_char(c);
+    void check_scalar_content(const str_view& scalar) const {
+        const char* p_current = scalar.begin();
+        const char* p_end = scalar.end();
+
+        while (p_current != p_end) {
+            const uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(*p_current));
+            if (num_bytes > 1) {
+                // Multibyte characters are already checked in the input_adapter module.
+                p_current += num_bytes;
+                continue;
+            }
+
+            switch (*p_current++) {
+            // 0x00(NULL) has already been handled above.
+            case 0x01:
+                emit_error("Control character U+0001 (SOH) must be escaped to \\u0001.");
+            case 0x02:
+                emit_error("Control character U+0002 (STX) must be escaped to \\u0002.");
+            case 0x03:
+                emit_error("Control character U+0003 (ETX) must be escaped to \\u0003.");
+            case 0x04:
+                emit_error("Control character U+0004 (EOT) must be escaped to \\u0004.");
+            case 0x05:
+                emit_error("Control character U+0005 (ENQ) must be escaped to \\u0005.");
+            case 0x06:
+                emit_error("Control character U+0006 (ACK) must be escaped to \\u0006.");
+            case 0x07:
+                emit_error("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
+            case 0x08:
+                emit_error("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
+            case 0x09: // HT
+                // horizontal tabs (\t) are safe to use without escaping.
+                break;
+            // 0x0A(LF) has already been handled above.
+            case 0x0B:
+                emit_error("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
+            case 0x0C:
+                emit_error("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
+            // 0x0D(CR) has already been handled above.
+            case 0x0E:
+                emit_error("Control character U+000E (SO) must be escaped to \\u000E.");
+            case 0x0F:
+                emit_error("Control character U+000F (SI) must be escaped to \\u000F.");
+            case 0x10:
+                emit_error("Control character U+0010 (DLE) must be escaped to \\u0010.");
+            case 0x11:
+                emit_error("Control character U+0011 (DC1) must be escaped to \\u0011.");
+            case 0x12:
+                emit_error("Control character U+0012 (DC2) must be escaped to \\u0012.");
+            case 0x13:
+                emit_error("Control character U+0013 (DC3) must be escaped to \\u0013.");
+            case 0x14:
+                emit_error("Control character U+0014 (DC4) must be escaped to \\u0014.");
+            case 0x15:
+                emit_error("Control character U+0015 (NAK) must be escaped to \\u0015.");
+            case 0x16:
+                emit_error("Control character U+0016 (SYN) must be escaped to \\u0016.");
+            case 0x17:
+                emit_error("Control character U+0017 (ETB) must be escaped to \\u0017.");
+            case 0x18:
+                emit_error("Control character U+0018 (CAN) must be escaped to \\u0018.");
+            case 0x19:
+                emit_error("Control character U+0019 (EM) must be escaped to \\u0019.");
+            case 0x1A:
+                emit_error("Control character U+001A (SUB) must be escaped to \\u001A.");
+            case 0x1B:
+                emit_error("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
+            case 0x1C:
+                emit_error("Control character U+001C (FS) must be escaped to \\u001C.");
+            case 0x1D:
+                emit_error("Control character U+001D (GS) must be escaped to \\u001D.");
+            case 0x1E:
+                emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
+            case 0x1F:
+                emit_error("Control character U+001F (US) must be escaped to \\u001F.");
+            default:
+                break;
             }
         }
     }
@@ -4421,10 +4409,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/scalar_parser.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP
@@ -4437,10 +4425,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/conversions/scalar_conv.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 // **NOTE FOR LIBARARY DEVELOPERS**:
@@ -5277,10 +5265,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ENCODINGS_YAML_ESCAPER_HPP
@@ -5631,10 +5619,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/scalar_scanner.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
@@ -5967,10 +5955,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/tag_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_TAG_T_HPP
@@ -6037,7 +6025,7 @@ public:
     /// @brief Constructs a new scalar_parser object.
     /// @param line Current line.
     /// @param indent Current indentation.
-    scalar_parser(uint32_t line, uint32_t indent) noexcept // NOLINT(bugprone-easily-swappable-parameters)
+    scalar_parser(uint32_t line, uint32_t indent) noexcept
         : m_line(line),
           m_indent(indent) {
     }
@@ -6574,10 +6562,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/tag_resolver.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_TAG_RESOLVER_HPP
@@ -6759,10 +6747,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/input_adapter_traits.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP
@@ -6872,10 +6860,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/node_attrs.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_NODE_ATTRS_HPP
@@ -7013,10 +7001,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/node_property.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_NODE_PROPERTY_HPP
@@ -7075,6 +7063,7 @@ class basic_deserializer {
         BLOCK_MAPPING_EXPLICIT_VALUE, //!< The underlying node is an explicit block mapping value.
         MAPPING_VALUE,                //!< The underlying node is a block mapping value.
         BLOCK_SEQUENCE,               //!< The underlying node is a block sequence.
+        BLOCK_SEQUENCE_ENTRY,         //!< The underlying node is a block sequence entry.
         FLOW_SEQUENCE,                //!< The underlying node is a flow sequence.
         FLOW_SEQUENCE_KEY,            //!< The underlying node is a flow sequence as a key.
         FLOW_MAPPING,                 //!< The underlying node is a flow mapping.
@@ -7091,7 +7080,6 @@ class basic_deserializer {
         /// @param indent The indentation width in the current line. (count from zero)
         /// @param state The parse context type.
         /// @param p_node The underlying node associated to this context.
-        // // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
         parse_context(uint32_t line, uint32_t indent, context_state_t state, basic_node_type* p_node) noexcept
             : line(line),
               indent(indent),
@@ -7184,6 +7172,7 @@ private:
         lexical_token token {};
 
         basic_node_type root;
+        mp_current_node = &root;
         mp_meta = root.mp_meta;
 
         // parse directives first.
@@ -7196,17 +7185,27 @@ private:
 
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
-            root = basic_node_type::sequence();
+            root = basic_node_type::sequence({basic_node_type()});
             apply_directive_set(root);
             if (found_props) {
                 // If node properties are found before the block sequence entry prefix, the properties belong to the
                 // root sequence node.
                 apply_node_properties(root);
             }
+
             parse_context context(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
+            m_context_stack.emplace_back(context);
+
+            mp_current_node = &(root.template get_value_ref<sequence_type&>().back());
+            apply_directive_set(*mp_current_node);
+            context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
+            context.p_node = mp_current_node;
             m_context_stack.emplace_back(std::move(context));
+
             token = lexer.get_next_token();
+            line = lexer.get_lines_processed();
+            indent = lexer.get_last_token_begin_pos();
             break;
         }
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
@@ -7218,6 +7217,8 @@ private:
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_SEQUENCE, &root);
             token = lexer.get_next_token();
+            line = lexer.get_lines_processed();
+            indent = lexer.get_last_token_begin_pos();
             break;
         case lexical_token_t::MAPPING_FLOW_BEGIN:
             ++m_flow_context_depth;
@@ -7228,6 +7229,8 @@ private:
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
             token = lexer.get_next_token();
+            line = lexer.get_lines_processed();
+            indent = lexer.get_last_token_begin_pos();
             break;
         case lexical_token_t::EXPLICIT_KEY_PREFIX: {
             // If the explicit key prefix (? ) is detected here, the root node of current document must be a mapping.
@@ -7239,6 +7242,8 @@ private:
             parse_context context(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
             m_context_stack.emplace_back(std::move(context));
+            line = lexer.get_lines_processed();
+            indent = lexer.get_last_token_begin_pos();
             break;
         }
         case lexical_token_t::BLOCK_LITERAL_SCALAR:
@@ -7266,6 +7271,9 @@ private:
                     m_needs_tag_impl = false;
                     m_tag_name.clear();
                 }
+
+                line = lexer.get_lines_processed();
+                indent = lexer.get_last_token_begin_pos();
             }
             break;
         default:
@@ -7273,10 +7281,8 @@ private:
             break;
         }
 
-        mp_current_node = &root;
-
         // parse YAML nodes recursively
-        deserialize_node(lexer, token, last_type);
+        deserialize_node(lexer, token, line, indent, last_type);
         FK_YAML_ASSERT(
             last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
             last_type == lexical_token_t::END_OF_DOCUMENT);
@@ -7388,52 +7394,43 @@ private:
     /// @param lexer The lexical analyzer to be used.
     /// @param first_type The first lexical token.
     /// @param last_type Storage for last lexical token type.
-    void deserialize_node(lexer_type& lexer, const lexical_token& first_token, lexical_token_t& last_type) {
+    void deserialize_node(
+        lexer_type& lexer, const lexical_token& first_token, uint32_t first_line, uint32_t first_indent,
+        lexical_token_t& last_type) {
         lexical_token token = first_token;
-        uint32_t line = lexer.get_lines_processed();
-        uint32_t indent = lexer.get_last_token_begin_pos();
+        uint32_t line = first_line;
+        uint32_t indent = first_indent;
 
         do {
             switch (token.type) {
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
-                uint32_t pop_num = 0;
-                if (indent == 0) {
-                    pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
-                }
-                else {
-                    const bool needs_to_move_back = indent < m_context_stack.back().indent;
-                    if (needs_to_move_back) {
-                        auto target_itr = std::find_if( // LCOV_EXCL_LINE
-                            m_context_stack.rbegin(),
-                            m_context_stack.rend(),
-                            [indent](const parse_context& c) { return indent > c.indent; });
-                        pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
-                    }
-                }
-                if (pop_num > 0) {
-                    for (uint32_t i = 0; i < pop_num; i++) {
-                        // move back to the previous container node.
-                        m_context_stack.pop_back();
-                    }
-                    mp_current_node = m_context_stack.back().p_node;
+                const bool needs_to_move_back = indent == 0 || indent < m_context_stack.back().indent;
+                if (needs_to_move_back) {
+                    pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                        return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                    });
                 }
 
-                if FK_YAML_UNLIKELY (mp_current_node->is_null()) {
-                    // This path is needed in case the input contains nested explicit keys like the following YAML
-                    // snippet:
+                switch (m_context_stack.back().state) {
+                case context_state_t::MAPPING_VALUE:
+                case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
+                case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
+                case context_state_t::BLOCK_SEQUENCE_ENTRY:
+                    // This path is needed in case the input contains nested explicit keys.
                     // ```yaml
-                    // ? ? foo
-                    //   : bar
-                    // : baz
+                    // foo:
+                    //   ? ? foo
+                    //     : bar
+                    //   : ? baz
+                    //     : - ? qux
+                    //         : 123
                     // ```
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
-                }
-
-                if (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE) {
-                    auto& seq = mp_current_node->template get_value_ref<sequence_type&>();
-                    seq.emplace_back(basic_node_type::mapping());
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, &(seq.back()));
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    break;
+                default:
+                    break;
                 }
 
                 token = lexer.get_next_token();
@@ -7441,14 +7438,22 @@ private:
                     // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
                     auto* p_node = new basic_node_type(node_type::SEQUENCE);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, p_node);
-                    mp_current_node = m_context_stack.back().p_node;
-                    apply_directive_set(*mp_current_node);
+
+                    apply_directive_set(*p_node);
                     parse_context context(
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos(),
                         context_state_t::BLOCK_SEQUENCE,
-                        mp_current_node);
+                        p_node);
+                    m_context_stack.emplace_back(context);
+
+                    p_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type());
+                    mp_current_node = &(p_node->template get_value_ref<sequence_type&>().back());
+                    apply_directive_set(*mp_current_node);
+                    context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
+                    context.p_node = mp_current_node;
                     m_context_stack.emplace_back(std::move(context));
+
                     break;
                 }
 
@@ -7463,9 +7468,17 @@ private:
                 continue;
             }
             case lexical_token_t::KEY_SEPARATOR: {
-                const bool is_empty_seq = mp_current_node->is_sequence() && mp_current_node->empty();
-                if FK_YAML_UNLIKELY (is_empty_seq) {
+                FK_YAML_ASSERT(!m_context_stack.empty());
+                if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
+                    // empty mapping keys are not supported.
+                    // ```yaml
+                    // - : foo
+                    // ```
                     throw parse_error("sequence key should not be empty.", line, indent);
+                }
+
+                if (m_flow_context_depth > 0) {
+                    break;
                 }
 
                 // hold the line count of the key separator for later use.
@@ -7484,10 +7497,6 @@ private:
 
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
-
-                if (m_flow_context_depth > 0) {
-                    continue;
-                }
 
                 const bool is_implicit_same_line =
                     (line == old_line) && (m_context_stack.empty() || old_indent > m_context_stack.back().indent);
@@ -7519,13 +7528,20 @@ private:
 
                     if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                         // a key separator preceding block sequence entries
-                        *mp_current_node = basic_node_type::sequence();
+                        *mp_current_node = basic_node_type::sequence({basic_node_type()});
                         apply_directive_set(*mp_current_node);
                         apply_node_properties(*mp_current_node);
                         auto& cur_context = m_context_stack.back();
                         cur_context.line = line;
                         cur_context.indent = indent;
                         cur_context.state = context_state_t::BLOCK_SEQUENCE;
+
+                        mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                        apply_directive_set(*mp_current_node);
+                        parse_context entry_context = cur_context;
+                        entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
+                        entry_context.p_node = mp_current_node;
+                        m_context_stack.emplace_back(std::move(entry_context));
 
                         token = lexer.get_next_token();
                         line = lexer.get_lines_processed();
@@ -7551,15 +7567,30 @@ private:
                             // https://github.com/fktn-k/fkYAML/issues/368 for more details.
                             line = line_after_props;
                             indent = lexer.get_last_token_begin_pos();
-                            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(
-                                basic_node_type::mapping());
-                            mp_current_node = &mp_current_node->template get_value_ref<sequence_type&>().back();
+                            *mp_current_node = basic_node_type::mapping();
                             m_context_stack.emplace_back(
                                 line_after_props, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                            apply_directive_set(*mp_current_node);
                             apply_node_properties(*mp_current_node);
                         }
 
                         continue;
+                    }
+
+                    if (indent <= m_context_stack.back().indent) {
+                        FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::MAPPING_VALUE);
+
+                        // Mapping values can be omitted and are considered to be null.
+                        // ```yaml
+                        // foo:
+                        // bar:
+                        //   baz:
+                        // qux:
+                        // # -> {foo: null, bar: {baz: null}, qux: null}
+                        // ```
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
+                        });
                     }
 
                     // defer checking the existence of a key separator after the following scalar until the next
@@ -7568,10 +7599,7 @@ private:
                 }
 
                 // handle explicit mapping key separators.
-
-                while (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-                    m_context_stack.pop_back();
-                }
+                FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY);
 
                 basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
@@ -7579,13 +7607,19 @@ private:
                     key_node, basic_node_type());
                 mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
-                    line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
+                    old_line, old_indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
 
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                    *mp_current_node = basic_node_type::sequence();
+                    *mp_current_node = basic_node_type::sequence({basic_node_type()});
                     apply_directive_set(*mp_current_node);
                     apply_node_properties(*mp_current_node);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
+
+                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    parse_context entry_context = m_context_stack.back();
+                    entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
+                    entry_context.p_node = mp_current_node;
+                    m_context_stack.emplace_back(std::move(entry_context));
                     break;
                 }
 
@@ -7605,62 +7639,64 @@ private:
                 // ```
                 continue;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
-                const bool is_further_nested = m_context_stack.back().indent < indent;
-                if (is_further_nested) {
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                FK_YAML_ASSERT(!m_context_stack.empty());
+                const uint32_t parent_indent = m_context_stack.back().indent;
+                if (indent == parent_indent) {
+                    // If the previous block sequence entry is empty, just move to the parent context.
+                    // ```yaml
+                    // foo:
+                    //   -
+                    //   - bar
+                    // # ^ (here)
+                    // # -> {foo: [null, bar]}
+                    // ```
+                    pop_to_parent_node(line, indent, [](const parse_context& c) {
+                        return c.state == context_state_t::BLOCK_SEQUENCE;
+                    });
+                }
+                else if (indent < parent_indent) {
+                    pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                        return c.state == context_state_t::BLOCK_SEQUENCE && indent == c.indent;
+                    });
+                }
+                else /*parent_indent < indent*/ {
+                    if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE) {
+                        // bad indentation like the following YAML:
+                        // ```yaml
+                        // - "foo"
+                        //   - bar
+                        // # ^
+                        // ```
+                        throw parse_error("bad indentation of a mapping entry.", line, indent);
+                    }
+
+                    *mp_current_node = basic_node_type::sequence();
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
                     apply_directive_set(*mp_current_node);
                     apply_node_properties(*mp_current_node);
-                    break;
                 }
 
-                // move back to the previous sequence if necessary.
-                while (m_context_stack.back().state != context_state_t::BLOCK_SEQUENCE ||
-                       indent != m_context_stack.back().indent) {
-                    m_context_stack.pop_back();
-                }
-                mp_current_node = m_context_stack.back().p_node;
+                auto& seq = mp_current_node->template get_value_ref<sequence_type&>();
+                seq.emplace_back(basic_node_type());
+                mp_current_node = &(seq.back());
+                apply_directive_set(*mp_current_node);
+                m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
                 break;
             }
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
                 if (m_flow_context_depth == 0) {
                     lexer.set_context_state(true);
 
-                    uint32_t pop_num = 0;
-                    if (indent == 0) {
-                        pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
-                    }
-                    else if (indent <= m_context_stack.back().indent) {
-                        auto target_itr = std::find_if( // LCOV_EXCL_LINE
-                            m_context_stack.rbegin(),
-                            m_context_stack.rend(),
-                            [indent](const parse_context& c) {
-                                if (indent != c.indent) {
-                                    return false;
-                                }
-
-                                switch (c.state) {
-                                case context_state_t::BLOCK_MAPPING:
-                                case context_state_t::MAPPING_VALUE:
-                                    return true;
-                                default:
-                                    return false;
-                                }
-                            });
-                        const bool is_indent_valid = (target_itr != m_context_stack.rend());
-                        if FK_YAML_UNLIKELY (!is_indent_valid) {
-                            throw parse_error("Detected invalid indentation.", line, indent);
-                        }
-
-                        pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
-                    }
-                    if (pop_num > 0) {
-                        for (uint32_t i = 0; i < pop_num; i++) {
-                            // move back to the previous container node.
-                            m_context_stack.pop_back();
-                        }
-                        mp_current_node = m_context_stack.back().p_node;
+                    if (indent <= m_context_stack.back().indent) {
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            switch (c.state) {
+                            case context_state_t::BLOCK_MAPPING:
+                            case context_state_t::MAPPING_VALUE:
+                                return indent == c.indent;
+                            default:
+                                return false;
+                            }
+                        });
                     }
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
@@ -7774,40 +7810,16 @@ private:
                 if (m_flow_context_depth == 0) {
                     lexer.set_context_state(true);
 
-                    uint32_t pop_num = 0;
-                    if (indent == 0) {
-                        pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
-                    }
-                    else if (indent <= m_context_stack.back().indent) {
-                        auto target_itr = std::find_if( // LCOV_EXCL_LINE
-                            m_context_stack.rbegin(),
-                            m_context_stack.rend(),
-                            [indent](const parse_context& c) {
-                                if (indent != c.indent) {
-                                    return false;
-                                }
-
-                                switch (c.state) {
-                                case context_state_t::BLOCK_MAPPING:
-                                case context_state_t::MAPPING_VALUE:
-                                    return true;
-                                default:
-                                    return false;
-                                }
-                            });
-                        const bool is_indent_valid = (target_itr != m_context_stack.rend());
-                        if FK_YAML_UNLIKELY (!is_indent_valid) {
-                            throw parse_error("Detected invalid indentation.", line, indent);
-                        }
-
-                        pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
-                    }
-                    if (pop_num > 0) {
-                        for (uint32_t i = 0; i < pop_num; i++) {
-                            // move back to the previous container node.
-                            m_context_stack.pop_back();
-                        }
-                        mp_current_node = m_context_stack.back().p_node;
+                    if (indent <= m_context_stack.back().indent) {
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            switch (c.state) {
+                            case context_state_t::BLOCK_MAPPING:
+                            case context_state_t::MAPPING_VALUE:
+                                return indent == c.indent;
+                            default:
+                                return false;
+                            }
+                        });
                     }
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
@@ -7952,11 +7964,8 @@ private:
                 apply_directive_set(node);
                 apply_node_properties(node);
 
-                const bool should_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
-                if (should_continue) {
-                    continue;
-                }
-                break;
+                deserialize_scalar(lexer, std::move(node), indent, line, token);
+                continue;
             }
             case lexical_token_t::PLAIN_SCALAR:
             case lexical_token_t::SINGLE_QUOTED_SCALAR:
@@ -7970,11 +7979,8 @@ private:
                 apply_directive_set(node);
                 apply_node_properties(node);
 
-                const bool do_continue = deserialize_scalar(lexer, std::move(node), indent, line, token);
-                if (do_continue) {
-                    continue;
-                }
-                break;
+                deserialize_scalar(lexer, std::move(node), indent, line, token);
+                continue;
             }
             case lexical_token_t::BLOCK_LITERAL_SCALAR:
             case lexical_token_t::BLOCK_FOLDED_SCALAR: {
@@ -8019,7 +8025,6 @@ private:
     /// @param line The variable to store the line of either the first property or the last non-property token.
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
-    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     bool deserialize_node_properties(lexer_type& lexer, lexical_token& last_token, uint32_t& line, uint32_t& indent) {
         m_needs_anchor_impl = m_needs_tag_impl = false;
 
@@ -8090,39 +8095,30 @@ private:
     /// @param indent The indentation width in the current line where the key is found.
     void add_new_key(basic_node_type&& key, const uint32_t line, const uint32_t indent) {
         if (m_flow_context_depth == 0) {
-            uint32_t pop_num = 0;
-            if (indent == 0) {
-                pop_num = static_cast<uint32_t>(m_context_stack.size() - 1);
+            if FK_YAML_UNLIKELY (m_context_stack.back().indent < indent) {
+                // bad indentation like the following YAML:
+                // ```yaml
+                // foo: true
+                //   baz: 123
+                // # ^
+                // ```
+                throw parse_error("bad indentation of a mapping entry.", line, indent);
             }
-            else if (indent <= m_context_stack.back().indent) {
-                auto target_itr =
-                    std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), [indent](const parse_context& c) {
-                        // the target node is a block mapping key node with the same indentation.
-                        return (indent == c.indent) && (c.state == context_state_t::BLOCK_MAPPING);
-                    });
-                const bool is_indent_valid = (target_itr != m_context_stack.rend());
-                if FK_YAML_UNLIKELY (!is_indent_valid) {
-                    throw parse_error("Detected invalid indentation.", line, indent);
-                }
 
-                pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), target_itr));
-            }
-            if (pop_num > 0) {
-                for (uint32_t i = 0; i < pop_num; i++) {
-                    // move back to the previous container node.
-                    m_context_stack.pop_back();
-                }
-                mp_current_node = m_context_stack.back().p_node;
-            }
+            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
+            });
         }
-        else if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
-            throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
-        }
+        else {
+            if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+                throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
+            }
 
-        if (mp_current_node->is_sequence()) {
-            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
-            mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
-            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+            if (mp_current_node->is_sequence()) {
+                mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
+                mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
+                m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+            }
         }
 
         auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
@@ -8140,33 +8136,35 @@ private:
     /// @param node_value A rvalue basic_node_type object to be assigned to the current node.
     void assign_node_value(basic_node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
-            if (m_flow_context_depth > 0) {
-                if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
-                    throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
-                }
-                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+            FK_YAML_ASSERT(m_flow_context_depth > 0);
+
+            if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+                // Flow sequence entries are not allowed to be empty.
+                // ```yaml
+                // [foo,,bar]
+                // ```
+                throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
             }
 
             mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
+            m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             return;
         }
 
         // a scalar node
         *mp_current_node = std::move(node_value);
-        if FK_YAML_LIKELY (!m_context_stack.empty()) {
-            if (m_flow_context_depth > 0 ||
-                m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-                m_context_stack.pop_back();
-                mp_current_node = m_context_stack.back().p_node;
-
-                if (m_flow_context_depth > 0) {
-                    m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
-                }
-            }
-        }
-        else {
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
             // single scalar document.
             return;
+        }
+
+        if FK_YAML_LIKELY (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+            m_context_stack.pop_back();
+            mp_current_node = m_context_stack.back().p_node;
+
+            if (m_flow_context_depth > 0) {
+                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+            }
         }
     }
 
@@ -8177,31 +8175,38 @@ private:
     /// @param line The number of processed lines. Can be updated in this function.
     /// @param token The storage for last lexical token.
     /// @return true if next token has already been got, false otherwise.
-    bool deserialize_scalar(
+    void deserialize_scalar(
         lexer_type& lexer, basic_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {
-        if (mp_current_node->is_mapping()) {
-            add_new_key(std::move(node), line, indent);
-            return false;
-        }
-
         token = lexer.get_next_token();
-        if (token.type == lexical_token_t::KEY_SEPARATOR) {
-            if (line != lexer.get_lines_processed()) {
+        if (mp_current_node->is_mapping()) {
+            const bool is_key_sep_followed =
+                (token.type == lexical_token_t::KEY_SEPARATOR) && (line == lexer.get_lines_processed());
+            if FK_YAML_UNLIKELY (!is_key_sep_followed) {
+                throw parse_error(
+                    "The \":\" mapping value indicator must be followed after a mapping key.",
+                    lexer.get_lines_processed(),
+                    lexer.get_last_token_begin_pos());
+            }
+            add_new_key(std::move(node), line, indent);
+        }
+        else if (token.type == lexical_token_t::KEY_SEPARATOR) {
+            if FK_YAML_UNLIKELY (line != lexer.get_lines_processed()) {
                 // This path is for explicit mapping key separator like:
-                //
                 // ```yaml
                 //   ? foo
                 //   : bar
                 // # ^ this separator
                 // ```
                 assign_node_value(std::move(node), line, indent);
-                if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-                    mp_current_node = m_context_stack.back().p_node;
-                    m_context_stack.pop_back();
-                }
                 indent = lexer.get_last_token_begin_pos();
                 line = lexer.get_lines_processed();
-                return true;
+
+                if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                    pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                        return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
+                    });
+                }
+                return;
             }
 
             if (mp_current_node->is_scalar()) {
@@ -8210,6 +8215,7 @@ private:
                     switch (cur_context.state) {
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
+                    case context_state_t::BLOCK_SEQUENCE_ENTRY:
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         break;
                     default:
@@ -8248,9 +8254,34 @@ private:
         else {
             assign_node_value(std::move(node), line, indent);
         }
+
         indent = lexer.get_last_token_begin_pos();
         line = lexer.get_lines_processed();
-        return true;
+    }
+
+    /// @brief Pops parent contexts to a block mapping with the given indentation.
+    /// @tparam Pred Functor type to test parent contexts.
+    /// @param line The current line count.
+    /// @param indent The indentation level of the target parent block mapping.
+    template <typename Pred>
+    void pop_to_parent_node(uint32_t line, uint32_t indent, Pred&& pred) {
+        FK_YAML_ASSERT(!m_context_stack.empty());
+
+        // LCOV_EXCL_START
+        auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
+        // LCOV_EXCL_STOP
+        const bool is_indent_valid = (itr != m_context_stack.rend());
+        if FK_YAML_UNLIKELY (!is_indent_valid) {
+            throw parse_error("Detected invalid indentation.", line, indent);
+        }
+
+        const auto pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
+
+        // move back to the parent block mapping.
+        for (uint32_t i = 0; i < pop_num; i++) {
+            m_context_stack.pop_back();
+        }
+        mp_current_node = m_context_stack.back().p_node;
     }
 
     /// @brief Set YAML directive properties to the given node.
@@ -8313,10 +8344,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/input/input_adapter.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_INPUT_ADAPTER_HPP
@@ -8336,10 +8367,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf_encode_detector.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_DETECTOR_HPP
@@ -8353,10 +8384,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/encodings/utf_encode_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ENCODINGS_UTF_ENCODE_T_HPP
@@ -9755,10 +9786,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/iterator.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ITERATOR_HPP
@@ -9918,7 +9949,7 @@ public:
 
     /// @brief A dereference operator of the iterator class.
     /// @return reference Reference to the Node object internally referenced by the actual iterator object.
-    reference operator*() noexcept {
+    reference operator*() const noexcept {
         if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return *(m_iterator_holder.sequence_iterator);
         }
@@ -10119,7 +10150,7 @@ public:
 
     /// @brief Get reference to the YAML node of the current iterator.
     /// @return Reference to the YAML node of the current iterator.
-    reference value() noexcept {
+    reference value() const noexcept {
         return operator*();
     }
 
@@ -10130,9 +10161,253 @@ private:
     iterator_holder<value_type> m_iterator_holder {};
 };
 
+/// @brief Get reference to a mapping key node.
+/// @tparam ValueType The iterator value type.
+/// @tparam I The element index.
+/// @param i An iterator object.
+/// @return Reference to a mapping key node.
+template <std::size_t I, typename ValueType, enable_if_t<I == 0, int> = 0>
+inline auto get(const iterator<ValueType>& i) -> decltype(i.key()) {
+    return i.key();
+}
+
+/// @brief Get reference to a mapping value node.
+/// @tparam ValueType The iterator value type.
+/// @tparam I The element index
+/// @param i An iterator object.
+/// @return Reference to a mapping value node.
+template <std::size_t I, typename ValueType, enable_if_t<I == 1, int> = 0>
+inline auto get(const iterator<ValueType>& i) -> decltype(i.value()) {
+    return i.value();
+}
+
 FK_YAML_DETAIL_NAMESPACE_END
 
+namespace std {
+
+#ifdef __clang__
+// clang emits warnings against mixed usage of class/struct for tuple_size/tuple_element.
+// see also: https://groups.google.com/a/isocpp.org/g/std-discussion/c/QC-AMb5oO1w
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
+
+/// @brief Parcial pecialization of std::tuple_size for iterator class.
+/// @tparam ValueType The iterator value type.
+template <typename ValueType>
+// NOLINTNEXTLINE(cert-dcl58-cpp)
+struct tuple_size<::fkyaml::detail::iterator<ValueType>> : integral_constant<size_t, 2> {};
+
+/// @brief Parcial specialization of std::tuple_element for iterator class.
+/// @tparam ValueType The iterator value type.
+/// @tparam I The element index.
+template <size_t I, typename ValueType>
+// NOLINTNEXTLINE(cert-dcl58-cpp)
+struct tuple_element<I, ::fkyaml::detail::iterator<ValueType>> {
+    using type = decltype(get<I>(std::declval<::fkyaml::detail::iterator<ValueType>>()));
+};
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
+} // namespace std
+
 #endif /* FK_YAML_DETAIL_ITERATOR_HPP */
+
+// #include <fkYAML/detail/map_range_proxy.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_MAP_RANGE_PROXY_HPP
+#define FK_YAML_DETAIL_MAP_RANGE_PROXY_HPP
+
+// #include <fkYAML/detail/macros/define_macros.hpp>
+
+// #include <fkYAML/detail/meta/node_traits.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief A helper iterator class which wraps a mapping iterator object.
+/// @tparam Iterator The base iterator type.
+template <typename Iterator>
+class map_iterator_proxy {
+public:
+    /// @brief The type of the pointed-to elements by base iterators.
+    using value_type = Iterator;
+
+    /// @brief The type to represent difference between the pointed-to elements by base iterators.
+    using difference_type = std::ptrdiff_t;
+
+    /// @brief The type of the pointed-to element references by base iterators.
+    using reference = value_type&;
+
+    /// @brief The type of the pointed-to element pointers by base iterators.
+    using pointer = value_type*;
+
+    /// @brief The iterator category.
+    using iterator_category = std::forward_iterator_tag;
+
+    /// @brief Constructs a map_iterator_proxy object.
+    map_iterator_proxy() = default;
+
+    /// @brief Constructs a map_iterator_proxy object with an Iterator object.
+    /// @param i A base iterator object.
+    map_iterator_proxy(const Iterator& i) noexcept
+        : m_base_iterator(i) {
+    }
+
+    /// @brief Copy constructs a map_iterator_proxy object.
+    map_iterator_proxy(const map_iterator_proxy&) = default;
+
+    /// @brief Copy assigns a map_iterator_proxy object.
+    map_iterator_proxy& operator=(const map_iterator_proxy&) = default;
+
+    /// @brief Move constructs a map_iterator_proxy object.
+    map_iterator_proxy(map_iterator_proxy&&) = default;
+
+    /// @biref Move assigns a map_iterator_proxy object.
+    map_iterator_proxy& operator=(map_iterator_proxy&&) = default;
+
+    /// @brief Destructs a map_iterator_proxy object.
+    ~map_iterator_proxy() = default;
+
+    /// @brief Get reference to the base iterator object.
+    /// @return Reference to the base iterator object.
+    reference operator*() noexcept {
+        return m_base_iterator;
+    }
+
+    /// @brief Get pointer to the base iterator object.
+    /// @return Pointer to the base iterator object.
+    pointer operator->() noexcept {
+        return &m_base_iterator;
+    }
+
+    /// @brief Pre-increments the base iterator object.
+    /// @return Reference to this map_iterator_proxy object.
+    map_iterator_proxy& operator++() noexcept {
+        ++m_base_iterator;
+        return *this;
+    }
+
+    /// @brief Post-increments the base iterator object.
+    /// @return A map_iterator_proxy object with its base iterator incremented.
+    map_iterator_proxy operator++(int) & noexcept {
+        auto result = *this;
+        ++(*this);
+        return result;
+    }
+
+    /// @brief Check equality between map_iterator_proxy objects.
+    /// @param rhs A map_iterator_proxy object to compare with.
+    /// @return true if this map_iterator_proxy object is equal to `rhs`, false otherwise.
+    bool operator==(const map_iterator_proxy& rhs) const noexcept {
+        return m_base_iterator == rhs.m_base_iterator;
+    }
+
+    /// @brief Check inequality between map_iterator_proxy objects.
+    /// @param rhs A map_iterator_proxy object to compare with.
+    /// @return true if this map_iterator_proxy object is not equal to `rhs`, false otherwise.
+    bool operator!=(const map_iterator_proxy& rhs) const noexcept {
+        return m_base_iterator != rhs.m_base_iterator;
+    }
+
+    /// @brief Get the mapping key node pointed by the base iterator.
+    /// @return Reference to the mapping key node.
+    typename Iterator::reference key() const {
+        return m_base_iterator.key();
+    }
+
+    /// @brief Get the mapping value node pointed by the base iterator.
+    /// @return Reference to the mapping value node.
+    typename Iterator::reference value() const noexcept {
+        return m_base_iterator.value();
+    }
+
+private:
+    /// The base iterator object.
+    Iterator m_base_iterator {};
+};
+
+/// @brief A helper struct which allows accessing node iterator member functions in range-based for loops.
+/// @tparam BasicNodeType A basic_node template instance type.
+template <typename BasicNodeType>
+class map_range_proxy {
+    static_assert(
+        is_basic_node<remove_cv_t<BasicNodeType>>::value,
+        "map_range_proxy only accepts a basic_node type as its template parameter.");
+
+public:
+    /// @brief The type of non-const iterators.
+    using iterator = map_iterator_proxy<typename std::conditional<
+        std::is_const<BasicNodeType>::value, typename BasicNodeType::const_iterator,
+        typename BasicNodeType::iterator>::type>;
+
+    /// @brief The type of const iterators.
+    using const_iterator = map_iterator_proxy<typename BasicNodeType::const_iterator>;
+
+    /// @brief Constructs a map_range_proxy object with a BasicNodeType object.
+    /// @param map A mapping node object.
+    map_range_proxy(BasicNodeType& map) noexcept
+        : mp_map(&map) {
+    }
+
+    /// @brief Copy constructs a map_range_proxy object.
+    map_range_proxy(const map_range_proxy&) = default;
+
+    /// @brief Copy assigns a map_range_proxy object.
+    /// @return Reference to this map_range_proxy object.
+    map_range_proxy& operator=(const map_range_proxy&) = default;
+
+    /// @brief Move constructs a map_range_proxy object.
+    map_range_proxy(map_range_proxy&&) = default;
+
+    /// @brief Move assigns a map_range_proxy object.
+    /// @return Reference to this map_range_proxy object.
+    map_range_proxy& operator=(map_range_proxy&&) = default;
+
+    /// @brief Destructs a map_range_proxy object.
+    ~map_range_proxy() = default;
+
+    /// @brief Get an iterator to the first element.
+    /// @return An iterator to the first element.
+    iterator begin() noexcept {
+        return {mp_map->begin()};
+    }
+
+    /// @brief Get a const iterator to the first element.
+    /// @return A const iterator to the first element.
+    const_iterator begin() const noexcept {
+        return {mp_map->cbegin()};
+    }
+
+    /// @brief Get an iterator to the past-the-last element.
+    /// @return An iterator to the past-the-last element.
+    iterator end() noexcept {
+        return {mp_map->end()};
+    }
+
+    /// @brief Get a const iterator to the past-the-last element.
+    /// @return A const iterator to the past-the-last element.
+    const_iterator end() const noexcept {
+        return {mp_map->cend()};
+    }
+
+private:
+    /// Pointer to the mapping node object. (non-null)
+    BasicNodeType* mp_map {nullptr};
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_MAP_RANGE_PROXY_HPP */
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
@@ -10147,10 +10422,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/node_ref_storage.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_NODE_REF_STORAGE_HPP
@@ -10240,10 +10515,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/output/serializer.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP
@@ -10259,10 +10534,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_string.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_CONVERSIONS_TO_STRING_HPP
@@ -10480,6 +10755,10 @@ private:
     void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
         switch (node.get_type()) {
         case node_type::SEQUENCE:
+            if (node.size() == 0) {
+                str += "[]\n";
+                return;
+            }
             for (const auto& seq_item : node) {
                 insert_indentation(cur_indent, str);
                 str += "-";
@@ -10498,35 +10777,54 @@ private:
                     str += " ";
                     serialize_node(seq_item, cur_indent, str);
                     str += "\n";
+                    continue;
                 }
-                else {
+
+                const bool is_empty = seq_item.empty();
+                if (!is_empty) {
                     str += "\n";
                     serialize_node(seq_item, cur_indent + 2, str);
+                    continue;
+                }
+
+                // an empty sequence or mapping
+                if (seq_item.is_sequence()) {
+                    str += " []\n";
+                }
+                else /*seq_item.is_mapping()*/ {
+                    str += " {}\n";
                 }
             }
             break;
         case node_type::MAPPING:
-            for (auto itr = node.begin(); itr != node.end(); ++itr) {
+            if (node.size() == 0) {
+                str += "{}\n";
+                return;
+            }
+            for (auto itr : node.map_items()) {
                 insert_indentation(cur_indent, str);
 
-                bool is_appended = try_append_alias(itr.key(), false, str);
+                // serialize a mapping key node.
+                const auto& key_node = itr.key();
+
+                bool is_appended = try_append_alias(key_node, false, str);
                 if (is_appended) {
                     // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
                     str += " ";
                 }
                 else {
-                    const bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
-                    const bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
+                    const bool is_anchor_appended = try_append_anchor(key_node, false, str);
+                    const bool is_tag_appended = try_append_tag(key_node, is_anchor_appended, str);
                     if (is_anchor_appended || is_tag_appended) {
                         str += " ";
                     }
 
-                    const bool is_container = !itr.key().is_scalar();
+                    const bool is_container = !key_node.is_scalar();
                     if (is_container) {
                         str += "? ";
                     }
                     const auto indent = static_cast<uint32_t>(get_cur_indent(str));
-                    serialize_node(itr.key(), indent, str);
+                    serialize_node(key_node, indent, str);
                     if (is_container) {
                         // a newline code is already inserted in the above serialize_node() call.
                         insert_indentation(indent - 2, str);
@@ -10535,25 +10833,34 @@ private:
 
                 str += ":";
 
-                is_appended = try_append_alias(*itr, true, str);
+                // serialize a mapping value node.
+                const auto& value_node = itr.value();
+
+                is_appended = try_append_alias(value_node, true, str);
                 if (is_appended) {
                     str += "\n";
                     continue;
                 }
 
-                try_append_anchor(*itr, true, str);
-                try_append_tag(*itr, true, str);
+                try_append_anchor(value_node, true, str);
+                try_append_tag(value_node, true, str);
 
                 const bool is_scalar = itr->is_scalar();
                 if (is_scalar) {
                     str += " ";
-                    serialize_node(*itr, cur_indent, str);
+                    serialize_node(value_node, cur_indent, str);
                     str += "\n";
+                    continue;
+                }
+
+                const bool is_empty = itr->empty();
+                if (is_empty) {
+                    str += " ";
                 }
                 else {
                     str += "\n";
-                    serialize_node(*itr, cur_indent + 2, str);
                 }
+                serialize_node(value_node, cur_indent + 2, str);
             }
             break;
         case node_type::NULL_OBJECT:
@@ -10700,10 +11007,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/reverse_iterator.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_REVERSE_ITERATOR_HPP
@@ -10766,11 +11073,18 @@ public:
         : m_current(i) {
     }
 
+    /// @brief Copy constructs a reverse_iterator object with a compatible reverse_iterator object.
+    /// @tparam U A compatible iterator type with Iterator.
+    /// @param other A compatible reverse_iterator object.
     template <typename U, enable_if_t<negation<std::is_same<U, Iterator>>::value, int> = 0>
     reverse_iterator(const reverse_iterator<U>& other) noexcept
         : m_current(other.base()) {
     }
 
+    /// @brief Copy assigns a reverse_iterator object with a compatible reverse_iterator object.
+    /// @tparam U A compatible iterator type with Iterator.
+    /// @param other A compatible reverse_iterator object.
+    /// @return Reference to this reverse_iterator object.
     template <typename U, enable_if_t<negation<std::is_same<U, Iterator>>::value, int> = 0>
     reverse_iterator& operator=(const reverse_iterator<U>& other) noexcept {
         m_current = other.base();
@@ -10874,34 +11188,71 @@ public:
     }
 
 private:
+    ///
     Iterator m_current;
 };
 
+/// @brief Check equality between reverse_iterator objects.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if the two reverse_iterator objects are equal, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator==(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() == rhs.base();
 }
 
+/// @brief Check inequality between reverse_iterator objects.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if the two reverse_iterator objects are not equal, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator!=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() != rhs.base();
 }
 
+/// @brief Check if `lhs` is less than `rhs`.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if `lhs` is less than `rhs`, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator<(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() > rhs.base();
 }
 
+/// @brief Check if `lhs` is less than or equal to `rhs`.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if `lhs` is less than or equal to `rhs`, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator<=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() >= rhs.base();
 }
 
+/// @brief Check if `lhs` is greater than `rhs`.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if `lhs` is greater than `rhs`, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator>(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() < rhs.base();
 }
 
+/// @brief Check if `lhs` is greater than or equal to `rhs`.
+/// @tparam IteratorL Base iterator type for `lhs`.
+/// @tparam IteratorR Base iterator type for `rhs`.
+/// @param lhs A reverse_iterator object.
+/// @param rhs A reverse_iterator object.
+/// @return true if `lhs` is greater than or equal to `rhs`, false otherwise.
 template <typename IteratorL, typename IteratorR>
 inline bool operator>=(const reverse_iterator<IteratorL>& lhs, const reverse_iterator<IteratorR>& rhs) {
     return lhs.base() <= rhs.base();
@@ -10916,10 +11267,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/types/yaml_version_t.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP
@@ -10971,10 +11322,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/node_value_converter.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_NODE_VALUE_CONVERTER_HPP
@@ -10987,10 +11338,10 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/conversions/from_node.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
@@ -10998,6 +11349,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #include <array>
 #include <cmath>
+#include <forward_list>
 #include <limits>
 #include <utility>
 #include <valarray>
@@ -11056,8 +11408,6 @@ using is_sequence_container_adapter = conjunction<
 template <typename ContainerType, typename = void>
 struct call_reserve_if_available {
     /// @brief Do nothing since ContainerType does not have reserve function.
-    /// @param
-    /// @param
     static void call(ContainerType& /*unused*/, typename ContainerType::size_type /*unused*/) {
     }
 };
@@ -11076,6 +11426,75 @@ struct call_reserve_if_available<ContainerType, enable_if_t<detect::has_reserve<
 
 // from_node() implementations
 
+/// @brief from_node function for C-style 1D arrays whose element type must be a basic_node template instance type or a
+/// compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T Element type of C-style 1D array.
+/// @tparam N Size of the array.
+/// @param n A basic_node object.
+/// @param array An array object.
+template <typename BasicNodeType, typename T, std::size_t N>
+inline auto from_node(const BasicNodeType& n, T (&array)[N])
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value type is not sequence type.", n.get_type());
+    }
+
+    // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+    for (std::size_t i = 0; i < N; i++) {
+        n.at(i).get_value_inplace(array[i]);
+    }
+}
+
+/// @brief from_node function for C-style 2D arrays whose element type must be a basic_node template instance type or a
+/// compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T Element type of C-style 2D array.
+/// @tparam N0 Size of the outer dimension.
+/// @tparam N1 Size of the inner dimension.
+/// @param n A basic_node object.
+/// @param array An array object.
+template <typename BasicNodeType, typename T, std::size_t N0, std::size_t N1>
+inline auto from_node(const BasicNodeType& n, T (&array)[N0][N1])
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value type is not sequence type.", n.get_type());
+    }
+
+    // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+    for (std::size_t i0 = 0; i0 < N0; i0++) {
+        for (std::size_t i1 = 0; i1 < N1; i1++) {
+            n.at(i0).at(i1).get_value_inplace(array[i0][i1]);
+        }
+    }
+}
+
+/// @brief from_node function for C-style 2D arrays whose element type must be a basic_node template instance type or a
+/// compatible type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T Element type of C-style 2D array.
+/// @tparam N0 Size of the outermost dimension.
+/// @tparam N1 Size of the middle dimension.
+/// @tparam N2 Size of the innermost dimension.
+/// @param n A basic_node object.
+/// @param array An array object.
+template <typename BasicNodeType, typename T, std::size_t N0, std::size_t N1, std::size_t N2>
+inline auto from_node(const BasicNodeType& n, T (&array)[N0][N1][N2])
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value type is not sequence type.", n.get_type());
+    }
+
+    // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+    for (std::size_t i0 = 0; i0 < N0; i0++) {
+        for (std::size_t i1 = 0; i1 < N1; i1++) {
+            for (std::size_t i2 = 0; i2 < N2; i2++) {
+                n.at(i0).at(i1).at(i2).get_value_inplace(array[i0][i1][i2]);
+            }
+        }
+    }
+}
+
 /// @brief from_node function for std::array objects whose element type must be a basic_node template instance type or a
 /// compatible type. This function is necessary since insert function is not implemented for std::array.
 /// @tparam BasicNodeType A basic_node template instance type.
@@ -11084,14 +11503,15 @@ struct call_reserve_if_available<ContainerType, enable_if_t<detect::has_reserve<
 /// @param n A basic_node object.
 /// @param arr A std::array object.
 template <typename BasicNodeType, typename T, std::size_t N>
-inline auto from_node(const BasicNodeType& n, std::array<T, N>& arr) -> decltype(n.template get_value<T>(), void()) {
+inline auto from_node(const BasicNodeType& n, std::array<T, N>& arr)
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
 
-    std::size_t count = std::min(n.size(), N);
-    for (std::size_t i = 0; i < count; i++) {
-        arr.at(i) = n.at(i).template get_value<T>();
+    for (std::size_t i = 0; i < N; i++) {
+        // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+        n.at(i).get_value_inplace(arr.at(i));
     }
 }
 
@@ -11102,7 +11522,8 @@ inline auto from_node(const BasicNodeType& n, std::array<T, N>& arr) -> decltype
 /// @param n A basic_node object.
 /// @param va A std::valarray object.
 template <typename BasicNodeType, typename T>
-inline auto from_node(const BasicNodeType& n, std::valarray<T>& va) -> decltype(n.template get_value<T>(), void()) {
+inline auto from_node(const BasicNodeType& n, std::valarray<T>& va)
+    -> decltype(n.get_value_inplace(std::declval<T&>()), void()) {
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
@@ -11110,7 +11531,32 @@ inline auto from_node(const BasicNodeType& n, std::valarray<T>& va) -> decltype(
     std::size_t count = n.size();
     va.resize(count);
     for (std::size_t i = 0; i < count; i++) {
-        va[i] = n.at(i).template get_value<T>();
+        // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+        n.at(i).get_value_inplace(va[i]);
+    }
+}
+
+/// @brief from_node function for std::forward_list objects whose element type must be a basic_node template instance
+/// type or a compatible type. This function is necessary since insert function is not implemented for
+/// std::forward_list.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T Element type of std::forward_list.
+/// @tparam Alloc Allocator type of std::forward_list.
+/// @param n A basic_node object.
+/// @param fl A std::forward_list object.
+template <typename BasicNodeType, typename T, typename Alloc>
+inline auto from_node(const BasicNodeType& n, std::forward_list<T, Alloc>& fl)
+    -> decltype(n.template get_value<T>(), void()) {
+    if FK_YAML_UNLIKELY (!n.is_sequence()) {
+        throw type_error("The target node value is not sequence type.", n.get_type());
+    }
+
+    fl.clear();
+
+    // std::forward_list does not have insert function.
+    auto insert_pos_itr = fl.before_begin();
+    for (const auto& elem : n) {
+        insert_pos_itr = fl.emplace_after(insert_pos_itr, elem.template get_value<T>());
     }
 }
 
@@ -11133,6 +11579,8 @@ inline auto from_node(const BasicNodeType& n, CompatSeqType& s)
         throw type_error("The target node value is not sequence type.", n.get_type());
     }
 
+    s.clear();
+
     // call reserve function first if it's available (like std::vector).
     call_reserve_if_available<CompatSeqType>::call(s, n.size());
 
@@ -11154,9 +11602,14 @@ template <
     enable_if_t<
         conjunction<is_basic_node<BasicNodeType>, is_sequence_container_adapter<SeqContainerAdapter>>::value, int> = 0>
 inline auto from_node(const BasicNodeType& n, SeqContainerAdapter& ca)
-    -> decltype(n.template get_value<typename SeqContainerAdapter::value_type>(), ca.emplace(std::declval<typename SeqContainerAdapter::value_type>()), void()) {
+    -> decltype(n.template get_value<typename SeqContainerAdapter::value_type>(), ca.push(std::declval<typename SeqContainerAdapter::value_type>()), void()) {
     if FK_YAML_UNLIKELY (!n.is_sequence()) {
         throw type_error("The target node value is not sequence type.", n.get_type());
+    }
+
+    // clear existing elements manually since clear function is not implemeneted for container adapter classes.
+    while (!ca.empty()) {
+        ca.pop();
     }
 
     for (const auto& elem : n) {
@@ -11185,6 +11638,7 @@ inline auto from_node(const BasicNodeType& n, CompatMapType& m)
         throw type_error("The target node value type is not mapping type.", n.get_type());
     }
 
+    m.clear();
     call_reserve_if_available<CompatMapType>::call(m, n.size());
 
     for (const auto& pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
@@ -11472,7 +11926,9 @@ inline auto from_node(const BasicNodeType& n, std::pair<T, U>& p)
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
 
-    p = {n.at(0).template get_value<T>(), n.at(1).template get_value<U>()};
+    // call get_value_inplace(), not get_value(), since the storage to fill the result into is already created.
+    n.at(0).get_value_inplace(p.first);
+    n.at(1).get_value_inplace(p.second);
 }
 
 /// @brief concrete implementation of from_node function for std::tuple objects.
@@ -11568,10 +12024,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/detail/conversions/to_node.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
@@ -11955,10 +12411,10 @@ FK_YAML_NAMESPACE_END
 // #include <fkYAML/ordered_map.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_ORDERED_MAP_HPP
@@ -11990,21 +12446,36 @@ template <
     typename Allocator = std::allocator<std::pair<const Key, Value>>>
 class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator> {
 public:
-    /// A type for keys.
+    /// @brief A type for keys.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using key_type = Key;
-    /// A type for values.
+
+    /// @brief A type for values.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using mapped_type = Value;
-    /// A type for internal key-value containers.
+
+    /// @brief A type for internal key-value containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using Container = std::vector<std::pair<const Key, Value>, Allocator>;
-    /// A type for key-value pairs.
+
+    /// @brief A type for key-value pairs.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using value_type = typename Container::value_type;
-    /// A type for non-const iterators.
+
+    /// @brief A type for non-const iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using iterator = typename Container::iterator;
-    /// A type for const iterators.
+
+    /// @brief A type for const iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using const_iterator = typename Container::const_iterator;
-    /// A type for size parameters used in this class.
+
+    /// @brief A type for size parameters used in this class.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using size_type = typename Container::size_type;
-    /// A type for comparison between keys.
+
+    /// @brief A type for comparison between keys.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using key_compare = std::equal_to<Key>;
 
 public:
@@ -12225,6 +12696,14 @@ public:
     /// @deprecated Use fkyaml::yaml_version_type enum class. (since 0.3.12)
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/yaml_version_t/
     using yaml_version_t = detail::yaml_version_t;
+
+    /// @brief A type for mapping range objects for the map_items() function.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_range/
+    using map_range = fkyaml::detail::map_range_proxy<basic_node>;
+
+    /// @brief A type for constant mapping range objects for the map_items() function.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_range/
+    using const_map_range = fkyaml::detail::map_range_proxy<const basic_node>;
 
 private:
     template <node_type>
@@ -13433,7 +13912,8 @@ public:
     }
 
     /// @brief Get the node value object converted into a given type.
-    /// @note This function requires T objects to be default constructible.
+    /// @note This function requires T objects to be default constructible. Also, T cannot be either a reference,
+    /// pointer or C-style array type.
     /// @tparam T A compatible value type which might be cv-qualified.
     /// @tparam ValueType A compatible value type with cv-qualifiers removed by default.
     /// @return A compatible native data value converted from the basic_node object.
@@ -13442,13 +13922,15 @@ public:
         typename T, typename ValueType = detail::remove_cv_t<T>,
         detail::enable_if_t<std::is_default_constructible<ValueType>::value, int> = 0>
     T get_value() const noexcept(
-        noexcept(std::declval<const basic_node>().template get_value_impl<ValueType>(std::declval<ValueType&>()))) {
+        noexcept(std::declval<const basic_node&>().template get_value_impl<ValueType>(std::declval<ValueType&>()))) {
         // emit a compile error if T is either a reference, pointer or C-style array type.
         static_assert(
             !std::is_reference<T>::value,
             "get_value() cannot be called with reference types. you might want to call get_value_ref().");
         static_assert(!std::is_pointer<T>::value, "get_value() cannot be called with pointer types.");
-        static_assert(!std::is_array<T>::value, "get_value() cannot be called with C-style array types.");
+        static_assert(
+            !std::is_array<T>::value,
+            "get_value() cannot be called with C-style array types. you might want to call get_value_inplace().");
 
         auto ret = ValueType();
         if (has_anchor_name()) {
@@ -13460,6 +13942,23 @@ public:
             get_value_impl(ret);
         }
         return ret;
+    }
+
+    /// @brief Get the node value object converted into a given type. The conversion result is filled into `value_ref`.
+    /// @tparam T A compatible value type.
+    /// @param value_ref A storage into which the conversion result is filled.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_inplace/
+    template <typename T>
+    void get_value_inplace(T& value_ref) const
+        noexcept(noexcept(std::declval<const basic_node&>().template get_value_impl<T>(std::declval<T&>()))) {
+        if (has_anchor_name()) {
+            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
+            itr->second.get_value_impl(value_ref);
+        }
+        else {
+            get_value_impl(value_ref);
+        }
     }
 
     /// @brief Explicit reference access to the internally stored YAML node value.
@@ -13664,6 +14163,28 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
     const_reverse_iterator crend() const {
         return rend();
+    }
+
+    /// @brief Returns a range of mapping entries.
+    /// @throw `type_error` if this basic_node is not a mapping.
+    /// @return A range of mapping entries.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_items/
+    map_range map_items() {
+        if FK_YAML_UNLIKELY (!is_mapping()) {
+            throw type_error("map_items() cannot be called on a non-mapping node.", get_type());
+        }
+        return {*this};
+    }
+
+    /// @brief Returns a const range of mapping entries.
+    /// @throw `type_error` if this basic_node is not a mapping.
+    /// @return A const range of mapping entries.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_items/
+    const_map_range map_items() const {
+        if FK_YAML_UNLIKELY (!is_mapping()) {
+            throw type_error("map_items() cannot be called on a non-mapping node.", get_type());
+        }
+        return {*this};
     }
 
 private:

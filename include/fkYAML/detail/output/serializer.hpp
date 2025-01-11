@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP
@@ -137,6 +137,10 @@ private:
     void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
         switch (node.get_type()) {
         case node_type::SEQUENCE:
+            if (node.size() == 0) {
+                str += "[]\n";
+                return;
+            }
             for (const auto& seq_item : node) {
                 insert_indentation(cur_indent, str);
                 str += "-";
@@ -155,35 +159,54 @@ private:
                     str += " ";
                     serialize_node(seq_item, cur_indent, str);
                     str += "\n";
+                    continue;
                 }
-                else {
+
+                const bool is_empty = seq_item.empty();
+                if (!is_empty) {
                     str += "\n";
                     serialize_node(seq_item, cur_indent + 2, str);
+                    continue;
+                }
+
+                // an empty sequence or mapping
+                if (seq_item.is_sequence()) {
+                    str += " []\n";
+                }
+                else /*seq_item.is_mapping()*/ {
+                    str += " {}\n";
                 }
             }
             break;
         case node_type::MAPPING:
-            for (auto itr = node.begin(); itr != node.end(); ++itr) {
+            if (node.size() == 0) {
+                str += "{}\n";
+                return;
+            }
+            for (auto itr : node.map_items()) {
                 insert_indentation(cur_indent, str);
 
-                bool is_appended = try_append_alias(itr.key(), false, str);
+                // serialize a mapping key node.
+                const auto& key_node = itr.key();
+
+                bool is_appended = try_append_alias(key_node, false, str);
                 if (is_appended) {
                     // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
                     str += " ";
                 }
                 else {
-                    const bool is_anchor_appended = try_append_anchor(itr.key(), false, str);
-                    const bool is_tag_appended = try_append_tag(itr.key(), is_anchor_appended, str);
+                    const bool is_anchor_appended = try_append_anchor(key_node, false, str);
+                    const bool is_tag_appended = try_append_tag(key_node, is_anchor_appended, str);
                     if (is_anchor_appended || is_tag_appended) {
                         str += " ";
                     }
 
-                    const bool is_container = !itr.key().is_scalar();
+                    const bool is_container = !key_node.is_scalar();
                     if (is_container) {
                         str += "? ";
                     }
                     const auto indent = static_cast<uint32_t>(get_cur_indent(str));
-                    serialize_node(itr.key(), indent, str);
+                    serialize_node(key_node, indent, str);
                     if (is_container) {
                         // a newline code is already inserted in the above serialize_node() call.
                         insert_indentation(indent - 2, str);
@@ -192,25 +215,34 @@ private:
 
                 str += ":";
 
-                is_appended = try_append_alias(*itr, true, str);
+                // serialize a mapping value node.
+                const auto& value_node = itr.value();
+
+                is_appended = try_append_alias(value_node, true, str);
                 if (is_appended) {
                     str += "\n";
                     continue;
                 }
 
-                try_append_anchor(*itr, true, str);
-                try_append_tag(*itr, true, str);
+                try_append_anchor(value_node, true, str);
+                try_append_tag(value_node, true, str);
 
                 const bool is_scalar = itr->is_scalar();
                 if (is_scalar) {
                     str += " ";
-                    serialize_node(*itr, cur_indent, str);
+                    serialize_node(value_node, cur_indent, str);
                     str += "\n";
+                    continue;
+                }
+
+                const bool is_empty = itr->empty();
+                if (is_empty) {
+                    str += " ";
                 }
                 else {
                     str += "\n";
-                    serialize_node(*itr, cur_indent + 2, str);
                 }
+                serialize_node(value_node, cur_indent + 2, str);
             }
             break;
         case node_type::NULL_OBJECT:

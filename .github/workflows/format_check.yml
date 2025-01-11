@@ -10,8 +10,8 @@ on:
       - include/**
       - scripts/**
       - single_include/**
-      - test/**
-      - tool/amalgamation/**
+      - tests/**
+      - tools/amalgamation/**
       - CMakeLists.txt
       - .clang-format
   # to grant contents write permission to fork repos as well
@@ -21,8 +21,8 @@ on:
       - include/**
       - scripts/**
       - single_include/**
-      - test/**
-      - tool/amalgamation/**
+      - tests/**
+      - tools/amalgamation/**
       - CMakeLists.txt
       - .clang-format
   workflow_dispatch:

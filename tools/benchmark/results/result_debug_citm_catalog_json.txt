@@ -1,0 +1,18 @@
+2024-12-22T01:28:01+09:00
+Running ./build_bm_debug/tool/benchmark/benchmarker
+Run on (16 X 3193.88 MHz CPU s)
+CPU Caches:
+  L1 Data 32 KiB (x8)
+  L1 Instruction 32 KiB (x8)
+  L2 Unified 512 KiB (x8)
+  L3 Unified 16384 KiB (x1)
+Load Average: 1.00, 0.39, 0.14
+***WARNING*** Library was built as DEBUG. Timings may be affected.
+-------------------------------------------------------------------------------------
+Benchmark                           Time             CPU   Iterations UserCounters...
+-------------------------------------------------------------------------------------
+bm_fkyaml_parse              20140087 ns     20219603 ns           36 bytes_per_second=81.465Mi/s items_per_second=49.457/s
+bm_yamlcpp_parse            824976395 ns    827427500 ns            1 bytes_per_second=1.99074Mi/s items_per_second=1.20857/s
+bm_libfyaml_parse           119860560 ns    120087717 ns            6 bytes_per_second=13.7166Mi/s items_per_second=8.32725/s
+bm_rapidyaml_parse_inplace      52605 ns        52662 ns        13548 bytes_per_second=30.5454Gi/s items_per_second=18.989k/s
+bm_rapidyaml_parse_arena     41897531 ns     41887041 ns           17 bytes_per_second=39.3246Mi/s items_per_second=23.8737/s

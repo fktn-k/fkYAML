@@ -16,7 +16,7 @@ TOOL_SRCS = $(shell find tool -type f -name '*.cpp' | sort)
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 4
-TARGET_PATCH_VERSION := 0
+TARGET_PATCH_VERSION := 1
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -88,10 +88,10 @@ check-amalgamate:
 ##########################################
 
 update-params-for-natvis:
-	echo { \"version\": \"$(TARGET_VERSION_FULL)\" } > ./tool/natvis_generator/params.json
+	echo { \"version\": \"$(TARGET_VERSION_FULL)\" } > ./tools/natvis_generator/params.json
 
 fkYAML.natvis: update-params-for-natvis
-	@$(MAKE) -C ./tool/natvis_generator generate
+	@$(MAKE) -C ./tools/natvis_generator generate
 
 #####################
 #   Documentation   #
@@ -102,10 +102,10 @@ examples:
 	cmake --build build_examples --config Debug
 
 build-docs: examples
-	@$(MAKE) -C ./docs/mkdocs build
+	@$(MAKE) -C ./docs build
 
 serve-docs: examples
-	@$(MAKE) -C ./docs/mkdocs serve
+	@$(MAKE) -C ./docs serve
 
 ###############
 #   Version   #
@@ -130,10 +130,10 @@ update-project-version:
 reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year "2023-2024" --style cppsingle
+		--license MIT --year "2023-2025" --style cppsingle
 	pipx run reuse annotate $(TEST_SRCS) $(EXAMPLE_SRCS) $(TOOL_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year "2023-2024" --style cppsingle
+		--license MIT --year "2023-2025" --style cppsingle
 	pipx run reuse lint
 
 update-sources: reuse update-version-macros
@@ -161,7 +161,7 @@ update-version: fkYAML.natvis update-project-version update-sources update-git-t
 # pre-requisites: lcov
 lcov-coverage:
 	cmake -B build_coverage -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_CODE_COVERAGE=ON
-	cmake --build build_coverage --config Debug --target generate_test_coverage -j $(JOBS)
+	cmake --build build_coverage --config Debug --target generate_test_coverage
 
 # pre-requisites: genhtml lcov
 html-coverage: lcov-coverage
@@ -178,18 +178,18 @@ build-bm-debug:
 	cmake --build build_bm_debug --config Debug
 
 bm-debug:
-	BENCHMARK_OUT=./tool/benchmark/results/result_debug_ubuntu_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/cases/ubuntu.yml
-	BENCHMARK_OUT=./tool/benchmark/results/result_debug_citm_catalog_json.txt BENCHMARK_OUT_FORMAT=console ./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/cases/citm_catalog.json
-	BENCHMARK_OUT=./tool/benchmark/results/result_debug_citm_catalog_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_debug/tool/benchmark/benchmarker ./tool/benchmark/cases/citm_catalog.yml
+	BENCHMARK_OUT=./tools/benchmark/results/result_debug_ubuntu_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_debug/tools/benchmark/benchmarker ./tools/benchmark/cases/ubuntu.yml
+	BENCHMARK_OUT=./tools/benchmark/results/result_debug_citm_catalog_json.txt BENCHMARK_OUT_FORMAT=console ./build_bm_debug/tools/benchmark/benchmarker ./tools/benchmark/cases/citm_catalog.json
+	BENCHMARK_OUT=./tools/benchmark/results/result_debug_citm_catalog_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_debug/tools/benchmark/benchmarker ./tools/benchmark/cases/citm_catalog.yml
 
 build-bm-release:
 	cmake -B build_bm_release -S . -DCMAKE_BUILD_TYPE=Release -DFK_YAML_RUN_BENCHMARK=ON
 	cmake --build build_bm_release --config Release
 
 bm-release:
-	BENCHMARK_OUT=./tool/benchmark/results/result_release_ubuntu_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/cases/ubuntu.yml
-	BENCHMARK_OUT=./tool/benchmark/results/result_release_citm_catalog_json.txt BENCHMARK_OUT_FORMAT=console ./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/cases/citm_catalog.json
-	BENCHMARK_OUT=./tool/benchmark/results/result_release_citm_catalog_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_release/tool/benchmark/benchmarker ./tool/benchmark/cases/citm_catalog.yml
+	BENCHMARK_OUT=./tools/benchmark/results/result_release_ubuntu_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_release/tools/benchmark/benchmarker ./tools/benchmark/cases/ubuntu.yml
+	BENCHMARK_OUT=./tools/benchmark/results/result_release_citm_catalog_json.txt BENCHMARK_OUT_FORMAT=console ./build_bm_release/tools/benchmark/benchmarker ./tools/benchmark/cases/citm_catalog.json
+	BENCHMARK_OUT=./tools/benchmark/results/result_release_citm_catalog_yml.txt BENCHMARK_OUT_FORMAT=console ./build_bm_release/tools/benchmark/benchmarker ./tools/benchmark/cases/citm_catalog.yml
 
 ###################
 #   Maintenance   #

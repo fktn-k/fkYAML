@@ -9,52 +9,75 @@ on:
 jobs:
   create_package:
     timeout-minutes: 10
-    runs-on: ${{matrix.os}}
+    runs-on: ubuntu-latest # Since fkYAML is a header-only library, just using ubuntu-latest is enough for packaging.
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
         single_header: ["ON", "OFF"]
         include:
-          - os: ubuntu-latest
-            artifact_name: fkYAML.tgz
+          - artifact_name: fkYAML
             single_header: "OFF"
-          - os: ubuntu-latest
-            artifact_name: fkYAML_single_header.tgz
-            single_header: "ON"
-          - os: windows-latest
-            artifact_name: fkYAML.zip
-            single_header: "OFF"
-          - os: windows-latest
-            artifact_name: fkYAML_single_header.zip
+          - artifact_name: fkYAML_single_header
             single_header: "ON"
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+
+    - name: install zip
+      run: sudo apt-get install zip
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{github.workspace}}/build/package" -DFK_YAML_USE_SINGLE_HEADER=${{matrix.single_header}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{github.workspace}}/build/${{matrix.artifact_name}}" -DFK_YAML_USE_SINGLE_HEADER=${{matrix.single_header}}
 
     - name: Install
       run: |
         cmake --build ${{github.workspace}}/build --config Release --target install
-        ls ${{github.workspace}}/build/package
+        ls -lAR ${{github.workspace}}/build/${{matrix.artifact_name}}
 
-    - name: Package
-      shell: bash
+    - name: Create tgz/zip archives of the install package
       run: |
-        ls '${{github.workspace}}/build'
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]
-        then
-          7z a ${{matrix.artifact_name}} '${{github.workspace}}/build/package'
-        else
-          tar czvf ${{matrix.artifact_name}} '${{github.workspace}}/build/package'
-        fi
-        ls
+        cd ${{github.workspace}}/build
+        tar czvf '${{matrix.artifact_name}}.tgz' ./${{matrix.artifact_name}}
+        zip -r '${{matrix.artifact_name}}.zip' ./${{matrix.artifact_name}}
 
-    - name: Upload Artifacts
+    - name: Upload Artifacts (tgz)
       uses: actions/upload-artifact@v4
       with:
-        name: ${{matrix.artifact_name}}
-        path: ${{matrix.artifact_name}}
+        name: '${{matrix.artifact_name}}.tgz'
+        path: '${{github.workspace}}/build/${{matrix.artifact_name}}.tgz'
+
+    - name: Upload Artifacts (zip)
+      uses: actions/upload-artifact@v4
+      with:
+        name: '${{matrix.artifact_name}}.zip'
+        path: '${{github.workspace}}/build/${{matrix.artifact_name}}.zip'
+
+  create_minimum_archive:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: install zip
+      run: sudo apt-get install zip
+
+    - name: Create minimum tgz & zip archives
+      working-directory: ${{github.workspace}}
+      run: | # create a tgz archive which contains minimum required files to be used as a CMake project (e.g., using FetchContent).
+        mkdir fkYAML_min
+        cp -vr CMakeLists.txt fkYAML.natvis LICENSE.txt README.md include single_include ./fkYAML_min
+        tar czvf fkYAML_min.tgz ./fkYAML_min
+        zip -r fkYAML_min.zip ./fkYAML_min
+        rm -rf ./fkYAML_min
+
+    - name: Upload the minimum archive (tgz)
+      uses: actions/upload-artifact@v4
+      with:
+        name: fkYAML_min.tgz
+        path: '${{github.workspace}}/fkYAML_min.tgz'
+
+    - name: Upload the minimum archive (zip)
+      uses: actions/upload-artifact@v4
+      with:
+        name: fkYAML_min.zip
+        path: '${{github.workspace}}/fkYAML_min.zip'

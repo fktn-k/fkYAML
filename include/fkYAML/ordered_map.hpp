@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_ORDERED_MAP_HPP
@@ -32,21 +32,36 @@ template <
     typename Allocator = std::allocator<std::pair<const Key, Value>>>
 class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator> {
 public:
-    /// A type for keys.
+    /// @brief A type for keys.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using key_type = Key;
-    /// A type for values.
+
+    /// @brief A type for values.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using mapped_type = Value;
-    /// A type for internal key-value containers.
+
+    /// @brief A type for internal key-value containers.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using Container = std::vector<std::pair<const Key, Value>, Allocator>;
-    /// A type for key-value pairs.
+
+    /// @brief A type for key-value pairs.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using value_type = typename Container::value_type;
-    /// A type for non-const iterators.
+
+    /// @brief A type for non-const iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using iterator = typename Container::iterator;
-    /// A type for const iterators.
+
+    /// @brief A type for const iterators.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using const_iterator = typename Container::const_iterator;
-    /// A type for size parameters used in this class.
+
+    /// @brief A type for size parameters used in this class.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using size_type = typename Container::size_type;
-    /// A type for comparison between keys.
+
+    /// @brief A type for comparison between keys.
+    /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
     using key_compare = std::equal_to<Key>;
 
 public:

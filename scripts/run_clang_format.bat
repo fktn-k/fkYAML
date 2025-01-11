@@ -17,15 +17,15 @@ for /r %ROOT_PATH%\include %%f in (*.hpp) do (
     .\venv_clang_format\Scripts\clang-format.exe %%f -i
 )
 
-for /r %ROOT_PATH%\test %%f in (*.cpp) do (
+for /r %ROOT_PATH%\tests %%f in (*.cpp) do (
     .\venv_clang_format\Scripts\clang-format.exe %%f -i
 )
 
-for /r %ROOT_PATH%\docs\examples %%f in (*.cpp) do (
+for /r %ROOT_PATH%\examples %%f in (*.cpp) do (
     .\venv_clang_format\Scripts\clang-format.exe %%f -i
 )
 
-for /r %ROOT_PATH%\tool\benchmark %%f in (*.cpp) do (
+for /r %ROOT_PATH%\tools\benchmark %%f in (*.cpp) do (
     .\venv_clang_format\Scripts\clang-format.exe %%f -i
 )
 

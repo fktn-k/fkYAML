@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
@@ -28,6 +28,23 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Lexical token information
 struct lexical_token {
+    lexical_token() = default;
+
+    lexical_token(lexical_token_t t, str_view s) noexcept
+        : type(t),
+          str(s) {
+    }
+
+    lexical_token(lexical_token_t t) noexcept
+        : type(t) {
+    }
+
+    lexical_token(const lexical_token&) = default;
+    lexical_token& operator=(const lexical_token&) = default;
+    lexical_token(lexical_token&&) = default;
+    lexical_token& operator=(lexical_token&&) = default;
+    ~lexical_token() = default;
+
     /// Lexical token type.
     lexical_token_t type {lexical_token_t::END_OF_BUFFER};
     /// Lexical token contents.
@@ -62,36 +79,29 @@ public:
         m_last_token_begin_line = m_pos_tracker.get_lines_read();
 
         if (m_cur_itr == m_end_itr) {
-            return {};
+            return {lexical_token_t::END_OF_BUFFER};
         }
-
-        lexical_token token {};
-        token.type = lexical_token_t::PLAIN_SCALAR;
 
         switch (*m_cur_itr) {
         case '?':
             if (++m_cur_itr == m_end_itr) {
-                token.str = str_view {m_token_begin_itr, m_end_itr};
-                return token;
+                return {lexical_token_t::PLAIN_SCALAR, {m_token_begin_itr, 1}};
             }
 
             if (*m_cur_itr == ' ') {
-                token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
-                return token;
+                return {lexical_token_t::EXPLICIT_KEY_PREFIX};
             }
             break;
         case ':': // key separator
             if (++m_cur_itr == m_end_itr) {
-                token.type = lexical_token_t::KEY_SEPARATOR;
-                return token;
+                return {lexical_token_t::KEY_SEPARATOR};
             }
 
             switch (*m_cur_itr) {
             case ' ':
             case '\t':
             case '\n':
-                token.type = lexical_token_t::KEY_SEPARATOR;
-                return token;
+                return {lexical_token_t::KEY_SEPARATOR};
             case ',':
             case '[':
             case ']':
@@ -100,8 +110,7 @@ public:
                 if (m_state & flow_context_bit) {
                     // Flow indicators are not "safe" to be followed in a flow context.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                    token.type = lexical_token_t::KEY_SEPARATOR;
-                    return token;
+                    return {lexical_token_t::KEY_SEPARATOR};
                 }
                 break;
             default:
@@ -110,109 +119,72 @@ public:
             break;
         case ',': // value separator
             ++m_cur_itr;
-            token.type = lexical_token_t::VALUE_SEPARATOR;
-            return token;
-        case '&': { // anchor prefix
-            extract_anchor_name(token);
-            const bool is_empty = token.str.empty();
-            if FK_YAML_UNLIKELY (is_empty) {
-                emit_error("anchor name must not be empty.");
-            }
-
-            token.type = lexical_token_t::ANCHOR_PREFIX;
-            return token;
-        }
-        case '*': { // alias prefix
-            extract_anchor_name(token);
-            const bool is_empty = token.str.empty();
-            if FK_YAML_UNLIKELY (is_empty) {
-                emit_error("anchor name must not be empty.");
-            }
-
-            token.type = lexical_token_t::ALIAS_PREFIX;
-            return token;
-        }
-        case '!':
-            extract_tag_name(token);
-            token.type = lexical_token_t::TAG_PREFIX;
-            return token;
+            return {lexical_token_t::VALUE_SEPARATOR};
+        case '&': // anchor prefix
+            return {lexical_token_t::ANCHOR_PREFIX, extract_anchor_name()};
+        case '*': // alias prefix
+            return {lexical_token_t::ALIAS_PREFIX, extract_anchor_name()};
+        case '!': // tag prefix
+            return {lexical_token_t::TAG_PREFIX, extract_tag_name()};
         case '#': // comment prefix
             scan_comment();
             return get_next_token();
         case '%': // directive prefix
             if (m_state & document_directive_bit) {
-                token.type = scan_directive();
-                return token;
+                return {scan_directive()};
             }
             // The '%' character can be safely used as the first character in document contents.
             // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
             break;
-        case '-': {
-            const char next = *(m_cur_itr + 1);
-            switch (next) {
+        case '-':
+            switch (*(m_cur_itr + 1)) {
             case ' ':
             case '\t':
             case '\n':
                 // Move a cursor to the beginning of the next token.
                 m_cur_itr += 2;
-                token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
-                return token;
+                return {lexical_token_t::SEQUENCE_BLOCK_PREFIX};
             default:
                 break;
             }
 
-            const bool is_available = ((m_end_itr - m_cur_itr) > 2);
-            if (is_available) {
+            if ((m_end_itr - m_cur_itr) > 2) {
                 const bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
                 if (is_dir_end) {
                     m_cur_itr += 3;
-                    token.type = lexical_token_t::END_OF_DIRECTIVES;
-                    return token;
+                    return {lexical_token_t::END_OF_DIRECTIVES};
                 }
             }
 
             break;
-        }
         case '[': // sequence flow begin
             ++m_cur_itr;
-            token.type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
-            return token;
+            return {lexical_token_t::SEQUENCE_FLOW_BEGIN};
         case ']': // sequence flow end
             ++m_cur_itr;
-            token.type = lexical_token_t::SEQUENCE_FLOW_END;
-            return token;
+            return {lexical_token_t::SEQUENCE_FLOW_END};
         case '{': // mapping flow begin
             ++m_cur_itr;
-            token.type = lexical_token_t::MAPPING_FLOW_BEGIN;
-            return token;
+            return {lexical_token_t::MAPPING_FLOW_BEGIN};
         case '}': // mapping flow end
             ++m_cur_itr;
-            token.type = lexical_token_t::MAPPING_FLOW_END;
-            return token;
+            return {lexical_token_t::MAPPING_FLOW_END};
         case '@':
             emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
         case '`':
             emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
         case '\"':
             ++m_token_begin_itr;
-            token.type = lexical_token_t::DOUBLE_QUOTED_SCALAR;
-            determine_double_quoted_scalar_range(token.str);
-            check_scalar_content(token.str);
-            return token;
+            return {lexical_token_t::DOUBLE_QUOTED_SCALAR, determine_double_quoted_scalar_range()};
         case '\'':
             ++m_token_begin_itr;
-            token.type = lexical_token_t::SINGLE_QUOTED_SCALAR;
-            determine_single_quoted_scalar_range(token.str);
-            check_scalar_content(token.str);
-            return token;
+            return {lexical_token_t::SINGLE_QUOTED_SCALAR, determine_single_quoted_scalar_range()};
         case '.': {
-            const bool is_available = ((m_end_itr - m_cur_itr) > 2);
-            if (is_available) {
+            if ((m_end_itr - m_cur_itr) > 2) {
                 const bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
                 if (is_doc_end) {
                     m_cur_itr += 3;
-                    token.type = lexical_token_t::END_OF_DOCUMENT;
-                    return token;
+                    return {lexical_token_t::END_OF_DOCUMENT};
                 }
             }
             break;
@@ -224,30 +196,23 @@ public:
             FK_YAML_ASSERT(header_end_pos != str_view::npos);
             const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
 
-            if (*m_token_begin_itr == '|') {
-                token.type = lexical_token_t::BLOCK_LITERAL_SCALAR;
-            }
-            else {
-                token.type = lexical_token_t::BLOCK_FOLDED_SCALAR;
-            }
-
+            const lexical_token_t type = *m_token_begin_itr == '|' ? lexical_token_t::BLOCK_LITERAL_SCALAR
+                                                                   : lexical_token_t::BLOCK_FOLDED_SCALAR;
             const str_view header_line = sv.substr(1, header_end_pos - 1);
             m_block_scalar_header = convert_to_block_scalar_header(header_line);
 
             m_token_begin_itr = sv.begin() + (header_end_pos + 1);
-            m_block_scalar_header.indent =
-                determine_block_scalar_content_range(base_indent, m_block_scalar_header.indent, token.str);
 
-            return token;
+            return {
+                type,
+                determine_block_scalar_content_range(
+                    base_indent, m_block_scalar_header.indent, m_block_scalar_header.indent)};
         }
         default:
             break;
         }
 
-        token.type = lexical_token_t::PLAIN_SCALAR;
-        determine_plain_scalar_range(token.str);
-        check_scalar_content(token.str);
-        return token;
+        return {lexical_token_t::PLAIN_SCALAR, determine_plain_scalar_range()};
     }
 
     /// @brief Get the beginning position of a last token.
@@ -595,8 +560,8 @@ private:
     }
 
     /// @brief Extracts an anchor name from the input.
-    /// @param token The token into which the extraction result is written.
-    void extract_anchor_name(lexical_token& token) {
+    /// @return The extracted anchor name.
+    str_view extract_anchor_name() {
         FK_YAML_ASSERT(*m_cur_itr == '&' || *m_cur_itr == '*');
 
         m_token_begin_itr = ++m_cur_itr;
@@ -625,18 +590,21 @@ private:
             }
         }
 
-        token.str = str_view {m_token_begin_itr, m_cur_itr};
+        if FK_YAML_UNLIKELY (m_token_begin_itr == m_cur_itr) {
+            emit_error("anchor name must not be empty.");
+        }
+
+        return {m_token_begin_itr, m_cur_itr};
     }
 
     /// @brief Extracts a tag name from the input.
-    /// @param token The token into which the extraction result is written.
-    void extract_tag_name(lexical_token& token) {
+    /// @return A tag name.
+    str_view extract_tag_name() {
         FK_YAML_ASSERT(*m_cur_itr == '!');
 
         if (++m_cur_itr == m_end_itr) {
             // Just "!" is a non-specific tag.
-            token.str = str_view {m_token_begin_itr, m_end_itr};
-            return;
+            return {m_token_begin_itr, m_end_itr};
         }
 
         bool is_verbatim = false;
@@ -646,8 +614,7 @@ private:
         case ' ':
         case '\n':
             // Just "!" is a non-specific tag.
-            token.str = str_view {m_token_begin_itr, m_cur_itr};
-            return;
+            return {m_token_begin_itr, m_cur_itr};
         case '!':
             // Secondary tag handles (!!suffix)
             break;
@@ -690,16 +657,16 @@ private:
             }
         } while (!ends_loop);
 
-        token.str = str_view {m_token_begin_itr, m_cur_itr};
+        str_view tag_name {m_token_begin_itr, m_cur_itr};
 
         if (is_verbatim) {
-            const char last = token.str.back();
+            const char last = tag_name.back();
             if FK_YAML_UNLIKELY (last != '>') {
                 emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
             }
 
             // only the `TAG` part of the `!<TAG>` for URI validation.
-            const str_view tag_body = token.str.substr(2, token.str.size() - 3);
+            const str_view tag_body = tag_name.substr(2, tag_name.size() - 3);
             if FK_YAML_UNLIKELY (tag_body.empty()) {
                 emit_error("verbatim tag(!<TAG>) must not be empty.");
             }
@@ -709,11 +676,11 @@ private:
                 emit_error("invalid URI character is found in a verbatim tag.");
             }
 
-            return;
+            return tag_name;
         }
 
         if (is_named_handle) {
-            const char last = token.str.back();
+            const char last = tag_name.back();
             if FK_YAML_UNLIKELY (last == '!') {
                 // Tag shorthand must be followed by a non-empty suffix.
                 // See the "Tag Shorthands" section in https://yaml.org/spec/1.2.2/#691-node-tags.
@@ -723,10 +690,10 @@ private:
 
         // get the position of last tag prefix character (!) to extract body of tag shorthands.
         // tag shorthand is either primary(!tag), secondary(!!tag) or named(!handle!tag).
-        const std::size_t last_tag_prefix_pos = token.str.find_last_of('!');
+        const std::size_t last_tag_prefix_pos = tag_name.find_last_of('!');
         FK_YAML_ASSERT(last_tag_prefix_pos != str_view::npos);
 
-        const str_view tag_uri = token.str.substr(last_tag_prefix_pos + 1);
+        const str_view tag_uri = tag_name.substr(last_tag_prefix_pos + 1);
         const bool is_valid_uri = uri_encoding::validate(tag_uri.begin(), tag_uri.end());
         if FK_YAML_UNLIKELY (!is_valid_uri) {
             emit_error("Invalid URI character is found in a named tag handle.");
@@ -738,11 +705,13 @@ private:
         if (invalid_char_pos != str_view::npos) {
             emit_error("Tag shorthand cannot contain flow indicators({}[],).");
         }
+
+        return tag_name;
     }
 
     /// @brief Determines the range of single quoted scalar by scanning remaining input buffer contents.
-    /// @param token Storage for the range of single quoted scalar.
-    void determine_single_quoted_scalar_range(str_view& token) {
+    /// @return A single quoted scalar.
+    str_view determine_single_quoted_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\'');
@@ -750,9 +719,10 @@ private:
             FK_YAML_ASSERT(pos < sv.size());
             if FK_YAML_LIKELY (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
                 // closing single quote is found.
-                token = {m_token_begin_itr, pos};
-                m_cur_itr = sv.begin() + (pos + 1);
-                return;
+                m_cur_itr = m_token_begin_itr + (pos + 1);
+                str_view single_quoted_scalar {m_token_begin_itr, pos};
+                check_scalar_content(single_quoted_scalar);
+                return single_quoted_scalar;
             }
 
             // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
@@ -766,8 +736,8 @@ private:
     }
 
     /// @brief Determines the range of double quoted scalar by scanning remaining input buffer contents.
-    /// @param token Storage for the range of double quoted scalar.
-    void determine_double_quoted_scalar_range(str_view& token) {
+    /// @return A double quoted scalar.
+    str_view determine_double_quoted_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         std::size_t pos = sv.find('\"');
@@ -794,9 +764,10 @@ private:
 
             if (is_closed) {
                 // closing double quote is found.
-                token = {m_token_begin_itr, pos};
-                m_cur_itr = sv.begin() + (pos + 1);
-                return;
+                m_cur_itr = m_token_begin_itr + (pos + 1);
+                str_view double_quoted_salar {m_token_begin_itr, pos};
+                check_scalar_content(double_quoted_salar);
+                return double_quoted_salar;
             }
 
             pos = sv.find('\"', pos + 1);
@@ -807,16 +778,17 @@ private:
     }
 
     /// @brief Determines the range of plain scalar by scanning remaining input buffer contents.
-    /// @param token Storage for the range of plain scalar.
-    void determine_plain_scalar_range(str_view& token) {
+    /// @return A plain scalar.
+    str_view determine_plain_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        constexpr str_view filter {"\n :{}[],"};
+        // flow indicators are checked only within a flow context.
+        const str_view filter = (m_state & flow_context_bit) ? "\n :{}[]," : "\n :";
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
-            token = sv;
+            check_scalar_content(sv);
             m_cur_itr = m_end_itr;
-            return;
+            return sv;
         }
 
         bool ends_loop = false;
@@ -894,7 +866,7 @@ private:
             case ']':
             case ',':
                 // This check is enabled only in a flow context.
-                ends_loop = (m_state & flow_context_bit);
+                ends_loop = true;
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -907,8 +879,10 @@ private:
             pos = sv.find_first_of(filter, pos + 1);
         } while (pos != str_view::npos);
 
-        token = sv.substr(0, pos);
-        m_cur_itr = token.end();
+        str_view plain_scalar = sv.substr(0, pos);
+        check_scalar_content(plain_scalar);
+        m_cur_itr = plain_scalar.end();
+        return plain_scalar;
     }
 
     /// @brief Scan a block style string token either in the literal or folded style.
@@ -916,32 +890,36 @@ private:
     /// @param indicated_indent The indicated indent level in the block scalar header. 0 means it's not indicated.
     /// @param token Storage for the scanned block scalar range.
     /// @return The content indentation level of the block scalar.
-    uint32_t determine_block_scalar_content_range(uint32_t base_indent, uint32_t indicated_indent, str_view& token) {
+    str_view determine_block_scalar_content_range(
+        uint32_t base_indent, uint32_t indicated_indent, uint32_t& content_indent) {
         const str_view sv {m_token_begin_itr, m_end_itr};
+        const std::size_t remain_input_len = sv.size();
 
         // Handle leading all-space lines.
         uint32_t cur_indent = 0;
         uint32_t max_leading_indent = 0;
         const char* cur_itr = m_token_begin_itr;
-        for (bool stop_increment = false; cur_itr != m_end_itr; ++cur_itr) {
-            const char c = *cur_itr;
-            if (c == ' ') {
-                if (!stop_increment) {
+        bool stop_increment = false;
+
+        while (cur_itr != m_end_itr) {
+            switch (*cur_itr++) {
+            case ' ':
+                if FK_YAML_LIKELY (!stop_increment) {
                     ++cur_indent;
                 }
                 continue;
-            }
-            if (c == '\n') {
-                max_leading_indent = std::max(cur_indent, max_leading_indent);
-                cur_indent = 0;
-                stop_increment = false;
-                continue;
-            }
-            if (c == '\t') {
+            case '\t':
                 // Tabs are not counted as an indent character but still part of an empty line.
                 // See https://yaml.org/spec/1.2.2/#rule-s-indent and https://yaml.org/spec/1.2.2/#64-empty-lines.
                 stop_increment = true;
                 continue;
+            case '\n':
+                max_leading_indent = std::max(cur_indent, max_leading_indent);
+                cur_indent = 0;
+                stop_increment = false;
+                continue;
+            default:
+                break;
             }
             break;
         }
@@ -952,10 +930,11 @@ private:
             // loops from the next loop. (https://github.com/fktn-k/fkYAML/pull/410)
             m_cur_itr = m_end_itr;
 
-            token = sv;
             // If there's no non-empty line, the content indentation level is equal to the number of spaces on the
             // longest line. https://yaml.org/spec/1.2.2/#8111-block-indentation-indicator
-            return indicated_indent == 0 ? std::max(cur_indent, max_leading_indent) : base_indent + indicated_indent;
+            content_indent =
+                indicated_indent == 0 ? std::max(cur_indent, max_leading_indent) : base_indent + indicated_indent;
+            return sv;
         }
 
         // Any leading empty line must not contain more spaces than the first non-empty line.
@@ -973,14 +952,14 @@ private:
 
         std::size_t last_newline_pos = sv.find('\n', cur_itr - m_token_begin_itr + 1);
         if (last_newline_pos == str_view::npos) {
-            last_newline_pos = sv.size();
+            last_newline_pos = remain_input_len;
         }
 
-        const uint32_t content_indent = base_indent + indicated_indent;
-        while (last_newline_pos < sv.size()) {
+        content_indent = base_indent + indicated_indent;
+        while (last_newline_pos < remain_input_len) {
             std::size_t cur_line_end_pos = sv.find('\n', last_newline_pos + 1);
             if (cur_line_end_pos == str_view::npos) {
-                cur_line_end_pos = sv.size();
+                cur_line_end_pos = remain_input_len;
             }
 
             const std::size_t cur_line_content_begin_pos = sv.find_first_not_of(' ', last_newline_pos + 1);
@@ -1012,95 +991,93 @@ private:
         }
 
         // include last newline character if not all characters have been consumed yet.
-        if (last_newline_pos < sv.size()) {
+        if (last_newline_pos < remain_input_len) {
             ++last_newline_pos;
         }
 
-        token = sv.substr(0, last_newline_pos);
-        m_cur_itr = token.end();
-
-        return content_indent;
-    }
-
-    /// @brief Handle unescaped control characters.
-    /// @param c A target character.
-    void handle_unescaped_control_char(char c) const {
-        FK_YAML_ASSERT(0x00 <= c && c <= 0x1F);
-
-        switch (c) {
-        // 0x00(NULL) has already been handled above.
-        case 0x01:
-            emit_error("Control character U+0001 (SOH) must be escaped to \\u0001.");
-        case 0x02:
-            emit_error("Control character U+0002 (STX) must be escaped to \\u0002.");
-        case 0x03:
-            emit_error("Control character U+0003 (ETX) must be escaped to \\u0003.");
-        case 0x04:
-            emit_error("Control character U+0004 (EOT) must be escaped to \\u0004.");
-        case 0x05:
-            emit_error("Control character U+0005 (ENQ) must be escaped to \\u0005.");
-        case 0x06:
-            emit_error("Control character U+0006 (ACK) must be escaped to \\u0006.");
-        case 0x07:
-            emit_error("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
-        case 0x08:
-            emit_error("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
-        case 0x09: // HT
-            // horizontal tabs (\t) are safe to use without escaping.
-            break;
-        // 0x0A(LF) has already been handled above.
-        case 0x0B:
-            emit_error("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
-        case 0x0C:
-            emit_error("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
-        // 0x0D(CR) has already been handled above.
-        case 0x0E:
-            emit_error("Control character U+000E (SO) must be escaped to \\u000E.");
-        case 0x0F:
-            emit_error("Control character U+000F (SI) must be escaped to \\u000F.");
-        case 0x10:
-            emit_error("Control character U+0010 (DLE) must be escaped to \\u0010.");
-        case 0x11:
-            emit_error("Control character U+0011 (DC1) must be escaped to \\u0011.");
-        case 0x12:
-            emit_error("Control character U+0012 (DC2) must be escaped to \\u0012.");
-        case 0x13:
-            emit_error("Control character U+0013 (DC3) must be escaped to \\u0013.");
-        case 0x14:
-            emit_error("Control character U+0014 (DC4) must be escaped to \\u0014.");
-        case 0x15:
-            emit_error("Control character U+0015 (NAK) must be escaped to \\u0015.");
-        case 0x16:
-            emit_error("Control character U+0016 (SYN) must be escaped to \\u0016.");
-        case 0x17:
-            emit_error("Control character U+0017 (ETB) must be escaped to \\u0017.");
-        case 0x18:
-            emit_error("Control character U+0018 (CAN) must be escaped to \\u0018.");
-        case 0x19:
-            emit_error("Control character U+0019 (EM) must be escaped to \\u0019.");
-        case 0x1A:
-            emit_error("Control character U+001A (SUB) must be escaped to \\u001A.");
-        case 0x1B:
-            emit_error("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
-        case 0x1C:
-            emit_error("Control character U+001C (FS) must be escaped to \\u001C.");
-        case 0x1D:
-            emit_error("Control character U+001D (GS) must be escaped to \\u001D.");
-        case 0x1E:
-            emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
-        case 0x1F:
-            emit_error("Control character U+001F (US) must be escaped to \\u001F.");
-        default:
-            break;
-        }
+        m_cur_itr = m_token_begin_itr + last_newline_pos;
+        return sv.substr(0, last_newline_pos);
     }
 
     /// @brief Checks if the given scalar contains no unescaped control characters.
     /// @param scalar Scalar contents.
-    void check_scalar_content(str_view scalar) const {
-        for (auto c : scalar) {
-            if (0 <= c && c < 0x20) {
-                handle_unescaped_control_char(c);
+    void check_scalar_content(const str_view& scalar) const {
+        const char* p_current = scalar.begin();
+        const char* p_end = scalar.end();
+
+        while (p_current != p_end) {
+            const uint32_t num_bytes = utf8::get_num_bytes(static_cast<uint8_t>(*p_current));
+            if (num_bytes > 1) {
+                // Multibyte characters are already checked in the input_adapter module.
+                p_current += num_bytes;
+                continue;
+            }
+
+            switch (*p_current++) {
+            // 0x00(NULL) has already been handled above.
+            case 0x01:
+                emit_error("Control character U+0001 (SOH) must be escaped to \\u0001.");
+            case 0x02:
+                emit_error("Control character U+0002 (STX) must be escaped to \\u0002.");
+            case 0x03:
+                emit_error("Control character U+0003 (ETX) must be escaped to \\u0003.");
+            case 0x04:
+                emit_error("Control character U+0004 (EOT) must be escaped to \\u0004.");
+            case 0x05:
+                emit_error("Control character U+0005 (ENQ) must be escaped to \\u0005.");
+            case 0x06:
+                emit_error("Control character U+0006 (ACK) must be escaped to \\u0006.");
+            case 0x07:
+                emit_error("Control character U+0007 (BEL) must be escaped to \\a or \\u0007.");
+            case 0x08:
+                emit_error("Control character U+0008 (BS) must be escaped to \\b or \\u0008.");
+            case 0x09: // HT
+                // horizontal tabs (\t) are safe to use without escaping.
+                break;
+            // 0x0A(LF) has already been handled above.
+            case 0x0B:
+                emit_error("Control character U+000B (VT) must be escaped to \\v or \\u000B.");
+            case 0x0C:
+                emit_error("Control character U+000C (FF) must be escaped to \\f or \\u000C.");
+            // 0x0D(CR) has already been handled above.
+            case 0x0E:
+                emit_error("Control character U+000E (SO) must be escaped to \\u000E.");
+            case 0x0F:
+                emit_error("Control character U+000F (SI) must be escaped to \\u000F.");
+            case 0x10:
+                emit_error("Control character U+0010 (DLE) must be escaped to \\u0010.");
+            case 0x11:
+                emit_error("Control character U+0011 (DC1) must be escaped to \\u0011.");
+            case 0x12:
+                emit_error("Control character U+0012 (DC2) must be escaped to \\u0012.");
+            case 0x13:
+                emit_error("Control character U+0013 (DC3) must be escaped to \\u0013.");
+            case 0x14:
+                emit_error("Control character U+0014 (DC4) must be escaped to \\u0014.");
+            case 0x15:
+                emit_error("Control character U+0015 (NAK) must be escaped to \\u0015.");
+            case 0x16:
+                emit_error("Control character U+0016 (SYN) must be escaped to \\u0016.");
+            case 0x17:
+                emit_error("Control character U+0017 (ETB) must be escaped to \\u0017.");
+            case 0x18:
+                emit_error("Control character U+0018 (CAN) must be escaped to \\u0018.");
+            case 0x19:
+                emit_error("Control character U+0019 (EM) must be escaped to \\u0019.");
+            case 0x1A:
+                emit_error("Control character U+001A (SUB) must be escaped to \\u001A.");
+            case 0x1B:
+                emit_error("Control character U+001B (ESC) must be escaped to \\e or \\u001B.");
+            case 0x1C:
+                emit_error("Control character U+001C (FS) must be escaped to \\u001C.");
+            case 0x1D:
+                emit_error("Control character U+001D (GS) must be escaped to \\u001D.");
+            case 0x1E:
+                emit_error("Control character U+001E (RS) must be escaped to \\u001E.");
+            case 0x1F:
+                emit_error("Control character U+001F (US) must be escaped to \\u001F.");
+            default:
+                break;
             }
         }
     }

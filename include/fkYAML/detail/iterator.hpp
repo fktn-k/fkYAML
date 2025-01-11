@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ITERATOR_HPP
@@ -160,7 +160,7 @@ public:
 
     /// @brief A dereference operator of the iterator class.
     /// @return reference Reference to the Node object internally referenced by the actual iterator object.
-    reference operator*() noexcept {
+    reference operator*() const noexcept {
         if (m_inner_iterator_type == iterator_t::SEQUENCE) {
             return *(m_iterator_holder.sequence_iterator);
         }
@@ -361,7 +361,7 @@ public:
 
     /// @brief Get reference to the YAML node of the current iterator.
     /// @return Reference to the YAML node of the current iterator.
-    reference value() noexcept {
+    reference value() const noexcept {
         return operator*();
     }
 
@@ -372,6 +372,56 @@ private:
     iterator_holder<value_type> m_iterator_holder {};
 };
 
+/// @brief Get reference to a mapping key node.
+/// @tparam ValueType The iterator value type.
+/// @tparam I The element index.
+/// @param i An iterator object.
+/// @return Reference to a mapping key node.
+template <std::size_t I, typename ValueType, enable_if_t<I == 0, int> = 0>
+inline auto get(const iterator<ValueType>& i) -> decltype(i.key()) {
+    return i.key();
+}
+
+/// @brief Get reference to a mapping value node.
+/// @tparam ValueType The iterator value type.
+/// @tparam I The element index
+/// @param i An iterator object.
+/// @return Reference to a mapping value node.
+template <std::size_t I, typename ValueType, enable_if_t<I == 1, int> = 0>
+inline auto get(const iterator<ValueType>& i) -> decltype(i.value()) {
+    return i.value();
+}
+
 FK_YAML_DETAIL_NAMESPACE_END
+
+namespace std {
+
+#ifdef __clang__
+// clang emits warnings against mixed usage of class/struct for tuple_size/tuple_element.
+// see also: https://groups.google.com/a/isocpp.org/g/std-discussion/c/QC-AMb5oO1w
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
+
+/// @brief Parcial pecialization of std::tuple_size for iterator class.
+/// @tparam ValueType The iterator value type.
+template <typename ValueType>
+// NOLINTNEXTLINE(cert-dcl58-cpp)
+struct tuple_size<::fkyaml::detail::iterator<ValueType>> : integral_constant<size_t, 2> {};
+
+/// @brief Parcial specialization of std::tuple_element for iterator class.
+/// @tparam ValueType The iterator value type.
+/// @tparam I The element index.
+template <size_t I, typename ValueType>
+// NOLINTNEXTLINE(cert-dcl58-cpp)
+struct tuple_element<I, ::fkyaml::detail::iterator<ValueType>> {
+    using type = decltype(get<I>(std::declval<::fkyaml::detail::iterator<ValueType>>()));
+};
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
+} // namespace std
 
 #endif /* FK_YAML_DETAIL_ITERATOR_HPP */

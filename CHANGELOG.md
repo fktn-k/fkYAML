@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.4.1](https://github.com/fktn-k/fkYAML/releases/tag/v0.4.1) (2025-01-11)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.4.0...v0.4.1)
+
+- Fix: made sure that empty documents just serialize to \[\] or {} [\#460](https://github.com/fktn-k/fkYAML/pull/460) ([johan-gson](https://github.com/johan-gson))
+- fix: Fixed a bug where serialize didn't write out empty vectors and mappings [\#456](https://github.com/fktn-k/fkYAML/pull/456) ([johan-gson](https://github.com/johan-gson))
+- Fix bad indentation detection for block collection entries [\#451](https://github.com/fktn-k/fkYAML/pull/451) ([fktn-k](https://github.com/fktn-k))
+- Emit an error if ":" is missing after a mapping key [\#450](https://github.com/fktn-k/fkYAML/pull/450) ([fktn-k](https://github.com/fktn-k))
+
+- Add test cases for serializing root empty collections [\#461](https://github.com/fktn-k/fkYAML/pull/461) ([fktn-k](https://github.com/fktn-k))
+- Mapping key/value access in range based for loops [\#458](https://github.com/fktn-k/fkYAML/pull/458) ([fktn-k](https://github.com/fktn-k))
+- Add test cases for serializing empty collection nodes [\#457](https://github.com/fktn-k/fkYAML/pull/457) ([fktn-k](https://github.com/fktn-k))
+- Fix invalid paths for documentation & other tools [\#453](https://github.com/fktn-k/fkYAML/pull/453) ([fktn-k](https://github.com/fktn-k))
+- Update copyright year and directory structure [\#452](https://github.com/fktn-k/fkYAML/pull/452) ([fktn-k](https://github.com/fktn-k))
+- Optimize lexer implementation [\#448](https://github.com/fktn-k/fkYAML/pull/448) ([fktn-k](https://github.com/fktn-k))
+- Update workflow jobs for release artifacts [\#447](https://github.com/fktn-k/fkYAML/pull/447) ([fktn-k](https://github.com/fktn-k))
+- Revise the contents of API References [\#445](https://github.com/fktn-k/fkYAML/pull/445) ([fktn-k](https://github.com/fktn-k))
+- support std::forward\_list in from\_node [\#444](https://github.com/fktn-k/fkYAML/pull/444) ([fktn-k](https://github.com/fktn-k))
+- Add get\_value\_inplace API to basic\_node [\#443](https://github.com/fktn-k/fkYAML/pull/443) ([fktn-k](https://github.com/fktn-k))
+- Resolve CMake deprecation warning [\#442](https://github.com/fktn-k/fkYAML/pull/442) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.4.0](https://github.com/fktn-k/fkYAML/releases/tag/v0.4.0) (2024-12-10)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.3.14...v0.4.0)

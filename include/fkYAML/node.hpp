@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2024 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_NODE_HPP
@@ -25,6 +25,7 @@
 #include <fkYAML/detail/input/deserializer.hpp>
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/detail/iterator.hpp>
+#include <fkYAML/detail/map_range_proxy.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
@@ -133,6 +134,14 @@ public:
     /// @deprecated Use fkyaml::yaml_version_type enum class. (since 0.3.12)
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/yaml_version_t/
     using yaml_version_t = detail::yaml_version_t;
+
+    /// @brief A type for mapping range objects for the map_items() function.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_range/
+    using map_range = fkyaml::detail::map_range_proxy<basic_node>;
+
+    /// @brief A type for constant mapping range objects for the map_items() function.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_range/
+    using const_map_range = fkyaml::detail::map_range_proxy<const basic_node>;
 
 private:
     template <node_type>
@@ -1341,7 +1350,8 @@ public:
     }
 
     /// @brief Get the node value object converted into a given type.
-    /// @note This function requires T objects to be default constructible.
+    /// @note This function requires T objects to be default constructible. Also, T cannot be either a reference,
+    /// pointer or C-style array type.
     /// @tparam T A compatible value type which might be cv-qualified.
     /// @tparam ValueType A compatible value type with cv-qualifiers removed by default.
     /// @return A compatible native data value converted from the basic_node object.
@@ -1350,13 +1360,15 @@ public:
         typename T, typename ValueType = detail::remove_cv_t<T>,
         detail::enable_if_t<std::is_default_constructible<ValueType>::value, int> = 0>
     T get_value() const noexcept(
-        noexcept(std::declval<const basic_node>().template get_value_impl<ValueType>(std::declval<ValueType&>()))) {
+        noexcept(std::declval<const basic_node&>().template get_value_impl<ValueType>(std::declval<ValueType&>()))) {
         // emit a compile error if T is either a reference, pointer or C-style array type.
         static_assert(
             !std::is_reference<T>::value,
             "get_value() cannot be called with reference types. you might want to call get_value_ref().");
         static_assert(!std::is_pointer<T>::value, "get_value() cannot be called with pointer types.");
-        static_assert(!std::is_array<T>::value, "get_value() cannot be called with C-style array types.");
+        static_assert(
+            !std::is_array<T>::value,
+            "get_value() cannot be called with C-style array types. you might want to call get_value_inplace().");
 
         auto ret = ValueType();
         if (has_anchor_name()) {
@@ -1368,6 +1380,23 @@ public:
             get_value_impl(ret);
         }
         return ret;
+    }
+
+    /// @brief Get the node value object converted into a given type. The conversion result is filled into `value_ref`.
+    /// @tparam T A compatible value type.
+    /// @param value_ref A storage into which the conversion result is filled.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_inplace/
+    template <typename T>
+    void get_value_inplace(T& value_ref) const
+        noexcept(noexcept(std::declval<const basic_node&>().template get_value_impl<T>(std::declval<T&>()))) {
+        if (has_anchor_name()) {
+            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
+            itr->second.get_value_impl(value_ref);
+        }
+        else {
+            get_value_impl(value_ref);
+        }
     }
 
     /// @brief Explicit reference access to the internally stored YAML node value.
@@ -1572,6 +1601,28 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/rend/
     const_reverse_iterator crend() const {
         return rend();
+    }
+
+    /// @brief Returns a range of mapping entries.
+    /// @throw `type_error` if this basic_node is not a mapping.
+    /// @return A range of mapping entries.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_items/
+    map_range map_items() {
+        if FK_YAML_UNLIKELY (!is_mapping()) {
+            throw type_error("map_items() cannot be called on a non-mapping node.", get_type());
+        }
+        return {*this};
+    }
+
+    /// @brief Returns a const range of mapping entries.
+    /// @throw `type_error` if this basic_node is not a mapping.
+    /// @return A const range of mapping entries.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_items/
+    const_map_range map_items() const {
+        if FK_YAML_UNLIKELY (!is_mapping()) {
+            throw type_error("map_items() cannot be called on a non-mapping node.", get_type());
+        }
+        return {*this};
     }
 
 private:
