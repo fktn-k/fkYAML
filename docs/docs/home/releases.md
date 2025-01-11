@@ -1,5 +1,88 @@
 # Releases
 
+## **fkYAML version 0.4.1**
+
+!!! abstract "Release Packages"
+
+    * CMake package of the multiple header version
+        * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.1/fkYAML.zip)
+        * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.1/fkYAML.tgz)
+    * CMake package of the single header version
+        * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.1/fkYAML_single_header.zip)
+        * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.1/fkYAML_single_header.tgz)
+    * minimum repository contents for CMake
+        * [fkYAML_min.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.1/fkYAML_min.zip)
+        * [fkYAML_min.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.1/fkYAML_min.tgz)
+    * single headers
+        * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.1/node.hpp)
+        * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.1/fkyaml_fwd.hpp)
+
+### What's Changed
+
+#### :sparkles: New Features
+
+- Add get\_value\_inplace API to basic\_node ([\#443](https://github.com/fktn-k/fkYAML/pull/443), [fktn-k](https://github.com/fktn-k))
+    - The new API `get_value_inplace()` converts a node value into a given type and writes the result into a given output parameter.
+    - The target type doesn't have to be default-constructible since the API doesn't construct an instance during the conversion.
+    - See [the dedicated API reference page](https://fktn-k.github.io/fkYAML/api/basic_node/get_value_inplace/) for more details.
+- Mapping key/value access in range based for loops ([\#458](https://github.com/fktn-k/fkYAML/pull/458), [fktn-k](https://github.com/fktn-k))
+    - Proposed by [sndth](https://github.com/sndth) in the discussion [\#400](https://github.com/fktn-k/fkYAML/discussions/400)
+    - The new API `map_items()` allows accessing mapping keys/values in range-based for loops.
+    - Structured binding support is added to `fkyaml::basic_node::iterator` and `fkyaml::basic_node::const_iterator`.
+      ```cpp
+      fkyaml::node mapping = {{"a", 123}, {"b", 3.14}};
+      for (auto& [key, val] : mapping.map_items()) {
+          // `key` and `val` are both of type `fkyaml::node::reference`.
+          std::cout << "key: " << key << ", value: " << val << std::endl;
+      }
+      // output:
+      // key: a, value: 123
+      // key: b, value: 3.14
+      ```
+    - See [the dedicated API reference page](https://fktn-k.github.io/fkYAML/api/basic_node/map_items/) for more details.
+- support std::forward\_list in from\_node ([\#444](https://github.com/fktn-k/fkYAML/pull/444), [fktn-k](https://github.com/fktn-k))
+
+#### :zap: Improvements
+
+- Resolve CMake deprecation warning ([\#442](https://github.com/fktn-k/fkYAML/pull/442), [fktn-k](https://github.com/fktn-k))
+- Optimize lexer implementation ([\#448](https://github.com/fktn-k/fkYAML/pull/448), [fktn-k](https://github.com/fktn-k))
+
+#### :bug: Bug Fixes
+
+- Emit an error if ":" is missing after a mapping key ([\#450](https://github.com/fktn-k/fkYAML/pull/450), [fktn-k](https://github.com/fktn-k))
+    - Reported by [sndth](https://github.com/sndth) in the issue [\#449](https://github.com/fktn-k/fkYAML/issues/449)
+- Fix bad indentation detection for block collection entries ([\#451](https://github.com/fktn-k/fkYAML/pull/451), [fktn-k](https://github.com/fktn-k))
+    - Reported by [sndth](https://github.com/sndth) in the issue [\#449](https://github.com/fktn-k/fkYAML/issues/449)
+- Fix serialization of empty collections
+    - fix: Fixed a bug where serialize didn't write out empty vectors and mappings ([\#456](https://github.com/fktn-k/fkYAML/pull/456), [johan-gson](https://github.com/johan-gson))
+    - Add test cases for serializing empty collection nodes ([\#457](https://github.com/fktn-k/fkYAML/pull/457), [fktn-k](https://github.com/fktn-k))
+    - Fix: made sure that empty documents just serialize to \[\] or {} ([\#460](https://github.com/fktn-k/fkYAML/pull/460), [johan-gson](https://github.com/johan-gson))
+    - Add test cases for serializing root empty collections ([\#461](https://github.com/fktn-k/fkYAML/pull/461), [fktn-k](https://github.com/fktn-k))
+
+#### :robot: CI
+
+- Update workflow jobs for release artifacts ([\#447](https://github.com/fktn-k/fkYAML/pull/447), [fktn-k](https://github.com/fktn-k))
+    - Adds new release artifacts (fkYAML_min.zip, fkYAML_min.tgz) which contain minimum required files for CMake. (roughly the top CMakeLists.txt & include|single_include directories)
+    - They reduces the cost of downloading unnecessary files for a client app by using the CMake FetchContent module.  
+      ```cmake
+      FetchContent_Declare(
+          fkYAML
+          URL https://github.com/fktn-k/fkYAML/releases/download/v0.4.1/fkYAML_min.zip
+      )
+      FetchContent_MakeAvailable(fkYAML)
+      ```
+
+#### :memo: Documentation
+
+- Revise the contents of API References ([\#445](https://github.com/fktn-k/fkYAML/pull/445), [fktn-k](https://github.com/fktn-k))
+- Update copyright year and directory structure ([\#452](https://github.com/fktn-k/fkYAML/pull/452), [fktn-k](https://github.com/fktn-k))
+- Fix invalid paths for documentation & other tools ([\#453](https://github.com/fktn-k/fkYAML/pull/453), [fktn-k](https://github.com/fktn-k))
+
+### Full Changelog
+https://github.com/fktn-k/fkYAML/compare/v0.4.0...v0.4.1
+
+---
+
 ## **fkYAML version 0.4.0**
 
 !!! abstract "Release Packages"
@@ -22,48 +105,48 @@ Note that a breaking change has been made in the way of error handling when dese
 
 #### :boom: Breaking Changes
 - Stop throwing parse\_error on string-to-int/float conversion failures if not forced with tag ([\#431](https://github.com/fktn-k/fkYAML/pull/431), [fktn-k](https://github.com/fktn-k))
-  - reported by [tomwpid](https://github.com/tomwpid) in the issue [\#428](https://github.com/fktn-k/fkYAML/issues/428)
-  - The library used to throw a `fkyaml::parse_error` upon conversion failures from a scalar to an integer or floating point value while parsing a YAML like this:  
-    ```yaml
-    id: 6E-578 # "6E-578" is interpreted as a floating point value but not expressible as a `double`
-               # --> `fkyaml::parse_error` gets thrown due to the conversion failure.
-    ```
-  - Such a conversion failure is now internally recovered by treating the scalar as a string scalar instead.  
+    - reported by [tomwpid](https://github.com/tomwpid) in the issue [\#428](https://github.com/fktn-k/fkYAML/issues/428)
+    - The library used to throw a `fkyaml::parse_error` upon conversion failures from a scalar to an integer or floating point value while parsing a YAML like this:  
+      ```yaml
+      id: 6E-578 # "6E-578" is interpreted as a floating point value but not expressible as a `double`
+                # --> `fkyaml::parse_error` gets thrown due to the conversion failure.
+      ```
+    - Such a conversion failure is now internally recovered by treating the scalar as a string scalar instead.  
 
 #### :sparkles: New Features
 - Support parsing multiline plain scalars ([\#432](https://github.com/fktn-k/fkYAML/pull/432), [fktn-k](https://github.com/fktn-k))
-  - Parsing a YAML which contains multi-line plain (unquoted) scalars are now supported.  
-    ```yaml
-    foo: this is 
-      a multi-line
-        plain scalar # interpreted as "this is a multi-line plain scalar"
-    ```
+    - Parsing a YAML which contains multi-line plain (unquoted) scalars are now supported.  
+      ```yaml
+      foo: this is 
+        a multi-line
+          plain scalar # interpreted as "this is a multi-line plain scalar"
+      ```
 - Support reverse iterations over sequence/mapping nodes ([\#440](https://github.com/fktn-k/fkYAML/pull/440), [fktn-k](https://github.com/fktn-k))
-  - You can now iterate over sequence/mapping elements in a reversed order like this:  
-    ```cpp
-    // node is [1, 2, 3]
-    for (auto rit = node.rbegin(); rit != node.rend(); ++rit) {
-        std::cout << *rit << std::endl;
-    }
-    
-    // output:
-    // 3
-    // 2
-    // 1
-    ```
+    - You can now iterate over sequence/mapping elements in a reversed order like this:  
+      ```cpp
+      // node is [1, 2, 3]
+      for (auto rit = node.rbegin(); rit != node.rend(); ++rit) {
+          std::cout << *rit << std::endl;
+      }
+      
+      // output:
+      // 3
+      // 2
+      // 1
+      ```
 
 #### :zap: Improvements
 - Resolve the C4800 warning when compiled with MSVC ([\#430](https://github.com/fktn-k/fkYAML/pull/430), [fktn-k](https://github.com/fktn-k))
-  - reported by [tomwpid](https://github.com/tomwpid) in the issue [\#429](https://github.com/fktn-k/fkYAML/issues/429)
+    - reported by [tomwpid](https://github.com/tomwpid) in the issue [\#429](https://github.com/fktn-k/fkYAML/issues/429)
 - Make node iterators compatible with different value type const-ness ([\#438](https://github.com/fktn-k/fkYAML/pull/438), [fktn-k](https://github.com/fktn-k))
-  - `fkyaml::node::iterator` and `fkyaml::node::const_iterator` are compatible in constructions, assignments and comparisons.  
+    - `fkyaml::node::iterator` and `fkyaml::node::const_iterator` are compatible in constructions, assignments and comparisons.  
 
 #### :bug: Bug Fixes
 - Emit error if an anchor is specified to an alias ([\#434](https://github.com/fktn-k/fkYAML/pull/434), [fktn-k](https://github.com/fktn-k))
 - Fixed bugs in parsing block scalars ([\#435](https://github.com/fktn-k/fkYAML/pull/435), [fktn-k](https://github.com/fktn-k))
 - Fix parsing input which begins with a newline & indentation ([\#437](https://github.com/fktn-k/fkYAML/pull/437), [fktn-k](https://github.com/fktn-k))
 - Fix round-trip issue in float serialization using scientific notation ([\#439](https://github.com/fktn-k/fkYAML/pull/439), [fktn-k](https://github.com/fktn-k))
-  - reported by [dyerbod](https://github.com/dyerbod) in the issue [\#405](https://github.com/fktn-k/fkYAML/issues/405)
+    - reported by [dyerbod](https://github.com/dyerbod) in the issue [\#405](https://github.com/fktn-k/fkYAML/issues/405)
 
 #### :robot: CI
 - Update GitHub Actions workflow jobs using macOS related runner images ([\#433](https://github.com/fktn-k/fkYAML/pull/433), [fktn-k](https://github.com/fktn-k))
@@ -92,27 +175,27 @@ Other changes are related to minor bug fixes in YAML scalar parsing and maintena
 
 #### :sparkles: New Features
 - Numeric scalar conversions inside basic\_node::get\_value API ([\#419](https://github.com/fktn-k/fkYAML/pull/419), [fktn-k](https://github.com/fktn-k))
-  - Suggested by [ARessegetesStery](https://github.com/ARessegetesStery) in the issue [\#366](https://github.com/fktn-k/fkYAML/issues/366)
-  - Automatic value conversions among null, boolean, integer and floating-point scalar values inside [fkyaml::basic_node::get_value()](../api/basic_node/get_value.md) API calls
+    - Suggested by [ARessegetesStery](https://github.com/ARessegetesStery) in the issue [\#366](https://github.com/fktn-k/fkYAML/issues/366)
+    - Automatic value conversions among null, boolean, integer and floating-point scalar values inside [fkyaml::basic_node::get_value()](../api/basic_node/get_value.md) API calls
 - Add forward declaration header ([\#422](https://github.com/fktn-k/fkYAML/pull/422), [fktn-k](https://github.com/fktn-k))
-  - Suggested by [abcminiuser](https://github.com/abcminiuser) in the duscussion [\#420](https://github.com/fktn-k/fkYAML/discussions/420)
-  - This new header provides the fkYAML namespace macros and forward declarations of fkYAML API classes.
-  - This file is available both in the [include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/include) and [single_include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/single_include) directories.
+    - Suggested by [abcminiuser](https://github.com/abcminiuser) in the duscussion [\#420](https://github.com/fktn-k/fkYAML/discussions/420)
+    - This new header provides the fkYAML namespace macros and forward declarations of fkYAML API classes.
+    - This file is available both in the [include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/include) and [single_include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/single_include) directories.
 
 #### :zap: Improvements
 - Support more STL types in from\_node ([\#421](https://github.com/fktn-k/fkYAML/pull/421), [fktn-k](https://github.com/fktn-k))
-  - YAML node objects can now be converted into a lot more STL container types.
-  - See [the API documentation page](https://fktn-k.github.io/fkYAML/api/basic_node/get_value/) for more details.
+    - YAML node objects can now be converted into a lot more STL container types.
+    - See [the API documentation page](https://fktn-k.github.io/fkYAML/api/basic_node/get_value/) for more details.
 - Clarify type restrictions of get\_value\(\) & get\_value\_ref\(\) APIs ([\#424](https://github.com/fktn-k/fkYAML/pull/424), [fktn-k](https://github.com/fktn-k))
-  - get_value calls with unsupported types (reference, pointer and C-style array types) now emits an explicit error message.
+    - get_value calls with unsupported types (reference, pointer and C-style array types) now emits an explicit error message.
 - Use std::unreachable\(\) or similar compiler specific extensions for dead but necessary code ([\#425](https://github.com/fktn-k/fkYAML/pull/425), [fktn-k](https://github.com/fktn-k))
-  - Exclude detail::unreachable\(\) from coverage target ([\#426](https://github.com/fktn-k/fkYAML/pull/426), [fktn-k](https://github.com/fktn-k))
+    - Exclude detail::unreachable\(\) from coverage target ([\#426](https://github.com/fktn-k/fkYAML/pull/426), [fktn-k](https://github.com/fktn-k))
 
 #### :bug: Bug Fixes
 - Fix wrong scalar value type detection from floating point value token ([\#414](https://github.com/fktn-k/fkYAML/pull/414), [fktn-k](https://github.com/fktn-k))
-  - reported by [ebertolazzi](https://github.com/ebertolazzi) in the issue [\#413](https://github.com/fktn-k/fkYAML/issues/413)
+    - reported by [ebertolazzi](https://github.com/ebertolazzi) in the issue [\#413](https://github.com/fktn-k/fkYAML/issues/413)
 - Disable -Wdeprecated-literal-operator warnings ([\#417](https://github.com/fktn-k/fkYAML/pull/417), [fktn-k](https://github.com/fktn-k))
-  - reported by [ebertolazzi](https://github.com/ebertolazzi) in the issue [\#413](https://github.com/fktn-k/fkYAML/issues/413)
+    - reported by [ebertolazzi](https://github.com/ebertolazzi) in the issue [\#413](https://github.com/fktn-k/fkYAML/issues/413)
 
 #### :robot: CI
 - Update GA workflow jobs for ubuntu24.04 ([\#415](https://github.com/fktn-k/fkYAML/pull/415), [fktn-k](https://github.com/fktn-k))
@@ -145,18 +228,18 @@ No changes are required for migration.
 
 #### :zap: Improvements
 - Refine benchmarking ([\#397](https://github.com/fktn-k/fkYAML/pull/397), [fktn-k](https://github.com/fktn-k))
-  - replaced data files for benchmarking for better comparison against existing YAML libraries
+    - replaced data files for benchmarking for better comparison against existing YAML libraries
 - Optimized scalar parsing ([\#409](https://github.com/fktn-k/fkYAML/pull/409), [fktn-k](https://github.com/fktn-k))
-  - increased parse speed by about 5MiB/s
+    - increased parse speed by about 5MiB/s
 
 #### :bug: Bug Fixes
 - Accept % as first scalar character ([\#399](https://github.com/fktn-k/fkYAML/pull/399), [fktn-k](https://github.com/fktn-k))
 - Fix compile warnings/errors when benchmarker app is compiled with msvc ([\#401](https://github.com/fktn-k/fkYAML/pull/401), [fktn-k](https://github.com/fktn-k))
 - Updated natvis file ([\#402](https://github.com/fktn-k/fkYAML/pull/402), [fktn-k](https://github.com/fktn-k))
-  - fixed broken natvis file contents
+    - fixed broken natvis file contents
 - Fix URI validation for tag shorthands ([\#403](https://github.com/fktn-k/fkYAML/pull/403), [fktn-k](https://github.com/fktn-k))
 - Fix float scalar serialization when a float is actually an integer ([\#407](https://github.com/fktn-k/fkYAML/pull/407), [fktn-k](https://github.com/fktn-k))
-  - reported by [ARessegetesStery](https://github.com/ARessegetesStery) in the issue [\#405](https://github.com/fktn-k/fkYAML/issues/405)
+    - reported by [ARessegetesStery](https://github.com/ARessegetesStery) in the issue [\#405](https://github.com/fktn-k/fkYAML/issues/405)
 - Fix infinite loops after parsing final empty block scalar ([\#410](https://github.com/fktn-k/fkYAML/pull/410), [fktn-k](https://github.com/fktn-k))
 - Fix wrong parse result from single scalar document ([\#411](https://github.com/fktn-k/fkYAML/pull/411), [fktn-k](https://github.com/fktn-k))
 
@@ -187,19 +270,19 @@ Last but not least, several bugs have also been resolved in deserialization, and
 #### :sparkles: New Features
 
 - Add node\_type/yaml\_version\_type enum class APIs by [fktn-k](https://github.com/fktn-k) in [\#388](https://github.com/fktn-k/fkYAML/pull/388)
-  - In this PR, the following APIs has been deprecated. Although they still work as before except for compile-time deprecation warnings, it's highly recommended to replace their usages with new APIs since they are planned to be removed in v0.4.0. See the Deprecation notes in each deprecated API reference page for migration guides.
-    - [`fkyaml::basic_node::node_t`](https://fktn-k.github.io/fkYAML/api/basic_node/node_t/)  
-      - Replace with: [`fkyaml::node_type`](https://fktn-k.github.io/fkYAML/api/node_type/)
-    - [`fkyaml::basic_node::basic_node(const fkyaml::basic_node::node_t)`](https://fktn-k.github.io/fkYAML/api/basic_node/constructor/#overload-3)
-      - Replace with: [`fkyaml::basic_node::basic_node(const fkyaml::node_type)`](https://fktn-k.github.io/fkYAML/api/basic_node/constructor/#overload-2)
-    - [`fkyaml::basic_node::node_t fkyaml::basic_node::type()`](https://fktn-k.github.io/fkYAML/api/basic_node/type/)
-      - Replace with: [`fkyaml::basic_node::get_type()`](https://fktn-k.github.io/fkYAML/api/basic_node/get_type/)
-    - [`fkyaml::basic_node::yaml_version_t`](https://fktn-k.github.io/fkYAML/api/basic_node/yaml_version_t/)
-      - Replace with: [`fkyaml::yaml_version_type`](https://fktn-k.github.io/fkYAML/api/yaml_version_type/)
-    - [`fkyaml::basic_node::yaml_version_t fkyaml::basic_node::get_yaml_version()`](https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/)
-      - Replace with: [`fkyaml::yaml_version_type fkyaml::basic_node::get_yaml_version_type()`](https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version_type/)
-    - [`void fkyaml::basic_node::set_yaml_version(const fkyaml::basic_node::yaml_version_t)`](https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/)
-      - Replace with: [`void fkyaml::basic_node::set_yaml_version_type(const fkyaml::yaml_version_type)`](https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version_type/)
+    - In this PR, the following APIs has been deprecated. Although they still work as before except for compile-time deprecation warnings, it's highly recommended to replace their usages with new APIs since they are planned to be removed in v0.4.0. See the Deprecation notes in each deprecated API reference page for migration guides.
+        - [`fkyaml::basic_node::node_t`](https://fktn-k.github.io/fkYAML/api/basic_node/node_t/)  
+            - Replace with: [`fkyaml::node_type`](https://fktn-k.github.io/fkYAML/api/node_type/)
+        - [`fkyaml::basic_node::basic_node(const fkyaml::basic_node::node_t)`](https://fktn-k.github.io/fkYAML/api/basic_node/constructor/#overload-3)
+            - Replace with: [`fkyaml::basic_node::basic_node(const fkyaml::node_type)`](https://fktn-k.github.io/fkYAML/api/basic_node/constructor/#overload-2)
+        - [`fkyaml::basic_node::node_t fkyaml::basic_node::type()`](https://fktn-k.github.io/fkYAML/api/basic_node/type/)
+            - Replace with: [`fkyaml::basic_node::get_type()`](https://fktn-k.github.io/fkYAML/api/basic_node/get_type/)
+        - [`fkyaml::basic_node::yaml_version_t`](https://fktn-k.github.io/fkYAML/api/basic_node/yaml_version_t/)
+            - Replace with: [`fkyaml::yaml_version_type`](https://fktn-k.github.io/fkYAML/api/yaml_version_type/)
+        - [`fkyaml::basic_node::yaml_version_t fkyaml::basic_node::get_yaml_version()`](https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/)
+            - Replace with: [`fkyaml::yaml_version_type fkyaml::basic_node::get_yaml_version_type()`](https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version_type/)
+        - [`void fkyaml::basic_node::set_yaml_version(const fkyaml::basic_node::yaml_version_t)`](https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/)
+            - Replace with: [`void fkyaml::basic_node::set_yaml_version_type(const fkyaml::yaml_version_type)`](https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version_type/)
 
 
 #### :zap: Improvements
