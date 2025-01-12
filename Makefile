@@ -9,7 +9,7 @@ SRCS = $(shell find include -type f -name '*.hpp' | sort)
 # list of sources in the test directory.
 TEST_SRCS = $(shell find test -type f -name '*.hpp' -o -name '*.cpp' | sort)
 # list of sources in the examples directory.
-EXAMPLE_SRCS = $(shell find docs/examples -type f -name '*.cpp' | sort)
+EXAMPLE_SRCS = $(shell find examples -type f -name '*.cpp' | sort)
 # list of sources in the tool directory.
 TOOL_SRCS = $(shell find tool -type f -name '*.cpp' | sort)
 
