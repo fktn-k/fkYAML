@@ -12,6 +12,7 @@
 #include <utility>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
+#include <fkYAML/detail/exception_safe_allocation.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/meta/type_traits.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
@@ -44,7 +45,7 @@ struct external_node_constructor<node_type::SEQUENCE> {
     static void construct(BasicNodeType& n, const typename BasicNodeType::sequence_type& s) noexcept {
         n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
         n.m_attrs = detail::node_attr_bits::seq_bit;
-        n.m_node_value.p_sequence = BasicNodeType::template create_object<typename BasicNodeType::sequence_type>(s);
+        n.m_node_value.p_sequence = create_object<typename BasicNodeType::sequence_type>(s);
     }
 
     /// @brief Constructs a basic_node object with rvalue sequence.
@@ -55,8 +56,7 @@ struct external_node_constructor<node_type::SEQUENCE> {
     static void construct(BasicNodeType& n, typename BasicNodeType::sequence_type&& s) noexcept {
         n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
         n.m_attrs = detail::node_attr_bits::seq_bit;
-        n.m_node_value.p_sequence =
-            BasicNodeType::template create_object<typename BasicNodeType::sequence_type>(std::move(s));
+        n.m_node_value.p_sequence = create_object<typename BasicNodeType::sequence_type>(std::move(s));
     }
 };
 
@@ -71,7 +71,7 @@ struct external_node_constructor<node_type::MAPPING> {
     static void construct(BasicNodeType& n, const typename BasicNodeType::mapping_type& m) noexcept {
         n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
         n.m_attrs = detail::node_attr_bits::map_bit;
-        n.m_node_value.p_mapping = BasicNodeType::template create_object<typename BasicNodeType::mapping_type>(m);
+        n.m_node_value.p_mapping = create_object<typename BasicNodeType::mapping_type>(m);
     }
 
     /// @brief Constructs a basic_node object with rvalue mapping.
@@ -82,8 +82,7 @@ struct external_node_constructor<node_type::MAPPING> {
     static void construct(BasicNodeType& n, typename BasicNodeType::mapping_type&& m) noexcept {
         n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
         n.m_attrs = detail::node_attr_bits::map_bit;
-        n.m_node_value.p_mapping =
-            BasicNodeType::template create_object<typename BasicNodeType::mapping_type>(std::move(m));
+        n.m_node_value.p_mapping = create_object<typename BasicNodeType::mapping_type>(std::move(m));
     }
 };
 
@@ -158,7 +157,7 @@ struct external_node_constructor<node_type::STRING> {
     static void construct(BasicNodeType& n, const typename BasicNodeType::string_type& s) noexcept {
         n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
         n.m_attrs = detail::node_attr_bits::string_bit;
-        n.m_node_value.p_string = BasicNodeType::template create_object<typename BasicNodeType::string_type>(s);
+        n.m_node_value.p_string = create_object<typename BasicNodeType::string_type>(s);
     }
 
     /// @brief Constructs a basic_node object with rvalue strings.
@@ -169,8 +168,7 @@ struct external_node_constructor<node_type::STRING> {
     static void construct(BasicNodeType& n, typename BasicNodeType::string_type&& s) noexcept {
         n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
         n.m_attrs = detail::node_attr_bits::string_bit;
-        n.m_node_value.p_string =
-            BasicNodeType::template create_object<typename BasicNodeType::string_type>(std::move(s));
+        n.m_node_value.p_string = create_object<typename BasicNodeType::string_type>(std::move(s));
     }
 
     /// @brief Constructs a basic_node object with compatible strings.
@@ -188,7 +186,7 @@ struct external_node_constructor<node_type::STRING> {
     static void construct(BasicNodeType& n, const CompatibleStringType& s) noexcept {
         n.m_node_value.destroy(n.m_attrs & detail::node_attr_mask::value);
         n.m_attrs = detail::node_attr_bits::string_bit;
-        n.m_node_value.p_string = BasicNodeType::template create_object<typename BasicNodeType::string_type>(s);
+        n.m_node_value.p_string = create_object<typename BasicNodeType::string_type>(s);
     }
 };
 
