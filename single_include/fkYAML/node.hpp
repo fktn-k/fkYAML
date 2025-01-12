@@ -7271,9 +7271,9 @@ private:
                 // If node properties and a followed node are on the different line, the properties belong to the root
                 // node.
                 if (m_needs_anchor_impl) {
-                    m_root_anchor_name = std::move(m_anchor_name);
+                    m_root_anchor_name = m_anchor_name;
                     m_needs_anchor_impl = false;
-                    m_anchor_name.clear();
+                    m_anchor_name = {};
                 }
 
                 if (m_needs_tag_impl) {
@@ -8054,7 +8054,7 @@ private:
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_anchor_name.assign(token.str.begin(), token.str.end());
+                m_anchor_name = token.str;
                 m_needs_anchor_impl = true;
 
                 if (!m_needs_tag_impl) {
@@ -8250,8 +8250,9 @@ private:
 
                     // apply node properties if any to the root mapping node.
                     if (!m_root_anchor_name.empty()) {
-                        mp_current_node->add_anchor_name(std::move(m_root_anchor_name));
-                        m_root_anchor_name.clear();
+                        mp_current_node->add_anchor_name(
+                            std::string(m_root_anchor_name.begin(), m_root_anchor_name.end()));
+                        m_root_anchor_name = {};
                     }
                     if (!m_root_tag_name.empty()) {
                         mp_current_node->add_tag_name(std::string(m_root_tag_name.begin(), m_root_tag_name.end()));
@@ -8304,9 +8305,9 @@ private:
     /// @param node A node type object to be set YAML node properties.
     void apply_node_properties(basic_node_type& node) {
         if (m_needs_anchor_impl) {
-            node.add_anchor_name(m_anchor_name);
+            node.add_anchor_name(std::string(m_anchor_name.begin(), m_anchor_name.end()));
             m_needs_anchor_impl = false;
-            m_anchor_name.clear();
+            m_anchor_name = {};
         }
 
         if (m_needs_tag_impl) {
@@ -8338,11 +8339,11 @@ private:
     /// A flag to determine the need for a value separator or a flow suffix to follow.
     flow_token_state_t m_flow_token_state {flow_token_state_t::NEEDS_VALUE_OR_SUFFIX};
     /// The last YAML anchor name.
-    std::string m_anchor_name;
+    str_view m_anchor_name;
     /// The last tag name.
     str_view m_tag_name;
     /// The root YAML anchor name. (maybe empty and unused)
-    std::string m_root_anchor_name;
+    str_view m_root_anchor_name;
     /// The root tag name. (maybe empty and unused)
     str_view m_root_tag_name;
 };
