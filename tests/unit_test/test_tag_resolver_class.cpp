@@ -98,7 +98,10 @@ TEST_CASE("TagResolver_ResolveTag") {
     }
 
     SECTION("invalid tag name with empty document_metainfo<fkyaml::node>") {
-        const fkyaml::detail::str_view tag = GENERATE("", "invalid", "!invalid!tag");
+        auto tag = GENERATE(
+            fkyaml::detail::str_view(""),
+            fkyaml::detail::str_view("invalid"),
+            fkyaml::detail::str_view("!invalid!tag"));
 
         REQUIRE_THROWS_AS(
             fkyaml::detail::tag_resolver<fkyaml::node>::resolve_tag(tag, directives), fkyaml::invalid_tag);
