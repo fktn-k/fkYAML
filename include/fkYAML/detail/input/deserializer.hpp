@@ -260,9 +260,9 @@ private:
                 }
 
                 if (m_needs_tag_impl) {
-                    m_root_tag_name = std::move(m_tag_name);
+                    m_root_tag_name = m_tag_name;
                     m_needs_tag_impl = false;
-                    m_tag_name.clear();
+                    m_tag_name = {};
                 }
 
                 line = lexer.get_lines_processed();
@@ -1055,7 +1055,7 @@ private:
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_tag_name.assign(token.str.begin(), token.str.end());
+                m_tag_name = token.str;
                 m_needs_tag_impl = true;
 
                 if (!m_needs_anchor_impl) {
@@ -1237,8 +1237,8 @@ private:
                         m_root_anchor_name.clear();
                     }
                     if (!m_root_tag_name.empty()) {
-                        mp_current_node->add_tag_name(std::move(m_root_tag_name));
-                        m_root_tag_name.clear();
+                        mp_current_node->add_tag_name(std::string(m_root_tag_name.begin(), m_root_tag_name.end()));
+                        m_root_tag_name = {};
                     }
                 }
             }
@@ -1293,9 +1293,9 @@ private:
         }
 
         if (m_needs_tag_impl) {
-            node.add_tag_name(m_tag_name);
+            node.add_tag_name(std::string(m_tag_name.begin(), m_tag_name.end()));
             m_needs_tag_impl = false;
-            m_tag_name.clear();
+            m_tag_name = {};
         }
     }
 
@@ -1323,11 +1323,11 @@ private:
     /// The last YAML anchor name.
     std::string m_anchor_name;
     /// The last tag name.
-    std::string m_tag_name;
+    str_view m_tag_name;
     /// The root YAML anchor name. (maybe empty and unused)
     std::string m_root_anchor_name;
     /// The root tag name. (maybe empty and unused)
-    std::string m_root_tag_name;
+    str_view m_root_tag_name;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
