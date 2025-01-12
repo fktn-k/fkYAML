@@ -145,7 +145,7 @@ public:
     using const_map_range = fkyaml::detail::map_range_proxy<const basic_node>;
 
 private:
-    template <node_type>
+    template <typename BasicNodeType>
     friend struct fkyaml::detail::external_node_constructor;
 
     template <typename BasicNodeType>
