@@ -105,6 +105,31 @@ inline void to_node(BasicNodeType& n, T&& s) noexcept {
     external_node_constructor<BasicNodeType>::sequence(n, std::forward<T>(s));
 }
 
+/// @brief to_node function for compatible sequence types.
+/// @note This overload is enabled when
+/// * both begin()/end() functions are callable
+/// * CompatSeqType doesn't have `mapped_type` (mapping-like type)
+/// * BasicNodeType::string_type cannot be constructed from a CompatSeqType object (string-like type)
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatSeqType A container type.
+/// @param n A basic_node object.
+/// @param s A container object.
+template <
+    typename BasicNodeType, typename CompatSeqType,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>,
+            negation<std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<CompatSeqType>>>,
+            negation<is_basic_node<remove_cvref_t<CompatSeqType>>>, detect::has_begin_end<CompatSeqType>,
+            negation<detect::has_mapped_type<CompatSeqType>>,
+            negation<std::is_constructible<typename BasicNodeType::string_type, CompatSeqType>>>::value,
+        int> = 0>
+inline void to_node(BasicNodeType& n, CompatSeqType&& s) {
+    using std::begin;
+    using std::end;
+    external_node_constructor<BasicNodeType>::sequence(n, begin(s), end(s));
+}
+
 /// @brief to_node function for BasicNodeType::mapping_type objects.
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T A mapping node value type.
