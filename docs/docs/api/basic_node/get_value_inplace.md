@@ -1,6 +1,6 @@
 <small>Defined in header [`<fkYAML/node.hpp>`](https://github.com/fktn-k/fkYAML/blob/develop/include/fkYAML/node.hpp)</small>
 
-# <small>fkyaml::basic_node::</small>get_value
+# <small>fkyaml::basic_node::</small>get_value_inplace
 
 ```cpp
 template <typename T>
@@ -25,11 +25,11 @@ This function converts a [`fkyaml::basic_node`](./index.md) to either of the fol
    value_ref = *this; // Copy-assigns a current basic_node object.
    ```
 
-This function shares internal implementation with the [`get_value`](./get_value.md).  
-Thus, all the STL container & scalar types which are supported by that function, is also supported by this function as well.  
-See the notes there for details.
+This function shares internal implementation with the [`get_value()`](./get_value.md) function.  
+Thus, all the STL container & scalar types which are supported by that function, are also supported by this function as well.  
+See the notes there for details.  
 
-??? Note "Difference from `get_value()`"
+??? Note "Differences from `get_value()`"
 
     One crutial difference from the [`get_value`](./get_value.md) function is, this function does not require the template parameter type `T` to be [default-constructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible) since no instantiation of `T` is necessary inside the function to return the conversion result anymore.  
     So, you might prefer this function, for example, if you already created a `T` object as a member variable and want to assign a node value to it.  
