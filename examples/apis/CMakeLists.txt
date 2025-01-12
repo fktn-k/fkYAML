@@ -3,6 +3,7 @@ set(INPUT_MULTI_YAML_PATH ${CMAKE_CURRENT_SOURCE_DIR}/input_multi.yaml)
 
 add_subdirectory(basic_node)
 add_subdirectory(exception)
+add_subdirectory(macros)
 add_subdirectory(node_type)
 add_subdirectory(node_value_converter)
 add_subdirectory(operator_literal_yaml)
