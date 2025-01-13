@@ -133,40 +133,43 @@ TEST_CASE("Node_ThrowingSpecializationTypeCtor") {
 }
 
 TEST_CASE("Node_CtorWithCompatibleType") {
+    // sequence-like types
+
     SECTION("1D C-style array") {
         fkyaml::node ints_node_val[2] {1, 2};
         int ints_val[2] {1, 2};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_integer());
+            REQUIRE(n[0].get_value<int>() == 1);
+            REQUIRE(n[1].is_integer());
+            REQUIRE(n[1].get_value<int>() == 2);
+        };
+
         fkyaml::node ints_node(ints_node_val);
-        REQUIRE(ints_node.is_sequence());
-        REQUIRE(ints_node.size() == 2);
-        REQUIRE(ints_node[0].is_integer());
-        REQUIRE(ints_node[0].get_value<int>() == 1);
-        REQUIRE(ints_node[1].is_integer());
-        REQUIRE(ints_node[1].get_value<int>() == 2);
+        validate(ints_node);
 
         fkyaml::node ints(ints_val);
-        REQUIRE(ints.is_sequence());
-        REQUIRE(ints.size() == 2);
-        REQUIRE(ints[0].is_integer());
-        REQUIRE(ints[0].get_value<int>() == 1);
-        REQUIRE(ints[1].is_integer());
-        REQUIRE(ints[1].get_value<int>() == 2);
+        validate(ints);
     }
 
     SECTION("2D C-style array") {
         fkyaml::node ints_node_val[3][3] {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
         int ints_val[3][3] {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
 
+        auto validate = [](const fkyaml::node& n, int i, int j) {
+            REQUIRE(n.at(i).at(j).is_integer());
+            REQUIRE(n.at(i).at(j).get_value<int>() == i * 3 + j + 1);
+        };
+
         fkyaml::node ints_node(ints_node_val);
         fkyaml::node ints(ints_val);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                REQUIRE(ints_node.at(i).at(j).is_integer());
-                REQUIRE(ints_node.at(i).at(j).get_value<int>() == i * 3 + j + 1);
-
-                REQUIRE(ints.at(i).at(j).is_integer());
-                REQUIRE(ints.at(i).at(j).get_value<int>() == i * 3 + j + 1);
+                validate(ints_node, i, j);
+                validate(ints, i, j);
             }
         }
     }
@@ -181,16 +184,18 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             {{10, 11, 12}, {13, 14, 15}, {16, 17, 18}},
             {{19, 20, 21}, {22, 23, 24}, {25, 26, 27}}};
 
+        auto validate = [](const fkyaml::node& n, int i, int j, int k) {
+            REQUIRE(n.at(i).at(j).at(k).is_integer());
+            REQUIRE(n.at(i).at(j).at(k).get_value<int>() == i * 9 + j * 3 + k + 1);
+        };
+
         fkyaml::node ints_node(ints_node_val);
         fkyaml::node ints(ints_val);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 for (int k = 0; k < 3; k++) {
-                    REQUIRE(ints_node.at(i).at(j).at(k).is_integer());
-                    REQUIRE(ints_node.at(i).at(j).at(k).get_value<int>() == i * 9 + j * 3 + k + 1);
-
-                    REQUIRE(ints.at(i).at(j).at(k).is_integer());
-                    REQUIRE(ints.at(i).at(j).at(k).get_value<int>() == i * 9 + j * 3 + k + 1);
+                    validate(ints_node, i, j, k);
+                    validate(ints, i, j, k);
                 }
             }
         }
@@ -200,210 +205,200 @@ TEST_CASE("Node_CtorWithCompatibleType") {
         std::vector<fkyaml::node> vector_node_val {fkyaml::node(true), fkyaml::node(false)};
         std::vector<bool> vector_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            REQUIRE(n[0].get_value<bool>() == true);
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == false);
+        };
+
         fkyaml::node vector_node(vector_node_val);
-        REQUIRE(vector_node.is_sequence());
-        REQUIRE(vector_node.size() == 2);
-        REQUIRE(vector_node[0].is_boolean());
-        REQUIRE(vector_node[0].get_value<bool>() == true);
-        REQUIRE(vector_node[1].is_boolean());
-        REQUIRE(vector_node[1].get_value<bool>() == false);
+        validate(vector_node);
 
         fkyaml::node vector_bool(vector_bool_val);
-        REQUIRE(vector_bool.is_sequence());
-        REQUIRE(vector_bool.size() == 2);
-        REQUIRE(vector_bool[0].is_boolean());
-        REQUIRE(vector_bool[0].get_value<bool>() == true);
-        REQUIRE(vector_bool[1].is_boolean());
-        REQUIRE(vector_bool[1].get_value<bool>() == false);
+        validate(vector_bool);
     }
 
     SECTION("std::array") {
         std::array<fkyaml::node, 2> array_node_val {{fkyaml::node(true), fkyaml::node(false)}};
         std::array<bool, 2> array_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            REQUIRE(n[0].get_value<bool>() == true);
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == false);
+        };
+
         fkyaml::node array_node(array_node_val);
-        REQUIRE(array_node.is_sequence());
-        REQUIRE(array_node.size() == 2);
-        REQUIRE(array_node[0].is_boolean());
-        REQUIRE(array_node[0].get_value<bool>() == true);
-        REQUIRE(array_node[1].is_boolean());
-        REQUIRE(array_node[1].get_value<bool>() == false);
+        validate(array_node);
 
         fkyaml::node array_bool(array_bool_val);
-        REQUIRE(array_bool.is_sequence());
-        REQUIRE(array_bool.size() == 2);
-        REQUIRE(array_bool[0].is_boolean());
-        REQUIRE(array_bool[0].get_value<bool>() == true);
-        REQUIRE(array_bool[1].is_boolean());
-        REQUIRE(array_bool[1].get_value<bool>() == false);
+        validate(array_bool);
     }
 
     SECTION("std::valarray") {
         std::valarray<fkyaml::node> valarray_node_val {fkyaml::node(true), fkyaml::node(false)};
         std::valarray<bool> valarray_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            REQUIRE(n[0].get_value<bool>() == true);
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == false);
+        };
+
         fkyaml::node valarray_node(valarray_node_val);
-        REQUIRE(valarray_node.is_sequence());
-        REQUIRE(valarray_node.size() == 2);
-        REQUIRE(valarray_node[0].is_boolean());
-        REQUIRE(valarray_node[0].get_value<bool>() == true);
-        REQUIRE(valarray_node[1].is_boolean());
-        REQUIRE(valarray_node[1].get_value<bool>() == false);
+        validate(valarray_node);
 
         fkyaml::node valarray_bool(valarray_bool_val);
-        REQUIRE(valarray_bool.is_sequence());
-        REQUIRE(valarray_bool.size() == 2);
-        REQUIRE(valarray_bool[0].is_boolean());
-        REQUIRE(valarray_bool[0].get_value<bool>() == true);
-        REQUIRE(valarray_bool[1].is_boolean());
-        REQUIRE(valarray_bool[1].get_value<bool>() == false);
+        validate(valarray_bool);
     }
 
     SECTION("std::forward_list") {
         std::forward_list<fkyaml::node> forward_list_node_val {fkyaml::node(true), fkyaml::node(false)};
         std::forward_list<bool> forward_list_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            REQUIRE(n[0].get_value<bool>() == true);
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == false);
+        };
+
         fkyaml::node forward_list_node(forward_list_node_val);
-        REQUIRE(forward_list_node.is_sequence());
-        REQUIRE(forward_list_node.size() == 2);
-        REQUIRE(forward_list_node[0].is_boolean());
-        REQUIRE(forward_list_node[0].get_value<bool>() == true);
-        REQUIRE(forward_list_node[1].is_boolean());
-        REQUIRE(forward_list_node[1].get_value<bool>() == false);
+        validate(forward_list_node);
 
         fkyaml::node forward_list_bool(forward_list_bool_val);
-        REQUIRE(forward_list_bool.is_sequence());
-        REQUIRE(forward_list_bool.size() == 2);
-        REQUIRE(forward_list_bool[0].is_boolean());
-        REQUIRE(forward_list_bool[0].get_value<bool>() == true);
-        REQUIRE(forward_list_bool[1].is_boolean());
-        REQUIRE(forward_list_bool[1].get_value<bool>() == false);
+        validate(forward_list_bool);
     }
 
     SECTION("std::deque") {
         std::deque<fkyaml::node> deque_node_val {fkyaml::node(true), fkyaml::node(false)};
         std::deque<bool> deque_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            REQUIRE(n[0].get_value<bool>() == true);
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == false);
+        };
+
         fkyaml::node deque_node(deque_node_val);
-        REQUIRE(deque_node.is_sequence());
-        REQUIRE(deque_node.size() == 2);
-        REQUIRE(deque_node[0].is_boolean());
-        REQUIRE(deque_node[0].get_value<bool>() == true);
-        REQUIRE(deque_node[1].is_boolean());
-        REQUIRE(deque_node[1].get_value<bool>() == false);
+        validate(deque_node);
 
         fkyaml::node deque_bool(deque_bool_val);
-        REQUIRE(deque_bool.is_sequence());
-        REQUIRE(deque_bool.size() == 2);
-        REQUIRE(deque_bool[0].is_boolean());
-        REQUIRE(deque_bool[0].get_value<bool>() == true);
-        REQUIRE(deque_bool[1].is_boolean());
-        REQUIRE(deque_bool[1].get_value<bool>() == false);
+        validate(deque_bool);
     }
 
     SECTION("std::list") {
         std::list<fkyaml::node> list_node_val {fkyaml::node(true), fkyaml::node(false)};
         std::list<bool> list_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            REQUIRE(n[0].get_value<bool>() == true);
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == false);
+        };
+
         fkyaml::node list_node(list_node_val);
-        REQUIRE(list_node.is_sequence());
-        REQUIRE(list_node.size() == 2);
-        REQUIRE(list_node[0].is_boolean());
-        REQUIRE(list_node[0].get_value<bool>() == true);
-        REQUIRE(list_node[1].is_boolean());
-        REQUIRE(list_node[1].get_value<bool>() == false);
+        validate(list_node);
 
         fkyaml::node list_bool(list_bool_val);
-        REQUIRE(list_bool.is_sequence());
-        REQUIRE(list_bool.size() == 2);
-        REQUIRE(list_bool[0].is_boolean());
-        REQUIRE(list_bool[0].get_value<bool>() == true);
-        REQUIRE(list_bool[1].is_boolean());
-        REQUIRE(list_bool[1].get_value<bool>() == false);
+        validate(list_bool);
     }
 
     SECTION("std::set") {
         std::set<fkyaml::node> set_node_val {fkyaml::node(true), fkyaml::node(false)};
         std::set<bool> set_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            REQUIRE(n[0].get_value<bool>() == false);
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == true);
+        };
+
         fkyaml::node set_node(set_node_val);
-        REQUIRE(set_node.is_sequence());
-        REQUIRE(set_node.size() == 2);
-        REQUIRE(set_node[0].is_boolean());
-        REQUIRE(set_node[0].get_value<bool>() == false);
-        REQUIRE(set_node[1].is_boolean());
-        REQUIRE(set_node[1].get_value<bool>() == true);
+        validate(set_node);
 
         fkyaml::node set_bool(set_bool_val);
-        REQUIRE(set_bool.is_sequence());
-        REQUIRE(set_bool.size() == 2);
-        REQUIRE(set_bool[0].is_boolean());
-        REQUIRE(set_bool[0].get_value<bool>() == false);
-        REQUIRE(set_bool[1].is_boolean());
-        REQUIRE(set_bool[1].get_value<bool>() == true);
+        validate(set_bool);
     }
 
     SECTION("std::multiset") {
         std::multiset<fkyaml::node> multiset_node_val {fkyaml::node(true), fkyaml::node(false)};
         std::multiset<bool> multiset_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            REQUIRE(n[0].get_value<bool>() == false);
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == true);
+        };
+
         fkyaml::node multiset_node(multiset_node_val);
-        REQUIRE(multiset_node.is_sequence());
-        REQUIRE(multiset_node.size() == 2);
-        REQUIRE(multiset_node[0].is_boolean());
-        REQUIRE(multiset_node[0].get_value<bool>() == false);
-        REQUIRE(multiset_node[1].is_boolean());
-        REQUIRE(multiset_node[1].get_value<bool>() == true);
+        validate(multiset_node);
 
         fkyaml::node multiset_bool(multiset_bool_val);
-        REQUIRE(multiset_bool.is_sequence());
-        REQUIRE(multiset_bool.size() == 2);
-        REQUIRE(multiset_bool[0].is_boolean());
-        REQUIRE(multiset_bool[0].get_value<bool>() == false);
-        REQUIRE(multiset_bool[1].is_boolean());
-        REQUIRE(multiset_bool[1].get_value<bool>() == true);
+        validate(multiset_bool);
     }
 
     SECTION("std::unordered_set") {
         std::unordered_set<fkyaml::node> unordered_set_node_val {fkyaml::node(true), fkyaml::node(false)};
         std::unordered_set<bool> unordered_set_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            bool ret = n[0].get_value<bool>();
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == !ret);
+        };
+
         fkyaml::node unordered_set_node(unordered_set_node_val);
-        REQUIRE(unordered_set_node.is_sequence());
-        REQUIRE(unordered_set_node.size() == 2);
-        REQUIRE(unordered_set_node[0].is_boolean());
-        bool ret = unordered_set_node[0].get_value<bool>();
-        REQUIRE(unordered_set_node[1].is_boolean());
-        REQUIRE(unordered_set_node[1].get_value<bool>() == !ret);
+        validate(unordered_set_node);
 
         fkyaml::node unordered_set_bool(unordered_set_bool_val);
-        REQUIRE(unordered_set_bool.is_sequence());
-        REQUIRE(unordered_set_bool.size() == 2);
-        REQUIRE(unordered_set_bool[0].is_boolean());
-        ret = unordered_set_bool[0].get_value<bool>();
-        REQUIRE(unordered_set_bool[1].is_boolean());
-        REQUIRE(unordered_set_bool[1].get_value<bool>() == !ret);
+        validate(unordered_set_bool);
     }
 
     SECTION("std::unordered_multiset") {
         std::unordered_multiset<fkyaml::node> unordered_multiset_node_val {fkyaml::node(true), fkyaml::node(false)};
         std::unordered_multiset<bool> unordered_multiset_bool_val {true, false};
 
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_boolean());
+            bool ret = n[0].get_value<bool>();
+            REQUIRE(n[1].is_boolean());
+            REQUIRE(n[1].get_value<bool>() == !ret);
+        };
+
         fkyaml::node unordered_multiset_node(unordered_multiset_node_val);
-        REQUIRE(unordered_multiset_node.is_sequence());
-        REQUIRE(unordered_multiset_node.size() == 2);
-        REQUIRE(unordered_multiset_node[0].is_boolean());
-        bool ret = unordered_multiset_node[0].get_value<bool>();
-        REQUIRE(unordered_multiset_node[1].is_boolean());
-        REQUIRE(unordered_multiset_node[1].get_value<bool>() == !ret);
+        validate(unordered_multiset_node);
 
         fkyaml::node unordered_multiset_bool(unordered_multiset_bool_val);
-        REQUIRE(unordered_multiset_bool.is_sequence());
-        REQUIRE(unordered_multiset_bool.size() == 2);
-        REQUIRE(unordered_multiset_bool[0].is_boolean());
-        ret = unordered_multiset_bool[0].get_value<bool>();
-        REQUIRE(unordered_multiset_bool[1].is_boolean());
-        REQUIRE(unordered_multiset_bool[1].get_value<bool>() == !ret);
+        validate(unordered_multiset_bool);
     }
 
     // mapping-like types
@@ -503,13 +498,20 @@ TEST_CASE("Node_CtorWithCompatibleType") {
         fkyaml::node unordered_multimap(unordered_multimap_val);
         validate(unordered_multimap);
     }
+
+    SECTION("std::nullptr_t") {
+        fkyaml::node node(nullptr);
+        REQUIRE(node.is_null());
+    }
+
+    SECTION("bool") {
+        fkyaml::node node(true);
+        REQUIRE(node.is_boolean());
+        REQUIRE(node.get_value<bool>() == true);
+    }
 }
 
 TEST_CASE("Node_BooleanCtor") {
-    fkyaml::node node(true);
-    REQUIRE(node.get_type() == fkyaml::node_type::BOOLEAN);
-    REQUIRE(node.is_boolean());
-    REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == true);
 }
 
 TEST_CASE("Node_IntegerCtor") {
