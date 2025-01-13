@@ -121,7 +121,7 @@ template <
             is_basic_node<BasicNodeType>,
             negation<std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<CompatSeqType>>>,
             negation<is_basic_node<remove_cvref_t<CompatSeqType>>>, detect::has_begin_end<CompatSeqType>,
-            negation<detect::has_mapped_type<CompatSeqType>>,
+            negation<conjunction<detect::has_key_type<CompatSeqType>, detect::has_mapped_type<CompatSeqType>>>,
             negation<std::is_constructible<typename BasicNodeType::string_type, CompatSeqType>>>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, CompatSeqType&& s) {
@@ -143,6 +143,32 @@ template <
         int> = 0>
 inline void to_node(BasicNodeType& n, T&& m) noexcept {
     external_node_constructor<BasicNodeType>::mapping(n, std::forward<T>(m));
+}
+
+/// @brief to_node function for compatible sequence types.
+/// @note This overload is enabled when
+/// * both begin()/end() functions are callable
+/// * CompatSeqType doesn't have `mapped_type` (mapping-like type)
+/// * BasicNodeType::string_type cannot be constructed from a CompatSeqType object (string-like type)
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatSeqType A container type.
+/// @param n A basic_node object.
+/// @param s A container object.
+template <
+    typename BasicNodeType, typename CompatMapType,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>, negation<is_basic_node<remove_cvref_t<CompatMapType>>>,
+            negation<std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<CompatMapType>>>,
+            detect::has_begin_end<CompatMapType>, detect::has_key_type<CompatMapType>,
+            detect::has_mapped_type<CompatMapType>>::value,
+        int> = 0>
+inline void to_node(BasicNodeType& n, CompatMapType&& m) {
+    external_node_constructor<BasicNodeType>::mapping(n);
+    auto& map = n.template get_value_ref<typename BasicNodeType::mapping_type&>();
+    for (const auto& pair : m) {
+        map.emplace(pair.first, pair.second);
+    }
 }
 
 /// @brief to_node function for null objects.

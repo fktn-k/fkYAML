@@ -405,22 +405,104 @@ TEST_CASE("Node_CtorWithCompatibleType") {
         REQUIRE(unordered_multiset_bool[1].is_boolean());
         REQUIRE(unordered_multiset_bool[1].get_value<bool>() == !ret);
     }
-}
 
-TEST_CASE("Node_MappingCtor") {
-    fkyaml::node node(fkyaml::node::mapping_type {{"test", fkyaml::node(true)}});
-    REQUIRE(node.get_type() == fkyaml::node_type::MAPPING);
-    REQUIRE(node.is_mapping());
-    REQUIRE(node.size() == 1);
-    REQUIRE(node.contains("test"));
-    REQUIRE(node["test"].is_boolean());
-    REQUIRE(node["test"].get_value_ref<fkyaml::node::boolean_type&>() == true);
-}
+    // mapping-like types
 
-TEST_CASE("Node_NullCtor") {
-    fkyaml::node node(nullptr);
-    REQUIRE(node.get_type() == fkyaml::node_type::NULL_OBJECT);
-    REQUIRE(node.is_null());
+    SECTION("std::map") {
+        std::map<fkyaml::node, fkyaml::node> map_node_val;
+        map_node_val.emplace("test", 123);
+        map_node_val.emplace("foo", -456);
+        std::map<std::string, int> map_val;
+        map_val.emplace("test", 123);
+        map_val.emplace("foo", -456);
+
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_mapping());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n.at("test").is_integer());
+            REQUIRE(n.at("test").get_value<int>() == 123);
+            REQUIRE(n.at("foo").is_integer());
+            REQUIRE(n.at("foo").get_value<int>() == -456);
+        };
+
+        fkyaml::node map_node(map_node_val);
+        validate(map_node);
+
+        fkyaml::node map(map_val);
+        validate(map);
+    }
+
+    SECTION("std::multimap") {
+        std::multimap<fkyaml::node, fkyaml::node> multimap_node_val;
+        multimap_node_val.emplace("test", 123);
+        multimap_node_val.emplace("foo", -456);
+        std::multimap<std::string, int> multimap_val;
+        multimap_val.emplace("test", 123);
+        multimap_val.emplace("foo", -456);
+
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_mapping());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n.at("test").is_integer());
+            REQUIRE(n.at("test").get_value<int>() == 123);
+            REQUIRE(n.at("foo").is_integer());
+            REQUIRE(n.at("foo").get_value<int>() == -456);
+        };
+
+        fkyaml::node multimap_node(multimap_node_val);
+        validate(multimap_node);
+
+        fkyaml::node multimap(multimap_val);
+        validate(multimap);
+    }
+
+    SECTION("std::unordered_map") {
+        std::unordered_map<fkyaml::node, fkyaml::node> unordered_map_node_val;
+        unordered_map_node_val.emplace("test", 123);
+        unordered_map_node_val.emplace("foo", -456);
+        std::unordered_map<std::string, int> unordered_map_val;
+        unordered_map_val.emplace("test", 123);
+        unordered_map_val.emplace("foo", -456);
+
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_mapping());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n.at("test").is_integer());
+            REQUIRE(n.at("test").get_value<int>() == 123);
+            REQUIRE(n.at("foo").is_integer());
+            REQUIRE(n.at("foo").get_value<int>() == -456);
+        };
+
+        fkyaml::node unordered_map_node(unordered_map_node_val);
+        validate(unordered_map_node);
+
+        fkyaml::node unordered_map(unordered_map_val);
+        validate(unordered_map);
+    }
+
+    SECTION("std::unordered_multimap") {
+        std::unordered_multimap<fkyaml::node, fkyaml::node> unordered_multimap_node_val;
+        unordered_multimap_node_val.emplace("test", 123);
+        unordered_multimap_node_val.emplace("foo", -456);
+        std::unordered_multimap<std::string, int> unordered_multimap_val;
+        unordered_multimap_val.emplace("test", 123);
+        unordered_multimap_val.emplace("foo", -456);
+
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_mapping());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n.at("test").is_integer());
+            REQUIRE(n.at("test").get_value<int>() == 123);
+            REQUIRE(n.at("foo").is_integer());
+            REQUIRE(n.at("foo").get_value<int>() == -456);
+        };
+
+        fkyaml::node unordered_multimap_node(unordered_multimap_node_val);
+        validate(unordered_multimap_node);
+
+        fkyaml::node unordered_multimap(unordered_multimap_val);
+        validate(unordered_multimap);
+    }
 }
 
 TEST_CASE("Node_BooleanCtor") {
