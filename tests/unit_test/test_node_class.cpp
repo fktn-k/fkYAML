@@ -161,7 +161,7 @@ TEST_CASE("Node_CtorWithCompatibleType") {
 
         auto validate = [](const fkyaml::node& n, int i, int j) {
             REQUIRE(n.at(i).at(j).is_integer());
-            REQUIRE(n.at(i).at(j).get_value<int>() == i * 3 + j + 1);
+            REQUIRE(n.at(i).at(j).get_value_ref<const fkyaml::node::integer_type&>() == i * 3 + j + 1);
         };
 
         fkyaml::node ints_node(ints_node_val);
@@ -186,7 +186,7 @@ TEST_CASE("Node_CtorWithCompatibleType") {
 
         auto validate = [](const fkyaml::node& n, int i, int j, int k) {
             REQUIRE(n.at(i).at(j).at(k).is_integer());
-            REQUIRE(n.at(i).at(j).at(k).get_value<int>() == i * 9 + j * 3 + k + 1);
+            REQUIRE(n.at(i).at(j).at(k).get_value_ref<const fkyaml::node::integer_type&>() == i * 9 + j * 3 + k + 1);
         };
 
         fkyaml::node ints_node(ints_node_val);
@@ -415,9 +415,9 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_mapping());
             REQUIRE(n.size() == 2);
             REQUIRE(n.at("test").is_integer());
-            REQUIRE(n.at("test").get_value<int>() == 123);
+            REQUIRE(n.at("test").get_value_ref<const fkyaml::node::integer_type&>() == 123);
             REQUIRE(n.at("foo").is_integer());
-            REQUIRE(n.at("foo").get_value<int>() == -456);
+            REQUIRE(n.at("foo").get_value_ref<const fkyaml::node::integer_type&>() == -456);
         };
 
         fkyaml::node map_node(map_node_val);
@@ -439,9 +439,9 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_mapping());
             REQUIRE(n.size() == 2);
             REQUIRE(n.at("test").is_integer());
-            REQUIRE(n.at("test").get_value<int>() == 123);
+            REQUIRE(n.at("test").get_value_ref<const fkyaml::node::integer_type&>() == 123);
             REQUIRE(n.at("foo").is_integer());
-            REQUIRE(n.at("foo").get_value<int>() == -456);
+            REQUIRE(n.at("foo").get_value_ref<const fkyaml::node::integer_type&>() == -456);
         };
 
         fkyaml::node multimap_node(multimap_node_val);
@@ -463,9 +463,9 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_mapping());
             REQUIRE(n.size() == 2);
             REQUIRE(n.at("test").is_integer());
-            REQUIRE(n.at("test").get_value<int>() == 123);
+            REQUIRE(n.at("test").get_value_ref<const fkyaml::node::integer_type&>() == 123);
             REQUIRE(n.at("foo").is_integer());
-            REQUIRE(n.at("foo").get_value<int>() == -456);
+            REQUIRE(n.at("foo").get_value_ref<const fkyaml::node::integer_type&>() == -456);
         };
 
         fkyaml::node unordered_map_node(unordered_map_node_val);
@@ -487,9 +487,9 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_mapping());
             REQUIRE(n.size() == 2);
             REQUIRE(n.at("test").is_integer());
-            REQUIRE(n.at("test").get_value<int>() == 123);
+            REQUIRE(n.at("test").get_value_ref<const fkyaml::node::integer_type&>() == 123);
             REQUIRE(n.at("foo").is_integer());
-            REQUIRE(n.at("foo").get_value<int>() == -456);
+            REQUIRE(n.at("foo").get_value_ref<const fkyaml::node::integer_type&>() == -456);
         };
 
         fkyaml::node unordered_multimap_node(unordered_multimap_node_val);
@@ -504,48 +504,59 @@ TEST_CASE("Node_CtorWithCompatibleType") {
         REQUIRE(node.is_null());
     }
 
-    SECTION("bool") {
+    SECTION("boolean") {
         fkyaml::node node(true);
         REQUIRE(node.is_boolean());
-        REQUIRE(node.get_value<bool>() == true);
+        REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == true);
     }
-}
 
-TEST_CASE("Node_BooleanCtor") {
-}
+    SECTION("integer") {
+        fkyaml::node node(23467);
+        REQUIRE(node.is_integer());
+        REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 23467);
+    }
 
-TEST_CASE("Node_IntegerCtor") {
-    fkyaml::node node(23467);
-    REQUIRE(node.get_type() == fkyaml::node_type::INTEGER);
-    REQUIRE(node.is_integer());
-    REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 23467);
-}
+    SECTION("floating point") {
+        fkyaml::node node(3.14);
+        REQUIRE(node.is_float_number());
+        REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
+    }
 
-TEST_CASE("Node_FloatNumberCtor") {
-    fkyaml::node node(3.14);
-    REQUIRE(node.get_type() == fkyaml::node_type::FLOAT);
-    REQUIRE(node.is_float_number());
-    REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
-}
+    // string-like types
 
-TEST_CASE("Node_StringCtor") {
-    auto node = GENERATE(fkyaml::node(std::string("test")));
-    REQUIRE(node.get_type() == fkyaml::node_type::STRING);
-    REQUIRE(node.is_string());
-    REQUIRE(node.size() == 4);
-    REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
-}
+    SECTION("std::string") {
+        fkyaml::node node(std::string("test"));
+        REQUIRE(node.is_string());
+        REQUIRE(node.size() == 4);
+        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+    }
+
+    SECTION("C-style char array") {
+        fkyaml::node node("test");
+        REQUIRE(node.is_string());
+        REQUIRE(node.size() == 4);
+        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+    }
+
+    SECTION("pointer to a null-terminated char sequence") {
+        const char buff[] = "test";
+        const char* p_buff = &buff[0];
+        fkyaml::node node(p_buff);
+        REQUIRE(node.is_string());
+        REQUIRE(node.size() == 4);
+        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+    }
 
 #ifdef FK_YAML_HAS_CXX_17
-TEST_CASE("Node_StringViewCtor") {
-    using namespace std::string_view_literals;
-    auto node = fkyaml::node("test"sv);
-    REQUIRE(node.get_type() == fkyaml::node_type::STRING);
-    REQUIRE(node.is_string());
-    REQUIRE(node.size() == 4);
-    REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
-}
+    SECTION("Node_StringViewCtor") {
+        using namespace std::string_view_literals;
+        auto node = fkyaml::node("test"sv);
+        REQUIRE(node.is_string());
+        REQUIRE(node.size() == 4);
+        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+    }
 #endif
+}
 
 TEST_CASE("Node_SequenceCopyCtor") {
     fkyaml::node n = "test";
