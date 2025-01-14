@@ -124,6 +124,7 @@ template <
             negation<conjunction<detect::has_key_type<CompatSeqType>, detect::has_mapped_type<CompatSeqType>>>,
             negation<std::is_constructible<typename BasicNodeType::string_type, CompatSeqType>>>::value,
         int> = 0>
+// NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
 inline void to_node(BasicNodeType& n, CompatSeqType&& s) {
     using std::begin;
     using std::end;
@@ -198,7 +199,7 @@ template <
 inline void to_node(BasicNodeType& n, CompatMapType&& m) {
     external_node_constructor<BasicNodeType>::mapping(n);
     auto& map = n.template get_value_ref<typename BasicNodeType::mapping_type&>();
-    for (const auto& pair : m) {
+    for (const auto& pair : std::forward<CompatMapType>(m)) {
         map.emplace(pair.first, pair.second);
     }
 }

@@ -223,7 +223,7 @@ TEST_CASE("Node_CtorWithCompatibleType") {
 
     SECTION("std::array") {
         std::array<fkyaml::node, 2> array_node_val {{fkyaml::node(true), fkyaml::node(false)}};
-        std::array<bool, 2> array_bool_val {true, false};
+        std::array<bool, 2> array_bool_val {{true, false}};
 
         auto validate = [](const fkyaml::node& n) {
             REQUIRE(n.is_sequence());
@@ -422,8 +422,8 @@ TEST_CASE("Node_CtorWithCompatibleType") {
     }
 
     SECTION("std::tuple") {
-        std::tuple<fkyaml::node, fkyaml::node, fkyaml::node> tuple_node_val = {"test", 123, true};
-        std::tuple<std::string, int, bool> tuple_val = {"test", 123, true};
+        std::tuple<fkyaml::node, fkyaml::node, fkyaml::node> tuple_node_val("test", 123, true);
+        std::tuple<std::string, int, bool> tuple_val("test", 123, true);
 
         auto validate = [](const fkyaml::node& n) {
             REQUIRE(n.is_sequence());
