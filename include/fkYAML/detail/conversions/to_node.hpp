@@ -107,7 +107,7 @@ inline void to_node(BasicNodeType& n, T&& s) noexcept {
 
 /// @brief to_node function for compatible sequence types.
 /// @note This overload is enabled when
-/// * both begin()/end() functions are callable
+/// * both begin()/end() functions are callable on a `CompatSeqType` object
 /// * CompatSeqType doesn't have `mapped_type` (mapping-like type)
 /// * BasicNodeType::string_type cannot be constructed from a CompatSeqType object (string-like type)
 /// @tparam BasicNodeType A basic_node template instance type.
@@ -145,15 +145,14 @@ inline void to_node(BasicNodeType& n, T&& m) noexcept {
     external_node_constructor<BasicNodeType>::mapping(n, std::forward<T>(m));
 }
 
-/// @brief to_node function for compatible sequence types.
+/// @brief to_node function for compatible mapping types.
 /// @note This overload is enabled when
-/// * both begin()/end() functions are callable
-/// * CompatSeqType doesn't have `mapped_type` (mapping-like type)
-/// * BasicNodeType::string_type cannot be constructed from a CompatSeqType object (string-like type)
+/// * both begin()/end() functions are callable on a `CompatMapType` object
+/// * CompatMapType has both `key_type` and `mapped_type`
 /// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam CompatSeqType A container type.
+/// @tparam CompatMapType A container type.
 /// @param n A basic_node object.
-/// @param s A container object.
+/// @param m A container object.
 template <
     typename BasicNodeType, typename CompatMapType,
     enable_if_t<
