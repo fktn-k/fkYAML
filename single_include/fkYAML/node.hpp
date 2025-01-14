@@ -698,44 +698,40 @@ using emplace_fn_t = decltype(std::declval<T>().emplace(std::declval<Args>()...)
 /// @brief The type which represents reserve member function.
 /// @tparam T A target type.
 template <typename T>
-using reserve_fn_t = decltype(std::declval<T>().reserve(std::declval<typename T::size_type>()));
+using reserve_fn_t = decltype(std::declval<T>().reserve(std::declval<typename remove_cvref_t<T>::size_type>()));
 
 /// @brief Type traits to check if T has `iterator` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_iterator = is_detected<iterator_t, T>;
+using has_iterator = is_detected<iterator_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T has `key_type` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_key_type = is_detected<key_type_t, T>;
+using has_key_type = is_detected<key_type_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T has `mapped_type` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_mapped_type = is_detected<mapped_type_t, T>;
+using has_mapped_type = is_detected<mapped_type_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T has `value_type` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_value_type = is_detected<value_type_t, T>;
+using has_value_type = is_detected<value_type_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T is a std::iterator_traits like type.
 /// @tparam T A target type.
 template <typename T>
 struct is_iterator_traits : conjunction<
-                                is_detected<difference_type_t, T>, has_value_type<T>, is_detected<pointer_t, T>,
-                                is_detected<reference_t, T>, is_detected<iterator_category_t, T>> {};
+                                is_detected<difference_type_t, remove_cvref_t<T>>, has_value_type<remove_cvref_t<T>>,
+                                is_detected<pointer_t, remove_cvref_t<T>>, is_detected<reference_t, remove_cvref_t<T>>,
+                                is_detected<iterator_category_t, remove_cvref_t<T>>> {};
 
 /// @brief Type traits to check if T has `container_type` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_container_type = is_detected<container_type_t, T>;
-
-/// @brief Type traits to check if T has emplace member function.
-/// @tparam T A target type.
-template <typename T, typename... Args>
-using has_emplace = is_detected<emplace_fn_t, T, Args...>;
+using has_container_type = is_detected<container_type_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T has reserve member function.
 /// @tparam T A target type.
@@ -12261,7 +12257,7 @@ inline void to_node(BasicNodeType& n, T&& s) noexcept {
 
 /// @brief to_node function for compatible sequence types.
 /// @note This overload is enabled when
-/// * both begin()/end() functions are callable
+/// * both begin()/end() functions are callable on a `CompatSeqType` object
 /// * CompatSeqType doesn't have `mapped_type` (mapping-like type)
 /// * BasicNodeType::string_type cannot be constructed from a CompatSeqType object (string-like type)
 /// @tparam BasicNodeType A basic_node template instance type.
@@ -12275,13 +12271,46 @@ template <
             is_basic_node<BasicNodeType>,
             negation<std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<CompatSeqType>>>,
             negation<is_basic_node<remove_cvref_t<CompatSeqType>>>, detect::has_begin_end<CompatSeqType>,
-            negation<detect::has_mapped_type<CompatSeqType>>,
+            negation<conjunction<detect::has_key_type<CompatSeqType>, detect::has_mapped_type<CompatSeqType>>>,
             negation<std::is_constructible<typename BasicNodeType::string_type, CompatSeqType>>>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, CompatSeqType&& s) {
     using std::begin;
     using std::end;
     external_node_constructor<BasicNodeType>::sequence(n, begin(s), end(s));
+}
+
+/// @brief to_node function for std::pair objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T The first type of std::pair.
+/// @tparam U The second type of std::pair.
+/// @param n A basic_node object.
+/// @param p A std::pair object.
+template <typename BasicNodeType, typename T, typename U>
+inline void to_node(BasicNodeType& n, const std::pair<T, U>& p) {
+    n = {p.first, p.second};
+}
+
+/// @brief concrete implementation of to_node function for std::tuple objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam ...Types The value types of std::tuple.
+/// @tparam ...Idx Index sequence values for std::tuple value types.
+/// @param n A basic_node object.
+/// @param t A std::tuple object.
+/// @param _ Index sequence values (unused)
+template <typename BasicNodeType, typename... Types, std::size_t... Idx>
+inline void to_node_tuple_impl(BasicNodeType& n, const std::tuple<Types...>& t, index_sequence<Idx...> /*unused*/) {
+    n = {std::get<Idx>(t)...};
+}
+
+/// @brief to_node function for std::tuple objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam ...Types The value types of std::tuple.
+/// @param n A basic_node object.
+/// @param t A std::tuple object.
+template <typename BasicNodeType, typename... Types>
+inline void to_node(BasicNodeType& n, const std::tuple<Types...>& t) {
+    to_node_tuple_impl(n, t, index_sequence_for<Types...> {});
 }
 
 /// @brief to_node function for BasicNodeType::mapping_type objects.
@@ -12297,6 +12326,31 @@ template <
         int> = 0>
 inline void to_node(BasicNodeType& n, T&& m) noexcept {
     external_node_constructor<BasicNodeType>::mapping(n, std::forward<T>(m));
+}
+
+/// @brief to_node function for compatible mapping types.
+/// @note This overload is enabled when
+/// * both begin()/end() functions are callable on a `CompatMapType` object
+/// * CompatMapType has both `key_type` and `mapped_type`
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatMapType A container type.
+/// @param n A basic_node object.
+/// @param m A container object.
+template <
+    typename BasicNodeType, typename CompatMapType,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>, negation<is_basic_node<remove_cvref_t<CompatMapType>>>,
+            negation<std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<CompatMapType>>>,
+            detect::has_begin_end<CompatMapType>, detect::has_key_type<CompatMapType>,
+            detect::has_mapped_type<CompatMapType>>::value,
+        int> = 0>
+inline void to_node(BasicNodeType& n, CompatMapType&& m) {
+    external_node_constructor<BasicNodeType>::mapping(n);
+    auto& map = n.template get_value_ref<typename BasicNodeType::mapping_type&>();
+    for (const auto& pair : m) {
+        map.emplace(pair.first, pair.second);
+    }
 }
 
 /// @brief to_node function for null objects.
