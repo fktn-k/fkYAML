@@ -130,6 +130,39 @@ inline void to_node(BasicNodeType& n, CompatSeqType&& s) {
     external_node_constructor<BasicNodeType>::sequence(n, begin(s), end(s));
 }
 
+/// @brief to_node function for std::pair objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T The first type of std::pair.
+/// @tparam U The second type of std::pair.
+/// @param n A basic_node object.
+/// @param p A std::pair object.
+template <typename BasicNodeType, typename T, typename U>
+inline void to_node(BasicNodeType& n, const std::pair<T, U>& p) {
+    n = {p.first, p.second};
+}
+
+/// @brief concrete implementation of to_node function for std::tuple objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam ...Types The value types of std::tuple.
+/// @tparam ...Idx Index sequence values for std::tuple value types.
+/// @param n A basic_node object.
+/// @param t A std::tuple object.
+/// @param _ Index sequence values (unused)
+template <typename BasicNodeType, typename... Types, std::size_t... Idx>
+inline void to_node_tuple_impl(BasicNodeType& n, const std::tuple<Types...>& t, index_sequence<Idx...> /*unused*/) {
+    n = {std::get<Idx>(t)...};
+}
+
+/// @brief to_node function for std::tuple objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam ...Types The value types of std::tuple.
+/// @param n A basic_node object.
+/// @param t A std::tuple object.
+template <typename BasicNodeType, typename... Types>
+inline void to_node(BasicNodeType& n, const std::tuple<Types...>& t) {
+    to_node_tuple_impl(n, t, index_sequence_for<Types...> {});
+}
+
 /// @brief to_node function for BasicNodeType::mapping_type objects.
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T A mapping node value type.

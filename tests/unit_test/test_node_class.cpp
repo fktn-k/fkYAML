@@ -401,6 +401,48 @@ TEST_CASE("Node_CtorWithCompatibleType") {
         validate(unordered_multiset_bool);
     }
 
+    SECTION("std::pair") {
+        std::pair<fkyaml::node, fkyaml::node> pair_node_val = {"test", 123};
+        std::pair<std::string, int> pair_val = {"test", 123};
+
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 2);
+            REQUIRE(n[0].is_string());
+            REQUIRE(n[0].get_value_ref<const std::string&>() == "test");
+            REQUIRE(n[1].is_integer());
+            REQUIRE(n[1].get_value_ref<const fkyaml::node::integer_type&>() == 123);
+        };
+
+        fkyaml::node pair_node(pair_node_val);
+        validate(pair_node);
+
+        fkyaml::node pair(pair_val);
+        validate(pair);
+    }
+
+    SECTION("std::tuple") {
+        std::tuple<fkyaml::node, fkyaml::node, fkyaml::node> tuple_node_val = {"test", 123, true};
+        std::tuple<std::string, int, bool> tuple_val = {"test", 123, true};
+
+        auto validate = [](const fkyaml::node& n) {
+            REQUIRE(n.is_sequence());
+            REQUIRE(n.size() == 3);
+            REQUIRE(n[0].is_string());
+            REQUIRE(n[0].get_value_ref<const std::string&>() == "test");
+            REQUIRE(n[1].is_integer());
+            REQUIRE(n[1].get_value_ref<const fkyaml::node::integer_type&>() == 123);
+            REQUIRE(n[2].is_boolean());
+            REQUIRE(n[2].get_value_ref<const fkyaml::node::boolean_type&>() == true);
+        };
+
+        fkyaml::node tuple_node(tuple_node_val);
+        validate(tuple_node);
+
+        fkyaml::node tuple(tuple_val);
+        validate(tuple);
+    }
+
     // mapping-like types
 
     SECTION("std::map") {
