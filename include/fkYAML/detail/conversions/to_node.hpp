@@ -148,20 +148,31 @@ inline void to_node(BasicNodeType& n, const std::pair<T, U>& p) {
 /// @tparam ...Idx Index sequence values for std::tuple value types.
 /// @param n A basic_node object.
 /// @param t A std::tuple object.
-/// @param _ Index sequence values (unused)
+/// @param _ An index sequence. (unused)
 template <typename BasicNodeType, typename... Types, std::size_t... Idx>
 inline void to_node_tuple_impl(BasicNodeType& n, const std::tuple<Types...>& t, index_sequence<Idx...> /*unused*/) {
     n = {std::get<Idx>(t)...};
 }
 
-/// @brief to_node function for std::tuple objects.
+/// @brief to_node function for std::tuple objects with no value types.
+/// @note This implementation is needed since calling `to_node_tuple_impl()` with an empty tuple creates a null node.
 /// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam ...Types The value types of std::tuple.
+/// @param n A basic_node object.
+/// @param _ A std::tuple object. (unused)
+template <typename BasicNodeType>
+inline void to_node(BasicNodeType& n, const std::tuple<>& /*unused*/) {
+    n = BasicNodeType::sequence();
+}
+
+/// @brief to_node function for std::tuple objects with at least one value type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam ...FirstType The first value types of std::tuple.
+/// @tparam ...RestTypes The rest value types of std::tuple. (maybe empty)
 /// @param n A basic_node object.
 /// @param t A std::tuple object.
-template <typename BasicNodeType, typename... Types>
-inline void to_node(BasicNodeType& n, const std::tuple<Types...>& t) {
-    to_node_tuple_impl(n, t, index_sequence_for<Types...> {});
+template <typename BasicNodeType, typename FirstType, typename... RestTypes>
+inline void to_node(BasicNodeType& n, const std::tuple<FirstType, RestTypes...>& t) {
+    to_node_tuple_impl(n, t, index_sequence_for<FirstType, RestTypes...> {});
 }
 
 /// @brief to_node function for BasicNodeType::mapping_type objects.
