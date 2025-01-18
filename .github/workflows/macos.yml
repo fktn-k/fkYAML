@@ -31,6 +31,7 @@ jobs:
     timeout-minutes: 10
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       matrix:
         build_type: [ Debug, Release ]
         single_header: ["ON", "OFF"]
@@ -56,6 +57,7 @@ jobs:
     timeout-minutes: 10
     runs-on: macos-13
     strategy:
+      fail-fast: false
       matrix:
         xcode: [ '14.1', '14.2', '14.3.1', '15.0.1', '15.1', '15.2' ]
         build_type: [ Debug, Release ]
@@ -82,6 +84,7 @@ jobs:
     timeout-minutes: 10
     runs-on: macos-14
     strategy:
+      fail-fast: false
       matrix:
         # The macos-14 runner image will contain only Xcode 15.x versions due to support policy changes.
         # Xcode 16.x versions are tested with the macos-15 runner image.
@@ -111,6 +114,7 @@ jobs:
     timeout-minutes: 10
     runs-on: macos-15
     strategy:
+      fail-fast: false
       matrix:
         # The macos-14 runner image will contain only Xcode 16.x versions.
         # See https://github.com/actions/runner-images/issues/10703 for more details.
