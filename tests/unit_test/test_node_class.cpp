@@ -441,6 +441,12 @@ TEST_CASE("Node_CtorWithCompatibleType") {
 
         fkyaml::node tuple(tuple_val);
         validate(tuple);
+
+        // regression test for https://github.com/fktn-k/fkYAML/pull/467
+        std::tuple<> empty_tuple_val {};
+        fkyaml::node empty_tuple_node(empty_tuple_val);
+        REQUIRE(empty_tuple_node.is_sequence());
+        REQUIRE(empty_tuple_node.empty());
     }
 
     // mapping-like types
