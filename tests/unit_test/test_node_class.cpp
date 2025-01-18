@@ -4110,6 +4110,11 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
         REQUIRE(std::get<0>(tuple_val_inplace) == 123);
         REQUIRE(std::get<1>(tuple_val_inplace) == "test");
         REQUIRE(std::get<2>(tuple_val_inplace) == true);
+
+        fkyaml::node empty_seq = fkyaml::node::sequence();
+        REQUIRE_NOTHROW(empty_seq.get_value<std::tuple<>>());
+        std::tuple<> empty_tuple_inplace {};
+        REQUIRE_NOTHROW(empty_seq.get_value_inplace(empty_tuple_inplace));
     }
 
 #ifdef FK_YAML_HAS_CXX_17
