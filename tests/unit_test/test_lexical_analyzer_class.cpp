@@ -235,6 +235,31 @@ TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
 }
 
+TEST_CASE("LexicalAnalyzer_Comment") {
+    fkyaml::detail::lexical_token token;
+
+    SECTION("valid comments") {
+        auto input = GENERATE(
+            fkyaml::detail::str_view("# comment"),
+            fkyaml::detail::str_view(" # comment"),
+            fkyaml::detail::str_view("\t# comment\n"),
+            fkyaml::detail::str_view("\n# comment"));
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    // regression test for https://github.com/fktn-k/fkYAML/pull/469
+    SECTION("invalid comments") {
+        fkyaml::detail::str_view input("\'foo\'#invalid");
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR);
+        REQUIRE(token.str == "foo");
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+}
+
 TEST_CASE("LexicalAnalyzer_Colon") {
     fkyaml::detail::lexical_token token;
 
