@@ -280,11 +280,26 @@ TEST_CASE("LexicalAnalyzer_Colon") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with an always-safe character") {
+    SECTION("colon with an always-safe character (block)") {
         fkyaml::detail::lexical_analyzer lexer(":test");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(token.str == ":test");
+    }
+
+    SECTION("colon with an always-safe character (flow)") {
+        fkyaml::detail::lexical_analyzer lexer("[:test]");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
+        lexer.set_context_state(true);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == ":test");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_END);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        lexer.set_context_state(false);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("colon with a flow indicator in a non-flow context") {
