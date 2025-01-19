@@ -62,10 +62,10 @@ public:
     /// @brief Construct a new lexical_analyzer object.
     /// @param input_buffer An input buffer.
     explicit lexical_analyzer(str_view input_buffer) noexcept
-        : m_input_buffer(input_buffer),
-          m_cur_itr(m_input_buffer.begin()),
-          m_end_itr(m_input_buffer.end()) {
-        m_pos_tracker.set_target_buffer(m_input_buffer);
+        : m_begin_itr(input_buffer.begin()),
+          m_cur_itr(input_buffer.begin()),
+          m_end_itr(input_buffer.end()) {
+        m_pos_tracker.set_target_buffer(input_buffer);
     }
 
     /// @brief Get the next lexical token by scanning the left of the input buffer.
@@ -102,18 +102,47 @@ public:
             case '\t':
             case '\n':
                 return {lexical_token_t::KEY_SEPARATOR};
-            case ',':
-            case '[':
-            case ']':
-            case '{':
-            case '}':
-                if (m_state & flow_context_bit) {
+            default:
+                if ((m_state & flow_context_bit) == 0) {
+                    // in a block context
+                    break;
+                }
+
+                switch (*m_cur_itr) {
+                case ',':
+                case '[':
+                case ']':
+                case '{':
+                case '}':
                     // Flow indicators are not "safe" to be followed in a flow context.
                     // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
                     return {lexical_token_t::KEY_SEPARATOR};
+                default:
+                    // At least '{' or '[' must precedes this token.
+                    FK_YAML_ASSERT(m_token_begin_itr != m_begin_itr);
+
+                    // if a key inside a flow mapping is JSON-like (surrounded by indicators, see below), YAML allows
+                    // the following value to be specified adjacent to the ":" mapping value indicator.
+                    // ```yaml
+                    // # the following flow mapping entries are all valid.
+                    // {
+                    //   "foo":true,
+                    //   'bar':false,          # 'bar' is actually not JSON but allowed in YAML
+                    //                         # since its surrounded by the single quotes.
+                    //   {[1,2,3]:null}:"baz"
+                    // }
+                    // ```
+                    switch (*(m_token_begin_itr - 1)) {
+                    case '\'':
+                    case '\"':
+                    case ']':
+                    case '}':
+                        return {lexical_token_t::KEY_SEPARATOR};
+                    default:
+                        break;
+                    }
+                    break;
                 }
-                break;
-            default:
                 break;
             }
             break;
@@ -272,14 +301,14 @@ public:
 private:
     uint32_t get_current_indent_level(const char* p_line_end) {
         // get the beginning position of the current line.
-        std::size_t line_begin_pos = str_view(m_input_buffer.begin(), p_line_end - 1).find_last_of('\n');
+        std::size_t line_begin_pos = str_view(m_begin_itr, p_line_end - 1).find_last_of('\n');
         if (line_begin_pos == str_view::npos) {
             line_begin_pos = 0;
         }
         else {
             ++line_begin_pos;
         }
-        const char* p_line_begin = m_input_buffer.begin() + line_begin_pos;
+        const char* p_line_begin = m_begin_itr + line_begin_pos;
         const char* cur_itr = p_line_begin;
 
         // get the indentation of the current line.
@@ -1182,8 +1211,8 @@ private:
     }
 
 private:
-    /// An input buffer adapter to be analyzed.
-    str_view m_input_buffer;
+    /// The iterator to the first element in the input buffer.
+    const char* m_begin_itr {};
     /// The iterator to the current character in the input buffer.
     const char* m_cur_itr {};
     /// The iterator to the beginning of the current token.
