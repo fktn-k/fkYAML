@@ -3698,6 +3698,16 @@ private:
     /// @brief Skip until a newline code or a null character is found.
     void scan_comment() {
         FK_YAML_ASSERT(*m_cur_itr == '#');
+        if FK_YAML_LIKELY (m_cur_itr != m_begin_itr) {
+            switch (*(m_cur_itr - 1)) {
+            case ' ':
+            case '\t':
+            case '\n':
+                break;
+            default:
+                emit_error("Comment must not begin right after non-break characters");
+            }
+        }
         skip_until_line_end();
     }
 
