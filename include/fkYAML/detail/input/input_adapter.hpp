@@ -12,6 +12,7 @@
 #include <array>
 #include <cstdio>
 #include <cstring>
+#include <deque>
 #include <istream>
 #include <iterator>
 #include <string>
@@ -88,64 +89,63 @@ private:
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
         IterType current = m_begin;
+        std::deque<IterType> cr_itrs {};
         while (current != m_end) {
             const auto first = static_cast<uint8_t>(*current++);
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
+            case 1:
+                if FK_YAML_UNLIKELY (first == 0x0D /*CR*/) {
+                    cr_itrs.emplace_back(std::prev(current));
+                }
+                break;
             case 2: {
-                const std::initializer_list<uint8_t> bytes {first, static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
                 }
                 break;
             }
             case 3: {
-                const std::initializer_list<uint8_t> bytes {
-                    first, static_cast<uint8_t>(*current++), static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
                 }
                 break;
             }
             case 4: {
-                const std::initializer_list<uint8_t> bytes {
-                    first,
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const auto fourth = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
                 }
                 break;
             }
-            case 1:
-            default:
-                break;
+            default:           // LCOV_EXCL_LINE
+                unreachable(); // LCOV_EXCL_LINE
             }
         }
 
-        IterType cr_or_end_itr = std::find(m_begin, m_end, '\r');
-        const bool is_contiguous_no_cr = (cr_or_end_itr == m_end) && m_is_contiguous;
-        if (is_contiguous_no_cr) {
+        const bool is_contiguous_no_cr = cr_itrs.empty() && m_is_contiguous;
+        if FK_YAML_LIKELY (is_contiguous_no_cr) {
             // The input iterators (begin, end) can be used as-is during parsing.
             return str_view {m_begin, m_end};
         }
 
-        m_buffer.reserve(std::distance(m_begin, m_end));
+        m_buffer.reserve(std::distance(m_begin, m_end) - cr_itrs.size());
 
         current = m_begin;
-        do {
-            m_buffer.append(current, cr_or_end_itr);
-            if (cr_or_end_itr == m_end) {
-                break;
-            }
-            current = std::next(cr_or_end_itr);
-            cr_or_end_itr = std::find(current, m_end, '\r');
-        } while (current != m_end);
+        for (const auto& cr_itr : cr_itrs) {
+            m_buffer.append(current, cr_itr);
+            current = std::next(cr_itr);
+        }
+        m_buffer.append(current, m_end);
 
         return str_view {m_buffer.begin(), m_buffer.end()};
     }
@@ -290,51 +290,57 @@ public:
     /// @return View into the input buffer contents.
     str_view get_buffer_view() {
         IterType current = m_begin;
+        std::deque<IterType> cr_itrs {};
         while (current != m_end) {
             const auto first = static_cast<uint8_t>(*current++);
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
+            case 1:
+                if FK_YAML_UNLIKELY (first == 0x0D /*CR*/) {
+                    cr_itrs.emplace_back(std::prev(current));
+                }
+                break;
             case 2: {
-                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
                 }
                 break;
             }
             case 3: {
-                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
                 }
                 break;
             }
             case 4: {
-                const std::initializer_list<uint8_t> bytes {
-                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const auto fourth = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
                 }
                 break;
             }
-            case 1:
-            default:
-                break;
+            default:           // LCOV_EXCL_LINE
+                unreachable(); // LCOV_EXCL_LINE
             }
         }
 
-        m_buffer.reserve(std::distance(m_begin, m_end));
+        m_buffer.reserve(std::distance(m_begin, m_end) - cr_itrs.size());
         current = m_begin;
-
-        while (current != m_end) {
-            const auto c = static_cast<char>(*current++);
-            if FK_YAML_LIKELY (c != '\r') {
-                m_buffer.push_back(c);
-            }
+        for (const auto& cr_itr : cr_itrs) {
+            std::transform(
+                current, cr_itr, std::back_inserter(m_buffer), [](char8_t c) { return static_cast<char>(c); });
+            current = std::next(cr_itr);
         }
+        std::transform(current, m_end, std::back_inserter(m_buffer), [](char8_t c) { return static_cast<char>(c); });
 
         return str_view {m_buffer.begin(), m_buffer.end()};
     }
@@ -564,19 +570,18 @@ private:
         while ((read_size = std::fread(&tmp_buf[0], sizeof(char), buf_size, m_file)) > 0) {
             char* p_current = &tmp_buf[0];
             char* p_end = p_current + read_size;
-            do {
-                // find CR in `tmp_buf`.
-                char* p_cr_or_end = p_current;
-                while (p_cr_or_end != p_end) {
-                    if (*p_cr_or_end == '\r') {
-                        break;
-                    }
-                    ++p_cr_or_end;
-                }
 
-                m_buffer.append(p_current, p_cr_or_end);
-                p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
-            } while (p_current != p_end);
+            // copy tmp_buf to m_buffer, dropping CRs.
+            char* p_cr = p_current;
+            do {
+                if FK_YAML_UNLIKELY (*p_cr == '\r') {
+                    m_buffer.append(p_current, p_cr);
+                    p_current = p_cr + 1;
+                }
+                ++p_cr;
+            } while (p_cr != p_end);
+
+            m_buffer.append(p_current, p_end);
         }
 
         auto current = m_buffer.begin();
@@ -586,38 +591,37 @@ private:
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
+            case 1:
+                break;
             case 2: {
-                const std::initializer_list<uint8_t> bytes {first, static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
                 }
                 break;
             }
             case 3: {
-                const std::initializer_list<uint8_t> bytes {
-                    first, static_cast<uint8_t>(*current++), static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
                 }
                 break;
             }
             case 4: {
-                const std::initializer_list<uint8_t> bytes {
-                    first,
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const auto fourth = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
                 }
                 break;
             }
-            case 1:
-            default:
-                break;
+            default:           // LCOV_EXCL_LINE
+                unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -768,19 +772,18 @@ private:
 
             char* p_current = &tmp_buf[0];
             char* p_end = p_current + read_size;
-            do {
-                // find CR in `tmp_buf`.
-                char* p_cr_or_end = p_current;
-                while (p_cr_or_end != p_end) {
-                    if (*p_cr_or_end == '\r') {
-                        break;
-                    }
-                    ++p_cr_or_end;
-                }
 
-                m_buffer.append(p_current, p_cr_or_end);
-                p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
-            } while (p_current != p_end);
+            // copy tmp_buf to m_buffer, dropping CRs.
+            char* p_cr = p_current;
+            do {
+                if FK_YAML_UNLIKELY (*p_cr == '\r') {
+                    m_buffer.append(p_current, p_cr);
+                    p_current = p_cr + 1;
+                }
+                ++p_cr;
+            } while (p_cr != p_end);
+
+            m_buffer.append(p_current, p_end);
         } while (!m_istream->eof());
 
         auto current = m_buffer.begin();
@@ -790,38 +793,37 @@ private:
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
+            case 1:
+                break;
             case 2: {
-                const std::initializer_list<uint8_t> bytes {first, static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
                 }
                 break;
             }
             case 3: {
-                const std::initializer_list<uint8_t> bytes {
-                    first, static_cast<uint8_t>(*current++), static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
                 }
                 break;
             }
             case 4: {
-                const std::initializer_list<uint8_t> bytes {
-                    first,
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const auto fourth = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
                 }
                 break;
             }
-            case 1:
-            default:
-                break;
+            default:           // LCOV_EXCL_LINE
+                unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -851,7 +853,7 @@ private:
             while (encoded_buf_size < 2) {
                 m_istream->read(&chars[0], 2);
                 const std::streamsize size = m_istream->gcount();
-                if (size != 2) {
+                if FK_YAML_UNLIKELY (size != 2) {
                     break;
                 }
 
@@ -903,7 +905,7 @@ private:
         do {
             m_istream->read(&chars[0], 4);
             const std::streamsize size = m_istream->gcount();
-            if (size != 4) {
+            if FK_YAML_UNLIKELY (size != 4) {
                 break;
             }
 
