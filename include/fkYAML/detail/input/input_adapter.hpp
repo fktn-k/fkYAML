@@ -94,31 +94,29 @@ private:
 
             switch (num_bytes) {
             case 2: {
-                const std::initializer_list<uint8_t> bytes {first, static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
                 }
                 break;
             }
             case 3: {
-                const std::initializer_list<uint8_t> bytes {
-                    first, static_cast<uint8_t>(*current++), static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
                 }
                 break;
             }
             case 4: {
-                const std::initializer_list<uint8_t> bytes {
-                    first,
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const auto fourth = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
                 }
                 break;
             }
@@ -296,27 +294,29 @@ public:
 
             switch (num_bytes) {
             case 2: {
-                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
                 }
                 break;
             }
             case 3: {
-                const std::initializer_list<uint8_t> bytes {first, uint8_t(*current++), uint8_t(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
                 }
                 break;
             }
             case 4: {
-                const std::initializer_list<uint8_t> bytes {
-                    first, uint8_t(*current++), uint8_t(*current++), uint8_t(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const auto fourth = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
                 }
                 break;
             }
@@ -587,31 +587,29 @@ private:
 
             switch (num_bytes) {
             case 2: {
-                const std::initializer_list<uint8_t> bytes {first, static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
                 }
                 break;
             }
             case 3: {
-                const std::initializer_list<uint8_t> bytes {
-                    first, static_cast<uint8_t>(*current++), static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
                 }
                 break;
             }
             case 4: {
-                const std::initializer_list<uint8_t> bytes {
-                    first,
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const auto fourth = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
                 }
                 break;
             }
@@ -791,31 +789,29 @@ private:
 
             switch (num_bytes) {
             case 2: {
-                const std::initializer_list<uint8_t> bytes {first, static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
                 }
                 break;
             }
             case 3: {
-                const std::initializer_list<uint8_t> bytes {
-                    first, static_cast<uint8_t>(*current++), static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
                 }
                 break;
             }
             case 4: {
-                const std::initializer_list<uint8_t> bytes {
-                    first,
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++),
-                    static_cast<uint8_t>(*current++)};
-                const bool is_valid = utf8::validate(bytes);
+                const auto second = static_cast<uint8_t>(*current++);
+                const auto third = static_cast<uint8_t>(*current++);
+                const auto fourth = static_cast<uint8_t>(*current++);
+                const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
-                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes);
+                    throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
                 }
                 break;
             }
