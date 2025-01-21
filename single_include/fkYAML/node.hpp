@@ -9459,19 +9459,18 @@ private:
         while ((read_size = std::fread(&tmp_buf[0], sizeof(char), buf_size, m_file)) > 0) {
             char* p_current = &tmp_buf[0];
             char* p_end = p_current + read_size;
-            do {
-                // find CR in `tmp_buf`.
-                char* p_cr_or_end = p_current;
-                while (p_cr_or_end != p_end) {
-                    if (*p_cr_or_end == '\r') {
-                        break;
-                    }
-                    ++p_cr_or_end;
-                }
 
-                m_buffer.append(p_current, p_cr_or_end);
-                p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
-            } while (p_current != p_end);
+            // copy tmp_buf to m_buffer, dropping CRs.
+            char* p_cr = p_current;
+            do {
+                if FK_YAML_UNLIKELY (*p_cr == '\r') {
+                    m_buffer.append(p_current, p_cr);
+                    p_current = p_cr + 1;
+                }
+                ++p_cr;
+            } while (p_cr != p_end);
+
+            m_buffer.append(p_current, p_end);
         }
 
         auto current = m_buffer.begin();
@@ -9481,6 +9480,8 @@ private:
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
+            case 1:
+                break;
             case 2: {
                 const auto second = static_cast<uint8_t>(*current++);
                 const bool is_valid = utf8::validate(first, second);
@@ -9508,9 +9509,8 @@ private:
                 }
                 break;
             }
-            case 1:
-            default:
-                break;
+            default:           // LCOV_EXCL_LINE
+                unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -9661,19 +9661,18 @@ private:
 
             char* p_current = &tmp_buf[0];
             char* p_end = p_current + read_size;
-            do {
-                // find CR in `tmp_buf`.
-                char* p_cr_or_end = p_current;
-                while (p_cr_or_end != p_end) {
-                    if (*p_cr_or_end == '\r') {
-                        break;
-                    }
-                    ++p_cr_or_end;
-                }
 
-                m_buffer.append(p_current, p_cr_or_end);
-                p_current = (p_cr_or_end == p_end) ? p_end : p_cr_or_end + 1;
-            } while (p_current != p_end);
+            // copy tmp_buf to m_buffer, dropping CRs.
+            char* p_cr = p_current;
+            do {
+                if FK_YAML_UNLIKELY (*p_cr == '\r') {
+                    m_buffer.append(p_current, p_cr);
+                    p_current = p_cr + 1;
+                }
+                ++p_cr;
+            } while (p_cr != p_end);
+
+            m_buffer.append(p_current, p_end);
         } while (!m_istream->eof());
 
         auto current = m_buffer.begin();
@@ -9683,6 +9682,8 @@ private:
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
+            case 1:
+                break;
             case 2: {
                 const auto second = static_cast<uint8_t>(*current++);
                 const bool is_valid = utf8::validate(first, second);
@@ -9710,9 +9711,8 @@ private:
                 }
                 break;
             }
-            case 1:
-            default:
-                break;
+            default:           // LCOV_EXCL_LINE
+                unreachable(); // LCOV_EXCL_LINE
             }
         }
 
@@ -9742,7 +9742,7 @@ private:
             while (encoded_buf_size < 2) {
                 m_istream->read(&chars[0], 2);
                 const std::streamsize size = m_istream->gcount();
-                if (size != 2) {
+                if FK_YAML_UNLIKELY (size != 2) {
                     break;
                 }
 
@@ -9794,7 +9794,7 @@ private:
         do {
             m_istream->read(&chars[0], 4);
             const std::streamsize size = m_istream->gcount();
-            if (size != 4) {
+            if FK_YAML_UNLIKELY (size != 4) {
                 break;
             }
 
