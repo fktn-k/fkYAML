@@ -189,6 +189,7 @@ inline bool validate(uint8_t byte0, uint8_t byte1, uint8_t byte2, uint8_t byte3)
 inline void from_utf16(
     std::array<char16_t, 2> utf16, std::array<uint8_t, 4>& utf8, uint32_t& consumed_size, uint32_t& encoded_size) {
     const auto first = utf16[0];
+    const auto second = utf16[1];
     if (first < 0x80u) {
         utf8[0] = static_cast<uint8_t>(first & 0x7Fu);
         consumed_size = 1;
@@ -210,7 +211,7 @@ inline void from_utf16(
         consumed_size = 1;
         encoded_size = 3;
     }
-    else if (const auto second = utf16[1]; first <= 0xDBFFu && 0xDC00u <= second && second <= 0xDFFFu) {
+    else if (first <= 0xDBFFu && 0xDC00u <= second && second <= 0xDFFFu) {
         // surrogate pair
         const uint32_t code_point = 0x10000u + ((first & 0x03FFu) << 10) + (second & 0x03FFu);
         const auto utf8_chunk = static_cast<uint32_t>(
