@@ -14,6 +14,9 @@ TEST_CASE("Deserializer_EmptyInput") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
+    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("")));
+    REQUIRE(root.is_null());
+
     REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(" ")));
     REQUIRE(root.is_null());
 }

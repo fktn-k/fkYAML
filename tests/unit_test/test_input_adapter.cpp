@@ -49,7 +49,7 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
     }
 
-#ifdef FK_YAML_HAS_CXX_20
+#if FK_YAML_HAS_CHAR8_T
     SECTION("C-style char8_t array") {
         char8_t input8[] = u8"test";
         auto input_adapter = fkyaml::detail::input_adapter(input8);
@@ -115,7 +115,7 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
     }
 #endif
 
-#ifdef FK_YAML_HAS_CXX_20
+#if FK_YAML_HAS_CHAR8_T
     SECTION("std::u8string") {
         std::u8string input_str(u8"test");
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
@@ -163,6 +163,124 @@ TEST_CASE("InputAdapter_StreamInputAdapterProvider") {
         REQUIRE(ifs);
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+    }
+}
+
+TEST_CASE("InputAdapter_EmptyInput") {
+    SECTION("C-style char array") {
+        char input[] = "";
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+
+#if FK_YAML_HAS_CHAR8_T
+    SECTION("C-style char8_t array") {
+        char8_t input[] = u8"";
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+#endif
+
+    SECTION("C-style char16_t array") {
+        char16_t input[] = u"";
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+
+    SECTION("C-style char32_t array") {
+        char32_t input[] = U"";
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+
+    ////////////////////////////////////////////////////////
+
+    SECTION("std::string") {
+        std::string input {};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+
+    SECTION("std::u16string") {
+        std::u16string input {};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+
+    SECTION("std::u32string") {
+        std::u32string input {};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+
+#ifdef FK_YAML_HAS_CXX_17
+    SECTION("std::string_view") {
+        std::string_view input {};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+
+    SECTION("std::u16string_view") {
+        using namespace std::string_view_literals;
+        std::u16string_view input = u""sv;
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+
+    SECTION("std::u32string_view") {
+        using namespace std::string_view_literals;
+        std::u32string_view input = U""sv;
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+#endif
+
+#if FK_YAML_HAS_CHAR8_T
+    SECTION("std::u8string") {
+        std::u8string input {};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+
+    SECTION("std::u8string_view") {
+        using namespace std::string_view_literals;
+        std::u8string_view input = u8""sv;
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+    }
+#endif
+
+    SECTION("FILE object pointer") {
+        DISABLE_C4996
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_empty.txt", "r");
+        ENABLE_C4996
+
+        REQUIRE(p_file != nullptr);
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
+
+        std::fclose(p_file);
+    }
+
+    SECTION("input stream") {
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_empty.txt");
+        REQUIRE(ifs);
+        auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        auto view = input_adapter.get_buffer_view();
+        REQUIRE(view.empty());
     }
 }
 
@@ -1677,7 +1795,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
         REQUIRE(buffer[9] == '\n');
     }
 
-#ifdef FK_YAML_HAS_CXX_20
+#if FK_YAML_HAS_CHAR8_T
     SECTION("iterator_input_adapter (char)") {
         char8_t input[] = u8"test\r\ndata\r\n";
         auto input_adapter = fkyaml::detail::input_adapter(input);
