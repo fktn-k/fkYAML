@@ -29,13 +29,6 @@
 #define ENABLE_C4996
 #endif
 
-namespace /* file-scoped global variable for test cases */
-{
-
-constexpr char input_file_path[] = FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt";
-
-} // namespace
-
 TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
     char input[] = "test";
 
@@ -141,7 +134,7 @@ TEST_CASE("InputAdapter_FileInputAdapterProvider") {
 
     SECTION("valid FILE object pointer") {
         DISABLE_C4996
-        FILE* p_file = std::fopen(input_file_path, "r");
+        FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt", "r");
         ENABLE_C4996
 
         REQUIRE(p_file != nullptr);
@@ -159,7 +152,7 @@ TEST_CASE("InputAdapter_StreamInputAdapterProvider") {
     }
 
     SECTION("valid stream") {
-        std::ifstream ifs(input_file_path);
+        std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt");
         REQUIRE(ifs);
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -284,7 +277,7 @@ TEST_CASE("InputAdapter_EmptyInput") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF8N") {
+TEST_CASE("InputAdapter_GetBufferView_UTF8N") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = "test source.";
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -372,7 +365,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8N") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF8BOM") {
+TEST_CASE("InputAdapter_GetBufferView_UTF8BOM") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = {
             char(0xEFu), char(0xBBu), char(0xBFu), 't', 'e', 's', 't', ' ', 's', 'o', 'u', 'r', 'c', 'e', '.', 0};
@@ -463,7 +456,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8BOM") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
+TEST_CASE("InputAdapter_GetBufferView_UTF16BEN") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = {0, 0x61, 0x30, 0x42, char(0xD8u), 0x40, char(0xDCu), 0x0B, 0, 0x52, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -589,7 +582,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEN") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
+TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = {
             char(0xFEu), char(0xFFu), 0, 0x61, 0x30, 0x42, char(0xD8u), 0x40, char(0xDCu), 0x0B, 0, 0x52, 0};
@@ -714,7 +707,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BEBOM") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
+TEST_CASE("InputAdapter_GetBufferView_UTF16LEN") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = {0x61, 0, 0x42, 0x30, 0x40, char(0xD8u), 0x0B, char(0xDCu), 0x52, 0, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -838,7 +831,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEN") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
+TEST_CASE("InputAdapter_GetBufferView_UTF16LEBOM") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = {
             char(0xFFu), char(0xFEu), 0x61, 0, 0x42, 0x30, 0x40, char(0xD8u), 0x0B, char(0xDCu), 0x52, 0, 0};
@@ -964,7 +957,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16LEBOM") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
+TEST_CASE("InputAdapter_GetBufferView_UTF32BEN") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = {0, 0, 0, 0x61, 0, 0, 0x30, 0x42, 0, 0x02, 0, 0x0B, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1082,7 +1075,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEN") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
+TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = {0, 0, char(0xFEu), char(0xFFu), 0, 0, 0, 0x61, 0, 0, 0x30, 0x42, 0, 0x02, 0, 0x0B, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1200,7 +1193,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32BEBOM") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
+TEST_CASE("InputAdapter_GetBufferView_UTF32LEN") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = {0x61, 0, 0, 0, 0x42, 0x30, 0, 0, 0x0B, 0, 0x02, 0, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1318,7 +1311,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEN") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
+TEST_CASE("InputAdapter_GetBufferView_UTF32LEBOM") {
     SECTION("iterator_input_adapter with a char array") {
         char input[] = {char(0xFFu), char(0xFEu), 0, 0, 0x61, 0, 0, 0, 0x42, 0x30, 0, 0, 0x0B, 0, 0x02, 0, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1436,7 +1429,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF32LEBOM") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
+TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
     /////////////////////////////////
     //   UTF-8 1-Byte Characters   //
     /////////////////////////////////
@@ -1774,7 +1767,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8CharsValidation") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
+TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
     SECTION("iterator_input_adapter (char)") {
         char input[] = "test\r\ndata\r\n";
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1863,7 +1856,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF8NewlineCodeNormalization") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
+TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
     SECTION("iterator_input_adapter (char)") {
         char input[] = {0, char(0x74), 0, char(0x65), 0, char(0x73), 0, char(0x74), 0, char(0x0D),
                         0, char(0x0A), 0, char(0x64), 0, char(0x61), 0, char(0x74), 0, char(0x61),
@@ -1965,7 +1958,7 @@ TEST_CASE("InputAdapter_FillBuffer_UTF16BENewlineCodeNormalization") {
     }
 }
 
-TEST_CASE("InputAdapter_FillBuffer_UTF32BENewlineCodeNormalization") {
+TEST_CASE("InputAdapter_GetBufferView_UTF32BENewlineCodeNormalization") {
     SECTION("iterator_input_adapter (char)") {
         char input[] = {0, 0, 0, char(0x74), 0, 0, 0, char(0x65), 0, 0, 0, char(0x73), 0, 0, 0, char(0x74),
                         0, 0, 0, char(0x0D), 0, 0, 0, char(0x0A), 0, 0, 0, char(0x64), 0, 0, 0, char(0x61),
