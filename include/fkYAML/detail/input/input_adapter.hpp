@@ -769,6 +769,9 @@ private:
         do {
             m_istream->read(&tmp_buf[0], 256);
             const auto read_size = static_cast<std::size_t>(m_istream->gcount());
+            if FK_YAML_UNLIKELY (read_size == 0) {
+                break;
+            }
 
             char* p_current = &tmp_buf[0];
             char* p_end = p_current + read_size;
