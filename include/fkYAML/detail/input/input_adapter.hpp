@@ -66,6 +66,10 @@ public:
     /// @brief Get view into the input buffer contents.
     /// @return View into the input buffer contents.
     str_view get_buffer_view() {
+        if FK_YAML_UNLIKELY (m_begin == m_end) {
+            return {};
+        }
+
         m_buffer.clear();
 
         switch (m_encode_type) {
@@ -289,6 +293,10 @@ public:
     /// @brief Get view into the input buffer contents.
     /// @return View into the input buffer contents.
     str_view get_buffer_view() {
+        if FK_YAML_UNLIKELY (m_begin == m_end) {
+            return {};
+        }
+
         IterType current = m_begin;
         std::deque<IterType> cr_itrs {};
         while (current != m_end) {
@@ -391,6 +399,10 @@ public:
     /// @brief Get view into the input buffer contents.
     /// @return View into the input buffer contents.
     str_view get_buffer_view() {
+        if FK_YAML_UNLIKELY (m_begin == m_end) {
+            return {};
+        }
+
         const int shift_bits = (m_encode_type == utf_encode_t::UTF_16BE) ? 0 : 8;
 
         std::array<char16_t, 2> encoded_buffer {{0, 0}};
@@ -473,6 +485,10 @@ public:
     /// @brief Get view into the input buffer contents.
     /// @return View into the input buffer contents.
     str_view get_buffer_view() {
+        if FK_YAML_UNLIKELY (m_begin == m_end) {
+            return {};
+        }
+
         int shift_bits[4] {0, 0, 0, 0};
         if (m_encode_type == utf_encode_t::UTF_32LE) {
             shift_bits[0] = 24;
@@ -564,6 +580,7 @@ private:
     str_view get_buffer_view_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
+        m_buffer.clear();
         char tmp_buf[256] {};
         constexpr std::size_t buf_size = sizeof(tmp_buf) / sizeof(tmp_buf[0]);
         std::size_t read_size = 0;
@@ -582,6 +599,10 @@ private:
             } while (p_cr != p_end);
 
             m_buffer.append(p_current, p_end);
+        }
+
+        if FK_YAML_UNLIKELY (m_buffer.empty()) {
+            return {};
         }
 
         auto current = m_buffer.begin();
@@ -765,6 +786,7 @@ private:
     str_view get_buffer_view_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
+        m_buffer.clear();
         char tmp_buf[256] {};
         do {
             m_istream->read(&tmp_buf[0], 256);
@@ -788,6 +810,10 @@ private:
 
             m_buffer.append(p_current, p_end);
         } while (!m_istream->eof());
+
+        if FK_YAML_UNLIKELY (m_buffer.empty()) {
+            return {};
+        }
 
         auto current = m_buffer.begin();
         auto end = m_buffer.end();
