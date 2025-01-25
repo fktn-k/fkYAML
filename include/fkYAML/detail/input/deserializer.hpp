@@ -992,9 +992,15 @@ private:
                 continue;
             }
             // these tokens end parsing the current YAML document.
-            case lexical_token_t::END_OF_BUFFER: // This handles an empty input.
+            case lexical_token_t::END_OF_BUFFER:
+                // This handles an empty input.
+                last_type = token.type;
+                return;
             case lexical_token_t::END_OF_DIRECTIVES:
             case lexical_token_t::END_OF_DOCUMENT:
+                if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
+                    throw parse_error("An invalid document marker found in a flow collection", line, indent);
+                }
                 last_type = token.type;
                 return;
             // no way to come here while lexically analyzing document contents.
