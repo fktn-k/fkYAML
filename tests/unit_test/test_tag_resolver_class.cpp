@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -11,7 +11,7 @@
 #include <fkYAML/node.hpp>
 
 TEST_CASE("TagResolver_ResolveTag") {
-    using test_pair_t = std::pair<std::string, fkyaml::detail::tag_t>;
+    using test_pair_t = std::pair<fkyaml::detail::str_view, fkyaml::detail::tag_t>;
 
     fkyaml::detail::tag_t tag_type {};
     std::shared_ptr<fkyaml::detail::document_metainfo<fkyaml::node>> directives {};
@@ -98,7 +98,10 @@ TEST_CASE("TagResolver_ResolveTag") {
     }
 
     SECTION("invalid tag name with empty document_metainfo<fkyaml::node>") {
-        auto tag = GENERATE(std::string(""), std::string("invalid"), std::string("!invalid!tag"));
+        auto tag = GENERATE(
+            fkyaml::detail::str_view(""),
+            fkyaml::detail::str_view("invalid"),
+            fkyaml::detail::str_view("!invalid!tag"));
 
         REQUIRE_THROWS_AS(
             fkyaml::detail::tag_resolver<fkyaml::node>::resolve_tag(tag, directives), fkyaml::invalid_tag);
@@ -109,7 +112,7 @@ TEST_CASE("TagResolver_ResolveTag") {
             new fkyaml::detail::document_metainfo<fkyaml::node>());
         directives->named_handle_map.emplace("!valid!", "tag:example.com,2000");
 
-        auto tag = GENERATE(std::string("!invalid!tag"));
+        const fkyaml::detail::str_view tag = "!invalid!tag";
 
         REQUIRE_THROWS_AS(
             fkyaml::detail::tag_resolver<fkyaml::node>::resolve_tag(tag, directives), fkyaml::invalid_tag);

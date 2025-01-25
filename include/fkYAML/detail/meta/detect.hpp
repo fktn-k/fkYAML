@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -128,44 +128,40 @@ using emplace_fn_t = decltype(std::declval<T>().emplace(std::declval<Args>()...)
 /// @brief The type which represents reserve member function.
 /// @tparam T A target type.
 template <typename T>
-using reserve_fn_t = decltype(std::declval<T>().reserve(std::declval<typename T::size_type>()));
+using reserve_fn_t = decltype(std::declval<T>().reserve(std::declval<typename remove_cvref_t<T>::size_type>()));
 
 /// @brief Type traits to check if T has `iterator` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_iterator = is_detected<iterator_t, T>;
+using has_iterator = is_detected<iterator_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T has `key_type` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_key_type = is_detected<key_type_t, T>;
+using has_key_type = is_detected<key_type_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T has `mapped_type` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_mapped_type = is_detected<mapped_type_t, T>;
+using has_mapped_type = is_detected<mapped_type_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T has `value_type` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_value_type = is_detected<value_type_t, T>;
+using has_value_type = is_detected<value_type_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T is a std::iterator_traits like type.
 /// @tparam T A target type.
 template <typename T>
 struct is_iterator_traits : conjunction<
-                                is_detected<difference_type_t, T>, has_value_type<T>, is_detected<pointer_t, T>,
-                                is_detected<reference_t, T>, is_detected<iterator_category_t, T>> {};
+                                is_detected<difference_type_t, remove_cvref_t<T>>, has_value_type<remove_cvref_t<T>>,
+                                is_detected<pointer_t, remove_cvref_t<T>>, is_detected<reference_t, remove_cvref_t<T>>,
+                                is_detected<iterator_category_t, remove_cvref_t<T>>> {};
 
 /// @brief Type traits to check if T has `container_type` member type.
 /// @tparam T A target type.
 template <typename T>
-using has_container_type = is_detected<container_type_t, T>;
-
-/// @brief Type traits to check if T has emplace member function.
-/// @tparam T A target type.
-template <typename T, typename... Args>
-using has_emplace = is_detected<emplace_fn_t, T, Args...>;
+using has_container_type = is_detected<container_type_t, remove_cvref_t<T>>;
 
 /// @brief Type traits to check if T has reserve member function.
 /// @tparam T A target type.

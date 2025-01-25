@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -40,201 +40,149 @@ TEST_CASE("UTF8_GetNumBytes") {
 
 TEST_CASE("UTF8_Validate") {
     SECTION("1 byte character encoded in UTF-8") {
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x00u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x01u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x02u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x7Du)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x7Eu)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x7Fu)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0x81u)}) == false);
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0x00u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0x01u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0x02u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0x7Du)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0x7Eu)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0x7Fu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0x81u)));
     }
 
     SECTION("2 byte characters encoded in UTF-8") {
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xC0u), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xC1u), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xC2u), uint8_t(0x7Eu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xC2u), uint8_t(0x7Fu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xC2u), uint8_t(0x80u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xC3u), uint8_t(0x81u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xD0u), uint8_t(0xA0u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xDEu), uint8_t(0xBEu)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xDFu), uint8_t(0xBFu)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xDFu), uint8_t(0xC0u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xDFu), uint8_t(0xC1u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0xBFu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE1u), uint8_t(0xBFu)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xC0u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xC1u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xC2u), uint8_t(0x7Eu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xC2u), uint8_t(0x7Fu)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xC2u), uint8_t(0x80u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xC3u), uint8_t(0x81u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xD0u), uint8_t(0xA0u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xDEu), uint8_t(0xBEu)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xDFu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDFu), uint8_t(0xC0u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDFu), uint8_t(0xC1u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE1u), uint8_t(0xBFu)));
     }
 
     SECTION("3 byte characters encoded in UTF-8") {
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xDEu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xDFu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x7Fu), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x80u), uint8_t(0x7Eu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x80u), uint8_t(0x7Fu)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDEu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDFu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x7Eu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x7Fu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x80u), uint8_t(0x7Eu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x80u), uint8_t(0x7Fu)));
 
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x80u), uint8_t(0x80u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xE6u), uint8_t(0xA0u), uint8_t(0xA0u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xECu), uint8_t(0xBFu), uint8_t(0xBFu)}) == true);
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xE6u), uint8_t(0xA0u), uint8_t(0xA0u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xECu), uint8_t(0xBFu), uint8_t(0xBFu)));
 
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xECu), uint8_t(0xC0u), uint8_t(0xBFu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xECu), uint8_t(0xC1u), uint8_t(0xBFu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xECu), uint8_t(0xBFu), uint8_t(0xC0u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xECu), uint8_t(0xBFu), uint8_t(0xC1u)}) == false);
-
-        //////////////////////////////////////////////
-
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0x7Fu), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0x80u), uint8_t(0x7Eu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0x80u), uint8_t(0x7Fu)}) == false);
-
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0x80u), uint8_t(0x80u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0x90u), uint8_t(0xA0u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xBFu)}) == true);
-
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0xA0u), uint8_t(0xBFu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0xA1u), uint8_t(0xBFu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xC0u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xC1u)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xECu), uint8_t(0xC0u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xECu), uint8_t(0xC1u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xECu), uint8_t(0xBFu), uint8_t(0xC0u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xECu), uint8_t(0xBFu), uint8_t(0xC1u)));
 
         //////////////////////////////////////////////
 
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEEu), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEEu), uint8_t(0x7Fu), uint8_t(0x80u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x7Eu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x7Fu)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0x7Eu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0x7Fu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0x80u), uint8_t(0x7Eu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0x80u), uint8_t(0x7Fu)));
 
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x80u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEEu), uint8_t(0xA0u), uint8_t(0xA0u)}) == true);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xBFu)}) == true);
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0x90u), uint8_t(0xA0u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xBFu)));
 
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEFu), uint8_t(0xC0u), uint8_t(0xBFu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEFu), uint8_t(0xC1u), uint8_t(0xBFu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xC0u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xC1u)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
-        REQUIRE(fkyaml::detail::utf8::validate({uint8_t(0xF1u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0xA0u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0xA1u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xC0u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEDu), uint8_t(0x9Fu), uint8_t(0xC1u)));
+
+        //////////////////////////////////////////////
+
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEEu), uint8_t(0x7Eu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEEu), uint8_t(0x7Fu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x7Eu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x7Fu)));
+
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xEEu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xEEu), uint8_t(0xA0u), uint8_t(0xA0u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xBFu)));
+
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEFu), uint8_t(0xC0u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEFu), uint8_t(0xC1u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xC0u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xEFu), uint8_t(0xBFu), uint8_t(0xC1u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF1u), uint8_t(0xBFu), uint8_t(0xBFu)));
     }
 
     SECTION("4 byte characters encoded in UTF-8") {
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xDEu), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xDFu), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x8Eu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x8Fu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x7Fu), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x7Eu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x7Fu)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDEu), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDFu), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x8Eu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x8Fu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x7Eu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x7Fu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x7Eu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x7Fu)));
 
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)}) == true);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xA8u), uint8_t(0xA0u), uint8_t(0xA0u)}) == true);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xBFu)}) == true);
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xA8u), uint8_t(0xA0u), uint8_t(0xA0u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xBFu)));
 
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0x8Fu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xC0u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xC1u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0x7Fu), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xC0u), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xC1u), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0x7Fu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC0u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC1u)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0x8Fu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xC0u), uint8_t(0xBFu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xC1u), uint8_t(0xBFu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0x7Fu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xC0u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xC1u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0x7Fu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC0u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF0u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC1u)));
 
         ////////////////////////////////////////////////////
 
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF1u), uint8_t(0x7Eu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF1u), uint8_t(0x7Fu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x7Fu), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Eu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Fu)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF1u), uint8_t(0x7Eu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF1u), uint8_t(0x7Fu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x7Eu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x7Fu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Eu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Fu)));
 
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x80u)}) == true);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF2u), uint8_t(0xA0u), uint8_t(0xA0u), uint8_t(0xA0u)}) == true);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xBFu)}) == true);
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xF1u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xF2u), uint8_t(0xA0u), uint8_t(0xA0u), uint8_t(0xA0u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xBFu)));
 
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF3u), uint8_t(0xC0u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF3u), uint8_t(0xC1u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xC0u), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xC1u), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC0u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC1u)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF3u), uint8_t(0xC0u), uint8_t(0xBFu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF3u), uint8_t(0xC1u), uint8_t(0xBFu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xC0u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xC1u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC0u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF3u), uint8_t(0xBFu), uint8_t(0xBFu), uint8_t(0xC1u)));
 
         ////////////////////////////////////////////////////
 
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x7Eu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x7Fu), uint8_t(0x80u), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x7Eu), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x7Fu), uint8_t(0x80u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Eu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Fu)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x7Eu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x7Fu), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x7Eu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x7Fu), uint8_t(0x80u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Eu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x7Fu)));
 
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x80u)}) == true);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x88u), uint8_t(0xA0u), uint8_t(0x80u)}) == true);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)}) == true);
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x80u), uint8_t(0x80u), uint8_t(0x80u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x88u), uint8_t(0xA0u), uint8_t(0x80u)));
+        REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)));
 
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x90u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x91u), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xC0u), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xC1u), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xC0u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xC1u)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF5u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
-        REQUIRE(
-            fkyaml::detail::utf8::validate({uint8_t(0xF6u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)}) == false);
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x90u), uint8_t(0xBFu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x91u), uint8_t(0xBFu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xC0u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xC1u), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xC0u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF4u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xC1u)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF5u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)));
+        REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF6u), uint8_t(0x8Fu), uint8_t(0xBFu), uint8_t(0xBFu)));
     }
 }
 

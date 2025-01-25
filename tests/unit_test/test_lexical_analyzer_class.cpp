@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -218,21 +218,54 @@ TEST_CASE("LexicalAnalyzer_EndOfDirectives") {
 
 TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
     fkyaml::detail::lexical_token token;
-    fkyaml::detail::lexical_analyzer lexer("%YAML 1.2\n---\n...");
-    lexer.set_document_state(true);
 
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
-    REQUIRE(lexer.get_yaml_version() == fkyaml::detail::str_view("1.2"));
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
+    SECTION("valid document end marker") {
+        fkyaml::detail::lexical_analyzer lexer("%YAML 1.2\n---\n...");
+        lexer.set_document_state(true);
 
-    lexer.set_document_state(false);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
+        REQUIRE(lexer.get_yaml_version() == fkyaml::detail::str_view("1.2"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
 
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DOCUMENT);
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+        lexer.set_document_state(false);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DOCUMENT);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("invalid document end marker") {
+        fkyaml::detail::lexical_analyzer lexer("...invalid");
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
+}
+
+TEST_CASE("LexicalAnalyzer_Comment") {
+    fkyaml::detail::lexical_token token;
+
+    SECTION("valid comments") {
+        auto input = GENERATE(
+            fkyaml::detail::str_view("# comment"),
+            fkyaml::detail::str_view(" # comment"),
+            fkyaml::detail::str_view("\t# comment\n"),
+            fkyaml::detail::str_view("\n# comment"));
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    // regression test for https://github.com/fktn-k/fkYAML/pull/469
+    SECTION("invalid comments") {
+        fkyaml::detail::str_view input("\'foo\'#invalid");
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR);
+        REQUIRE(token.str == "foo");
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("LexicalAnalyzer_Colon") {
@@ -280,11 +313,26 @@ TEST_CASE("LexicalAnalyzer_Colon") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with an always-safe character") {
+    SECTION("colon with an always-safe character (block)") {
         fkyaml::detail::lexical_analyzer lexer(":test");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(token.str == ":test");
+    }
+
+    SECTION("colon with an always-safe character (flow)") {
+        fkyaml::detail::lexical_analyzer lexer("[:test]");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
+        lexer.set_context_state(true);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == ":test");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_END);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        lexer.set_context_state(false);
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
     SECTION("colon with a flow indicator in a non-flow context") {
@@ -378,13 +426,18 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
             fkyaml::detail::str_view("-.INF_VALUE"),
             fkyaml::detail::str_view(".nanValue"),
             fkyaml::detail::str_view(".NaNValue"),
-            fkyaml::detail::str_view(".NAN_VALUE"));
+            fkyaml::detail::str_view(".NAN_VALUE"),
+
+            // "---" and "..." not at the beginning of a line is a scalar
+            fkyaml::detail::str_view(" ---"),
+            fkyaml::detail::str_view(" ..."),
+            fkyaml::detail::str_view(" ...this is valid"));
 
         fkyaml::detail::lexical_analyzer lexer(input);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
-        REQUIRE(token.str.begin() == input.begin());
+        REQUIRE(token.str.begin() == input.begin() + input.find_first_not_of(' '));
         REQUIRE(token.str.end() == input.begin() + input.find_last_not_of(' ') + 1);
     }
 
@@ -1871,6 +1924,101 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_END);
+        lexer.set_context_state(false);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("\':\' is preceded by JSON-like keys and followed by values adjacent to it") {
+        fkyaml::detail::str_view input = "{\n"
+                                         "  \"foo\":123,\n"
+                                         "  \'bar\':true,\n"
+                                         "  [baz]:3.14,\n"
+                                         "  {\"qux\":false}:null\n"
+                                         "}";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
+
+        lexer.set_context_state(true);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR);
+        REQUIRE(token.str == "foo");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == "123");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR);
+        REQUIRE(token.str == "bar");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == "true");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == "baz");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_END);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == "3.14");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR);
+        REQUIRE(token.str == "qux");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == "false");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_END);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == "null");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_END);
+
         lexer.set_context_state(false);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());

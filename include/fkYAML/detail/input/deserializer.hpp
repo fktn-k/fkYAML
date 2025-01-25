@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -254,15 +254,15 @@ private:
                 // If node properties and a followed node are on the different line, the properties belong to the root
                 // node.
                 if (m_needs_anchor_impl) {
-                    m_root_anchor_name = std::move(m_anchor_name);
+                    m_root_anchor_name = m_anchor_name;
                     m_needs_anchor_impl = false;
-                    m_anchor_name.clear();
+                    m_anchor_name = {};
                 }
 
                 if (m_needs_tag_impl) {
-                    m_root_tag_name = std::move(m_tag_name);
+                    m_root_tag_name = m_tag_name;
                     m_needs_tag_impl = false;
-                    m_tag_name.clear();
+                    m_tag_name = {};
                 }
 
                 line = lexer.get_lines_processed();
@@ -992,9 +992,15 @@ private:
                 continue;
             }
             // these tokens end parsing the current YAML document.
-            case lexical_token_t::END_OF_BUFFER: // This handles an empty input.
+            case lexical_token_t::END_OF_BUFFER:
+                // This handles an empty input.
+                last_type = token.type;
+                return;
             case lexical_token_t::END_OF_DIRECTIVES:
             case lexical_token_t::END_OF_DOCUMENT:
+                if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
+                    throw parse_error("An invalid document marker found in a flow collection", line, indent);
+                }
                 last_type = token.type;
                 return;
             // no way to come here while lexically analyzing document contents.
@@ -1037,7 +1043,7 @@ private:
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_anchor_name.assign(token.str.begin(), token.str.end());
+                m_anchor_name = token.str;
                 m_needs_anchor_impl = true;
 
                 if (!m_needs_tag_impl) {
@@ -1055,7 +1061,7 @@ private:
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_tag_name.assign(token.str.begin(), token.str.end());
+                m_tag_name = token.str;
                 m_needs_tag_impl = true;
 
                 if (!m_needs_anchor_impl) {
@@ -1233,12 +1239,13 @@ private:
 
                     // apply node properties if any to the root mapping node.
                     if (!m_root_anchor_name.empty()) {
-                        mp_current_node->add_anchor_name(std::move(m_root_anchor_name));
-                        m_root_anchor_name.clear();
+                        mp_current_node->add_anchor_name(
+                            std::string(m_root_anchor_name.begin(), m_root_anchor_name.end()));
+                        m_root_anchor_name = {};
                     }
                     if (!m_root_tag_name.empty()) {
-                        mp_current_node->add_tag_name(std::move(m_root_tag_name));
-                        m_root_tag_name.clear();
+                        mp_current_node->add_tag_name(std::string(m_root_tag_name.begin(), m_root_tag_name.end()));
+                        m_root_tag_name = {};
                     }
                 }
             }
@@ -1287,15 +1294,15 @@ private:
     /// @param node A node type object to be set YAML node properties.
     void apply_node_properties(basic_node_type& node) {
         if (m_needs_anchor_impl) {
-            node.add_anchor_name(m_anchor_name);
+            node.add_anchor_name(std::string(m_anchor_name.begin(), m_anchor_name.end()));
             m_needs_anchor_impl = false;
-            m_anchor_name.clear();
+            m_anchor_name = {};
         }
 
         if (m_needs_tag_impl) {
-            node.add_tag_name(m_tag_name);
+            node.add_tag_name(std::string(m_tag_name.begin(), m_tag_name.end()));
             m_needs_tag_impl = false;
-            m_tag_name.clear();
+            m_tag_name = {};
         }
     }
 
@@ -1321,13 +1328,13 @@ private:
     /// A flag to determine the need for a value separator or a flow suffix to follow.
     flow_token_state_t m_flow_token_state {flow_token_state_t::NEEDS_VALUE_OR_SUFFIX};
     /// The last YAML anchor name.
-    std::string m_anchor_name;
+    str_view m_anchor_name;
     /// The last tag name.
-    std::string m_tag_name;
+    str_view m_tag_name;
     /// The root YAML anchor name. (maybe empty and unused)
-    std::string m_root_anchor_name;
+    str_view m_root_anchor_name;
     /// The root tag name. (maybe empty and unused)
-    std::string m_root_tag_name;
+    str_view m_root_tag_name;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

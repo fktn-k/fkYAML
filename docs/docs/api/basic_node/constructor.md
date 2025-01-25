@@ -64,8 +64,16 @@ Available overloads are:
    Template parameter `CompatibleType` includes, but not limited to, the following types:  
     * sequences:
         * [`sequence_type`](sequence_type.md)
+        * container types which fulfills the following requirements, e.g., `std::vector` or `std::set`.
+            * Both `begin()` and `end()` are callable on a `CompatibleType` object.
+            * `CompatibleType` doesn't have both `key_type` and `mapped_type` member types.
+            * A [`string_type`](string_type.md) object is not constructible from a `CompatibleType` object.
+        * `std::pair` and `std::tuple`
     * mappings
         * [`mapping_type`](mapping_type.md)
+        * container types which fullfills the following requirements, e.g., `std::map` or `std::unordered_multimap`.
+            * Both `begin()` and `end()` are callable on a `CompatibleType` object.
+            * `CompatibleType` has both `key_type` and `mapped_type` member types.
     * null
         * [`std::nullptr_t`](https://en.cppreference.com/w/cpp/types/nullptr_t)
     * booleans

@@ -6,17 +6,17 @@
 
 # list of source files in the include directory.
 SRCS = $(shell find include -type f -name '*.hpp' | sort)
-# list of sources in the test directory.
-TEST_SRCS = $(shell find test -type f -name '*.hpp' -o -name '*.cpp' | sort)
+# list of sources in the tests directory.
+TEST_SRCS = $(shell find tests -type f -name '*.hpp' -o -name '*.cpp' | sort)
 # list of sources in the examples directory.
-EXAMPLE_SRCS = $(shell find docs/examples -type f -name '*.cpp' | sort)
-# list of sources in the tool directory.
-TOOL_SRCS = $(shell find tool -type f -name '*.cpp' | sort)
+EXAMPLE_SRCS = $(shell find examples -type f -name '*.cpp' | sort)
+# list of sources in the tools directory.
+TOOL_SRCS = $(shell find tools -type f -name '*.cpp' | sort)
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 4
-TARGET_PATCH_VERSION := 1
+TARGET_PATCH_VERSION := 2
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -140,8 +140,8 @@ update-sources: reuse update-version-macros
 	@$(MAKE) amalgamate
 
 update-git-tag-ref:
-	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' docs/mkdocs/docs/tutorials/cmake_integration.md)
-	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' test/cmake_fetch_content_test/project/CMakeLists.txt)
+	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' docs/docs/tutorials/cmake_integration.md)
+	$(shell sed -i 's/GIT_TAG \+v[0-9]\+\.[0-9]\+\.[0-9]\+/GIT_TAG v$(TARGET_VERSION_FULL)/' tests/cmake_fetch_content_test/project/CMakeLists.txt)
 
 CHANGELOG.md:
 	github_changelog_generator --user fktn-k --project fkYAML \

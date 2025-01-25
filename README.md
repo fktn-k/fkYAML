@@ -151,33 +151,33 @@ The following tables are created from the benchmarking results in the following 
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 60.1886Mi/s                          |
-| libfyaml                           | 34.9689Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 19.4415Gi/s                          |
-| rapidyaml<br>(with immutable buff) | 139.381Mi/s                          |
-| yaml-cpp                           | 8.8139Mi/s                           |
+| fkYAML                             | 62.5049Mi/s                          |
+| libfyaml                           | 39.235Mi/s                           |
+| rapidyaml<br>(with mutable buff)   | 22.007Gi/s                           |
+| rapidyaml<br>(with immutable buff) | 133.311Mi/s                          |
+| yaml-cpp                           | 9.07876Mi/s                          |
 
 ### Parsing [citm_catalog.json](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.json)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 91.1523Mi/s                          |
-| libfyaml                           | 51.8156Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 29.7284Gi/s                          |
-| rapidyaml<br>(with immutable buff) | 140.764Mi/s                          |
-| yaml-cpp                           | 14.8521Mi/s                          |
+| fkYAML                             | 97.216Mi/s                           |
+| libfyaml                           | 57.3021Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 37.9026Gi/s                          |
+| rapidyaml<br>(with immutable buff) | 140.375Mi/s                          |
+| yaml-cpp                           | 14.3192Mi/s                          |
 
 ### Parsing [citm_catalog.yml](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.yml)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 36.0492Mi/s                          |
-| libfyaml                           | 21.547Mi/s                           |
-| rapidyaml<br>(with mutable buff)   | 22.6904Gi/s                          |
-| rapidyaml<br>(with immutable buff) | 64.3972Mi/s                          |
-| yaml-cpp                           | 6.2337Mi/s                           |
+| fkYAML                             | 38.7563Mi/s                          |
+| libfyaml                           | 24.7526Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 37.9676Gi/s                          |
+| rapidyaml<br>(with immutable buff) | 68.4245Mi/s                          |
+| yaml-cpp                           | 6.47003Mi/s                          |
 
-Although [rapidyaml](https://github.com/biojppm/rapidyaml) is about 2x faster with immutable buffers and far faster with mutable buffers than fkYAML as it focuses on high performance, fkYAML is in general 70% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also about 6x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) is about 2x faster with immutable buffers and far faster with mutable buffers than fkYAML as it focuses on high performance, fkYAML is in general 70% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also about 6.5x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
 Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some use cases since there is no need for string manipulations upon data queries.  
 
 ## License

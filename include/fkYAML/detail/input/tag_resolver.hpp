@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -34,19 +34,18 @@ public:
     /// @brief Resolve the input tag name into an expanded tag name prepended with a registered prefix.
     /// @param tag The input tag name.
     /// @return The type of a node deduced from the given tag name.
-    static tag_t resolve_tag(const std::string& tag, const std::shared_ptr<doc_metainfo_type>& directives) {
+    static tag_t resolve_tag(const str_view tag, const std::shared_ptr<doc_metainfo_type>& directives) {
         const std::string normalized = normalize_tag_name(tag, directives);
         return convert_to_tag_type(normalized);
     }
 
 private:
-    static std::string normalize_tag_name(
-        const std::string& tag, const std::shared_ptr<doc_metainfo_type>& directives) {
+    static std::string normalize_tag_name(const str_view tag, const std::shared_ptr<doc_metainfo_type>& directives) {
         if FK_YAML_UNLIKELY (tag.empty()) {
             throw invalid_tag("tag must not be empty.", "");
         }
         if FK_YAML_UNLIKELY (tag[0] != '!') {
-            throw invalid_tag("tag must start with \'!\'", tag.c_str());
+            throw invalid_tag("tag must start with \'!\'", std::string(tag.begin(), tag.end()).c_str());
         }
 
         if (tag.size() == 1) {
@@ -56,7 +55,7 @@ private:
             //   * tag:yaml.org,2002:str
             // See the "Non-Specific Tags" section in https://yaml.org/spec/1.2.2/#691-node-tags.
             // The interpretation cannot take place here because the input lacks the corresponding value.
-            return tag;
+            return {tag.begin(), tag.end()};
         }
 
         std::string normalized {"!<"};
@@ -66,11 +65,13 @@ private:
             const bool is_null_or_empty = !directives || directives->secondary_handle_prefix.empty();
             if (is_null_or_empty) {
                 normalized.append(default_secondary_handle_prefix.begin(), default_secondary_handle_prefix.end());
-                normalized += tag.substr(2);
             }
             else {
-                normalized += directives->secondary_handle_prefix + tag.substr(2);
+                normalized += directives->secondary_handle_prefix;
             }
+
+            const str_view body = tag.substr(2);
+            normalized.append(body.begin(), body.end());
             break;
         }
         case '<':
@@ -78,16 +79,20 @@ private:
                 const bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
                 if (is_null_or_empty) {
                     normalized.append(default_primary_handle_prefix.begin(), default_primary_handle_prefix.end());
-                    return normalized + tag.substr(3);
                 }
-                return normalized + directives->primary_handle_prefix + tag.substr(3);
+                else {
+                    normalized += directives->primary_handle_prefix;
+                }
+
+                const str_view body = tag.substr(3);
+                return normalized.append(body.begin(), body.end());
             }
 
             // verbatim tags must be delivered as-is to the application.
             // See https://yaml.org/spec/1.2.2/#691-node-tags for more details.
-            return tag;
+            return {tag.begin(), tag.end()};
         default: {
-            auto tag_end_pos = tag.find_first_of('!', 1);
+            const std::size_t tag_end_pos = tag.find_first_of('!', 1);
 
             // handle a named handle (!tag!suffix -> !<[tag][suffix]>)
             if (tag_end_pos != std::string::npos) {
@@ -96,14 +101,17 @@ private:
 
                 const bool is_null_or_empty = !directives || directives->named_handle_map.empty();
                 if FK_YAML_UNLIKELY (is_null_or_empty) {
-                    throw invalid_tag("named handle has not been registered.", tag.c_str());
+                    throw invalid_tag(
+                        "named handle has not been registered.", std::string(tag.begin(), tag.end()).c_str());
                 }
 
                 // find the extracted named handle in the map.
-                auto named_handle_itr = directives->named_handle_map.find(tag.substr(0, tag_end_pos + 1));
+                const str_view named_handle = tag.substr(0, tag_end_pos + 1);
+                auto named_handle_itr = directives->named_handle_map.find({named_handle.begin(), named_handle.end()});
                 auto end_itr = directives->named_handle_map.end();
                 if FK_YAML_UNLIKELY (named_handle_itr == end_itr) {
-                    throw invalid_tag("named handle has not been registered.", tag.c_str());
+                    throw invalid_tag(
+                        "named handle has not been registered.", std::string(tag.begin(), tag.end()).c_str());
                 }
 
                 // The YAML spec prohibits expanding the percent-encoded characters (%xx -> a UTF-8 byte).
@@ -111,7 +119,8 @@ private:
                 // See https://yaml.org/spec/1.2.2/#56-miscellaneous-characters for more details.
 
                 normalized += named_handle_itr->second;
-                normalized.append(tag.begin() + (static_cast<std::ptrdiff_t>(tag_end_pos) + 1), tag.end());
+                const str_view body = tag.substr(tag_end_pos + 1);
+                normalized.append(body.begin(), body.end());
                 break;
             }
 
@@ -119,12 +128,13 @@ private:
             const bool is_null_or_empty = !directives || directives->primary_handle_prefix.empty();
             if (is_null_or_empty) {
                 normalized.append(default_primary_handle_prefix.begin(), default_primary_handle_prefix.end());
-                normalized += tag.substr(1);
             }
             else {
-                normalized += directives->primary_handle_prefix + tag.substr(1);
+                normalized += directives->primary_handle_prefix;
             }
 
+            const str_view body = tag.substr(1);
+            normalized.append(body.begin(), body.end());
             break;
         }
         }

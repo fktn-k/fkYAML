@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.0
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -16,18 +16,18 @@
 int main() {
     // deserialize a YAML string.
     std::string input = R"(
-    %YAML 1.2
-    ---
-    foo: true
-    bar: 123
-    baz: 3.14
-    ...
-    %TAG ! tag:test.com,2000:
-    ---
-    null: one
-    false: 456
-    TRUE: 1.414
-    )";
+%YAML 1.2
+---
+foo: true
+bar: 123
+baz: 3.14
+...
+%TAG ! tag:test.com,2000:
+---
+null: one
+false: 456
+TRUE: 1.414
+)";
     std::vector<fkyaml::node> docs = fkyaml::node::deserialize_docs(std::begin(input), std::end(input));
 
     // check the deserialization result.

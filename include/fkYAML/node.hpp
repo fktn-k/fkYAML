@@ -1,6 +1,6 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.1
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
@@ -22,6 +22,7 @@
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
+#include <fkYAML/detail/exception_safe_allocation.hpp>
 #include <fkYAML/detail/input/deserializer.hpp>
 #include <fkYAML/detail/input/input_adapter.hpp>
 #include <fkYAML/detail/iterator.hpp>
@@ -144,7 +145,7 @@ public:
     using const_map_range = fkyaml::detail::map_range_proxy<const basic_node>;
 
 private:
-    template <node_type>
+    template <typename BasicNodeType>
     friend struct fkyaml::detail::external_node_constructor;
 
     template <typename BasicNodeType>
@@ -174,10 +175,10 @@ private:
         explicit node_value(detail::node_attr_t value_type_bit) {
             switch (value_type_bit) {
             case detail::node_attr_bits::seq_bit:
-                p_sequence = create_object<sequence_type>();
+                p_sequence = detail::create_object<sequence_type>();
                 break;
             case detail::node_attr_bits::map_bit:
-                p_mapping = create_object<mapping_type>();
+                p_mapping = detail::create_object<mapping_type>();
                 break;
             case detail::node_attr_bits::null_bit:
                 p_mapping = nullptr;
@@ -192,7 +193,7 @@ private:
                 float_val = static_cast<float_number_type>(0.0);
                 break;
             case detail::node_attr_bits::string_bit:
-                p_string = create_object<string_type>();
+                p_string = detail::create_object<string_type>();
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -206,16 +207,16 @@ private:
             switch (value_type_bit) {
             case detail::node_attr_bits::seq_bit:
                 p_sequence->clear();
-                destroy_object<sequence_type>(p_sequence);
+                detail::destroy_object<sequence_type>(p_sequence);
                 p_sequence = nullptr;
                 break;
             case detail::node_attr_bits::map_bit:
                 p_mapping->clear();
-                destroy_object<mapping_type>(p_mapping);
+                detail::destroy_object<mapping_type>(p_mapping);
                 p_mapping = nullptr;
                 break;
             case detail::node_attr_bits::string_bit:
-                destroy_object<string_type>(p_string);
+                detail::destroy_object<string_type>(p_string);
                 p_string = nullptr;
                 break;
             default:
@@ -236,42 +237,6 @@ private:
         /// A pointer to the value of string type.
         string_type* p_string;
     };
-
-private:
-    /// @brief Allocates and constructs an object with a given type and arguments.
-    /// @tparam ObjType The target object type.
-    /// @tparam ArgTypes The packed argument types for constructor arguments.
-    /// @param[in] args A parameter pack for constructor arguments of the target object type.
-    /// @return ObjType* An address of allocated memory on the heap.
-    template <typename ObjType, typename... ArgTypes>
-    static ObjType* create_object(ArgTypes&&... args) {
-        using AllocType = std::allocator<ObjType>;
-        using AllocTraitsType = std::allocator_traits<AllocType>;
-
-        AllocType alloc {};
-        auto deleter = [&alloc](ObjType* obj) {
-            AllocTraitsType::destroy(alloc, obj);
-            AllocTraitsType::deallocate(alloc, obj, 1);
-        };
-
-        std::unique_ptr<ObjType, decltype(deleter)> object(AllocTraitsType::allocate(alloc, 1), deleter);
-        AllocTraitsType::construct(alloc, object.get(), std::forward<ArgTypes>(args)...);
-
-        FK_YAML_ASSERT(object != nullptr);
-        return object.release();
-    }
-
-    /// @brief Destroys and deallocates an object with specified type.
-    /// @warning Make sure the `obj` parameter is not nullptr before calling this function.
-    /// @tparam ObjType The target object type.
-    /// @param[in] obj A pointer to the target object to be destroyed.
-    template <typename ObjType>
-    static void destroy_object(ObjType* obj) {
-        FK_YAML_ASSERT(obj != nullptr);
-        std::allocator<ObjType> alloc;
-        std::allocator_traits<decltype(alloc)>::destroy(alloc, obj);
-        std::allocator_traits<decltype(alloc)>::deallocate(alloc, obj, 1);
-    }
 
 public:
     /// @brief Constructs a new basic_node object of null type.
@@ -301,10 +266,10 @@ public:
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs & detail::node_attr_mask::value) {
             case detail::node_attr_bits::seq_bit:
-                m_node_value.p_sequence = create_object<sequence_type>(*(rhs.m_node_value.p_sequence));
+                m_node_value.p_sequence = detail::create_object<sequence_type>(*(rhs.m_node_value.p_sequence));
                 break;
             case detail::node_attr_bits::map_bit:
-                m_node_value.p_mapping = create_object<mapping_type>(*(rhs.m_node_value.p_mapping));
+                m_node_value.p_mapping = detail::create_object<mapping_type>(*(rhs.m_node_value.p_mapping));
                 break;
             case detail::node_attr_bits::null_bit:
                 m_node_value.p_mapping = nullptr;
@@ -319,7 +284,7 @@ public:
                 m_node_value.float_val = rhs.m_node_value.float_val;
                 break;
             case detail::node_attr_bits::string_bit:
-                m_node_value.p_string = create_object<string_type>(*(rhs.m_node_value.p_string));
+                m_node_value.p_string = detail::create_object<string_type>(*(rhs.m_node_value.p_string));
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -415,7 +380,7 @@ public:
 
         if (is_mapping) {
             m_attrs = detail::node_attr_bits::map_bit;
-            m_node_value.p_mapping = create_object<mapping_type>();
+            m_node_value.p_mapping = detail::create_object<mapping_type>();
 
             for (auto& elem_ref : init) {
                 auto elem = elem_ref.release();
@@ -425,7 +390,7 @@ public:
         }
         else {
             m_attrs = detail::node_attr_bits::seq_bit;
-            m_node_value.p_sequence = create_object<sequence_type>();
+            m_node_value.p_sequence = detail::create_object<sequence_type>();
             m_node_value.p_sequence->reserve(std::distance(init.begin(), init.end()));
             for (auto& elem_ref : init) {
                 m_node_value.p_sequence->emplace_back(std::move(elem_ref.release()));
@@ -521,7 +486,7 @@ public:
     static basic_node sequence() {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::seq_bit;
-        node.m_node_value.p_sequence = create_object<sequence_type>();
+        node.m_node_value.p_sequence = detail::create_object<sequence_type>();
         return node;
     } // LCOV_EXCL_LINE
 
@@ -532,7 +497,7 @@ public:
     static basic_node sequence(const sequence_type& seq) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::seq_bit;
-        node.m_node_value.p_sequence = create_object<sequence_type>(seq);
+        node.m_node_value.p_sequence = detail::create_object<sequence_type>(seq);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -543,7 +508,7 @@ public:
     static basic_node sequence(sequence_type&& seq) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::seq_bit;
-        node.m_node_value.p_sequence = create_object<sequence_type>(std::move(seq));
+        node.m_node_value.p_sequence = detail::create_object<sequence_type>(std::move(seq));
         return node;
     } // LCOV_EXCL_LINE
 
@@ -553,7 +518,7 @@ public:
     static basic_node mapping() {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::map_bit;
-        node.m_node_value.p_mapping = create_object<mapping_type>();
+        node.m_node_value.p_mapping = detail::create_object<mapping_type>();
         return node;
     } // LCOV_EXCL_LINE
 
@@ -564,7 +529,7 @@ public:
     static basic_node mapping(const mapping_type& map) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::map_bit;
-        node.m_node_value.p_mapping = create_object<mapping_type>(map);
+        node.m_node_value.p_mapping = detail::create_object<mapping_type>(map);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -575,7 +540,7 @@ public:
     static basic_node mapping(mapping_type&& map) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::map_bit;
-        node.m_node_value.p_mapping = create_object<mapping_type>(std::move(map));
+        node.m_node_value.p_mapping = detail::create_object<mapping_type>(std::move(map));
         return node;
     } // LCOV_EXCL_LINE
 
