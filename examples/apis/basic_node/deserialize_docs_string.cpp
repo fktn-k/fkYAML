@@ -15,18 +15,18 @@
 int main() {
     // deserialize a YAML string.
     std::string s = R"(
-    %YAML 1.2
-    ---
-    foo: true
-    bar: 123
-    baz: 3.14
-    ...
-    %TAG ! tag:test.com,2000:
-    ---
-    null: one
-    false: 456
-    TRUE: 1.414
-    )";
+%YAML 1.2
+---
+foo: true
+bar: 123
+baz: 3.14
+...
+%TAG ! tag:test.com,2000:
+---
+null: one
+false: 456
+TRUE: 1.414
+)";
     std::vector<fkyaml::node> docs = fkyaml::node::deserialize_docs(s);
 
     // check the deserialization result.
