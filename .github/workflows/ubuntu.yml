@@ -129,6 +129,17 @@ jobs:
       - name: Run Clang Sanitizers
         run: make clang-sanitizers
 
+  ci_examples:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build examples
+        run: make examples
+
   ci_test_clang_cxx_standards:
     runs-on: ubuntu-latest
     container: silkeh/clang:latest
