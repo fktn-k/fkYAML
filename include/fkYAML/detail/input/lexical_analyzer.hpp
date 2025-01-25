@@ -165,7 +165,7 @@ public:
             // The '%' character can be safely used as the first character in document contents.
             // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
             break;
-        case '-':
+        case '-': {
             switch (*(m_cur_itr + 1)) {
             case ' ':
             case '\t':
@@ -177,15 +177,18 @@ public:
                 break;
             }
 
-            if ((m_end_itr - m_cur_itr) > 2) {
-                const bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
-                if (is_dir_end) {
-                    m_cur_itr += 3;
-                    return {lexical_token_t::END_OF_DIRECTIVES};
+            if (m_pos_tracker.get_cur_pos_in_line() == 0) {
+                if ((m_end_itr - m_cur_itr) > 2) {
+                    const bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
+                    if (is_dir_end) {
+                        m_cur_itr += 3;
+                        return {lexical_token_t::END_OF_DIRECTIVES};
+                    }
                 }
             }
 
             break;
+        }
         case '[': // sequence flow begin
             ++m_cur_itr;
             return {lexical_token_t::SEQUENCE_FLOW_BEGIN};
@@ -209,11 +212,28 @@ public:
             ++m_token_begin_itr;
             return {lexical_token_t::SINGLE_QUOTED_SCALAR, determine_single_quoted_scalar_range()};
         case '.': {
-            if ((m_end_itr - m_cur_itr) > 2) {
-                const bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
-                if (is_doc_end) {
-                    m_cur_itr += 3;
-                    return {lexical_token_t::END_OF_DOCUMENT};
+            if (m_pos_tracker.get_cur_pos_in_line() == 0) {
+                const auto rem_size = m_end_itr - m_cur_itr;
+                if FK_YAML_LIKELY (rem_size > 2) {
+                    const bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
+                    if (is_doc_end) {
+                        if (rem_size > 3) {
+                            switch (*(m_cur_itr + 3)) {
+                            case ' ':
+                            case '\t':
+                            case '\n':
+                                m_cur_itr += 4;
+                                break;
+                            default:
+                                // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
+                                emit_error("The document end marker \"...\" must not be followed by non-ws char.");
+                            }
+                        }
+                        else {
+                            m_cur_itr += 3;
+                        }
+                        return {lexical_token_t::END_OF_DOCUMENT};
+                    }
                 }
             }
             break;
