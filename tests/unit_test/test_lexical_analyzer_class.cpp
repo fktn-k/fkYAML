@@ -218,21 +218,29 @@ TEST_CASE("LexicalAnalyzer_EndOfDirectives") {
 
 TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
     fkyaml::detail::lexical_token token;
-    fkyaml::detail::lexical_analyzer lexer("%YAML 1.2\n---\n...");
-    lexer.set_document_state(true);
 
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
-    REQUIRE(lexer.get_yaml_version() == fkyaml::detail::str_view("1.2"));
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
+    SECTION("valid document end marker") {
+        fkyaml::detail::lexical_analyzer lexer("%YAML 1.2\n---\n...");
+        lexer.set_document_state(true);
 
-    lexer.set_document_state(false);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
+        REQUIRE(lexer.get_yaml_version() == fkyaml::detail::str_view("1.2"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
 
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DOCUMENT);
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+        lexer.set_document_state(false);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DOCUMENT);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("invalid document end marker") {
+        fkyaml::detail::lexical_analyzer lexer("...invalid");
+        REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("LexicalAnalyzer_Comment") {
@@ -418,13 +426,18 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
             fkyaml::detail::str_view("-.INF_VALUE"),
             fkyaml::detail::str_view(".nanValue"),
             fkyaml::detail::str_view(".NaNValue"),
-            fkyaml::detail::str_view(".NAN_VALUE"));
+            fkyaml::detail::str_view(".NAN_VALUE"),
+
+            // "---" and "..." not at the beginning of a line is a scalar
+            fkyaml::detail::str_view(" ---"),
+            fkyaml::detail::str_view(" ..."),
+            fkyaml::detail::str_view(" ...this is valid"));
 
         fkyaml::detail::lexical_analyzer lexer(input);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
-        REQUIRE(token.str.begin() == input.begin());
+        REQUIRE(token.str.begin() == input.begin() + input.find_first_not_of(' '));
         REQUIRE(token.str.end() == input.begin() + input.find_last_not_of(' ') + 1);
     }
 

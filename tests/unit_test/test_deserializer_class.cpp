@@ -3232,6 +3232,20 @@ TEST_CASE("Deserializer_DocumentWithMarkers") {
         REQUIRE(foo_node.is_string());
         REQUIRE(foo_node.get_value_ref<std::string&>() == "one");
     }
+
+    SECTION("invalid directives end marker(---) in a flow collection") {
+        std::string input = "[\n"
+                            "---\n"
+                            "]";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("invalid document end marker(...) in a flow collection") {
+        std::string input = "[\n"
+                            "...\n"
+                            "]";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_MultipleDocuments") {
