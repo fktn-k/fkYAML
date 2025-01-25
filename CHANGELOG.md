@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.4.2](https://github.com/fktn-k/fkYAML/releases/tag/v0.4.2) (2025-01-25)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.4.1...v0.4.2)
+
+- Fix document marker detections [\#472](https://github.com/fktn-k/fkYAML/pull/472) ([fktn-k](https://github.com/fktn-k))
+- Fix error in parsing empty inputs [\#471](https://github.com/fktn-k/fkYAML/pull/471) ([fktn-k](https://github.com/fktn-k))
+- Fix comment prefix check [\#469](https://github.com/fktn-k/fkYAML/pull/469) ([fktn-k](https://github.com/fktn-k))
+- Fix conversions from empty tuples [\#467](https://github.com/fktn-k/fkYAML/pull/467) ([fktn-k](https://github.com/fktn-k))
+
+- Fix example builds with incorrectly indented document markers [\#473](https://github.com/fktn-k/fkYAML/pull/473) ([fktn-k](https://github.com/fktn-k))
+- Refactor UTF encode validation & line break normalization [\#470](https://github.com/fktn-k/fkYAML/pull/470) ([fktn-k](https://github.com/fktn-k))
+- Allow ':' adjacent to a flow mapping value right after a JSON-like key [\#468](https://github.com/fktn-k/fkYAML/pull/468) ([fktn-k](https://github.com/fktn-k))
+- Disable the fail-fast option for GitHub Actions workflow jobs [\#466](https://github.com/fktn-k/fkYAML/pull/466) ([fktn-k](https://github.com/fktn-k))
+- Add to\_node\(\) implementations for STL container types [\#465](https://github.com/fktn-k/fkYAML/pull/465) ([fktn-k](https://github.com/fktn-k))
+- Fix example builds and typos in docs [\#464](https://github.com/fktn-k/fkYAML/pull/464) ([fktn-k](https://github.com/fktn-k))
+- Improve handling node properties in deserialization [\#463](https://github.com/fktn-k/fkYAML/pull/463) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.4.1](https://github.com/fktn-k/fkYAML/releases/tag/v0.4.1) (2025-01-11)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.4.0...v0.4.1)

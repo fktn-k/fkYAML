@@ -1,5 +1,59 @@
 # Releases
 
+## **fkYAML version 0.4.2**
+
+!!! abstract "Release Packages"
+
+    * CMake package of the multiple header version
+        * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.2/fkYAML.zip)
+        * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.2/fkYAML.tgz)
+    * CMake package of the single header version
+        * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.2/fkYAML_single_header.zip)
+        * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.2/fkYAML_single_header.tgz)
+    * minimum repository contents for CMake
+        * [fkYAML_min.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.2/fkYAML_min.zip)
+        * [fkYAML_min.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.2/fkYAML_min.tgz)
+    * single headers
+        * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.2/node.hpp)
+        * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.2/fkyaml_fwd.hpp)
+
+### What's Changed
+
+#### :sparkles: New Features
+- Add to\_node\(\) implementations for STL container types ([\#465](https://github.com/fktn-k/fkYAML/pull/465), [fktn-k](https://github.com/fktn-k))
+    - `fkyaml::basic_node` objects can now be constructible with objects with most of the STL container types.
+      ```cpp
+      std::list<int> l {123, -456, 789};
+      fkyaml::node seq = l; // internally converted as a sequence with the built-in to_node implementation.
+
+      std::unordered_map<std::string, float> um {{"foo", 3.14f}, {"bar", 1.41f}};
+      fkyaml::node map = um; // internally converted as a mapping with the built-in to_node implementation.
+      ```
+    - See [the API reference page](https://fktn-k.github.io/fkYAML/api/basic_node/constructor/) for the `fkyaml::basic_node` constructor for more details.
+
+#### :zap: Improvements
+- Improve handling node properties in deserialization ([\#463](https://github.com/fktn-k/fkYAML/pull/463), [fktn-k](https://github.com/fktn-k))
+- Allow ':' adjacent to a flow mapping value right after a JSON-like key ([\#468](https://github.com/fktn-k/fkYAML/pull/468), [fktn-k](https://github.com/fktn-k))
+- Refactor UTF encode validation & line break normalization ([\#470](https://github.com/fktn-k/fkYAML/pull/470), [fktn-k](https://github.com/fktn-k))
+
+#### :bug: Bug Fixes
+- Fix conversions from empty tuples ([\#467](https://github.com/fktn-k/fkYAML/pull/467), [fktn-k](https://github.com/fktn-k))
+- Fix comment prefix check ([\#469](https://github.com/fktn-k/fkYAML/pull/469), [fktn-k](https://github.com/fktn-k))
+- Fix error in parsing empty inputs ([\#471](https://github.com/fktn-k/fkYAML/pull/471), [fktn-k](https://github.com/fktn-k))
+- Fix document marker detections ([\#472](https://github.com/fktn-k/fkYAML/pull/472), [fktn-k](https://github.com/fktn-k))
+
+#### :robot: CI
+- Disable the fail-fast option for GitHub Actions workflow jobs ([\#466](https://github.com/fktn-k/fkYAML/pull/466), [fktn-k](https://github.com/fktn-k))
+
+#### :memo: Documentation
+- Fix example builds and typos in docs ([\#464](https://github.com/fktn-k/fkYAML/pull/464), [fktn-k](https://github.com/fktn-k))
+- Fix example builds with incorrectly indented document markers ([\#473](https://github.com/fktn-k/fkYAML/pull/473), [fktn-k](https://github.com/fktn-k))
+
+### Full Changelog
+https://github.com/fktn-k/fkYAML/compare/v0.4.1...v0.4.2
+
+---
+
 ## **fkYAML version 0.4.1**
 
 !!! abstract "Release Packages"
