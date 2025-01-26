@@ -79,11 +79,11 @@ target_include_directories(
   unit_test_config
   INTERFACE
     "${CMAKE_CURRENT_BINARY_DIR}/include"
+    "${CATCH2_ROOT_DIR}/single_include"
 )
 target_link_libraries(
   unit_test_config
   INTERFACE
-    Catch2::Catch2
     ${FK_YAML_TARGET_NAME}
 )
 target_compile_features(

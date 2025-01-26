@@ -1,3 +1,6 @@
+set(CATCH2_ROOT_DIR "${PROJECT_SOURCE_DIR}/thirdparty/Catch2")
+list(APPEND CMAKE_MODULE_PATH "${CATCH2_ROOT_DIR}/contrib")
+
 add_subdirectory(unit_test)
 
 if(FK_YAML_BUILD_ALL_TEST)
