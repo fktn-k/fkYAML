@@ -47,8 +47,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_USE_SINGLE_HEADER=${{matrix.use_single_header}}
@@ -66,8 +64,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Run Clang-Tidy
       run: make clang-tidy
@@ -78,8 +74,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Install include-what-you-use
       run: |
@@ -95,8 +89,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Install Valgrind
       run: |
@@ -120,8 +112,6 @@ jobs:
           git --version
 
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Get latest CMake
         uses: lukka/get-cmake@latest
@@ -134,8 +124,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Build examples
         run: make examples
@@ -157,8 +145,6 @@ jobs:
         git --version
 
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Get latest CMake
       uses: lukka/get-cmake@latest
@@ -189,8 +175,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Get latest CMake
       uses: lukka/get-cmake@latest
@@ -227,8 +211,6 @@ jobs:
         git --version
 
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Get latest CMake and Ninja
       uses: lukka/get-cmake@latest
@@ -265,8 +247,6 @@ jobs:
         git --version
 
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Get latest CMake and Ninja
       uses: lukka/get-cmake@latest
@@ -296,8 +276,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: add repository commonly needed to install GCC
       run: |
@@ -351,8 +329,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Install Intel oneAPI Base Toolkit
       run: | # from the official document: https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2024-1/apt.html
