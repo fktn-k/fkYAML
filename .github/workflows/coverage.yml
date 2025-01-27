@@ -34,7 +34,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: ${{github.head_ref}}
-        submodules: recursive
 
     - name: Install lcov
       run: |

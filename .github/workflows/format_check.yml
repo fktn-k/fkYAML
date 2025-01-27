@@ -43,7 +43,6 @@ jobs:
       with:
         ref: ${{github.head_ref}}
         token: ${{secrets.FKYAML_FORMAT_CHECK_PAT}}
-        submodules: recursive
 
     - name: Run clang-format style check
       run: ${{github.workspace}}/scripts/run_clang_format.sh

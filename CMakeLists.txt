@@ -31,24 +31,6 @@ if(FK_YAML_CODE_COVERAGE OR FK_YAML_RUN_VALGRIND OR FK_YAML_RUN_CLANG_SANITIZERS
   set(FK_YAML_BUILD_TEST ON)
 endif()
 
-if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
-  set(CATCH2_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2")
-
-  if(NOT EXISTS ${CATCH2_ROOT_DIR}/CMakeLists.txt)
-    find_package(Git REQUIRED)
-    message(STATUS "Fetching git submodule: Catch2")
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ${CATCH2_ROOT_DIR}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      RESULT_VARIABLE GIT_SUBMOD_RET)
-    if(NOT GIT_SUBMOD_RET EQUAL "0")
-      message(FATAL_ERROR "Failed to fetch Catch2 as a git submodule.")
-    endif()
-  endif()
-
-  list(APPEND CMAKE_MODULE_PATH "${CATCH2_ROOT_DIR}/contrib")
-endif()
-
 ###########################################
 #   Configure variables for the library   #
 ###########################################
@@ -140,7 +122,6 @@ endif()
 ###########################
 
 if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
-  add_subdirectory(${CATCH2_ROOT_DIR})
   include(CTest)
   enable_testing()
   add_subdirectory(tests)
