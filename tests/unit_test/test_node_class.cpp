@@ -830,7 +830,7 @@ TEST_CASE("Node_CopyAssignmentOperator") {
 //
 
 /// @brief
-/// A utility iterator class which implements LegacyInputIterator and.
+/// A utility iterator class which implements LegacyInputIterator.
 /// https://en.cppreference.com/w/cpp/named_req/InputIterator
 template <typename T>
 class legacy_input_iterator {
@@ -858,10 +858,6 @@ public:
 
     reference operator*() noexcept {
         return *mp_val;
-    }
-
-    pointer operator->() noexcept {
-        return mp_val;
     }
 
     bool operator==(const legacy_input_iterator& rhs) const noexcept {
