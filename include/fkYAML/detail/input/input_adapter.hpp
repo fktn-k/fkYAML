@@ -1013,7 +1013,7 @@ inline iterator_input_adapter<ItrType> create_iterator_input_adapter(ItrType beg
 template <typename ItrType>
 inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end) {
     bool is_contiguous = true;
-    const auto size = static_cast<ptrdiff_t>(std::distance(begin, end));
+    const auto size = std::distance(begin, end);
 
     // Check if `begin` & `end` are contiguous iterators.
     // Getting distance between begin and (end - 1) avoids dereferencing an invalid sentinel.
@@ -1052,18 +1052,15 @@ struct container_input_adapter_factory {};
 template <typename ContainerType>
 struct container_input_adapter_factory<
     ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>> {
-    /// Whether ContainerType is a contiguous container.
-    static constexpr bool is_contiguous = is_contiguous_container<ContainerType>::value;
-
     /// A type for resulting input adapter object.
-    using adapter_type = decltype(create_iterator_input_adapter(
-        begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()), is_contiguous));
+    using adapter_type =
+        decltype(input_adapter(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>())));
 
     /// @brief A factory method of input adapter objects for the target container objects.
     /// @param container A container-like input object.
     /// @return adapter_type An iterator_input_adapter object.
     static adapter_type create(const ContainerType& container) {
-        return create_iterator_input_adapter(begin(container), end(container), is_contiguous);
+        return input_adapter(begin(container), end(container));
     }
 };
 

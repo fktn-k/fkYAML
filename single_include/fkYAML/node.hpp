@@ -6931,10 +6931,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP
 #define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP
 
-#include <array>
-#include <string>
 #include <type_traits>
-#include <vector>
 
 // #include <fkYAML/detail/macros/define_macros.hpp>
 
@@ -6942,10 +6939,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
-
-#if defined(FK_YAML_HAS_CXX_17) && FK_YAML_HAS_INCLUDE(<string_view>)
-#include <string_view>
-#endif
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -6985,44 +6978,6 @@ struct is_input_adapter : std::false_type {};
 template <typename InputAdapterType>
 struct is_input_adapter<InputAdapterType, enable_if_t<has_get_buffer_view<InputAdapterType>::value>> : std::true_type {
 };
-
-/////////////////////////////////////////////////
-//   traits for contiguous iterator detection
-/////////////////////////////////////////////////
-
-/// @brief Type traits to check if T is a container which has contiguous bytes.
-/// @tparam T A target type.
-template <typename T>
-struct is_contiguous_container : std::false_type {};
-
-/// @brief A partial specialization of is_contiguous_container if T is a std::array.
-/// @tparam T Element type.
-/// @tparam N Maximum number of elements.
-template <typename T, std::size_t N>
-struct is_contiguous_container<std::array<T, N>> : std::true_type {};
-
-/// @brief A partial specialization of is_contiguous_container if T is a std::basic_string.
-/// @tparam CharT Character type.
-/// @tparam Traits Character traits type.
-/// @tparam Alloc Allocator type.
-template <typename CharT, typename Traits, typename Alloc>
-struct is_contiguous_container<std::basic_string<CharT, Traits, Alloc>> : std::true_type {};
-
-#ifdef FK_YAML_HAS_CXX_17
-
-/// @brief A partial specialization of is_contiguous_container if T is a std::basic_string_view.
-/// @tparam CharT Character type.
-/// @tparam Traits Character traits type.
-template <typename CharT, typename Traits>
-struct is_contiguous_container<std::basic_string_view<CharT, Traits>> : std::true_type {};
-
-#endif // defined(FK_YAML_HAS_CXX_20)
-
-/// @brief A partial specialization of is_contiguous_container if T is a std::vector.
-/// @tparam T Element type.
-/// @tparam Alloc Allocator type.
-template <typename T, typename Alloc>
-struct is_contiguous_container<std::vector<T, Alloc>> : std::true_type {};
 
 FK_YAML_DETAIL_NAMESPACE_END
 
@@ -9931,7 +9886,7 @@ inline iterator_input_adapter<ItrType> create_iterator_input_adapter(ItrType beg
 template <typename ItrType>
 inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end) {
     bool is_contiguous = true;
-    const auto size = static_cast<ptrdiff_t>(std::distance(begin, end));
+    const auto size = std::distance(begin, end);
 
     // Check if `begin` & `end` are contiguous iterators.
     // Getting distance between begin and (end - 1) avoids dereferencing an invalid sentinel.
@@ -9970,18 +9925,15 @@ struct container_input_adapter_factory {};
 template <typename ContainerType>
 struct container_input_adapter_factory<
     ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>> {
-    /// Whether ContainerType is a contiguous container.
-    static constexpr bool is_contiguous = is_contiguous_container<ContainerType>::value;
-
     /// A type for resulting input adapter object.
-    using adapter_type = decltype(create_iterator_input_adapter(
-        begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()), is_contiguous));
+    using adapter_type =
+        decltype(input_adapter(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>())));
 
     /// @brief A factory method of input adapter objects for the target container objects.
     /// @param container A container-like input object.
     /// @return adapter_type An iterator_input_adapter object.
     static adapter_type create(const ContainerType& container) {
-        return create_iterator_input_adapter(begin(container), end(container), is_contiguous);
+        return input_adapter(begin(container), end(container));
     }
 };
 
