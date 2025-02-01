@@ -8976,12 +8976,9 @@ private:
                 if FK_YAML_UNLIKELY (first == 0x0D /*CR*/) {
                     cr_itrs.emplace_back(current);
                 }
-                ++current;
                 break;
             case 2: {
-                ++current;
-                const auto second = static_cast<uint8_t>(*current);
-                ++current;
+                const auto second = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
@@ -8989,11 +8986,8 @@ private:
                 break;
             }
             case 3: {
-                ++current;
-                const auto second = static_cast<uint8_t>(*current);
-                ++current;
-                const auto third = static_cast<uint8_t>(*current);
-                ++current;
+                const auto second = static_cast<uint8_t>(*++current);
+                const auto third = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
@@ -9001,13 +8995,9 @@ private:
                 break;
             }
             case 4: {
-                ++current;
-                const auto second = static_cast<uint8_t>(*current);
-                ++current;
-                const auto third = static_cast<uint8_t>(*current);
-                ++current;
-                const auto fourth = static_cast<uint8_t>(*current);
-                ++current;
+                const auto second = static_cast<uint8_t>(*++current);
+                const auto third = static_cast<uint8_t>(*++current);
+                const auto fourth = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
@@ -9017,6 +9007,8 @@ private:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            ++current;
         }
 
         const bool is_contiguous_no_cr = cr_itrs.empty() && m_is_contiguous;
@@ -9065,8 +9057,7 @@ private:
         while (current != m_end || encoded_buf_size != 0) {
             while (current != m_end && encoded_buf_size < 2) {
                 auto utf16 = static_cast<char16_t>(static_cast<uint8_t>(*current) << shift_bits[0]);
-                ++current;
-                utf16 |= static_cast<char16_t>(static_cast<uint8_t>(*current) << shift_bits[1]);
+                utf16 |= static_cast<char16_t>(static_cast<uint8_t>(*++current) << shift_bits[1]);
                 ++current;
 
                 // skip appending CRs.
@@ -9198,12 +9189,9 @@ public:
                 if FK_YAML_UNLIKELY (first == 0x0D /*CR*/) {
                     cr_itrs.emplace_back(current);
                 }
-                ++current;
                 break;
             case 2: {
-                ++current;
-                const auto second = static_cast<uint8_t>(*current);
-                ++current;
+                const auto second = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
@@ -9211,11 +9199,8 @@ public:
                 break;
             }
             case 3: {
-                ++current;
-                const auto second = static_cast<uint8_t>(*current);
-                ++current;
-                const auto third = static_cast<uint8_t>(*current);
-                ++current;
+                const auto second = static_cast<uint8_t>(*++current);
+                const auto third = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
@@ -9223,13 +9208,9 @@ public:
                 break;
             }
             case 4: {
-                ++current;
-                const auto second = static_cast<uint8_t>(*current);
-                ++current;
-                const auto third = static_cast<uint8_t>(*current);
-                ++current;
-                const auto fourth = static_cast<uint8_t>(*current);
-                ++current;
+                const auto second = static_cast<uint8_t>(*++current);
+                const auto third = static_cast<uint8_t>(*++current);
+                const auto fourth = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
@@ -9239,6 +9220,8 @@ public:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            ++current;
         }
 
         m_buffer.reserve(std::distance(m_begin, m_end) - cr_itrs.size());
