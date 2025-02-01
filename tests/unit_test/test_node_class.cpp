@@ -829,15 +829,74 @@ TEST_CASE("Node_CopyAssignmentOperator") {
 // test cases for deserialization
 //
 
+/// @brief
+/// A utility iterator class which implements LegacyInputIterator and.
+/// https://en.cppreference.com/w/cpp/named_req/InputIterator
+template <typename T>
+class legacy_input_iterator {
+public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+    legacy_input_iterator() = default;
+    legacy_input_iterator(pointer p_val) noexcept
+        : mp_val(p_val) {
+    }
+    legacy_input_iterator(const legacy_input_iterator&) = default;
+    legacy_input_iterator(legacy_input_iterator&&) = default;
+    legacy_input_iterator& operator=(const legacy_input_iterator&) = default;
+    legacy_input_iterator& operator=(legacy_input_iterator&&) = default;
+    ~legacy_input_iterator() = default;
+
+    legacy_input_iterator& operator++() noexcept {
+        ++mp_val;
+        return *this;
+    }
+
+    reference operator*() noexcept {
+        return *mp_val;
+    }
+
+    pointer operator->() noexcept {
+        return mp_val;
+    }
+
+    bool operator==(const legacy_input_iterator& rhs) const noexcept {
+        return mp_val == rhs.mp_val;
+    }
+
+    bool operator!=(const legacy_input_iterator& rhs) const noexcept {
+        return mp_val != rhs.mp_val;
+    }
+
+private:
+    pointer mp_val {nullptr};
+};
+
 TEST_CASE("Node_Deserialize") {
     char source[] = "foo: bar";
+    char16_t source_u16[] = u"foo: bar";
+    char32_t source_u32[] = U"foo: bar";
     std::stringstream ss;
     ss << source;
+
+    auto begin = legacy_input_iterator<char> {&source[0]};
+    auto end = legacy_input_iterator<char> {&source[8]};
+    auto begin_u16 = legacy_input_iterator<char16_t> {&source_u16[0]};
+    auto end_u16 = legacy_input_iterator<char16_t> {&source_u16[8]};
+    auto begin_u32 = legacy_input_iterator<char32_t> {&source_u32[0]};
+    auto end_u32 = legacy_input_iterator<char32_t> {&source_u32[8]};
 
     fkyaml::node node = GENERATE_REF(
         fkyaml::node::deserialize("foo: bar"),
         fkyaml::node::deserialize(source),
         fkyaml::node::deserialize(&source[0], &source[8]),
+        fkyaml::node::deserialize(begin, end),
+        fkyaml::node::deserialize(begin_u16, end_u16),
+        fkyaml::node::deserialize(begin_u32, end_u32),
         fkyaml::node::deserialize(std::string(source)),
         fkyaml::node::deserialize(ss));
 
@@ -848,14 +907,48 @@ TEST_CASE("Node_Deserialize") {
     REQUIRE(node["foo"].get_value_ref<std::string&>() == "bar");
 }
 
+#if FK_YAML_HAS_CHAR8_T
+TEST_CASE("Node_Deserialize_char8_t") {
+    char8_t source_u8[] = u8"foo: bar";
+    auto begin_u8 = legacy_input_iterator<char8_t> {&source_u8[0]};
+    auto end_u8 = legacy_input_iterator<char8_t> {&source_u8[8]};
+
+    fkyaml::node node = GENERATE_REF(
+        fkyaml::node::deserialize(&source_u8[0], &source_u8[8]), fkyaml::node::deserialize(begin_u8, end_u8));
+
+    REQUIRE(node.is_mapping());
+    REQUIRE(node.size() == 1);
+    REQUIRE(node.contains("foo"));
+    REQUIRE(node["foo"].is_string());
+    REQUIRE(node["foo"].get_value_ref<std::string&>() == "bar");
+}
+#endif // FK_YAML_HAS_CHAR8_T
+
 TEST_CASE("Node_DeserializeDocs") {
     char source[] = "foo: bar\n"
                     "...\n"
                     "- true\n"
                     "- 3.14\n"
                     "- Null";
+    char16_t source_u16[] = u"foo: bar\n"
+                            "...\n"
+                            "- true\n"
+                            "- 3.14\n"
+                            "- Null";
+    char32_t source_u32[] = U"foo: bar\n"
+                            "...\n"
+                            "- true\n"
+                            "- 3.14\n"
+                            "- Null";
     std::stringstream ss;
     ss << source;
+
+    auto begin = legacy_input_iterator<char> {&source[0]};
+    auto end = legacy_input_iterator<char> {&source[33]};
+    auto begin_u16 = legacy_input_iterator<char16_t> {&source_u16[0]};
+    auto end_u16 = legacy_input_iterator<char16_t> {&source_u16[33]};
+    auto begin_u32 = legacy_input_iterator<char32_t> {&source_u32[0]};
+    auto end_u32 = legacy_input_iterator<char32_t> {&source_u32[33]};
 
     std::vector<fkyaml::node> docs = GENERATE_REF(
         fkyaml::node::deserialize_docs("foo: bar\n"
@@ -865,6 +958,9 @@ TEST_CASE("Node_DeserializeDocs") {
                                        "- Null"),
         fkyaml::node::deserialize_docs(source),
         fkyaml::node::deserialize_docs(&source[0], &source[33]),
+        fkyaml::node::deserialize_docs(begin, end),
+        fkyaml::node::deserialize_docs(begin_u16, end_u16),
+        fkyaml::node::deserialize_docs(begin_u32, end_u32),
         fkyaml::node::deserialize_docs(std::string(source)),
         fkyaml::node::deserialize_docs(ss));
 
@@ -889,6 +985,43 @@ TEST_CASE("Node_DeserializeDocs") {
     fkyaml::node& seq2 = root1[2];
     REQUIRE(seq2.is_null());
 }
+
+#if FK_YAML_HAS_CHAR8_T
+TEST_CASE("Node_DeserializeDocs_char8_t") {
+    char8_t source_u8[] = u8"foo: bar\n"
+                          "...\n"
+                          "- true\n"
+                          "- 3.14\n"
+                          "- Null";
+    auto begin_u8 = legacy_input_iterator<char8_t> {&source_u8[0]};
+    auto end_u8 = legacy_input_iterator<char8_t> {&source_u8[33]};
+
+    std::vector<fkyaml::node> docs = GENERATE_REF(
+        fkyaml::node::deserialize_docs(&source_u8[0], &source_u8[33]),
+        fkyaml::node::deserialize_docs(begin_u8, end_u8));
+
+    REQUIRE(docs.size() == 2);
+    fkyaml::node& root0 = docs[0];
+    REQUIRE(root0.is_mapping());
+    REQUIRE(root0.size() == 1);
+    REQUIRE(root0.contains("foo"));
+    fkyaml::node& foo_node = root0["foo"];
+    REQUIRE(foo_node.is_string());
+    REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+
+    fkyaml::node& root1 = docs[1];
+    REQUIRE(root1.is_sequence());
+    REQUIRE(root1.size() == 3);
+    fkyaml::node& seq0 = root1[0];
+    REQUIRE(seq0.is_boolean());
+    REQUIRE(seq0.get_value<bool>() == true);
+    fkyaml::node& seq1 = root1[1];
+    REQUIRE(seq1.is_float_number());
+    REQUIRE(seq1.get_value<double>() == 3.14);
+    fkyaml::node& seq2 = root1[2];
+    REQUIRE(seq2.is_null());
+}
+#endif // FK_YAML_HAS_CHAR8_T
 
 TEST_CASE("Node_ExtractionOperator") {
     fkyaml::node node;

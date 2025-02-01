@@ -431,7 +431,10 @@ public:
     }
 
     /// @brief Deserialize the first YAML document in the input ranged by the iterators into a basic_node object.
-    /// @tparam ItrType Type of a compatible iterator.
+    /// @note
+    /// Iterators must satisfy the LegacyInputIterator requirements.
+    /// See https://en.cppreference.com/w/cpp/named_req/InputIterator.
+    /// @tparam ItrType Type of a compatible iterator
     /// @param[in] begin An iterator to the first element of an input sequence.
     /// @param[in] end An iterator to the past-the-last element of an input sequence.
     /// @return The resulting basic_node object deserialized from the pair of iterators.
