@@ -52,7 +52,7 @@ Throws a [`fkyaml::exception`](../exception/index.md) if the deserialization pro
 ***`ItrType`***
 :   Type of a compatible iterator, for instance:
 
-    * a pair of iterators which implement the [LegacyInputIterator] requirements, e.g., return values of `std::string::begin()` and `std::string::begin()`
+    * a pair of iterators which implement the [LegacyInputIterator](https://en.cppreference.com/w/cpp/named_req/InputIterator) requirements, e.g., return values of `std::string::begin()` and `std::string::begin()`
     * a pair of pointers such as `ptr` and `ptr + len`
 
 ## **Parameters**
