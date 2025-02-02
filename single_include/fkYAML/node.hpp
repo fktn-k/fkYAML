@@ -6931,10 +6931,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP
 #define FK_YAML_DETAIL_META_INPUT_ADAPTER_TRAITS_HPP
 
-#include <array>
-#include <string>
 #include <type_traits>
-#include <vector>
 
 // #include <fkYAML/detail/macros/define_macros.hpp>
 
@@ -6942,10 +6939,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
-
-#if defined(FK_YAML_HAS_CXX_17) && FK_YAML_HAS_INCLUDE(<string_view>)
-#include <string_view>
-#endif
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -6985,44 +6978,6 @@ struct is_input_adapter : std::false_type {};
 template <typename InputAdapterType>
 struct is_input_adapter<InputAdapterType, enable_if_t<has_get_buffer_view<InputAdapterType>::value>> : std::true_type {
 };
-
-/////////////////////////////////////////////////
-//   traits for contiguous iterator detection
-/////////////////////////////////////////////////
-
-/// @brief Type traits to check if T is a container which has contiguous bytes.
-/// @tparam T A target type.
-template <typename T>
-struct is_contiguous_container : std::false_type {};
-
-/// @brief A partial specialization of is_contiguous_container if T is a std::array.
-/// @tparam T Element type.
-/// @tparam N Maximum number of elements.
-template <typename T, std::size_t N>
-struct is_contiguous_container<std::array<T, N>> : std::true_type {};
-
-/// @brief A partial specialization of is_contiguous_container if T is a std::basic_string.
-/// @tparam CharT Character type.
-/// @tparam Traits Character traits type.
-/// @tparam Alloc Allocator type.
-template <typename CharT, typename Traits, typename Alloc>
-struct is_contiguous_container<std::basic_string<CharT, Traits, Alloc>> : std::true_type {};
-
-#ifdef FK_YAML_HAS_CXX_17
-
-/// @brief A partial specialization of is_contiguous_container if T is a std::basic_string_view.
-/// @tparam CharT Character type.
-/// @tparam Traits Character traits type.
-template <typename CharT, typename Traits>
-struct is_contiguous_container<std::basic_string_view<CharT, Traits>> : std::true_type {};
-
-#endif // defined(FK_YAML_HAS_CXX_20)
-
-/// @brief A partial specialization of is_contiguous_container if T is a std::vector.
-/// @tparam T Element type.
-/// @tparam Alloc Allocator type.
-template <typename T, typename Alloc>
-struct is_contiguous_container<std::vector<T, Alloc>> : std::true_type {};
 
 FK_YAML_DETAIL_NAMESPACE_END
 
@@ -8689,8 +8644,9 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
         // the inner curly braces are necessary for older compilers
         std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
-        for (int i = 0; i < 4 && begin + i != end; i++) {
-            bytes[i] = static_cast<uint8_t>(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto current = begin;
+        for (int i = 0; i < 4 && current != end; i++, ++current) {
+            bytes[i] = static_cast<uint8_t>(*current); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
@@ -8734,8 +8690,9 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
 
         std::array<uint8_t, 4> bytes {};
         bytes.fill(0xFFu);
-        for (int i = 0; i < 4 && begin + i != end; i++) {
-            bytes[i] = uint8_t(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto current = begin;
+        for (int i = 0; i < 4 && current != end; i++, ++current) {
+            bytes[i] = uint8_t(*current); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
@@ -8772,12 +8729,13 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
         // the inner curly braces are necessary for older compilers
         std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
-        for (int i = 0; i < 2 && begin + i != end; i++) {
+        auto current = begin;
+        for (int i = 0; i < 2 && current != end; i++, ++current) {
             // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
-            const char16_t elem = begin[i];
+            const char16_t elem = *current;
             const int idx_base = i * 2;
-            bytes[idx_base] = static_cast<uint8_t>((elem & 0xFF00u) >> 8);
-            bytes[idx_base + 1] = static_cast<uint8_t>(elem & 0xFFu);
+            bytes[idx_base] = static_cast<uint8_t>(elem >> 8);
+            bytes[idx_base + 1] = static_cast<uint8_t>(elem);
             // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
@@ -8813,10 +8771,10 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
         // the inner curly braces are necessary for older compilers
         std::array<uint8_t, 4> bytes {{}};
         const char32_t elem = *begin;
-        bytes[0] = static_cast<uint8_t>((elem & 0xFF000000u) >> 24);
-        bytes[1] = static_cast<uint8_t>((elem & 0x00FF0000u) >> 16);
-        bytes[2] = static_cast<uint8_t>((elem & 0x0000FF00u) >> 8);
-        bytes[3] = static_cast<uint8_t>(elem & 0x000000FFu);
+        bytes[0] = static_cast<uint8_t>(elem >> 24);
+        bytes[1] = static_cast<uint8_t>(elem >> 16);
+        bytes[2] = static_cast<uint8_t>(elem >> 8);
+        bytes[3] = static_cast<uint8_t>(elem);
 
         bool has_bom = false;
         const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
@@ -9010,17 +8968,17 @@ private:
         IterType current = m_begin;
         std::deque<IterType> cr_itrs {};
         while (current != m_end) {
-            const auto first = static_cast<uint8_t>(*current++);
+            const auto first = static_cast<uint8_t>(*current);
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 1:
                 if FK_YAML_UNLIKELY (first == 0x0D /*CR*/) {
-                    cr_itrs.emplace_back(std::prev(current));
+                    cr_itrs.emplace_back(current);
                 }
                 break;
             case 2: {
-                const auto second = static_cast<uint8_t>(*current++);
+                const auto second = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
@@ -9028,8 +8986,8 @@ private:
                 break;
             }
             case 3: {
-                const auto second = static_cast<uint8_t>(*current++);
-                const auto third = static_cast<uint8_t>(*current++);
+                const auto second = static_cast<uint8_t>(*++current);
+                const auto third = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
@@ -9037,9 +8995,9 @@ private:
                 break;
             }
             case 4: {
-                const auto second = static_cast<uint8_t>(*current++);
-                const auto third = static_cast<uint8_t>(*current++);
-                const auto fourth = static_cast<uint8_t>(*current++);
+                const auto second = static_cast<uint8_t>(*++current);
+                const auto third = static_cast<uint8_t>(*++current);
+                const auto fourth = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
@@ -9049,12 +9007,15 @@ private:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            ++current;
         }
 
         const bool is_contiguous_no_cr = cr_itrs.empty() && m_is_contiguous;
         if FK_YAML_LIKELY (is_contiguous_no_cr) {
             // The input iterators (begin, end) can be used as-is during parsing.
-            return str_view {m_begin, m_end};
+            FK_YAML_ASSERT(m_begin != m_end);
+            return str_view {&*m_begin, static_cast<std::size_t>(std::distance(m_begin, m_end))};
         }
 
         m_buffer.reserve(std::distance(m_begin, m_end) - cr_itrs.size());
@@ -9095,8 +9056,9 @@ private:
         IterType current = m_begin;
         while (current != m_end || encoded_buf_size != 0) {
             while (current != m_end && encoded_buf_size < 2) {
-                auto utf16 = static_cast<char16_t>(static_cast<uint8_t>(*current++) << shift_bits[0]);
-                utf16 |= static_cast<char16_t>(static_cast<uint8_t>(*current++) << shift_bits[1]);
+                auto utf16 = static_cast<char16_t>(static_cast<uint8_t>(*current) << shift_bits[0]);
+                utf16 |= static_cast<char16_t>(static_cast<uint8_t>(*++current) << shift_bits[1]);
+                ++current;
 
                 // skip appending CRs.
                 if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
@@ -9146,10 +9108,14 @@ private:
 
         IterType current = m_begin;
         while (current != m_end) {
-            auto utf32 = static_cast<char32_t>(*current++ << shift_bits[0]);
-            utf32 |= static_cast<char32_t>(*current++ << shift_bits[1]);
-            utf32 |= static_cast<char32_t>(*current++ << shift_bits[2]);
-            utf32 |= static_cast<char32_t>(*current++ << shift_bits[3]);
+            auto utf32 = static_cast<char32_t>(*current << shift_bits[0]);
+            ++current;
+            utf32 |= static_cast<char32_t>(*current << shift_bits[1]);
+            ++current;
+            utf32 |= static_cast<char32_t>(*current << shift_bits[2]);
+            ++current;
+            utf32 |= static_cast<char32_t>(*current << shift_bits[3]);
+            ++current;
 
             if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
@@ -9215,17 +9181,17 @@ public:
         IterType current = m_begin;
         std::deque<IterType> cr_itrs {};
         while (current != m_end) {
-            const auto first = static_cast<uint8_t>(*current++);
+            const auto first = static_cast<uint8_t>(*current);
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 1:
                 if FK_YAML_UNLIKELY (first == 0x0D /*CR*/) {
-                    cr_itrs.emplace_back(std::prev(current));
+                    cr_itrs.emplace_back(current);
                 }
                 break;
             case 2: {
-                const auto second = static_cast<uint8_t>(*current++);
+                const auto second = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
@@ -9233,8 +9199,8 @@ public:
                 break;
             }
             case 3: {
-                const auto second = static_cast<uint8_t>(*current++);
-                const auto third = static_cast<uint8_t>(*current++);
+                const auto second = static_cast<uint8_t>(*++current);
+                const auto third = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
@@ -9242,9 +9208,9 @@ public:
                 break;
             }
             case 4: {
-                const auto second = static_cast<uint8_t>(*current++);
-                const auto third = static_cast<uint8_t>(*current++);
-                const auto fourth = static_cast<uint8_t>(*current++);
+                const auto second = static_cast<uint8_t>(*++current);
+                const auto third = static_cast<uint8_t>(*++current);
+                const auto fourth = static_cast<uint8_t>(*++current);
                 const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
@@ -9254,6 +9220,8 @@ public:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            ++current;
         }
 
         m_buffer.reserve(std::distance(m_begin, m_end) - cr_itrs.size());
@@ -9332,7 +9300,8 @@ public:
         IterType current = m_begin;
         while (current != m_end || encoded_buf_size != 0) {
             while (current != m_end && encoded_buf_size < 2) {
-                char16_t utf16 = *current++;
+                char16_t utf16 = *current;
+                ++current;
                 utf16 = static_cast<char16_t>(((utf16 & 0x00FFu) << shift_bits) | ((utf16 & 0xFF00u) >> shift_bits));
 
                 if FK_YAML_LIKELY (utf16 != char16_t(0x000Du)) {
@@ -9421,7 +9390,8 @@ public:
 
         IterType current = m_begin;
         while (current != m_end) {
-            const char32_t tmp = *current++;
+            const char32_t tmp = *current;
+            ++current;
             const auto utf32 = static_cast<char32_t>(
                 ((tmp & 0xFF000000u) >> shift_bits[0]) | ((tmp & 0x00FF0000u) >> shift_bits[1]) |
                 ((tmp & 0x0000FF00u) << shift_bits[2]) | ((tmp & 0x000000FFu) << shift_bits[3]));
@@ -9898,18 +9868,15 @@ inline iterator_input_adapter<ItrType> create_iterator_input_adapter(ItrType beg
 /// @return iterator_input_adapter<ItrType> An iterator_input_adapter object for the target iterator type.
 template <typename ItrType>
 inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end) {
-    constexpr bool is_random_access_itr =
-        std::is_same<typename std::iterator_traits<ItrType>::iterator_category, std::random_access_iterator_tag>::value;
+    bool is_contiguous = true;
+    const auto size = std::distance(begin, end);
 
     // Check if `begin` & `end` are contiguous iterators.
     // Getting distance between begin and (end - 1) avoids dereferencing an invalid sentinel.
-    bool is_contiguous = false;
-    if (is_random_access_itr) {
-        const auto size = static_cast<ptrdiff_t>(std::distance(begin, end - 1));
-
-        using CharPtr = remove_cvref_t<typename std::iterator_traits<ItrType>::pointer>;
-        CharPtr p_begin = &*begin;
-        CharPtr p_second_last = &*(end - 1);
+    if FK_YAML_LIKELY (size > 0) {
+        using char_ptr_t = remove_cvref_t<typename std::iterator_traits<ItrType>::pointer>;
+        char_ptr_t p_begin = &*begin;
+        char_ptr_t p_second_last = &*std::next(begin, size - 1);
         is_contiguous = (p_second_last - p_begin == size);
     }
     return create_iterator_input_adapter(begin, end, is_contiguous);
@@ -9941,18 +9908,15 @@ struct container_input_adapter_factory {};
 template <typename ContainerType>
 struct container_input_adapter_factory<
     ContainerType, void_t<decltype(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()))>> {
-    /// Whether ContainerType is a contiguous container.
-    static constexpr bool is_contiguous = is_contiguous_container<ContainerType>::value;
-
     /// A type for resulting input adapter object.
-    using adapter_type = decltype(create_iterator_input_adapter(
-        begin(std::declval<ContainerType>()), end(std::declval<ContainerType>()), is_contiguous));
+    using adapter_type =
+        decltype(input_adapter(begin(std::declval<ContainerType>()), end(std::declval<ContainerType>())));
 
     /// @brief A factory method of input adapter objects for the target container objects.
     /// @param container A container-like input object.
     /// @return adapter_type An iterator_input_adapter object.
     static adapter_type create(const ContainerType& container) {
-        return create_iterator_input_adapter(begin(container), end(container), is_contiguous);
+        return input_adapter(begin(container), end(container));
     }
 };
 
@@ -13179,7 +13143,10 @@ public:
     }
 
     /// @brief Deserialize the first YAML document in the input ranged by the iterators into a basic_node object.
-    /// @tparam ItrType Type of a compatible iterator.
+    /// @note
+    /// Iterators must satisfy the LegacyInputIterator requirements.
+    /// See https://en.cppreference.com/w/cpp/named_req/InputIterator.
+    /// @tparam ItrType Type of a compatible iterator
     /// @param[in] begin An iterator to the first element of an input sequence.
     /// @param[in] end An iterator to the past-the-last element of an input sequence.
     /// @return The resulting basic_node object deserialized from the pair of iterators.

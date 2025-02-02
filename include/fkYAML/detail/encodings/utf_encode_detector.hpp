@@ -103,8 +103,9 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
         // the inner curly braces are necessary for older compilers
         std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
-        for (int i = 0; i < 4 && begin + i != end; i++) {
-            bytes[i] = static_cast<uint8_t>(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto current = begin;
+        for (int i = 0; i < 4 && current != end; i++, ++current) {
+            bytes[i] = static_cast<uint8_t>(*current); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
@@ -148,8 +149,9 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char8_t>
 
         std::array<uint8_t, 4> bytes {};
         bytes.fill(0xFFu);
-        for (int i = 0; i < 4 && begin + i != end; i++) {
-            bytes[i] = uint8_t(begin[i]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto current = begin;
+        for (int i = 0; i < 4 && current != end; i++, ++current) {
+            bytes[i] = uint8_t(*current); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
         bool has_bom = false;
@@ -186,12 +188,13 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char16_t
         // the inner curly braces are necessary for older compilers
         std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
-        for (int i = 0; i < 2 && begin + i != end; i++) {
+        auto current = begin;
+        for (int i = 0; i < 2 && current != end; i++, ++current) {
             // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
-            const char16_t elem = begin[i];
+            const char16_t elem = *current;
             const int idx_base = i * 2;
-            bytes[idx_base] = static_cast<uint8_t>((elem & 0xFF00u) >> 8);
-            bytes[idx_base + 1] = static_cast<uint8_t>(elem & 0xFFu);
+            bytes[idx_base] = static_cast<uint8_t>(elem >> 8);
+            bytes[idx_base + 1] = static_cast<uint8_t>(elem);
             // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
         }
 
@@ -227,10 +230,10 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char32_t
         // the inner curly braces are necessary for older compilers
         std::array<uint8_t, 4> bytes {{}};
         const char32_t elem = *begin;
-        bytes[0] = static_cast<uint8_t>((elem & 0xFF000000u) >> 24);
-        bytes[1] = static_cast<uint8_t>((elem & 0x00FF0000u) >> 16);
-        bytes[2] = static_cast<uint8_t>((elem & 0x0000FF00u) >> 8);
-        bytes[3] = static_cast<uint8_t>(elem & 0x000000FFu);
+        bytes[0] = static_cast<uint8_t>(elem >> 24);
+        bytes[1] = static_cast<uint8_t>(elem >> 16);
+        bytes[2] = static_cast<uint8_t>(elem >> 8);
+        bytes[3] = static_cast<uint8_t>(elem);
 
         bool has_bom = false;
         const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
