@@ -24,8 +24,8 @@ struct novel {
 };
 
 void from_node(const fkyaml::node& node, novel& novel) {
-    novel.title = node["title"].get_value_ref<const std::string&>();
-    novel.author = node["author"].get_value_ref<const std::string&>();
+    novel.title = node["title"].as_str();
+    novel.author = node["author"].as_str();
     novel.year = node["year"].get_value<int>();
 }
 struct color {
