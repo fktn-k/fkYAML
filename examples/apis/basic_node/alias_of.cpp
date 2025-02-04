@@ -20,7 +20,7 @@ int main() {
     fkyaml::node alias_node = fkyaml::node::alias_of(anchor_node);
 
     // print the value in the alias node.
-    std::cout << alias_node.get_value_ref<fkyaml::node::string_type&>() << std::endl;
+    std::cout << alias_node.as_str() << std::endl;
 
     return 0;
 }

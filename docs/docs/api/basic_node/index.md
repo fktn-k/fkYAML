@@ -106,7 +106,13 @@ This class provides features to handle YAML nodes.
 | [operator<<](insertion_operator.md)       |          | serializes a basic_node into an output stream.                          |
 | [get_value](get_value.md)                 |          | converts a basic_node into a target type.                               |
 | [get_value_inplace](get_value_inplace.md) |          | converts a basic_node into a target type and write it to a destination. |
-| [get_value_ref](get_value_ref.md)         |          | converts a basic_node into reference to a target type.                  |
+| [as_seq](as_seq.md)                       |          | get reference to the sequence node value.                               |
+| [as_map](as_map.md)                       |          | get reference to the mapping node value.                                |
+| [as_bool](as_bool.md)                     |          | get reference to the boolean node value.                                |
+| [as_int](as_int.md)                       |          | get reference to the integer node value.                                |
+| [as_float](as_float.md)                   |          | get reference to the float node value.                                  |
+| [as_str](as_str.md)                       |          | get reference to the string node value.                                 |
+| [get_value_ref](get_value_ref.md)         |          | **(DEPRECATED)** converts a basic_node into reference to a target type. |
 
 ### Iterators
 | Name                      | Description                                                                                                |

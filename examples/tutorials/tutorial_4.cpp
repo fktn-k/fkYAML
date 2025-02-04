@@ -27,8 +27,8 @@ struct recommend {
 
 // overloads must be defined in the same namespace as user-defined types.
 void from_node(const fkyaml::node& node, novel& novel) {
-    novel.title = node["title"].get_value_ref<const std::string&>();
-    novel.author = node["author"].get_value_ref<const std::string&>();
+    novel.title = node["title"].as_str();
+    novel.author = node["author"].as_str();
     novel.year = node["year"].get_value<int>();
 }
 
@@ -47,7 +47,7 @@ int main() {
 
     // create an empty YAML sequence node.
     fkyaml::node response = {{"recommends", fkyaml::node::sequence()}};
-    auto& recommends = response["recommends"].get_value_ref<fkyaml::node::sequence_type&>();
+    auto& recommends = response["recommends"].as_seq();
 
     // get novels directly from the node.
     auto novels = root["novels"].get_value<std::vector<ns::novel>>();

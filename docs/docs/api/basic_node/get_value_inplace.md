@@ -67,5 +67,10 @@ See the notes there for details.
 
 * [basic_node](index.md)
 * [get_value](get_value.md)
-* [get_value_ref](get_value_ref.md)
+* [as_seq](as_seq.md)
+* [as_map](as_map.md)
+* [as_bool](as_bool.md)
+* [as_int](as_int.md)
+* [as_float](as_float.md)
+* [as_str](as_str.md)
 * [node_value_converter::from_node](../node_value_converter/from_node.md)

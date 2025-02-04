@@ -18,7 +18,7 @@ int main() {
     n1.swap(n2);
 
     // print the swapped values.
-    std::cout << n1.get_value_ref<std::string&>() << std::endl;
+    std::cout << n1.as_str() << std::endl;
     std::cout << n2.get_value<std::int64_t>() << std::endl;
     return 0;
 }

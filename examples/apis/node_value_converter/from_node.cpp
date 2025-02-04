@@ -18,8 +18,8 @@ struct book {
 };
 
 void from_node(const fkyaml::node& n, book& b) {
-    b.title = n["title"].get_value_ref<const fkyaml::node::string_type&>();
-    b.author = n["author"].get_value_ref<const fkyaml::node::string_type&>();
+    b.title = n["title"].as_str();
+    b.author = n["author"].as_str();
     b.year = n["year"].get_value<int>();
 }
 
