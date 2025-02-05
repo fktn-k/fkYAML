@@ -20,7 +20,7 @@ int main() {
 
     // create an empty YAML sequence node.
     fkyaml::node response = {{"recommends", fkyaml::node::sequence()}};
-    auto& recommends = response["recommends"].get_value_ref<fkyaml::node::sequence_type&>();
+    auto& recommends = response["recommends"].as_seq();
 
     // generate recommendations by extracting "title" & "author" values.
     for (auto& novel_node : root["novels"]) {

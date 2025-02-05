@@ -209,7 +209,7 @@ template <
         int> = 0>
 inline void to_node(BasicNodeType& n, CompatMapType&& m) {
     external_node_constructor<BasicNodeType>::mapping(n);
-    auto& map = n.template get_value_ref<typename BasicNodeType::mapping_type&>();
+    auto& map = n.as_map();
     for (const auto& pair : std::forward<CompatMapType>(m)) {
         map.emplace(pair.first, pair.second);
     }

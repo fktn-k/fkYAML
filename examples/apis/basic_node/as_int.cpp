@@ -10,16 +10,19 @@
 #include <fkYAML/node.hpp>
 
 int main() {
-    // create YAML nodes.
-    fkyaml::node n1 = 123;
-    fkyaml::node n2 = "foo";
+    // create a integer node.
+    fkyaml::node n = 123;
 
-    // swap the internally stored data between n1 & n2.
-    using std::swap;
-    swap(n1, n2);
+    // get reference to the integer value from a non-const node.
+    // use `auto&` or `fkyaml::node::integer_type&` for forward compatibility.
+    auto& i = n.as_int();
+    // get const reference to the integer value from a const node.
+    const fkyaml::node cn = n;
+    const auto& ci = cn.as_int();
 
-    // print the swapped values.
-    std::cout << n1.as_str() << std::endl;
-    std::cout << n2.get_value<std::int64_t>() << std::endl;
-    return 0;
+    // modify the integer value.
+    i = 321;
+
+    std::cout << i << std::endl;
+    std::cout << ci << std::endl;
 }

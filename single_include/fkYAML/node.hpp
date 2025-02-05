@@ -7327,7 +7327,7 @@ private:
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
             m_context_stack.emplace_back(context);
 
-            mp_current_node = &(root.template get_value_ref<sequence_type&>().back());
+            mp_current_node = &(root.as_seq().back());
             apply_directive_set(*mp_current_node);
             context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
             context.p_node = mp_current_node;
@@ -7577,8 +7577,8 @@ private:
                         p_node);
                     m_context_stack.emplace_back(context);
 
-                    p_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type());
-                    mp_current_node = &(p_node->template get_value_ref<sequence_type&>().back());
+                    p_node->as_seq().emplace_back(basic_node_type());
+                    mp_current_node = &(p_node->as_seq().back());
                     apply_directive_set(*mp_current_node);
                     context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
                     context.p_node = mp_current_node;
@@ -7666,7 +7666,7 @@ private:
                         cur_context.indent = indent;
                         cur_context.state = context_state_t::BLOCK_SEQUENCE;
 
-                        mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                        mp_current_node = &(mp_current_node->as_seq().back());
                         apply_directive_set(*mp_current_node);
                         parse_context entry_context = cur_context;
                         entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
@@ -7733,8 +7733,7 @@ private:
 
                 basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
-                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(
-                    key_node, basic_node_type());
+                m_context_stack.back().p_node->as_map().emplace(key_node, basic_node_type());
                 mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
                     old_line, old_indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
@@ -7745,7 +7744,7 @@ private:
                     apply_node_properties(*mp_current_node);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
 
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     parse_context entry_context = m_context_stack.back();
                     entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
                     entry_context.p_node = mp_current_node;
@@ -7806,7 +7805,7 @@ private:
                     apply_node_properties(*mp_current_node);
                 }
 
-                auto& seq = mp_current_node->template get_value_ref<sequence_type&>();
+                auto& seq = mp_current_node->as_seq();
                 seq.emplace_back(basic_node_type());
                 mp_current_node = &(seq.back());
                 apply_directive_set(*mp_current_node);
@@ -7838,8 +7837,8 @@ private:
                 switch (m_context_stack.back().state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node->as_seq().emplace_back(basic_node_type::sequence());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
@@ -7961,8 +7960,8 @@ private:
                 switch (m_context_stack.back().state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
@@ -8251,13 +8250,13 @@ private:
             }
 
             if (mp_current_node->is_sequence()) {
-                mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
+                mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
                 mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
                 m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
             }
         }
 
-        auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
+        auto itr = mp_current_node->as_map().emplace(std::move(key), basic_node_type());
         if FK_YAML_UNLIKELY (!itr.second) {
             throw parse_error("Detected duplication in mapping keys.", line, indent);
         }
@@ -8282,7 +8281,7 @@ private:
                 throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
             }
 
-            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
+            mp_current_node->as_seq().emplace_back(std::move(node_value));
             m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             return;
         }
@@ -11168,7 +11167,7 @@ private:
     typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
         FK_YAML_ASSERT(node.is_string());
 
-        const auto& s = node.template get_value_ref<const typename BasicNodeType::string_type&>();
+        const auto& s = node.as_str();
         return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
     } // LCOV_EXCL_LINE
 
@@ -11818,7 +11817,7 @@ inline auto from_node(const BasicNodeType& n, CompatMapType& m)
     m.clear();
     call_reserve_if_available<CompatMapType>::call(m, n.size());
 
-    for (const auto& pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
+    for (const auto& pair : n.as_map()) {
         m.emplace(
             pair.first.template get_value<typename CompatMapType::key_type>(),
             pair.second.template get_value<typename CompatMapType::mapped_type>());
@@ -11850,16 +11849,16 @@ inline void from_node(const BasicNodeType& n, bool& b) {
         b = false;
         break;
     case node_type::BOOLEAN:
-        b = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>());
+        b = static_cast<bool>(n.as_bool());
         break;
     case node_type::INTEGER:
         // true: non-zero, false: zero
-        b = (n.template get_value_ref<const typename BasicNodeType::integer_type&>() != 0);
+        b = (n.as_int() != 0);
         break;
     case node_type::FLOAT:
         // true: non-zero, false: zero
         using float_type = typename BasicNodeType::float_number_type;
-        b = (n.template get_value_ref<const float_type&>() != static_cast<float_type>(0.));
+        b = (n.as_float() != static_cast<float_type>(0.));
         break;
     case node_type::SEQUENCE:
     case node_type::MAPPING:
@@ -11879,7 +11878,7 @@ struct from_node_int_helper {
     /// @param n A node object.
     /// @return An integer value converted from the node's integer value.
     static IntType convert(const BasicNodeType& n) {
-        return n.template get_value_ref<const typename BasicNodeType::integer_type&>();
+        return n.as_int();
     }
 };
 
@@ -11893,7 +11892,7 @@ struct from_node_int_helper<BasicNodeType, IntType, false> {
     /// @return An integer value converted from the node's integer value.
     static IntType convert(const BasicNodeType& n) {
         using node_int_type = typename BasicNodeType::integer_type;
-        const node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
+        const node_int_type tmp_int = n.as_int();
 
         // under/overflow check.
         if (std::is_same<IntType, uint64_t>::value) {
@@ -11930,17 +11929,14 @@ inline void from_node(const BasicNodeType& n, IntegerType& i) {
         i = static_cast<IntegerType>(0);
         break;
     case node_type::BOOLEAN:
-        i = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>())
-                ? static_cast<IntegerType>(1)
-                : static_cast<IntegerType>(0);
+        i = static_cast<bool>(n.as_bool()) ? static_cast<IntegerType>(1) : static_cast<IntegerType>(0);
         break;
     case node_type::INTEGER:
         i = from_node_int_helper<BasicNodeType, IntegerType>::convert(n);
         break;
     case node_type::FLOAT: {
-        // int64_t should be safe to express integer part values of possible floating point types.
-        const auto tmp_int =
-            static_cast<int64_t>(n.template get_value_ref<const typename BasicNodeType::float_number_type&>());
+        // int64_t should be safe to express the integer part of possible floating point types.
+        const auto tmp_int = static_cast<int64_t>(n.as_float());
 
         // under/overflow check.
         if (std::is_same<IntegerType, uint64_t>::value) {
@@ -11979,7 +11975,7 @@ struct from_node_float_helper {
     /// @param n A node object.
     /// @return A floating point value converted from the node's floating point value.
     static FloatType convert(const BasicNodeType& n) {
-        return n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
+        return n.as_float();
     }
 };
 
@@ -11993,7 +11989,7 @@ struct from_node_float_helper<BasicNodeType, FloatType, false> {
     /// @return A floating point value converted from the node's floating point value.
     static FloatType convert(const BasicNodeType& n) {
         using node_float_type = typename BasicNodeType::float_number_type;
-        auto tmp_float = n.template get_value_ref<const node_float_type&>();
+        auto tmp_float = n.as_float();
 
         // check if the value is an infinite number (either positive or negative)
         if (std::isinf(tmp_float)) {
@@ -12037,12 +12033,10 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
         f = static_cast<FloatType>(0.);
         break;
     case node_type::BOOLEAN:
-        f = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>())
-                ? static_cast<FloatType>(1.)
-                : static_cast<FloatType>(0.);
+        f = static_cast<bool>(n.as_bool()) ? static_cast<FloatType>(1.) : static_cast<FloatType>(0.);
         break;
     case node_type::INTEGER:
-        f = static_cast<FloatType>(n.template get_value_ref<const typename BasicNodeType::integer_type&>());
+        f = static_cast<FloatType>(n.as_int());
         break;
     case node_type::FLOAT:
         f = from_node_float_helper<BasicNodeType, FloatType>::convert(n);
@@ -12064,7 +12058,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_typ
     if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
-    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
+    s = n.as_str();
 }
 
 /// @brief from_node function for compatible string type.
@@ -12086,7 +12080,7 @@ inline void from_node(const BasicNodeType& n, CompatibleStringType& s) {
     if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
-    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
+    s = n.as_str();
 }
 
 /// @brief from_node function for std::pair objects whose element types must be either a basic_node template instance
@@ -12417,7 +12411,7 @@ template <
         int> = 0>
 inline void to_node(BasicNodeType& n, CompatMapType&& m) {
     external_node_constructor<BasicNodeType>::mapping(n);
-    auto& map = n.template get_value_ref<typename BasicNodeType::mapping_type&>();
+    auto& map = n.as_map();
     for (const auto& pair : std::forward<CompatMapType>(m)) {
         map.emplace(pair.first, pair.second);
     }
@@ -14044,7 +14038,8 @@ public:
         // emit a compile error if T is either a reference, pointer or C-style array type.
         static_assert(
             !std::is_reference<T>::value,
-            "get_value() cannot be called with reference types. you might want to call get_value_ref().");
+            "get_value() cannot be called with reference types. "
+            "You might want to call one of as_seq(), as_map(), as_bool(), as_int(), as_float() or as_str().");
         static_assert(!std::is_pointer<T>::value, "get_value() cannot be called with pointer types.");
         static_assert(
             !std::is_array<T>::value,
@@ -14084,12 +14079,8 @@ public:
     /// @return Reference to the internally stored YAML node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_ref/
     template <typename ReferenceType, detail::enable_if_t<std::is_reference<ReferenceType>::value, int> = 0>
+    FK_YAML_DEPRECATED("Since 0.4.3; Use one of as_seq(), as_map(), as_bool(), as_int(), as_float() or as_str()")
     ReferenceType get_value_ref() {
-        if (has_anchor_name()) {
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
-            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            return itr->second.get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
-        }
         return get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
     }
 
@@ -14103,13 +14094,141 @@ public:
             detail::conjunction<
                 std::is_reference<ReferenceType>, std::is_const<detail::remove_reference_t<ReferenceType>>>::value,
             int> = 0>
+    FK_YAML_DEPRECATED("Since 0.4.3; Use one of as_seq(), as_map(), as_bool(), as_int(), as_float() or as_str()")
     ReferenceType get_value_ref() const {
-        if (has_anchor_name()) {
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
-            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            return itr->second.get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
-        }
         return get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
+    }
+
+    /// @brief Returns reference to the sequence node value.
+    /// @throw fkyaml::type_error The node value is not a sequence.
+    /// @return Reference to the sequence node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_seq/
+    sequence_type& as_seq() {
+        if FK_YAML_LIKELY (is_sequence()) {
+            return *(get_node_value_ptr()->p_sequence);
+        }
+        throw fkyaml::type_error("The node value is not a sequence.", get_type());
+    }
+
+    /// @brief Returns constant reference to the sequence node value.
+    /// @throw fkyaml::type_error The node value is not a sequence.
+    /// @return Constant reference to the sequence node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_seq/
+    const sequence_type& as_seq() const {
+        if FK_YAML_LIKELY (is_sequence()) {
+            return *(get_node_value_ptr()->p_sequence);
+        }
+        throw fkyaml::type_error("The node value is not a sequence.", get_type());
+    }
+
+    /// @brief Returns reference to the mapping node value.
+    /// @throw fkyaml::type_error The node value is not a mapping.
+    /// @return Reference to the mapping node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_map/
+    mapping_type& as_map() {
+        if FK_YAML_LIKELY (is_mapping()) {
+            return *(get_node_value_ptr()->p_mapping);
+        }
+        throw fkyaml::type_error("The node value is not a mapping.", get_type());
+    }
+
+    /// @brief Returns constant reference to the mapping node value.
+    /// @throw fkyaml::type_error The node value is not a mapping.
+    /// @return Constant reference to the mapping node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_map/
+    const mapping_type& as_map() const {
+        if FK_YAML_LIKELY (is_mapping()) {
+            return *(get_node_value_ptr()->p_mapping);
+        }
+        throw fkyaml::type_error("The node value is not a mapping.", get_type());
+    }
+
+    /// @brief Returns reference to the boolean node value.
+    /// @throw fkyaml::type_error The node value is not a boolean.
+    /// @return Reference to the boolean node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_bool/
+    boolean_type& as_bool() {
+        if FK_YAML_LIKELY (is_boolean()) {
+            return get_node_value_ptr()->boolean;
+        }
+        throw fkyaml::type_error("The node value is not a boolean.", get_type());
+    }
+
+    /// @brief Returns reference to the boolean node value.
+    /// @throw fkyaml::type_error The node value is not a boolean.
+    /// @return Constant reference to the boolean node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_bool/
+    const boolean_type& as_bool() const {
+        if FK_YAML_LIKELY (is_boolean()) {
+            return get_node_value_ptr()->boolean;
+        }
+        throw fkyaml::type_error("The node value is not a boolean.", get_type());
+    }
+
+    /// @brief Returns reference to the integer node value.
+    /// @throw fkyaml::type_error The node value is not an integer.
+    /// @return Reference to the integer node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_int/
+    integer_type& as_int() {
+        if FK_YAML_LIKELY (is_integer()) {
+            return get_node_value_ptr()->integer;
+        }
+        throw fkyaml::type_error("The node value is not an integer.", get_type());
+    }
+
+    /// @brief Returns reference to the integer node value.
+    /// @throw fkyaml::type_error The node value is not an integer.
+    /// @return Constant reference to the integer node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_int/
+    const integer_type& as_int() const {
+        if FK_YAML_LIKELY (is_integer()) {
+            return get_node_value_ptr()->integer;
+        }
+        throw fkyaml::type_error("The node value is not an integer.", get_type());
+    }
+
+    /// @brief Returns reference to the float node value.
+    /// @throw fkyaml::type_error The node value is not a float.
+    /// @return Reference to the float node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_float/
+    float_number_type& as_float() {
+        if FK_YAML_LIKELY (is_float_number()) {
+            return get_node_value_ptr()->float_val;
+        }
+        throw fkyaml::type_error("The node value is not a float.", get_type());
+    }
+
+    /// @brief Returns reference to the float node value.
+    /// @throw fkyaml::type_error The node value is not a float.
+    /// @return Constant reference to the float node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_float/
+    const float_number_type& as_float() const {
+        if FK_YAML_LIKELY (is_float_number()) {
+            return get_node_value_ptr()->float_val;
+        }
+        throw fkyaml::type_error("The node value is not a float.", get_type());
+    }
+
+    /// @brief Returns reference to the string node value.
+    /// @throw fkyaml::type_error The node value is not a string.
+    /// @return Reference to the string node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_str/
+    string_type& as_str() {
+        if FK_YAML_LIKELY (is_string()) {
+            return *(get_node_value_ptr()->p_string);
+        }
+        throw fkyaml::type_error("The node value is not a string.", get_type());
+    }
+
+    /// @brief Returns reference to the string node value.
+    /// @throw fkyaml::type_error The node value is not a string.
+    /// @return Constant reference to the string node value.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_str/
+    const string_type& as_str() const {
+        if FK_YAML_LIKELY (is_string()) {
+            return *(get_node_value_ptr()->p_string);
+        }
+        throw fkyaml::type_error("The node value is not a string.", get_type());
     }
 
     /// @brief Swaps the internally stored data with the specified basic_node object.
@@ -14308,8 +14427,19 @@ public:
 private:
     /// @brief Returns the pointer to the node_value object of either this node or the associated anchor node.
     /// @return The pointer to the node_value object of either this node or the associated anchor node.
+    node_value* get_node_value_ptr() {
+        if FK_YAML_UNLIKELY (has_anchor_name()) {
+            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
+            return &(itr->second.m_node_value);
+        }
+        return &m_node_value;
+    }
+
+    /// @brief Returns the pointer to the node_value object of either this node or the associated anchor node.
+    /// @return The pointer to the node_value object of either this node or the associated anchor node.
     const node_value* get_node_value_ptr() const {
-        if (has_anchor_name()) {
+        if FK_YAML_UNLIKELY (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
             return &(itr->second.m_node_value);
@@ -14318,7 +14448,7 @@ private:
     }
 
     detail::node_attr_t get_node_attrs() const {
-        if (has_anchor_name()) {
+        if FK_YAML_UNLIKELY (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
             return itr->second.m_attrs;
@@ -14342,120 +14472,84 @@ private:
     /// @throw fkyaml::exception The node value is not a sequence.
     /// @return Reference to the sequence node value.
     sequence_type& get_value_ref_impl(sequence_type* /*unused*/) {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::seq_bit) {
-            return *(m_node_value.p_sequence);
-        }
-        throw fkyaml::type_error("The node value is not a sequence.", get_type());
+        return as_seq();
     }
 
     /// @brief Returns constant reference to the sequence node value.
     /// @throw fkyaml::exception The node value is not a sequence.
     /// @return Constant reference to the sequence node value.
     const sequence_type& get_value_ref_impl(const sequence_type* /*unused*/) const {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::seq_bit) {
-            return *(m_node_value.p_sequence);
-        }
-        throw fkyaml::type_error("The node value is not a sequence.", get_type());
+        return as_seq();
     }
 
     /// @brief Returns reference to the mapping node value.
     /// @throw fkyaml::exception The node value is not a mapping.
     /// @return Reference to the mapping node value.
     mapping_type& get_value_ref_impl(mapping_type* /*unused*/) {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::map_bit) {
-            return *(m_node_value.p_mapping);
-        }
-        throw fkyaml::type_error("The node value is not a mapping.", get_type());
+        return as_map();
     }
 
     /// @brief Returns constant reference to the mapping node value.
     /// @throw fkyaml::exception The node value is not a mapping.
     /// @return Constant reference to the mapping node value.
     const mapping_type& get_value_ref_impl(const mapping_type* /*unused*/) const {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::map_bit) {
-            return *(m_node_value.p_mapping);
-        }
-        throw fkyaml::type_error("The node value is not a mapping.", get_type());
+        return as_map();
     }
 
     /// @brief Returns reference to the boolean node value.
     /// @throw fkyaml::exception The node value is not a boolean.
     /// @return Reference to the boolean node value.
     boolean_type& get_value_ref_impl(boolean_type* /*unused*/) {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::bool_bit) {
-            return m_node_value.boolean;
-        }
-        throw fkyaml::type_error("The node value is not a boolean.", get_type());
+        return as_bool();
     }
 
     /// @brief Returns reference to the boolean node value.
     /// @throw fkyaml::exception The node value is not a boolean.
     /// @return Constant reference to the boolean node value.
     const boolean_type& get_value_ref_impl(const boolean_type* /*unused*/) const {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::bool_bit) {
-            return m_node_value.boolean;
-        }
-        throw fkyaml::type_error("The node value is not a boolean.", get_type());
+        return as_bool();
     }
 
     /// @brief Returns reference to the integer node value.
     /// @throw fkyaml::exception The node value is not an integer.
     /// @return Reference to the integer node value.
     integer_type& get_value_ref_impl(integer_type* /*unused*/) {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::int_bit) {
-            return m_node_value.integer;
-        }
-        throw fkyaml::type_error("The node value is not an integer.", get_type());
+        return as_int();
     }
 
     /// @brief Returns reference to the integer node value.
     /// @throw fkyaml::exception The node value is not an integer.
     /// @return Constant reference to the integer node value.
     const integer_type& get_value_ref_impl(const integer_type* /*unused*/) const {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::int_bit) {
-            return m_node_value.integer;
-        }
-        throw fkyaml::type_error("The node value is not an integer.", get_type());
+        return as_int();
     }
 
     /// @brief Returns reference to the floating point number node value.
     /// @throw fkyaml::exception The node value is not a floating point number.
     /// @return Reference to the floating point number node value.
     float_number_type& get_value_ref_impl(float_number_type* /*unused*/) {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::float_bit) {
-            return m_node_value.float_val;
-        }
-        throw fkyaml::type_error("The node value is not a floating point number.", get_type());
+        return as_float();
     }
 
     /// @brief Returns reference to the floating point number node value.
     /// @throw fkyaml::exception The node value is not a floating point number.
     /// @return Constant reference to the floating point number node value.
     const float_number_type& get_value_ref_impl(const float_number_type* /*unused*/) const {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::float_bit) {
-            return m_node_value.float_val;
-        }
-        throw fkyaml::type_error("The node value is not a floating point number.", get_type());
+        return as_float();
     }
 
     /// @brief Returns reference to the string node value.
     /// @throw fkyaml::exception The node value is not a string.
     /// @return Reference to the string node value.
     string_type& get_value_ref_impl(string_type* /*unused*/) {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::string_bit) {
-            return *(m_node_value.p_string);
-        }
-        throw fkyaml::type_error("The node value is not a string.", get_type());
+        return as_str();
     }
 
     /// @brief Returns reference to the string node value.
     /// @throw fkyaml::exception The node value is not a string.
     /// @return Constant reference to the string node value.
     const string_type& get_value_ref_impl(const string_type* /*unused*/) const {
-        if FK_YAML_LIKELY (m_attrs & detail::node_attr_bits::string_bit) {
-            return *(m_node_value.p_string);
-        }
-        throw fkyaml::type_error("The node value is not a string.", get_type());
+        return as_str();
     }
 
     /// The current node attributes.

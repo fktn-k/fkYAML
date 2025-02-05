@@ -36,10 +36,9 @@ works on:
     auto node = fkyaml::node::deserialize(yaml);
 
     // 2. Modify it.
-    //    `fkyaml::node::sequence_type` is `std::vector<fkyaml::node>`.
+    //    as_seq() returns a `std::vector<fkyaml::node>&` object.
     node["maintainer"] = "fktn-k";
-    node.at("works on").get_value_ref<fkyaml::node::sequence_type&>()
-                       .emplace_back("Windows");
+    node.at("works on").as_seq().emplace_back("Windows");
 
     // 3. serialize the modified document to a YAML string and save it.
     std::ofstream ofs("out.yaml");
@@ -106,7 +105,7 @@ See the [supported compilers](#supported-compilers) section for more details.
     * YAML syntax
         * Support scalars, sequences, mappings in both block and flow styles.
             * Sequences and mappings are accepted as mapping keys in de/serialization. Such a key can also be passed to query a mapping value like [`operator[]`](https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/) or [`at`](https://fktn-k.github.io/fkYAML/api/basic_node/at/).
-            * Values can be referenced by [`get_value_ref`](https://fktn-k.github.io/fkYAML/api/basic_node/get_value_ref/) or converted to arbitrary types by [`get_value`](https://fktn-k.github.io/fkYAML/api/basic_node/get_value/) or [`get_value_inplace`](https://fktn-k.github.io/fkYAML/api/basic_node/get_value_inplace/).
+            * Node values can be referenced by using [`as_seq`](https://fktn-k.github.io/fkYAML/api/basic_node/as_seq/) or [`as_map`](https://fktn-k.github.io/fkYAML/api/basic_node/as_map/), or converted to arbitrary types by [`get_value`](https://fktn-k.github.io/fkYAML/api/basic_node/get_value/) or [`get_value_inplace`](https://fktn-k.github.io/fkYAML/api/basic_node/get_value_inplace/).
             * Empty mapping keys like `: value` or `- : value` are NOT supported.
         * Support `%TAG` and `%YAML` directives
             * `%YAML` directives have no effect and YAML 1.2 is always assumed.

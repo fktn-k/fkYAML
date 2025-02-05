@@ -297,7 +297,7 @@ inline auto from_node(const BasicNodeType& n, CompatMapType& m)
     m.clear();
     call_reserve_if_available<CompatMapType>::call(m, n.size());
 
-    for (const auto& pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
+    for (const auto& pair : n.as_map()) {
         m.emplace(
             pair.first.template get_value<typename CompatMapType::key_type>(),
             pair.second.template get_value<typename CompatMapType::mapped_type>());
@@ -329,16 +329,16 @@ inline void from_node(const BasicNodeType& n, bool& b) {
         b = false;
         break;
     case node_type::BOOLEAN:
-        b = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>());
+        b = static_cast<bool>(n.as_bool());
         break;
     case node_type::INTEGER:
         // true: non-zero, false: zero
-        b = (n.template get_value_ref<const typename BasicNodeType::integer_type&>() != 0);
+        b = (n.as_int() != 0);
         break;
     case node_type::FLOAT:
         // true: non-zero, false: zero
         using float_type = typename BasicNodeType::float_number_type;
-        b = (n.template get_value_ref<const float_type&>() != static_cast<float_type>(0.));
+        b = (n.as_float() != static_cast<float_type>(0.));
         break;
     case node_type::SEQUENCE:
     case node_type::MAPPING:
@@ -358,7 +358,7 @@ struct from_node_int_helper {
     /// @param n A node object.
     /// @return An integer value converted from the node's integer value.
     static IntType convert(const BasicNodeType& n) {
-        return n.template get_value_ref<const typename BasicNodeType::integer_type&>();
+        return n.as_int();
     }
 };
 
@@ -372,7 +372,7 @@ struct from_node_int_helper<BasicNodeType, IntType, false> {
     /// @return An integer value converted from the node's integer value.
     static IntType convert(const BasicNodeType& n) {
         using node_int_type = typename BasicNodeType::integer_type;
-        const node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
+        const node_int_type tmp_int = n.as_int();
 
         // under/overflow check.
         if (std::is_same<IntType, uint64_t>::value) {
@@ -409,17 +409,14 @@ inline void from_node(const BasicNodeType& n, IntegerType& i) {
         i = static_cast<IntegerType>(0);
         break;
     case node_type::BOOLEAN:
-        i = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>())
-                ? static_cast<IntegerType>(1)
-                : static_cast<IntegerType>(0);
+        i = static_cast<bool>(n.as_bool()) ? static_cast<IntegerType>(1) : static_cast<IntegerType>(0);
         break;
     case node_type::INTEGER:
         i = from_node_int_helper<BasicNodeType, IntegerType>::convert(n);
         break;
     case node_type::FLOAT: {
-        // int64_t should be safe to express integer part values of possible floating point types.
-        const auto tmp_int =
-            static_cast<int64_t>(n.template get_value_ref<const typename BasicNodeType::float_number_type&>());
+        // int64_t should be safe to express the integer part of possible floating point types.
+        const auto tmp_int = static_cast<int64_t>(n.as_float());
 
         // under/overflow check.
         if (std::is_same<IntegerType, uint64_t>::value) {
@@ -458,7 +455,7 @@ struct from_node_float_helper {
     /// @param n A node object.
     /// @return A floating point value converted from the node's floating point value.
     static FloatType convert(const BasicNodeType& n) {
-        return n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
+        return n.as_float();
     }
 };
 
@@ -472,7 +469,7 @@ struct from_node_float_helper<BasicNodeType, FloatType, false> {
     /// @return A floating point value converted from the node's floating point value.
     static FloatType convert(const BasicNodeType& n) {
         using node_float_type = typename BasicNodeType::float_number_type;
-        auto tmp_float = n.template get_value_ref<const node_float_type&>();
+        auto tmp_float = n.as_float();
 
         // check if the value is an infinite number (either positive or negative)
         if (std::isinf(tmp_float)) {
@@ -516,12 +513,10 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
         f = static_cast<FloatType>(0.);
         break;
     case node_type::BOOLEAN:
-        f = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>())
-                ? static_cast<FloatType>(1.)
-                : static_cast<FloatType>(0.);
+        f = static_cast<bool>(n.as_bool()) ? static_cast<FloatType>(1.) : static_cast<FloatType>(0.);
         break;
     case node_type::INTEGER:
-        f = static_cast<FloatType>(n.template get_value_ref<const typename BasicNodeType::integer_type&>());
+        f = static_cast<FloatType>(n.as_int());
         break;
     case node_type::FLOAT:
         f = from_node_float_helper<BasicNodeType, FloatType>::convert(n);
@@ -543,7 +538,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_typ
     if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
-    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
+    s = n.as_str();
 }
 
 /// @brief from_node function for compatible string type.
@@ -565,7 +560,7 @@ inline void from_node(const BasicNodeType& n, CompatibleStringType& s) {
     if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
-    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
+    s = n.as_str();
 }
 
 /// @brief from_node function for std::pair objects whose element types must be either a basic_node template instance

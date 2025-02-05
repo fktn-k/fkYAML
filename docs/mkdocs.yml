@@ -109,8 +109,6 @@ nav:
       - 'iterator, const_iterator': api/basic_node/iterator.md
       - 'reverse_iterator, const_reverse_iterator': api/basic_node/reverse_iterator.md
       - value_converter_type: api/basic_node/value_converter_type.md
-      - node_t: api/basic_node/node_t.md
-      - yaml_version_t: api/basic_node/yaml_version_t.md
       - 'map_range, const_map_range': api/basic_node/map_range.md
     - (constructor): api/basic_node/constructor.md
     - (destructor): api/basic_node/destructor.md
@@ -126,6 +124,12 @@ nav:
     - add_anchor_name: api/basic_node/add_anchor_name.md
     - add_tag_name: api/basic_node/add_tag_name.md
     - alias_of: api/basic_node/alias_of.md
+    - as_bool: api/basic_node/as_bool.md
+    - as_float: api/basic_node/as_float.md
+    - as_int: api/basic_node/as_int.md
+    - as_map: api/basic_node/as_map.md
+    - as_seq: api/basic_node/as_seq.md
+    - as_str: api/basic_node/as_str.md
     - at: api/basic_node/at.md
     - 'begin, cbegin': api/basic_node/begin.md
     - contains: api/basic_node/contains.md
@@ -138,8 +142,6 @@ nav:
     - get_type: api/basic_node/get_type.md
     - get_value: api/basic_node/get_value.md
     - get_value_inplace: api/basic_node/get_value_inplace.md
-    - get_value_ref: api/basic_node/get_value_ref.md
-    - get_yaml_version: api/basic_node/get_yaml_version.md
     - get_yaml_version_type: api/basic_node/get_yaml_version_type.md
     - has_anchor_name: api/basic_node/has_anchor_name.md
     - has_tag_name: api/basic_node/has_tag_name.md
@@ -161,11 +163,16 @@ nav:
     - sequence: api/basic_node/sequence.md
     - serialize: api/basic_node/serialize.md
     - serialize_docs: api/basic_node/serialize_docs.md
-    - set_yaml_version: api/basic_node/set_yaml_version.md
     - set_yaml_version_type: api/basic_node/set_yaml_version_type.md
     - size: api/basic_node/size.md
     - swap: api/basic_node/swap.md
-    - type: api/basic_node/type.md
+    - deprecated:
+      - node_t: api/basic_node/node_t.md
+      - yaml_version_t: api/basic_node/yaml_version_t.md
+      - get_value_ref: api/basic_node/get_value_ref.md
+      - get_yaml_version: api/basic_node/get_yaml_version.md
+      - set_yaml_version: api/basic_node/set_yaml_version.md
+      - type: api/basic_node/type.md
   - exception:
     - exception: api/exception/index.md
     - (constructor): api/exception/constructor.md

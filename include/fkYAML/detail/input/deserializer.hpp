@@ -190,7 +190,7 @@ private:
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
             m_context_stack.emplace_back(context);
 
-            mp_current_node = &(root.template get_value_ref<sequence_type&>().back());
+            mp_current_node = &(root.as_seq().back());
             apply_directive_set(*mp_current_node);
             context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
             context.p_node = mp_current_node;
@@ -440,8 +440,8 @@ private:
                         p_node);
                     m_context_stack.emplace_back(context);
 
-                    p_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type());
-                    mp_current_node = &(p_node->template get_value_ref<sequence_type&>().back());
+                    p_node->as_seq().emplace_back(basic_node_type());
+                    mp_current_node = &(p_node->as_seq().back());
                     apply_directive_set(*mp_current_node);
                     context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
                     context.p_node = mp_current_node;
@@ -529,7 +529,7 @@ private:
                         cur_context.indent = indent;
                         cur_context.state = context_state_t::BLOCK_SEQUENCE;
 
-                        mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                        mp_current_node = &(mp_current_node->as_seq().back());
                         apply_directive_set(*mp_current_node);
                         parse_context entry_context = cur_context;
                         entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
@@ -596,8 +596,7 @@ private:
 
                 basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
-                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(
-                    key_node, basic_node_type());
+                m_context_stack.back().p_node->as_map().emplace(key_node, basic_node_type());
                 mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
                     old_line, old_indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
@@ -608,7 +607,7 @@ private:
                     apply_node_properties(*mp_current_node);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
 
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     parse_context entry_context = m_context_stack.back();
                     entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
                     entry_context.p_node = mp_current_node;
@@ -669,7 +668,7 @@ private:
                     apply_node_properties(*mp_current_node);
                 }
 
-                auto& seq = mp_current_node->template get_value_ref<sequence_type&>();
+                auto& seq = mp_current_node->as_seq();
                 seq.emplace_back(basic_node_type());
                 mp_current_node = &(seq.back());
                 apply_directive_set(*mp_current_node);
@@ -701,8 +700,8 @@ private:
                 switch (m_context_stack.back().state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node->as_seq().emplace_back(basic_node_type::sequence());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
@@ -824,8 +823,8 @@ private:
                 switch (m_context_stack.back().state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
@@ -1114,13 +1113,13 @@ private:
             }
 
             if (mp_current_node->is_sequence()) {
-                mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
+                mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
                 mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
                 m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
             }
         }
 
-        auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
+        auto itr = mp_current_node->as_map().emplace(std::move(key), basic_node_type());
         if FK_YAML_UNLIKELY (!itr.second) {
             throw parse_error("Detected duplication in mapping keys.", line, indent);
         }
@@ -1145,7 +1144,7 @@ private:
                 throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
             }
 
-            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
+            mp_current_node->as_seq().emplace_back(std::move(node_value));
             m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             return;
         }

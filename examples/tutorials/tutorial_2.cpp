@@ -19,8 +19,8 @@ int main() {
 
     // print only values associated with "title" key.
     for (auto& novel_node : root["novels"]) {
-        // get reference to the "title" value with `get_value_ref` function.
-        std::cout << novel_node["title"].get_value_ref<std::string&>() << std::endl;
+        // get reference to the "title" value with `as_str` function.
+        std::cout << novel_node["title"].as_str() << std::endl;
     }
 
     return 0;

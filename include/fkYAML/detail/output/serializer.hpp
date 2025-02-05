@@ -373,7 +373,7 @@ private:
     typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
         FK_YAML_ASSERT(node.is_string());
 
-        const auto& s = node.template get_value_ref<const typename BasicNodeType::string_type&>();
+        const auto& s = node.as_str();
         return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
     } // LCOV_EXCL_LINE
 

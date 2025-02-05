@@ -35,7 +35,7 @@ TRUE: 1.414
 
     std::cout << std::endl;
 
-    std::cout << docs[1][nullptr].get_value_ref<std::string&>() << std::endl;
+    std::cout << docs[1][nullptr].as_str() << std::endl;
     std::cout << docs[1][false].get_value<std::int64_t>() << std::endl;
     std::cout << std::setprecision(4) << docs[1][true].get_value<double>() << std::endl;
 

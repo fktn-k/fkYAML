@@ -59,19 +59,19 @@ TEST_CASE("Node_NullTypeCtor") {
 TEST_CASE("Node_BooleanTypeCtor") {
     fkyaml::node node(fkyaml::node_type::BOOLEAN);
     REQUIRE(node.is_boolean());
-    REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == false);
+    REQUIRE(node.as_bool() == false);
 }
 
 TEST_CASE("Node_IntegerTypeCtor") {
     fkyaml::node node(fkyaml::node_type::INTEGER);
     REQUIRE(node.is_integer());
-    REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 0);
+    REQUIRE(node.as_int() == 0);
 }
 
 TEST_CASE("Node_FloatTypeCtor") {
     fkyaml::node node(fkyaml::node_type::FLOAT);
     REQUIRE(node.is_float_number());
-    REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 0.0);
+    REQUIRE(node.as_float() == 0.0);
 }
 
 TEST_CASE("Node_StringTypeCtor") {
@@ -100,19 +100,19 @@ TEST_CASE("Node_NullTypeCtor(deprecated)") {
 TEST_CASE("Node_BooleanTypeCtor(deprecated)") {
     fkyaml::node node(fkyaml::node::node_t::BOOLEAN);
     REQUIRE(node.is_boolean());
-    REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == false);
+    REQUIRE(node.as_bool() == false);
 }
 
 TEST_CASE("Node_IntegerTypeCtor(deprecated)") {
     fkyaml::node node(fkyaml::node::node_t::INTEGER);
     REQUIRE(node.is_integer());
-    REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 0);
+    REQUIRE(node.as_int() == 0);
 }
 
 TEST_CASE("Node_FloatNumberTypeCtor(deprecated)") {
     fkyaml::node node(fkyaml::node::node_t::FLOAT_NUMBER);
     REQUIRE(node.is_float_number());
-    REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 0.0);
+    REQUIRE(node.as_float() == 0.0);
 }
 
 TEST_CASE("Node_StringTypeCtor(deprecated)") {
@@ -161,7 +161,7 @@ TEST_CASE("Node_CtorWithCompatibleType") {
 
         auto validate = [](const fkyaml::node& n, int i, int j) {
             REQUIRE(n.at(i).at(j).is_integer());
-            REQUIRE(n.at(i).at(j).get_value_ref<const fkyaml::node::integer_type&>() == i * 3 + j + 1);
+            REQUIRE(n.at(i).at(j).as_int() == i * 3 + j + 1);
         };
 
         fkyaml::node ints_node(ints_node_val);
@@ -186,7 +186,7 @@ TEST_CASE("Node_CtorWithCompatibleType") {
 
         auto validate = [](const fkyaml::node& n, int i, int j, int k) {
             REQUIRE(n.at(i).at(j).at(k).is_integer());
-            REQUIRE(n.at(i).at(j).at(k).get_value_ref<const fkyaml::node::integer_type&>() == i * 9 + j * 3 + k + 1);
+            REQUIRE(n.at(i).at(j).at(k).as_int() == i * 9 + j * 3 + k + 1);
         };
 
         fkyaml::node ints_node(ints_node_val);
@@ -409,9 +409,9 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_sequence());
             REQUIRE(n.size() == 2);
             REQUIRE(n[0].is_string());
-            REQUIRE(n[0].get_value_ref<const std::string&>() == "test");
+            REQUIRE(n[0].as_str() == "test");
             REQUIRE(n[1].is_integer());
-            REQUIRE(n[1].get_value_ref<const fkyaml::node::integer_type&>() == 123);
+            REQUIRE(n[1].as_int() == 123);
         };
 
         fkyaml::node pair_node(pair_node_val);
@@ -429,11 +429,11 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_sequence());
             REQUIRE(n.size() == 3);
             REQUIRE(n[0].is_string());
-            REQUIRE(n[0].get_value_ref<const std::string&>() == "test");
+            REQUIRE(n[0].as_str() == "test");
             REQUIRE(n[1].is_integer());
-            REQUIRE(n[1].get_value_ref<const fkyaml::node::integer_type&>() == 123);
+            REQUIRE(n[1].as_int() == 123);
             REQUIRE(n[2].is_boolean());
-            REQUIRE(n[2].get_value_ref<const fkyaml::node::boolean_type&>() == true);
+            REQUIRE(n[2].as_bool() == true);
         };
 
         fkyaml::node tuple_node(tuple_node_val);
@@ -463,9 +463,9 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_mapping());
             REQUIRE(n.size() == 2);
             REQUIRE(n.at("test").is_integer());
-            REQUIRE(n.at("test").get_value_ref<const fkyaml::node::integer_type&>() == 123);
+            REQUIRE(n.at("test").as_int() == 123);
             REQUIRE(n.at("foo").is_integer());
-            REQUIRE(n.at("foo").get_value_ref<const fkyaml::node::integer_type&>() == -456);
+            REQUIRE(n.at("foo").as_int() == -456);
         };
 
         fkyaml::node map_node(map_node_val);
@@ -487,9 +487,9 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_mapping());
             REQUIRE(n.size() == 2);
             REQUIRE(n.at("test").is_integer());
-            REQUIRE(n.at("test").get_value_ref<const fkyaml::node::integer_type&>() == 123);
+            REQUIRE(n.at("test").as_int() == 123);
             REQUIRE(n.at("foo").is_integer());
-            REQUIRE(n.at("foo").get_value_ref<const fkyaml::node::integer_type&>() == -456);
+            REQUIRE(n.at("foo").as_int() == -456);
         };
 
         fkyaml::node multimap_node(multimap_node_val);
@@ -511,9 +511,9 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_mapping());
             REQUIRE(n.size() == 2);
             REQUIRE(n.at("test").is_integer());
-            REQUIRE(n.at("test").get_value_ref<const fkyaml::node::integer_type&>() == 123);
+            REQUIRE(n.at("test").as_int() == 123);
             REQUIRE(n.at("foo").is_integer());
-            REQUIRE(n.at("foo").get_value_ref<const fkyaml::node::integer_type&>() == -456);
+            REQUIRE(n.at("foo").as_int() == -456);
         };
 
         fkyaml::node unordered_map_node(unordered_map_node_val);
@@ -535,9 +535,9 @@ TEST_CASE("Node_CtorWithCompatibleType") {
             REQUIRE(n.is_mapping());
             REQUIRE(n.size() == 2);
             REQUIRE(n.at("test").is_integer());
-            REQUIRE(n.at("test").get_value_ref<const fkyaml::node::integer_type&>() == 123);
+            REQUIRE(n.at("test").as_int() == 123);
             REQUIRE(n.at("foo").is_integer());
-            REQUIRE(n.at("foo").get_value_ref<const fkyaml::node::integer_type&>() == -456);
+            REQUIRE(n.at("foo").as_int() == -456);
         };
 
         fkyaml::node unordered_multimap_node(unordered_multimap_node_val);
@@ -555,19 +555,19 @@ TEST_CASE("Node_CtorWithCompatibleType") {
     SECTION("boolean") {
         fkyaml::node node(true);
         REQUIRE(node.is_boolean());
-        REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == true);
+        REQUIRE(node.as_bool() == true);
     }
 
     SECTION("integer") {
         fkyaml::node node(23467);
         REQUIRE(node.is_integer());
-        REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 23467);
+        REQUIRE(node.as_int() == 23467);
     }
 
     SECTION("floating point") {
         fkyaml::node node(3.14);
         REQUIRE(node.is_float_number());
-        REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
+        REQUIRE(node.as_float() == 3.14);
     }
 
     // string-like types
@@ -576,14 +576,14 @@ TEST_CASE("Node_CtorWithCompatibleType") {
         fkyaml::node node(std::string("test"));
         REQUIRE(node.is_string());
         REQUIRE(node.size() == 4);
-        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+        REQUIRE(node.as_str() == "test");
     }
 
     SECTION("C-style char array") {
         fkyaml::node node("test");
         REQUIRE(node.is_string());
         REQUIRE(node.size() == 4);
-        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+        REQUIRE(node.as_str() == "test");
     }
 
     SECTION("pointer to a null-terminated char sequence") {
@@ -592,7 +592,7 @@ TEST_CASE("Node_CtorWithCompatibleType") {
         fkyaml::node node(p_buff);
         REQUIRE(node.is_string());
         REQUIRE(node.size() == 4);
-        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+        REQUIRE(node.as_str() == "test");
     }
 
 #ifdef FK_YAML_HAS_CXX_17
@@ -601,7 +601,7 @@ TEST_CASE("Node_CtorWithCompatibleType") {
         auto node = fkyaml::node("test"sv);
         REQUIRE(node.is_string());
         REQUIRE(node.size() == 4);
-        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == "test");
+        REQUIRE(node.as_str() == "test");
     }
 #endif
 }
@@ -616,14 +616,14 @@ TEST_CASE("Node_SequenceCopyCtor") {
     REQUIRE(node.size() == 2);
     REQUIRE_NOTHROW(node[0]);
     REQUIRE(node[0].is_boolean());
-    REQUIRE_NOTHROW(node[0].get_value_ref<fkyaml::node::boolean_type&>());
-    REQUIRE(node[0].get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE_NOTHROW(node[0].as_bool());
+    REQUIRE(node[0].as_bool() == true);
     REQUIRE_NOTHROW(node[1]);
     REQUIRE(node[1].is_string());
-    REQUIRE_NOTHROW(node[1].get_value_ref<fkyaml::node::string_type&>());
-    REQUIRE_NOTHROW(node[1].get_value_ref<fkyaml::node::string_type&>().size());
-    REQUIRE(node[1].get_value_ref<fkyaml::node::string_type&>().size() == 4);
-    REQUIRE(node[1].get_value_ref<fkyaml::node::string_type&>().compare("test") == 0);
+    REQUIRE_NOTHROW(node[1].as_str());
+    REQUIRE_NOTHROW(node[1].as_str().size());
+    REQUIRE(node[1].as_str().size() == 4);
+    REQUIRE(node[1].as_str().compare("test") == 0);
 }
 
 TEST_CASE("Node_MappingCopyCtor") {
@@ -634,12 +634,12 @@ TEST_CASE("Node_MappingCopyCtor") {
     REQUIRE(node.size() == 2);
     REQUIRE_NOTHROW(node["test0"]);
     REQUIRE(node["test0"].is_integer());
-    REQUIRE_NOTHROW(node["test0"].get_value_ref<fkyaml::node::integer_type&>());
-    REQUIRE(node["test0"].get_value_ref<fkyaml::node::integer_type&>() == 123);
+    REQUIRE_NOTHROW(node["test0"].as_int());
+    REQUIRE(node["test0"].as_int() == 123);
     REQUIRE_NOTHROW(node["test1"]);
     REQUIRE(node["test1"].is_float_number());
-    REQUIRE_NOTHROW(node["test1"].get_value_ref<fkyaml::node::float_number_type&>());
-    REQUIRE(node["test1"].get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
+    REQUIRE_NOTHROW(node["test1"].as_float());
+    REQUIRE(node["test1"].as_float() == 3.14);
 }
 
 TEST_CASE("Node_NullCopyCtor") {
@@ -652,24 +652,24 @@ TEST_CASE("Node_BooleanCopyCtor") {
     fkyaml::node copied = true;
     fkyaml::node node(copied);
     REQUIRE(node.is_boolean());
-    REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::boolean_type&>());
-    REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE_NOTHROW(node.as_bool());
+    REQUIRE(node.as_bool() == true);
 }
 
 TEST_CASE("Node_IntegerCopyCtor") {
     fkyaml::node copied = 123;
     fkyaml::node node(copied);
     REQUIRE(node.is_integer());
-    REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::integer_type&>());
-    REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 123);
+    REQUIRE_NOTHROW(node.as_int());
+    REQUIRE(node.as_int() == 123);
 }
 
 TEST_CASE("Node_FloatNumberCopyCtor") {
     fkyaml::node copied = 3.14;
     fkyaml::node node(copied);
     REQUIRE(node.is_float_number());
-    REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::float_number_type&>());
-    REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
+    REQUIRE_NOTHROW(node.as_float());
+    REQUIRE(node.as_float() == 3.14);
 }
 
 TEST_CASE("Node_StringCopyCtor") {
@@ -678,8 +678,8 @@ TEST_CASE("Node_StringCopyCtor") {
     REQUIRE(node.is_string());
     REQUIRE_NOTHROW(node.size());
     REQUIRE(node.size() == 4);
-    REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::string_type&>());
-    REQUIRE(node.get_value_ref<fkyaml::node::string_type&>().compare("test") == 0);
+    REQUIRE_NOTHROW(node.as_str());
+    REQUIRE(node.as_str().compare("test") == 0);
 }
 
 TEST_CASE("Node_AliasCopyCtor") {
@@ -688,8 +688,8 @@ TEST_CASE("Node_AliasCopyCtor") {
     fkyaml::node tmp_alias = fkyaml::node::alias_of(tmp);
     fkyaml::node alias(tmp_alias);
     REQUIRE(alias.is_boolean());
-    REQUIRE_NOTHROW(alias.get_value_ref<fkyaml::node::boolean_type&>());
-    REQUIRE(alias.get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE_NOTHROW(alias.as_bool());
+    REQUIRE(alias.as_bool() == true);
 }
 
 TEST_CASE("Node_SequenceMoveCtor") {
@@ -700,14 +700,14 @@ TEST_CASE("Node_SequenceMoveCtor") {
     REQUIRE(node.size() == 2);
     REQUIRE_NOTHROW(node[0]);
     REQUIRE(node[0].is_boolean());
-    REQUIRE_NOTHROW(node[0].get_value_ref<fkyaml::node::boolean_type&>());
-    REQUIRE(node[0].get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE_NOTHROW(node[0].as_bool());
+    REQUIRE(node[0].as_bool() == true);
     REQUIRE_NOTHROW(node[1]);
     REQUIRE(node[1].is_string());
-    REQUIRE_NOTHROW(node[1].get_value_ref<fkyaml::node::string_type&>());
-    REQUIRE_NOTHROW(node[1].get_value_ref<fkyaml::node::string_type&>().size());
-    REQUIRE(node[1].get_value_ref<fkyaml::node::string_type&>().size() == 4);
-    REQUIRE(node[1].get_value_ref<fkyaml::node::string_type&>().compare("test") == 0);
+    REQUIRE_NOTHROW(node[1].as_str());
+    REQUIRE_NOTHROW(node[1].as_str().size());
+    REQUIRE(node[1].as_str().size() == 4);
+    REQUIRE(node[1].as_str().compare("test") == 0);
 }
 
 TEST_CASE("Node_MappingMoveCtor") {
@@ -718,12 +718,12 @@ TEST_CASE("Node_MappingMoveCtor") {
     REQUIRE(node.size() == 2);
     REQUIRE_NOTHROW(node["test0"]);
     REQUIRE(node["test0"].is_integer());
-    REQUIRE_NOTHROW(node["test0"].get_value_ref<fkyaml::node::integer_type&>());
-    REQUIRE(node["test0"].get_value_ref<fkyaml::node::integer_type&>() == 123);
+    REQUIRE_NOTHROW(node["test0"].as_int());
+    REQUIRE(node["test0"].as_int() == 123);
     REQUIRE_NOTHROW(node["test1"]);
     REQUIRE(node["test1"].is_float_number());
-    REQUIRE_NOTHROW(node["test1"].get_value_ref<fkyaml::node::float_number_type&>());
-    REQUIRE(node["test1"].get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
+    REQUIRE_NOTHROW(node["test1"].as_float());
+    REQUIRE(node["test1"].as_float() == 3.14);
 }
 
 TEST_CASE("Node_NullMoveCtor") {
@@ -736,24 +736,24 @@ TEST_CASE("Node_BooleanMoveCtor") {
     fkyaml::node moved = true;
     fkyaml::node node(std::move(moved));
     REQUIRE(node.is_boolean());
-    REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::boolean_type&>());
-    REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE_NOTHROW(node.as_bool());
+    REQUIRE(node.as_bool() == true);
 }
 
 TEST_CASE("Node_IntegerMoveCtor") {
     fkyaml::node moved = 123;
     fkyaml::node node(std::move(moved));
     REQUIRE(node.is_integer());
-    REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::integer_type&>());
-    REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == 123);
+    REQUIRE_NOTHROW(node.as_int());
+    REQUIRE(node.as_int() == 123);
 }
 
 TEST_CASE("Node_FloatNumberMoveCtor") {
     fkyaml::node moved = 3.14;
     fkyaml::node node(std::move(moved));
     REQUIRE(node.is_float_number());
-    REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::float_number_type&>());
-    REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
+    REQUIRE_NOTHROW(node.as_float());
+    REQUIRE(node.as_float() == 3.14);
 }
 
 TEST_CASE("Node_StringMoveCtor") {
@@ -762,8 +762,8 @@ TEST_CASE("Node_StringMoveCtor") {
     REQUIRE(node.is_string());
     REQUIRE_NOTHROW(node.size());
     REQUIRE(node.size() == 4);
-    REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::string_type&>());
-    REQUIRE(node.get_value_ref<fkyaml::node::string_type&>().compare("test") == 0);
+    REQUIRE_NOTHROW(node.as_str());
+    REQUIRE(node.as_str().compare("test") == 0);
 }
 
 TEST_CASE("Node_AliasMoveCtor") {
@@ -772,8 +772,8 @@ TEST_CASE("Node_AliasMoveCtor") {
     fkyaml::node tmp_alias = fkyaml::node::alias_of(tmp);
     fkyaml::node alias(std::move(tmp_alias));
     REQUIRE(alias.is_boolean());
-    REQUIRE_NOTHROW(alias.get_value_ref<fkyaml::node::boolean_type&>());
-    REQUIRE(alias.get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE_NOTHROW(alias.as_bool());
+    REQUIRE(alias.as_bool() == true);
 }
 
 TEST_CASE("Node_InitializerListCtor") {
@@ -789,19 +789,19 @@ TEST_CASE("Node_InitializerListCtor") {
 
     REQUIRE(node.contains("foo"));
     REQUIRE(node["foo"].is_float_number());
-    REQUIRE(node["foo"].get_value_ref<fkyaml::node::float_number_type&>() == 3.14);
+    REQUIRE(node["foo"].as_float() == 3.14);
 
     REQUIRE(node.contains(true));
     REQUIRE(node[true].is_integer());
-    REQUIRE(node[true].get_value_ref<fkyaml::node::integer_type&>() == 123);
+    REQUIRE(node[true].as_int() == 123);
 
     REQUIRE(node.contains(567));
     REQUIRE(node[567].is_sequence());
     REQUIRE(node[567].size() == 2);
     REQUIRE(node[567][0].is_boolean());
-    REQUIRE(node[567][0].get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE(node[567][0].as_bool() == true);
     REQUIRE(node[567][1].is_boolean());
-    REQUIRE(node[567][1].get_value_ref<fkyaml::node::boolean_type&>() == false);
+    REQUIRE(node[567][1].as_bool() == false);
 
     REQUIRE(node.contains(fkyaml::node {true, 1.57}));
     REQUIRE(node[fkyaml::node {true, 1.57}].is_null());
@@ -811,7 +811,7 @@ TEST_CASE("Node_InitializerListCtor") {
     REQUIRE(node[fkyaml::node {{"bar", nullptr}}].size() == 1);
     REQUIRE(node[fkyaml::node {{"bar", nullptr}}].contains("baz"));
     REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].is_string());
-    REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].get_value_ref<fkyaml::node::string_type&>() == "qux");
+    REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].as_str() == "qux");
 }
 
 TEST_CASE("Node_CopyAssignmentOperator") {
@@ -900,7 +900,7 @@ TEST_CASE("Node_Deserialize") {
     REQUIRE(node.size() == 1);
     REQUIRE(node.contains("foo"));
     REQUIRE(node["foo"].is_string());
-    REQUIRE(node["foo"].get_value_ref<std::string&>() == "bar");
+    REQUIRE(node["foo"].as_str() == "bar");
 }
 
 #if FK_YAML_HAS_CHAR8_T
@@ -916,7 +916,7 @@ TEST_CASE("Node_Deserialize_char8_t") {
     REQUIRE(node.size() == 1);
     REQUIRE(node.contains("foo"));
     REQUIRE(node["foo"].is_string());
-    REQUIRE(node["foo"].get_value_ref<std::string&>() == "bar");
+    REQUIRE(node["foo"].as_str() == "bar");
 }
 #endif // FK_YAML_HAS_CHAR8_T
 
@@ -967,7 +967,7 @@ TEST_CASE("Node_DeserializeDocs") {
     REQUIRE(root0.contains("foo"));
     fkyaml::node& foo_node = root0["foo"];
     REQUIRE(foo_node.is_string());
-    REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+    REQUIRE(foo_node.as_str() == "bar");
 
     fkyaml::node& root1 = docs[1];
     REQUIRE(root1.is_sequence());
@@ -1003,7 +1003,7 @@ TEST_CASE("Node_DeserializeDocs_char8_t") {
     REQUIRE(root0.contains("foo"));
     fkyaml::node& foo_node = root0["foo"];
     REQUIRE(foo_node.is_string());
-    REQUIRE(foo_node.get_value_ref<std::string&>() == "bar");
+    REQUIRE(foo_node.as_str() == "bar");
 
     fkyaml::node& root1 = docs[1];
     REQUIRE(root1.is_sequence());
@@ -1038,8 +1038,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == "konnichiwa");
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == "konnichiwa");
     }
 
     SECTION("char sequences literals with using fkyaml::yaml_literals") {
@@ -1048,8 +1048,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == "konnichiwa");
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == "konnichiwa");
     }
 
     SECTION("char sequences literals with using fkyaml::literals::yaml_literals") {
@@ -1058,8 +1058,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == "konnichiwa");
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == "konnichiwa");
     }
 
     SECTION("char sequences of u8\"\" literals with using fkyaml::literals") {
@@ -1068,8 +1068,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
     SECTION("char sequences with u8 literal literals with using fkyaml::yaml_literals") {
@@ -1078,8 +1078,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
     SECTION("char sequences of u8 literal literals with using fkyaml::literals::yaml_literals") {
@@ -1088,8 +1088,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
     SECTION("char16_t sequences with using fkyaml::literals") {
@@ -1098,8 +1098,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
     SECTION("char16_t sequences with using fkyaml::yaml_literals") {
@@ -1108,8 +1108,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
     SECTION("char16_t sequences with using fkyaml::literals::yaml_literals") {
@@ -1118,8 +1118,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
     SECTION("char32_t sequences with using fkyaml::literals") {
@@ -1128,8 +1128,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
     SECTION("char32_t sequences with using fkyaml::yaml_literals") {
@@ -1138,8 +1138,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 
     SECTION("char32_t sequences with using fkyaml::literals::yaml_literals") {
@@ -1148,8 +1148,8 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
         REQUIRE(node.is_mapping());
         REQUIRE(node.size() == 2);
-        REQUIRE(node["en"].get_value_ref<std::string&>() == "hello");
-        REQUIRE(node["jp"].get_value_ref<std::string&>() == reinterpret_cast<const char*>(u8"こんにちは"));
+        REQUIRE(node["en"].as_str() == "hello");
+        REQUIRE(node["jp"].as_str() == reinterpret_cast<const char*>(u8"こんにちは"));
     }
 }
 
@@ -1226,7 +1226,7 @@ TEST_CASE("Node_MappingNodeFactory") {
             REQUIRE(node.is_mapping());
             REQUIRE(node.size() == 1);
             REQUIRE(node["test"].is_boolean());
-            REQUIRE(node["test"].get_value_ref<fkyaml::node::boolean_type&>() == true);
+            REQUIRE(node["test"].as_bool() == true);
         }
 
         SECTION("rvalue mapping") {
@@ -1234,7 +1234,7 @@ TEST_CASE("Node_MappingNodeFactory") {
             REQUIRE(node.is_mapping());
             REQUIRE(node.size() == 1);
             REQUIRE(node["test"].is_boolean());
-            REQUIRE(node["test"].get_value_ref<fkyaml::node::boolean_type&>() == true);
+            REQUIRE(node["test"].as_bool() == true);
         }
     }
 }
@@ -1243,7 +1243,7 @@ TEST_CASE("Node_BooleanNodeFactory") {
     auto boolean = GENERATE(true, false);
     fkyaml::node node = boolean;
     REQUIRE(node.is_boolean());
-    REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == boolean);
+    REQUIRE(node.as_bool() == boolean);
 }
 
 TEST_CASE("Node_IntegerNodeFactory") {
@@ -1253,7 +1253,7 @@ TEST_CASE("Node_IntegerNodeFactory") {
         std::numeric_limits<fkyaml::node::integer_type>::max());
     fkyaml::node node = integer;
     REQUIRE(node.is_integer());
-    REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == integer);
+    REQUIRE(node.as_int() == integer);
 }
 
 TEST_CASE("Node_FloatNumberNodeFactory") {
@@ -1263,7 +1263,7 @@ TEST_CASE("Node_FloatNumberNodeFactory") {
         std::numeric_limits<fkyaml::node::float_number_type>::max());
     fkyaml::node node = float_val;
     REQUIRE(node.is_float_number());
-    REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == float_val);
+    REQUIRE(node.as_float() == float_val);
 }
 
 TEST_CASE("Node_StringNodeFactory") {
@@ -1278,14 +1278,14 @@ TEST_CASE("Node_StringNodeFactory") {
         fkyaml::node node = str;
         REQUIRE(node.is_string());
         REQUIRE(node.size() == str.size());
-        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == str);
+        REQUIRE(node.as_str() == str);
     }
 
     SECTION("rvalue string") {
         fkyaml::node node = "test";
         REQUIRE(node.is_string());
         REQUIRE(node.size() == 4);
-        REQUIRE(node.get_value_ref<fkyaml::node::string_type&>().compare("test") == 0);
+        REQUIRE(node.as_str().compare("test") == 0);
     }
 }
 
@@ -1312,7 +1312,7 @@ TEST_CASE("Node_AliasNodeFactory") {
         REQUIRE_NOTHROW(fkyaml::node::alias_of(anchor));
         fkyaml::node alias = fkyaml::node::alias_of(anchor);
         REQUIRE(alias.is_string());
-        REQUIRE(alias.get_value_ref<fkyaml::node::string_type&>().compare("alias_test") == 0);
+        REQUIRE(alias.as_str().compare("alias_test") == 0);
     }
 }
 
@@ -1388,7 +1388,7 @@ TEST_CASE("Node_SubscriptOperator") {
 
     SECTION("sequence") {
         fkyaml::node node = fkyaml::node::sequence();
-        node.get_value_ref<fkyaml::node::sequence_type&>().emplace_back();
+        node.as_seq().emplace_back();
 
         SECTION("non-const integer value") {
             REQUIRE_NOTHROW(node[0]);
@@ -2595,7 +2595,7 @@ TEST_CASE("Node_At") {
 
     SECTION("sequence with integer argument") {
         fkyaml::node node = fkyaml::node::sequence();
-        node.get_value_ref<fkyaml::node::sequence_type&>().emplace_back();
+        node.as_seq().emplace_back();
 
         SECTION("non-const integer value") {
             REQUIRE_NOTHROW(node.at(0));
@@ -2618,7 +2618,7 @@ TEST_CASE("Node_At") {
 
     SECTION("sequence with non-integer argument") {
         fkyaml::node node = fkyaml::node::sequence();
-        node.get_value_ref<fkyaml::node::sequence_type&>().emplace_back();
+        node.as_seq().emplace_back();
 
         SECTION("non-const node with a non-integer value") {
             REQUIRE_THROWS_AS(node.at(fkyaml::node::sequence_type()), fkyaml::type_error);
@@ -2659,7 +2659,7 @@ TEST_CASE("Node_At") {
 
     SECTION("sequence with out-of-bounds integer argument") {
         fkyaml::node node = fkyaml::node::sequence();
-        node.get_value_ref<fkyaml::node::sequence_type&>().emplace_back();
+        node.as_seq().emplace_back();
 
         SECTION("non-const argument") {
             REQUIRE_THROWS_AS(node.at(1), fkyaml::out_of_range);
@@ -4306,45 +4306,45 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
 // test cases for value reference getters
 //
 
-TEST_CASE("Node_GetValueRefForSequence") {
+TEST_CASE("Node_AsSeq") {
     SECTION("sequence") {
         fkyaml::node node =
             fkyaml::node::sequence(fkyaml::node::sequence_type {fkyaml::node(), fkyaml::node(), fkyaml::node()});
 
         SECTION("non-alias sequence node") {
-            REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::sequence_type&>());
-            REQUIRE(node.get_value_ref<fkyaml::node::sequence_type&>().size() == 3);
+            REQUIRE_NOTHROW(node.as_seq());
+            REQUIRE(node.as_seq().size() == 3);
             for (int i = 0; i < 3; ++i) {
-                REQUIRE(node.get_value_ref<fkyaml::node::sequence_type&>()[i].is_null());
+                REQUIRE(node.as_seq()[i].is_null());
             }
         }
 
         SECTION("const non-alias sequence node") {
             const fkyaml::node const_node = node;
-            REQUIRE_NOTHROW(const_node.get_value_ref<const fkyaml::node::sequence_type&>());
-            REQUIRE(const_node.get_value_ref<const fkyaml::node::sequence_type&>().size() == 3);
+            REQUIRE_NOTHROW(const_node.as_seq());
+            REQUIRE(const_node.as_seq().size() == 3);
             for (int i = 0; i < 3; ++i) {
-                REQUIRE(node.get_value_ref<const fkyaml::node::sequence_type&>()[i].is_null());
+                REQUIRE(node.as_seq()[i].is_null());
             }
         }
 
         SECTION("alias sequence node") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<fkyaml::node::sequence_type&>());
-            REQUIRE(alias.get_value_ref<fkyaml::node::sequence_type&>().size() == 3);
+            REQUIRE_NOTHROW(alias.as_seq());
+            REQUIRE(alias.as_seq().size() == 3);
             for (int i = 0; i < 3; ++i) {
-                REQUIRE(alias.get_value_ref<fkyaml::node::sequence_type&>()[i].is_null());
+                REQUIRE(alias.as_seq()[i].is_null());
             }
         }
 
         SECTION("const alias sequence node") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<const fkyaml::node::sequence_type&>());
-            REQUIRE(alias.get_value_ref<const fkyaml::node::sequence_type&>().size() == 3);
+            REQUIRE_NOTHROW(alias.as_seq());
+            REQUIRE(alias.as_seq().size() == 3);
             for (int i = 0; i < 3; ++i) {
-                REQUIRE(alias.get_value_ref<const fkyaml::node::sequence_type&>()[i].is_null());
+                REQUIRE(alias.as_seq()[i].is_null());
             }
         }
     }
@@ -4359,36 +4359,36 @@ TEST_CASE("Node_GetValueRefForSequence") {
             fkyaml::node(""));
 
         SECTION("non-alias non-sequence nodes") {
-            REQUIRE_THROWS_AS(node.get_value_ref<fkyaml::node::sequence_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.as_seq(), fkyaml::type_error);
         }
 
         SECTION("const non-alias non-sequence nodes") {
             const fkyaml::node const_node = node;
-            REQUIRE_THROWS_AS(const_node.get_value_ref<const fkyaml::node::sequence_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.as_seq(), fkyaml::type_error);
         }
 
         SECTION("alias non-sequence nodes") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<fkyaml::node::sequence_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_seq(), fkyaml::type_error);
         }
 
         SECTION("const alias non-sequence nodes") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<const fkyaml::node::sequence_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_seq(), fkyaml::type_error);
         }
     }
 }
 
-TEST_CASE("Node_GetValueRefForMapping") {
+TEST_CASE("Node_AsMap") {
     SECTION("mapping") {
         fkyaml::node node = fkyaml::node::mapping(fkyaml::node::mapping_type {
             {"test0", fkyaml::node()}, {"test1", fkyaml::node()}, {"test2", fkyaml::node()}});
 
         SECTION("non-alias mapping node") {
-            REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::mapping_type&>());
-            REQUIRE(node.get_value_ref<fkyaml::node::mapping_type&>().size() == 3);
+            REQUIRE_NOTHROW(node.as_map());
+            REQUIRE(node.as_map().size() == 3);
             REQUIRE(node["test0"].is_null());
             REQUIRE(node["test1"].is_null());
             REQUIRE(node["test2"].is_null());
@@ -4396,8 +4396,8 @@ TEST_CASE("Node_GetValueRefForMapping") {
 
         SECTION("const non-alias mapping node") {
             const fkyaml::node const_node = node;
-            REQUIRE_NOTHROW(const_node.get_value_ref<const fkyaml::node::mapping_type&>());
-            REQUIRE(const_node.get_value_ref<const fkyaml::node::mapping_type&>().size() == 3);
+            REQUIRE_NOTHROW(const_node.as_map());
+            REQUIRE(const_node.as_map().size() == 3);
             REQUIRE(const_node["test0"].is_null());
             REQUIRE(const_node["test1"].is_null());
             REQUIRE(const_node["test2"].is_null());
@@ -4406,8 +4406,8 @@ TEST_CASE("Node_GetValueRefForMapping") {
         SECTION("alias mapping node") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<fkyaml::node::mapping_type&>());
-            REQUIRE(alias.get_value_ref<fkyaml::node::mapping_type&>().size() == 3);
+            REQUIRE_NOTHROW(alias.as_map());
+            REQUIRE(alias.as_map().size() == 3);
             REQUIRE(alias["test0"].is_null());
             REQUIRE(alias["test1"].is_null());
             REQUIRE(alias["test2"].is_null());
@@ -4416,7 +4416,7 @@ TEST_CASE("Node_GetValueRefForMapping") {
         SECTION("const alias mapping node") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<const fkyaml::node::mapping_type&>());
+            REQUIRE_NOTHROW(alias.as_map());
             REQUIRE(alias["test0"].is_null());
             REQUIRE(alias["test1"].is_null());
             REQUIRE(alias["test2"].is_null());
@@ -4433,55 +4433,55 @@ TEST_CASE("Node_GetValueRefForMapping") {
             fkyaml::node(""));
 
         SECTION("non-alias non-mapping nodes") {
-            REQUIRE_THROWS_AS(node.get_value_ref<fkyaml::node::mapping_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.as_map(), fkyaml::type_error);
         }
 
         SECTION("const non-alias non-mapping nodes") {
             const fkyaml::node const_node = node;
-            REQUIRE_THROWS_AS(const_node.get_value_ref<const fkyaml::node::mapping_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.as_map(), fkyaml::type_error);
         }
 
         SECTION("alias non-mapping nodes") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<fkyaml::node::mapping_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_map(), fkyaml::type_error);
         }
 
         SECTION("const alias non-mapping nodes") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<const fkyaml::node::mapping_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_map(), fkyaml::type_error);
         }
     }
 }
 
-TEST_CASE("Node_GetValueRefForBoolean") {
+TEST_CASE("Node_AsBool") {
     SECTION("boolean") {
         fkyaml::node node = true;
 
         SECTION("non-alias boolean node") {
-            REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::boolean_type&>());
-            REQUIRE(node.get_value_ref<fkyaml::node::boolean_type&>() == true);
+            REQUIRE_NOTHROW(node.as_bool());
+            REQUIRE(node.as_bool() == true);
         }
 
         SECTION("const non-alias boolean node") {
             const fkyaml::node const_node = node;
-            REQUIRE_NOTHROW(const_node.get_value_ref<const fkyaml::node::boolean_type&>());
-            REQUIRE(const_node.get_value_ref<const fkyaml::node::boolean_type&>() == true);
+            REQUIRE_NOTHROW(const_node.as_bool());
+            REQUIRE(const_node.as_bool() == true);
         }
 
         SECTION("alias boolean node") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<fkyaml::node::boolean_type&>());
-            REQUIRE(alias.get_value_ref<fkyaml::node::boolean_type&>() == true);
+            REQUIRE_NOTHROW(alias.as_bool());
+            REQUIRE(alias.as_bool() == true);
         }
 
         SECTION("const alias boolean node") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<const fkyaml::node::boolean_type&>());
-            REQUIRE(alias.get_value_ref<const fkyaml::node::boolean_type&>() == true);
+            REQUIRE_NOTHROW(alias.as_bool());
+            REQUIRE(alias.as_bool() == true);
         }
     }
 
@@ -4495,56 +4495,56 @@ TEST_CASE("Node_GetValueRefForBoolean") {
             fkyaml::node(""));
 
         SECTION("non-alias non-boolean nodes") {
-            REQUIRE_THROWS_AS(node.get_value_ref<fkyaml::node::boolean_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.as_bool(), fkyaml::type_error);
         }
 
         SECTION("const non-alias non-boolean nodes") {
             const fkyaml::node const_node = node;
-            REQUIRE_THROWS_AS(const_node.get_value_ref<const fkyaml::node::boolean_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.as_bool(), fkyaml::type_error);
         }
 
         SECTION("alias non-boolean nodes") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<fkyaml::node::boolean_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_bool(), fkyaml::type_error);
         }
 
         SECTION("const alias non-boolean nodes") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<const fkyaml::node::boolean_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_bool(), fkyaml::type_error);
         }
     }
 }
 
-TEST_CASE("Node_GetValueRefForInteger") {
+TEST_CASE("Node_AsInt") {
     SECTION("integer") {
         fkyaml::node::integer_type integer = -123;
         fkyaml::node node = integer;
 
         SECTION("non-alias integer node") {
-            REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::integer_type&>());
-            REQUIRE(node.get_value_ref<fkyaml::node::integer_type&>() == integer);
+            REQUIRE_NOTHROW(node.as_int());
+            REQUIRE(node.as_int() == integer);
         }
 
         SECTION("const non-alias integer node") {
             const fkyaml::node const_node = node;
-            REQUIRE_NOTHROW(const_node.get_value_ref<const fkyaml::node::integer_type&>());
-            REQUIRE(const_node.get_value_ref<const fkyaml::node::integer_type&>() == integer);
+            REQUIRE_NOTHROW(const_node.as_int());
+            REQUIRE(const_node.as_int() == integer);
         }
 
         SECTION("alias  integer node") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<fkyaml::node::integer_type&>());
-            REQUIRE(alias.get_value_ref<fkyaml::node::integer_type&>() == integer);
+            REQUIRE_NOTHROW(alias.as_int());
+            REQUIRE(alias.as_int() == integer);
         }
 
         SECTION("const alias  integer node") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<const fkyaml::node::integer_type&>());
-            REQUIRE(alias.get_value_ref<const fkyaml::node::integer_type&>() == integer);
+            REQUIRE_NOTHROW(alias.as_int());
+            REQUIRE(alias.as_int() == integer);
         }
     }
 
@@ -4558,56 +4558,56 @@ TEST_CASE("Node_GetValueRefForInteger") {
             fkyaml::node(""));
 
         SECTION("non-alias non-integer nodes") {
-            REQUIRE_THROWS_AS(node.get_value_ref<fkyaml::node::integer_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.as_int(), fkyaml::type_error);
         }
 
         SECTION("const non-alias non-integer nodes") {
             const fkyaml::node const_node = node;
-            REQUIRE_THROWS_AS(const_node.get_value_ref<const fkyaml::node::integer_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.as_int(), fkyaml::type_error);
         }
 
         SECTION("alias non-integer nodes") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<fkyaml::node::integer_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_int(), fkyaml::type_error);
         }
 
         SECTION("const alias non-integer nodes") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<const fkyaml::node::integer_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_int(), fkyaml::type_error);
         }
     }
 }
 
-TEST_CASE("Node_GetValueRefForFloatNumber") {
+TEST_CASE("Node_AsFloat") {
     SECTION("floating point number") {
         fkyaml::node::float_number_type float_val = 123.45;
         fkyaml::node node = float_val;
 
         SECTION("non-alias float number node") {
-            REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::float_number_type&>());
-            REQUIRE(node.get_value_ref<fkyaml::node::float_number_type&>() == float_val);
+            REQUIRE_NOTHROW(node.as_float());
+            REQUIRE(node.as_float() == float_val);
         }
 
         SECTION("const non-alias float number node") {
             const fkyaml::node const_node = node;
-            REQUIRE_NOTHROW(const_node.get_value_ref<const fkyaml::node::float_number_type&>());
-            REQUIRE(const_node.get_value_ref<const fkyaml::node::float_number_type&>() == float_val);
+            REQUIRE_NOTHROW(const_node.as_float());
+            REQUIRE(const_node.as_float() == float_val);
         }
 
         SECTION("alias float number node") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<fkyaml::node::float_number_type&>());
-            REQUIRE(alias.get_value_ref<fkyaml::node::float_number_type&>() == float_val);
+            REQUIRE_NOTHROW(alias.as_float());
+            REQUIRE(alias.as_float() == float_val);
         }
 
         SECTION("const alias float number node") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<const fkyaml::node::float_number_type&>());
-            REQUIRE(alias.get_value_ref<const fkyaml::node::float_number_type&>() == float_val);
+            REQUIRE_NOTHROW(alias.as_float());
+            REQUIRE(alias.as_float() == float_val);
         }
     }
 
@@ -4621,56 +4621,56 @@ TEST_CASE("Node_GetValueRefForFloatNumber") {
             fkyaml::node(""));
 
         SECTION("non-alias non-float-number nodes") {
-            REQUIRE_THROWS_AS(node.get_value_ref<fkyaml::node::float_number_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.as_float(), fkyaml::type_error);
         }
 
         SECTION("const non-alias non-float-number nodes") {
             const fkyaml::node const_node = node;
-            REQUIRE_THROWS_AS(const_node.get_value_ref<const fkyaml::node::float_number_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.as_float(), fkyaml::type_error);
         }
 
         SECTION("alias non-float-number nodes") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<fkyaml::node::float_number_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_float(), fkyaml::type_error);
         }
 
         SECTION("const alias non-float-number nodes") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<const fkyaml::node::float_number_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_float(), fkyaml::type_error);
         }
     }
 }
 
-TEST_CASE("Node_GetValueRefForString") {
+TEST_CASE("Node_AsStr") {
     SECTION("string") {
         fkyaml::node::string_type str = "test";
         fkyaml::node node = str;
 
         SECTION("non-alias string node") {
-            REQUIRE_NOTHROW(node.get_value_ref<fkyaml::node::string_type&>());
-            REQUIRE(node.get_value_ref<fkyaml::node::string_type&>() == str);
+            REQUIRE_NOTHROW(node.as_str());
+            REQUIRE(node.as_str() == str);
         }
 
         SECTION("const non-alias string node") {
             const fkyaml::node const_node = node;
-            REQUIRE_NOTHROW(const_node.get_value_ref<const fkyaml::node::string_type&>());
-            REQUIRE(const_node.get_value_ref<const fkyaml::node::string_type&>() == str);
+            REQUIRE_NOTHROW(const_node.as_str());
+            REQUIRE(const_node.as_str() == str);
         }
 
         SECTION("alias string node") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<fkyaml::node::string_type&>());
-            REQUIRE(alias.get_value_ref<fkyaml::node::string_type&>() == str);
+            REQUIRE_NOTHROW(alias.as_str());
+            REQUIRE(alias.as_str() == str);
         }
 
         SECTION("const alias string node") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_NOTHROW(alias.get_value_ref<const fkyaml::node::string_type&>());
-            REQUIRE(alias.get_value_ref<const fkyaml::node::string_type&>() == str);
+            REQUIRE_NOTHROW(alias.as_str());
+            REQUIRE(alias.as_str() == str);
         }
     }
 
@@ -4684,24 +4684,146 @@ TEST_CASE("Node_GetValueRefForString") {
             fkyaml::node(0.0));
 
         SECTION("non-alias non-string nodes") {
-            REQUIRE_THROWS_AS(node.get_value_ref<fkyaml::node::string_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(node.as_str(), fkyaml::type_error);
         }
 
         SECTION("const non-alias non-string nodes") {
             const fkyaml::node const_node = node;
-            REQUIRE_THROWS_AS(const_node.get_value_ref<const fkyaml::node::string_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(const_node.as_str(), fkyaml::type_error);
         }
 
         SECTION("alias non-string nodes") {
             node.add_anchor_name("anchor_name");
             fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<fkyaml::node::string_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_str(), fkyaml::type_error);
         }
 
         SECTION("const alias non-string nodes") {
             node.add_anchor_name("anchor_name");
             const fkyaml::node alias = fkyaml::node::alias_of(node);
-            REQUIRE_THROWS_AS(alias.get_value_ref<const fkyaml::node::string_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(alias.as_str(), fkyaml::type_error);
+        }
+    }
+}
+
+TEST_CASE("Node_GetValueRef(deprecated)") {
+    SECTION("sequence") {
+        SECTION("valid") {
+            auto seq = fkyaml::node::sequence();
+            REQUIRE_NOTHROW(seq.get_value_ref<fkyaml::node::sequence_type&>());
+            REQUIRE_NOTHROW(seq.get_value_ref<const fkyaml::node::sequence_type&>());
+        }
+
+        SECTION("invalid") {
+            auto non_seq = GENERATE(
+                fkyaml::node::mapping(),
+                fkyaml::node(),
+                fkyaml::node(false),
+                fkyaml::node(0),
+                fkyaml::node(0.0),
+                fkyaml::node(""));
+            REQUIRE_THROWS_AS(non_seq.get_value_ref<fkyaml::node::sequence_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(non_seq.get_value_ref<const fkyaml::node::sequence_type&>(), fkyaml::type_error);
+        }
+    }
+
+    SECTION("mapping") {
+        SECTION("valid") {
+            auto map = fkyaml::node::mapping();
+            REQUIRE_NOTHROW(map.get_value_ref<fkyaml::node::mapping_type&>());
+            REQUIRE_NOTHROW(map.get_value_ref<const fkyaml::node::mapping_type&>());
+        }
+
+        SECTION("invalid") {
+            auto non_map = GENERATE(
+                fkyaml::node::sequence(),
+                fkyaml::node(),
+                fkyaml::node(false),
+                fkyaml::node(0),
+                fkyaml::node(0.0),
+                fkyaml::node(""));
+            REQUIRE_THROWS_AS(non_map.get_value_ref<fkyaml::node::mapping_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(non_map.get_value_ref<const fkyaml::node::mapping_type&>(), fkyaml::type_error);
+        }
+    }
+
+    SECTION("boolean") {
+        SECTION("valid") {
+            fkyaml::node boolean = true;
+            REQUIRE_NOTHROW(boolean.get_value_ref<fkyaml::node::boolean_type&>());
+            REQUIRE_NOTHROW(boolean.get_value_ref<const fkyaml::node::boolean_type&>());
+        }
+
+        SECTION("invalid") {
+            auto non_bool = GENERATE(
+                fkyaml::node::sequence(),
+                fkyaml::node::mapping(),
+                fkyaml::node(),
+                fkyaml::node(0),
+                fkyaml::node(0.0),
+                fkyaml::node(""));
+            REQUIRE_THROWS_AS(non_bool.get_value_ref<fkyaml::node::boolean_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(non_bool.get_value_ref<const fkyaml::node::boolean_type&>(), fkyaml::type_error);
+        }
+    }
+
+    SECTION("integer") {
+        SECTION("valid") {
+            fkyaml::node integer = 0;
+            REQUIRE_NOTHROW(integer.get_value_ref<fkyaml::node::integer_type&>());
+            REQUIRE_NOTHROW(integer.get_value_ref<const fkyaml::node::integer_type&>());
+        }
+
+        SECTION("invalid") {
+            auto non_int = GENERATE(
+                fkyaml::node::sequence(),
+                fkyaml::node::mapping(),
+                fkyaml::node(),
+                fkyaml::node(false),
+                fkyaml::node(0.0),
+                fkyaml::node(""));
+            REQUIRE_THROWS_AS(non_int.get_value_ref<fkyaml::node::integer_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(non_int.get_value_ref<const fkyaml::node::integer_type&>(), fkyaml::type_error);
+        }
+    }
+
+    SECTION("float") {
+        SECTION("valid") {
+            fkyaml::node float_val = 0.0;
+            REQUIRE_NOTHROW(float_val.get_value_ref<fkyaml::node::float_number_type&>());
+            REQUIRE_NOTHROW(float_val.get_value_ref<const fkyaml::node::float_number_type&>());
+        }
+
+        SECTION("invalid") {
+            auto non_float = GENERATE(
+                fkyaml::node::sequence(),
+                fkyaml::node::mapping(),
+                fkyaml::node(),
+                fkyaml::node(false),
+                fkyaml::node(0),
+                fkyaml::node(""));
+            REQUIRE_THROWS_AS(non_float.get_value_ref<fkyaml::node::float_number_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(non_float.get_value_ref<const fkyaml::node::float_number_type&>(), fkyaml::type_error);
+        }
+    }
+
+    SECTION("string") {
+        SECTION("valid") {
+            fkyaml::node string = "";
+            REQUIRE_NOTHROW(string.get_value_ref<fkyaml::node::string_type&>());
+            REQUIRE_NOTHROW(string.get_value_ref<const fkyaml::node::string_type&>());
+        }
+
+        SECTION("invalid") {
+            auto non_string = GENERATE(
+                fkyaml::node::sequence(),
+                fkyaml::node::mapping(),
+                fkyaml::node(),
+                fkyaml::node(false),
+                fkyaml::node(0),
+                fkyaml::node(0.0));
+            REQUIRE_THROWS_AS(non_string.get_value_ref<fkyaml::node::string_type&>(), fkyaml::type_error);
+            REQUIRE_THROWS_AS(non_string.get_value_ref<const fkyaml::node::string_type&>(), fkyaml::type_error);
         }
     }
 }
@@ -5097,9 +5219,9 @@ TEST_CASE("Node_Swap") {
     fkyaml::node rhs_node = 123;
     lhs_node.swap(rhs_node);
     REQUIRE(lhs_node.is_integer());
-    REQUIRE(lhs_node.get_value_ref<fkyaml::node::integer_type&>() == 123);
+    REQUIRE(lhs_node.as_int() == 123);
     REQUIRE(rhs_node.is_boolean());
-    REQUIRE(rhs_node.get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE(rhs_node.as_bool() == true);
 }
 
 TEST_CASE("Node_ADLSwap") {
@@ -5110,7 +5232,7 @@ TEST_CASE("Node_ADLSwap") {
     swap(lhs_node, rhs_node);
 
     REQUIRE(lhs_node.is_integer());
-    REQUIRE(lhs_node.get_value_ref<fkyaml::node::integer_type&>() == 123);
+    REQUIRE(lhs_node.as_int() == 123);
     REQUIRE(rhs_node.is_boolean());
-    REQUIRE(rhs_node.get_value_ref<fkyaml::node::boolean_type&>() == true);
+    REQUIRE(rhs_node.as_bool() == true);
 }
