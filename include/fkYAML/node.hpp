@@ -175,13 +175,13 @@ private:
         explicit node_value(detail::node_attr_t value_type_bit) {
             switch (value_type_bit) {
             case detail::node_attr_bits::seq_bit:
-                p_sequence = detail::create_object<sequence_type>();
+                p_seq = detail::create_object<sequence_type>();
                 break;
             case detail::node_attr_bits::map_bit:
-                p_mapping = detail::create_object<mapping_type>();
+                p_map = detail::create_object<mapping_type>();
                 break;
             case detail::node_attr_bits::null_bit:
-                p_mapping = nullptr;
+                p_map = nullptr;
                 break;
             case detail::node_attr_bits::bool_bit:
                 boolean = static_cast<boolean_type>(false);
@@ -193,7 +193,7 @@ private:
                 float_val = static_cast<float_number_type>(0.0);
                 break;
             case detail::node_attr_bits::string_bit:
-                p_string = detail::create_object<string_type>();
+                p_str = detail::create_object<string_type>();
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -206,18 +206,18 @@ private:
         void destroy(detail::node_attr_t value_type_bit) {
             switch (value_type_bit) {
             case detail::node_attr_bits::seq_bit:
-                p_sequence->clear();
-                detail::destroy_object<sequence_type>(p_sequence);
-                p_sequence = nullptr;
+                p_seq->clear();
+                detail::destroy_object<sequence_type>(p_seq);
+                p_seq = nullptr;
                 break;
             case detail::node_attr_bits::map_bit:
-                p_mapping->clear();
-                detail::destroy_object<mapping_type>(p_mapping);
-                p_mapping = nullptr;
+                p_map->clear();
+                detail::destroy_object<mapping_type>(p_map);
+                p_map = nullptr;
                 break;
             case detail::node_attr_bits::string_bit:
-                detail::destroy_object<string_type>(p_string);
-                p_string = nullptr;
+                detail::destroy_object<string_type>(p_str);
+                p_str = nullptr;
                 break;
             default:
                 break;
@@ -225,9 +225,9 @@ private:
         }
 
         /// A pointer to the value of sequence type.
-        sequence_type* p_sequence;
+        sequence_type* p_seq;
         /// A pointer to the value of mapping type. This pointer is also used when node type is null.
-        mapping_type* p_mapping {nullptr};
+        mapping_type* p_map {nullptr};
         /// A value of boolean type.
         boolean_type boolean;
         /// A value of integer type.
@@ -235,7 +235,7 @@ private:
         /// A value of float number type.
         float_number_type float_val;
         /// A pointer to the value of string type.
-        string_type* p_string;
+        string_type* p_str;
     };
 
 public:
@@ -253,7 +253,7 @@ public:
 
     explicit basic_node(const node_type type)
         : m_attrs(detail::node_attr_bits::from_node_type(type)),
-          m_node_value(m_attrs & detail::node_attr_mask::value) {
+          m_value(m_attrs & detail::node_attr_mask::value) {
     }
 
     /// @brief Copy constructor of the basic_node class.
@@ -266,25 +266,25 @@ public:
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs & detail::node_attr_mask::value) {
             case detail::node_attr_bits::seq_bit:
-                m_node_value.p_sequence = detail::create_object<sequence_type>(*(rhs.m_node_value.p_sequence));
+                m_value.p_seq = detail::create_object<sequence_type>(*(rhs.m_value.p_seq));
                 break;
             case detail::node_attr_bits::map_bit:
-                m_node_value.p_mapping = detail::create_object<mapping_type>(*(rhs.m_node_value.p_mapping));
+                m_value.p_map = detail::create_object<mapping_type>(*(rhs.m_value.p_map));
                 break;
             case detail::node_attr_bits::null_bit:
-                m_node_value.p_mapping = nullptr;
+                m_value.p_map = nullptr;
                 break;
             case detail::node_attr_bits::bool_bit:
-                m_node_value.boolean = rhs.m_node_value.boolean;
+                m_value.boolean = rhs.m_value.boolean;
                 break;
             case detail::node_attr_bits::int_bit:
-                m_node_value.integer = rhs.m_node_value.integer;
+                m_value.integer = rhs.m_value.integer;
                 break;
             case detail::node_attr_bits::float_bit:
-                m_node_value.float_val = rhs.m_node_value.float_val;
+                m_value.float_val = rhs.m_value.float_val;
                 break;
             case detail::node_attr_bits::string_bit:
-                m_node_value.p_string = detail::create_object<string_type>(*(rhs.m_node_value.p_string));
+                m_value.p_str = detail::create_object<string_type>(*(rhs.m_value.p_str));
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -302,35 +302,35 @@ public:
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs & detail::node_attr_mask::value) {
             case detail::node_attr_bits::seq_bit:
-                FK_YAML_ASSERT(rhs.m_node_value.p_sequence != nullptr);
-                m_node_value.p_sequence = rhs.m_node_value.p_sequence;
-                rhs.m_node_value.p_sequence = nullptr;
+                FK_YAML_ASSERT(rhs.m_value.p_seq != nullptr);
+                m_value.p_seq = rhs.m_value.p_seq;
+                rhs.m_value.p_seq = nullptr;
                 break;
             case detail::node_attr_bits::map_bit:
-                FK_YAML_ASSERT(rhs.m_node_value.p_mapping != nullptr);
-                m_node_value.p_mapping = rhs.m_node_value.p_mapping;
-                rhs.m_node_value.p_mapping = nullptr;
+                FK_YAML_ASSERT(rhs.m_value.p_map != nullptr);
+                m_value.p_map = rhs.m_value.p_map;
+                rhs.m_value.p_map = nullptr;
                 break;
             case detail::node_attr_bits::null_bit:
-                FK_YAML_ASSERT(rhs.m_node_value.p_mapping == nullptr);
-                m_node_value.p_mapping = rhs.m_node_value.p_mapping;
+                FK_YAML_ASSERT(rhs.m_value.p_map == nullptr);
+                m_value.p_map = rhs.m_value.p_map;
                 break;
             case detail::node_attr_bits::bool_bit:
-                m_node_value.boolean = rhs.m_node_value.boolean;
-                rhs.m_node_value.boolean = static_cast<boolean_type>(false);
+                m_value.boolean = rhs.m_value.boolean;
+                rhs.m_value.boolean = static_cast<boolean_type>(false);
                 break;
             case detail::node_attr_bits::int_bit:
-                m_node_value.integer = rhs.m_node_value.integer;
-                rhs.m_node_value.integer = static_cast<integer_type>(0);
+                m_value.integer = rhs.m_value.integer;
+                rhs.m_value.integer = static_cast<integer_type>(0);
                 break;
             case detail::node_attr_bits::float_bit:
-                m_node_value.float_val = rhs.m_node_value.float_val;
-                rhs.m_node_value.float_val = static_cast<float_number_type>(0.0);
+                m_value.float_val = rhs.m_value.float_val;
+                rhs.m_value.float_val = static_cast<float_number_type>(0.0);
                 break;
             case detail::node_attr_bits::string_bit:
-                FK_YAML_ASSERT(rhs.m_node_value.p_string != nullptr);
-                m_node_value.p_string = rhs.m_node_value.p_string;
-                rhs.m_node_value.p_string = nullptr;
+                FK_YAML_ASSERT(rhs.m_value.p_str != nullptr);
+                m_value.p_str = rhs.m_value.p_str;
+                rhs.m_value.p_str = nullptr;
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -338,7 +338,7 @@ public:
         }
 
         rhs.m_attrs = detail::node_attr_bits::default_bits;
-        rhs.m_node_value.p_mapping = nullptr;
+        rhs.m_value.p_map = nullptr;
     }
 
     /// @brief Construct a new basic_node object from a value of compatible types.
@@ -381,20 +381,20 @@ public:
 
         if (is_mapping) {
             m_attrs = detail::node_attr_bits::map_bit;
-            m_node_value.p_mapping = detail::create_object<mapping_type>();
+            m_value.p_map = detail::create_object<mapping_type>();
 
-            auto& map = *m_node_value.p_mapping;
+            auto& map = *m_value.p_map;
             for (auto& elem_ref : init) {
                 auto elem = elem_ref.release();
-                auto& seq = *elem.m_node_value.p_sequence;
+                auto& seq = *elem.m_value.p_seq;
                 map.emplace(std::move(seq[0]), std::move(seq[1]));
             }
         }
         else {
             m_attrs = detail::node_attr_bits::seq_bit;
-            m_node_value.p_sequence = detail::create_object<sequence_type>();
+            m_value.p_seq = detail::create_object<sequence_type>();
 
-            auto& seq = *m_node_value.p_sequence;
+            auto& seq = *m_value.p_seq;
             seq.reserve(std::distance(init.begin(), init.end()));
             for (auto& elem_ref : init) {
                 seq.emplace_back(std::move(elem_ref.release()));
@@ -410,13 +410,13 @@ public:
             if (m_attrs & detail::node_attr_bits::anchor_bit) {
                 auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
                 std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-                itr->second.m_node_value.destroy(itr->second.m_attrs & detail::node_attr_mask::value);
+                itr->second.m_value.destroy(itr->second.m_attrs & detail::node_attr_mask::value);
                 itr->second.m_attrs = detail::node_attr_bits::default_bits;
                 itr->second.mp_meta.reset();
             }
         }
         else if ((m_attrs & detail::node_attr_bits::null_bit) == 0) {
-            m_node_value.destroy(m_attrs & detail::node_attr_mask::value);
+            m_value.destroy(m_attrs & detail::node_attr_mask::value);
         }
 
         m_attrs = detail::node_attr_bits::default_bits;
@@ -493,7 +493,7 @@ public:
     static basic_node sequence() {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::seq_bit;
-        node.m_node_value.p_sequence = detail::create_object<sequence_type>();
+        node.m_value.p_seq = detail::create_object<sequence_type>();
         return node;
     } // LCOV_EXCL_LINE
 
@@ -504,7 +504,7 @@ public:
     static basic_node sequence(const sequence_type& seq) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::seq_bit;
-        node.m_node_value.p_sequence = detail::create_object<sequence_type>(seq);
+        node.m_value.p_seq = detail::create_object<sequence_type>(seq);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -515,7 +515,7 @@ public:
     static basic_node sequence(sequence_type&& seq) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::seq_bit;
-        node.m_node_value.p_sequence = detail::create_object<sequence_type>(std::move(seq));
+        node.m_value.p_seq = detail::create_object<sequence_type>(std::move(seq));
         return node;
     } // LCOV_EXCL_LINE
 
@@ -525,7 +525,7 @@ public:
     static basic_node mapping() {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::map_bit;
-        node.m_node_value.p_mapping = detail::create_object<mapping_type>();
+        node.m_value.p_map = detail::create_object<mapping_type>();
         return node;
     } // LCOV_EXCL_LINE
 
@@ -536,7 +536,7 @@ public:
     static basic_node mapping(const mapping_type& map) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::map_bit;
-        node.m_node_value.p_mapping = detail::create_object<mapping_type>(map);
+        node.m_value.p_map = detail::create_object<mapping_type>(map);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -547,7 +547,7 @@ public:
     static basic_node mapping(mapping_type&& map) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::map_bit;
-        node.m_node_value.p_mapping = detail::create_object<mapping_type>(std::move(map));
+        node.m_value.p_map = detail::create_object<mapping_type>(std::move(map));
         return node;
     } // LCOV_EXCL_LINE
 
@@ -614,12 +614,12 @@ public:
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            return act_node.m_node_value.p_sequence->operator[](key_node.get_value<int>());
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return act_node.m_value.p_seq->operator[](key_node.get_value<int>());
         }
 
-        FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-        return act_node.m_node_value.p_mapping->operator[](std::move(key_node));
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        return act_node.m_value.p_map->operator[](std::move(key_node));
     }
 
     /// @brief A subscript operator of the basic_node class with a key of a compatible type with basic_node.
@@ -647,12 +647,12 @@ public:
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            return act_node.m_node_value.p_sequence->operator[](key_node.get_value<int>());
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return act_node.m_value.p_seq->operator[](key_node.get_value<int>());
         }
 
-        FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-        return act_node.m_node_value.p_mapping->operator[](std::move(key_node));
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        return act_node.m_value.p_map->operator[](std::move(key_node));
     }
 
     /// @brief A subscript operator of the basic_node class with a basic_node key object.
@@ -667,19 +667,19 @@ public:
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
-        const node_value& node_value = resolve_reference().m_node_value;
+        const node_value& node_value = resolve_reference().m_value;
 
         if (is_sequence()) {
             if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
-            FK_YAML_ASSERT(node_value.p_sequence != nullptr);
-            return node_value.p_sequence->operator[](std::forward<KeyType>(key).template get_value<int>());
+            FK_YAML_ASSERT(node_value.p_seq != nullptr);
+            return node_value.p_seq->operator[](std::forward<KeyType>(key).template get_value<int>());
         }
 
-        FK_YAML_ASSERT(node_value.p_mapping != nullptr);
-        return node_value.p_mapping->operator[](std::forward<KeyType>(key));
+        FK_YAML_ASSERT(node_value.p_map != nullptr);
+        return node_value.p_map->operator[](std::forward<KeyType>(key));
     }
 
     /// @brief A subscript operator of the basic_node class with a basic_node key object.
@@ -694,19 +694,19 @@ public:
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
-        const node_value& node_value = resolve_reference().m_node_value;
+        const node_value& node_value = resolve_reference().m_value;
 
         if (is_sequence()) {
             if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
-            FK_YAML_ASSERT(node_value.p_sequence != nullptr);
-            return node_value.p_sequence->operator[](key.template get_value<int>());
+            FK_YAML_ASSERT(node_value.p_seq != nullptr);
+            return node_value.p_seq->operator[](key.template get_value<int>());
         }
 
-        FK_YAML_ASSERT(node_value.p_mapping != nullptr);
-        return node_value.p_mapping->operator[](std::forward<KeyType>(key));
+        FK_YAML_ASSERT(node_value.p_map != nullptr);
+        return node_value.p_map->operator[](std::forward<KeyType>(key));
     }
 
     /// @brief An equal-to operator of the basic_node class.
@@ -725,28 +725,28 @@ public:
         bool ret = false;
         switch (lhs_val_bit) {
         case detail::node_attr_bits::seq_bit:
-            ret = (*(lhs.m_node_value.p_sequence) == *(act_rhs.m_node_value.p_sequence));
+            ret = (*(lhs.m_value.p_seq) == *(act_rhs.m_value.p_seq));
             break;
         case detail::node_attr_bits::map_bit:
-            ret = (*(lhs.m_node_value.p_mapping) == *(act_rhs.m_node_value.p_mapping));
+            ret = (*(lhs.m_value.p_map) == *(act_rhs.m_value.p_map));
             break;
         case detail::node_attr_bits::null_bit:
             // Always true for comparisons between null nodes.
             ret = true;
             break;
         case detail::node_attr_bits::bool_bit:
-            ret = (lhs.m_node_value.boolean == act_rhs.m_node_value.boolean);
+            ret = (lhs.m_value.boolean == act_rhs.m_value.boolean);
             break;
         case detail::node_attr_bits::int_bit:
-            ret = (lhs.m_node_value.integer == act_rhs.m_node_value.integer);
+            ret = (lhs.m_value.integer == act_rhs.m_value.integer);
             break;
         case detail::node_attr_bits::float_bit:
             ret =
-                (std::abs(lhs.m_node_value.float_val - act_rhs.m_node_value.float_val) <
+                (std::abs(lhs.m_value.float_val - act_rhs.m_value.float_val) <
                  std::numeric_limits<float_number_type>::epsilon());
             break;
         case detail::node_attr_bits::string_bit:
-            ret = (*(lhs.m_node_value.p_string) == *(act_rhs.m_node_value.p_string));
+            ret = (*(lhs.m_value.p_str) == *(act_rhs.m_value.p_str));
             break;
         default:                   // LCOV_EXCL_LINE
             detail::unreachable(); // LCOV_EXCL_LINE
@@ -789,26 +789,26 @@ public:
         bool ret = false;
         switch (lhs_val_bit) {
         case detail::node_attr_bits::seq_bit:
-            ret = (*(lhs.m_node_value.p_sequence) < *(act_rhs.m_node_value.p_sequence));
+            ret = (*(lhs.m_value.p_seq) < *(act_rhs.m_value.p_seq));
             break;
         case detail::node_attr_bits::map_bit:
-            ret = (*(lhs.m_node_value.p_mapping) < *(act_rhs.m_node_value.p_mapping));
+            ret = (*(lhs.m_value.p_map) < *(act_rhs.m_value.p_map));
             break;
         case detail::node_attr_bits::null_bit: // LCOV_EXCL_LINE
             // Will not come here since null nodes are always the same.
             detail::unreachable(); // LCOV_EXCL_LINE
         case detail::node_attr_bits::bool_bit:
             // false < true
-            ret = (!lhs.m_node_value.boolean && act_rhs.m_node_value.boolean);
+            ret = (!lhs.m_value.boolean && act_rhs.m_value.boolean);
             break;
         case detail::node_attr_bits::int_bit:
-            ret = (lhs.m_node_value.integer < act_rhs.m_node_value.integer);
+            ret = (lhs.m_value.integer < act_rhs.m_value.integer);
             break;
         case detail::node_attr_bits::float_bit:
-            ret = (lhs.m_node_value.float_val < act_rhs.m_node_value.float_val);
+            ret = (lhs.m_value.float_val < act_rhs.m_value.float_val);
             break;
         case detail::node_attr_bits::string_bit:
-            ret = (*(lhs.m_node_value.p_string) < *(act_rhs.m_node_value.p_string));
+            ret = (*(lhs.m_value.p_str) < *(act_rhs.m_value.p_str));
             break;
         default:                   // LCOV_EXCL_LINE
             detail::unreachable(); // LCOV_EXCL_LINE
@@ -936,16 +936,16 @@ public:
         const basic_node& act_node = resolve_reference();
         switch (act_node.m_attrs & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            return act_node.m_node_value.p_sequence->empty();
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return act_node.m_value.p_seq->empty();
         }
         case detail::node_attr_bits::map_bit: {
-            FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-            return act_node.m_node_value.p_mapping->empty();
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return act_node.m_value.p_map->empty();
         }
         case detail::node_attr_bits::string_bit: {
-            FK_YAML_ASSERT(act_node.m_node_value.p_string != nullptr);
-            return act_node.m_node_value.p_string->empty();
+            FK_YAML_ASSERT(act_node.m_value.p_str != nullptr);
+            return act_node.m_value.p_str->empty();
         }
         default:
             throw fkyaml::type_error("The target node is not of a container type.", get_type());
@@ -959,14 +959,14 @@ public:
         const basic_node& act_node = resolve_reference();
         switch (act_node.m_attrs & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            return act_node.m_node_value.p_sequence->size();
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return act_node.m_value.p_seq->size();
         case detail::node_attr_bits::map_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-            return act_node.m_node_value.p_mapping->size();
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return act_node.m_value.p_map->size();
         case detail::node_attr_bits::string_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_string != nullptr);
-            return act_node.m_node_value.p_string->size();
+            FK_YAML_ASSERT(act_node.m_value.p_str != nullptr);
+            return act_node.m_value.p_str->size();
         default:
             throw fkyaml::type_error("The target node is not of a container type.", get_type());
         }
@@ -986,8 +986,8 @@ public:
     bool contains(KeyType&& key) const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.m_attrs & detail::node_attr_bits::map_bit) {
-            FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-            const auto& map = *act_node.m_node_value.p_mapping;
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            const auto& map = *act_node.m_value.p_map;
             return map.find(std::forward<KeyType>(key)) != map.end();
         }
 
@@ -1019,8 +1019,8 @@ public:
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            sequence_type& seq = *act_node.m_node_value.p_sequence;
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            sequence_type& seq = *act_node.m_value.p_seq;
             int index = std::move(node_key).template get_value<int>();
             int size = static_cast<int>(seq.size());
             if FK_YAML_UNLIKELY (index >= size) {
@@ -1029,8 +1029,8 @@ public:
             return seq[index];
         }
 
-        FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-        mapping_type& map = *act_node.m_node_value.p_mapping;
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        mapping_type& map = *act_node.m_value.p_map;
         const bool is_found = map.find(node_key) != map.end();
         if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(node_key).c_str());
@@ -1063,8 +1063,8 @@ public:
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            const sequence_type& seq = *act_node.m_node_value.p_sequence;
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            const sequence_type& seq = *act_node.m_value.p_seq;
             int index = std::move(node_key).template get_value<int>();
             int size = static_cast<int>(seq.size());
             if FK_YAML_UNLIKELY (index >= size) {
@@ -1073,8 +1073,8 @@ public:
             return seq[index];
         }
 
-        FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-        const mapping_type& map = *act_node.m_node_value.p_mapping;
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        const mapping_type& map = *act_node.m_value.p_map;
         const bool is_found = map.find(node_key) != map.end();
         if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(node_key).c_str());
@@ -1100,8 +1100,8 @@ public:
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            sequence_type& seq = *act_node.m_node_value.p_sequence;
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            sequence_type& seq = *act_node.m_value.p_seq;
             int index = std::forward<KeyType>(key).template get_value<int>();
             int size = static_cast<int>(seq.size());
             if FK_YAML_UNLIKELY (index >= size) {
@@ -1110,8 +1110,8 @@ public:
             return seq[index];
         }
 
-        FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-        mapping_type& map = *act_node.m_node_value.p_mapping;
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        mapping_type& map = *act_node.m_value.p_map;
         bool is_found = map.find(key) != map.end();
         if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(key).c_str());
@@ -1137,8 +1137,8 @@ public:
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            const sequence_type& seq = *act_node.m_node_value.p_sequence;
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            const sequence_type& seq = *act_node.m_value.p_seq;
             int index = std::forward<KeyType>(key).template get_value<int>();
             int size = static_cast<int>(seq.size());
             if FK_YAML_UNLIKELY (index >= size) {
@@ -1147,8 +1147,8 @@ public:
             return seq[index];
         }
 
-        FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-        const mapping_type& map = *act_node.m_node_value.p_mapping;
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        const mapping_type& map = *act_node.m_value.p_map;
         bool is_found = map.find(key) != map.end();
         if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(key).c_str());
@@ -1369,7 +1369,7 @@ public:
     sequence_type& as_seq() {
         basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_sequence_impl()) {
-            return *act_node.m_node_value.p_sequence;
+            return *act_node.m_value.p_seq;
         }
         throw fkyaml::type_error("The node value is not a sequence.", get_type());
     }
@@ -1381,7 +1381,7 @@ public:
     const sequence_type& as_seq() const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_sequence_impl()) {
-            return *act_node.m_node_value.p_sequence;
+            return *act_node.m_value.p_seq;
         }
         throw fkyaml::type_error("The node value is not a sequence.", get_type());
     }
@@ -1393,7 +1393,7 @@ public:
     mapping_type& as_map() {
         basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_mapping_impl()) {
-            return *act_node.m_node_value.p_mapping;
+            return *act_node.m_value.p_map;
         }
         throw fkyaml::type_error("The node value is not a mapping.", get_type());
     }
@@ -1405,7 +1405,7 @@ public:
     const mapping_type& as_map() const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_mapping_impl()) {
-            return *act_node.m_node_value.p_mapping;
+            return *act_node.m_value.p_map;
         }
         throw fkyaml::type_error("The node value is not a mapping.", get_type());
     }
@@ -1417,7 +1417,7 @@ public:
     boolean_type& as_bool() {
         basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_boolean_impl()) {
-            return act_node.m_node_value.boolean;
+            return act_node.m_value.boolean;
         }
         throw fkyaml::type_error("The node value is not a boolean.", get_type());
     }
@@ -1429,7 +1429,7 @@ public:
     const boolean_type& as_bool() const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_boolean_impl()) {
-            return act_node.m_node_value.boolean;
+            return act_node.m_value.boolean;
         }
         throw fkyaml::type_error("The node value is not a boolean.", get_type());
     }
@@ -1441,7 +1441,7 @@ public:
     integer_type& as_int() {
         basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_integer_impl()) {
-            return act_node.m_node_value.integer;
+            return act_node.m_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
     }
@@ -1453,7 +1453,7 @@ public:
     const integer_type& as_int() const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_integer_impl()) {
-            return act_node.m_node_value.integer;
+            return act_node.m_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
     }
@@ -1465,7 +1465,7 @@ public:
     float_number_type& as_float() {
         basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_float_number_impl()) {
-            return act_node.m_node_value.float_val;
+            return act_node.m_value.float_val;
         }
         throw fkyaml::type_error("The node value is not a float.", get_type());
     }
@@ -1477,7 +1477,7 @@ public:
     const float_number_type& as_float() const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_float_number_impl()) {
-            return act_node.m_node_value.float_val;
+            return act_node.m_value.float_val;
         }
         throw fkyaml::type_error("The node value is not a float.", get_type());
     }
@@ -1489,7 +1489,7 @@ public:
     string_type& as_str() {
         basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_string_impl()) {
-            return *act_node.m_node_value.p_string;
+            return *act_node.m_value.p_str;
         }
         throw fkyaml::type_error("The node value is not a string.", get_type());
     }
@@ -1501,7 +1501,7 @@ public:
     const string_type& as_str() const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_string_impl()) {
-            return *act_node.m_node_value.p_string;
+            return *act_node.m_value.p_str;
         }
         throw fkyaml::type_error("The node value is not a string.", get_type());
     }
@@ -1515,9 +1515,9 @@ public:
         swap(mp_meta, rhs.mp_meta);
 
         node_value tmp {};
-        std::memcpy(&tmp, &m_node_value, sizeof(node_value));
-        std::memcpy(&m_node_value, &rhs.m_node_value, sizeof(node_value));
-        std::memcpy(&rhs.m_node_value, &tmp, sizeof(node_value));
+        std::memcpy(&tmp, &m_value, sizeof(node_value));
+        std::memcpy(&m_value, &rhs.m_value, sizeof(node_value));
+        std::memcpy(&rhs.m_value, &tmp, sizeof(node_value));
 
         swap(m_prop.tag, rhs.m_prop.tag);
         swap(m_prop.anchor, rhs.m_prop.anchor);
@@ -1531,11 +1531,11 @@ public:
         basic_node& act_node = resolve_reference();
         switch (act_node.m_attrs & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            return {act_node.m_node_value.p_sequence->begin()};
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return {act_node.m_value.p_seq->begin()};
         case detail::node_attr_bits::map_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-            return {act_node.m_node_value.p_mapping->begin()};
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return {act_node.m_value.p_map->begin()};
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
@@ -1549,11 +1549,11 @@ public:
         const basic_node& act_node = resolve_reference();
         switch (act_node.m_attrs & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            return {act_node.m_node_value.p_sequence->begin()};
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return {act_node.m_value.p_seq->begin()};
         case detail::node_attr_bits::map_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-            return {act_node.m_node_value.p_mapping->begin()};
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return {act_node.m_value.p_map->begin()};
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
@@ -1575,11 +1575,11 @@ public:
         basic_node& act_node = resolve_reference();
         switch (act_node.m_attrs & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            return {act_node.m_node_value.p_sequence->end()};
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return {act_node.m_value.p_seq->end()};
         case detail::node_attr_bits::map_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-            return {act_node.m_node_value.p_mapping->end()};
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return {act_node.m_value.p_map->end()};
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
@@ -1593,11 +1593,11 @@ public:
         const basic_node& act_node = resolve_reference();
         switch (act_node.m_attrs & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_sequence != nullptr);
-            return {act_node.m_node_value.p_sequence->end()};
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return {act_node.m_value.p_seq->end()};
         case detail::node_attr_bits::map_bit:
-            FK_YAML_ASSERT(act_node.m_node_value.p_mapping != nullptr);
-            return {act_node.m_node_value.p_mapping->end()};
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return {act_node.m_value.p_map->end()};
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
@@ -1845,7 +1845,7 @@ private:
         // NOLINTNEXTLINE(bugprone-unhandled-exception-at-new)
         std::shared_ptr<detail::document_metainfo<basic_node>>(new detail::document_metainfo<basic_node>())};
     /// The current node value.
-    node_value m_node_value {};
+    node_value m_value {};
     /// The property set of this node.
     detail::node_property m_prop {};
 };

@@ -28,7 +28,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @brief The external constructor template for basic_node objects.
 /// @note All the non-specialized instantiations results in compilation error since such instantiations are not
 /// supported.
-/// @warning All the specialization must call n.m_node_value.destroy() first in the construct function to avoid
+/// @warning All the specialization must call n.m_value.destroy() first in the construct function to avoid
 /// memory leak.
 /// @tparam node_type The resulting YAML node value type.
 template <typename BasicNodeType>
@@ -37,50 +37,50 @@ struct external_node_constructor {
     static void sequence(BasicNodeType& n, Args&&... args) {
         destroy(n);
         n.m_attrs |= node_attr_bits::seq_bit;
-        n.m_node_value.p_sequence = create_object<typename BasicNodeType::sequence_type>(std::forward<Args>(args)...);
+        n.m_value.p_seq = create_object<typename BasicNodeType::sequence_type>(std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     static void mapping(BasicNodeType& n, Args&&... args) {
         destroy(n);
         n.m_attrs |= node_attr_bits::map_bit;
-        n.m_node_value.p_mapping = create_object<typename BasicNodeType::mapping_type>(std::forward<Args>(args)...);
+        n.m_value.p_map = create_object<typename BasicNodeType::mapping_type>(std::forward<Args>(args)...);
     }
 
     static void null_scalar(BasicNodeType& n, std::nullptr_t) {
         destroy(n);
         n.m_attrs |= node_attr_bits::null_bit;
-        n.m_node_value.p_mapping = nullptr;
+        n.m_value.p_map = nullptr;
     }
 
     static void boolean_scalar(BasicNodeType& n, const typename BasicNodeType::boolean_type b) {
         destroy(n);
         n.m_attrs |= node_attr_bits::bool_bit;
-        n.m_node_value.boolean = b;
+        n.m_value.boolean = b;
     }
 
     static void integer_scalar(BasicNodeType& n, const typename BasicNodeType::integer_type i) {
         destroy(n);
         n.m_attrs |= node_attr_bits::int_bit;
-        n.m_node_value.integer = i;
+        n.m_value.integer = i;
     }
 
     static void float_scalar(BasicNodeType& n, const typename BasicNodeType::float_number_type f) {
         destroy(n);
         n.m_attrs |= node_attr_bits::float_bit;
-        n.m_node_value.float_val = f;
+        n.m_value.float_val = f;
     }
 
     template <typename... Args>
     static void string_scalar(BasicNodeType& n, Args&&... args) {
         destroy(n);
         n.m_attrs |= node_attr_bits::string_bit;
-        n.m_node_value.p_string = create_object<typename BasicNodeType::string_type>(std::forward<Args>(args)...);
+        n.m_value.p_str = create_object<typename BasicNodeType::string_type>(std::forward<Args>(args)...);
     }
 
 private:
     static void destroy(BasicNodeType& n) {
-        n.m_node_value.destroy(n.m_attrs & node_attr_mask::value);
+        n.m_value.destroy(n.m_attrs & node_attr_mask::value);
         n.m_attrs &= ~node_attr_mask::value;
     }
 };
