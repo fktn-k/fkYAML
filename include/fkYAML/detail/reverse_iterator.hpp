@@ -21,7 +21,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 template <typename Iterator>
 class reverse_iterator {
     static_assert(
-        is_basic_node<typename std::remove_const<typename Iterator::value_type>::type>::value,
+        is_basic_node<typename Iterator::value_type>::value,
         "reverse_iterator only accepts a basic_node type as the underlying iterator's value type");
 
 public:

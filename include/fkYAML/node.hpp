@@ -175,13 +175,13 @@ private:
         explicit node_value(detail::node_attr_t value_type_bit) {
             switch (value_type_bit) {
             case detail::node_attr_bits::seq_bit:
-                p_sequence = detail::create_object<sequence_type>();
+                p_seq = detail::create_object<sequence_type>();
                 break;
             case detail::node_attr_bits::map_bit:
-                p_mapping = detail::create_object<mapping_type>();
+                p_map = detail::create_object<mapping_type>();
                 break;
             case detail::node_attr_bits::null_bit:
-                p_mapping = nullptr;
+                p_map = nullptr;
                 break;
             case detail::node_attr_bits::bool_bit:
                 boolean = static_cast<boolean_type>(false);
@@ -193,7 +193,7 @@ private:
                 float_val = static_cast<float_number_type>(0.0);
                 break;
             case detail::node_attr_bits::string_bit:
-                p_string = detail::create_object<string_type>();
+                p_str = detail::create_object<string_type>();
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -206,18 +206,18 @@ private:
         void destroy(detail::node_attr_t value_type_bit) {
             switch (value_type_bit) {
             case detail::node_attr_bits::seq_bit:
-                p_sequence->clear();
-                detail::destroy_object<sequence_type>(p_sequence);
-                p_sequence = nullptr;
+                p_seq->clear();
+                detail::destroy_object<sequence_type>(p_seq);
+                p_seq = nullptr;
                 break;
             case detail::node_attr_bits::map_bit:
-                p_mapping->clear();
-                detail::destroy_object<mapping_type>(p_mapping);
-                p_mapping = nullptr;
+                p_map->clear();
+                detail::destroy_object<mapping_type>(p_map);
+                p_map = nullptr;
                 break;
             case detail::node_attr_bits::string_bit:
-                detail::destroy_object<string_type>(p_string);
-                p_string = nullptr;
+                detail::destroy_object<string_type>(p_str);
+                p_str = nullptr;
                 break;
             default:
                 break;
@@ -225,9 +225,9 @@ private:
         }
 
         /// A pointer to the value of sequence type.
-        sequence_type* p_sequence;
+        sequence_type* p_seq;
         /// A pointer to the value of mapping type. This pointer is also used when node type is null.
-        mapping_type* p_mapping {nullptr};
+        mapping_type* p_map {nullptr};
         /// A value of boolean type.
         boolean_type boolean;
         /// A value of integer type.
@@ -235,7 +235,7 @@ private:
         /// A value of float number type.
         float_number_type float_val;
         /// A pointer to the value of string type.
-        string_type* p_string;
+        string_type* p_str;
     };
 
 public:
@@ -253,7 +253,7 @@ public:
 
     explicit basic_node(const node_type type)
         : m_attrs(detail::node_attr_bits::from_node_type(type)),
-          m_node_value(m_attrs & detail::node_attr_mask::value) {
+          m_value(m_attrs & detail::node_attr_mask::value) {
     }
 
     /// @brief Copy constructor of the basic_node class.
@@ -266,25 +266,25 @@ public:
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs & detail::node_attr_mask::value) {
             case detail::node_attr_bits::seq_bit:
-                m_node_value.p_sequence = detail::create_object<sequence_type>(*(rhs.m_node_value.p_sequence));
+                m_value.p_seq = detail::create_object<sequence_type>(*(rhs.m_value.p_seq));
                 break;
             case detail::node_attr_bits::map_bit:
-                m_node_value.p_mapping = detail::create_object<mapping_type>(*(rhs.m_node_value.p_mapping));
+                m_value.p_map = detail::create_object<mapping_type>(*(rhs.m_value.p_map));
                 break;
             case detail::node_attr_bits::null_bit:
-                m_node_value.p_mapping = nullptr;
+                m_value.p_map = nullptr;
                 break;
             case detail::node_attr_bits::bool_bit:
-                m_node_value.boolean = rhs.m_node_value.boolean;
+                m_value.boolean = rhs.m_value.boolean;
                 break;
             case detail::node_attr_bits::int_bit:
-                m_node_value.integer = rhs.m_node_value.integer;
+                m_value.integer = rhs.m_value.integer;
                 break;
             case detail::node_attr_bits::float_bit:
-                m_node_value.float_val = rhs.m_node_value.float_val;
+                m_value.float_val = rhs.m_value.float_val;
                 break;
             case detail::node_attr_bits::string_bit:
-                m_node_value.p_string = detail::create_object<string_type>(*(rhs.m_node_value.p_string));
+                m_value.p_str = detail::create_object<string_type>(*(rhs.m_value.p_str));
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -302,35 +302,35 @@ public:
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs & detail::node_attr_mask::value) {
             case detail::node_attr_bits::seq_bit:
-                FK_YAML_ASSERT(rhs.m_node_value.p_sequence != nullptr);
-                m_node_value.p_sequence = rhs.m_node_value.p_sequence;
-                rhs.m_node_value.p_sequence = nullptr;
+                FK_YAML_ASSERT(rhs.m_value.p_seq != nullptr);
+                m_value.p_seq = rhs.m_value.p_seq;
+                rhs.m_value.p_seq = nullptr;
                 break;
             case detail::node_attr_bits::map_bit:
-                FK_YAML_ASSERT(rhs.m_node_value.p_mapping != nullptr);
-                m_node_value.p_mapping = rhs.m_node_value.p_mapping;
-                rhs.m_node_value.p_mapping = nullptr;
+                FK_YAML_ASSERT(rhs.m_value.p_map != nullptr);
+                m_value.p_map = rhs.m_value.p_map;
+                rhs.m_value.p_map = nullptr;
                 break;
             case detail::node_attr_bits::null_bit:
-                FK_YAML_ASSERT(rhs.m_node_value.p_mapping == nullptr);
-                m_node_value.p_mapping = rhs.m_node_value.p_mapping;
+                FK_YAML_ASSERT(rhs.m_value.p_map == nullptr);
+                m_value.p_map = rhs.m_value.p_map;
                 break;
             case detail::node_attr_bits::bool_bit:
-                m_node_value.boolean = rhs.m_node_value.boolean;
-                rhs.m_node_value.boolean = static_cast<boolean_type>(false);
+                m_value.boolean = rhs.m_value.boolean;
+                rhs.m_value.boolean = static_cast<boolean_type>(false);
                 break;
             case detail::node_attr_bits::int_bit:
-                m_node_value.integer = rhs.m_node_value.integer;
-                rhs.m_node_value.integer = static_cast<integer_type>(0);
+                m_value.integer = rhs.m_value.integer;
+                rhs.m_value.integer = static_cast<integer_type>(0);
                 break;
             case detail::node_attr_bits::float_bit:
-                m_node_value.float_val = rhs.m_node_value.float_val;
-                rhs.m_node_value.float_val = static_cast<float_number_type>(0.0);
+                m_value.float_val = rhs.m_value.float_val;
+                rhs.m_value.float_val = static_cast<float_number_type>(0.0);
                 break;
             case detail::node_attr_bits::string_bit:
-                FK_YAML_ASSERT(rhs.m_node_value.p_string != nullptr);
-                m_node_value.p_string = rhs.m_node_value.p_string;
-                rhs.m_node_value.p_string = nullptr;
+                FK_YAML_ASSERT(rhs.m_value.p_str != nullptr);
+                m_value.p_str = rhs.m_value.p_str;
+                rhs.m_value.p_str = nullptr;
                 break;
             default:                   // LCOV_EXCL_LINE
                 detail::unreachable(); // LCOV_EXCL_LINE
@@ -338,7 +338,7 @@ public:
         }
 
         rhs.m_attrs = detail::node_attr_bits::default_bits;
-        rhs.m_node_value.p_mapping = nullptr;
+        rhs.m_value.p_map = nullptr;
     }
 
     /// @brief Construct a new basic_node object from a value of compatible types.
@@ -375,25 +375,29 @@ public:
     basic_node(initializer_list_t init) {
         bool is_mapping =
             std::all_of(init.begin(), init.end(), [](const detail::node_ref_storage<basic_node>& node_ref) {
+                // Do not use is_sequence_impl() since node_ref may be an anchor or alias.
                 return node_ref->is_sequence() && node_ref->size() == 2;
             });
 
         if (is_mapping) {
             m_attrs = detail::node_attr_bits::map_bit;
-            m_node_value.p_mapping = detail::create_object<mapping_type>();
+            m_value.p_map = detail::create_object<mapping_type>();
 
+            auto& map = *m_value.p_map;
             for (auto& elem_ref : init) {
                 auto elem = elem_ref.release();
-                m_node_value.p_mapping->emplace(
-                    std::move((*(elem.m_node_value.p_sequence))[0]), std::move((*(elem.m_node_value.p_sequence))[1]));
+                auto& seq = *elem.m_value.p_seq;
+                map.emplace(std::move(seq[0]), std::move(seq[1]));
             }
         }
         else {
             m_attrs = detail::node_attr_bits::seq_bit;
-            m_node_value.p_sequence = detail::create_object<sequence_type>();
-            m_node_value.p_sequence->reserve(std::distance(init.begin(), init.end()));
+            m_value.p_seq = detail::create_object<sequence_type>();
+
+            auto& seq = *m_value.p_seq;
+            seq.reserve(std::distance(init.begin(), init.end()));
             for (auto& elem_ref : init) {
-                m_node_value.p_sequence->emplace_back(std::move(elem_ref.release()));
+                seq.emplace_back(std::move(elem_ref.release()));
             }
         }
     }
@@ -406,13 +410,13 @@ public:
             if (m_attrs & detail::node_attr_bits::anchor_bit) {
                 auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
                 std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-                itr->second.m_node_value.destroy(itr->second.m_attrs & detail::node_attr_mask::value);
+                itr->second.m_value.destroy(itr->second.m_attrs & detail::node_attr_mask::value);
                 itr->second.m_attrs = detail::node_attr_bits::default_bits;
                 itr->second.mp_meta.reset();
             }
         }
         else if ((m_attrs & detail::node_attr_bits::null_bit) == 0) {
-            m_node_value.destroy(m_attrs & detail::node_attr_mask::value);
+            m_value.destroy(m_attrs & detail::node_attr_mask::value);
         }
 
         m_attrs = detail::node_attr_bits::default_bits;
@@ -489,7 +493,7 @@ public:
     static basic_node sequence() {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::seq_bit;
-        node.m_node_value.p_sequence = detail::create_object<sequence_type>();
+        node.m_value.p_seq = detail::create_object<sequence_type>();
         return node;
     } // LCOV_EXCL_LINE
 
@@ -500,7 +504,7 @@ public:
     static basic_node sequence(const sequence_type& seq) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::seq_bit;
-        node.m_node_value.p_sequence = detail::create_object<sequence_type>(seq);
+        node.m_value.p_seq = detail::create_object<sequence_type>(seq);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -511,7 +515,7 @@ public:
     static basic_node sequence(sequence_type&& seq) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::seq_bit;
-        node.m_node_value.p_sequence = detail::create_object<sequence_type>(std::move(seq));
+        node.m_value.p_seq = detail::create_object<sequence_type>(std::move(seq));
         return node;
     } // LCOV_EXCL_LINE
 
@@ -521,7 +525,7 @@ public:
     static basic_node mapping() {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::map_bit;
-        node.m_node_value.p_mapping = detail::create_object<mapping_type>();
+        node.m_value.p_map = detail::create_object<mapping_type>();
         return node;
     } // LCOV_EXCL_LINE
 
@@ -532,7 +536,7 @@ public:
     static basic_node mapping(const mapping_type& map) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::map_bit;
-        node.m_node_value.p_mapping = detail::create_object<mapping_type>(map);
+        node.m_value.p_map = detail::create_object<mapping_type>(map);
         return node;
     } // LCOV_EXCL_LINE
 
@@ -543,7 +547,7 @@ public:
     static basic_node mapping(mapping_type&& map) {
         basic_node node;
         node.m_attrs = detail::node_attr_bits::map_bit;
-        node.m_node_value.p_mapping = detail::create_object<mapping_type>(std::move(map));
+        node.m_value.p_map = detail::create_object<mapping_type>(std::move(map));
         return node;
     } // LCOV_EXCL_LINE
 
@@ -596,24 +600,26 @@ public:
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
     basic_node& operator[](KeyType&& key) {
-        if FK_YAML_UNLIKELY (is_scalar()) {
+        basic_node& act_node = resolve_reference();
+
+        if FK_YAML_UNLIKELY (act_node.is_scalar_impl()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
-        basic_node n = std::forward<KeyType>(key);
-        const node_value* p_node_value = get_node_value_ptr();
+        basic_node key_node = std::forward<KeyType>(key);
 
-        if (is_sequence()) {
-            if FK_YAML_UNLIKELY (!n.is_integer()) {
+        if (act_node.is_sequence_impl()) {
+            // Do not use is_integer_impl() since n may be an anchor or alias.
+            if FK_YAML_UNLIKELY (!key_node.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return p_node_value->p_sequence->operator[](n.get_value<int>());
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return act_node.m_value.p_seq->operator[](key_node.get_value<int>());
         }
 
-        FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-        return p_node_value->p_mapping->operator[](std::move(n));
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        return act_node.m_value.p_map->operator[](std::move(key_node));
     }
 
     /// @brief A subscript operator of the basic_node class with a key of a compatible type with basic_node.
@@ -628,24 +634,25 @@ public:
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
     const basic_node& operator[](KeyType&& key) const {
-        if FK_YAML_UNLIKELY (is_scalar()) {
+        const basic_node& act_node = resolve_reference();
+
+        if FK_YAML_UNLIKELY (act_node.is_scalar_impl()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
-        basic_node node_key = std::forward<KeyType>(key);
-        const node_value* p_node_value = get_node_value_ptr();
+        basic_node key_node = std::forward<KeyType>(key);
 
-        if (is_sequence()) {
-            if FK_YAML_UNLIKELY (!node_key.is_integer()) {
+        if (act_node.is_sequence_impl()) {
+            if FK_YAML_UNLIKELY (!key_node.is_integer_impl()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return p_node_value->p_sequence->operator[](node_key.get_value<int>());
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return act_node.m_value.p_seq->operator[](key_node.get_value<int>());
         }
 
-        FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-        return p_node_value->p_mapping->operator[](std::move(node_key));
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        return act_node.m_value.p_map->operator[](std::move(key_node));
     }
 
     /// @brief A subscript operator of the basic_node class with a basic_node key object.
@@ -653,26 +660,25 @@ public:
     /// @param key A key to the target value in a sequence/mapping node.
     /// @return The value associated with the given key, or a default basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
-    template <
-        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    template <typename KeyType, detail::enable_if_t<detail::is_basic_node<KeyType>::value, int> = 0>
     basic_node& operator[](KeyType&& key) {
         if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
-        const node_value* p_node_value = get_node_value_ptr();
+        const node_value& node_value = resolve_reference().m_value;
 
         if (is_sequence()) {
             if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return p_node_value->p_sequence->operator[](key.template get_value<int>());
+            FK_YAML_ASSERT(node_value.p_seq != nullptr);
+            return node_value.p_seq->operator[](std::forward<KeyType>(key).template get_value<int>());
         }
 
-        FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-        return p_node_value->p_mapping->operator[](std::forward<KeyType>(key));
+        FK_YAML_ASSERT(node_value.p_map != nullptr);
+        return node_value.p_map->operator[](std::forward<KeyType>(key));
     }
 
     /// @brief A subscript operator of the basic_node class with a basic_node key object.
@@ -680,26 +686,25 @@ public:
     /// @param key A key to the target value in a sequence/mapping node.
     /// @return The value associated with the given key, or a default basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
-    template <
-        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    template <typename KeyType, detail::enable_if_t<detail::is_basic_node<KeyType>::value, int> = 0>
     const basic_node& operator[](KeyType&& key) const {
         if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
         }
 
-        const node_value* p_node_value = get_node_value_ptr();
+        const node_value& node_value = resolve_reference().m_value;
 
         if (is_sequence()) {
             if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error(
                     "An argument of operator[] for sequence nodes must be an integer.", get_type());
             }
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return p_node_value->p_sequence->operator[](key.template get_value<int>());
+            FK_YAML_ASSERT(node_value.p_seq != nullptr);
+            return node_value.p_seq->operator[](key.template get_value<int>());
         }
 
-        FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-        return p_node_value->p_mapping->operator[](std::forward<KeyType>(key));
+        FK_YAML_ASSERT(node_value.p_map != nullptr);
+        return node_value.p_map->operator[](std::forward<KeyType>(key));
     }
 
     /// @brief An equal-to operator of the basic_node class.
@@ -707,39 +712,39 @@ public:
     /// @return true if both types and values are equal, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_eq/
     bool operator==(const basic_node& rhs) const noexcept {
-        const detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
-        if (this_val_bit != (rhs.get_node_attrs() & detail::node_attr_mask::value)) {
+        const basic_node& lhs = resolve_reference();
+        const basic_node& act_rhs = rhs.resolve_reference();
+
+        const detail::node_attr_t lhs_val_bit = lhs.m_attrs & detail::node_attr_mask::value;
+        if (lhs_val_bit != (act_rhs.m_attrs & detail::node_attr_mask::value)) {
             return false;
         }
 
-        const node_value* this_node_value_ptr = get_node_value_ptr();
-        const node_value* other_node_value_ptr = rhs.get_node_value_ptr();
-
         bool ret = false;
-        switch (this_val_bit) {
+        switch (lhs_val_bit) {
         case detail::node_attr_bits::seq_bit:
-            ret = (*(this_node_value_ptr->p_sequence) == *(other_node_value_ptr->p_sequence));
+            ret = (*(lhs.m_value.p_seq) == *(act_rhs.m_value.p_seq));
             break;
         case detail::node_attr_bits::map_bit:
-            ret = (*(this_node_value_ptr->p_mapping) == *(other_node_value_ptr->p_mapping));
+            ret = (*(lhs.m_value.p_map) == *(act_rhs.m_value.p_map));
             break;
         case detail::node_attr_bits::null_bit:
             // Always true for comparisons between null nodes.
             ret = true;
             break;
         case detail::node_attr_bits::bool_bit:
-            ret = (this_node_value_ptr->boolean == other_node_value_ptr->boolean);
+            ret = (lhs.m_value.boolean == act_rhs.m_value.boolean);
             break;
         case detail::node_attr_bits::int_bit:
-            ret = (this_node_value_ptr->integer == other_node_value_ptr->integer);
+            ret = (lhs.m_value.integer == act_rhs.m_value.integer);
             break;
         case detail::node_attr_bits::float_bit:
             ret =
-                (std::abs(this_node_value_ptr->float_val - other_node_value_ptr->float_val) <
+                (std::abs(lhs.m_value.float_val - act_rhs.m_value.float_val) <
                  std::numeric_limits<float_number_type>::epsilon());
             break;
         case detail::node_attr_bits::string_bit:
-            ret = (*(this_node_value_ptr->p_string) == *(other_node_value_ptr->p_string));
+            ret = (*(lhs.m_value.p_str) == *(act_rhs.m_value.p_str));
             break;
         default:                   // LCOV_EXCL_LINE
             detail::unreachable(); // LCOV_EXCL_LINE
@@ -765,43 +770,43 @@ public:
             return false;
         }
 
-        const detail::node_attr_t this_val_bit = get_node_attrs() & detail::node_attr_mask::value;
-        const detail::node_attr_t other_val_bit = rhs.get_node_attrs() & detail::node_attr_mask::value;
+        const basic_node& lhs = resolve_reference();
+        const basic_node& act_rhs = rhs.resolve_reference();
 
-        if (this_val_bit < other_val_bit) {
+        const detail::node_attr_t lhs_val_bit = lhs.m_attrs & detail::node_attr_mask::value;
+        const detail::node_attr_t rhs_val_bit = act_rhs.m_attrs & detail::node_attr_mask::value;
+
+        if (lhs_val_bit < rhs_val_bit) {
             return true;
         }
 
-        if (this_val_bit != other_val_bit) {
+        if (lhs_val_bit != rhs_val_bit) {
             return false;
         }
 
-        const node_value* p_this_value = get_node_value_ptr();
-        const node_value* p_other_value = rhs.get_node_value_ptr();
-
         bool ret = false;
-        switch (this_val_bit) {
+        switch (lhs_val_bit) {
         case detail::node_attr_bits::seq_bit:
-            ret = (*(p_this_value->p_sequence) < *(p_other_value->p_sequence));
+            ret = (*(lhs.m_value.p_seq) < *(act_rhs.m_value.p_seq));
             break;
         case detail::node_attr_bits::map_bit:
-            ret = (*(p_this_value->p_mapping) < *(p_other_value->p_mapping));
+            ret = (*(lhs.m_value.p_map) < *(act_rhs.m_value.p_map));
             break;
         case detail::node_attr_bits::null_bit: // LCOV_EXCL_LINE
             // Will not come here since null nodes are always the same.
             detail::unreachable(); // LCOV_EXCL_LINE
         case detail::node_attr_bits::bool_bit:
             // false < true
-            ret = (!p_this_value->boolean && p_other_value->boolean);
+            ret = (!lhs.m_value.boolean && act_rhs.m_value.boolean);
             break;
         case detail::node_attr_bits::int_bit:
-            ret = (p_this_value->integer < p_other_value->integer);
+            ret = (lhs.m_value.integer < act_rhs.m_value.integer);
             break;
         case detail::node_attr_bits::float_bit:
-            ret = (p_this_value->float_val < p_other_value->float_val);
+            ret = (lhs.m_value.float_val < act_rhs.m_value.float_val);
             break;
         case detail::node_attr_bits::string_bit:
-            ret = (*(p_this_value->p_string) < *(p_other_value->p_string));
+            ret = (*(lhs.m_value.p_str) < *(act_rhs.m_value.p_str));
             break;
         default:                   // LCOV_EXCL_LINE
             detail::unreachable(); // LCOV_EXCL_LINE
@@ -839,8 +844,7 @@ public:
     /// @return The type of the YAML node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_type/
     node_type get_type() const noexcept {
-        const detail::node_attr_t attrs = get_node_attrs();
-        return detail::node_attr_bits::to_node_type(attrs);
+        return detail::node_attr_bits::to_node_type(resolve_reference().m_attrs);
     }
 
     /// @brief Returns the type of the current basic_node value.
@@ -857,56 +861,56 @@ public:
     /// @return true if the type is sequence, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_sequence/
     bool is_sequence() const noexcept {
-        return get_node_attrs() & detail::node_attr_bits::seq_bit;
+        return resolve_reference().is_sequence_impl();
     }
 
     /// @brief Tests whether the current basic_node value is of mapping type.
     /// @return true if the type is mapping, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_mapping/
     bool is_mapping() const noexcept {
-        return get_node_attrs() & detail::node_attr_bits::map_bit;
+        return resolve_reference().is_mapping_impl();
     }
 
     /// @brief Tests whether the current basic_node value is of null type.
     /// @return true if the type is null, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_null/
     bool is_null() const noexcept {
-        return get_node_attrs() & detail::node_attr_bits::null_bit;
+        return resolve_reference().is_null_impl();
     }
 
     /// @brief Tests whether the current basic_node value is of boolean type.
     /// @return true if the type is boolean, false otherwise
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_boolean/
     bool is_boolean() const noexcept {
-        return get_node_attrs() & detail::node_attr_bits::bool_bit;
+        return resolve_reference().is_boolean_impl();
     }
 
     /// @brief Tests whether the current basic_node value is of integer type.
     /// @return true if the type is integer, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_integer/
     bool is_integer() const noexcept {
-        return get_node_attrs() & detail::node_attr_bits::int_bit;
+        return resolve_reference().is_integer_impl();
     }
 
     /// @brief Tests whether the current basic_node value is of float number type.
     /// @return true if the type is floating point number, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_float_number/
     bool is_float_number() const noexcept {
-        return get_node_attrs() & detail::node_attr_bits::float_bit;
+        return resolve_reference().is_float_number_impl();
     }
 
     /// @brief Tests whether the current basic_node value is of string type.
     /// @return true if the type is string, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_string/
     bool is_string() const noexcept {
-        return get_node_attrs() & detail::node_attr_bits::string_bit;
+        return resolve_reference().is_string_impl();
     }
 
     /// @brief Tests whether the current basic_node value is of scalar types.
     /// @return true if the type is scalar, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_scalar/
     bool is_scalar() const noexcept {
-        return get_node_attrs() & detail::node_attr_bits::scalar_bits;
+        return resolve_reference().is_scalar_impl();
     }
 
     /// @brief Tests whether the current basic_node is an anchor node.
@@ -927,21 +931,19 @@ public:
     /// @return true if the node value is empty, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/empty/
     bool empty() const {
-        switch (get_node_attrs() & detail::node_attr_mask::value) {
+        const basic_node& act_node = resolve_reference();
+        switch (act_node.m_attrs & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return p_node_value->p_sequence->empty();
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return act_node.m_value.p_seq->empty();
         }
         case detail::node_attr_bits::map_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return p_node_value->p_mapping->empty();
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return act_node.m_value.p_map->empty();
         }
         case detail::node_attr_bits::string_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_string != nullptr);
-            return p_node_value->p_string->empty();
+            FK_YAML_ASSERT(act_node.m_value.p_str != nullptr);
+            return act_node.m_value.p_str->empty();
         }
         default:
             throw fkyaml::type_error("The target node is not of a container type.", get_type());
@@ -952,17 +954,17 @@ public:
     /// @return The size of a node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/size/
     std::size_t size() const {
-        const node_value* p_node_value = get_node_value_ptr();
-        switch (get_node_attrs() & detail::node_attr_mask::value) {
+        const basic_node& act_node = resolve_reference();
+        switch (act_node.m_attrs & detail::node_attr_mask::value) {
         case detail::node_attr_bits::seq_bit:
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return p_node_value->p_sequence->size();
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return act_node.m_value.p_seq->size();
         case detail::node_attr_bits::map_bit:
-            FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return p_node_value->p_mapping->size();
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return act_node.m_value.p_map->size();
         case detail::node_attr_bits::string_bit:
-            FK_YAML_ASSERT(p_node_value->p_string != nullptr);
-            return p_node_value->p_string->size();
+            FK_YAML_ASSERT(act_node.m_value.p_str != nullptr);
+            return act_node.m_value.p_str->size();
         default:
             throw fkyaml::type_error("The target node is not of a container type.", get_type());
         }
@@ -975,36 +977,15 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/contains/
     template <
         typename KeyType, detail::enable_if_t<
-                              detail::conjunction<
-                                  detail::negation<detail::is_basic_node<detail::remove_cvref_t<KeyType>>>,
+                              detail::disjunction<
+                                  detail::is_basic_node<KeyType>,
                                   detail::is_node_compatible_type<basic_node, detail::remove_cvref_t<KeyType>>>::value,
                               int> = 0>
     bool contains(KeyType&& key) const {
-        if FK_YAML_LIKELY (get_node_attrs() & detail::node_attr_bits::map_bit) {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-
-            const mapping_type& map = *p_node_value->p_mapping;
-            basic_node node_key = std::forward<KeyType>(key);
-            return map.find(std::move(node_key)) != map.end();
-        }
-
-        return false;
-    }
-
-    /// @brief Check whether this basic_node object has a given key in its inner mapping Node value.
-    /// @tparam KeyType A key type which is a kind of basic_node template class.
-    /// @param[in] key A key to the target value in the YAML mapping node value.
-    /// @return true if the YAML node is a mapping and has the given key, false otherwise.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/contains/
-    template <
-        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
-    bool contains(KeyType&& key) const {
-        if FK_YAML_LIKELY (get_node_attrs() & detail::node_attr_bits::map_bit) {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-
-            const mapping_type& map = *p_node_value->p_mapping;
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.m_attrs & detail::node_attr_bits::map_bit) {
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            const auto& map = *act_node.m_value.p_map;
             return map.find(std::forward<KeyType>(key)) != map.end();
         }
 
@@ -1023,35 +1004,36 @@ public:
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
     basic_node& at(KeyType&& key) {
-        if FK_YAML_UNLIKELY (is_scalar()) {
+        basic_node& act_node = resolve_reference();
+
+        if FK_YAML_UNLIKELY (act_node.is_scalar_impl()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", get_type());
         }
 
         basic_node node_key = std::forward<KeyType>(key);
-        const node_value* p_node_value = get_node_value_ptr();
 
-        if (is_sequence()) {
-            if FK_YAML_UNLIKELY (!node_key.is_integer()) {
+        if (act_node.is_sequence_impl()) {
+            if FK_YAML_UNLIKELY (!node_key.is_integer_impl()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            sequence_type& seq = *p_node_value->p_sequence;
-            int index = node_key.template get_value<int>();
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            sequence_type& seq = *act_node.m_value.p_seq;
+            int index = std::move(node_key).template get_value<int>();
             int size = static_cast<int>(seq.size());
             if FK_YAML_UNLIKELY (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
-            return seq.at(index);
+            return seq[index];
         }
 
-        FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-        mapping_type& map = *p_node_value->p_mapping;
-        bool is_found = map.find(node_key) != map.end();
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        mapping_type& map = *act_node.m_value.p_map;
+        const bool is_found = map.find(node_key) != map.end();
         if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(node_key).c_str());
         }
-        return map.at(node_key);
+        return map[std::move(node_key)];
     }
 
     /// @brief Get a basic_node object with a key of a compatible type.
@@ -1066,35 +1048,36 @@ public:
                                   detail::is_node_compatible_type<basic_node, KeyType>>::value,
                               int> = 0>
     const basic_node& at(KeyType&& key) const {
-        if FK_YAML_UNLIKELY (is_scalar()) {
+        const basic_node& act_node = resolve_reference();
+
+        if FK_YAML_UNLIKELY (act_node.is_scalar_impl()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", get_type());
         }
 
         basic_node node_key = std::forward<KeyType>(key);
-        const node_value* p_node_value = get_node_value_ptr();
 
-        if (is_sequence()) {
+        if (act_node.is_sequence_impl()) {
             if FK_YAML_UNLIKELY (!node_key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            const sequence_type& seq = *p_node_value->p_sequence;
-            int index = node_key.template get_value<int>();
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            const sequence_type& seq = *act_node.m_value.p_seq;
+            int index = std::move(node_key).template get_value<int>();
             int size = static_cast<int>(seq.size());
             if FK_YAML_UNLIKELY (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
-            return seq.at(index);
+            return seq[index];
         }
 
-        FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-        const mapping_type& map = *p_node_value->p_mapping;
-        bool is_found = map.find(node_key) != map.end();
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        const mapping_type& map = *act_node.m_value.p_map;
+        const bool is_found = map.find(node_key) != map.end();
         if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(node_key).c_str());
         }
-        return map.at(node_key);
+        return map.at(std::move(node_key));
     }
 
     /// @brief Get a basic_node object with a basic_node key object.
@@ -1102,37 +1085,35 @@ public:
     /// @param key A key to the target basic_node object in a sequence/mapping node.
     /// @return Reference to the basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
-    template <
-        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    template <typename KeyType, detail::enable_if_t<detail::is_basic_node<KeyType>::value, int> = 0>
     basic_node& at(KeyType&& key) {
-        if FK_YAML_UNLIKELY (is_scalar()) {
+        basic_node& act_node = resolve_reference();
+        if FK_YAML_UNLIKELY (act_node.is_scalar_impl()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", get_type());
         }
 
-        const node_value* p_node_value = get_node_value_ptr();
-
-        if (is_sequence()) {
+        if (act_node.is_sequence_impl()) {
             if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            sequence_type& seq = *p_node_value->p_sequence;
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            sequence_type& seq = *act_node.m_value.p_seq;
             int index = std::forward<KeyType>(key).template get_value<int>();
             int size = static_cast<int>(seq.size());
             if FK_YAML_UNLIKELY (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
-            return seq.at(index);
+            return seq[index];
         }
 
-        FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-        mapping_type& map = *p_node_value->p_mapping;
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        mapping_type& map = *act_node.m_value.p_map;
         bool is_found = map.find(key) != map.end();
         if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(key).c_str());
         }
-        return map.at(key);
+        return map[std::forward<KeyType>(key)];
     }
 
     /// @brief Get a basic_node object with a basic_node key object.
@@ -1140,37 +1121,35 @@ public:
     /// @param key A key to the target basic_node object in a sequence/mapping node.
     /// @return Constant reference to the basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
-    template <
-        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    template <typename KeyType, detail::enable_if_t<detail::is_basic_node<KeyType>::value, int> = 0>
     const basic_node& at(KeyType&& key) const {
-        if FK_YAML_UNLIKELY (is_scalar()) {
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_UNLIKELY (act_node.is_scalar_impl()) {
             throw fkyaml::type_error("at() is unavailable for a scalar node.", get_type());
         }
 
-        const node_value* p_node_value = get_node_value_ptr();
-
-        if (is_sequence()) {
+        if (act_node.is_sequence_impl()) {
             if FK_YAML_UNLIKELY (!key.is_integer()) {
                 throw fkyaml::type_error("An argument of at() for sequence nodes must be an integer.", get_type());
             }
 
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            const sequence_type& seq = *p_node_value->p_sequence;
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            const sequence_type& seq = *act_node.m_value.p_seq;
             int index = std::forward<KeyType>(key).template get_value<int>();
             int size = static_cast<int>(seq.size());
             if FK_YAML_UNLIKELY (index >= size) {
                 throw fkyaml::out_of_range(index);
             }
-            return seq.at(index);
+            return seq[index];
         }
 
-        FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-        const mapping_type& map = *p_node_value->p_mapping;
+        FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+        const mapping_type& map = *act_node.m_value.p_map;
         bool is_found = map.find(key) != map.end();
         if FK_YAML_UNLIKELY (!is_found) {
             throw fkyaml::out_of_range(serialize(key).c_str());
         }
-        return map.at(key);
+        return map.at(std::forward<KeyType>(key));
     }
 
     /// @brief Get the YAML version for this basic_node object.
@@ -1249,7 +1228,7 @@ public:
         m_attrs &= ~detail::node_attr_mask::anchoring;
         m_attrs |= detail::node_attr_bits::anchor_bit;
         mp_meta = p_meta;
-        auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
+        const auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
         m_prop.anchor = anchor_name;
     }
@@ -1340,14 +1319,7 @@ public:
             "get_value() cannot be called with C-style array types. you might want to call get_value_inplace().");
 
         auto ret = ValueType();
-        if (has_anchor_name()) {
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
-            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            itr->second.get_value_impl(ret);
-        }
-        else {
-            get_value_impl(ret);
-        }
+        resolve_reference().get_value_impl(ret);
         return ret;
     }
 
@@ -1358,14 +1330,7 @@ public:
     template <typename T>
     void get_value_inplace(T& value_ref) const
         noexcept(noexcept(std::declval<const basic_node&>().template get_value_impl<T>(std::declval<T&>()))) {
-        if (has_anchor_name()) {
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
-            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            itr->second.get_value_impl(value_ref);
-        }
-        else {
-            get_value_impl(value_ref);
-        }
+        resolve_reference().get_value_impl(value_ref);
     }
 
     /// @brief Explicit reference access to the internally stored YAML node value.
@@ -1398,8 +1363,9 @@ public:
     /// @return Reference to the sequence node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_seq/
     sequence_type& as_seq() {
-        if FK_YAML_LIKELY (is_sequence()) {
-            return *(get_node_value_ptr()->p_sequence);
+        basic_node& act_node = resolve_reference(); // NOLINT(misc-const-correctness)
+        if FK_YAML_LIKELY (act_node.is_sequence_impl()) {
+            return *act_node.m_value.p_seq;
         }
         throw fkyaml::type_error("The node value is not a sequence.", get_type());
     }
@@ -1409,8 +1375,9 @@ public:
     /// @return Constant reference to the sequence node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_seq/
     const sequence_type& as_seq() const {
-        if FK_YAML_LIKELY (is_sequence()) {
-            return *(get_node_value_ptr()->p_sequence);
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_sequence_impl()) {
+            return *act_node.m_value.p_seq;
         }
         throw fkyaml::type_error("The node value is not a sequence.", get_type());
     }
@@ -1420,8 +1387,9 @@ public:
     /// @return Reference to the mapping node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_map/
     mapping_type& as_map() {
-        if FK_YAML_LIKELY (is_mapping()) {
-            return *(get_node_value_ptr()->p_mapping);
+        basic_node& act_node = resolve_reference(); // NOLINT(misc-const-correctness)
+        if FK_YAML_LIKELY (act_node.is_mapping_impl()) {
+            return *act_node.m_value.p_map;
         }
         throw fkyaml::type_error("The node value is not a mapping.", get_type());
     }
@@ -1431,8 +1399,9 @@ public:
     /// @return Constant reference to the mapping node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_map/
     const mapping_type& as_map() const {
-        if FK_YAML_LIKELY (is_mapping()) {
-            return *(get_node_value_ptr()->p_mapping);
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_mapping_impl()) {
+            return *act_node.m_value.p_map;
         }
         throw fkyaml::type_error("The node value is not a mapping.", get_type());
     }
@@ -1442,8 +1411,9 @@ public:
     /// @return Reference to the boolean node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_bool/
     boolean_type& as_bool() {
-        if FK_YAML_LIKELY (is_boolean()) {
-            return get_node_value_ptr()->boolean;
+        basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_boolean_impl()) {
+            return act_node.m_value.boolean;
         }
         throw fkyaml::type_error("The node value is not a boolean.", get_type());
     }
@@ -1453,8 +1423,9 @@ public:
     /// @return Constant reference to the boolean node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_bool/
     const boolean_type& as_bool() const {
-        if FK_YAML_LIKELY (is_boolean()) {
-            return get_node_value_ptr()->boolean;
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_boolean_impl()) {
+            return act_node.m_value.boolean;
         }
         throw fkyaml::type_error("The node value is not a boolean.", get_type());
     }
@@ -1464,8 +1435,9 @@ public:
     /// @return Reference to the integer node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_int/
     integer_type& as_int() {
-        if FK_YAML_LIKELY (is_integer()) {
-            return get_node_value_ptr()->integer;
+        basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_integer_impl()) {
+            return act_node.m_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
     }
@@ -1475,8 +1447,9 @@ public:
     /// @return Constant reference to the integer node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_int/
     const integer_type& as_int() const {
-        if FK_YAML_LIKELY (is_integer()) {
-            return get_node_value_ptr()->integer;
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_integer_impl()) {
+            return act_node.m_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
     }
@@ -1486,8 +1459,9 @@ public:
     /// @return Reference to the float node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_float/
     float_number_type& as_float() {
-        if FK_YAML_LIKELY (is_float_number()) {
-            return get_node_value_ptr()->float_val;
+        basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_float_number_impl()) {
+            return act_node.m_value.float_val;
         }
         throw fkyaml::type_error("The node value is not a float.", get_type());
     }
@@ -1497,8 +1471,9 @@ public:
     /// @return Constant reference to the float node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_float/
     const float_number_type& as_float() const {
-        if FK_YAML_LIKELY (is_float_number()) {
-            return get_node_value_ptr()->float_val;
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_float_number_impl()) {
+            return act_node.m_value.float_val;
         }
         throw fkyaml::type_error("The node value is not a float.", get_type());
     }
@@ -1508,8 +1483,9 @@ public:
     /// @return Reference to the string node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_str/
     string_type& as_str() {
-        if FK_YAML_LIKELY (is_string()) {
-            return *(get_node_value_ptr()->p_string);
+        basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_string_impl()) {
+            return *act_node.m_value.p_str;
         }
         throw fkyaml::type_error("The node value is not a string.", get_type());
     }
@@ -1519,8 +1495,9 @@ public:
     /// @return Constant reference to the string node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_str/
     const string_type& as_str() const {
-        if FK_YAML_LIKELY (is_string()) {
-            return *(get_node_value_ptr()->p_string);
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_string_impl()) {
+            return *act_node.m_value.p_str;
         }
         throw fkyaml::type_error("The node value is not a string.", get_type());
     }
@@ -1534,9 +1511,9 @@ public:
         swap(mp_meta, rhs.mp_meta);
 
         node_value tmp {};
-        std::memcpy(&tmp, &m_node_value, sizeof(node_value));
-        std::memcpy(&m_node_value, &rhs.m_node_value, sizeof(node_value));
-        std::memcpy(&rhs.m_node_value, &tmp, sizeof(node_value));
+        std::memcpy(&tmp, &m_value, sizeof(node_value));
+        std::memcpy(&m_value, &rhs.m_value, sizeof(node_value));
+        std::memcpy(&rhs.m_value, &tmp, sizeof(node_value));
 
         swap(m_prop.tag, rhs.m_prop.tag);
         swap(m_prop.anchor, rhs.m_prop.anchor);
@@ -1547,17 +1524,14 @@ public:
     /// @return An iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     iterator begin() {
-        switch (get_node_attrs() & detail::node_attr_mask::value) {
-        case detail::node_attr_bits::seq_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {p_node_value->p_sequence->begin()};
-        }
-        case detail::node_attr_bits::map_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {p_node_value->p_mapping->begin()};
-        }
+        basic_node& act_node = resolve_reference();
+        switch (act_node.m_attrs & detail::node_attr_mask::value) {
+        case detail::node_attr_bits::seq_bit:
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return {act_node.m_value.p_seq->begin()};
+        case detail::node_attr_bits::map_bit:
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return {act_node.m_value.p_map->begin()};
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
@@ -1568,17 +1542,14 @@ public:
     /// @return A const iterator to the first element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/begin/
     const_iterator begin() const {
-        switch (get_node_attrs() & detail::node_attr_mask::value) {
-        case detail::node_attr_bits::seq_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {p_node_value->p_sequence->begin()};
-        }
-        case detail::node_attr_bits::map_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {p_node_value->p_mapping->begin()};
-        }
+        const basic_node& act_node = resolve_reference();
+        switch (act_node.m_attrs & detail::node_attr_mask::value) {
+        case detail::node_attr_bits::seq_bit:
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return {act_node.m_value.p_seq->begin()};
+        case detail::node_attr_bits::map_bit:
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return {act_node.m_value.p_map->begin()};
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
@@ -1597,17 +1568,14 @@ public:
     /// @return An iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     iterator end() {
-        switch (get_node_attrs() & detail::node_attr_mask::value) {
-        case detail::node_attr_bits::seq_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {p_node_value->p_sequence->end()};
-        }
-        case detail::node_attr_bits::map_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {p_node_value->p_mapping->end()};
-        }
+        basic_node& act_node = resolve_reference();
+        switch (act_node.m_attrs & detail::node_attr_mask::value) {
+        case detail::node_attr_bits::seq_bit:
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return {act_node.m_value.p_seq->end()};
+        case detail::node_attr_bits::map_bit:
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return {act_node.m_value.p_map->end()};
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
@@ -1618,17 +1586,14 @@ public:
     /// @return A const iterator to the past-the-last element of a container node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/end/
     const_iterator end() const {
-        switch (get_node_attrs() & detail::node_attr_mask::value) {
-        case detail::node_attr_bits::seq_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_sequence != nullptr);
-            return {p_node_value->p_sequence->end()};
-        }
-        case detail::node_attr_bits::map_bit: {
-            const node_value* p_node_value = get_node_value_ptr();
-            FK_YAML_ASSERT(p_node_value->p_mapping != nullptr);
-            return {p_node_value->p_mapping->end()};
-        }
+        const basic_node& act_node = resolve_reference();
+        switch (act_node.m_attrs & detail::node_attr_mask::value) {
+        case detail::node_attr_bits::seq_bit:
+            FK_YAML_ASSERT(act_node.m_value.p_seq != nullptr);
+            return {act_node.m_value.p_seq->end()};
+        case detail::node_attr_bits::map_bit:
+            FK_YAML_ASSERT(act_node.m_value.p_map != nullptr);
+            return {act_node.m_value.p_map->end()};
         default:
             throw fkyaml::type_error("The target node is neither of sequence nor mapping types.", get_type());
         }
@@ -1719,35 +1684,58 @@ public:
     }
 
 private:
-    /// @brief Returns the pointer to the node_value object of either this node or the associated anchor node.
-    /// @return The pointer to the node_value object of either this node or the associated anchor node.
-    node_value* get_node_value_ptr() {
+    /// @brief Resolves anchor/alias reference and returns reference to an actual value node.
+    /// @return Reference to an actual value node.
+    basic_node& resolve_reference() {
         if FK_YAML_UNLIKELY (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            return &(itr->second.m_node_value);
+            return itr->second;
         }
-        return &m_node_value;
+        return *this;
     }
 
-    /// @brief Returns the pointer to the node_value object of either this node or the associated anchor node.
-    /// @return The pointer to the node_value object of either this node or the associated anchor node.
-    const node_value* get_node_value_ptr() const {
+    /// @brief Resolves anchor/alias reference and returns const reference to an actual value node.
+    /// @return Const reference to an actual value node.
+    const basic_node& resolve_reference() const {
         if FK_YAML_UNLIKELY (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            return &(itr->second.m_node_value);
+            return itr->second;
         }
-        return &m_node_value;
+        return *this;
     }
 
-    detail::node_attr_t get_node_attrs() const {
-        if FK_YAML_UNLIKELY (has_anchor_name()) {
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
-            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            return itr->second.m_attrs;
-        }
-        return m_attrs;
+    bool is_sequence_impl() const noexcept {
+        return m_attrs & detail::node_attr_bits::seq_bit;
+    }
+
+    bool is_mapping_impl() const noexcept {
+        return m_attrs & detail::node_attr_bits::map_bit;
+    }
+
+    bool is_null_impl() const noexcept {
+        return m_attrs & detail::node_attr_bits::null_bit;
+    }
+
+    bool is_boolean_impl() const noexcept {
+        return m_attrs & detail::node_attr_bits::bool_bit;
+    }
+
+    bool is_integer_impl() const noexcept {
+        return m_attrs & detail::node_attr_bits::int_bit;
+    }
+
+    bool is_float_number_impl() const noexcept {
+        return m_attrs & detail::node_attr_bits::float_bit;
+    }
+
+    bool is_string_impl() const noexcept {
+        return m_attrs & detail::node_attr_bits::string_bit;
+    }
+
+    bool is_scalar_impl() const noexcept {
+        return m_attrs & detail::node_attr_bits::scalar_bits;
     }
 
     template <
@@ -1853,7 +1841,7 @@ private:
         // NOLINTNEXTLINE(bugprone-unhandled-exception-at-new)
         std::shared_ptr<detail::document_metainfo<basic_node>>(new detail::document_metainfo<basic_node>())};
     /// The current node value.
-    node_value m_node_value {};
+    node_value m_value {};
     /// The property set of this node.
     detail::node_property m_prop {};
 };

@@ -29,14 +29,8 @@ using get_buffer_view_fn_t = decltype(std::declval<T>().get_buffer_view());
 /// @brief Type traits to check if InputAdapterType has get_buffer_view member function.
 /// @tparam InputAdapterType An input adapter type to check if it has get_buffer_view function.
 /// @tparam typename N/A
-template <typename InputAdapterType, typename = void>
-struct has_get_buffer_view : std::false_type {};
-
-/// @brief A partial specialization of has_get_buffer_view if InputAdapterType has get_buffer_view member function.
-/// @tparam InputAdapterType A type of a target input adapter.
 template <typename InputAdapterType>
-struct has_get_buffer_view<InputAdapterType, enable_if_t<is_detected<get_buffer_view_fn_t, InputAdapterType>::value>>
-    : std::true_type {};
+using has_get_buffer_view = is_detected<get_buffer_view_fn_t, InputAdapterType>;
 
 ////////////////////////////////
 //   is_input_adapter traits
