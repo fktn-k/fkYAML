@@ -660,8 +660,7 @@ public:
     /// @param key A key to the target value in a sequence/mapping node.
     /// @return The value associated with the given key, or a default basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
-    template <
-        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    template <typename KeyType, detail::enable_if_t<detail::is_basic_node<KeyType>::value, int> = 0>
     basic_node& operator[](KeyType&& key) {
         if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
@@ -687,8 +686,7 @@ public:
     /// @param key A key to the target value in a sequence/mapping node.
     /// @return The value associated with the given key, or a default basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/
-    template <
-        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    template <typename KeyType, detail::enable_if_t<detail::is_basic_node<KeyType>::value, int> = 0>
     const basic_node& operator[](KeyType&& key) const {
         if FK_YAML_UNLIKELY (is_scalar()) {
             throw fkyaml::type_error("operator[] is unavailable for a scalar node.", get_type());
@@ -980,7 +978,7 @@ public:
     template <
         typename KeyType, detail::enable_if_t<
                               detail::disjunction<
-                                  detail::is_basic_node<detail::remove_cvref_t<KeyType>>,
+                                  detail::is_basic_node<KeyType>,
                                   detail::is_node_compatible_type<basic_node, detail::remove_cvref_t<KeyType>>>::value,
                               int> = 0>
     bool contains(KeyType&& key) const {
@@ -1087,8 +1085,7 @@ public:
     /// @param key A key to the target basic_node object in a sequence/mapping node.
     /// @return Reference to the basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
-    template <
-        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    template <typename KeyType, detail::enable_if_t<detail::is_basic_node<KeyType>::value, int> = 0>
     basic_node& at(KeyType&& key) {
         basic_node& act_node = resolve_reference();
         if FK_YAML_UNLIKELY (act_node.is_scalar_impl()) {
@@ -1124,8 +1121,7 @@ public:
     /// @param key A key to the target basic_node object in a sequence/mapping node.
     /// @return Constant reference to the basic_node object associated with the given key.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/at/
-    template <
-        typename KeyType, detail::enable_if_t<detail::is_basic_node<detail::remove_cvref_t<KeyType>>::value, int> = 0>
+    template <typename KeyType, detail::enable_if_t<detail::is_basic_node<KeyType>::value, int> = 0>
     const basic_node& at(KeyType&& key) const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_UNLIKELY (act_node.is_scalar_impl()) {

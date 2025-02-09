@@ -120,7 +120,7 @@ template <
         conjunction<
             is_basic_node<BasicNodeType>,
             negation<std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<CompatSeqType>>>,
-            negation<is_basic_node<remove_cvref_t<CompatSeqType>>>, detect::has_begin_end<CompatSeqType>,
+            negation<is_basic_node<CompatSeqType>>, detect::has_begin_end<CompatSeqType>,
             negation<conjunction<detect::has_key_type<CompatSeqType>, detect::has_mapped_type<CompatSeqType>>>,
             negation<std::is_constructible<typename BasicNodeType::string_type, CompatSeqType>>>::value,
         int> = 0>
@@ -202,7 +202,7 @@ template <
     typename BasicNodeType, typename CompatMapType,
     enable_if_t<
         conjunction<
-            is_basic_node<BasicNodeType>, negation<is_basic_node<remove_cvref_t<CompatMapType>>>,
+            is_basic_node<BasicNodeType>, negation<is_basic_node<CompatMapType>>,
             negation<std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<CompatMapType>>>,
             detect::has_begin_end<CompatMapType>, detect::has_key_type<CompatMapType>,
             detect::has_mapped_type<CompatMapType>>::value,

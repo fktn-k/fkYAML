@@ -10,11 +10,9 @@
 #define FK_YAML_DETAIL_META_TYPE_TRAITS_HPP
 
 #include <iterator>
-#include <limits>
 #include <type_traits>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
-#include <fkYAML/detail/meta/detect.hpp>
 #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -43,55 +41,12 @@ struct is_comparable<
 /// @tparam ObjectKeyType The original key type.
 /// @tparam KeyType A type to be used as key type.
 template <typename Comparator, typename ObjectKeyType, typename KeyType>
-using is_usable_as_key_type = typename std::conditional<
-    is_comparable<Comparator, ObjectKeyType, KeyType>::value, std::true_type, std::false_type>::type;
+using is_usable_as_key_type = is_comparable<Comparator, ObjectKeyType, KeyType>;
 
-/// @brief Type trait to check if IntegralType is of non-boolean integral types.
-/// @tparam IntegralType A type to be checked.
-/// @tparam typename N/A
-template <typename IntegralType, typename = void>
-struct is_non_bool_integral : std::false_type {};
-
-/// @brief A partial specialization of is_non_bool_integral if IntegralType is of non-boolean integral types.
-/// @tparam IntegralType A type to be checked.
-template <typename IntegralType>
-struct is_non_bool_integral<
-    IntegralType,
-    enable_if_t<conjunction<std::is_integral<IntegralType>, negation<std::is_same<bool, IntegralType>>>::value>>
-    : std::true_type {};
-
-/// @brief Type traits to check if Types are all signed arithmetic types.
-/// @tparam Types Types to check if they are all signed arithmetic types.
-template <typename... Types>
-using is_all_signed = conjunction<std::is_signed<Types>...>;
-
-/// @brief Type traits to check if Types are all unsigned arithmetic types.
-/// @tparam Types Types to check if they are all unsigned arithmetic types.
-template <typename... Types>
-using is_all_unsigned = conjunction<std::is_unsigned<Types>...>;
-
-/// @brief Type trait implementation to check if TargetIntegerType and CompatibleIntegerType are compatible integer
-/// types.
-/// @tparam TargetIntegerType A target integer type.
-/// @tparam CompatibleIntegerType A compatible integer type.
-/// @tparam typename N/A
-template <typename TargetIntegerType, typename CompatibleIntegerType, typename = void>
-struct is_compatible_integer_type_impl : std::false_type {};
-
-/// @brief A partial specialization of is_compatible_integer_type_impl if TargetIntegerType and CompatibleIntegerType
-/// are compatible integer types.
-/// @tparam TargetIntegerType A target integer type.
-/// @tparam CompatibleIntegerType A compatible integer type.
-template <typename TargetIntegerType, typename CompatibleIntegerType>
-struct is_compatible_integer_type_impl<
-    TargetIntegerType, CompatibleIntegerType, enable_if_t<is_non_bool_integral<CompatibleIntegerType>::value>>
-    : std::true_type {};
-
-/// @brief Type traits to check if TargetIntegerType and CompatibleIntegerType are compatible integer types.
-/// @tparam TargetIntegerType A target integer type.
-/// @tparam CompatibleIntegerType A compatible integer type.
-template <typename TargetIntegerType, typename CompatibleIntegerType>
-struct is_compatible_integer_type : is_compatible_integer_type_impl<TargetIntegerType, CompatibleIntegerType> {};
+/// @brief Type trait to check if T is of non-boolean integral types.
+/// @tparam T A type to be checked.
+template <typename T>
+using is_non_bool_integral = conjunction<std::is_integral<T>, negation<std::is_same<bool, T>>>;
 
 /// @brief Type traits to check if T is a complete type.
 /// @tparam T A type to be checked if a complete type.
@@ -132,33 +87,6 @@ struct type_tag {
     /// @brief A tagged type.
     using type = T;
 };
-
-/// @brief A utility struct to retrieve the first type in variadic template arguments.
-/// @tparam Types Types of variadic template arguments.
-template <typename... Types>
-struct get_head_type;
-
-/// @brief A specialization of get_head_type if variadic template has no arguments.
-/// @tparam  N/A
-template <>
-struct get_head_type<> {
-    /// @brief A head type
-    using type = void;
-};
-
-/// @brief A partial specialization of get_head_type if variadic template has one or more argument(s).
-/// @tparam First The first type in the arguments
-/// @tparam Rest The rest of the types in the arguments.
-template <typename First, typename... Rest>
-struct get_head_type<First, Rest...> {
-    /// @brief A head type.
-    using type = First;
-};
-
-/// @brief An alias template to retrieve the first type in variadic template arguments.
-/// @tparam Types Types of variadic template arguments.
-template <typename... Types>
-using head_type = typename get_head_type<Types...>::type;
 
 FK_YAML_DETAIL_NAMESPACE_END
 

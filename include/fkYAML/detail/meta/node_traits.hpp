@@ -21,26 +21,31 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 //   is_basic_node traits
 /////////////////////////////
 
-/// @brief A struct to check the template parameter class is a kind of basic_node template class.
-/// @tparam T A class to be checked if it's a kind of basic_node template class.
+/// @brief Actual implementation of the is_basic_node type traits struct.
+/// @tparam T A class to be checked if it's a basic_node template class instance type.
 template <typename T>
-struct is_basic_node : std::false_type {};
+struct is_basic_node_impl : std::false_type {};
 
-/// @brief A partial specialization of is_basic_node for basic_node template class.
+/// @brief A partial specialization of is_basic_node_impl for basic_node template class.
 /// @tparam SequenceType A type for sequence node value containers.
 /// @tparam MappingType A type for mapping node value containers.
 /// @tparam BooleanType A type for boolean node values.
 /// @tparam IntegerType A type for integer node values.
 /// @tparam FloatNumberType A type for float number node values.
 /// @tparam StringType A type for string node values.
-/// @tparam Converter A type for
+/// @tparam Converter A type for node-value converter
 template <
     template <typename, typename...> class SequenceType, template <typename, typename, typename...> class MappingType,
     typename BooleanType, typename IntegerType, typename FloatNumberType, typename StringType,
     template <typename, typename> class Converter>
-struct is_basic_node<
+struct is_basic_node_impl<
     basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, Converter>>
     : std::true_type {};
+
+/// @brief A struct to check the template parameter class is a basic_node template class instance type.
+/// @tparam T A class to be checked if it's a basic_node template class instance type.
+template <typename T>
+struct is_basic_node : is_basic_node_impl<remove_cvref_t<T>> {};
 
 ///////////////////////////////////
 //   is_node_ref_storage traits
@@ -91,7 +96,7 @@ struct has_from_node : std::false_type {};
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T A target type passed to from_node function.
 template <typename BasicNodeType, typename T>
-struct has_from_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>> {
+struct has_from_node<BasicNodeType, T, enable_if_t<negation<is_basic_node<T>>::value>> {
     using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
     // NOLINTNEXTLINE(readability-identifier-naming)
@@ -111,7 +116,7 @@ struct has_to_node : std::false_type {};
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T A target type passed to to_node function.
 template <typename BasicNodeType, typename T>
-struct has_to_node<BasicNodeType, T, enable_if_t<!is_basic_node<T>::value>> {
+struct has_to_node<BasicNodeType, T, enable_if_t<negation<is_basic_node<T>>::value>> {
     using converter = typename BasicNodeType::template value_converter_type<T, void>;
 
     // NOLINTNEXTLINE(readability-identifier-naming)

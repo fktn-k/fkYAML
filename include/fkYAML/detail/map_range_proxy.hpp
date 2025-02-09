@@ -121,7 +121,7 @@ private:
 template <typename BasicNodeType>
 class map_range_proxy {
     static_assert(
-        is_basic_node<remove_cv_t<BasicNodeType>>::value,
+        is_basic_node<BasicNodeType>::value,
         "map_range_proxy only accepts a basic_node type as its template parameter.");
 
 public:
