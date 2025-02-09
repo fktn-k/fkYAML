@@ -13995,7 +13995,7 @@ public:
     /// @return Reference to the sequence node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_seq/
     sequence_type& as_seq() {
-        basic_node& act_node = resolve_reference();
+        basic_node& act_node = resolve_reference(); // NOLINT(misc-const-correctness)
         if FK_YAML_LIKELY (act_node.is_sequence_impl()) {
             return *act_node.m_value.p_seq;
         }
@@ -14019,7 +14019,7 @@ public:
     /// @return Reference to the mapping node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_map/
     mapping_type& as_map() {
-        basic_node& act_node = resolve_reference();
+        basic_node& act_node = resolve_reference(); // NOLINT(misc-const-correctness)
         if FK_YAML_LIKELY (act_node.is_mapping_impl()) {
             return *act_node.m_value.p_map;
         }
