@@ -16,14 +16,14 @@ fkYAML is a C++ header-only library to deserialize, serialize and build YAML doc
 It is also carefully desinged and tested to work with various compilers, C++ standards and platforms.  
 So, if you want portability & development speed-up, fkYAML is the way to go.  
 You can add YAML support into your projects by just including the header file(s).  
-This simple example deserializes a YAML string into a document, make simple modifications, and finally serializes the modified documentation to a YAML string.  
+This simple example (1) deserializes a YAML string into a document, (2) modifies the documentation, and finally (3) serializes the modified documentation to a YAML string.  
 ```cpp
 #include <iostream>
 #include <string>
 #include <fkYAML/node.hpp>
 
 int main() {
-    // 1. deserialize a YAML string into a document.
+    // 1. Deserialize a YAML string into a document.
     //    The input can be other container types or their iterators.
     //    `deserialize` accepts `FILE*`, `std::istream` as well.
     std::string yaml = R"(
@@ -40,7 +40,7 @@ works on:
     node["maintainer"] = "fktn-k";
     node.at("works on").as_seq().emplace_back("Windows");
 
-    // 3. serialize the modified document to a YAML string and save it.
+    // 3. Serialize the modified document to a YAML string and save it.
     std::ofstream ofs("out.yaml");
     ofs << node;
   
