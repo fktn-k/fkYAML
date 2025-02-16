@@ -2922,14 +2922,14 @@ struct string_wrap {
 };
 
 template <typename T, typename U>
-using get_fn_t = decltype(std::declval<T>().template get<U>());
+using get_value_fn_t = decltype(std::declval<T>().template get_value<U>());
 
 TEST_CASE("Node_GetValue_GetValueInplace") {
     SECTION("sequence") {
         fkyaml::node node {true, false};
 
         SECTION("sequence value (1D C-style array)") {
-            STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int(&)[2]>::value);
+            STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_fn_t, const fkyaml::node&, int(&)[2]>::value);
 
             int ints_1d[2] {0, 0};
             fkyaml::node array_1d {1, 2};
@@ -2939,7 +2939,7 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
         }
 
         SECTION("sequence value (2D C-style array)") {
-            STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int(&)[3][3]>::value);
+            STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_fn_t, const fkyaml::node&, int(&)[3][3]>::value);
 
             int ints_2d[3][3] {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
             fkyaml::node array_2d {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
@@ -2952,7 +2952,8 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
         }
 
         SECTION("sequence value (3D C-style array)") {
-            STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int(&)[3][3][3]>::value);
+            STATIC_REQUIRE_FALSE(
+                fkyaml::detail::is_detected<get_value_fn_t, const fkyaml::node&, int(&)[3][3][3]>::value);
 
             int ints_3d[3][3][3] {
                 {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
@@ -4286,7 +4287,7 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
     SECTION("not default constructible type") {
         // get_value() requires its output type to be default constructible
         STATIC_REQUIRE_FALSE(
-            fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, not_default_constructible>::value);
+            fkyaml::detail::is_detected<get_value_fn_t, const fkyaml::node&, not_default_constructible>::value);
 
         // but get_value_inplace() accepts types which are not default constructible.
         not_default_constructible ndc(0);
@@ -4296,9 +4297,231 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
     }
 
     SECTION("unsupported types") {
-        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int*>::value);
-        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int(&)[2]>::value);
-        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_fn_t, const fkyaml::node&, int&>::value);
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_fn_t, const fkyaml::node&, int*>::value);
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_fn_t, const fkyaml::node&, int(&)[2]>::value);
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_fn_t, const fkyaml::node&, int&>::value);
+    }
+}
+
+template <typename T, typename U>
+using get_value_or_fn_t = decltype(std::declval<T>().template get_value_or<U>(std::declval<U>()));
+
+TEST_CASE("Node_GetValueOr") {
+    SECTION("sequence (success)") {
+        fkyaml::node node = {true, false};
+
+        std::vector<fkyaml::node> vector_node_def {false, true};
+        auto vector_node_ldef_ret = node.get_value_or<std::vector<fkyaml::node>>(vector_node_def);
+        auto vector_node_rdef_ret = node.get_value_or<std::vector<fkyaml::node>>(std::move(vector_node_def));
+
+        auto validate_nodes = [](const std::vector<fkyaml::node>& nodes) {
+            REQUIRE(nodes.size() == 2);
+            REQUIRE(nodes.at(0).is_boolean());
+            REQUIRE(nodes.at(0).as_bool() == true);
+            REQUIRE(nodes.at(1).is_boolean());
+            REQUIRE(nodes.at(1).as_bool() == false);
+        };
+        validate_nodes(vector_node_ldef_ret);
+        validate_nodes(vector_node_rdef_ret);
+
+        std::vector<bool> vector_bool_def {false, true};
+        auto vector_bool_ldef_ret = node.get_value_or<std::vector<bool>>(vector_bool_def);
+        auto vector_bool_rdef_ret = node.get_value_or<std::vector<bool>>(std::move(vector_bool_def));
+
+        auto validate_bools = [](const std::vector<bool>& bools) {
+            REQUIRE(bools.size() == 2);
+            REQUIRE(bools.at(0) == true);
+            REQUIRE(bools.at(1) == false);
+        };
+        validate_bools(vector_bool_ldef_ret);
+        validate_bools(vector_bool_rdef_ret);
+    }
+
+    SECTION("sequence (failure)") {
+        fkyaml::node node = nullptr;
+
+        std::vector<fkyaml::node> vector_node_def {false, true};
+        auto vector_node_ldef_ret = node.get_value_or<std::vector<fkyaml::node>>(vector_node_def);
+        auto vector_node_rdef_ret = node.get_value_or<std::vector<fkyaml::node>>(std::move(vector_node_def));
+
+        auto validate_nodes = [](const std::vector<fkyaml::node>& nodes) {
+            REQUIRE(nodes.size() == 2);
+            REQUIRE(nodes.at(0).is_boolean());
+            REQUIRE(nodes.at(0).as_bool() == false);
+            REQUIRE(nodes.at(1).is_boolean());
+            REQUIRE(nodes.at(1).as_bool() == true);
+        };
+        // validate_nodes(vector_node_ldef_ret);
+        validate_nodes(vector_node_rdef_ret);
+
+        std::vector<bool> vector_bool_def {false, true};
+        auto vector_bool_ldef_ret = node.get_value_or<std::vector<bool>>(vector_bool_def);
+        auto vector_bool_rdef_ret = node.get_value_or<std::vector<bool>>(std::move(vector_bool_def));
+
+        auto validate_bools = [](const std::vector<bool>& bools) {
+            REQUIRE(bools.size() == 2);
+            REQUIRE(bools.at(0) == false);
+            REQUIRE(bools.at(1) == true);
+        };
+        validate_bools(vector_bool_ldef_ret);
+        validate_bools(vector_bool_rdef_ret);
+    }
+
+    SECTION("mapping (success)") {
+        fkyaml::node node = {{"foo", true}, {"bar", false}};
+
+        std::map<fkyaml::node, fkyaml::node> map_node_def {{"foo", false}, {"bar", true}};
+        auto map_node_ldef_ret = node.get_value_or<std::map<fkyaml::node, fkyaml::node>>(map_node_def);
+        auto map_node_rdef_ret = node.get_value_or<std::map<fkyaml::node, fkyaml::node>>(std::move(map_node_def));
+
+        auto validate_nodes = [](const std::map<fkyaml::node, fkyaml::node>& nodes) {
+            REQUIRE(nodes.size() == 2);
+            REQUIRE(nodes.at("foo").is_boolean());
+            REQUIRE(nodes.at("foo").as_bool() == true);
+            REQUIRE(nodes.at("bar").is_boolean());
+            REQUIRE(nodes.at("bar").as_bool() == false);
+        };
+        validate_nodes(map_node_ldef_ret);
+        validate_nodes(map_node_rdef_ret);
+
+        std::map<std::string, bool> map_bool_def {{"foo", false}, {"bar", true}};
+        auto map_bool_ldef_ret = node.get_value_or<std::map<std::string, bool>>(map_bool_def);
+        auto map_bool_rdef_ret = node.get_value_or<std::map<std::string, bool>>(std::move(map_bool_def));
+
+        auto validate_bools = [](const std::map<std::string, bool>& bools) {
+            REQUIRE(bools.size() == 2);
+            REQUIRE(bools.at("foo") == true);
+            REQUIRE(bools.at("bar") == false);
+        };
+        validate_bools(map_bool_ldef_ret);
+        validate_bools(map_bool_rdef_ret);
+    }
+
+    SECTION("mapping (failure)") {
+        fkyaml::node node = nullptr;
+
+        std::map<fkyaml::node, fkyaml::node> map_node_def {{"foo", false}, {"bar", true}};
+        auto map_node_ldef_ret = node.get_value_or<std::map<fkyaml::node, fkyaml::node>>(map_node_def);
+        auto map_node_rdef_ret = node.get_value_or<std::map<fkyaml::node, fkyaml::node>>(std::move(map_node_def));
+
+        auto validate_nodes = [](const std::map<fkyaml::node, fkyaml::node>& nodes) {
+            REQUIRE(nodes.size() == 2);
+            REQUIRE(nodes.at("foo").is_boolean());
+            REQUIRE(nodes.at("foo").as_bool() == false);
+            REQUIRE(nodes.at("bar").is_boolean());
+            REQUIRE(nodes.at("bar").as_bool() == true);
+        };
+        validate_nodes(map_node_ldef_ret);
+        validate_nodes(map_node_rdef_ret);
+
+        std::map<std::string, bool> map_bool_def {{"foo", false}, {"bar", true}};
+        auto map_bool_ldef_ret = node.get_value_or<std::map<std::string, bool>>(map_bool_def);
+        auto map_bool_rdef_ret = node.get_value_or<std::map<std::string, bool>>(std::move(map_bool_def));
+
+        auto validate_bools = [](const std::map<std::string, bool>& bools) {
+            REQUIRE(bools.size() == 2);
+            REQUIRE(bools.at("foo") == false);
+            REQUIRE(bools.at("bar") == true);
+        };
+        validate_bools(map_bool_ldef_ret);
+        validate_bools(map_bool_rdef_ret);
+    }
+
+    SECTION("boolean (success)") {
+        fkyaml::node node = true;
+
+        bool def = false;
+        auto ret = node.get_value_or<bool>(def);
+        REQUIRE(ret == true);
+    }
+
+    SECTION("boolean (failure)") {
+        fkyaml::node node = "foo";
+
+        bool def = false;
+        auto ret = node.get_value_or<bool>(def);
+        REQUIRE(ret == false);
+    }
+
+    SECTION("integer (success)") {
+        fkyaml::node node = 123;
+
+        int def = 456;
+        auto ret = node.get_value_or<int>(def);
+        REQUIRE(ret == 123);
+    }
+
+    SECTION("integer (failure)") {
+        fkyaml::node node = "foo";
+
+        int def = 456;
+        auto ret = node.get_value_or<int>(def);
+        REQUIRE(ret == 456);
+    }
+
+    SECTION("float (success)") {
+        fkyaml::node node = 3.14;
+
+        double def = 1.41;
+        auto ret = node.get_value_or<double>(def);
+        REQUIRE(std::abs(ret - 3.14) < std::numeric_limits<double>::epsilon());
+    }
+
+    SECTION("float (failure)") {
+        fkyaml::node node = "foo";
+
+        double def = 1.41;
+        auto ret = node.get_value_or<double>(def);
+        REQUIRE(std::abs(ret - 1.41) < std::numeric_limits<double>::epsilon());
+    }
+
+    SECTION("string (success)") {
+        fkyaml::node node = "foo";
+
+        std::string def_str = "default";
+        const char def_cstr[] = "default";
+
+        auto ret_ldef_str = node.get_value_or<std::string>(def_str);
+        auto ret_rdef_str = node.get_value_or<std::string>(std::move(def_str));
+        auto ret_cstr = node.get_value_or<std::string>(def_cstr);
+        auto ret_lit = node.get_value_or<std::string>("default");
+
+        REQUIRE(ret_ldef_str == "foo");
+        REQUIRE(ret_rdef_str == "foo");
+        REQUIRE(ret_cstr == "foo");
+        REQUIRE(ret_lit == "foo");
+    }
+
+    SECTION("string (failure)") {
+        fkyaml::node node = nullptr;
+
+        std::string def_str = "default";
+        const char def_cstr[] = "default";
+
+        auto ret_ldef_str = node.get_value_or<std::string>(def_str);
+        auto ret_rdef_str = node.get_value_or<std::string>(std::move(def_str));
+        auto ret_cstr = node.get_value_or<std::string>(def_cstr);
+        auto ret_lit = node.get_value_or<std::string>("default");
+
+        REQUIRE(ret_ldef_str == "default");
+        REQUIRE(ret_rdef_str == "default");
+        REQUIRE(ret_cstr == "default");
+        REQUIRE(ret_lit == "default");
+    }
+
+    SECTION("unsupported types") {
+        // C-style array types
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int(&)[2]>::value);
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int(&)[3][3]>::value);
+        STATIC_REQUIRE_FALSE(
+            fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int(&)[3][3][3]>::value);
+
+        // pointer types
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int*>::value);
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int(&)[2]>::value);
+
+        // reference types
+        STATIC_REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int&>::value);
     }
 }
 
