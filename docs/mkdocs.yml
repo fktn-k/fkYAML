@@ -142,6 +142,7 @@ nav:
     - get_type: api/basic_node/get_type.md
     - get_value: api/basic_node/get_value.md
     - get_value_inplace: api/basic_node/get_value_inplace.md
+    - get_value_or: api/basic_node/get_value_or.md
     - get_yaml_version_type: api/basic_node/get_yaml_version_type.md
     - has_anchor_name: api/basic_node/has_anchor_name.md
     - has_tag_name: api/basic_node/has_tag_name.md

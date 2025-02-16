@@ -96,23 +96,24 @@ This class provides features to handle YAML nodes.
 | [is_string](is_string.md)             | checks if a basic_node has a string node value.                    |
 
 ### Conversions
-| Name                                      |          | Description                                                             |
-| ----------------------------------------- | -------- | ----------------------------------------------------------------------- |
-| [deserialize](deserialize.md)             | (static) | deserializes the first YAML document into a basic_node.                 |
-| [deserialize_docs](deserialize_docs.md)   | (static) | deserializes all YAML documents into basic_node objects.                |
-| [operator>>](extraction_operator.md)      |          | deserializes an input stream into a basic_node.                         |
-| [serialize](serialize.md)                 | (static) | serializes a basic_node into a YAML formatted string.                   |
-| [serialize_docs](serialize_docs.md)       | (static) | serializes basic_node objects into a YAML formatted string.             |
-| [operator<<](insertion_operator.md)       |          | serializes a basic_node into an output stream.                          |
-| [get_value](get_value.md)                 |          | converts a basic_node into a target type.                               |
-| [get_value_inplace](get_value_inplace.md) |          | converts a basic_node into a target type and write it to a destination. |
-| [as_seq](as_seq.md)                       |          | get reference to the sequence node value.                               |
-| [as_map](as_map.md)                       |          | get reference to the mapping node value.                                |
-| [as_bool](as_bool.md)                     |          | get reference to the boolean node value.                                |
-| [as_int](as_int.md)                       |          | get reference to the integer node value.                                |
-| [as_float](as_float.md)                   |          | get reference to the float node value.                                  |
-| [as_str](as_str.md)                       |          | get reference to the string node value.                                 |
-| [get_value_ref](get_value_ref.md)         |          | **(DEPRECATED)** converts a basic_node into reference to a target type. |
+| Name                                      |          | Description                                                                                       |
+| ----------------------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| [deserialize](deserialize.md)             | (static) | deserializes the first YAML document into a basic_node.                                           |
+| [deserialize_docs](deserialize_docs.md)   | (static) | deserializes all YAML documents into basic_node objects.                                          |
+| [operator>>](extraction_operator.md)      |          | deserializes an input stream into a basic_node.                                                   |
+| [serialize](serialize.md)                 | (static) | serializes a basic_node into a YAML formatted string.                                             |
+| [serialize_docs](serialize_docs.md)       | (static) | serializes basic_node objects into a YAML formatted string.                                       |
+| [operator<<](insertion_operator.md)       |          | serializes a basic_node into an output stream.                                                    |
+| [get_value](get_value.md)                 |          | converts a basic_node into a target type.                                                         |
+| [get_value_inplace](get_value_inplace.md) |          | converts a basic_node into a target type and write it to a destination.                           |
+| [get_value_or](get_value_or.md)           |          | tries to convert a basic_node into a target type.<br>returns a default value if conversion fails. |
+| [as_seq](as_seq.md)                       |          | get reference to the sequence node value.                                                         |
+| [as_map](as_map.md)                       |          | get reference to the mapping node value.                                                          |
+| [as_bool](as_bool.md)                     |          | get reference to the boolean node value.                                                          |
+| [as_int](as_int.md)                       |          | get reference to the integer node value.                                                          |
+| [as_float](as_float.md)                   |          | get reference to the float node value.                                                            |
+| [as_str](as_str.md)                       |          | get reference to the string node value.                                                           |
+| [get_value_ref](get_value_ref.md)         |          | **(DEPRECATED)** converts a basic_node into reference to a target type.                           |
 
 ### Iterators
 | Name                      | Description                                                                                                |
