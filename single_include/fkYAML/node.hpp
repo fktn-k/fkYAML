@@ -13931,13 +13931,15 @@ public:
     /// @brief Get the node value object converted into a given type.
     /// @note This function requires T objects to be default constructible. Also, T cannot be either a reference,
     /// pointer or C-style array type.
-    /// @tparam T A compatible value type which might be cv-qualified.
-    /// @tparam ValueType A compatible value type with cv-qualifiers removed by default.
-    /// @return A compatible native data value converted from the basic_node object.
+    /// @tparam T A compatible value type which may be cv-qualified.
+    /// @tparam ValueType A compatible value type (T without cv-qualifiers by default).
+    /// @return A value converted from this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value/
     template <
         typename T, typename ValueType = detail::remove_cv_t<T>,
-        detail::enable_if_t<std::is_default_constructible<ValueType>::value, int> = 0>
+        detail::enable_if_t<
+            detail::conjunction<std::is_default_constructible<ValueType>, detail::negation<std::is_pointer<T>>>::value,
+            int> = 0>
     T get_value() const noexcept(
         noexcept(std::declval<const basic_node&>().template get_value_impl<ValueType>(std::declval<ValueType&>()))) {
         // emit a compile error if T is either a reference, pointer or C-style array type.
@@ -13945,10 +13947,9 @@ public:
             !std::is_reference<T>::value,
             "get_value() cannot be called with reference types. "
             "You might want to call one of as_seq(), as_map(), as_bool(), as_int(), as_float() or as_str().");
-        static_assert(!std::is_pointer<T>::value, "get_value() cannot be called with pointer types.");
         static_assert(
             !std::is_array<T>::value,
-            "get_value() cannot be called with C-style array types. you might want to call get_value_inplace().");
+            "get_value() cannot be called with C-style array types. You might want to call get_value_inplace().");
 
         auto ret = ValueType();
         resolve_reference().get_value_impl(ret);
@@ -13963,6 +13964,47 @@ public:
     void get_value_inplace(T& value_ref) const
         noexcept(noexcept(std::declval<const basic_node&>().template get_value_impl<T>(std::declval<T&>()))) {
         resolve_reference().get_value_impl(value_ref);
+    }
+
+    /// @brief Get the node value object converted to a given type. If the conversion fails, this function returns a
+    /// given default value instead.
+    /// @note This function requires T to be default constructible. Also, T cannot be either a reference, pointer or
+    /// C-style array type.
+    /// @tparam T A compatible value type which may be cv-qualified.
+    /// @tparam U A default value type from which T must be constructible.
+    /// @param default_value The default value returned if conversion fails.
+    /// @return A value converted from this basic_node object if conversion succeeded, the given default value
+    /// otherwise.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_or/
+    template <
+        typename T, typename U,
+        detail::enable_if_t<
+            detail::conjunction<
+                std::is_constructible<T, U>, std::is_default_constructible<T>,
+                detail::negation<std::is_pointer<T>>>::value,
+            int> = 0>
+    T get_value_or(U&& default_value) const noexcept {
+        static_assert(
+            !std::is_reference<T>::value,
+            "get_value_or() cannot be called with reference types. "
+            "You might want to call one of as_seq(), as_map(), as_bool(), as_int(), as_float() or as_str().");
+        static_assert(
+            !std::is_array<T>::value,
+            "get_value_or() cannot be called with C-style array types. You might want to call get_value_inplace().");
+
+        // TODO:
+        // Ideally, there should be no exception thrown in this kind of function. However, achieving that would require
+        // a lot of refactoring and/or some API changes, especially `from_node` interface definition. So, try-catch is
+        // used instead for now.
+        try {
+            return get_value<T>();
+        }
+        catch (const std::exception& /*unused*/) {
+            // Any exception derived from std::exception is interpreted as a conversion failure in some way
+            // since user-defined from_node function may throw a different object from a fkyaml::type_error.
+            // and std::exception is usually the base class of user-defined exception types.
+            return std::forward<U>(default_value);
+        }
     }
 
     /// @brief Explicit reference access to the internally stored YAML node value.
