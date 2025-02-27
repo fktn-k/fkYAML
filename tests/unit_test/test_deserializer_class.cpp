@@ -1119,6 +1119,7 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root["baz"].is_null());
     }
 
+    // regression test for https://github.com/fktn-k/fkYAML/issues/487
     SECTION("block mapping after an empty block sequence entry (same indentation)") {
         std::string input = "test:\n"
                             "    - coords:\n"
