@@ -8276,7 +8276,28 @@ private:
                     switch (cur_context.state) {
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        break;
                     case context_state_t::BLOCK_SEQUENCE_ENTRY:
+                        if FK_YAML_UNLIKELY (cur_context.indent >= indent) {
+                            // This handles combination of empty block sequence entry and block mapping entry with the
+                            // same indentation level, for examples:
+                            // ```yaml
+                            // foo:
+                            //   bar:
+                            //   -         # These entries are indented
+                            //   baz: 123  # with the same width.
+                            // # ^^^
+                            // ```
+                            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                            });
+                            add_new_key(std::move(node), line, indent);
+                            indent = lexer.get_last_token_begin_pos();
+                            line = lexer.get_lines_processed();
+                            return;
+                        }
+
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         break;
                     default:

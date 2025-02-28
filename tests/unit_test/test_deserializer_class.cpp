@@ -1118,6 +1118,75 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root["bar"]["bar"].is_null());
         REQUIRE(root["baz"].is_null());
     }
+
+    // regression test for https://github.com/fktn-k/fkYAML/issues/487
+    SECTION("block mapping after an empty block sequence entry (same indentation)") {
+        std::string input = "test:\n"
+                            "    - coords:\n"
+                            "      -\n"
+                            "      -\n"
+                            "      name: \"a\"\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
+
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE(test_node.size() == 1);
+
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_mapping());
+        REQUIRE(test_0_node.size() == 2);
+        REQUIRE(test_0_node.contains("coords"));
+        REQUIRE(test_0_node.contains("name"));
+
+        fkyaml::node& test_0_coords_node = test_0_node["coords"];
+        REQUIRE(test_0_coords_node.is_sequence());
+        REQUIRE(test_0_coords_node.size() == 2);
+
+        REQUIRE(test_0_coords_node[0].is_null());
+        REQUIRE(test_0_coords_node[1].is_null());
+
+        fkyaml::node& test_0_name_node = test_0_node["name"];
+        REQUIRE(test_0_name_node.is_string());
+        REQUIRE(test_0_name_node.as_str() == "a");
+    }
+
+    SECTION("block mapping after an empty block sequence entry (less indented)") {
+        std::string input = "test:\n"
+                            "    - coords:\n"
+                            "        -\n"
+                            "        -\n"
+                            "      name: \"a\"\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("test"));
+
+        fkyaml::node& test_node = root["test"];
+        REQUIRE(test_node.is_sequence());
+        REQUIRE(test_node.size() == 1);
+
+        fkyaml::node& test_0_node = test_node[0];
+        REQUIRE(test_0_node.is_mapping());
+        REQUIRE(test_0_node.size() == 2);
+        REQUIRE(test_0_node.contains("coords"));
+        REQUIRE(test_0_node.contains("name"));
+
+        fkyaml::node& test_0_coords_node = test_0_node["coords"];
+        REQUIRE(test_0_coords_node.is_sequence());
+        REQUIRE(test_0_coords_node.size() == 2);
+
+        REQUIRE(test_0_coords_node[0].is_null());
+        REQUIRE(test_0_coords_node[1].is_null());
+
+        fkyaml::node& test_0_name_node = test_0_node["name"];
+        REQUIRE(test_0_name_node.is_string());
+        REQUIRE(test_0_name_node.as_str() == "a");
+    }
 }
 
 TEST_CASE("Deserializer_FlowContainerKey") {
