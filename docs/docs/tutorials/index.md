@@ -98,7 +98,7 @@ After creating a tutorial project with the above files, execute the following co
 ```bash
 $ cd /path/to/tutorial/
 $ cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
-$ cmake --build build --config --config Release
+$ cmake --build build --config Release
 ```
 
 Congratulation! You've got an application which loads a YAML file and then outputs the content on the console.  
