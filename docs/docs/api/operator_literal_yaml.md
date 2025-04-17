@@ -10,7 +10,7 @@ inline node operator"" _yaml(const char32_t* s, std::size_t n);
 ```
 
 This operator implements a user-defined string literal for YAML node objects.  
-It can be used by adding `#!cpp _yaml` to a string literal encoded in either UTF-8, UTF-16 or UTF-32 format and returns a [`node`](basic_node/node.md) object if no error occured in the deserialization process.  
+It can be used by adding `#!cpp _yaml` to a string literal encoded in either UTF-8, UTF-16 or UTF-32 format and returns a [`node`](basic_node/node.md) object if no error occurred in the deserialization process.  
 Calling this operator is equivalent with calling [`#!cpp fkyaml::basic_node::deserialize(s, s + n)`](basic_node/deserialize.md).
 
 This operator is declared in the namespace `fkyaml::literals::yaml_literals`, where both `literals` and `yaml_literals` are [inline namespaces](https://en.cppreference.com/w/cpp/language/namespace#Inline_namespaces).  

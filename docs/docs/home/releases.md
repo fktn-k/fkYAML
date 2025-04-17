@@ -232,7 +232,7 @@ Other changes are related to minor bug fixes in YAML scalar parsing and maintena
     - Suggested by [ARessegetesStery](https://github.com/ARessegetesStery) in the issue [\#366](https://github.com/fktn-k/fkYAML/issues/366)
     - Automatic value conversions among null, boolean, integer and floating-point scalar values inside [fkyaml::basic_node::get_value()](../api/basic_node/get_value.md) API calls
 - Add forward declaration header ([\#422](https://github.com/fktn-k/fkYAML/pull/422), [fktn-k](https://github.com/fktn-k))
-    - Suggested by [abcminiuser](https://github.com/abcminiuser) in the duscussion [\#420](https://github.com/fktn-k/fkYAML/discussions/420)
+    - Suggested by [abcminiuser](https://github.com/abcminiuser) in the discussion [\#420](https://github.com/fktn-k/fkYAML/discussions/420)
     - This new header provides the fkYAML namespace macros and forward declarations of fkYAML API classes.
     - This file is available both in the [include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/include) and [single_include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/single_include) directories.
 
@@ -406,7 +406,7 @@ Furthermore, CI workflow errors when a PR from fork repository tries to acquire 
 ### Summary
 
 This release adds the new support for deserializing/serializing multiple YAML documents by adding new APIs ([`fkyaml::node::deserialize_docs()`](https://fktn-k.github.io/fkYAML/api/basic_node/deserialize_docs/) and [`fkyaml::node::serialize_docs()`](https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/) respectively). You can still call the existing APIs for deserializing/serializing a single YAML document. See the linked API document pages for details.  
-In addition, from this version on, Intel icpx compiler is supported and used in the CI processes. Some compiler flags are added in building the unit testing app, but no compiler specific swiches are required for the library itself.  
+In addition, from this version on, Intel icpx compiler is supported and used in the CI processes. Some compiler flags are added in building the unit testing app, but no compiler specific switches are required for the library itself.  
 Moreover, because the GitHub Actions runner image for macOS11 has been deprecated, the CI jobs which uses the runner image and some compiler support which depend on the runner image have been removed.  
 For other changes like bug fixes, see descriptions in each related issues and PRs.  
 
@@ -466,7 +466,7 @@ Moreover, several bugs in deserialization and Windows builds have been fixed.
 #### :bug: Bug Fixes
 
 - fixed parse error on explicit mappings as a block sequence entry by [fktn-k](https://github.com/fktn-k) in [\#353](https://github.com/fktn-k/fkYAML/pull/353)
-- Fix parse error on smal negative integer keys by [fktn-k](https://github.com/fktn-k) in [\#355](https://github.com/fktn-k/fkYAML/pull/355)
+- Fix parse error on small negative integer keys by [fktn-k](https://github.com/fktn-k) in [\#355](https://github.com/fktn-k/fkYAML/pull/355)
 - Fix compile errors on Windows by [fktn-k](https://github.com/fktn-k) in [\#358](https://github.com/fktn-k/fkYAML/pull/358), reported by [Michael-Lafreniere](https://github.com/Michael-Lafreniere) in [\#357](https://github.com/fktn-k/fkYAML/issues/357)
 
 **Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.8...v0.3.9
@@ -930,7 +930,7 @@ Furthermore, bugs in the deserialization/serialization features have also been f
 
 #### :bug: Bug Fixes
 
-- \#218 Fixed lacking quotes & escapes during serializtion [\#220](https://github.com/fktn-k/fkYAML/pull/220) ([fktn-k](https://github.com/fktn-k))
+- \#218 Fixed lacking quotes & escapes during serialization [\#220](https://github.com/fktn-k/fkYAML/pull/220) ([fktn-k](https://github.com/fktn-k))
 - \#217 Fix parse errors on strings containing single quotes [\#219](https://github.com/fktn-k/fkYAML/pull/219) ([fktn-k](https://github.com/fktn-k))
 
 **Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.2.1...v0.2.2
@@ -1196,7 +1196,7 @@ Furthermore, several tool/service integrations has been incorporated for better 
 ## **fkYAML v0.0.0**
 
 This release provides basic features of the fkYAML library.  
-Major known issues and limitaions are as follows:  
+Major known issues and limitations are as follows:  
 
 - %TAG directives are not supported. (Will surely be implemented.)
 - YAML key must be a string literal. (YAML specification of any version does not restrict YAML keys as such.)

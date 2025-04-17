@@ -31,7 +31,7 @@ See the notes there for details.
 
 ??? Note "Differences from `get_value()`"
 
-    One crutial difference from the [`get_value`](./get_value.md) function is, this function does not require the template parameter type `T` to be [default-constructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible) since no instantiation of `T` is necessary inside the function to return the conversion result anymore.  
+    One crucial difference from the [`get_value`](./get_value.md) function is, this function does not require the template parameter type `T` to be [default-constructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible) since no instantiation of `T` is necessary inside the function to return the conversion result anymore.  
     So, you might prefer this function, for example, if you already created a `T` object as a member variable and want to assign a node value to it.  
     
     Another is C-style array support.  

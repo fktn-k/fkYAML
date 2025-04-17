@@ -13,7 +13,7 @@
 
 # fkYAML
 fkYAML is a C++ header-only library to deserialize, serialize and build YAML documents.  
-It is also carefully desinged and tested to work with various compilers, C++ standards and platforms.  
+It is also carefully designed and tested to work with various compilers, C++ standards and platforms.  
 So, if you want portability & development speed-up, fkYAML is the way to go.  
 You can add YAML support into your projects by just including the header file(s).  
 This simple example (1) deserializes a YAML string into a document, (2) modifies the documentation, and finally (3) serializes the modified documentation to a YAML string.  

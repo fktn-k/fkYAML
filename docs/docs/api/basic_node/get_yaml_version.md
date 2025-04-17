@@ -46,5 +46,5 @@ The YAML specification version applied to a basic_node.
 ## **See Also**
 
 * [basic_node](index.md)
-* [yaml_verion_t](yaml_version_t.md)
+* [yaml_version_t](yaml_version_t.md)
 * [set_yaml_version](set_yaml_version.md)
