@@ -824,9 +824,9 @@ private:
             if (is_closed) {
                 // closing double quote is found.
                 m_cur_itr = m_token_begin_itr + (pos + 1);
-                str_view double_quoted_salar {m_token_begin_itr, pos};
-                check_scalar_content(double_quoted_salar);
-                return double_quoted_salar;
+                str_view double_quoted_scalar {m_token_begin_itr, pos};
+                check_scalar_content(double_quoted_scalar);
+                return double_quoted_scalar;
             }
 
             pos = sv.find('\"', pos + 1);

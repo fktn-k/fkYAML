@@ -65,7 +65,7 @@
 #define FK_YAML_INLINE_VAR
 #endif
 
-// switch usage of constexpr keyward depending on active C++ standard.
+// switch usage of constexpr keyword depending on active C++ standard.
 #if defined(FK_YAML_HAS_CXX_17)
 #define FK_YAML_CXX17_CONSTEXPR constexpr
 #else
