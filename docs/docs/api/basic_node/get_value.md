@@ -78,7 +78,7 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
 ??? Note "Convert from a Null or Numeric Scalar Node"
 
-    If the YAML node value is a null, boolean, integer or floating point, this function internally executes type conversion according to the following rules which all depend on the template paramter type `T`:
+    If the YAML node value is a null, boolean, integer or floating point, this function internally executes type conversion according to the following rules which all depend on the template parameter type `T`:
 
     * If the YAML node value is a **null** (node_type::NULL_OBJECT), the value can be converted to:
         * `false` (boolean)

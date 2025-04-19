@@ -6,9 +6,9 @@
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-// **NOTE FOR LIBARARY DEVELOPERS**:
+// **NOTE FOR LIBRARY DEVELOPERS**:
 // Implementations in this header file are intentionally optimized for conversions between YAML scalars and native C++
-// types. So, some implementations don't follow the convensions in the standard C++ functions. For example, octals must
+// types. So, some implementations don't follow the conversions in the standard C++ functions. For example, octals must
 // begin with "0o" (not "0"), which is specified in the YAML spec 1.2.
 
 #ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP

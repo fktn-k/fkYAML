@@ -17,7 +17,7 @@ Note that mapping values are stored as a pointer to an allocated memory area on 
 !!! Note "Preserve the insertion order of key-value pairs"
 
     The YAML specification describes as a mapping node as "an unordered association of unique keys to values".  
-    Which means that **the insertion order of key-value pairs are not guranteed by the YAML specification**.  
+    Which means that **the insertion order of key-value pairs are not guaranteed by the YAML specification**.  
     To follow the specification, the fkYAML library uses `std::map` as the mapping container type by default with the intention of better integration with other C++ programs.  
     If mapping values needs to be dependent on the insertion order, you can force preserving the insertion order by specifying [`fkyaml::ordered_map`](../ordered_map/index.md) as the MappingType template parameter as follows:
 

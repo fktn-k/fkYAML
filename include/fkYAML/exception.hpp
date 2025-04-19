@@ -105,7 +105,7 @@ private:
     /// @brief Generate an error message from the given parameters for the UTF-32 encoding.
     /// @param msg An error message.
     /// @param u32 The UTF-32 encoded element used for the UTF-8 encoding.
-    /// @return A genereated error message.
+    /// @return A generated error message.
     static std::string generate_error_message(const char* msg, char32_t u32) noexcept {
         // uint32_t is large enough for UTF-32 encoded elements.
         return detail::format("invalid_encoding: %s in=0x%08x", msg, static_cast<uint32_t>(u32));
@@ -116,10 +116,10 @@ private:
 /// @sa https://fktn-k.github.io/fkYAML/api/exception/parse_error/
 class parse_error : public exception {
 public:
-    /// @brief Constructs a new parse_error object with an error message and counts of lines and colums at the error.
+    /// @brief Constructs a new parse_error object with an error message and counts of lines and columns at the error.
     /// @param[in] msg An error message.
     /// @param[in] lines Count of lines.
-    /// @param[in] cols_in_line Count of colums.
+    /// @param[in] cols_in_line Count of columns.
     explicit parse_error(const char* msg, uint32_t lines, uint32_t cols_in_line) noexcept
         : exception(generate_error_message(msg, lines, cols_in_line).c_str()) {
     }

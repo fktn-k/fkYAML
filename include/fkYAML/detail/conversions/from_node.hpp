@@ -263,7 +263,7 @@ inline auto from_node(const BasicNodeType& n, SeqContainerAdapter& ca)
         throw type_error("The target node value is not sequence type.", n.get_type());
     }
 
-    // clear existing elements manually since clear function is not implemeneted for container adapter classes.
+    // clear existing elements manually since clear function is not implemented for container adapter classes.
     while (!ca.empty()) {
         ca.pop();
     }
@@ -606,7 +606,7 @@ inline void from_node(const BasicNodeType& n, std::tuple<Types...>& t) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
 
-    // Types... must be explicitly specified; the retun type would otherwise be std::tuple with no value types.
+    // Types... must be explicitly specified; the return type would otherwise be std::tuple with no value types.
     t = from_node_tuple_impl<BasicNodeType, Types...>(n, index_sequence_for<Types...> {});
 }
 

@@ -13,7 +13,7 @@ bool contains(BasicNodeType&& key) const; // (2)
 Checks if the YAML node has the given key in the queried mapping.  
 If the node value is not a mapping, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.  
 
-The input parameter `key` must be either a [`basic_node`](index.md) obejct or an object of a compatible type, i.e., a type with which a [`basic_node`](index.md) object can be constructible.  
+The input parameter `key` must be either a [`basic_node`](index.md) object or an object of a compatible type, i.e., a type with which a [`basic_node`](index.md) object can be constructible.  
 Note that the overload (1) internally constructs a temporal [`basic_node`](index.md) object.  
 So, if you use the same key multiple times, for example, in a for loop, consider creating a [`basic_node`](index.md) as a key first for better performance.  
 

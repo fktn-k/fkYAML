@@ -403,13 +403,13 @@ namespace std {
 #pragma clang diagnostic ignored "-Wmismatched-tags"
 #endif
 
-/// @brief Parcial pecialization of std::tuple_size for iterator class.
+/// @brief Partial specialization of std::tuple_size for iterator class.
 /// @tparam ValueType The iterator value type.
 template <typename ValueType>
 // NOLINTNEXTLINE(cert-dcl58-cpp)
 struct tuple_size<::fkyaml::detail::iterator<ValueType>> : integral_constant<size_t, 2> {};
 
-/// @brief Parcial specialization of std::tuple_element for iterator class.
+/// @brief Partial specialization of std::tuple_element for iterator class.
 /// @tparam ValueType The iterator value type.
 /// @tparam I The element index.
 template <size_t I, typename ValueType>

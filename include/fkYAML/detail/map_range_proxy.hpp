@@ -52,7 +52,7 @@ public:
     /// @brief Move constructs a map_iterator_proxy object.
     map_iterator_proxy(map_iterator_proxy&&) = default;
 
-    /// @biref Move assigns a map_iterator_proxy object.
+    /// @brief Move assigns a map_iterator_proxy object.
     map_iterator_proxy& operator=(map_iterator_proxy&&) = default;
 
     /// @brief Destructs a map_iterator_proxy object.
