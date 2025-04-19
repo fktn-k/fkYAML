@@ -149,7 +149,7 @@
 #define FK_YAML_INLINE_VAR
 #endif
 
-// switch usage of constexpr keyward depending on active C++ standard.
+// switch usage of constexpr keyword depending on active C++ standard.
 #if defined(FK_YAML_HAS_CXX_17)
 #define FK_YAML_CXX17_CONSTEXPR constexpr
 #else
@@ -1724,7 +1724,7 @@ private:
     /// @brief Generate an error message from the given parameters for the UTF-32 encoding.
     /// @param msg An error message.
     /// @param u32 The UTF-32 encoded element used for the UTF-8 encoding.
-    /// @return A genereated error message.
+    /// @return A generated error message.
     static std::string generate_error_message(const char* msg, char32_t u32) noexcept {
         // uint32_t is large enough for UTF-32 encoded elements.
         return detail::format("invalid_encoding: %s in=0x%08x", msg, static_cast<uint32_t>(u32));
@@ -1735,10 +1735,10 @@ private:
 /// @sa https://fktn-k.github.io/fkYAML/api/exception/parse_error/
 class parse_error : public exception {
 public:
-    /// @brief Constructs a new parse_error object with an error message and counts of lines and colums at the error.
+    /// @brief Constructs a new parse_error object with an error message and counts of lines and columns at the error.
     /// @param[in] msg An error message.
     /// @param[in] lines Count of lines.
-    /// @param[in] cols_in_line Count of colums.
+    /// @param[in] cols_in_line Count of columns.
     explicit parse_error(const char* msg, uint32_t lines, uint32_t cols_in_line) noexcept
         : exception(generate_error_message(msg, lines, cols_in_line).c_str()) {
     }
@@ -2644,13 +2644,13 @@ public:
         size_type len = m_len - pos;
 
         while (len >= n) {
-            // find the first occurence of s0
+            // find the first occurrence of s0
             p_first = traits_type::find(p_first, len - n + 1, s0);
             if (!p_first) {
                 return npos;
             }
 
-            // compare the full strings from the first occurence of s0
+            // compare the full strings from the first occurrence of s0
             if (traits_type::compare(p_first, s, n) == 0) {
                 return p_first - mp_str;
             }
@@ -2726,7 +2726,7 @@ public:
         return rfind(basic_str_view(s), pos);
     }
 
-    /// @brief Finds the first occurence of `sv` character sequence in this referenced character sequence.
+    /// @brief Finds the first occurrence of `sv` character sequence in this referenced character sequence.
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `sv` characters, `npos` otherwise.
@@ -2734,7 +2734,7 @@ public:
         return find_first_of(sv.mp_str, pos, sv.m_len);
     }
 
-    /// @brief Finds the first occurence of `c` character in this referenced character sequence.
+    /// @brief Finds the first occurrence of `c` character in this referenced character sequence.
     /// @param c The character to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `c` character, `npos` otherwise.
@@ -2742,7 +2742,7 @@ public:
         return find(c, pos);
     }
 
-    /// @brief Finds the first occurence of `s` character sequence by `n` characters in this referenced character
+    /// @brief Finds the first occurrence of `s` character sequence by `n` characters in this referenced character
     /// sequence.
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
@@ -2763,7 +2763,7 @@ public:
         return npos;
     }
 
-    /// @brief Finds the first occurence of `s` character sequence in this referenced character sequence.
+    /// @brief Finds the first occurrence of `s` character sequence in this referenced character sequence.
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `s` characters, `npos` otherwise.
@@ -2771,7 +2771,7 @@ public:
         return find_first_of(basic_str_view(s), pos);
     }
 
-    /// @brief Finds the last occurence of `sv` character sequence in this referenced character sequence.
+    /// @brief Finds the last occurrence of `sv` character sequence in this referenced character sequence.
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `sv` characters, `npos` otherwise.
@@ -2779,7 +2779,7 @@ public:
         return find_last_of(sv.mp_str, pos, sv.m_len);
     }
 
-    /// @brief Finds the last occurence of `c` character in this referenced character sequence.
+    /// @brief Finds the last occurrence of `c` character in this referenced character sequence.
     /// @param c The character to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `c` character, `npos` otherwise.
@@ -2787,7 +2787,7 @@ public:
         return rfind(c, pos);
     }
 
-    /// @brief Finds the last occurence of `s` character sequence by `n` characters in this referenced character
+    /// @brief Finds the last occurrence of `s` character sequence by `n` characters in this referenced character
     /// sequence.
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
@@ -2808,7 +2808,7 @@ public:
         return npos;
     }
 
-    /// @brief Finds the last occurence of `s` character sequence in this referenced character sequence.
+    /// @brief Finds the last occurrence of `s` character sequence in this referenced character sequence.
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `s` characters, `npos` otherwise.
@@ -4056,9 +4056,9 @@ private:
             if (is_closed) {
                 // closing double quote is found.
                 m_cur_itr = m_token_begin_itr + (pos + 1);
-                str_view double_quoted_salar {m_token_begin_itr, pos};
-                check_scalar_content(double_quoted_salar);
-                return double_quoted_salar;
+                str_view double_quoted_scalar {m_token_begin_itr, pos};
+                check_scalar_content(double_quoted_scalar);
+                return double_quoted_scalar;
             }
 
             pos = sv.find('\"', pos + 1);
@@ -4528,9 +4528,9 @@ FK_YAML_DETAIL_NAMESPACE_END
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-// **NOTE FOR LIBARARY DEVELOPERS**:
+// **NOTE FOR LIBRARY DEVELOPERS**:
 // Implementations in this header file are intentionally optimized for conversions between YAML scalars and native C++
-// types. So, some implementations don't follow the convensions in the standard C++ functions. For example, octals must
+// types. So, some implementations don't follow the conversions in the standard C++ functions. For example, octals must
 // begin with "0o" (not "0"), which is specified in the YAML spec 1.2.
 
 #ifndef FK_YAML_CONVERSIONS_SCALAR_CONV_HPP
@@ -10315,13 +10315,13 @@ namespace std {
 #pragma clang diagnostic ignored "-Wmismatched-tags"
 #endif
 
-/// @brief Parcial pecialization of std::tuple_size for iterator class.
+/// @brief Partial specialization of std::tuple_size for iterator class.
 /// @tparam ValueType The iterator value type.
 template <typename ValueType>
 // NOLINTNEXTLINE(cert-dcl58-cpp)
 struct tuple_size<::fkyaml::detail::iterator<ValueType>> : integral_constant<size_t, 2> {};
 
-/// @brief Parcial specialization of std::tuple_element for iterator class.
+/// @brief Partial specialization of std::tuple_element for iterator class.
 /// @tparam ValueType The iterator value type.
 /// @tparam I The element index.
 template <size_t I, typename ValueType>
@@ -10395,7 +10395,7 @@ public:
     /// @brief Move constructs a map_iterator_proxy object.
     map_iterator_proxy(map_iterator_proxy&&) = default;
 
-    /// @biref Move assigns a map_iterator_proxy object.
+    /// @brief Move assigns a map_iterator_proxy object.
     map_iterator_proxy& operator=(map_iterator_proxy&&) = default;
 
     /// @brief Destructs a map_iterator_proxy object.
@@ -11730,7 +11730,7 @@ inline auto from_node(const BasicNodeType& n, SeqContainerAdapter& ca)
         throw type_error("The target node value is not sequence type.", n.get_type());
     }
 
-    // clear existing elements manually since clear function is not implemeneted for container adapter classes.
+    // clear existing elements manually since clear function is not implemented for container adapter classes.
     while (!ca.empty()) {
         ca.pop();
     }
@@ -12073,7 +12073,7 @@ inline void from_node(const BasicNodeType& n, std::tuple<Types...>& t) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
 
-    // Types... must be explicitly specified; the retun type would otherwise be std::tuple with no value types.
+    // Types... must be explicitly specified; the return type would otherwise be std::tuple with no value types.
     t = from_node_tuple_impl<BasicNodeType, Types...>(n, index_sequence_for<Types...> {});
 }
 
