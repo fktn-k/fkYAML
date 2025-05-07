@@ -257,6 +257,18 @@ TEST_CASE("LexicalAnalyzer_Comment") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
+    SECTION("valid tab comments") {
+        fkyaml::detail::str_view input("a #comment");
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.str == "a");
+
+        fkyaml::detail::str_view tab_input("a\t#comment");
+        fkyaml::detail::lexical_analyzer tab_lexer(tab_input);
+        REQUIRE_NOTHROW(token = tab_lexer.get_next_token());
+        REQUIRE(token.str == "a");
+    }
+
     // regression test for https://github.com/fktn-k/fkYAML/pull/469
     SECTION("invalid comments") {
         fkyaml::detail::str_view input("\'foo\'#invalid");
