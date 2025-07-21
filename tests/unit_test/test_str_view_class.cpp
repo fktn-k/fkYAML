@@ -215,7 +215,7 @@ TEST_CASE("StrView_Compare") {
     // skip checks of comparisons with a large string object if int == ptrdiff_t
     if (static_cast<std::ptrdiff_t>(std::numeric_limits<int>::max()) < std::numeric_limits<std::ptrdiff_t>::max()) {
         constexpr std::size_t long_str_size = static_cast<std::size_t>(std::numeric_limits<int>::max()) + 4u;
-        char* p_long_str = (char*)std::malloc(long_str_size);
+        char* p_long_str = static_cast<char*>(std::malloc(long_str_size));
         for (std::size_t i = 0; i < long_str_size - 1; i++) {
             p_long_str[i] = 'a';
         }

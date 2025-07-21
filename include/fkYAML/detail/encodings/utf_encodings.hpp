@@ -203,8 +203,7 @@ inline void from_utf16(
         encoded_size = 2;
     }
     else if (first < 0xD800u || 0xE000u <= first) {
-        const auto utf8_chunk =
-            static_cast<uint32_t>(0xE08080u | ((first & 0xF000u) << 4) | ((first & 0x0FC0u) << 2) | (first & 0x3Fu));
+        const uint32_t utf8_chunk = 0xE08080u | ((first & 0xF000u) << 4) | ((first & 0x0FC0u) << 2) | (first & 0x3Fu);
         utf8[0] = static_cast<uint8_t>(utf8_chunk >> 16);
         utf8[1] = static_cast<uint8_t>(utf8_chunk >> 8);
         utf8[2] = static_cast<uint8_t>(utf8_chunk);
@@ -214,9 +213,8 @@ inline void from_utf16(
     else if (first <= 0xDBFFu && 0xDC00u <= second && second <= 0xDFFFu) {
         // surrogate pair
         const uint32_t code_point = 0x10000u + ((first & 0x03FFu) << 10) + (second & 0x03FFu);
-        const auto utf8_chunk = static_cast<uint32_t>(
-            0xF0808080u | ((code_point & 0x1C0000u) << 6) | ((code_point & 0x03F000u) << 4) |
-            ((code_point & 0x0FC0u) << 2) | (code_point & 0x3Fu));
+        const uint32_t utf8_chunk = 0xF0808080u | ((code_point & 0x1C0000u) << 6) | ((code_point & 0x03F000u) << 4) |
+                                    ((code_point & 0x0FC0u) << 2) | (code_point & 0x3Fu);
         utf8[0] = static_cast<uint8_t>(utf8_chunk >> 24);
         utf8[1] = static_cast<uint8_t>(utf8_chunk >> 16);
         utf8[2] = static_cast<uint8_t>(utf8_chunk >> 8);
@@ -245,17 +243,15 @@ inline void from_utf32(const char32_t utf32, std::array<uint8_t, 4>& utf8, uint3
         encoded_size = 2;
     }
     else if (utf32 <= 0xFFFFu) {
-        const auto utf8_chunk =
-            static_cast<uint32_t>(0xE08080u | ((utf32 & 0xF000u) << 4) | ((utf32 & 0x0FC0u) << 2) | (utf32 & 0x3F));
+        const uint32_t utf8_chunk = 0xE08080u | ((utf32 & 0xF000u) << 4) | ((utf32 & 0x0FC0u) << 2) | (utf32 & 0x3F);
         utf8[0] = static_cast<uint8_t>(utf8_chunk >> 16);
         utf8[1] = static_cast<uint8_t>(utf8_chunk >> 8);
         utf8[2] = static_cast<uint8_t>(utf8_chunk);
         encoded_size = 3;
     }
     else if (utf32 <= 0x10FFFFu) {
-        const auto utf8_chunk = static_cast<uint32_t>(
-            0xF0808080u | ((utf32 & 0x1C0000u) << 6) | ((utf32 & 0x03F000u) << 4) | ((utf32 & 0x0FC0u) << 2) |
-            (utf32 & 0x3Fu));
+        const uint32_t utf8_chunk = 0xF0808080u | ((utf32 & 0x1C0000u) << 6) | ((utf32 & 0x03F000u) << 4) |
+                                    ((utf32 & 0x0FC0u) << 2) | (utf32 & 0x3Fu);
         utf8[0] = static_cast<uint8_t>(utf8_chunk >> 24);
         utf8[1] = static_cast<uint8_t>(utf8_chunk >> 16);
         utf8[2] = static_cast<uint8_t>(utf8_chunk >> 8);
