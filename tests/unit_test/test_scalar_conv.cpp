@@ -62,7 +62,7 @@ TEST_CASE("ScalarConv_atoi") {
     SECTION("decimal number with an explicit plus sign") {
         std::string input = "+64";
         REQUIRE(fkyaml::detail::atoi(input.begin(), input.end(), integer) == true);
-        REQUIRE(integer == int32_t(64));
+        REQUIRE(integer == 64);
     }
 
     SECTION("hexadecimal number with different writings in alphabets") {

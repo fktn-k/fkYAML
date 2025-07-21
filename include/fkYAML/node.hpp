@@ -1990,7 +1990,7 @@ inline fkyaml::node FK_YAML_QUOTE_OPERATOR(const char32_t* s, std::size_t n) {
 /// @param n The size of `s`.
 /// @return The resulting `node` object deserialized from `s`.
 inline fkyaml::node FK_YAML_QUOTE_OPERATOR(const char8_t* s, std::size_t n) {
-    return fkyaml::node::deserialize((const char8_t*)s, (const char8_t*)s + n);
+    return fkyaml::node::deserialize(s, s + n);
 }
 
 #if defined(__clang__)

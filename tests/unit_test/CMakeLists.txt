@@ -120,6 +120,7 @@ target_compile_options(
       -Wall -Wextra -Werror -pedantic -Wpedantic -Wdeprecated --all-warnings --extra-warnings
       -Wno-deprecated-declarations # for testing deprecated functions
       -Wno-self-move # necessary to build the detail::iterator class test
+      -Wold-style-cast # regression test for https://github.com/fktn-k/fkYAML/issues/495
     >
     # Clang
     $<$<CXX_COMPILER_ID:Clang>:

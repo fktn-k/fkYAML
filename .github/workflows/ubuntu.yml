@@ -204,6 +204,12 @@ jobs:
     container: silkeh/clang:${{matrix.compiler}}
 
     steps:
+    - name: Edit repository URLs for old ubuntu releases.
+      run: |
+        sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
+        sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
+      if: ${{ matrix.compiler == '3.4' || matrix.compiler == '3.5' || matrix.compiler == '3.6' || matrix.compiler == '3.7' || matrix.compiler == '3.8' || matrix.compiler == '3.9' || matrix.compiler == '7' || matrix.compiler == '8' || matrix.compiler == '9' || matrix.compiler == '10' }}
+
     - name: Install git and unzip
       run: |
         apt-get update
@@ -240,6 +246,12 @@ jobs:
     container: gcc:${{matrix.compiler}}
 
     steps:
+    - name: Edit repository URLs for old ubuntu releases.
+      run: |
+        sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
+        sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
+      if: ${{ matrix.compiler == '7' || matrix.compiler == '8' }}
+
     - name: Install git and unzip
       run: |
         apt-get update
