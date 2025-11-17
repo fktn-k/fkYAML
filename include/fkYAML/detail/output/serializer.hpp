@@ -262,10 +262,10 @@ private:
             str += m_tmp_str_buff;
             break;
         case node_type::STRING: {
-            bool is_escaped = false;
-            auto str_val = get_string_node_value(node, is_escaped);
+            bool needs_quotes = false;
+            auto str_val = get_string_node_value(node, needs_quotes);
 
-            if (is_escaped) {
+            if (needs_quotes) {
                 // There's no other token type with escapes than strings.
                 // Also, escapes must be in double-quoted strings.
                 str += '\"';
@@ -366,15 +366,69 @@ private:
         return false;
     }
 
+    /// @brief Scan a string for YAML indicator characters that require quoting.
+    /// @param[in] str The already escaped string value to be inspected.
+    /// @return true if the string contains characters that could be interpreted
+    ///         by a YAML parser as structural tokens (e.g., alias, anchor, tag,
+    ///         comment, or flow indicators), and therefore must be surrounded
+    ///         with quotes to preserve its semantic meaning; false otherwise.
+    bool scane_yaml_tokens(const std::string& str) const {
+        if (str.empty()) {
+            // Empty plain scalar is technically valid, and escaper already
+            // decided we don't need quotes for whitespace/escapes.
+            return false;
+        }
+
+        for (char c : str) {
+            switch (c){
+                // Definitely dangerous as plain: will be lexed as alias/anchor/tag/comment
+                case '*': // alias: *foo
+                case '&': // anchor: &foo
+                case '!': // tag
+                case '#': // comment start
+                    return true;
+
+                // Structural indicators; legal in plain scalars in some positions,
+                // but conservative choice is to quote whenever present.
+                case '[': case ']':
+                case '{': case '}':
+                case ',':
+                case '|': case '>':
+                case '@': case '`':
+                case '%':
+                    return true;
+
+                // “Flow” indicators at beginning of scalar or before space are tricky.
+                // Being conservative, just quote if they appear anywhere.
+                case ':':
+                case '?':
+                case '-':
+                    return true;
+
+                default:
+                    break;
+            }
+        }
+
+        // No suspicious YAML indicator characters found, can stay plain.
+        return false;    
+    }
+
     /// @brief Get a string value from the given node and, if necessary, escape its contents.
     /// @param[in] node The target string YAML node.
-    /// @param[out] is_escaped Whether the contents of an output string has been escaped.
+    /// @param[out] need_quotes Whether the contents of an output string needs to be quoted.
     /// @return The (escaped) string node value.
-    typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
+    typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& need_quotes) const {
         FK_YAML_ASSERT(node.is_string());
 
         const auto& s = node.as_str();
-        return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
+        auto result = yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), need_quotes);
+        if (!need_quotes)
+        {
+            // A naked string may need to be quoted to keep its semantic meaning.
+            need_quotes = scane_yaml_tokens(result);
+        }
+        return result;
     } // LCOV_EXCL_LINE
 
 private:
