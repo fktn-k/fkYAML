@@ -380,38 +380,42 @@ private:
         }
 
         for (char c : str) {
-            switch (c){
-                // Definitely dangerous as plain: will be lexed as alias/anchor/tag/comment
-                case '*': // alias: *foo
-                case '&': // anchor: &foo
-                case '!': // tag
-                case '#': // comment start
-                    return true;
+            switch (c) {
+            // Definitely dangerous as plain: will be lexed as alias/anchor/tag/comment
+            case '*': // alias: *foo
+            case '&': // anchor: &foo
+            case '!': // tag
+            case '#': // comment start
+                return true;
 
-                // Structural indicators; legal in plain scalars in some positions,
-                // but conservative choice is to quote whenever present.
-                case '[': case ']':
-                case '{': case '}':
-                case ',':
-                case '|': case '>':
-                case '@': case '`':
-                case '%':
-                    return true;
+            // Structural indicators; legal in plain scalars in some positions,
+            // but conservative choice is to quote whenever present.
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+            case ',':
+            case '|':
+            case '>':
+            case '@':
+            case '`':
+            case '%':
+                return true;
 
-                // “Flow” indicators at beginning of scalar or before space are tricky.
-                // Being conservative, just quote if they appear anywhere.
-                case ':':
-                case '?':
-                case '-':
-                    return true;
+            // “Flow” indicators at beginning of scalar or before space are tricky.
+            // Being conservative, just quote if they appear anywhere.
+            case ':':
+            case '?':
+            case '-':
+                return true;
 
-                default:
-                    break;
+            default:
+                break;
             }
         }
 
         // No suspicious YAML indicator characters found, can stay plain.
-        return false;    
+        return false;
     }
 
     /// @brief Get a string value from the given node and, if necessary, escape its contents.
@@ -423,8 +427,7 @@ private:
 
         const auto& s = node.as_str();
         auto result = yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), need_quotes);
-        if (!need_quotes)
-        {
+        if (!need_quotes) {
             // A naked string may need to be quoted to keep its semantic meaning.
             need_quotes = scane_yaml_tokens(result);
         }
