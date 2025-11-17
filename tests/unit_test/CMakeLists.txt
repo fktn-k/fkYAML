@@ -244,6 +244,7 @@ add_executable(
   test_utf_encodings.cpp
   test_yaml_escaper_class.cpp
   test_yaml_version_type.cpp
+  test_string_serialize_deserialize.cpp
   main.cpp
 )
 
