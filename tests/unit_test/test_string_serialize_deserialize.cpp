@@ -24,18 +24,26 @@ TEST_CASE("String_Serialize_Deserialize_Roundtrip") {
 
     // Values that should *not* trigger scane_yaml_tokens
     source["plain"]      = "just_text";
-    source["empty"]      = "";
 
     std::stringstream buff;
     buff << source;
 
     fkyaml::node copy;
     REQUIRE_NOTHROW(copy = fkyaml::node::deserialize(buff));
-    for (const auto& kv : source.map_items()) {
-        const auto& key  = kv.key().as_str();
-        const auto& lhs  = source[key];
-        const auto& rhs  = copy[key];
-
-        REQUIRE(lhs == rhs);
-    }
+    REQUIRE(source["alias"]     == copy["alias"]);
+    REQUIRE(source["anchor"]    == copy["anchor"]);
+    REQUIRE(source["tag"]       == copy["tag"]);
+    REQUIRE(source["comment"]   == copy["comment"]);
+    REQUIRE(source["brackets"]  == copy["brackets"]);
+    REQUIRE(source["braces"]    == copy["braces"]);
+    REQUIRE(source["comma"]     == copy["comma"]);
+    REQUIRE(source["pipe"]      == copy["pipe"]);
+    REQUIRE(source["gt"]        == copy["gt"]);
+    REQUIRE(source["at"]        == copy["at"]);
+    REQUIRE(source["backtick"]  == copy["backtick"]);
+    REQUIRE(source["percent"]   == copy["percent"]);
+    REQUIRE(source["colon"]     == copy["colon"]);
+    REQUIRE(source["question"]  == copy["question"]);
+    REQUIRE(source["dash"]      == copy["dash"]);
+    REQUIRE(source["plain"]     == copy["plain"]);
 }

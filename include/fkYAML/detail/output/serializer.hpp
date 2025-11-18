@@ -408,7 +408,7 @@ private:
             case '?':
             case '-':
                 return true;
-
+                
             default:
                 break;
             }
@@ -428,7 +428,6 @@ private:
         const auto& s = node.as_str();
         auto result = yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), need_quotes);
         if (!need_quotes) {
-            // A naked string may need to be quoted to keep its semantic meaning.
             need_quotes = scane_yaml_tokens(result);
         }
         return result;
