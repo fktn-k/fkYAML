@@ -370,13 +370,24 @@ private:
     /// @param[in] str The already escaped string value to be inspected.
     /// @return true if the string contains characters that could be interpreted
     ///         by a YAML parser as structural tokens (e.g., alias, anchor, tag,
-    ///         comment, or flow indicators), and therefore must be surrounded
-    ///         with quotes to preserve its semantic meaning; false otherwise.
-    bool scane_yaml_tokens(const std::string& str) const {
+    ///         comment, or flow indicators) or space at the beginning, and therefore 
+    ///         must be surrounded with quotes to preserve its semantic meaning; 
+    ///         false otherwise.
+    bool scan_yaml_tokens(const std::string& str) const {
         if (str.empty()) {
             // Empty plain scalar is technically valid, and escaper already
             // decided we don't need quotes for whitespace/escapes.
             return false;
+        }
+
+        // The string contains spaces at the beginning or end of the stirng. " data "
+        if (str.front() == ' ')
+        {
+            return true;
+        }
+        if (str.back() == ' ')
+        {
+            return true;
         }
 
         for (char c : str) {
@@ -428,7 +439,7 @@ private:
         const auto& s = node.as_str();
         auto result = yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), need_quotes);
         if (!need_quotes) {
-            need_quotes = scane_yaml_tokens(result);
+            need_quotes = scan_yaml_tokens(result);
         }
         return result;
     } // LCOV_EXCL_LINE
