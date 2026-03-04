@@ -372,15 +372,17 @@ struct from_node_int_helper<BasicNodeType, IntType, false> {
     /// @return An integer value converted from the node's integer value.
     static IntType convert(const BasicNodeType& n) {
         using node_int_type = typename BasicNodeType::integer_type;
+
+        // as_int() throws for uint_bit-marked nodes (value > INT64_MAX stored as a signed
+        // bit-pattern). Short-circuit before calling as_int() so get_value<uint64_t>() works.
+        if (std::is_same<IntType, uint64_t>::value && n.is_uint()) {
+            return static_cast<IntType>(n.as_uint());
+        }
+
         const node_int_type tmp_int = n.as_int();
 
         // under/overflow check.
         if (std::is_same<IntType, uint64_t>::value) {
-            // Nodes marked with uint_bit store a uint64_t bit pattern in a signed field.
-            // Recover the original unsigned value without a sign check.
-            if (n.is_uint()) {
-                return static_cast<IntType>(tmp_int);
-            }
             if FK_YAML_UNLIKELY (tmp_int < 0) {
                 throw exception("Integer value underflow detected.");
             }
