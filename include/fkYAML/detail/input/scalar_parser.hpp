@@ -12,6 +12,7 @@
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/scalar_conv.hpp>
+#include <fkYAML/detail/conversions/to_node.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 #include <fkYAML/detail/input/block_scalar_header.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>
@@ -534,6 +535,24 @@ private:
             if FK_YAML_LIKELY (converted) {
                 return basic_node_type(integer);
             }
+
+            // For untagged plain integer scalars, attempt a uint64_t parse to handle large
+            // positive values that exceed int64_t max (e.g. xxHash/UUID results like
+            // 15745692345339290292). This only applies when integer_type is a signed 64-bit
+            // type; any other width would not be able to represent the value anyway.
+            if (tag_type != tag_t::INTEGER && std::is_signed<integer_type>::value &&
+                sizeof(integer_type) == sizeof(uint64_t)) {
+                uint64_t u64 = 0;
+                if (detail::atoi(token.begin(), token.end(), u64)) {
+                    basic_node_type node;
+                    // Store the bit pattern in the signed field and set uint_bit so that
+                    // as_uint() / get_value<uint64_t>() can recover the correct value.
+                    detail::external_node_constructor<basic_node_type>::unsigned_integer_scalar(
+                        node, static_cast<integer_type>(u64));
+                    return node;
+                }
+            }
+
             if FK_YAML_UNLIKELY (tag_type == tag_t::INTEGER) {
                 throw parse_error("Failed to convert a scalar to an integer.", m_line, m_indent);
             }

@@ -65,6 +65,16 @@ struct external_node_constructor {
         n.m_value.integer = i;
     }
 
+    /// @brief Constructs an INTEGER node from a uint64_t value that exceeds the signed range.
+    /// The raw bit pattern is stored in the integer field and the uint_bit flag is set so that
+    /// get_value<uint64_t>() / as_uint() can recover the original unsigned value.
+    static void unsigned_integer_scalar(BasicNodeType& n, const typename BasicNodeType::integer_type i) {
+        destroy(n);
+        n.m_attrs |= node_attr_bits::int_bit;
+        n.m_attrs |= node_attr_bits::uint_bit;
+        n.m_value.integer = i;
+    }
+
     static void float_scalar(BasicNodeType& n, const typename BasicNodeType::float_number_type f) {
         destroy(n);
         n.m_attrs |= node_attr_bits::float_bit;
@@ -81,7 +91,9 @@ struct external_node_constructor {
 private:
     static void destroy(BasicNodeType& n) {
         n.m_value.destroy(n.m_attrs & node_attr_mask::value);
-        n.m_attrs &= ~node_attr_mask::value;
+        // Clear both the value-type bits and the uint_bit style flag so that any
+        // subsequent reassignment starts from a clean state.
+        n.m_attrs &= ~(node_attr_mask::value | node_attr_bits::uint_bit);
     }
 };
 

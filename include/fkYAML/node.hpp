@@ -1472,6 +1472,36 @@ public:
         throw fkyaml::type_error("The node value is not a boolean.", get_type());
     }
 
+    /// @brief Checks if the node is an integer that was parsed from a uint64_t value exceeding INT64_MAX.
+    /// @return true if the node holds an unsigned integer, false otherwise.
+    bool is_uint() const noexcept {
+        return resolve_reference().is_uint_impl();
+    }
+
+    /// @brief Returns the integer node value as an unsigned 64-bit integer.
+    /// This is valid both for nodes where integer_type is unsigned and for nodes where a large
+    /// positive decimal scalar (> INT64_MAX) was stored with the uint_bit flag set.
+    /// @throw fkyaml::type_error if the node is not a compatible integer.
+    /// @return The node value as uint64_t.
+    uint64_t as_uint() const {
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_integer_impl()) {
+            // When integer_type is unsigned the stored value IS the uint64_t directly.
+            if (std::is_unsigned<integer_type>::value) {
+                return static_cast<uint64_t>(act_node.m_value.integer);
+            }
+            // When integer_type is signed, only uint_bit-marked nodes carry a uint64_t.
+            if (act_node.m_attrs & detail::node_attr_bits::uint_bit) {
+                return static_cast<uint64_t>(act_node.m_value.integer);
+            }
+            // Signed values in the non-negative range can be returned safely.
+            if (act_node.m_value.integer >= static_cast<integer_type>(0)) {
+                return static_cast<uint64_t>(act_node.m_value.integer);
+            }
+        }
+        throw fkyaml::type_error("The node value cannot be represented as an unsigned integer.", get_type());
+    }
+
     /// @brief Returns reference to the integer node value.
     /// @throw fkyaml::type_error The node value is not an integer.
     /// @return Reference to the integer node value.
@@ -1479,18 +1509,30 @@ public:
     integer_type& as_int() {
         basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_integer_impl()) {
+            if FK_YAML_UNLIKELY (act_node.is_uint_impl()) {
+                throw fkyaml::type_error(
+                    "The integer value exceeds INT64_MAX and cannot be returned as a signed integer. "
+                    "Use as_uint() instead.",
+                    get_type());
+            }
             return act_node.m_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
     }
 
     /// @brief Returns reference to the integer node value.
-    /// @throw fkyaml::type_error The node value is not an integer.
+    /// @throw fkyaml::type_error The node value is not an integer, or exceeds INT64_MAX.
     /// @return Constant reference to the integer node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_int/
     const integer_type& as_int() const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_integer_impl()) {
+            if FK_YAML_UNLIKELY (act_node.is_uint_impl()) {
+                throw fkyaml::type_error(
+                    "The integer value exceeds INT64_MAX and cannot be returned as a signed integer. "
+                    "Use as_uint() instead.",
+                    get_type());
+            }
             return act_node.m_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
@@ -1766,6 +1808,12 @@ private:
 
     bool is_integer_impl() const noexcept {
         return m_attrs & detail::node_attr_bits::int_bit;
+    }
+
+    bool is_uint_impl() const noexcept {
+        // Both int_bit and uint_bit must be set: this node stores a uint64_t value
+        // whose bit pattern was placed into the signed integer_type field.
+        return (m_attrs & detail::node_attr_bits::int_bit) && (m_attrs & detail::node_attr_bits::uint_bit);
     }
 
     bool is_float_number_impl() const noexcept {

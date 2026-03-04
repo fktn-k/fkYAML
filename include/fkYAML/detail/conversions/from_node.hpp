@@ -376,6 +376,11 @@ struct from_node_int_helper<BasicNodeType, IntType, false> {
 
         // under/overflow check.
         if (std::is_same<IntType, uint64_t>::value) {
+            // Nodes marked with uint_bit store a uint64_t bit pattern in a signed field.
+            // Recover the original unsigned value without a sign check.
+            if (n.is_uint()) {
+                return static_cast<IntType>(tmp_int);
+            }
             if FK_YAML_UNLIKELY (tmp_int < 0) {
                 throw exception("Integer value underflow detected.");
             }

@@ -5356,6 +5356,484 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_CONVERSIONS_SCALAR_CONV_HPP */
 
+// #include <fkYAML/detail/conversions/to_node.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
+#define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
+
+#include <utility>
+
+// #include <fkYAML/detail/macros/define_macros.hpp>
+
+// #include <fkYAML/detail/exception_safe_allocation.hpp>
+
+// #include <fkYAML/detail/meta/node_traits.hpp>
+
+// #include <fkYAML/detail/meta/type_traits.hpp>
+
+// #include <fkYAML/detail/meta/stl_supplement.hpp>
+
+// #include <fkYAML/detail/node_attrs.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_NODE_ATTRS_HPP
+#define FK_YAML_DETAIL_NODE_ATTRS_HPP
+
+#include <cstdint>
+#include <limits>
+
+// #include <fkYAML/detail/macros/define_macros.hpp>
+
+// #include <fkYAML/node_type.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief The type for node attribute bits.
+using node_attr_t = uint32_t;
+
+/// @brief The namespace to define bit masks for node attribute bits.
+namespace node_attr_mask {
+
+/// The bit mask for node value type bits.
+constexpr node_attr_t value = 0x0000FFFFu;
+/// The bit mask for node style type bits. (bits are not yet defined.)
+constexpr node_attr_t style = 0x00FF0000u;
+/// The bit mask for node property related bits.
+constexpr node_attr_t props = 0xFF000000u;
+/// The bit mask for anchor/alias node type bits.
+constexpr node_attr_t anchoring = 0x03000000u;
+/// The bit mask for anchor offset value bits.
+constexpr node_attr_t anchor_offset = 0xFC000000u;
+/// The bit mask for all the bits for node attributes.
+constexpr node_attr_t all = std::numeric_limits<node_attr_t>::max();
+
+} // namespace node_attr_mask
+
+/// @brief The namespace to define bits for node attributes.
+namespace node_attr_bits {
+
+/// The sequence node bit.
+constexpr node_attr_t seq_bit = 1u << 0;
+/// The mapping node bit.
+constexpr node_attr_t map_bit = 1u << 1;
+/// The null scalar node bit.
+constexpr node_attr_t null_bit = 1u << 2;
+/// The boolean scalar node bit.
+constexpr node_attr_t bool_bit = 1u << 3;
+/// The integer scalar node bit.
+constexpr node_attr_t int_bit = 1u << 4;
+/// The floating point scalar node bit.
+constexpr node_attr_t float_bit = 1u << 5;
+/// The string scalar node bit.
+constexpr node_attr_t string_bit = 1u << 6;
+
+/// A utility bit set to filter scalar node bits.
+constexpr node_attr_t scalar_bits = null_bit | bool_bit | int_bit | float_bit | string_bit;
+
+/// The unsigned integer flag bit.
+/// Set on INTEGER nodes whose stored int64_t value represents a uint64_t that exceeds INT64_MAX.
+/// This allows values such as xxHash/UUID results to round-trip correctly through get_value<uint64_t>().
+constexpr node_attr_t uint_bit = 1u << 16; // lives in the style bits area (0x00FF0000)
+
+/// The anchor node bit.
+constexpr node_attr_t anchor_bit = 0x01000000u;
+/// The alias node bit.
+constexpr node_attr_t alias_bit = 0x02000000u;
+
+/// A utility bit set for initialization.
+constexpr node_attr_t default_bits = null_bit;
+
+/// @brief Converts a node_type value to a node_attr_t value.
+/// @param t A type of node value.
+/// @return The associated node value bit.
+inline node_attr_t from_node_type(node_type t) noexcept {
+    switch (t) {
+    case node_type::SEQUENCE:
+        return seq_bit;
+    case node_type::MAPPING:
+        return map_bit;
+    case node_type::NULL_OBJECT:
+        return null_bit;
+    case node_type::BOOLEAN:
+        return bool_bit;
+    case node_type::INTEGER:
+        return int_bit;
+    case node_type::FLOAT:
+        return float_bit;
+    case node_type::STRING:
+        return string_bit;
+    default:                        // LCOV_EXCL_LINE
+        return node_attr_mask::all; // LCOV_EXCL_LINE
+    }
+}
+
+/// @brief Converts a node_attr_t value to a node_type value.
+/// @param bits node attribute bits
+/// @return An associated node value type with the given node value bit.
+inline node_type to_node_type(node_attr_t bits) noexcept {
+    switch (bits & node_attr_mask::value) {
+    case seq_bit:
+        return node_type::SEQUENCE;
+    case map_bit:
+        return node_type::MAPPING;
+    case null_bit:
+        return node_type::NULL_OBJECT;
+    case bool_bit:
+        return node_type::BOOLEAN;
+    case int_bit:
+        return node_type::INTEGER;
+    case float_bit:
+        return node_type::FLOAT;
+    case string_bit:
+        return node_type::STRING;
+    default:                   // LCOV_EXCL_LINE
+        detail::unreachable(); // LCOV_EXCL_LINE
+    }
+}
+
+/// @brief Get an anchor offset used to reference an anchor node from the given attribute bits.
+/// @param attrs node attribute bits
+/// @return An anchor offset value.
+inline uint32_t get_anchor_offset(node_attr_t attrs) noexcept {
+    return (attrs & node_attr_mask::anchor_offset) >> 26;
+}
+
+/// @brief Set an anchor offset value to the appropriate bits.
+/// @param offset An anchor offset value.
+/// @param attrs node attribute bit set into which the offset value is written.
+inline void set_anchor_offset(uint32_t offset, node_attr_t& attrs) noexcept {
+    attrs &= ~node_attr_mask::anchor_offset;
+    attrs |= (offset & 0x3Fu) << 26;
+}
+
+} // namespace node_attr_bits
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_NODE_ATTRS_HPP */
+
+// #include <fkYAML/node_type.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+///////////////////////////////////
+//   external_node_constructor   //
+///////////////////////////////////
+
+/// @brief The external constructor template for basic_node objects.
+/// @note All the non-specialized instantiations results in compilation error since such instantiations are not
+/// supported.
+/// @warning All the specialization must call n.m_value.destroy() first in the construct function to avoid
+/// memory leak.
+/// @tparam node_type The resulting YAML node value type.
+template <typename BasicNodeType>
+struct external_node_constructor {
+    template <typename... Args>
+    static void sequence(BasicNodeType& n, Args&&... args) {
+        destroy(n);
+        n.m_attrs |= node_attr_bits::seq_bit;
+        n.m_value.p_seq = create_object<typename BasicNodeType::sequence_type>(std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    static void mapping(BasicNodeType& n, Args&&... args) {
+        destroy(n);
+        n.m_attrs |= node_attr_bits::map_bit;
+        n.m_value.p_map = create_object<typename BasicNodeType::mapping_type>(std::forward<Args>(args)...);
+    }
+
+    static void null_scalar(BasicNodeType& n, std::nullptr_t) {
+        destroy(n);
+        n.m_attrs |= node_attr_bits::null_bit;
+        n.m_value.p_map = nullptr;
+    }
+
+    static void boolean_scalar(BasicNodeType& n, const typename BasicNodeType::boolean_type b) {
+        destroy(n);
+        n.m_attrs |= node_attr_bits::bool_bit;
+        n.m_value.boolean = b;
+    }
+
+    static void integer_scalar(BasicNodeType& n, const typename BasicNodeType::integer_type i) {
+        destroy(n);
+        n.m_attrs |= node_attr_bits::int_bit;
+        n.m_value.integer = i;
+    }
+
+    /// @brief Constructs an INTEGER node from a uint64_t value that exceeds the signed range.
+    /// The raw bit pattern is stored in the integer field and the uint_bit flag is set so that
+    /// get_value<uint64_t>() / as_uint() can recover the original unsigned value.
+    static void unsigned_integer_scalar(BasicNodeType& n, const typename BasicNodeType::integer_type i) {
+        destroy(n);
+        n.m_attrs |= node_attr_bits::int_bit;
+        n.m_attrs |= node_attr_bits::uint_bit;
+        n.m_value.integer = i;
+    }
+
+    static void float_scalar(BasicNodeType& n, const typename BasicNodeType::float_number_type f) {
+        destroy(n);
+        n.m_attrs |= node_attr_bits::float_bit;
+        n.m_value.float_val = f;
+    }
+
+    template <typename... Args>
+    static void string_scalar(BasicNodeType& n, Args&&... args) {
+        destroy(n);
+        n.m_attrs |= node_attr_bits::string_bit;
+        n.m_value.p_str = create_object<typename BasicNodeType::string_type>(std::forward<Args>(args)...);
+    }
+
+private:
+    static void destroy(BasicNodeType& n) {
+        n.m_value.destroy(n.m_attrs & node_attr_mask::value);
+        // Clear both the value-type bits and the uint_bit style flag so that any
+        // subsequent reassignment starts from a clean state.
+        n.m_attrs &= ~(node_attr_mask::value | node_attr_bits::uint_bit);
+    }
+};
+
+/////////////////
+//   to_node   //
+/////////////////
+
+/// @brief to_node function for BasicNodeType::sequence_type objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T A sequence node value type.
+/// @param n A basic_node object.
+/// @param s A sequence node value object.
+template <
+    typename BasicNodeType, typename T,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>,
+            std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<T>>>::value,
+        int> = 0>
+inline void to_node(BasicNodeType& n, T&& s) noexcept {
+    external_node_constructor<BasicNodeType>::sequence(n, std::forward<T>(s));
+}
+
+/// @brief to_node function for compatible sequence types.
+/// @note This overload is enabled when
+/// * both begin()/end() functions are callable on a `CompatSeqType` object
+/// * CompatSeqType doesn't have `mapped_type` (mapping-like type)
+/// * BasicNodeType::string_type cannot be constructed from a CompatSeqType object (string-like type)
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatSeqType A container type.
+/// @param n A basic_node object.
+/// @param s A container object.
+template <
+    typename BasicNodeType, typename CompatSeqType,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>,
+            negation<std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<CompatSeqType>>>,
+            negation<is_basic_node<CompatSeqType>>, detect::has_begin_end<CompatSeqType>,
+            negation<conjunction<detect::has_key_type<CompatSeqType>, detect::has_mapped_type<CompatSeqType>>>,
+            negation<std::is_constructible<typename BasicNodeType::string_type, CompatSeqType>>>::value,
+        int> = 0>
+// NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
+inline void to_node(BasicNodeType& n, CompatSeqType&& s) {
+    using std::begin;
+    using std::end;
+    external_node_constructor<BasicNodeType>::sequence(n, begin(s), end(s));
+}
+
+/// @brief to_node function for std::pair objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T The first type of std::pair.
+/// @tparam U The second type of std::pair.
+/// @param n A basic_node object.
+/// @param p A std::pair object.
+template <typename BasicNodeType, typename T, typename U>
+inline void to_node(BasicNodeType& n, const std::pair<T, U>& p) {
+    n = {p.first, p.second};
+}
+
+/// @brief concrete implementation of to_node function for std::tuple objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam ...Types The value types of std::tuple.
+/// @tparam ...Idx Index sequence values for std::tuple value types.
+/// @param n A basic_node object.
+/// @param t A std::tuple object.
+/// @param _ An index sequence. (unused)
+template <typename BasicNodeType, typename... Types, std::size_t... Idx>
+inline void to_node_tuple_impl(BasicNodeType& n, const std::tuple<Types...>& t, index_sequence<Idx...> /*unused*/) {
+    n = {std::get<Idx>(t)...};
+}
+
+/// @brief to_node function for std::tuple objects with no value types.
+/// @note This implementation is needed since calling `to_node_tuple_impl()` with an empty tuple creates a null node.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @param n A basic_node object.
+/// @param _ A std::tuple object. (unused)
+template <typename BasicNodeType>
+inline void to_node(BasicNodeType& n, const std::tuple<>& /*unused*/) {
+    n = BasicNodeType::sequence();
+}
+
+/// @brief to_node function for std::tuple objects with at least one value type.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam ...FirstType The first value types of std::tuple.
+/// @tparam ...RestTypes The rest value types of std::tuple. (maybe empty)
+/// @param n A basic_node object.
+/// @param t A std::tuple object.
+template <typename BasicNodeType, typename FirstType, typename... RestTypes>
+inline void to_node(BasicNodeType& n, const std::tuple<FirstType, RestTypes...>& t) {
+    to_node_tuple_impl(n, t, index_sequence_for<FirstType, RestTypes...> {});
+}
+
+/// @brief to_node function for BasicNodeType::mapping_type objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T A mapping node value type.
+/// @param n A basic_node object.
+/// @param m A mapping node value object.
+template <
+    typename BasicNodeType, typename T,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>, std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<T>>>::value,
+        int> = 0>
+inline void to_node(BasicNodeType& n, T&& m) noexcept {
+    external_node_constructor<BasicNodeType>::mapping(n, std::forward<T>(m));
+}
+
+/// @brief to_node function for compatible mapping types.
+/// @note This overload is enabled when
+/// * both begin()/end() functions are callable on a `CompatMapType` object
+/// * CompatMapType has both `key_type` and `mapped_type`
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam CompatMapType A container type.
+/// @param n A basic_node object.
+/// @param m A container object.
+template <
+    typename BasicNodeType, typename CompatMapType,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>, negation<is_basic_node<CompatMapType>>,
+            negation<std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<CompatMapType>>>,
+            detect::has_begin_end<CompatMapType>, detect::has_key_type<CompatMapType>,
+            detect::has_mapped_type<CompatMapType>>::value,
+        int> = 0>
+inline void to_node(BasicNodeType& n, CompatMapType&& m) {
+    external_node_constructor<BasicNodeType>::mapping(n);
+    auto& map = n.as_map();
+    for (const auto& pair : std::forward<CompatMapType>(m)) {
+        map.emplace(pair.first, pair.second);
+    }
+}
+
+/// @brief to_node function for null objects.
+/// @tparam BasicNodeType A mapping node value type.
+/// @tparam NullType This must be std::nullptr_t type
+template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+inline void to_node(BasicNodeType& n, std::nullptr_t /*unused*/) {
+    external_node_constructor<BasicNodeType>::null_scalar(n, nullptr);
+}
+
+/// @brief to_node function for BasicNodeType::boolean_type objects.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T A boolean scalar node value type.
+/// @param n A basic_node object.
+/// @param b A boolean scalar node value object.
+template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
+inline void to_node(BasicNodeType& n, typename BasicNodeType::boolean_type b) noexcept {
+    external_node_constructor<BasicNodeType>::boolean_scalar(n, b);
+}
+
+/// @brief to_node function for integers.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T An integer type.
+/// @param n A basic_node object.
+/// @param i An integer object.
+template <
+    typename BasicNodeType, typename T,
+    enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_non_bool_integral<T>>::value, int> = 0>
+inline void to_node(BasicNodeType& n, T i) noexcept {
+    external_node_constructor<BasicNodeType>::integer_scalar(n, i);
+}
+
+/// @brief to_node function for floating point numbers.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T A floating point number type.
+/// @param n A basic_node object.
+/// @param f A floating point number object.
+template <
+    typename BasicNodeType, typename T,
+    enable_if_t<conjunction<is_basic_node<BasicNodeType>, std::is_floating_point<T>>::value, int> = 0>
+inline void to_node(BasicNodeType& n, T f) noexcept {
+    external_node_constructor<BasicNodeType>::float_scalar(n, f);
+}
+
+/// @brief to_node function for compatible strings.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T A compatible string type.
+/// @param n A basic_node object.
+/// @param s A compatible string object.
+template <
+    typename BasicNodeType, typename T,
+    enable_if_t<
+        conjunction<
+            is_basic_node<BasicNodeType>, negation<is_null_pointer<T>>,
+            std::is_constructible<typename BasicNodeType::string_type, T>>::value,
+        int> = 0>
+inline void to_node(BasicNodeType& n, T&& s) {
+    external_node_constructor<BasicNodeType>::string_scalar(n, std::forward<T>(s));
+}
+
+/// @brief A function object to call to_node functions.
+/// @note User-defined specialization is available by providing implementation **OUTSIDE** fkyaml namespace.
+struct to_node_fn {
+    /// @brief Call to_node function suitable for the given T type.
+    /// @tparam BasicNodeType A basic_node template instance type.
+    /// @tparam T A target value type assigned to the basic_node object.
+    /// @param n A basic_node object.
+    /// @param val A target object assigned to the basic_node object.
+    /// @return decltype(to_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
+    template <typename BasicNodeType, typename T>
+    auto operator()(BasicNodeType& n, T&& val) const
+        noexcept(noexcept(to_node(n, std::forward<T>(val)))) -> decltype(to_node(n, std::forward<T>(val))) {
+        return to_node(n, std::forward<T>(val));
+    }
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+FK_YAML_NAMESPACE_BEGIN
+
+#ifndef FK_YAML_HAS_CXX_17
+// anonymous namespace to hold `to_node` functor.
+// see http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4381.html for why it's needed.
+namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-namespaces)
+{
+#endif
+
+/// @brief A global object to represent ADL friendly to_node functor.
+// NOLINTNEXTLINE(misc-definitions-in-headers)
+FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::to_node_fn>::value;
+
+#ifndef FK_YAML_HAS_CXX_17
+} // namespace
+#endif
+
+FK_YAML_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP */
+
 // #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -6606,6 +7084,24 @@ private:
             if FK_YAML_LIKELY (converted) {
                 return basic_node_type(integer);
             }
+
+            // For untagged plain integer scalars, attempt a uint64_t parse to handle large
+            // positive values that exceed int64_t max (e.g. xxHash/UUID results like
+            // 15745692345339290292). This only applies when integer_type is a signed 64-bit
+            // type; any other width would not be able to represent the value anyway.
+            if (tag_type != tag_t::INTEGER && std::is_signed<integer_type>::value &&
+                sizeof(integer_type) == sizeof(uint64_t)) {
+                uint64_t u64 = 0;
+                if (detail::atoi(token.begin(), token.end(), u64)) {
+                    basic_node_type node;
+                    // Store the bit pattern in the signed field and set uint_bit so that
+                    // as_uint() / get_value<uint64_t>() can recover the correct value.
+                    detail::external_node_constructor<basic_node_type>::unsigned_integer_scalar(
+                        node, static_cast<integer_type>(u64));
+                    return node;
+                }
+            }
+
             if FK_YAML_UNLIKELY (tag_type == tag_t::INTEGER) {
                 throw parse_error("Failed to convert a scalar to an integer.", m_line, m_indent);
             }
@@ -6911,145 +7407,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/node_attrs.hpp>
-//  _______   __ __   __  _____   __  __  __
-// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
-// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-//
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
-// SPDX-License-Identifier: MIT
-
-#ifndef FK_YAML_DETAIL_NODE_ATTRS_HPP
-#define FK_YAML_DETAIL_NODE_ATTRS_HPP
-
-#include <cstdint>
-#include <limits>
-
-// #include <fkYAML/detail/macros/define_macros.hpp>
-
-// #include <fkYAML/node_type.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief The type for node attribute bits.
-using node_attr_t = uint32_t;
-
-/// @brief The namespace to define bit masks for node attribute bits.
-namespace node_attr_mask {
-
-/// The bit mask for node value type bits.
-constexpr node_attr_t value = 0x0000FFFFu;
-/// The bit mask for node style type bits. (bits are not yet defined.)
-constexpr node_attr_t style = 0x00FF0000u;
-/// The bit mask for node property related bits.
-constexpr node_attr_t props = 0xFF000000u;
-/// The bit mask for anchor/alias node type bits.
-constexpr node_attr_t anchoring = 0x03000000u;
-/// The bit mask for anchor offset value bits.
-constexpr node_attr_t anchor_offset = 0xFC000000u;
-/// The bit mask for all the bits for node attributes.
-constexpr node_attr_t all = std::numeric_limits<node_attr_t>::max();
-
-} // namespace node_attr_mask
-
-/// @brief The namespace to define bits for node attributes.
-namespace node_attr_bits {
-
-/// The sequence node bit.
-constexpr node_attr_t seq_bit = 1u << 0;
-/// The mapping node bit.
-constexpr node_attr_t map_bit = 1u << 1;
-/// The null scalar node bit.
-constexpr node_attr_t null_bit = 1u << 2;
-/// The boolean scalar node bit.
-constexpr node_attr_t bool_bit = 1u << 3;
-/// The integer scalar node bit.
-constexpr node_attr_t int_bit = 1u << 4;
-/// The floating point scalar node bit.
-constexpr node_attr_t float_bit = 1u << 5;
-/// The string scalar node bit.
-constexpr node_attr_t string_bit = 1u << 6;
-
-/// A utility bit set to filter scalar node bits.
-constexpr node_attr_t scalar_bits = null_bit | bool_bit | int_bit | float_bit | string_bit;
-
-/// The anchor node bit.
-constexpr node_attr_t anchor_bit = 0x01000000u;
-/// The alias node bit.
-constexpr node_attr_t alias_bit = 0x02000000u;
-
-/// A utility bit set for initialization.
-constexpr node_attr_t default_bits = null_bit;
-
-/// @brief Converts a node_type value to a node_attr_t value.
-/// @param t A type of node value.
-/// @return The associated node value bit.
-inline node_attr_t from_node_type(node_type t) noexcept {
-    switch (t) {
-    case node_type::SEQUENCE:
-        return seq_bit;
-    case node_type::MAPPING:
-        return map_bit;
-    case node_type::NULL_OBJECT:
-        return null_bit;
-    case node_type::BOOLEAN:
-        return bool_bit;
-    case node_type::INTEGER:
-        return int_bit;
-    case node_type::FLOAT:
-        return float_bit;
-    case node_type::STRING:
-        return string_bit;
-    default:                        // LCOV_EXCL_LINE
-        return node_attr_mask::all; // LCOV_EXCL_LINE
-    }
-}
-
-/// @brief Converts a node_attr_t value to a node_type value.
-/// @param bits node attribute bits
-/// @return An associated node value type with the given node value bit.
-inline node_type to_node_type(node_attr_t bits) noexcept {
-    switch (bits & node_attr_mask::value) {
-    case seq_bit:
-        return node_type::SEQUENCE;
-    case map_bit:
-        return node_type::MAPPING;
-    case null_bit:
-        return node_type::NULL_OBJECT;
-    case bool_bit:
-        return node_type::BOOLEAN;
-    case int_bit:
-        return node_type::INTEGER;
-    case float_bit:
-        return node_type::FLOAT;
-    case string_bit:
-        return node_type::STRING;
-    default:                   // LCOV_EXCL_LINE
-        detail::unreachable(); // LCOV_EXCL_LINE
-    }
-}
-
-/// @brief Get an anchor offset used to reference an anchor node from the given attribute bits.
-/// @param attrs node attribute bits
-/// @return An anchor offset value.
-inline uint32_t get_anchor_offset(node_attr_t attrs) noexcept {
-    return (attrs & node_attr_mask::anchor_offset) >> 26;
-}
-
-/// @brief Set an anchor offset value to the appropriate bits.
-/// @param offset An anchor offset value.
-/// @param attrs node attribute bit set into which the offset value is written.
-inline void set_anchor_offset(uint32_t offset, node_attr_t& attrs) noexcept {
-    attrs &= ~node_attr_mask::anchor_offset;
-    attrs |= (offset & 0x3Fu) << 26;
-}
-
-} // namespace node_attr_bits
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_NODE_ATTRS_HPP */
 
 // #include <fkYAML/detail/node_property.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -11840,6 +12197,11 @@ struct from_node_int_helper<BasicNodeType, IntType, false> {
 
         // under/overflow check.
         if (std::is_same<IntType, uint64_t>::value) {
+            // Nodes marked with uint_bit store a uint64_t bit pattern in a signed field.
+            // Recover the original unsigned value without a sign check.
+            if (n.is_uint()) {
+                return static_cast<IntType>(tmp_int);
+            }
             if FK_YAML_UNLIKELY (tmp_int < 0) {
                 throw exception("Integer value underflow detected.");
             }
@@ -12137,326 +12499,6 @@ FK_YAML_NAMESPACE_END
 #endif /* FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP */
 
 // #include <fkYAML/detail/conversions/to_node.hpp>
-//  _______   __ __   __  _____   __  __  __
-// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
-// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-//
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
-// SPDX-License-Identifier: MIT
-
-#ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
-#define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
-
-#include <utility>
-
-// #include <fkYAML/detail/macros/define_macros.hpp>
-
-// #include <fkYAML/detail/exception_safe_allocation.hpp>
-
-// #include <fkYAML/detail/meta/node_traits.hpp>
-
-// #include <fkYAML/detail/meta/type_traits.hpp>
-
-// #include <fkYAML/detail/meta/stl_supplement.hpp>
-
-// #include <fkYAML/detail/node_attrs.hpp>
-
-// #include <fkYAML/node_type.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-///////////////////////////////////
-//   external_node_constructor   //
-///////////////////////////////////
-
-/// @brief The external constructor template for basic_node objects.
-/// @note All the non-specialized instantiations results in compilation error since such instantiations are not
-/// supported.
-/// @warning All the specialization must call n.m_value.destroy() first in the construct function to avoid
-/// memory leak.
-/// @tparam node_type The resulting YAML node value type.
-template <typename BasicNodeType>
-struct external_node_constructor {
-    template <typename... Args>
-    static void sequence(BasicNodeType& n, Args&&... args) {
-        destroy(n);
-        n.m_attrs |= node_attr_bits::seq_bit;
-        n.m_value.p_seq = create_object<typename BasicNodeType::sequence_type>(std::forward<Args>(args)...);
-    }
-
-    template <typename... Args>
-    static void mapping(BasicNodeType& n, Args&&... args) {
-        destroy(n);
-        n.m_attrs |= node_attr_bits::map_bit;
-        n.m_value.p_map = create_object<typename BasicNodeType::mapping_type>(std::forward<Args>(args)...);
-    }
-
-    static void null_scalar(BasicNodeType& n, std::nullptr_t) {
-        destroy(n);
-        n.m_attrs |= node_attr_bits::null_bit;
-        n.m_value.p_map = nullptr;
-    }
-
-    static void boolean_scalar(BasicNodeType& n, const typename BasicNodeType::boolean_type b) {
-        destroy(n);
-        n.m_attrs |= node_attr_bits::bool_bit;
-        n.m_value.boolean = b;
-    }
-
-    static void integer_scalar(BasicNodeType& n, const typename BasicNodeType::integer_type i) {
-        destroy(n);
-        n.m_attrs |= node_attr_bits::int_bit;
-        n.m_value.integer = i;
-    }
-
-    static void float_scalar(BasicNodeType& n, const typename BasicNodeType::float_number_type f) {
-        destroy(n);
-        n.m_attrs |= node_attr_bits::float_bit;
-        n.m_value.float_val = f;
-    }
-
-    template <typename... Args>
-    static void string_scalar(BasicNodeType& n, Args&&... args) {
-        destroy(n);
-        n.m_attrs |= node_attr_bits::string_bit;
-        n.m_value.p_str = create_object<typename BasicNodeType::string_type>(std::forward<Args>(args)...);
-    }
-
-private:
-    static void destroy(BasicNodeType& n) {
-        n.m_value.destroy(n.m_attrs & node_attr_mask::value);
-        n.m_attrs &= ~node_attr_mask::value;
-    }
-};
-
-/////////////////
-//   to_node   //
-/////////////////
-
-/// @brief to_node function for BasicNodeType::sequence_type objects.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam T A sequence node value type.
-/// @param n A basic_node object.
-/// @param s A sequence node value object.
-template <
-    typename BasicNodeType, typename T,
-    enable_if_t<
-        conjunction<
-            is_basic_node<BasicNodeType>,
-            std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<T>>>::value,
-        int> = 0>
-inline void to_node(BasicNodeType& n, T&& s) noexcept {
-    external_node_constructor<BasicNodeType>::sequence(n, std::forward<T>(s));
-}
-
-/// @brief to_node function for compatible sequence types.
-/// @note This overload is enabled when
-/// * both begin()/end() functions are callable on a `CompatSeqType` object
-/// * CompatSeqType doesn't have `mapped_type` (mapping-like type)
-/// * BasicNodeType::string_type cannot be constructed from a CompatSeqType object (string-like type)
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam CompatSeqType A container type.
-/// @param n A basic_node object.
-/// @param s A container object.
-template <
-    typename BasicNodeType, typename CompatSeqType,
-    enable_if_t<
-        conjunction<
-            is_basic_node<BasicNodeType>,
-            negation<std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<CompatSeqType>>>,
-            negation<is_basic_node<CompatSeqType>>, detect::has_begin_end<CompatSeqType>,
-            negation<conjunction<detect::has_key_type<CompatSeqType>, detect::has_mapped_type<CompatSeqType>>>,
-            negation<std::is_constructible<typename BasicNodeType::string_type, CompatSeqType>>>::value,
-        int> = 0>
-// NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
-inline void to_node(BasicNodeType& n, CompatSeqType&& s) {
-    using std::begin;
-    using std::end;
-    external_node_constructor<BasicNodeType>::sequence(n, begin(s), end(s));
-}
-
-/// @brief to_node function for std::pair objects.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam T The first type of std::pair.
-/// @tparam U The second type of std::pair.
-/// @param n A basic_node object.
-/// @param p A std::pair object.
-template <typename BasicNodeType, typename T, typename U>
-inline void to_node(BasicNodeType& n, const std::pair<T, U>& p) {
-    n = {p.first, p.second};
-}
-
-/// @brief concrete implementation of to_node function for std::tuple objects.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam ...Types The value types of std::tuple.
-/// @tparam ...Idx Index sequence values for std::tuple value types.
-/// @param n A basic_node object.
-/// @param t A std::tuple object.
-/// @param _ An index sequence. (unused)
-template <typename BasicNodeType, typename... Types, std::size_t... Idx>
-inline void to_node_tuple_impl(BasicNodeType& n, const std::tuple<Types...>& t, index_sequence<Idx...> /*unused*/) {
-    n = {std::get<Idx>(t)...};
-}
-
-/// @brief to_node function for std::tuple objects with no value types.
-/// @note This implementation is needed since calling `to_node_tuple_impl()` with an empty tuple creates a null node.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @param n A basic_node object.
-/// @param _ A std::tuple object. (unused)
-template <typename BasicNodeType>
-inline void to_node(BasicNodeType& n, const std::tuple<>& /*unused*/) {
-    n = BasicNodeType::sequence();
-}
-
-/// @brief to_node function for std::tuple objects with at least one value type.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam ...FirstType The first value types of std::tuple.
-/// @tparam ...RestTypes The rest value types of std::tuple. (maybe empty)
-/// @param n A basic_node object.
-/// @param t A std::tuple object.
-template <typename BasicNodeType, typename FirstType, typename... RestTypes>
-inline void to_node(BasicNodeType& n, const std::tuple<FirstType, RestTypes...>& t) {
-    to_node_tuple_impl(n, t, index_sequence_for<FirstType, RestTypes...> {});
-}
-
-/// @brief to_node function for BasicNodeType::mapping_type objects.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam T A mapping node value type.
-/// @param n A basic_node object.
-/// @param m A mapping node value object.
-template <
-    typename BasicNodeType, typename T,
-    enable_if_t<
-        conjunction<
-            is_basic_node<BasicNodeType>, std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<T>>>::value,
-        int> = 0>
-inline void to_node(BasicNodeType& n, T&& m) noexcept {
-    external_node_constructor<BasicNodeType>::mapping(n, std::forward<T>(m));
-}
-
-/// @brief to_node function for compatible mapping types.
-/// @note This overload is enabled when
-/// * both begin()/end() functions are callable on a `CompatMapType` object
-/// * CompatMapType has both `key_type` and `mapped_type`
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam CompatMapType A container type.
-/// @param n A basic_node object.
-/// @param m A container object.
-template <
-    typename BasicNodeType, typename CompatMapType,
-    enable_if_t<
-        conjunction<
-            is_basic_node<BasicNodeType>, negation<is_basic_node<CompatMapType>>,
-            negation<std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<CompatMapType>>>,
-            detect::has_begin_end<CompatMapType>, detect::has_key_type<CompatMapType>,
-            detect::has_mapped_type<CompatMapType>>::value,
-        int> = 0>
-inline void to_node(BasicNodeType& n, CompatMapType&& m) {
-    external_node_constructor<BasicNodeType>::mapping(n);
-    auto& map = n.as_map();
-    for (const auto& pair : std::forward<CompatMapType>(m)) {
-        map.emplace(pair.first, pair.second);
-    }
-}
-
-/// @brief to_node function for null objects.
-/// @tparam BasicNodeType A mapping node value type.
-/// @tparam NullType This must be std::nullptr_t type
-template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void to_node(BasicNodeType& n, std::nullptr_t /*unused*/) {
-    external_node_constructor<BasicNodeType>::null_scalar(n, nullptr);
-}
-
-/// @brief to_node function for BasicNodeType::boolean_type objects.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam T A boolean scalar node value type.
-/// @param n A basic_node object.
-/// @param b A boolean scalar node value object.
-template <typename BasicNodeType, enable_if_t<is_basic_node<BasicNodeType>::value, int> = 0>
-inline void to_node(BasicNodeType& n, typename BasicNodeType::boolean_type b) noexcept {
-    external_node_constructor<BasicNodeType>::boolean_scalar(n, b);
-}
-
-/// @brief to_node function for integers.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam T An integer type.
-/// @param n A basic_node object.
-/// @param i An integer object.
-template <
-    typename BasicNodeType, typename T,
-    enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_non_bool_integral<T>>::value, int> = 0>
-inline void to_node(BasicNodeType& n, T i) noexcept {
-    external_node_constructor<BasicNodeType>::integer_scalar(n, i);
-}
-
-/// @brief to_node function for floating point numbers.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam T A floating point number type.
-/// @param n A basic_node object.
-/// @param f A floating point number object.
-template <
-    typename BasicNodeType, typename T,
-    enable_if_t<conjunction<is_basic_node<BasicNodeType>, std::is_floating_point<T>>::value, int> = 0>
-inline void to_node(BasicNodeType& n, T f) noexcept {
-    external_node_constructor<BasicNodeType>::float_scalar(n, f);
-}
-
-/// @brief to_node function for compatible strings.
-/// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam T A compatible string type.
-/// @param n A basic_node object.
-/// @param s A compatible string object.
-template <
-    typename BasicNodeType, typename T,
-    enable_if_t<
-        conjunction<
-            is_basic_node<BasicNodeType>, negation<is_null_pointer<T>>,
-            std::is_constructible<typename BasicNodeType::string_type, T>>::value,
-        int> = 0>
-inline void to_node(BasicNodeType& n, T&& s) {
-    external_node_constructor<BasicNodeType>::string_scalar(n, std::forward<T>(s));
-}
-
-/// @brief A function object to call to_node functions.
-/// @note User-defined specialization is available by providing implementation **OUTSIDE** fkyaml namespace.
-struct to_node_fn {
-    /// @brief Call to_node function suitable for the given T type.
-    /// @tparam BasicNodeType A basic_node template instance type.
-    /// @tparam T A target value type assigned to the basic_node object.
-    /// @param n A basic_node object.
-    /// @param val A target object assigned to the basic_node object.
-    /// @return decltype(to_node(n, std::forward<T>(val))) void by default. User can set it to some other type.
-    template <typename BasicNodeType, typename T>
-    auto operator()(BasicNodeType& n, T&& val) const
-        noexcept(noexcept(to_node(n, std::forward<T>(val)))) -> decltype(to_node(n, std::forward<T>(val))) {
-        return to_node(n, std::forward<T>(val));
-    }
-};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-FK_YAML_NAMESPACE_BEGIN
-
-#ifndef FK_YAML_HAS_CXX_17
-// anonymous namespace to hold `to_node` functor.
-// see http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4381.html for why it's needed.
-namespace // NOLINT(cert-dcl59-cpp,fuchsia-header-anon-namespaces,google-build-namespaces)
-{
-#endif
-
-/// @brief A global object to represent ADL friendly to_node functor.
-// NOLINTNEXTLINE(misc-definitions-in-headers)
-FK_YAML_INLINE_VAR constexpr const auto& to_node = detail::static_const<detail::to_node_fn>::value;
-
-#ifndef FK_YAML_HAS_CXX_17
-} // namespace
-#endif
-
-FK_YAML_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -14122,6 +14164,36 @@ public:
         throw fkyaml::type_error("The node value is not a boolean.", get_type());
     }
 
+    /// @brief Checks if the node is an integer that was parsed from a uint64_t value exceeding INT64_MAX.
+    /// @return true if the node holds an unsigned integer, false otherwise.
+    bool is_uint() const noexcept {
+        return resolve_reference().is_uint_impl();
+    }
+
+    /// @brief Returns the integer node value as an unsigned 64-bit integer.
+    /// This is valid both for nodes where integer_type is unsigned and for nodes where a large
+    /// positive decimal scalar (> INT64_MAX) was stored with the uint_bit flag set.
+    /// @throw fkyaml::type_error if the node is not a compatible integer.
+    /// @return The node value as uint64_t.
+    uint64_t as_uint() const {
+        const basic_node& act_node = resolve_reference();
+        if FK_YAML_LIKELY (act_node.is_integer_impl()) {
+            // When integer_type is unsigned the stored value IS the uint64_t directly.
+            if (std::is_unsigned<integer_type>::value) {
+                return static_cast<uint64_t>(act_node.m_value.integer);
+            }
+            // When integer_type is signed, only uint_bit-marked nodes carry a uint64_t.
+            if (act_node.m_attrs & detail::node_attr_bits::uint_bit) {
+                return static_cast<uint64_t>(act_node.m_value.integer);
+            }
+            // Signed values in the non-negative range can be returned safely.
+            if (act_node.m_value.integer >= static_cast<integer_type>(0)) {
+                return static_cast<uint64_t>(act_node.m_value.integer);
+            }
+        }
+        throw fkyaml::type_error("The node value cannot be represented as an unsigned integer.", get_type());
+    }
+
     /// @brief Returns reference to the integer node value.
     /// @throw fkyaml::type_error The node value is not an integer.
     /// @return Reference to the integer node value.
@@ -14129,18 +14201,30 @@ public:
     integer_type& as_int() {
         basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_integer_impl()) {
+            if FK_YAML_UNLIKELY (act_node.is_uint_impl()) {
+                throw fkyaml::type_error(
+                    "The integer value exceeds INT64_MAX and cannot be returned as a signed integer. "
+                    "Use as_uint() instead.",
+                    get_type());
+            }
             return act_node.m_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
     }
 
     /// @brief Returns reference to the integer node value.
-    /// @throw fkyaml::type_error The node value is not an integer.
+    /// @throw fkyaml::type_error The node value is not an integer, or exceeds INT64_MAX.
     /// @return Constant reference to the integer node value.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/as_int/
     const integer_type& as_int() const {
         const basic_node& act_node = resolve_reference();
         if FK_YAML_LIKELY (act_node.is_integer_impl()) {
+            if FK_YAML_UNLIKELY (act_node.is_uint_impl()) {
+                throw fkyaml::type_error(
+                    "The integer value exceeds INT64_MAX and cannot be returned as a signed integer. "
+                    "Use as_uint() instead.",
+                    get_type());
+            }
             return act_node.m_value.integer;
         }
         throw fkyaml::type_error("The node value is not an integer.", get_type());
@@ -14416,6 +14500,12 @@ private:
 
     bool is_integer_impl() const noexcept {
         return m_attrs & detail::node_attr_bits::int_bit;
+    }
+
+    bool is_uint_impl() const noexcept {
+        // Both int_bit and uint_bit must be set: this node stores a uint64_t value
+        // whose bit pattern was placed into the signed integer_type field.
+        return (m_attrs & detail::node_attr_bits::int_bit) && (m_attrs & detail::node_attr_bits::uint_bit);
     }
 
     bool is_float_number_impl() const noexcept {
