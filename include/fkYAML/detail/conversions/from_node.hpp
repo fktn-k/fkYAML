@@ -362,38 +362,39 @@ struct from_node_int_helper {
     }
 };
 
-/// @brief Helper struct for node-to-int conversion if IntType is not the node's integer value type.
+/// @brief Partial specialization for uint64_t when integer_type != uint64_t (the common int64_t case).
+/// This must be declared BEFORE the generic <IntType, false> specialization so the compiler always
+/// prefers it for uint64_t. Using a hardcoded 'false' (not a value-dependent expression) avoids
+/// the MSVC ambiguity that arises when std::is_same<...>::value is used as a template argument.
 /// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam IntType Target integer value type (different from BasicNodeType::integer_type)
+template <typename BasicNodeType>
+struct from_node_int_helper<BasicNodeType, uint64_t, false> {
+    /// @brief Convert node's integer value to uint64_t via as_uint().
+    /// @param n A node object.
+    /// @return The node value as uint64_t.
+    static uint64_t convert(const BasicNodeType& n) {
+        return n.as_uint();
+    }
+};
+
+/// @brief Helper struct for node-to-int conversion if IntType is not the node's integer value type
+/// and IntType is not uint64_t (covered by the explicit specialization above).
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam IntType Target integer value type (different from BasicNodeType::integer_type, not uint64_t)
 template <typename BasicNodeType, typename IntType>
 struct from_node_int_helper<BasicNodeType, IntType, false> {
-    /// @brief Convert node's integer value to non-uint64_t integer types.
+    /// @brief Convert node's integer value to a narrower signed/unsigned integer type.
     /// @param n A node object.
     /// @return An integer value converted from the node's integer value.
     static IntType convert(const BasicNodeType& n) {
         using node_int_type = typename BasicNodeType::integer_type;
-
-        // as_int() throws for uint_bit-marked nodes (value > INT64_MAX stored as a signed
-        // bit-pattern). Short-circuit before calling as_int() so get_value<uint64_t>() works.
-        if (std::is_same<IntType, uint64_t>::value && n.is_uint()) {
-            return static_cast<IntType>(n.as_uint());
-        }
-
         const node_int_type tmp_int = n.as_int();
 
-        // under/overflow check.
-        if (std::is_same<IntType, uint64_t>::value) {
-            if FK_YAML_UNLIKELY (tmp_int < 0) {
-                throw exception("Integer value underflow detected.");
-            }
+        if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntType>::min())) {
+            throw exception("Integer value underflow detected.");
         }
-        else {
-            if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntType>::min())) {
-                throw exception("Integer value underflow detected.");
-            }
-            if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntType>::max()) < tmp_int) {
-                throw exception("Integer value overflow detected.");
-            }
+        if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntType>::max()) < tmp_int) {
+            throw exception("Integer value overflow detected.");
         }
 
         return static_cast<IntType>(tmp_int);
