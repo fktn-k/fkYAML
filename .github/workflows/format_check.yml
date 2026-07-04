@@ -36,13 +36,12 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      pull-requests: write
 
     steps:
     - uses: actions/checkout@v7
       with:
         ref: ${{github.head_ref}}
-        token: ${{secrets.FKYAML_FORMAT_CHECK_PAT}}
 
     - name: Run clang-format style check
       run: ${{github.workspace}}/scripts/run_clang_format.sh
@@ -52,14 +51,42 @@ jobs:
 
     - name: Detect diffs caused by formatting scripts
       id: format_diff
-      run: git diff --name-only --exit-code
-
-    - name: Commit and push the diffs
-      if: failure() && steps.format_diff.outcome == 'failure'
+      env:
+        PR_NUMBER: ${{github.event.number}}
       run: |
-        set -x
-        git config user.name github-actions[bot]
-        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-        git add .
-        git commit --author="$(git log --pretty=format:"%an <%ae>")" -m "[bot] run clang-format & amalgamation"
-        git push
+        git diff --patch --no-color > ${{github.workspace}}/format_diff_pr${{PR_NUMBER}}.patch
+        if [ -s ${{github.workspace}}/format_diff_pr${{PR_NUMBER}}.patch ]; then
+          echo "The source code has not been formatted/amalgamated correctly. Diff:"
+          cat ${{github.workspace}}/format_diff_pr${{PR_NUMBER}}.patch
+          echo "has_diff=true" >> $GITHUB_OUTPUT
+          echo "Patch file created: format_diff_pr${{PR_NUMBER}}.patch"
+          echo "patch_file_name=format_diff_pr${{PR_NUMBER}}.patch" >> $GITHUB_OUTPUT
+          exit 1
+        else
+          echo "No formatting issues detected."
+          echo "has_diff=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload patch
+      id: upload_artifact_step
+      if: steps.diff.output.has_diff == 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{steps.diff.output.patch_file_name}}
+        path: ${{steps.diff.output.patch_file_name}}
+        overwrite: true
+
+    - name: Notify the artifact URL
+      if: steps.upload_artifact_step.conclusion == 'success'
+      uses: thollander/actions-comment-pull-request@v3
+      with:
+        message: |
+          ## :octocat: Format/Amalgamation Check Failed
+          The source code has not been formatted/amalgamated correctly in the commit [${{github.event.pull_request.head.sha}}](https://github.com/${{github.repository}}/commit/${{github.event.pull_request.head.sha}}).
+          Please download and apply the patch to fix it.
+
+          | Name | ${{steps.diff.output.patch_file_name}}.zip           |
+          |:-----|:-----------------------------------------------------|
+          | ID   | ${{steps.upload_artifact_step.outputs.artifact-id}}  |
+          | URL  | ${{steps.upload_artifact_step.outputs.artifact-url}} |
+        comment_tag: notification
