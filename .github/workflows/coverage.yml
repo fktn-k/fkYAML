@@ -12,8 +12,8 @@ on:
       - tests/**
       - CMakeLists.txt
       - Makefile
-  # to grant pull-requests write permission to fork repos as well
-  pull_request_target:
+  # Run on pull requests from both branches and forks.
+  pull_request:
     paths:
       - .github/workflows/coverage.yml
       - cmake/**
@@ -28,13 +28,14 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-22.04
     permissions:
+      contents: read
       pull-requests: write
 
     steps:
     - uses: actions/checkout@v7
       with:
         repository: ${{github.event.pull_request.head.repo.full_name}}
-        ref: ${{github.head_ref}}
+        ref: ${{github.event.pull_request.head.sha}}
         persist-credentials: false
 
     - name: Install lcov

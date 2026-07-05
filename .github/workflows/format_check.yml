@@ -14,8 +14,8 @@ on:
       - tools/amalgamation/**
       - CMakeLists.txt
       - .clang-format
-  # to grant contents write permission to fork repos as well
-  pull_request_target:
+  # Run on pull requests from both branches and forks.
+  pull_request:
     paths:
       - .github/workflows/format_check.yml
       - include/**
@@ -36,13 +36,14 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pull-requests: write
 
     steps:
     - uses: actions/checkout@v7
       with:
         repository: ${{github.event.pull_request.head.repo.full_name}}
-        ref: ${{github.head_ref}}
+        ref: ${{github.event.pull_request.head.sha}}
         persist-credentials: false
 
     - name: Run clang-format style check
@@ -56,13 +57,13 @@ jobs:
       env:
         PR_NUMBER: ${{github.event.number}}
       run: |
-        git diff --patch --no-color > ${{github.workspace}}/format_diff_pr${{PR_NUMBER}}.patch
-        if [ -s ${{github.workspace}}/format_diff_pr${{PR_NUMBER}}.patch ]; then
+        git diff --patch --no-color > ${{github.workspace}}/format_diff_pr${{env.PR_NUMBER}}.patch
+        if [ -s ${{github.workspace}}/format_diff_pr${{env.PR_NUMBER}}.patch ]; then
           echo "The source code has not been formatted/amalgamated correctly. Diff:"
-          cat ${{github.workspace}}/format_diff_pr${{PR_NUMBER}}.patch
+          cat ${{github.workspace}}/format_diff_pr${{env.PR_NUMBER}}.patch
           echo "has_diff=true" >> $GITHUB_OUTPUT
-          echo "Patch file created: format_diff_pr${{PR_NUMBER}}.patch"
-          echo "patch_file_name=format_diff_pr${{PR_NUMBER}}.patch" >> $GITHUB_OUTPUT
+          echo "Patch file created: format_diff_pr${{env.PR_NUMBER}}.patch"
+          echo "patch_file_name=format_diff_pr${{env.PR_NUMBER}}.patch" >> $GITHUB_OUTPUT
           exit 1
         else
           echo "No formatting issues detected."
