@@ -59,6 +59,11 @@ constexpr node_attr_t string_bit = 1u << 6;
 /// A utility bit set to filter scalar node bits.
 constexpr node_attr_t scalar_bits = null_bit | bool_bit | int_bit | float_bit | string_bit;
 
+/// The unsigned integer flag bit.
+/// Set on INTEGER nodes whose stored int64_t value represents a uint64_t that exceeds INT64_MAX.
+/// This allows values such as xxHash/UUID results to round-trip correctly through get_value<uint64_t>().
+constexpr node_attr_t uint_bit = 1u << 16; // lives in the style bits area (0x00FF0000)
+
 /// The anchor node bit.
 constexpr node_attr_t anchor_bit = 0x01000000u;
 /// The alias node bit.
