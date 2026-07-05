@@ -124,7 +124,11 @@ TEST_CASE("Node_AsInt_ThrowsForUintFlaggedNode") {
         std::string("9223372036854775808"),   // INT64_MAX + 1
         std::string("15745692345339290292"),  // xxHash value from the bug report
         std::string("18446744073709551615")); // UINT64_MAX
-    REQUIRE_THROWS_AS(fkyaml::node::deserialize("v: " + input)["v"].as_int(), fkyaml::type_error);
+    auto node = fkyaml::node::deserialize("v: " + input);
+    auto& int_node = node["v"];
+    REQUIRE_THROWS_AS(int_node.as_int(), fkyaml::type_error);
+    const auto& const_int_node = int_node;
+    REQUIRE_THROWS_AS(const_int_node.as_int(), fkyaml::type_error);
 }
 
 TEST_CASE("Node_UintBit_ClearedOnReassignment") {
