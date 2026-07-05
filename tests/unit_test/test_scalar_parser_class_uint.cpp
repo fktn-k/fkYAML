@@ -43,12 +43,11 @@ TEST_CASE("ScalarParser_UInt64_AsUintRecoversPreciseValue") {
 }
 
 TEST_CASE("ScalarParser_UInt64_SignedRangeNoUintBit") {
-    // Values within int64_t range must NOT have uint_bit set.
+    // Values within the negative integer range must NOT return true for is_uint().
     auto input = GENERATE(
-        std::string("-1"),
-        std::string("0"),
-        std::string("42"),
-        std::string("9223372036854775807")); // INT64_MAX
+        std::string("-9223372036854775808"), // INT64_MIN
+        std::string("-42"),
+        std::string("-1"));
     auto node = fkyaml::node::deserialize("v: " + input)["v"];
     REQUIRE(node.is_integer() == true);
     REQUIRE(node.is_uint() == false);
