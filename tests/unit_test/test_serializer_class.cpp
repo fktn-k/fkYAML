@@ -156,6 +156,13 @@ TEST_CASE("Serializer_StringNode") {
         node_str_pair_t("'test", "\"'test\""),
         node_str_pair_t(" test", "\" test\""),
         node_str_pair_t("test ", "\"test \""),
+        node_str_pair_t("-", "\"-\""),
+        node_str_pair_t("- test", "\"- test\""),
+        node_str_pair_t("-test", "-test"),
+        node_str_pair_t("? test", "\"? test\""),
+        node_str_pair_t("?test", "?test"),
+        node_str_pair_t(": test", "\": test\""),
+        node_str_pair_t(":test", ":test"),
         node_str_pair_t("foo: bar", "\"foo: bar\""),
         node_str_pair_t("foo #bar", "\"foo #bar\""),
         node_str_pair_t("foo\"bar", "\"foo\\\"bar\""),
@@ -182,7 +189,8 @@ TEST_CASE("Serializer_StringNodeStartingWithDirectiveIndicatorInMapping") {
     const fkyaml::node node = fkyaml::node::deserialize(yaml);
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node) == "percent: \"%\"\n"
+    REQUIRE(
+        serializer.serialize(node) == "percent: \"%\"\n"
                                       "project: fkYAML\n"
                                       "startingChar: \"%test\"\n");
 }
