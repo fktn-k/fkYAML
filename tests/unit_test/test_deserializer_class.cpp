@@ -34,7 +34,7 @@ TEST_CASE("Deserializer_KeySeparator") {
     }
 
     SECTION("error cases") {
-        auto input_str = GENERATE(std::string("- : foo"), std::string("- - : foo"));
+        auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"), std::string("- - : foo"));
         REQUIRE_THROWS_AS(
             root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
     }
@@ -2280,6 +2280,20 @@ TEST_CASE("Deserializer_BadIndentation") {
                             "    - def\n";
 
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SECTION("empty mapping value followed by scalar with flow indicator") {
+        std::string input = "\"\":\n"
+                            "  port:not_a_scalar]\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains(""));
+
+        fkyaml::node& empty_key_node = root[""];
+        REQUIRE(empty_key_node.is_string());
+        REQUIRE(empty_key_node.as_str() == "port:not_a_scalar]");
     }
 }
 

@@ -7878,7 +7878,9 @@ private:
                 continue;
             }
             case lexical_token_t::KEY_SEPARATOR: {
-                FK_YAML_ASSERT(!m_context_stack.empty());
+                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                    throw parse_error("mapping key should not be empty.", line, indent);
+                }
                 if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
                     // empty mapping keys are not supported.
                     // ```yaml
