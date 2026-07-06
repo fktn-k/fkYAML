@@ -11375,7 +11375,7 @@ private:
             const node_type type_if_plain =
                 scalar_scanner::scan(str_val.c_str(), str_val.c_str() + str_val.size()); // LCOV_EXCL_LINE
 
-            if (type_if_plain != node_type::STRING) {
+            if (type_if_plain != node_type::STRING || !is_valid_plain_scalar(str_val)) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
@@ -11471,6 +11471,46 @@ private:
         const auto& s = node.as_str();
         return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
     } // LCOV_EXCL_LINE
+
+    bool is_valid_plain_scalar(const typename BasicNodeType::string_type& s) const noexcept {
+        if (s.empty()) {
+            return false;
+        }
+
+        typedef typename BasicNodeType::string_type string_type;
+        const typename string_type::size_type npos = string_type::npos;
+        if (s.find(": ") != npos || s.find(":\t") != npos || s.find(" #") != npos || s.find("\t#") != npos) {
+            return false;
+        }
+
+        switch (s.front()) {
+        case '-':
+        case '?':
+        case ':':
+            return s.size() > 1 && s[1] != ' ' && s[1] != '\t';
+        case ',':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case '#':
+        case '&':
+        case '*':
+        case '!':
+        case '|':
+        case '>':
+        case '\'':
+        case '"':
+        case '%':
+        case '@':
+        case '`':
+        case ' ':
+        case '\t':
+            return false;
+        default:
+            return s.back() != ' ' && s.back() != '\t';
+        }
+    }
 
 private:
     /// A temporal buffer for conversion from a scalar to a string.
