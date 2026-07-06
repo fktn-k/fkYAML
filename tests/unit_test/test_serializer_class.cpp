@@ -113,7 +113,8 @@ TEST_CASE("Serializer_StringNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE_REF(
         node_str_pair_t("test", "test"),
-        node_str_pair_t("foo bar", "foo bar"),
+        node_str_pair_t("foo bar", "\"foo bar\""),
+        node_str_pair_t("", "\"\""),
         node_str_pair_t("null", "\"null\""),
         node_str_pair_t("Null", "\"Null\""),
         node_str_pair_t("NULL", "\"NULL\""),
@@ -137,6 +138,38 @@ TEST_CASE("Serializer_StringNode") {
         node_str_pair_t(".nan", "\".nan\""),
         node_str_pair_t(".NaN", "\".NaN\""),
         node_str_pair_t(".NAN", "\".NAN\""),
+        node_str_pair_t("%", "\"%\""),
+        node_str_pair_t("%test", "\"%test\""),
+        node_str_pair_t("@test", "\"@test\""),
+        node_str_pair_t("`test", "\"`test\""),
+        node_str_pair_t("#test", "\"#test\""),
+        node_str_pair_t("&test", "\"&test\""),
+        node_str_pair_t("*test", "\"*test\""),
+        node_str_pair_t("!test", "\"!test\""),
+        node_str_pair_t("|test", "\"|test\""),
+        node_str_pair_t(">test", "\">test\""),
+        node_str_pair_t("[test", "\"[test\""),
+        node_str_pair_t("]test", "\"]test\""),
+        node_str_pair_t("{test", "\"{test\""),
+        node_str_pair_t("}test", "\"}test\""),
+        node_str_pair_t(",test", "\",test\""),
+        node_str_pair_t("foo,bar", "\"foo,bar\""),
+        node_str_pair_t("foo[bar", "\"foo[bar\""),
+        node_str_pair_t("foo]bar", "\"foo]bar\""),
+        node_str_pair_t("foo{bar", "\"foo{bar\""),
+        node_str_pair_t("foo}bar", "\"foo}bar\""),
+        node_str_pair_t("'test", "\"'test\""),
+        node_str_pair_t(" test", "\" test\""),
+        node_str_pair_t("test ", "\"test \""),
+        node_str_pair_t("-", "\"-\""),
+        node_str_pair_t("- test", "\"- test\""),
+        node_str_pair_t("-test", "-test"),
+        node_str_pair_t("? test", "\"? test\""),
+        node_str_pair_t("?test", "?test"),
+        node_str_pair_t(": test", "\": test\""),
+        node_str_pair_t(":test", ":test"),
+        node_str_pair_t("foo: bar", "\"foo: bar\""),
+        node_str_pair_t("foo #bar", "\"foo #bar\""),
         node_str_pair_t("foo\"bar", "\"foo\\\"bar\""),
         node_str_pair_t(fkyaml::node::string_type({char(0xC2u), char(0xA1u)}), std::string({char(0xC2u), char(0xA1u)})),
         node_str_pair_t(
@@ -151,6 +184,20 @@ TEST_CASE("Serializer_StringNode") {
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+}
+
+TEST_CASE("Serializer_StringNodeStartingWithDirectiveIndicatorInMapping") {
+    const std::string yaml = "project: fkYAML\n"
+                             "percent: %\n"
+                             "startingChar: %test\n";
+
+    const fkyaml::node node = fkyaml::node::deserialize(yaml);
+
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(
+        serializer.serialize(node) == "percent: \"%\"\n"
+                                      "project: fkYAML\n"
+                                      "startingChar: \"%test\"\n");
 }
 
 TEST_CASE("Serializer_MappingKeyNode") {
