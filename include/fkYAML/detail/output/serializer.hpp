@@ -383,8 +383,7 @@ private:
         }
 
         typedef typename BasicNodeType::string_type string_type;
-        const typename string_type::size_type npos = string_type::npos;
-        if (s.find(": ") != npos || s.find(" #") != npos) {
+        if (s.find_first_of(" \t\n\r,[]{}") != string_type::npos) {
             return false;
         }
 
@@ -393,11 +392,6 @@ private:
         case '?':
         case ':':
             return s.size() > 1 && s[1] != ' ';
-        case ',':
-        case '[':
-        case ']':
-        case '{':
-        case '}':
         case '#':
         case '&':
         case '*':

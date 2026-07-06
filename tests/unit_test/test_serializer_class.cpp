@@ -113,7 +113,7 @@ TEST_CASE("Serializer_StringNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE_REF(
         node_str_pair_t("test", "test"),
-        node_str_pair_t("foo bar", "foo bar"),
+        node_str_pair_t("foo bar", "\"foo bar\""),
         node_str_pair_t("", "\"\""),
         node_str_pair_t("null", "\"null\""),
         node_str_pair_t("Null", "\"Null\""),
@@ -153,6 +153,11 @@ TEST_CASE("Serializer_StringNode") {
         node_str_pair_t("{test", "\"{test\""),
         node_str_pair_t("}test", "\"}test\""),
         node_str_pair_t(",test", "\",test\""),
+        node_str_pair_t("foo,bar", "\"foo,bar\""),
+        node_str_pair_t("foo[bar", "\"foo[bar\""),
+        node_str_pair_t("foo]bar", "\"foo]bar\""),
+        node_str_pair_t("foo{bar", "\"foo{bar\""),
+        node_str_pair_t("foo}bar", "\"foo}bar\""),
         node_str_pair_t("'test", "\"'test\""),
         node_str_pair_t(" test", "\" test\""),
         node_str_pair_t("test ", "\"test \""),
