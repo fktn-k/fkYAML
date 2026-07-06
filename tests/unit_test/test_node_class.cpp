@@ -814,6 +814,35 @@ TEST_CASE("Node_InitializerListCtor") {
     REQUIRE(node[fkyaml::node {{"bar", nullptr}}]["baz"].as_str() == "qux");
 }
 
+TEST_CASE("Node_InitializerListCtorWithSingleEmptyCollectionNode") {
+    SECTION("empty mapping node") {
+        const fkyaml::node expected = fkyaml::node::mapping();
+        const fkyaml::node actual {fkyaml::node::mapping()};
+
+        REQUIRE(actual.get_type() == expected.get_type());
+        REQUIRE(actual.is_mapping());
+        REQUIRE(actual.empty());
+    }
+
+    SECTION("empty sequence node") {
+        const fkyaml::node expected = fkyaml::node::sequence();
+        const fkyaml::node actual {fkyaml::node::sequence()};
+
+        REQUIRE(actual.get_type() == expected.get_type());
+        REQUIRE(actual.is_sequence());
+        REQUIRE(actual.empty());
+    }
+
+    SECTION("single scalar still creates a sequence") {
+        const fkyaml::node actual {"test"};
+
+        REQUIRE(actual.is_sequence());
+        REQUIRE(actual.size() == 1);
+        REQUIRE(actual[0].is_string());
+        REQUIRE(actual[0].as_str() == "test");
+    }
+}
+
 TEST_CASE("Node_CopyAssignmentOperator") {
     fkyaml::node node(123);
     fkyaml::node copied(true);

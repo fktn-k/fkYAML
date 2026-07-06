@@ -10934,13 +10934,15 @@ public:
     /// @brief Construct a new node ref storage object with an rvalue basic_node object.
     /// @param n An rvalue basic_node object.
     explicit node_ref_storage(node_type&& n) noexcept(std::is_nothrow_move_constructible<node_type>::value)
-        : m_owned_value(std::move(n)) {
+        : m_owned_value(std::move(n)),
+          m_has_node_ref(true) {
     }
 
     /// @brief Construct a new node ref storage object with an lvalue basic_node object.
     /// @param n An lvalue basic_node object.
     explicit node_ref_storage(const node_type& n) noexcept
-        : m_value_ref(&n) {
+        : m_value_ref(&n),
+          m_has_node_ref(true) {
     }
 
     /// @brief Construct a new node ref storage object with a std::initializer_list object.
@@ -10978,11 +10980,17 @@ public:
         return m_value_ref ? *m_value_ref : std::move(m_owned_value);
     }
 
+    bool has_node_ref() const noexcept {
+        return m_has_node_ref;
+    }
+
 private:
     /// A storage for a basic_node object given with rvalue reference.
     mutable node_type m_owned_value = nullptr;
     /// A pointer to a basic_node object given with lvalue reference.
     const node_type* m_value_ref = nullptr;
+    /// Whether this object was constructed directly from a basic_node object.
+    bool m_has_node_ref = false;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -13101,6 +13109,15 @@ public:
     /// @param[in] init A initializer list of basic_node objects.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(initializer_list_t init) {
+        if (init.size() == 1 && init.begin()->has_node_ref()) {
+            const auto& node_ref = *init.begin();
+            if ((node_ref->is_sequence() || node_ref->is_mapping()) && node_ref->empty() && !node_ref->is_anchor() &&
+                !node_ref->has_tag_name()) {
+                basic_node(node_ref.release()).swap(*this);
+                return;
+            }
+        }
+
         bool is_mapping =
             std::all_of(init.begin(), init.end(), [](const detail::node_ref_storage<basic_node>& node_ref) {
                 // Do not use is_sequence_impl() since node_ref may be an anchor or alias.
