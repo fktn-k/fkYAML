@@ -8,6 +8,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <sstream>
 #include <string>
 
 #include <catch2/catch.hpp>
@@ -538,6 +539,20 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEN") {
         REQUIRE(buffer[9] == char(0x5Au));
     }
 
+    SECTION("iterator_input_adapter with truncated UTF-16 bytes") {
+        std::string input {0, 0x61, 0};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+    }
+
+    SECTION("iterator_input_adapter with a dangling high surrogate after a surrogate pair") {
+        std::u16string input {char16_t(0x0061u), char16_t(0xD840u), char16_t(0xDC0Bu), char16_t(0xD840u)};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+    }
+
     SECTION("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16ben.txt", "r");
@@ -688,6 +703,44 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         std::fclose(p_file);
     }
 
+    SECTION("file_input_adapter with only a BOM") {
+        DISABLE_C4996
+        FILE* p_file = std::tmpfile();
+        ENABLE_C4996
+
+        REQUIRE(p_file != nullptr);
+        const char input[] = {char(0xFEu), char(0xFFu)};
+        REQUIRE(std::fwrite(input, sizeof(char), sizeof(input), p_file) == sizeof(input));
+        std::rewind(p_file);
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
+
+        REQUIRE(buffer.empty());
+
+        std::fclose(p_file);
+    }
+
+    SECTION("file_input_adapter with truncated UTF-16 bytes after a BOM") {
+        DISABLE_C4996
+        FILE* p_file = std::tmpfile();
+        ENABLE_C4996
+
+        REQUIRE(p_file != nullptr);
+        const char input[] = {char(0xFEu), char(0xFFu), 0};
+        REQUIRE(std::fwrite(input, sizeof(char), sizeof(input), p_file) == sizeof(input));
+        std::rewind(p_file);
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
+    }
+
     SECTION("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16bebom.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
@@ -704,6 +757,24 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         REQUIRE(buffer[6] == char(0x80u));
         REQUIRE(buffer[7] == char(0x8Bu));
         REQUIRE(buffer[8] == char(0x52u));
+    }
+
+    SECTION("stream_input_adapter with only a BOM") {
+        std::stringstream ss(std::string {char(0xFEu), char(0xFFu)});
+        auto input_adapter = fkyaml::detail::input_adapter(ss);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
+
+        REQUIRE(buffer.empty());
+    }
+
+    SECTION("stream_input_adapter with truncated UTF-16 bytes after a BOM") {
+        std::stringstream ss(std::string {char(0xFEu), char(0xFFu), 0});
+        auto input_adapter = fkyaml::detail::input_adapter(ss);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 }
 
@@ -995,6 +1066,13 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEN") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
+    SECTION("iterator_input_adapter with truncated UTF-32 bytes") {
+        std::string input {0, 0, 0, 0x61, 0};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+    }
+
     SECTION("iterator_input_adapter with a char32_t array") {
         char32_t input[] = {0x00000061u, 0x00003042u, 0x0002000Bu, 0x00000000};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1174,6 +1252,24 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
         std::fclose(p_file);
     }
 
+    SECTION("file_input_adapter with truncated UTF-32 bytes after a BOM") {
+        DISABLE_C4996
+        FILE* p_file = std::tmpfile();
+        ENABLE_C4996
+
+        REQUIRE(p_file != nullptr);
+        const char input[] = {0, 0, char(0xFEu), char(0xFFu), 0};
+        REQUIRE(std::fwrite(input, sizeof(char), sizeof(input), p_file) == sizeof(input));
+        std::rewind(p_file);
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
+    }
+
     SECTION("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32bebom.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
@@ -1190,6 +1286,14 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
         REQUIRE(buffer[5] == char(0xA0u));
         REQUIRE(buffer[6] == char(0x80u));
         REQUIRE(buffer[7] == char(0x8Bu));
+    }
+
+    SECTION("stream_input_adapter with truncated UTF-32 bytes after a BOM") {
+        std::stringstream ss(std::string {0, 0, char(0xFEu), char(0xFFu), 0});
+        auto input_adapter = fkyaml::detail::input_adapter(ss);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 }
 
@@ -1761,6 +1865,48 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
     SECTION("stream_input_adapter with invalid 4-byte UTF-8 encodings") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_4byte_char.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+    }
+
+    SECTION("iterator_input_adapter with truncated multi-byte UTF-8 encodings") {
+        std::string input {char(0xE3u), char(0x81u)};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+    }
+
+#if FK_YAML_HAS_CHAR8_T
+    SECTION("iterator_input_adapter with truncated multi-byte UTF-8 encodings using char8_t") {
+        std::u8string input {char8_t(0xE3u), char8_t(0x81u)};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+    }
+#endif
+
+    SECTION("file_input_adapter with truncated multi-byte UTF-8 encodings") {
+        DISABLE_C4996
+        FILE* p_file = std::tmpfile();
+        ENABLE_C4996
+
+        REQUIRE(p_file != nullptr);
+        const char input[] = {char(0xE3u), char(0x81u)};
+        REQUIRE(std::fwrite(input, sizeof(char), sizeof(input), p_file) == sizeof(input));
+        std::rewind(p_file);
+
+        auto input_adapter = fkyaml::detail::input_adapter(p_file);
+        REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::file_input_adapter>::value);
+
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+
+        std::fclose(p_file);
+    }
+
+    SECTION("stream_input_adapter with truncated multi-byte UTF-8 encodings") {
+        std::stringstream ss(std::string {char(0xE3u), char(0x81u)});
+        auto input_adapter = fkyaml::detail::input_adapter(ss);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
 
         REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
