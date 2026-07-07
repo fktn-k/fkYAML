@@ -2835,6 +2835,18 @@ TEST_CASE("Node_GetAnchorName") {
     }
 }
 
+TEST_CASE("Node_AnchorNodeDestructorWithDuplicateAnchorName") {
+    {
+        auto first = fkyaml::node::mapping();
+        first.add_anchor_name("anchor");
+
+        auto second = fkyaml::node::sequence();
+        second.add_anchor_name("anchor");
+    }
+
+    SUCCEED();
+}
+
 TEST_CASE("Node_AddAnchorName") {
     fkyaml::node node;
     std::string anchor_name = "anchor_name";
