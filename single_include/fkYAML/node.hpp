@@ -7656,6 +7656,17 @@ private:
             indent = lexer.get_last_token_begin_pos();
             break;
         }
+        case lexical_token_t::KEY_SEPARATOR:
+            root = basic_node_type::mapping();
+            apply_directive_set(root);
+            apply_node_properties(root);
+            m_context_stack.emplace_back(
+                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
+            add_new_key(basic_node_type(""), line, indent);
+            token = lexer.get_next_token();
+            line = lexer.get_lines_processed();
+            indent = lexer.get_last_token_begin_pos();
+            break;
         case lexical_token_t::BLOCK_LITERAL_SCALAR:
         case lexical_token_t::BLOCK_FOLDED_SCALAR:
             // If a block scalar token is detected here, current document contains single scalar.
@@ -7879,7 +7890,8 @@ private:
             }
             case lexical_token_t::KEY_SEPARATOR: {
                 if FK_YAML_UNLIKELY (m_context_stack.empty()) {
-                    throw parse_error("mapping key should not be empty.", line, indent);
+                    // Empty root mapping keys are handled before entering the main parsing loop.
+                    throw parse_error("mapping key without context is unsupported.", line, indent);
                 }
                 if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
                     // empty mapping keys are not supported.

@@ -34,9 +34,18 @@ TEST_CASE("Deserializer_KeySeparator") {
     }
 
     SECTION("error cases") {
-        auto input_str = GENERATE(std::string(": foo"), std::string("- : foo"), std::string("- - : foo"));
+        auto input_str = GENERATE(std::string("- : foo"), std::string("- - : foo"));
         REQUIRE_THROWS_AS(
             root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
+    }
+
+    SECTION("empty root mapping key") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(": foo")));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains(""));
+        REQUIRE(root[""].is_string());
+        REQUIRE(root[""].as_str() == "foo");
     }
 }
 
