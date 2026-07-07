@@ -33,7 +33,7 @@ TEST_CASE("Deserializer_KeySeparator") {
         REQUIRE(root.size() == 1);
     }
 
-    SECTION("error cases") {
+    SECTION("empty mapping key in block sequences is unsupported") {
         auto input_str = GENERATE(std::string("- : foo"), std::string("- - : foo"));
         REQUIRE_THROWS_AS(
             root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
