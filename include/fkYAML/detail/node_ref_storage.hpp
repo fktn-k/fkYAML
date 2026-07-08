@@ -28,17 +28,25 @@ class node_ref_storage {
 
     using node_type = BasicNodeType;
 
+    template <typename... Args>
+    struct has_single_basic_node_arg : std::false_type {};
+
+    template <typename Arg>
+    struct has_single_basic_node_arg<Arg> : is_basic_node<Arg> {};
+
 public:
     /// @brief Construct a new node ref storage object with an rvalue basic_node object.
     /// @param n An rvalue basic_node object.
     explicit node_ref_storage(node_type&& n) noexcept(std::is_nothrow_move_constructible<node_type>::value)
-        : m_owned_value(std::move(n)) {
+        : m_owned_value(std::move(n)),
+          m_has_node_ref(true) {
     }
 
     /// @brief Construct a new node ref storage object with an lvalue basic_node object.
     /// @param n An lvalue basic_node object.
     explicit node_ref_storage(const node_type& n) noexcept
-        : m_value_ref(&n) {
+        : m_value_ref(&n),
+          m_has_node_ref(true) {
     }
 
     /// @brief Construct a new node ref storage object with a std::initializer_list object.
@@ -52,7 +60,8 @@ public:
     /// @param args Arguments to construct a basic_node object.
     template <typename... Args, enable_if_t<std::is_constructible<node_type, Args...>::value, int> = 0>
     node_ref_storage(Args&&... args)
-        : m_owned_value(std::forward<Args>(args)...) {
+        : m_owned_value(std::forward<Args>(args)...),
+          m_has_node_ref(has_single_basic_node_arg<Args...>::value) {
     }
 
     // allow only move construct/assignment
@@ -76,11 +85,17 @@ public:
         return m_value_ref ? *m_value_ref : std::move(m_owned_value);
     }
 
+    bool has_node_ref() const noexcept {
+        return m_has_node_ref;
+    }
+
 private:
     /// A storage for a basic_node object given with rvalue reference.
     mutable node_type m_owned_value = nullptr;
     /// A pointer to a basic_node object given with lvalue reference.
     const node_type* m_value_ref = nullptr;
+    /// Whether this object was constructed directly from a basic_node object.
+    bool m_has_node_ref = false;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

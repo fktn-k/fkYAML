@@ -373,6 +373,15 @@ public:
     /// @param[in] init A initializer list of basic_node objects.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(initializer_list_t init) {
+        if (init.size() == 1 && init.begin()->has_node_ref()) {
+            const auto& node_ref = *init.begin();
+            if ((node_ref->is_sequence() || node_ref->is_mapping()) && node_ref->empty() && !node_ref->is_anchor() &&
+                !node_ref->has_tag_name()) {
+                basic_node(node_ref.release()).swap(*this);
+                return;
+            }
+        }
+
         bool is_mapping =
             std::all_of(init.begin(), init.end(), [](const detail::node_ref_storage<basic_node>& node_ref) {
                 // Do not use is_sequence_impl() since node_ref may be an anchor or alias.
