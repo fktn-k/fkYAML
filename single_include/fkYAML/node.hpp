@@ -13132,8 +13132,9 @@ public:
     basic_node(initializer_list_t init) {
         if (init.size() == 1 && init.begin()->has_node_ref()) {
             const auto& node_ref = *init.begin();
-            if ((node_ref->is_sequence() || node_ref->is_mapping()) && node_ref->empty() && !node_ref->is_anchor() &&
-                !node_ref->has_tag_name()) {
+            bool is_bare_empty_collection = (node_ref->is_sequence() || node_ref->is_mapping()) && node_ref->empty() &&
+                                            !node_ref->is_anchor() && !node_ref->has_tag_name();
+            if (is_bare_empty_collection) {
                 basic_node(node_ref.release()).swap(*this);
                 return;
             }
@@ -14245,7 +14246,7 @@ public:
         if (resolved.is_uint_impl()) {
             return true;
         }
-        else if (resolved.is_integer_impl() && resolved.m_value.integer >= static_cast<integer_type>(0)) {
+        if (resolved.is_integer_impl() && resolved.m_value.integer >= static_cast<integer_type>(0)) {
             // This is a signed integer node, but the value is non-negative,
             // so it can be treated as an unsigned integer.
             return true;
