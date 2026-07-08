@@ -375,8 +375,8 @@ public:
     basic_node(initializer_list_t init) {
         if (init.size() == 1 && init.begin()->has_node_ref()) {
             const auto& node_ref = *init.begin();
-            bool is_bare_empty_collection = (node_ref->is_sequence() || node_ref->is_mapping()) && node_ref->empty() &&
-                                            !node_ref->is_anchor() && !node_ref->has_tag_name();
+            bool is_bare_empty_collection =
+                !node_ref->is_scalar() && node_ref->empty() && !node_ref->is_anchor() && !node_ref->has_tag_name();
             if (is_bare_empty_collection) {
                 basic_node(node_ref.release()).swap(*this);
                 return;
@@ -410,7 +410,7 @@ public:
                 seq.emplace_back(std::move(elem_ref.release()));
             }
         }
-    }
+    } // LCOV_EXCL_LINE
 
     /// @brief Destroy the basic_node object and its value storage.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/destructor/

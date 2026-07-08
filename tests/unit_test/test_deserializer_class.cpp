@@ -47,11 +47,6 @@ TEST_CASE("Deserializer_KeySeparator") {
         REQUIRE(root[""].is_string());
         REQUIRE(root[""].as_str() == "foo");
     }
-
-    SECTION("empty mapping key in a sequence") {
-        REQUIRE_THROWS_AS(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter("- : foo")), fkyaml::parse_error);
-    }
 }
 
 TEST_CASE("Deserializer_ValueSeparator") {

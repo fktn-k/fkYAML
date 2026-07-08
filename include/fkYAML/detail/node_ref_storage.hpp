@@ -42,8 +42,15 @@ public:
           m_has_node_ref(true) {
     }
 
-    /// @brief Construct a new node ref storage object with an lvalue basic_node object.
-    /// @param n An lvalue basic_node object.
+    /// @brief Construct a new node ref storage object with a non-const lvalue basic_node object.
+    /// @param n A non-const lvalue basic_node object.
+    node_ref_storage(node_type& n) noexcept
+        : m_value_ref(&n),
+          m_has_node_ref(true) {
+    }
+
+    /// @brief Construct a new node ref storage object with a const lvalue basic_node object.
+    /// @param n A const lvalue basic_node object.
     explicit node_ref_storage(const node_type& n) noexcept
         : m_value_ref(&n),
           m_has_node_ref(true) {
