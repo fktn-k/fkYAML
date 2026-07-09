@@ -29,7 +29,7 @@ Build and run this tool with the following commands:
 
 ```bash
 $ cd path/to/fkYAML
-$ cmake -S . -B build -DCMAKE_BUILD_TYPE={Debug|Release} -DFK_YAML_RUN_BENCHMARK=ON
+$ cmake -S . -B build -DCMAKE_BUILD_TYPE={Debug|Release} -DFK_YAML_RUN_BENCHMARK=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 $ cmake --build build --config {Debug|Release}
 
 # You can specify an arbitrary input file such as /foo/bar/sample.yml or /foo/bar/sample.json
