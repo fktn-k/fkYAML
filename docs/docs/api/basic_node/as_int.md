@@ -8,7 +8,7 @@ const integer_type& as_int() const;
 ```
 
 Returns (const) reference to the integer node value.  
-If the current node value is not an integer, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.  
+If the current node value is not an integer or a value which cannot be represented as `integer_type`, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.  
 
 ## **Return Value**
 

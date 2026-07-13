@@ -841,6 +841,20 @@ TEST_CASE("Node_InitializerListCtorWithSingleEmptyCollectionNode") {
         REQUIRE(actual[0].is_string());
         REQUIRE(actual[0].as_str() == "test");
     }
+
+    SECTION("empty collection with a property") {
+        fkyaml::node node = fkyaml::node::mapping();
+        node.add_tag_name("!tag");
+        using init_list_t = std::initializer_list<fkyaml::detail::node_ref_storage<fkyaml::node>>;
+        const fkyaml::node actual(init_list_t {node});
+
+        REQUIRE(actual.is_sequence());
+        REQUIRE(actual.size() == 1);
+        REQUIRE(actual.at(0).get_type() == fkyaml::node_type::MAPPING);
+        REQUIRE(actual.at(0).empty());
+        REQUIRE(actual.at(0).has_tag_name());
+        REQUIRE(actual.at(0).get_tag_name() == "!tag");
+    }
 }
 
 TEST_CASE("Node_CopyAssignmentOperator") {

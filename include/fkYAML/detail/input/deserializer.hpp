@@ -472,16 +472,12 @@ private:
                 continue;
             }
             case lexical_token_t::KEY_SEPARATOR: {
-                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
-                    // Empty root mapping keys are handled before entering the main parsing loop.
-                    throw parse_error("mapping key without context is unsupported.", line, indent);
-                }
                 if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
                     // empty mapping keys are not supported.
                     // ```yaml
                     // - : foo
                     // ```
-                    throw parse_error("sequence key should not be empty.", line, indent);
+                    throw parse_error("mapping key should not be empty.", line, indent);
                 }
 
                 if (m_flow_context_depth > 0) {

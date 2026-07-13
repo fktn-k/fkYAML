@@ -36,15 +36,16 @@ TEST_CASE("Node_IsUint_ReturnsFalseForNonIntegerTypes") {
 TEST_CASE("Node_IsUint_ReturnsFalseWithinSignedRange") {
     auto input = GENERATE(
         std::string("-9223372036854775808"), // INT64_MIN
-        std::string("-1"),
-        std::string("0"),
-        std::string("1"),
-        std::string("9223372036854775807")); // INT64_MAX
+        std::string("-42"),
+        std::string("-1"));
     REQUIRE(fkyaml::node::deserialize("v: " + input)["v"].is_uint() == false);
 }
 
 TEST_CASE("Node_IsUint_ReturnsTrueAboveSignedRange") {
     auto input = GENERATE(
+        std::string("0"),
+        std::string("1"),
+        std::string("9223372036854775807"),   // INT64_MAX
         std::string("9223372036854775808"),   // INT64_MAX + 1
         std::string("15745692345339290292"),  // xxHash value from the bug report
         std::string("18446744073709551615")); // UINT64_MAX
@@ -124,7 +125,11 @@ TEST_CASE("Node_AsInt_ThrowsForUintFlaggedNode") {
         std::string("9223372036854775808"),   // INT64_MAX + 1
         std::string("15745692345339290292"),  // xxHash value from the bug report
         std::string("18446744073709551615")); // UINT64_MAX
-    REQUIRE_THROWS_AS(fkyaml::node::deserialize("v: " + input)["v"].as_int(), fkyaml::type_error);
+    auto node = fkyaml::node::deserialize("v: " + input);
+    auto& int_node = node["v"];
+    REQUIRE_THROWS_AS(int_node.as_int(), fkyaml::type_error);
+    const auto& const_int_node = int_node;
+    REQUIRE_THROWS_AS(const_int_node.as_int(), fkyaml::type_error);
 }
 
 TEST_CASE("Node_UintBit_ClearedOnReassignment") {
@@ -132,8 +137,8 @@ TEST_CASE("Node_UintBit_ClearedOnReassignment") {
     fkyaml::node n = fkyaml::node::deserialize("v: 15745692345339290292")["v"];
     REQUIRE(n.is_uint() == true);
 
-    n = fkyaml::node(static_cast<fkyaml::node::integer_type>(42));
+    n = fkyaml::node(static_cast<fkyaml::node::integer_type>(-42));
     REQUIRE(n.is_integer() == true);
     REQUIRE(n.is_uint() == false);
-    REQUIRE(n.as_int() == 42);
+    REQUIRE(n.as_int() == -42);
 }

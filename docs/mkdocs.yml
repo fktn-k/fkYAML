@@ -130,6 +130,7 @@ nav:
     - as_map: api/basic_node/as_map.md
     - as_seq: api/basic_node/as_seq.md
     - as_str: api/basic_node/as_str.md
+    - as_uint: api/basic_node/as_uint.md
     - at: api/basic_node/at.md
     - 'begin, cbegin': api/basic_node/begin.md
     - contains: api/basic_node/contains.md
@@ -156,6 +157,7 @@ nav:
     - is_scalar: api/basic_node/is_scalar.md
     - is_sequence: api/basic_node/is_sequence.md
     - is_string: api/basic_node/is_string.md
+    - is_uint: api/basic_node/is_uint.md
     - mapping: api/basic_node/mapping.md
     - map_items: api/basic_node/map_items.md
     - node: api/basic_node/node.md
