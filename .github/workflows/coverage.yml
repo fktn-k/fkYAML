@@ -86,4 +86,4 @@ jobs:
           |:-----|:-----------------------------------------------------|
           | ID   | ${{steps.upload_artifact_step.outputs.artifact-id}}  |
           | URL  | ${{steps.upload_artifact_step.outputs.artifact-url}} |
-        comment_tag: notification
+        comment-tag: coverage_notification
