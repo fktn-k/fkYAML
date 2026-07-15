@@ -110,6 +110,10 @@ if(FK_YAML_RUN_IWYU)
   add_subdirectory(tools/iwyu)
 endif()
 
+if(FK_YAML_RUN_BENCHMARK AND (NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM OR CMAKE_POLICY_VERSION_MINIMUM VERSION_LESS 3.5))
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
+
 if(FK_YAML_RUN_BENCHMARK)
   add_subdirectory(tools/benchmark)
 endif()

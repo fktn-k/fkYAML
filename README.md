@@ -207,14 +207,14 @@ Testing of the library with [the YAML test suite](https://github.com/yaml/yaml-t
 
 ## Benchmarking
 
-Though efficiency is not everything, speed and memory consumption are very important characteristics for C++ developers. Regarding speed, benchmarking scores are now available with [the dedicated benchmarking tool](./tool/benchmark/README.md) for the parsing.  
+Though efficiency is not everything, speed and memory consumption are very important characteristics for C++ developers. Regarding speed, benchmarking scores are now available with [the dedicated benchmarking tool](./tools/benchmark/README.md) for the parsing.  
 The following tables are created from the benchmarking results in the following environment:  
 
 * CPU: AMD Ryzen 7 5800H @3.20GHz
 * OS: Ubuntu22.04 (WSL2)
 * Compiler: g++11.4.0
 
-### Parsing [ubuntu.yml](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/ubuntu.yml)
+### Parsing [ubuntu.yml](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/cases/ubuntu.yml)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
@@ -224,7 +224,7 @@ The following tables are created from the benchmarking results in the following 
 | rapidyaml<br>(with immutable buff) | 133.311Mi/s                          |
 | yaml-cpp                           | 9.07876Mi/s                          |
 
-### Parsing [citm_catalog.json](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.json)
+### Parsing [citm_catalog.json](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/cases/citm_catalog.json)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
@@ -234,7 +234,7 @@ The following tables are created from the benchmarking results in the following 
 | rapidyaml<br>(with immutable buff) | 140.375Mi/s                          |
 | yaml-cpp                           | 14.3192Mi/s                          |
 
-### Parsing [citm_catalog.yml](https://github.com/fktn-k/fkYAML/blob/develop/tool/benchmark/cases/citm_catalog.yml)
+### Parsing [citm_catalog.yml](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/cases/citm_catalog.yml)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
