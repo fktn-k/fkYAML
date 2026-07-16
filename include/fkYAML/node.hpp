@@ -1776,25 +1776,21 @@ public:
         return {*this};
     }
 
-    /// @brief Remove a mapping entry by key.
+    /// @brief Erase a mapping entry by key.
     /// @tparam KeyType A type for the input key (any type convertible to node).
-    /// @param key A key identifying the mapping entry to remove.
-    /// @return true if an entry was found and removed, false otherwise.
+    /// @param key A key identifying the mapping entry to erase.
+    /// @return true if an entry was found and erased, false otherwise.
     template <typename KeyType>
-    bool remove(KeyType&& key)
-    {
+    bool erase(KeyType&& key) {
         basic_node key_node = std::forward<KeyType>(key);
         basic_node& act_node = resolve_reference();
-        if FK_YAML_UNLIKELY (!act_node.is_mapping_impl())
-        {
-            throw type_error("remove() cannot be called on a non-mapping node.", get_type());
+        if FK_YAML_UNLIKELY (!act_node.is_mapping_impl()) {
+            throw type_error("erase() cannot be called on a non-mapping node.", get_type());
         }
 
         auto& map = *act_node.m_value.p_map;
-        for (auto itr = map.begin(); itr != map.end(); ++itr)
-        {
-            if (itr->first == key_node)
-            {
+        for (auto itr = map.begin(); itr != map.end(); ++itr) {
+            if (itr->first == key_node) {
                 map.erase(itr);
                 return true;
             }

@@ -173,6 +173,7 @@ This class provides features to handle YAML nodes.
 
 ### Modifiers
 
-| Name            | Description                      |
-| --------------- | -------------------------------- |
-| [swap](swap.md) | swaps the internally stored data |
+| Name              | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| [erase](erase.md) | erases a mapping entry specified by the key.   |
+| [swap](swap.md)   | swaps the internally stored data.              |
