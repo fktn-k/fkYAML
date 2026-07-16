@@ -72,11 +72,11 @@ jobs:
 
     - name: Upload patch
       id: upload_artifact_step
-      if: steps.diff.output.has_diff == 'true'
+      if: steps.format_diff.outputs.has_diff == 'true'
       uses: actions/upload-artifact@v7
       with:
-        name: ${{steps.diff.output.patch_file_name}}
-        path: ${{steps.diff.output.patch_file_name}}
+        name: ${{steps.format_diff.outputs.patch_file_name}}
+        path: ${{steps.format_diff.outputs.patch_file_name}}
         overwrite: true
 
     - name: Notify the artifact URL
@@ -88,8 +88,8 @@ jobs:
           The source code has not been formatted/amalgamated correctly in the commit [${{github.event.pull_request.head.sha}}](https://github.com/${{github.repository}}/commit/${{github.event.pull_request.head.sha}}).
           Please download and apply the patch to fix it.
 
-          | Name | ${{steps.diff.output.patch_file_name}}.zip           |
+          | Name | ${{steps.format_diff.outputs.patch_file_name}}.zip           |
           |:-----|:-----------------------------------------------------|
           | ID   | ${{steps.upload_artifact_step.outputs.artifact-id}}  |
           | URL  | ${{steps.upload_artifact_step.outputs.artifact-url}} |
-        comment_tag: notification
+        comment-tag: format_notification

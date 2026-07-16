@@ -7889,16 +7889,12 @@ private:
                 continue;
             }
             case lexical_token_t::KEY_SEPARATOR: {
-                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
-                    // Empty root mapping keys are handled before entering the main parsing loop.
-                    throw parse_error("mapping key without context is unsupported.", line, indent);
-                }
                 if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
                     // empty mapping keys are not supported.
                     // ```yaml
                     // - : foo
                     // ```
-                    throw parse_error("sequence key should not be empty.", line, indent);
+                    throw parse_error("mapping key should not be empty.", line, indent);
                 }
 
                 if (m_flow_context_depth > 0) {
@@ -10958,8 +10954,15 @@ public:
           m_has_node_ref(true) {
     }
 
-    /// @brief Construct a new node ref storage object with an lvalue basic_node object.
-    /// @param n An lvalue basic_node object.
+    /// @brief Construct a new node ref storage object with a non-const lvalue basic_node object.
+    /// @param n A non-const lvalue basic_node object.
+    node_ref_storage(node_type& n) noexcept
+        : m_value_ref(&n),
+          m_has_node_ref(true) {
+    }
+
+    /// @brief Construct a new node ref storage object with a const lvalue basic_node object.
+    /// @param n A const lvalue basic_node object.
     explicit node_ref_storage(const node_type& n) noexcept
         : m_value_ref(&n),
           m_has_node_ref(true) {
@@ -13132,8 +13135,9 @@ public:
     basic_node(initializer_list_t init) {
         if (init.size() == 1 && init.begin()->has_node_ref()) {
             const auto& node_ref = *init.begin();
-            if ((node_ref->is_sequence() || node_ref->is_mapping()) && node_ref->empty() && !node_ref->is_anchor() &&
-                !node_ref->has_tag_name()) {
+            bool is_bare_empty_collection =
+                !node_ref->is_scalar() && node_ref->empty() && !node_ref->is_anchor() && !node_ref->has_tag_name();
+            if (is_bare_empty_collection) {
                 basic_node(node_ref.release()).swap(*this);
                 return;
             }
@@ -13166,7 +13170,7 @@ public:
                 seq.emplace_back(std::move(elem_ref.release()));
             }
         }
-    }
+    } // LCOV_EXCL_LINE
 
     /// @brief Destroy the basic_node object and its value storage.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/destructor/
@@ -14238,10 +14242,19 @@ public:
         throw fkyaml::type_error("The node value is not a boolean.", get_type());
     }
 
-    /// @brief Checks if the node is an integer that was parsed from a uint64_t value exceeding INT64_MAX.
+    /// @brief Checks if the node value is an unsigned integer.
     /// @return true if the node holds an unsigned integer, false otherwise.
     bool is_uint() const noexcept {
-        return resolve_reference().is_uint_impl();
+        const auto& resolved = resolve_reference();
+        if (resolved.is_uint_impl()) {
+            return true;
+        }
+        if (resolved.is_integer_impl() && resolved.m_value.integer >= static_cast<integer_type>(0)) {
+            // This is a signed integer node, but the value is non-negative,
+            // so it can be treated as an unsigned integer.
+            return true;
+        }
+        return false;
     }
 
     /// @brief Returns the integer node value as an unsigned 64-bit integer.

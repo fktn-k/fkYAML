@@ -56,7 +56,6 @@ jobs:
 
     - name: Decide the artifact name
       id: create_zip
-      if: github.event_name == 'pull_request_target'
       env:
         PR_NUMBER: ${{github.event.number}}
       run: |
@@ -75,7 +74,7 @@ jobs:
         overwrite: true
 
     - name: Notify the artifact URL
-      if: steps.upload_artifact_step.conclusion == 'success'
+      if: github.event_name == 'pull_request' && steps.upload_artifact_step.conclusion == 'success'
       uses: thollander/actions-comment-pull-request@v3
       with:
         message: |
@@ -87,4 +86,4 @@ jobs:
           |:-----|:-----------------------------------------------------|
           | ID   | ${{steps.upload_artifact_step.outputs.artifact-id}}  |
           | URL  | ${{steps.upload_artifact_step.outputs.artifact-url}} |
-        comment_tag: notification
+        comment-tag: coverage_notification
