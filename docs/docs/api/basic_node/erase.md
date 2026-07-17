@@ -4,7 +4,7 @@
 
 ```cpp
 template <typename KeyType>
-bool erase(KeyType&& key);
+size_type erase(KeyType&& key);
 ```
 
 Erases the entry with the given key from a YAML mapping node.  
@@ -24,7 +24,7 @@ The input parameter `key` must be either a [`basic_node`](index.md) object or an
 
 ## **Return Value**
 
-`true` if an entry was found and erased, `false` otherwise.  
+The number of erased entries (`0` or `1`).
 
 ??? Example
 

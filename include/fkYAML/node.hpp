@@ -1789,9 +1789,9 @@ public:
     /// @brief Erase a mapping entry by key.
     /// @tparam KeyType A type for the input key (any type convertible to node).
     /// @param key A key identifying the mapping entry to erase.
-    /// @return true if an entry was found and erased, false otherwise.
+    /// @return The number of erased entries (0 or 1).
     template <typename KeyType>
-    bool erase(KeyType&& key) {
+    size_type erase(KeyType&& key) {
         basic_node key_node = std::forward<KeyType>(key);
         basic_node& act_node = resolve_reference();
         if FK_YAML_UNLIKELY (!act_node.is_mapping_impl()) {
@@ -1802,10 +1802,10 @@ public:
         for (auto itr = map.begin(); itr != map.end(); ++itr) {
             if (itr->first == key_node) {
                 map.erase(itr);
-                return true;
+                return size_type {1};
             }
         }
-        return false;
+        return size_type {0};
     }
 
 private:
