@@ -16,7 +16,7 @@ TOOL_SRCS = $(shell find tools -type f -name '*.cpp' | sort)
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 4
-TARGET_PATCH_VERSION := 2
+TARGET_PATCH_VERSION := 3
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -130,10 +130,10 @@ update-project-version:
 reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year "2023-2025" --style cppsingle
+		--license MIT --year "2023-2026" --style cppsingle
 	pipx run reuse annotate $(TEST_SRCS) $(EXAMPLE_SRCS) $(TOOL_SRCS) --template fkYAML_support \
 		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year "2023-2025" --style cppsingle
+		--license MIT --year "2023-2026" --style cppsingle
 	pipx run reuse lint
 
 update-sources: reuse update-version-macros
