@@ -2458,6 +2458,60 @@ TEST_CASE("Node_Contains") {
 }
 
 //
+// test cases for mapping entry eraser
+//
+
+TEST_CASE("Node_Erase") {
+    SECTION("mapping") {
+        SECTION("existing compatible key") {
+            fkyaml::node node = fkyaml::node::mapping({{"test", fkyaml::node()}, {"other", 123}});
+
+            STATIC_REQUIRE((std::is_same<decltype(node.erase("test")), fkyaml::node::size_type>::value));
+            REQUIRE(node.erase("test") == 1);
+            REQUIRE(node.size() == 1);
+            REQUIRE_FALSE(node.contains("test"));
+            REQUIRE(node.contains("other"));
+        }
+
+        SECTION("existing node key") {
+            fkyaml::node node = fkyaml::node::mapping({{"test", fkyaml::node()}});
+            fkyaml::node node_key = "test";
+
+            REQUIRE(node.erase(node_key) == 1);
+            REQUIRE(node.empty());
+        }
+
+        SECTION("missing key") {
+            fkyaml::node node = fkyaml::node::mapping({{"test", fkyaml::node()}});
+
+            REQUIRE(node.erase("missing") == 0);
+            REQUIRE(node.size() == 1);
+        }
+
+        SECTION("alias node") {
+            fkyaml::node node = fkyaml::node::mapping({{"test", fkyaml::node()}});
+            node.add_anchor_name("anchor");
+            fkyaml::node alias = fkyaml::node::alias_of(node);
+
+            REQUIRE(alias.erase("test") == 1);
+            REQUIRE(node.empty());
+        }
+    }
+
+    SECTION("non-mapping") {
+        auto node = GENERATE(
+            fkyaml::node::sequence(),
+            fkyaml::node(),
+            fkyaml::node(false),
+            fkyaml::node(0),
+            fkyaml::node(0.0),
+            fkyaml::node(""));
+
+        REQUIRE_THROWS_AS(node.erase("test"), fkyaml::type_error);
+    }
+}
+
+//
 // test cases for container size getter
 //
 

@@ -138,6 +138,7 @@ nav:
     - deserialize_docs: api/basic_node/deserialize_docs.md
     - empty: api/basic_node/empty.md
     - 'end, cend': api/basic_node/end.md
+    - erase: api/basic_node/erase.md
     - get_anchor_name: api/basic_node/get_anchor_name.md
     - get_tag_name: api/basic_node/get_tag_name.md
     - get_type: api/basic_node/get_type.md
