@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <limits>
@@ -36,13 +37,13 @@ TEST_CASE("Serializer_EmptyCollectionNode") {
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
 
     SECTION("child sequence item is an empty sequence node") {
-        seq.get_value_ref<fkyaml::node::sequence_type&>().emplace_back(fkyaml::node::sequence());
+        seq.as_seq().emplace_back(fkyaml::node::sequence());
         std::string expected = "- []\n";
         REQUIRE(serializer.serialize(seq) == expected);
     }
 
     SECTION("child sequence item is an empty mapping node") {
-        seq.get_value_ref<fkyaml::node::sequence_type&>().emplace_back(fkyaml::node::mapping());
+        seq.as_seq().emplace_back(fkyaml::node::mapping());
         std::string expected = "- {}\n";
         REQUIRE(serializer.serialize(seq) == expected);
     }
@@ -113,7 +114,8 @@ TEST_CASE("Serializer_StringNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE_REF(
         node_str_pair_t("test", "test"),
-        node_str_pair_t("foo bar", "foo bar"),
+        node_str_pair_t("foo bar", "\"foo bar\""),
+        node_str_pair_t("", "\"\""),
         node_str_pair_t("null", "\"null\""),
         node_str_pair_t("Null", "\"Null\""),
         node_str_pair_t("NULL", "\"NULL\""),
@@ -137,6 +139,38 @@ TEST_CASE("Serializer_StringNode") {
         node_str_pair_t(".nan", "\".nan\""),
         node_str_pair_t(".NaN", "\".NaN\""),
         node_str_pair_t(".NAN", "\".NAN\""),
+        node_str_pair_t("%", "\"%\""),
+        node_str_pair_t("%test", "\"%test\""),
+        node_str_pair_t("@test", "\"@test\""),
+        node_str_pair_t("`test", "\"`test\""),
+        node_str_pair_t("#test", "\"#test\""),
+        node_str_pair_t("&test", "\"&test\""),
+        node_str_pair_t("*test", "\"*test\""),
+        node_str_pair_t("!test", "\"!test\""),
+        node_str_pair_t("|test", "\"|test\""),
+        node_str_pair_t(">test", "\">test\""),
+        node_str_pair_t("[test", "\"[test\""),
+        node_str_pair_t("]test", "\"]test\""),
+        node_str_pair_t("{test", "\"{test\""),
+        node_str_pair_t("}test", "\"}test\""),
+        node_str_pair_t(",test", "\",test\""),
+        node_str_pair_t("foo,bar", "\"foo,bar\""),
+        node_str_pair_t("foo[bar", "\"foo[bar\""),
+        node_str_pair_t("foo]bar", "\"foo]bar\""),
+        node_str_pair_t("foo{bar", "\"foo{bar\""),
+        node_str_pair_t("foo}bar", "\"foo}bar\""),
+        node_str_pair_t("'test", "\"'test\""),
+        node_str_pair_t(" test", "\" test\""),
+        node_str_pair_t("test ", "\"test \""),
+        node_str_pair_t("-", "\"-\""),
+        node_str_pair_t("- test", "\"- test\""),
+        node_str_pair_t("-test", "-test"),
+        node_str_pair_t("? test", "\"? test\""),
+        node_str_pair_t("?test", "?test"),
+        node_str_pair_t(": test", "\": test\""),
+        node_str_pair_t(":test", ":test"),
+        node_str_pair_t("foo: bar", "\"foo: bar\""),
+        node_str_pair_t("foo #bar", "\"foo #bar\""),
         node_str_pair_t("foo\"bar", "\"foo\\\"bar\""),
         node_str_pair_t(fkyaml::node::string_type({char(0xC2u), char(0xA1u)}), std::string({char(0xC2u), char(0xA1u)})),
         node_str_pair_t(
@@ -151,6 +185,20 @@ TEST_CASE("Serializer_StringNode") {
 
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+}
+
+TEST_CASE("Serializer_StringNodeStartingWithDirectiveIndicatorInMapping") {
+    const std::string yaml = "project: fkYAML\n"
+                             "percent: %\n"
+                             "startingChar: %test\n";
+
+    const fkyaml::node node = fkyaml::node::deserialize(yaml);
+
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(
+        serializer.serialize(node) == "percent: \"%\"\n"
+                                      "project: fkYAML\n"
+                                      "startingChar: \"%test\"\n");
 }
 
 TEST_CASE("Serializer_MappingKeyNode") {
@@ -173,7 +221,7 @@ TEST_CASE("Serializer_AnchorNode") {
     node[nullptr][2].add_anchor_name("B");
     fkyaml::node key = "baz";
     key.add_anchor_name("C");
-    node.get_value_ref<fkyaml::node::mapping_type&>().emplace(key, "qux");
+    node.as_map().emplace(key, "qux");
     node.add_anchor_name("anchor");
 
     std::string expected = "&anchor\n"
@@ -191,8 +239,8 @@ TEST_CASE("Serializer_AnchorNode") {
 TEST_CASE("Serializer_AliasNode") {
     fkyaml::node node = {{"foo", 123}};
     node["foo"].add_anchor_name("A");
-    node.get_value_ref<fkyaml::node::mapping_type&>().emplace(true, fkyaml::node::alias_of(node["foo"]));
-    node.get_value_ref<fkyaml::node::mapping_type&>().emplace(fkyaml::node::alias_of(node["foo"]), 3.14);
+    node.as_map().emplace(true, fkyaml::node::alias_of(node["foo"]));
+    node.as_map().emplace(fkyaml::node::alias_of(node["foo"]), 3.14);
     node[nullptr] = {"bar", fkyaml::node::alias_of(node["foo"])};
 
     // FIXME: Semantic equality between the input & the output is not guranteed
@@ -229,7 +277,7 @@ TEST_CASE("Serializer_TaggedNode") {
     fkyaml::node seq_node = {nullptr, 456};
     seq_node.add_tag_name("!!seq");
 
-    auto& mapping = root.get_value_ref<fkyaml::node::mapping_type&>();
+    auto& mapping = root.as_map();
     mapping.emplace(str_node, null_node);
     mapping.emplace(bool_node, int_node);
     mapping.emplace(null_node, float_node);

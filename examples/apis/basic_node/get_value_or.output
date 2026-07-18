@@ -1,0 +1,12 @@
+true
+false
+0, false, default
+
+2 : baz
+1 : bar
+0 : foo
+
+1.23
+default
+true
+1

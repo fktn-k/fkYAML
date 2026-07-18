@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <iostream>
@@ -12,10 +13,11 @@
 int main() {
     // create a YAML node.
     fkyaml::node n = 123;
+    const fkyaml::node cn = 123;
 
     // get references to the value.
-    auto ref = n.get_value_ref<fkyaml::node::integer_type&>();
-    auto cref = n.get_value_ref<const fkyaml::node::integer_type&>();
+    auto& ref = n.as_int();
+    auto& cref = cn.as_int();
 
     // print the referenced values
     std::cout << ref << std::endl;
@@ -23,7 +25,7 @@ int main() {
 
     // specifying incompatible reference type throws an exception
     try {
-        auto iref = n.get_value_ref<fkyaml::node::mapping_type&>();
+        auto iref = n.as_map();
     }
     catch (const fkyaml::exception& e) {
         std::cout << e.what() << std::endl;

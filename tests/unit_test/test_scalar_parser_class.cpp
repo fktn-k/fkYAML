@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <catch2/catch.hpp>
@@ -257,7 +258,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, token));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == token);
+        REQUIRE(node.as_str() == token);
     }
 
     SECTION("plain: multiline contents") {
@@ -271,7 +272,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, test_data.first));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == test_data.second);
+        REQUIRE(node.as_str() == test_data.second);
     }
 
     SECTION("single quoted: single line contents") {
@@ -291,7 +292,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, test_data.first));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == test_data.second);
+        REQUIRE(node.as_str() == test_data.second);
     }
 
     SECTION("single quoted: multiline contents") {
@@ -307,7 +308,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, test_data.first));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == test_data.second);
+        REQUIRE(node.as_str() == test_data.second);
     }
 
     SECTION("double quoted: single line contents") {
@@ -326,7 +327,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, test_data.first));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == test_data.second);
+        REQUIRE(node.as_str() == test_data.second);
     }
 
     SECTION("double quoted: multiline contents") {
@@ -344,7 +345,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, test_data.first));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == test_data.second);
+        REQUIRE(node.as_str() == test_data.second);
     }
 
     SECTION("double quoted: escaped unicode characters") {
@@ -380,7 +381,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_flow(lex_type, tag_type, test_data.first));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == test_data.second);
+        REQUIRE(node.as_str() == test_data.second);
     }
 
     SECTION("double quoted: invalid unicode escapings") {
@@ -411,7 +412,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "");
+        REQUIRE(node.as_str() == "");
     }
 
     SECTION("empty literal string scalar with strip chomping") {
@@ -421,7 +422,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "");
+        REQUIRE(node.as_str() == "");
     }
 
     SECTION("empty literal string scalar with clip chomping") {
@@ -431,7 +432,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "");
+        REQUIRE(node.as_str() == "");
     }
 
     SECTION("empty literal string scalar with keep chomping") {
@@ -441,7 +442,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "\n");
+        REQUIRE(node.as_str() == "\n");
     }
 
     SECTION("a leading empty line contains a tab") {
@@ -452,7 +453,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "\t \nfoo");
+        REQUIRE(node.as_str() == "\t \nfoo");
     }
 
     SECTION("literal scalar with the first line being more indented than the indicated level") {
@@ -463,7 +464,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "  foo\nbar\n");
+        REQUIRE(node.as_str() == "  foo\nbar\n");
     }
 
     SECTION("literal string scalar") {
@@ -474,7 +475,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo\nbar\n");
+        REQUIRE(node.as_str() == "foo\nbar\n");
     }
 
     SECTION("literal string scalar with implicit indentation and strip chomping") {
@@ -489,7 +490,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "\nfoo\nbar\n\nbaz");
+        REQUIRE(node.as_str() == "\nfoo\nbar\n\nbaz");
     }
 
     SECTION("literal string scalar with explicit indentation and strip chomping") {
@@ -504,7 +505,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "\nfoo\n  bar\n\nbaz");
+        REQUIRE(node.as_str() == "\nfoo\n  bar\n\nbaz");
     }
 
     SECTION("literal string scalar with implicit indentation and clip chomping") {
@@ -519,7 +520,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "\nfoo\nbar\n\nbaz\n");
+        REQUIRE(node.as_str() == "\nfoo\nbar\n\nbaz\n");
     }
 
     SECTION("literal string scalar with explicit indentation and clip chomping") {
@@ -534,7 +535,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "\nfoo\n  bar\n\nbaz");
+        REQUIRE(node.as_str() == "\nfoo\n  bar\n\nbaz");
     }
 
     SECTION("literal string scalar with clip chomping and no trailing newlines") {
@@ -547,7 +548,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo\nbar\n\nbaz");
+        REQUIRE(node.as_str() == "foo\nbar\n\nbaz");
     }
 
     SECTION("literal string scalar with implicit indentation and keep chomping") {
@@ -562,7 +563,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "\nfoo\nbar\n\nbaz\n\n");
+        REQUIRE(node.as_str() == "\nfoo\nbar\n\nbaz\n\n");
     }
 
     SECTION("literal string scalar with explicit indentation and keep chomping") {
@@ -576,7 +577,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo\n  bar\n\nbaz\n\n");
+        REQUIRE(node.as_str() == "foo\n  bar\n\nbaz\n\n");
     }
 }
 
@@ -594,7 +595,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "");
+        REQUIRE(node.as_str() == "");
     }
 
     SECTION("empty folded string scalar with strip chomping") {
@@ -605,7 +606,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "");
+        REQUIRE(node.as_str() == "");
     }
 
     SECTION("empty folded string scalar with clip chomping") {
@@ -616,7 +617,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "");
+        REQUIRE(node.as_str() == "");
     }
 
     SECTION("empty folded string scalar with keep chomping") {
@@ -627,7 +628,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "\n");
+        REQUIRE(node.as_str() == "\n");
     }
 
     SECTION("a leading empty line contains a tab") {
@@ -638,7 +639,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "\n\t \nfoo");
+        REQUIRE(node.as_str() == "\n\t \nfoo");
     }
 
     SECTION("folded string scalar with the first line being more indented than the indicated level") {
@@ -650,7 +651,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "  foo\nbar\n");
+        REQUIRE(node.as_str() == "  foo\nbar\n");
     }
 
     SECTION("folded string scalar with the non-first line being more indented than the indicated level") {
@@ -662,7 +663,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo\n  bar\n");
+        REQUIRE(node.as_str() == "foo\n  bar\n");
     }
 
     SECTION("folded string scalar") {
@@ -677,7 +678,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo\n\nbar\n");
+        REQUIRE(node.as_str() == "foo\n\nbar\n");
     }
 
     SECTION("folded string scalar with implicit indentation and strip chomping") {
@@ -691,7 +692,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo bar");
+        REQUIRE(node.as_str() == "foo bar");
     }
 
     SECTION("folded string scalar with implicit indentation and clip chomping") {
@@ -705,7 +706,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo bar\n");
+        REQUIRE(node.as_str() == "foo bar\n");
     }
 
     SECTION("folded string scalar with implicit indentation and keep chomping") {
@@ -719,7 +720,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo bar\n\n");
+        REQUIRE(node.as_str() == "foo bar\n\n");
     }
 
     SECTION("block folded scalar with no newline at the last content line and strip chomping.") {
@@ -732,7 +733,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo bar\nbaz");
+        REQUIRE(node.as_str() == "foo bar\nbaz");
     }
 
     SECTION("block folded scalar with no newline at the last content line and clip chomping.") {
@@ -745,7 +746,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo bar\nbaz");
+        REQUIRE(node.as_str() == "foo bar\nbaz");
     }
 
     SECTION("block folded scalar with no newline at the last more-indented content line.") {
@@ -758,6 +759,6 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.get_value_ref<std::string&>() == "foo bar\n  baz");
+        REQUIRE(node.as_str() == "foo bar\n  baz");
     }
 }

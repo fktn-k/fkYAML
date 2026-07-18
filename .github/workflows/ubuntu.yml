@@ -46,9 +46,7 @@ jobs:
         use_single_header: ["ON", "OFF"]
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_USE_SINGLE_HEADER=${{matrix.use_single_header}}
@@ -65,9 +63,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Run Clang-Tidy
       run: make clang-tidy
@@ -77,9 +73,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Install include-what-you-use
       run: |
@@ -94,9 +88,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Install Valgrind
       run: |
@@ -119,9 +111,7 @@ jobs:
           apt-get install -y git unzip
           git --version
 
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: actions/checkout@v7
 
       - name: Get latest CMake
         uses: lukka/get-cmake@latest
@@ -133,9 +123,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: actions/checkout@v7
 
       - name: Build examples
         run: make examples
@@ -156,9 +144,7 @@ jobs:
         apt-get install -y git unzip
         git --version
 
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Get latest CMake
       uses: lukka/get-cmake@latest
@@ -188,9 +174,7 @@ jobs:
         build_type: [ Debug, Release ]
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Get latest CMake
       uses: lukka/get-cmake@latest
@@ -215,20 +199,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [ "3.4", "3.5", "3.6", "3.7", "3.8", "3.9", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19" ]
+        compiler: [ "3.4", "3.5", "3.6", "3.7", "3.8", "3.9", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21" ]
         build_type: [ Debug, Release ]
     container: silkeh/clang:${{matrix.compiler}}
 
     steps:
+    - name: Edit repository URLs for old ubuntu releases.
+      run: |
+        sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
+        sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
+      if: ${{ matrix.compiler == '3.4' || matrix.compiler == '3.5' || matrix.compiler == '3.6' || matrix.compiler == '3.7' || matrix.compiler == '3.8' || matrix.compiler == '3.9' || matrix.compiler == '7' || matrix.compiler == '8' || matrix.compiler == '9' || matrix.compiler == '10' }}
+
     - name: Install git and unzip
       run: |
         apt-get update
         apt-get install -y git unzip
         git --version
 
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Get latest CMake and Ninja
       uses: lukka/get-cmake@latest
@@ -253,20 +241,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [ "7", "8", "9", "10", "11", "12", "13", "14", latest ]
+        compiler: [ "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" ]
         build_type: [ Debug, Release ]
     container: gcc:${{matrix.compiler}}
 
     steps:
+    - name: Edit repository URLs for old ubuntu releases.
+      run: |
+        sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
+        sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
+      if: ${{ matrix.compiler == '7' || matrix.compiler == '8' }}
+
     - name: Install git and unzip
       run: |
         apt-get update
         apt-get install -y git unzip
         git --version
 
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Get latest CMake and Ninja
       uses: lukka/get-cmake@latest
@@ -295,9 +287,7 @@ jobs:
         gcc_ver: [ '4.8', '5', '6' ]
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: add repository commonly needed to install GCC
       run: |
@@ -350,9 +340,7 @@ jobs:
         build_type: [ Debug, Release ]
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Install Intel oneAPI Base Toolkit
       run: | # from the official document: https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2024-1/apt.html

@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.8...3.10)
 
 project(
   fkYAML
-  VERSION 0.4.2
+  VERSION 0.4.3
   LANGUAGES CXX)
 
 #############################################################
@@ -29,24 +29,6 @@ if(FK_YAML_CODE_COVERAGE OR FK_YAML_RUN_VALGRIND OR FK_YAML_RUN_CLANG_SANITIZERS
 
   # Generating code coverage depends on the unit test app. So force build it.
   set(FK_YAML_BUILD_TEST ON)
-endif()
-
-if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
-  set(CATCH2_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2")
-
-  if(NOT EXISTS ${CATCH2_ROOT_DIR}/CMakeLists.txt)
-    find_package(Git REQUIRED)
-    message(STATUS "Fetching git submodule: Catch2")
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ${CATCH2_ROOT_DIR}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      RESULT_VARIABLE GIT_SUBMOD_RET)
-    if(NOT GIT_SUBMOD_RET EQUAL "0")
-      message(FATAL_ERROR "Failed to fetch Catch2 as a git submodule.")
-    endif()
-  endif()
-
-  list(APPEND CMAKE_MODULE_PATH "${CATCH2_ROOT_DIR}/contrib")
 endif()
 
 ###########################################
@@ -97,11 +79,12 @@ target_include_directories(
 if(MSVC)
   set(FK_YAML_INSTALL_NATVIS ON)
   set(FK_YAML_NATVIS_FILE ${FK_YAML_TARGET_NAME}.natvis)
+  set(FK_YAML_NATVIS_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
   target_sources(
     ${FK_YAML_TARGET_NAME}
     INTERFACE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${FK_YAML_NATVIS_FILE}>
-      $<INSTALL_INTERFACE:${FK_YAML_NATVIS_FILE}>
+      $<INSTALL_INTERFACE:${FK_YAML_NATVIS_INSTALL_DIR}/${FK_YAML_NATVIS_FILE}>
 )
 endif()
 
@@ -127,6 +110,10 @@ if(FK_YAML_RUN_IWYU)
   add_subdirectory(tools/iwyu)
 endif()
 
+if(FK_YAML_RUN_BENCHMARK AND (NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM OR CMAKE_POLICY_VERSION_MINIMUM VERSION_LESS 3.5))
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
+
 if(FK_YAML_RUN_BENCHMARK)
   add_subdirectory(tools/benchmark)
 endif()
@@ -140,7 +127,6 @@ endif()
 ###########################
 
 if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
-  add_subdirectory(${CATCH2_ROOT_DIR})
   include(CTest)
   enable_testing()
   add_subdirectory(tests)
@@ -190,7 +176,7 @@ if(FK_YAML_INSTALL)
   if(FK_YAML_INSTALL_NATVIS)
     install(
       FILES ${FK_YAML_NATVIS_FILE}
-      DESTINATION .
+      DESTINATION "${FK_YAML_NATVIS_INSTALL_DIR}"
     )
   endif()
 

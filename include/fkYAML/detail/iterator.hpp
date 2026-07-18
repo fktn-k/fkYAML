@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ITERATOR_HPP
@@ -403,13 +404,13 @@ namespace std {
 #pragma clang diagnostic ignored "-Wmismatched-tags"
 #endif
 
-/// @brief Parcial pecialization of std::tuple_size for iterator class.
+/// @brief Partial specialization of std::tuple_size for iterator class.
 /// @tparam ValueType The iterator value type.
 template <typename ValueType>
 // NOLINTNEXTLINE(cert-dcl58-cpp)
 struct tuple_size<::fkyaml::detail::iterator<ValueType>> : integral_constant<size_t, 2> {};
 
-/// @brief Parcial specialization of std::tuple_element for iterator class.
+/// @brief Partial specialization of std::tuple_element for iterator class.
 /// @tparam ValueType The iterator value type.
 /// @tparam I The element index.
 template <size_t I, typename ValueType>

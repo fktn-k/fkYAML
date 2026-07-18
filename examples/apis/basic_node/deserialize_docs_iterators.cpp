@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <array>
@@ -37,7 +38,7 @@ TRUE: 1.414
 
     std::cout << std::endl;
 
-    std::cout << docs[1][nullptr].get_value_ref<std::string&>() << std::endl;
+    std::cout << docs[1][nullptr].as_str() << std::endl;
     std::cout << docs[1][false].get_value<std::int64_t>() << std::endl;
     std::cout << std::setprecision(4) << docs[1][true].get_value<double>() << std::endl;
 

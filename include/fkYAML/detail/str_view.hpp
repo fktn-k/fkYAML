@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_STR_VIEW_HPP
@@ -498,13 +499,13 @@ public:
         size_type len = m_len - pos;
 
         while (len >= n) {
-            // find the first occurence of s0
+            // find the first occurrence of s0
             p_first = traits_type::find(p_first, len - n + 1, s0);
             if (!p_first) {
                 return npos;
             }
 
-            // compare the full strings from the first occurence of s0
+            // compare the full strings from the first occurrence of s0
             if (traits_type::compare(p_first, s, n) == 0) {
                 return p_first - mp_str;
             }
@@ -580,7 +581,7 @@ public:
         return rfind(basic_str_view(s), pos);
     }
 
-    /// @brief Finds the first occurence of `sv` character sequence in this referenced character sequence.
+    /// @brief Finds the first occurrence of `sv` character sequence in this referenced character sequence.
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `sv` characters, `npos` otherwise.
@@ -588,7 +589,7 @@ public:
         return find_first_of(sv.mp_str, pos, sv.m_len);
     }
 
-    /// @brief Finds the first occurence of `c` character in this referenced character sequence.
+    /// @brief Finds the first occurrence of `c` character in this referenced character sequence.
     /// @param c The character to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `c` character, `npos` otherwise.
@@ -596,7 +597,7 @@ public:
         return find(c, pos);
     }
 
-    /// @brief Finds the first occurence of `s` character sequence by `n` characters in this referenced character
+    /// @brief Finds the first occurrence of `s` character sequence by `n` characters in this referenced character
     /// sequence.
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
@@ -617,7 +618,7 @@ public:
         return npos;
     }
 
-    /// @brief Finds the first occurence of `s` character sequence in this referenced character sequence.
+    /// @brief Finds the first occurrence of `s` character sequence in this referenced character sequence.
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `s` characters, `npos` otherwise.
@@ -625,7 +626,7 @@ public:
         return find_first_of(basic_str_view(s), pos);
     }
 
-    /// @brief Finds the last occurence of `sv` character sequence in this referenced character sequence.
+    /// @brief Finds the last occurrence of `sv` character sequence in this referenced character sequence.
     /// @param sv The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `sv` characters, `npos` otherwise.
@@ -633,7 +634,7 @@ public:
         return find_last_of(sv.mp_str, pos, sv.m_len);
     }
 
-    /// @brief Finds the last occurence of `c` character in this referenced character sequence.
+    /// @brief Finds the last occurrence of `c` character in this referenced character sequence.
     /// @param c The character to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `c` character, `npos` otherwise.
@@ -641,7 +642,7 @@ public:
         return rfind(c, pos);
     }
 
-    /// @brief Finds the last occurence of `s` character sequence by `n` characters in this referenced character
+    /// @brief Finds the last occurrence of `s` character sequence by `n` characters in this referenced character
     /// sequence.
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
@@ -662,7 +663,7 @@ public:
         return npos;
     }
 
-    /// @brief Finds the last occurence of `s` character sequence in this referenced character sequence.
+    /// @brief Finds the last occurrence of `s` character sequence in this referenced character sequence.
     /// @param s The character sequence to compare with.
     /// @param pos The offset of the search beginning position in this referenced character sequence.
     /// @return The beginning position of `s` characters, `npos` otherwise.

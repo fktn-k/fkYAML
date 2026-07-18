@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <fstream>
@@ -27,8 +28,8 @@ struct recommend {
 
 // overloads must be defined in the same namespace as user-defined types.
 void from_node(const fkyaml::node& node, novel& novel) {
-    novel.title = node["title"].get_value_ref<const std::string&>();
-    novel.author = node["author"].get_value_ref<const std::string&>();
+    novel.title = node["title"].as_str();
+    novel.author = node["author"].as_str();
     novel.year = node["year"].get_value<int>();
 }
 
@@ -47,7 +48,7 @@ int main() {
 
     // create an empty YAML sequence node.
     fkyaml::node response = {{"recommends", fkyaml::node::sequence()}};
-    auto& recommends = response["recommends"].get_value_ref<fkyaml::node::sequence_type&>();
+    auto& recommends = response["recommends"].as_seq();
 
     // get novels directly from the node.
     auto novels = root["novels"].get_value<std::vector<ns::novel>>();

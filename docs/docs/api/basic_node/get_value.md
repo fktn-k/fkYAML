@@ -30,7 +30,13 @@ This function converts a [`fkyaml::basic_node`](./index.md) to either
    ```
 
 Actual conversions rely on the [`node_value_converter`](../node_value_converter/index.md)::[`from_node`](../node_value_converter/from_node.md) function.  
-This API makes a copy of the value, and if the copying costs too much, or if you need an address of the original value, then you should call [`get_value_ref`](get_value_ref.md) instead.  
+This API makes a copy of the value, and if the copying costs too much, or if you need an address of the original value, then you should call one of the following functions instead.
+* [`as_seq`](as_seq.md)
+* [`as_map`](as_map.md)
+* [`as_bool`](as_bool.md)
+* [`as_int`](as_int.md)
+* [`as_float`](as_float.md)
+* [`as_str`](as_str.md)
 
 ??? Note "Convert from a Sequence Node"
 
@@ -72,7 +78,7 @@ This API makes a copy of the value, and if the copying costs too much, or if you
 
 ??? Note "Convert from a Null or Numeric Scalar Node"
 
-    If the YAML node value is a null, boolean, integer or floating point, this function internally executes type conversion according to the following rules which all depend on the template paramter type `T`:
+    If the YAML node value is a null, boolean, integer or floating point, this function internally executes type conversion according to the following rules which all depend on the template parameter type `T`:
 
     * If the YAML node value is a **null** (node_type::NULL_OBJECT), the value can be converted to:
         * `false` (boolean)
@@ -135,5 +141,10 @@ A compatible native data value converted from the [basic_node](./index.md) objec
 
 * [basic_node](index.md)
 * [get_value_inplace](get_value_inplace.md)
-* [get_value_ref](get_value_ref.md)
+* [as_seq](as_seq.md)
+* [as_map](as_map.md)
+* [as_bool](as_bool.md)
+* [as_int](as_int.md)
+* [as_float](as_float.md)
+* [as_str](as_str.md)
 * [node_value_converter::from_node](../node_value_converter/from_node.md)

@@ -43,5 +43,5 @@ Sets a target YAML specification version to the `basic_node` object.
 ## **See Also**
 
 * [basic_node](index.md)
-* [yaml_verion_t](yaml_version_t.md)
+* [yaml_version_t](yaml_version_t.md)
 * [set_yaml_version](set_yaml_version.md)

@@ -34,4 +34,4 @@ The YAML specification version applied to a basic_node.
 
 * [basic_node](index.md)
 * [set_yaml_version_type](set_yaml_version_type.md)
-* [yaml_verion_type](../yaml_version_type.md)
+* [yaml_version_type](../yaml_version_type.md)

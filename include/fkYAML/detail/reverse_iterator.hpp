@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_REVERSE_ITERATOR_HPP
@@ -21,7 +22,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 template <typename Iterator>
 class reverse_iterator {
     static_assert(
-        is_basic_node<typename std::remove_const<typename Iterator::value_type>::type>::value,
+        is_basic_node<typename Iterator::value_type>::value,
         "reverse_iterator only accepts a basic_node type as the underlying iterator's value type");
 
 public:

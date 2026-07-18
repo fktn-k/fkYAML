@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_CONVERSIONS_FROM_NODE_HPP
@@ -263,7 +264,7 @@ inline auto from_node(const BasicNodeType& n, SeqContainerAdapter& ca)
         throw type_error("The target node value is not sequence type.", n.get_type());
     }
 
-    // clear existing elements manually since clear function is not implemeneted for container adapter classes.
+    // clear existing elements manually since clear function is not implemented for container adapter classes.
     while (!ca.empty()) {
         ca.pop();
     }
@@ -297,7 +298,7 @@ inline auto from_node(const BasicNodeType& n, CompatMapType& m)
     m.clear();
     call_reserve_if_available<CompatMapType>::call(m, n.size());
 
-    for (const auto& pair : n.template get_value_ref<const typename BasicNodeType::mapping_type&>()) {
+    for (const auto& pair : n.as_map()) {
         m.emplace(
             pair.first.template get_value<typename CompatMapType::key_type>(),
             pair.second.template get_value<typename CompatMapType::mapped_type>());
@@ -329,16 +330,16 @@ inline void from_node(const BasicNodeType& n, bool& b) {
         b = false;
         break;
     case node_type::BOOLEAN:
-        b = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>());
+        b = static_cast<bool>(n.as_bool());
         break;
     case node_type::INTEGER:
         // true: non-zero, false: zero
-        b = (n.template get_value_ref<const typename BasicNodeType::integer_type&>() != 0);
+        b = (n.as_int() != 0);
         break;
     case node_type::FLOAT:
         // true: non-zero, false: zero
         using float_type = typename BasicNodeType::float_number_type;
-        b = (n.template get_value_ref<const float_type&>() != static_cast<float_type>(0.));
+        b = (n.as_float() != static_cast<float_type>(0.));
         break;
     case node_type::SEQUENCE:
     case node_type::MAPPING:
@@ -358,35 +359,43 @@ struct from_node_int_helper {
     /// @param n A node object.
     /// @return An integer value converted from the node's integer value.
     static IntType convert(const BasicNodeType& n) {
-        return n.template get_value_ref<const typename BasicNodeType::integer_type&>();
+        return n.as_int();
     }
 };
 
-/// @brief Helper struct for node-to-int conversion if IntType is not the node's integer value type.
+/// @brief Partial specialization for uint64_t when integer_type != uint64_t (the common int64_t case).
+/// This must be declared BEFORE the generic <IntType, false> specialization so the compiler always
+/// prefers it for uint64_t. Using a hardcoded 'false' (not a value-dependent expression) avoids
+/// the MSVC ambiguity that arises when std::is_same<...>::value is used as a template argument.
 /// @tparam BasicNodeType A basic_node template instance type.
-/// @tparam IntType Target integer value type (different from BasicNodeType::integer_type)
+template <typename BasicNodeType>
+struct from_node_int_helper<BasicNodeType, uint64_t, false> {
+    /// @brief Convert node's integer value to uint64_t via as_uint().
+    /// @param n A node object.
+    /// @return The node value as uint64_t.
+    static uint64_t convert(const BasicNodeType& n) {
+        return n.as_uint();
+    }
+};
+
+/// @brief Helper struct for node-to-int conversion if IntType is not the node's integer value type
+/// and IntType is not uint64_t (covered by the explicit specialization above).
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam IntType Target integer value type (different from BasicNodeType::integer_type, not uint64_t)
 template <typename BasicNodeType, typename IntType>
 struct from_node_int_helper<BasicNodeType, IntType, false> {
-    /// @brief Convert node's integer value to non-uint64_t integer types.
+    /// @brief Convert node's integer value to a narrower signed/unsigned integer type.
     /// @param n A node object.
     /// @return An integer value converted from the node's integer value.
     static IntType convert(const BasicNodeType& n) {
         using node_int_type = typename BasicNodeType::integer_type;
-        const node_int_type tmp_int = n.template get_value_ref<const node_int_type&>();
+        const node_int_type tmp_int = n.as_int();
 
-        // under/overflow check.
-        if (std::is_same<IntType, uint64_t>::value) {
-            if FK_YAML_UNLIKELY (tmp_int < 0) {
-                throw exception("Integer value underflow detected.");
-            }
+        if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntType>::min())) {
+            throw exception("Integer value underflow detected.");
         }
-        else {
-            if FK_YAML_UNLIKELY (tmp_int < static_cast<node_int_type>(std::numeric_limits<IntType>::min())) {
-                throw exception("Integer value underflow detected.");
-            }
-            if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntType>::max()) < tmp_int) {
-                throw exception("Integer value overflow detected.");
-            }
+        if FK_YAML_UNLIKELY (static_cast<node_int_type>(std::numeric_limits<IntType>::max()) < tmp_int) {
+            throw exception("Integer value overflow detected.");
         }
 
         return static_cast<IntType>(tmp_int);
@@ -409,17 +418,14 @@ inline void from_node(const BasicNodeType& n, IntegerType& i) {
         i = static_cast<IntegerType>(0);
         break;
     case node_type::BOOLEAN:
-        i = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>())
-                ? static_cast<IntegerType>(1)
-                : static_cast<IntegerType>(0);
+        i = static_cast<bool>(n.as_bool()) ? static_cast<IntegerType>(1) : static_cast<IntegerType>(0);
         break;
     case node_type::INTEGER:
         i = from_node_int_helper<BasicNodeType, IntegerType>::convert(n);
         break;
     case node_type::FLOAT: {
-        // int64_t should be safe to express integer part values of possible floating point types.
-        const auto tmp_int =
-            static_cast<int64_t>(n.template get_value_ref<const typename BasicNodeType::float_number_type&>());
+        // int64_t should be safe to express the integer part of possible floating point types.
+        const auto tmp_int = static_cast<int64_t>(n.as_float());
 
         // under/overflow check.
         if (std::is_same<IntegerType, uint64_t>::value) {
@@ -458,7 +464,7 @@ struct from_node_float_helper {
     /// @param n A node object.
     /// @return A floating point value converted from the node's floating point value.
     static FloatType convert(const BasicNodeType& n) {
-        return n.template get_value_ref<const typename BasicNodeType::float_number_type&>();
+        return n.as_float();
     }
 };
 
@@ -472,7 +478,7 @@ struct from_node_float_helper<BasicNodeType, FloatType, false> {
     /// @return A floating point value converted from the node's floating point value.
     static FloatType convert(const BasicNodeType& n) {
         using node_float_type = typename BasicNodeType::float_number_type;
-        auto tmp_float = n.template get_value_ref<const node_float_type&>();
+        auto tmp_float = n.as_float();
 
         // check if the value is an infinite number (either positive or negative)
         if (std::isinf(tmp_float)) {
@@ -516,12 +522,10 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
         f = static_cast<FloatType>(0.);
         break;
     case node_type::BOOLEAN:
-        f = static_cast<bool>(n.template get_value_ref<const typename BasicNodeType::boolean_type&>())
-                ? static_cast<FloatType>(1.)
-                : static_cast<FloatType>(0.);
+        f = static_cast<bool>(n.as_bool()) ? static_cast<FloatType>(1.) : static_cast<FloatType>(0.);
         break;
     case node_type::INTEGER:
-        f = static_cast<FloatType>(n.template get_value_ref<const typename BasicNodeType::integer_type&>());
+        f = static_cast<FloatType>(n.as_int());
         break;
     case node_type::FLOAT:
         f = from_node_float_helper<BasicNodeType, FloatType>::convert(n);
@@ -543,7 +547,7 @@ inline void from_node(const BasicNodeType& n, typename BasicNodeType::string_typ
     if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
-    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
+    s = n.as_str();
 }
 
 /// @brief from_node function for compatible string type.
@@ -565,7 +569,7 @@ inline void from_node(const BasicNodeType& n, CompatibleStringType& s) {
     if FK_YAML_UNLIKELY (!n.is_string()) {
         throw type_error("The target node value type is not string type.", n.get_type());
     }
-    s = n.template get_value_ref<const typename BasicNodeType::string_type&>();
+    s = n.as_str();
 }
 
 /// @brief from_node function for std::pair objects whose element types must be either a basic_node template instance
@@ -611,7 +615,7 @@ inline void from_node(const BasicNodeType& n, std::tuple<Types...>& t) {
         throw type_error("The target node value type is not sequence type.", n.get_type());
     }
 
-    // Types... must be explicitly specified; the retun type would otherwise be std::tuple with no value types.
+    // Types... must be explicitly specified; the return type would otherwise be std::tuple with no value types.
     t = from_node_tuple_impl<BasicNodeType, Types...>(n, index_sequence_for<Types...> {});
 }
 

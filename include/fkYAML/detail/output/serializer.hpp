@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP
@@ -280,7 +281,7 @@ private:
             const node_type type_if_plain =
                 scalar_scanner::scan(str_val.c_str(), str_val.c_str() + str_val.size()); // LCOV_EXCL_LINE
 
-            if (type_if_plain != node_type::STRING) {
+            if (type_if_plain != node_type::STRING || !is_valid_plain_scalar(str_val)) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
                 str += '\"';
@@ -373,9 +374,42 @@ private:
     typename BasicNodeType::string_type get_string_node_value(const BasicNodeType& node, bool& is_escaped) {
         FK_YAML_ASSERT(node.is_string());
 
-        const auto& s = node.template get_value_ref<const typename BasicNodeType::string_type&>();
+        const auto& s = node.as_str();
         return yaml_escaper::escape(s.c_str(), s.c_str() + s.size(), is_escaped);
     } // LCOV_EXCL_LINE
+
+    bool is_valid_plain_scalar(const typename BasicNodeType::string_type& s) const noexcept {
+        if (s.empty()) {
+            return false;
+        }
+
+        typedef typename BasicNodeType::string_type string_type;
+        if (s.find_first_of(" \t\n\r,[]{}") != string_type::npos) {
+            return false;
+        }
+
+        switch (s.front()) {
+        case '-':
+        case '?':
+        case ':':
+            return s.size() > 1 && s[1] != ' ';
+        case '#':
+        case '&':
+        case '*':
+        case '!':
+        case '|':
+        case '>':
+        case '\'':
+        case '"':
+        case '%':
+        case '@':
+        case '`':
+        case ' ':
+            return false;
+        default:
+            return s.back() != ' ';
+        }
+    }
 
 private:
     /// A temporal buffer for conversion from a scalar to a string.

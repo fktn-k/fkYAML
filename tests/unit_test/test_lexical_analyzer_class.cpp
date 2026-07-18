@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <catch2/catch.hpp>
@@ -255,6 +256,18 @@ TEST_CASE("LexicalAnalyzer_Comment") {
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SECTION("valid tab comments") {
+        fkyaml::detail::str_view input("a #comment");
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.str == "a");
+
+        fkyaml::detail::str_view tab_input("a\t#comment");
+        fkyaml::detail::lexical_analyzer tab_lexer(tab_input);
+        REQUIRE_NOTHROW(token = tab_lexer.get_next_token());
+        REQUIRE(token.str == "a");
     }
 
     // regression test for https://github.com/fktn-k/fkYAML/pull/469

@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP
@@ -190,7 +191,7 @@ private:
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
             m_context_stack.emplace_back(context);
 
-            mp_current_node = &(root.template get_value_ref<sequence_type&>().back());
+            mp_current_node = &(root.as_seq().back());
             apply_directive_set(*mp_current_node);
             context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
             context.p_node = mp_current_node;
@@ -239,6 +240,17 @@ private:
             indent = lexer.get_last_token_begin_pos();
             break;
         }
+        case lexical_token_t::KEY_SEPARATOR:
+            root = basic_node_type::mapping();
+            apply_directive_set(root);
+            apply_node_properties(root);
+            m_context_stack.emplace_back(
+                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
+            add_new_key(basic_node_type(""), line, indent);
+            token = lexer.get_next_token();
+            line = lexer.get_lines_processed();
+            indent = lexer.get_last_token_begin_pos();
+            break;
         case lexical_token_t::BLOCK_LITERAL_SCALAR:
         case lexical_token_t::BLOCK_FOLDED_SCALAR:
             // If a block scalar token is detected here, current document contains single scalar.
@@ -440,8 +452,8 @@ private:
                         p_node);
                     m_context_stack.emplace_back(context);
 
-                    p_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type());
-                    mp_current_node = &(p_node->template get_value_ref<sequence_type&>().back());
+                    p_node->as_seq().emplace_back(basic_node_type());
+                    mp_current_node = &(p_node->as_seq().back());
                     apply_directive_set(*mp_current_node);
                     context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
                     context.p_node = mp_current_node;
@@ -461,13 +473,12 @@ private:
                 continue;
             }
             case lexical_token_t::KEY_SEPARATOR: {
-                FK_YAML_ASSERT(!m_context_stack.empty());
                 if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
                     // empty mapping keys are not supported.
                     // ```yaml
                     // - : foo
                     // ```
-                    throw parse_error("sequence key should not be empty.", line, indent);
+                    throw parse_error("mapping key should not be empty.", line, indent);
                 }
 
                 if (m_flow_context_depth > 0) {
@@ -529,7 +540,7 @@ private:
                         cur_context.indent = indent;
                         cur_context.state = context_state_t::BLOCK_SEQUENCE;
 
-                        mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                        mp_current_node = &(mp_current_node->as_seq().back());
                         apply_directive_set(*mp_current_node);
                         parse_context entry_context = cur_context;
                         entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
@@ -596,8 +607,7 @@ private:
 
                 basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
-                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(
-                    key_node, basic_node_type());
+                m_context_stack.back().p_node->as_map().emplace(key_node, basic_node_type());
                 mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
                     old_line, old_indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
@@ -608,7 +618,7 @@ private:
                     apply_node_properties(*mp_current_node);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
 
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     parse_context entry_context = m_context_stack.back();
                     entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
                     entry_context.p_node = mp_current_node;
@@ -669,7 +679,7 @@ private:
                     apply_node_properties(*mp_current_node);
                 }
 
-                auto& seq = mp_current_node->template get_value_ref<sequence_type&>();
+                auto& seq = mp_current_node->as_seq();
                 seq.emplace_back(basic_node_type());
                 mp_current_node = &(seq.back());
                 apply_directive_set(*mp_current_node);
@@ -701,8 +711,8 @@ private:
                 switch (m_context_stack.back().state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node->as_seq().emplace_back(basic_node_type::sequence());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
@@ -824,8 +834,8 @@ private:
                 switch (m_context_stack.back().state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
@@ -1114,13 +1124,13 @@ private:
             }
 
             if (mp_current_node->is_sequence()) {
-                mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
+                mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
                 mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
                 m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
             }
         }
 
-        auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
+        auto itr = mp_current_node->as_map().emplace(std::move(key), basic_node_type());
         if FK_YAML_UNLIKELY (!itr.second) {
             throw parse_error("Detected duplication in mapping keys.", line, indent);
         }
@@ -1145,7 +1155,7 @@ private:
                 throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
             }
 
-            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
+            mp_current_node->as_seq().emplace_back(std::move(node_value));
             m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             return;
         }
@@ -1214,7 +1224,28 @@ private:
                     switch (cur_context.state) {
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        break;
                     case context_state_t::BLOCK_SEQUENCE_ENTRY:
+                        if FK_YAML_UNLIKELY (cur_context.indent >= indent) {
+                            // This handles combination of empty block sequence entry and block mapping entry with the
+                            // same indentation level, for examples:
+                            // ```yaml
+                            // foo:
+                            //   bar:
+                            //   -         # These entries are indented
+                            //   baz: 123  # with the same width.
+                            // # ^^^
+                            // ```
+                            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                            });
+                            add_new_key(std::move(node), line, indent);
+                            indent = lexer.get_last_token_begin_pos();
+                            line = lexer.get_lines_processed();
+                            return;
+                        }
+
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         break;
                     default:

@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <fstream>
@@ -19,8 +20,8 @@ int main() {
 
     // print only values associated with "title" key.
     for (auto& novel_node : root["novels"]) {
-        // get reference to the "title" value with `get_value_ref` function.
-        std::cout << novel_node["title"].get_value_ref<std::string&>() << std::endl;
+        // get reference to the "title" value with `as_str` function.
+        std::cout << novel_node["title"].as_str() << std::endl;
     }
 
     return 0;

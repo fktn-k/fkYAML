@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_MAP_RANGE_PROXY_HPP
@@ -52,7 +53,7 @@ public:
     /// @brief Move constructs a map_iterator_proxy object.
     map_iterator_proxy(map_iterator_proxy&&) = default;
 
-    /// @biref Move assigns a map_iterator_proxy object.
+    /// @brief Move assigns a map_iterator_proxy object.
     map_iterator_proxy& operator=(map_iterator_proxy&&) = default;
 
     /// @brief Destructs a map_iterator_proxy object.
@@ -121,7 +122,7 @@ private:
 template <typename BasicNodeType>
 class map_range_proxy {
     static_assert(
-        is_basic_node<remove_cv_t<BasicNodeType>>::value,
+        is_basic_node<BasicNodeType>::value,
         "map_range_proxy only accepts a basic_node type as its template parameter.");
 
 public:

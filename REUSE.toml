@@ -10,6 +10,12 @@ SPDX-FileCopyrightText = "2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>"
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]
+path = "thirdparty/Catch2/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 Two Blue Cubes Ltd. All rights reserved."
+SPDX-License-Identifier = "BSL-1.0"
+
+[[annotations]]
 path = "thirdparty/imapdl/**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = ["2017 Georg Sauthoff <mail@gms.tf>", "2022, Alexander Stohr, ZF Friedrichshafen AG"]

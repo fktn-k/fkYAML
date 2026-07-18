@@ -79,11 +79,11 @@ target_include_directories(
   unit_test_config
   INTERFACE
     "${CMAKE_CURRENT_BINARY_DIR}/include"
+    "${CATCH2_ROOT_DIR}/single_include"
 )
 target_link_libraries(
   unit_test_config
   INTERFACE
-    Catch2::Catch2
     ${FK_YAML_TARGET_NAME}
 )
 target_compile_features(
@@ -120,6 +120,7 @@ target_compile_options(
       -Wall -Wextra -Werror -pedantic -Wpedantic -Wdeprecated --all-warnings --extra-warnings
       -Wno-deprecated-declarations # for testing deprecated functions
       -Wno-self-move # necessary to build the detail::iterator class test
+      -Wold-style-cast # regression test for https://github.com/fktn-k/fkYAML/issues/495
     >
     # Clang
     $<$<CXX_COMPILER_ID:Clang>:
@@ -225,7 +226,9 @@ add_executable(
   test_iterator_class.cpp
   test_lexical_analyzer_class.cpp
   test_node_attrs.cpp
+  test_node_attrs_uint.cpp
   test_node_class.cpp
+  test_node_class_uint.cpp
   test_node_ref_storage_class.cpp
   test_node_type.cpp
   test_ordered_map_class.cpp
@@ -233,6 +236,7 @@ add_executable(
   test_reverse_iterator_class.cpp
   test_scalar_conv.cpp
   test_scalar_parser_class.cpp
+  test_scalar_parser_class_uint.cpp
   test_scalar_scanner_class.cpp
   test_serializer_class.cpp
   test_str_view_class.cpp

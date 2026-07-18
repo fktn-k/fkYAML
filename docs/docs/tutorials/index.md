@@ -98,7 +98,7 @@ After creating a tutorial project with the above files, execute the following co
 ```bash
 $ cd /path/to/tutorial/
 $ cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
-$ cmake --build build --config --config Release
+$ cmake --build build --config Release
 ```
 
 Congratulation! You've got an application which loads a YAML file and then outputs the content on the console.  
@@ -157,7 +157,7 @@ Rebuild and run the application, and you'll see the same output as before:
 --8<-- "tutorials/tutorial_4.output"
 ```
 
-The specializations highlighted above do not change the output, but they allow us to focus more on what the code is to achive.  
+The specializations highlighted above do not change the output, but they allow us to focus more on the code's intent.  
 Note that the specialization with user-defined types requires the types to be default-constructible.  
 
 ## :tada: Next Steps

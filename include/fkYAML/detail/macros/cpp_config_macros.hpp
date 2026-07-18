@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_MACROS_CPP_CONFIG_MACROS_HPP
@@ -65,7 +66,7 @@
 #define FK_YAML_INLINE_VAR
 #endif
 
-// switch usage of constexpr keyward depending on active C++ standard.
+// switch usage of constexpr keyword depending on active C++ standard.
 #if defined(FK_YAML_HAS_CXX_17)
 #define FK_YAML_CXX17_CONSTEXPR constexpr
 #else

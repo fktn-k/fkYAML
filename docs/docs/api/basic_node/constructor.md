@@ -98,6 +98,8 @@ Available overloads are:
 
         `#!cpp fkyaml::node n {true};` will create a sequence of 1 boolean value, not a boolean value alone. This is because [overload resolution in C++ prioritizes a constructor with a single initializer list argument is prioritized to the others](https://en.cppreference.com/w/cpp/language/overload_resolution). In such cases, change the code to `#! fkyaml::node n(true);` instead.
 
+        As an exception, `#!cpp fkyaml::node n {fkyaml::node::mapping()};` creates an empty mapping node and `#!cpp fkyaml::node n {fkyaml::node::sequence()};` creates an empty sequence node.
+
 ## **Template Parameters**
 
 ***CompatibleType***

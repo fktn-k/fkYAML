@@ -1,9 +1,10 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
 // SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
@@ -824,9 +825,9 @@ private:
             if (is_closed) {
                 // closing double quote is found.
                 m_cur_itr = m_token_begin_itr + (pos + 1);
-                str_view double_quoted_salar {m_token_begin_itr, pos};
-                check_scalar_content(double_quoted_salar);
-                return double_quoted_salar;
+                str_view double_quoted_scalar {m_token_begin_itr, pos};
+                check_scalar_content(double_quoted_scalar);
+                return double_quoted_scalar;
             }
 
             pos = sv.find('\"', pos + 1);
@@ -842,7 +843,7 @@ private:
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         // flow indicators are checked only within a flow context.
-        const str_view filter = (m_state & flow_context_bit) ? "\n :{}[]," : "\n :";
+        const str_view filter = (m_state & flow_context_bit) ? "\t\n :{}[]," : "\t\n :";
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             check_scalar_content(sv);
@@ -874,6 +875,7 @@ private:
                 break;
             }
             case ' ':
+            case '\t':
                 if FK_YAML_UNLIKELY (pos == sv.size() - 1) {
                     // trim trailing space.
                     ends_loop = true;
