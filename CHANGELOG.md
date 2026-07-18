@@ -1,5 +1,38 @@
 # Changelog
 
+## [v0.4.3](https://github.com/fktn-k/fkYAML/releases/tag/v0.4.3) (2026-07-18)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.4.2...v0.4.3)
+
+- Fix `tool` directory typo and add CMake policy for the benchmark build [\#527](https://github.com/fktn-k/fkYAML/pull/527) ([sndth](https://github.com/sndth))
+- Handle empty mapping key separator as parse error [\#525](https://github.com/fktn-k/fkYAML/pull/525) ([sndth](https://github.com/sndth))
+- Fix brace initialization of empty collection nodes \(issue \#502\) [\#524](https://github.com/fktn-k/fkYAML/pull/524) ([sndth](https://github.com/sndth))
+- Fix serialization of strings that are invalid plain scalars [\#523](https://github.com/fktn-k/fkYAML/pull/523) ([sndth](https://github.com/sndth))
+- Fixes natvis path for non VS builds. [\#512](https://github.com/fktn-k/fkYAML/pull/512) ([rioki](https://github.com/rioki))
+- Resolve useless-cast & old-style-cast warnings [\#499](https://github.com/fktn-k/fkYAML/pull/499) ([fktn-k](https://github.com/fktn-k))
+- Fix project compilation on GCC compilers [\#497](https://github.com/fktn-k/fkYAML/pull/497) ([sndth](https://github.com/sndth))
+- Fix issue with separating comments using tab [\#496](https://github.com/fktn-k/fkYAML/pull/496) ([sndth](https://github.com/sndth))
+- Fix parsing block mapping entry after an empty block sequence entry [\#488](https://github.com/fktn-k/fkYAML/pull/488) ([fktn-k](https://github.com/fktn-k))
+
+- Add tests and documentation for `basic_node::erase` [\#530](https://github.com/fktn-k/fkYAML/pull/530) ([sndth](https://github.com/sndth))
+- Fix bugs in the format\_check and coverage workflows [\#529](https://github.com/fktn-k/fkYAML/pull/529) ([fktn-k](https://github.com/fktn-k))
+- Improve unsigned 64bit integer support [\#526](https://github.com/fktn-k/fkYAML/pull/526) ([fktn-k](https://github.com/fktn-k))
+- Fix errors in checking out to a branch in a forked repository \(part2\) [\#522](https://github.com/fktn-k/fkYAML/pull/522) ([fktn-k](https://github.com/fktn-k))
+- Fix errors in checking out to a branch in a forked repository [\#521](https://github.com/fktn-k/fkYAML/pull/521) ([fktn-k](https://github.com/fktn-k))
+- Update the format/amalgamation check by the GitHub Actions [\#520](https://github.com/fktn-k/fkYAML/pull/520) ([fktn-k](https://github.com/fktn-k))
+- Update GitHub Actions workflows [\#519](https://github.com/fktn-k/fkYAML/pull/519) ([fktn-k](https://github.com/fktn-k))
+- Add copilot-instructions.md for GitHub Copilot integrations [\#518](https://github.com/fktn-k/fkYAML/pull/518) ([fktn-k](https://github.com/fktn-k))
+- Support unsigned 64-bit integers \(uint64\_t\) exceeding INT64\_MAX \(\#501\) [\#513](https://github.com/fktn-k/fkYAML/pull/513) ([sndth](https://github.com/sndth))
+- Update CI workflows for windows [\#500](https://github.com/fktn-k/fkYAML/pull/500) ([fktn-k](https://github.com/fktn-k))
+- Fix typos and pr-template link [\#493](https://github.com/fktn-k/fkYAML/pull/493) ([edmundkrain](https://github.com/edmundkrain))
+- Removing typo, extra `--config` in tutorial bash [\#490](https://github.com/fktn-k/fkYAML/pull/490) ([mgodf7](https://github.com/mgodf7))
+- Add get\_value\_or\(\) [\#485](https://github.com/fktn-k/fkYAML/pull/485) ([fktn-k](https://github.com/fktn-k))
+- Refactor node class implementation [\#483](https://github.com/fktn-k/fkYAML/pull/483) ([fktn-k](https://github.com/fktn-k))
+- Replace getters for reference to node values [\#481](https://github.com/fktn-k/fkYAML/pull/481) ([fktn-k](https://github.com/fktn-k))
+- Update README.md [\#479](https://github.com/fktn-k/fkYAML/pull/479) ([fktn-k](https://github.com/fktn-k))
+- Relax iterator requirements for deserialization [\#478](https://github.com/fktn-k/fkYAML/pull/478) ([fktn-k](https://github.com/fktn-k))
+- Embed minimum necessary Catch2 v2.3.10 sources [\#475](https://github.com/fktn-k/fkYAML/pull/475) ([fktn-k](https://github.com/fktn-k))
+
 ## [v0.4.2](https://github.com/fktn-k/fkYAML/releases/tag/v0.4.2) (2025-01-25)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.4.1...v0.4.2)
