@@ -267,7 +267,7 @@ private:
             uint8_t chars[4] {};
             for (auto& c : chars) {
                 if FK_YAML_UNLIKELY (current == m_end) {
-                    throw invalid_encoding("Invalid UTF-32 encoding detected.", char32_t(0));
+                    throw invalid_encoding("Invalid UTF-32 encoding detected.", static_cast<char32_t>(0));
                 }
                 c = static_cast<uint8_t>(*current);
                 ++current;
@@ -794,7 +794,7 @@ private:
                 break;
             }
             if FK_YAML_UNLIKELY (size != 4) {
-                throw invalid_encoding("Invalid UTF-32 encoding detected.", char32_t(0));
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", static_cast<char32_t>(0));
             }
 
             const auto utf32 = static_cast<char32_t>(
@@ -1029,7 +1029,7 @@ private:
                 break;
             }
             if FK_YAML_UNLIKELY (size != 4) {
-                throw invalid_encoding("Invalid UTF-32 encoding detected.", char32_t(0));
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", static_cast<char32_t>(0));
             }
 
             const auto utf32 = static_cast<char32_t>(
