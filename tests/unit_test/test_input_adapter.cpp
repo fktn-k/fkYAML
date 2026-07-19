@@ -2003,6 +2003,24 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
+    SECTION("iterator_input_adapter (char) with a standalone CR") {
+        std::string input {0, char(0x0D)};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+
+        const fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
+
+        REQUIRE(buffer.empty());
+    }
+
+    SECTION("iterator_input_adapter (char16_t) with a standalone CR") {
+        std::u16string input {char16_t(0x000Du)};
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+
+        const fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
+
+        REQUIRE(buffer.empty());
+    }
+
     SECTION("iterator_input_adapter (char)") {
         char input[] = {0, char(0x74), 0, char(0x65), 0, char(0x73), 0, char(0x74), 0, char(0x0D),
                         0, char(0x0A), 0, char(0x64), 0, char(0x61), 0, char(0x74), 0, char(0x61),

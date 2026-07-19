@@ -9385,6 +9385,9 @@ private:
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
+            if (encoded_buf_size == 0) {
+                break;
+            }
 
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
@@ -9639,6 +9642,9 @@ public:
                     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
+            }
+            if (encoded_buf_size == 0) {
+                break;
             }
 
             uint32_t consumed_size = 0;
