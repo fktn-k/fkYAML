@@ -9257,6 +9257,17 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 template <typename IterType, typename = void>
 class iterator_input_adapter;
 
+template <typename IterType>
+uint8_t read_utf8_byte_or_throw(IterType& current, IterType end, std::initializer_list<uint8_t> bytes_read) {
+    if FK_YAML_UNLIKELY (current == end) {
+        throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", bytes_read);
+    }
+
+    const auto byte = static_cast<uint8_t>(*current);
+    ++current;
+    return byte;
+}
+
 /// @brief An input adapter for iterators of type char.
 /// @tparam IterType An iterator type.
 template <typename IterType>
@@ -9316,17 +9327,19 @@ private:
         IterType current = m_begin;
         std::deque<IterType> cr_itrs {};
         while (current != m_end) {
+            const IterType char_itr = current;
             const auto first = static_cast<uint8_t>(*current);
+            ++current;
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 1:
                 if FK_YAML_UNLIKELY (first == 0x0D /*CR*/) {
-                    cr_itrs.emplace_back(current);
+                    cr_itrs.emplace_back(char_itr);
                 }
                 break;
             case 2: {
-                const auto second = static_cast<uint8_t>(*++current);
+                const auto second = read_utf8_byte_or_throw(current, m_end, {first});
                 const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
@@ -9334,8 +9347,8 @@ private:
                 break;
             }
             case 3: {
-                const auto second = static_cast<uint8_t>(*++current);
-                const auto third = static_cast<uint8_t>(*++current);
+                const auto second = read_utf8_byte_or_throw(current, m_end, {first});
+                const auto third = read_utf8_byte_or_throw(current, m_end, {first, second});
                 const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
@@ -9343,9 +9356,9 @@ private:
                 break;
             }
             case 4: {
-                const auto second = static_cast<uint8_t>(*++current);
-                const auto third = static_cast<uint8_t>(*++current);
-                const auto fourth = static_cast<uint8_t>(*++current);
+                const auto second = read_utf8_byte_or_throw(current, m_end, {first});
+                const auto third = read_utf8_byte_or_throw(current, m_end, {first, second});
+                const auto fourth = read_utf8_byte_or_throw(current, m_end, {first, second, third});
                 const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
@@ -9355,8 +9368,6 @@ private:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
-
-            ++current;
         }
 
         const bool is_contiguous_no_cr = cr_itrs.empty() && m_is_contiguous;
@@ -9375,7 +9386,7 @@ private:
         }
         m_buffer.append(current, m_end);
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
     /// @brief The concrete implementation of get_buffer_view() for UTF-16 encoded inputs.
@@ -9404,8 +9415,16 @@ private:
         IterType current = m_begin;
         while (current != m_end || encoded_buf_size != 0) {
             while (current != m_end && encoded_buf_size < 2) {
-                auto utf16 = static_cast<char16_t>(static_cast<uint8_t>(*current) << shift_bits[0]);
-                utf16 |= static_cast<char16_t>(static_cast<uint8_t>(*++current) << shift_bits[1]);
+                const auto first = static_cast<uint8_t>(*current);
+                ++current;
+                if FK_YAML_UNLIKELY (current == m_end) {
+                    throw invalid_encoding(
+                        "Invalid UTF-16 encoding detected.",
+                        std::array<char16_t, 2> {{static_cast<char16_t>(first), 0}});
+                }
+
+                auto utf16 = static_cast<char16_t>(first << shift_bits[0]);
+                utf16 |= static_cast<char16_t>(static_cast<uint8_t>(*current) << shift_bits[1]);
                 ++current;
 
                 // skip appending CRs.
@@ -9414,19 +9433,29 @@ private:
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
+            if (encoded_buf_size == 0) {
+                break;
+            }
 
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
+            if FK_YAML_UNLIKELY (consumed_size > encoded_buf_size) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
             if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
+            }
+            else {
+                encoded_buffer[0] = encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
             m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
     /// @brief The concrete implementation of get_buffer_view() for UTF-32 encoded inputs.
@@ -9456,14 +9485,19 @@ private:
 
         IterType current = m_begin;
         while (current != m_end) {
-            auto utf32 = static_cast<char32_t>(*current << shift_bits[0]);
-            ++current;
-            utf32 |= static_cast<char32_t>(*current << shift_bits[1]);
-            ++current;
-            utf32 |= static_cast<char32_t>(*current << shift_bits[2]);
-            ++current;
-            utf32 |= static_cast<char32_t>(*current << shift_bits[3]);
-            ++current;
+            uint8_t chars[4] {};
+            for (auto& c : chars) {
+                if FK_YAML_UNLIKELY (current == m_end) {
+                    throw invalid_encoding("Invalid UTF-32 encoding detected.", static_cast<char32_t>(0));
+                }
+                c = static_cast<uint8_t>(*current);
+                ++current;
+            }
+
+            auto utf32 = static_cast<char32_t>(chars[0] << shift_bits[0]);
+            utf32 |= static_cast<char32_t>(chars[1] << shift_bits[1]);
+            utf32 |= static_cast<char32_t>(chars[2] << shift_bits[2]);
+            utf32 |= static_cast<char32_t>(chars[3] << shift_bits[3]);
 
             if FK_YAML_LIKELY (utf32 != char32_t(0x0000000Du)) {
                 utf8::from_utf32(utf32, utf8_buffer, utf8_buf_size);
@@ -9471,7 +9505,7 @@ private:
             }
         }
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
 private:
@@ -9529,17 +9563,19 @@ public:
         IterType current = m_begin;
         std::deque<IterType> cr_itrs {};
         while (current != m_end) {
+            const IterType char_itr = current;
             const auto first = static_cast<uint8_t>(*current);
+            ++current;
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 1:
                 if FK_YAML_UNLIKELY (first == 0x0D /*CR*/) {
-                    cr_itrs.emplace_back(current);
+                    cr_itrs.emplace_back(char_itr);
                 }
                 break;
             case 2: {
-                const auto second = static_cast<uint8_t>(*++current);
+                const auto second = read_utf8_byte_or_throw(current, m_end, {first});
                 const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
@@ -9547,8 +9583,8 @@ public:
                 break;
             }
             case 3: {
-                const auto second = static_cast<uint8_t>(*++current);
-                const auto third = static_cast<uint8_t>(*++current);
+                const auto second = read_utf8_byte_or_throw(current, m_end, {first});
+                const auto third = read_utf8_byte_or_throw(current, m_end, {first, second});
                 const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
@@ -9556,9 +9592,9 @@ public:
                 break;
             }
             case 4: {
-                const auto second = static_cast<uint8_t>(*++current);
-                const auto third = static_cast<uint8_t>(*++current);
-                const auto fourth = static_cast<uint8_t>(*++current);
+                const auto second = read_utf8_byte_or_throw(current, m_end, {first});
+                const auto third = read_utf8_byte_or_throw(current, m_end, {first, second});
+                const auto fourth = read_utf8_byte_or_throw(current, m_end, {first, second, third});
                 const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
@@ -9568,8 +9604,6 @@ public:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
-
-            ++current;
         }
 
         m_buffer.reserve(std::distance(m_begin, m_end) - cr_itrs.size());
@@ -9581,7 +9615,7 @@ public:
         }
         std::transform(current, m_end, std::back_inserter(m_buffer), [](char8_t c) { return static_cast<char>(c); });
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
 private:
@@ -9657,20 +9691,29 @@ public:
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
+            if (encoded_buf_size == 0) {
+                break;
+            }
 
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
+            if FK_YAML_UNLIKELY (consumed_size > encoded_buf_size) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
             if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
+            }
+            else {
+                encoded_buffer[0] = encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
             m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
 private:
@@ -9750,7 +9793,7 @@ public:
             }
         }
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
 private:
@@ -9841,14 +9884,15 @@ private:
         auto current = m_buffer.begin();
         auto end = m_buffer.end();
         while (current != end) {
-            const auto first = static_cast<uint8_t>(*current++);
+            const auto first = static_cast<uint8_t>(*current);
+            ++current;
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 1:
                 break;
             case 2: {
-                const auto second = static_cast<uint8_t>(*current++);
+                const auto second = read_utf8_byte_or_throw(current, end, {first});
                 const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
@@ -9856,8 +9900,8 @@ private:
                 break;
             }
             case 3: {
-                const auto second = static_cast<uint8_t>(*current++);
-                const auto third = static_cast<uint8_t>(*current++);
+                const auto second = read_utf8_byte_or_throw(current, end, {first});
+                const auto third = read_utf8_byte_or_throw(current, end, {first, second});
                 const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
@@ -9865,9 +9909,9 @@ private:
                 break;
             }
             case 4: {
-                const auto second = static_cast<uint8_t>(*current++);
-                const auto third = static_cast<uint8_t>(*current++);
-                const auto fourth = static_cast<uint8_t>(*current++);
+                const auto second = read_utf8_byte_or_throw(current, end, {first});
+                const auto third = read_utf8_byte_or_throw(current, end, {first, second});
+                const auto fourth = read_utf8_byte_or_throw(current, end, {first, second, third});
                 const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
@@ -9879,7 +9923,7 @@ private:
             }
         }
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
     /// @brief The concrete implementation of get_buffer_view() for UTF-16 encoded inputs.
@@ -9902,7 +9946,15 @@ private:
         uint32_t utf8_buf_size {0};
 
         while (std::feof(m_file) == 0) {
-            while (encoded_buf_size < 2 && std::fread(&chars[0], sizeof(char), 2, m_file) == 2) {
+            while (encoded_buf_size < 2) {
+                const std::size_t size = std::fread(&chars[0], sizeof(char), 2, m_file);
+                if (size == 0) {
+                    break;
+                }
+                if FK_YAML_UNLIKELY (size != 2) {
+                    throw invalid_encoding("Invalid UTF-16 encoding detected.", std::array<char16_t, 2> {{0, 0}});
+                }
+
                 const auto utf16 = static_cast<char16_t>(
                     (static_cast<uint8_t>(chars[0]) << shift_bits[0]) |
                     (static_cast<uint8_t>(chars[1]) << shift_bits[1]));
@@ -9911,19 +9963,29 @@ private:
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
+            if (encoded_buf_size == 0) {
+                break;
+            }
 
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
+            if FK_YAML_UNLIKELY (consumed_size > encoded_buf_size) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
             if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
+            }
+            else {
+                encoded_buffer[0] = encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
             m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         }
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
     /// @brief The concrete implementation of get_buffer_view() for UTF-32 encoded inputs.
@@ -9949,8 +10011,11 @@ private:
 
         while (std::feof(m_file) == 0) {
             const std::size_t size = std::fread(&chars[0], sizeof(char), 4, m_file);
-            if (size != 4) {
+            if (size == 0) {
                 break;
+            }
+            if FK_YAML_UNLIKELY (size != 4) {
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", static_cast<char32_t>(0));
             }
 
             const auto utf32 = static_cast<char32_t>(
@@ -9963,7 +10028,7 @@ private:
             }
         }
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
 private:
@@ -10051,14 +10116,15 @@ private:
         auto current = m_buffer.begin();
         auto end = m_buffer.end();
         while (current != end) {
-            const auto first = static_cast<uint8_t>(*current++);
+            const auto first = static_cast<uint8_t>(*current);
+            ++current;
             const uint32_t num_bytes = utf8::get_num_bytes(first);
 
             switch (num_bytes) {
             case 1:
                 break;
             case 2: {
-                const auto second = static_cast<uint8_t>(*current++);
+                const auto second = read_utf8_byte_or_throw(current, end, {first});
                 const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
@@ -10066,8 +10132,8 @@ private:
                 break;
             }
             case 3: {
-                const auto second = static_cast<uint8_t>(*current++);
-                const auto third = static_cast<uint8_t>(*current++);
+                const auto second = read_utf8_byte_or_throw(current, end, {first});
+                const auto third = read_utf8_byte_or_throw(current, end, {first, second});
                 const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
@@ -10075,9 +10141,9 @@ private:
                 break;
             }
             case 4: {
-                const auto second = static_cast<uint8_t>(*current++);
-                const auto third = static_cast<uint8_t>(*current++);
-                const auto fourth = static_cast<uint8_t>(*current++);
+                const auto second = read_utf8_byte_or_throw(current, end, {first});
+                const auto third = read_utf8_byte_or_throw(current, end, {first, second});
+                const auto fourth = read_utf8_byte_or_throw(current, end, {first, second, third});
                 const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
@@ -10089,7 +10155,7 @@ private:
             }
         }
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
     /// @brief The concrete implementation of get_buffer_view() for UTF-16 encoded inputs.
@@ -10115,8 +10181,11 @@ private:
             while (encoded_buf_size < 2) {
                 m_istream->read(&chars[0], 2);
                 const std::streamsize size = m_istream->gcount();
-                if FK_YAML_UNLIKELY (size != 2) {
+                if (size == 0) {
                     break;
+                }
+                if FK_YAML_UNLIKELY (size != 2) {
+                    throw invalid_encoding("Invalid UTF-16 encoding detected.", std::array<char16_t, 2> {{0, 0}});
                 }
 
                 const auto utf16 = static_cast<char16_t>(
@@ -10128,19 +10197,29 @@ private:
                     encoded_buffer[encoded_buf_size++] = utf16;
                 }
             }
+            if (encoded_buf_size == 0) {
+                break;
+            }
 
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
+            if FK_YAML_UNLIKELY (consumed_size > encoded_buf_size) {
+                throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
+            }
             if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
+                encoded_buffer[1] = 0;
+            }
+            else {
+                encoded_buffer[0] = encoded_buffer[1] = 0;
             }
             encoded_buf_size -= consumed_size;
 
             m_buffer.append(reinterpret_cast<const char*>(utf8_buffer.data()), utf8_buf_size);
         } while (!m_istream->eof());
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
     /// @brief The concrete implementation of get_buffer_view() for UTF-32 encoded inputs.
@@ -10167,8 +10246,11 @@ private:
         do {
             m_istream->read(&chars[0], 4);
             const std::streamsize size = m_istream->gcount();
-            if FK_YAML_UNLIKELY (size != 4) {
+            if (size == 0) {
                 break;
+            }
+            if FK_YAML_UNLIKELY (size != 4) {
+                throw invalid_encoding("Invalid UTF-32 encoding detected.", static_cast<char32_t>(0));
             }
 
             const auto utf32 = static_cast<char32_t>(
@@ -10181,7 +10263,7 @@ private:
             }
         } while (!m_istream->eof());
 
-        return str_view {m_buffer.begin(), m_buffer.end()};
+        return m_buffer;
     }
 
 private:
