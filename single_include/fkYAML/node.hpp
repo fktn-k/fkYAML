@@ -3,7 +3,6 @@
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -26,7 +25,6 @@
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -39,7 +37,6 @@
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -90,7 +87,6 @@
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -250,7 +246,6 @@
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -275,7 +270,6 @@
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -293,7 +287,6 @@
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -308,7 +301,6 @@
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -326,7 +318,6 @@
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -775,7 +766,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -873,7 +863,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1069,7 +1058,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1135,7 +1123,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1248,7 +1235,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1269,7 +1255,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1290,7 +1275,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1419,7 +1403,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1437,7 +1420,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1457,7 +1439,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1508,7 +1489,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -1525,7 +1505,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -2108,7 +2087,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -2147,7 +2125,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -2164,7 +2141,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -3230,7 +3206,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -4531,7 +4506,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -4548,7 +4522,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -5389,7 +5362,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -5414,7 +5386,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -5869,7 +5840,6 @@ FK_YAML_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -6224,7 +6194,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -6561,7 +6530,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -7187,7 +7155,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -7383,7 +7350,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -7448,7 +7414,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -8829,7 +8794,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -8854,7 +8818,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -8872,7 +8835,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -10314,7 +10276,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -10747,7 +10708,6 @@ struct tuple_element<I, ::fkyaml::detail::iterator<ValueType>> {
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -10952,7 +10912,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -11068,7 +11027,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -11088,7 +11046,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -11595,7 +11552,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -11856,7 +11812,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -11912,7 +11867,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -11929,7 +11883,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -12660,7 +12613,6 @@ FK_YAML_NAMESPACE_END
 // |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
