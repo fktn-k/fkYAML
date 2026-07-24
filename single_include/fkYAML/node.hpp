@@ -9392,9 +9392,14 @@ private:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
+            // Buffer management guarantees consumed_size <= encoded_buf_size.
+            // Keep this guard to prevent underflow if that invariant changes.
+            // LCOV_EXCL_START
             if FK_YAML_UNLIKELY (consumed_size > encoded_buf_size) {
                 throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
             }
+            // LCOV_EXCL_STOP
+
             if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
@@ -9650,9 +9655,14 @@ public:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
+            // Buffer management guarantees consumed_size <= encoded_buf_size.
+            // Keep this guard to prevent underflow if that invariant changes.
+            // LCOV_EXCL_START
             if FK_YAML_UNLIKELY (consumed_size > encoded_buf_size) {
                 throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
             }
+            // LCOV_EXCL_STOP
+
             if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
@@ -9922,9 +9932,14 @@ private:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
+            // Buffer management guarantees consumed_size <= encoded_buf_size.
+            // Keep this guard to prevent underflow if that invariant changes.
+            // LCOV_EXCL_START
             if FK_YAML_UNLIKELY (consumed_size > encoded_buf_size) {
                 throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
             }
+            // LCOV_EXCL_STOP
+
             if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
@@ -10156,9 +10171,14 @@ private:
             uint32_t consumed_size = 0;
             utf8::from_utf16(encoded_buffer, utf8_buffer, consumed_size, utf8_buf_size);
 
+            // Buffer management guarantees consumed_size <= encoded_buf_size.
+            // Keep this guard to prevent underflow if that invariant changes.
+            // LCOV_EXCL_START
             if FK_YAML_UNLIKELY (consumed_size > encoded_buf_size) {
                 throw invalid_encoding("Invalid UTF-16 encoding detected.", encoded_buffer);
             }
+            // LCOV_EXCL_STOP
+
             if FK_YAML_LIKELY (consumed_size == 1) {
                 encoded_buffer[0] = encoded_buffer[1];
                 encoded_buffer[1] = 0;
