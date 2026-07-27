@@ -57,7 +57,7 @@ scripts/check_amalgamation.sh
 
 ### 2. [`test/unit_test/*.cpp`](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test)
 
-These files contain the [Catch2](https://github.com/catchorg/Catch2) unit tests from which current coverage data is generated. (Click [here](https://coveralls.io/github/fktn-k/fkYAML) to see the current coverage of the library's code.) If you have added or changed a feature, please also modify a unit test to the associated file(s) to keep covering 100% of the lines/branches in the fkYAML library.  
+These files contain the [doctest](https://github.com/doctest/doctest) unit tests from which current coverage data is generated. (Click [here](https://coveralls.io/github/fktn-k/fkYAML) to see the current coverage of the library's code.) If you have added or changed a feature, please also modify a unit test to the associated file(s) to keep covering 100% of the lines/branches in the fkYAML library.  
 
 The unit tests can be compiled and executed with the following commands:  
 

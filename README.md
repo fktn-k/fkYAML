@@ -284,11 +284,11 @@ See the [`CONTRIBUTING.md`](https://github.com/fktn-k/fkYAML/blob/develop/CONTRI
 The library itself depends only on C++ standards and licensed under the MIT licence. However, it is built, tested or documented with a lot of third-party tools and services. Thanks a lot!  
 
 * [**amalgamate.py - Amalgamate C source and header files**](https://github.com/edlund/amalgamate) to generate a single header file.
-* [**Catch2**](https://github.com/catchorg/Catch2) as a unit-test framework.
 * [**Clang**](https://clang.llvm.org/) for compilation, coding style checks, and static/runtime analysis.
 * [**CMake**](https://cmake.org/) for automation of build & testing.
 * [**Codacy**](https://www.codacy.com/) for further [code analysis](https://app.codacy.com/gh/fktn-k/fkYAML/).
 * [**Coveralls**](https://coveralls.io/) to measure [code coverage](https://coveralls.io/github/fktn-k/fkYAML?branch=develop).
+* [**doctest**](https://github.com/doctest/doctest) as a unit-test framework.
 * [**Google Benchmark**](https://github.com/google/benchmark) as a benchmarking framework.
 * [**github-changelog-generator**](https://github.com/github-changelog-generator/github-changelog-generator) to generate the [CHANGELOG.md](https://github.com/fktn-k/fkYAML/tree/develop/CHANGELOG.md) file.
 * [**include-what-you-use**](https://github.com/include-what-you-use/include-what-you-use) to check the fkYAML library source files are each self-contained.
