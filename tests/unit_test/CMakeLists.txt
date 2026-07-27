@@ -140,10 +140,13 @@ target_compile_options(
       -Wall -Wextra -Werror -pedantic -Wdeprecated
       -Wno-c++98-compat -Wno-c++98-compat-pedantic
       -Wno-deprecated-declarations # for testing deprecated functions
+      -Wno-unused-comparison # for testing throwable operators
+      -Wno-unused-variable # for testing against old compilers
     >
     $<$<CXX_COMPILER_ID:AppleClang>:
       -Wall -Wextra -Werror -pedantic -Wdeprecated
       -Wno-deprecated-declarations # for testing deprecated functions
+      -Wno-unused-comparison # for testing throwable operators
     >
     # IntelLLVM
     $<$<CXX_COMPILER_ID:IntelLLVM>:

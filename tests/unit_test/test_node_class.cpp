@@ -129,7 +129,7 @@ TEST_CASE("Node_ThrowingSpecializationTypeCtor") {
     };
 
     using NodeType = fkyaml::basic_node<std::vector, std::map, bool, int64_t, double, String>;
-    REQUIRE_THROWS_AS(NodeType(fkyaml::node_type::STRING), fkyaml::exception);
+    REQUIRE_THROWS_AS((NodeType(fkyaml::node_type::STRING)), fkyaml::exception);
 }
 
 TEST_CASE("Node_CtorWithCompatibleType") {
@@ -948,8 +948,8 @@ TEST_CASE("Node_Deserialize_char8_t") {
     auto begin_u8 = legacy_input_iterator<char8_t> {&source_u8[0]};
     auto end_u8 = legacy_input_iterator<char8_t> {&source_u8[8]};
 
-    fkyaml::node node = GENERATE(
-        fkyaml::node::deserialize(&source_u8[0], &source_u8[8]), fkyaml::node::deserialize(begin_u8, end_u8));
+    fkyaml::node node =
+        GENERATE(fkyaml::node::deserialize(&source_u8[0], &source_u8[8]), fkyaml::node::deserialize(begin_u8, end_u8));
 
     REQUIRE(node.is_mapping());
     REQUIRE(node.size() == 1);
@@ -3045,8 +3045,7 @@ TEST_CASE("Node_GetValue_GetValueInplace") {
         }
 
         SUBCASE("sequence value (3D C-style array)") {
-            REQUIRE_FALSE(
-                fkyaml::detail::is_detected<get_value_fn_t, const fkyaml::node&, int(&)[3][3][3]>::value);
+            REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_fn_t, const fkyaml::node&, int(&)[3][3][3]>::value);
 
             int ints_3d[3][3][3] {
                 {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
@@ -4606,8 +4605,7 @@ TEST_CASE("Node_GetValueOr") {
         // C-style array types
         REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int(&)[2]>::value);
         REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int(&)[3][3]>::value);
-        REQUIRE_FALSE(
-            fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int(&)[3][3][3]>::value);
+        REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int(&)[3][3][3]>::value);
 
         // pointer types
         REQUIRE_FALSE(fkyaml::detail::is_detected<get_value_or_fn_t, const fkyaml::node&, int*>::value);
