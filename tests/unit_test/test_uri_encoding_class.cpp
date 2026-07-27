@@ -6,12 +6,12 @@
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
 TEST_CASE("URIEncoding_Validate") {
-    SECTION("valid URI characters") {
+    SUBCASE("valid URI characters") {
         auto input = GENERATE(
             std::string(""),
             std::string("%00%99%AF%af"),
@@ -24,7 +24,7 @@ TEST_CASE("URIEncoding_Validate") {
         REQUIRE(fkyaml::detail::uri_encoding::validate(input.c_str(), input.c_str() + input.size()));
     }
 
-    SECTION("invalid URI characters") {
+    SUBCASE("invalid URI characters") {
         auto input = GENERATE(
             std::string("%//"),
             std::string("%::"),

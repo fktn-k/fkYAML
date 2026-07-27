@@ -27,6 +27,19 @@ if(FK_YAML_RUN_VALGRIND)
   set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1")
 endif()
 
+##############################################
+#   Set up doctest framework for unit test   #
+##############################################
+
+include(FetchContent)
+FetchContent_Declare(
+  doctest
+  GIT_REPOSITORY https://github.com/doctest/doctest.git
+  GIT_TAG        v2.5.3
+)
+FetchContent_MakeAvailable(doctest)
+include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
+
 ############################################
 #   configure C++ standard for unit test   #
 ############################################
@@ -79,7 +92,7 @@ target_include_directories(
   unit_test_config
   INTERFACE
     "${CMAKE_CURRENT_BINARY_DIR}/include"
-    "${CATCH2_ROOT_DIR}/single_include"
+    "${doctest_SOURCE_DIR}"
 )
 target_link_libraries(
   unit_test_config
@@ -252,8 +265,7 @@ add_executable(
 
 target_link_libraries(${TEST_TARGET} PRIVATE unit_test_config)
 
-include(Catch)
-catch_discover_tests(${TEST_TARGET})
+doctest_discover_tests(${TEST_TARGET})
 
 add_dependencies(${TEST_TARGET} ${FK_YAML_TARGET_NAME})
 

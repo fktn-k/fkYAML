@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
@@ -16,7 +16,7 @@ TEST_CASE("TagResolver_ResolveTag") {
     fkyaml::detail::tag_t tag_type {};
     std::shared_ptr<fkyaml::detail::document_metainfo<fkyaml::node>> directives {};
 
-    SECTION("valid tag name with default tag handle prefixes") {
+    SUBCASE("valid tag name with default tag handle prefixes") {
         auto test_pair = GENERATE(
             test_pair_t {"!", fkyaml::detail::tag_t::NON_SPECIFIC},
             test_pair_t {"!local", fkyaml::detail::tag_t::CUSTOM_TAG},
@@ -43,7 +43,7 @@ TEST_CASE("TagResolver_ResolveTag") {
         REQUIRE(tag_type == test_pair.second);
     }
 
-    SECTION("valid tag name with non-default primary handle prefix") {
+    SUBCASE("valid tag name with non-default primary handle prefix") {
         directives = std::shared_ptr<fkyaml::detail::document_metainfo<fkyaml::node>>(
             new fkyaml::detail::document_metainfo<fkyaml::node>());
         directives->primary_handle_prefix = "tag:example.com,2000:";
@@ -57,7 +57,7 @@ TEST_CASE("TagResolver_ResolveTag") {
         REQUIRE(tag_type == test_pair.second);
     }
 
-    SECTION("valid tag name with non-default secondary handle prefix") {
+    SUBCASE("valid tag name with non-default secondary handle prefix") {
         directives = std::shared_ptr<fkyaml::detail::document_metainfo<fkyaml::node>>(
             new fkyaml::detail::document_metainfo<fkyaml::node>());
         directives->secondary_handle_prefix = "tag:example.com,2000";
@@ -76,7 +76,7 @@ TEST_CASE("TagResolver_ResolveTag") {
         REQUIRE(tag_type == test_pair.second);
     }
 
-    SECTION("valid tag name with named handles") {
+    SUBCASE("valid tag name with named handles") {
         directives = std::shared_ptr<fkyaml::detail::document_metainfo<fkyaml::node>>(
             new fkyaml::detail::document_metainfo<fkyaml::node>());
         directives->named_handle_map.emplace("!yaml!", "tag:yaml.org,2002:");
@@ -97,7 +97,7 @@ TEST_CASE("TagResolver_ResolveTag") {
         REQUIRE(tag_type == test_pair.second);
     }
 
-    SECTION("invalid tag name with empty document_metainfo<fkyaml::node>") {
+    SUBCASE("invalid tag name with empty document_metainfo<fkyaml::node>") {
         auto tag = GENERATE(
             fkyaml::detail::str_view(""),
             fkyaml::detail::str_view("invalid"),
@@ -107,7 +107,7 @@ TEST_CASE("TagResolver_ResolveTag") {
             fkyaml::detail::tag_resolver<fkyaml::node>::resolve_tag(tag, directives), fkyaml::invalid_tag);
     }
 
-    SECTION("invalid tag name with non-empty document_metainfo<fkyaml::node>") {
+    SUBCASE("invalid tag name with non-empty document_metainfo<fkyaml::node>") {
         directives = std::shared_ptr<fkyaml::detail::document_metainfo<fkyaml::node>>(
             new fkyaml::detail::document_metainfo<fkyaml::node>());
         directives->named_handle_map.emplace("!valid!", "tag:example.com,2000");

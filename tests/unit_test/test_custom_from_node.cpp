@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 

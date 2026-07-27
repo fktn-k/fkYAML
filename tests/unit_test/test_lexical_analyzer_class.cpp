@@ -6,14 +6,14 @@
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
 TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("valid YAML directive") {
+    SUBCASE("valid YAML directive") {
         using value_pair_t = std::pair<fkyaml::detail::str_view, fkyaml::detail::str_view>;
         auto value_pair = GENERATE(
             value_pair_t("%YAML 1.1 ", "1.1"),
@@ -36,7 +36,7 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("wrong YAML directive") {
+    SUBCASE("wrong YAML directive") {
         auto buffer = GENERATE(
             fkyaml::detail::str_view("%YUML 1.2"),
             fkyaml::detail::str_view("%YANL 1.2    \n"),
@@ -52,7 +52,7 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("invalid YAML directive value") {
+    SUBCASE("invalid YAML directive value") {
         auto buffer = GENERATE(
             fkyaml::detail::str_view("%YAML 1.3\n"),
             fkyaml::detail::str_view("%YAML 2.0\n"),
@@ -72,7 +72,7 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
 TEST_CASE("LexicalAnalyzer_TagDirective") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("primary tag handle") {
+    SUBCASE("primary tag handle") {
         auto input = GENERATE(fkyaml::detail::str_view("%TAG ! foo"), fkyaml::detail::str_view("%TAG\t!\tfoo"));
         fkyaml::detail::lexical_analyzer lexer(input);
         lexer.set_document_state(true);
@@ -85,7 +85,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("secondary tag handle") {
+    SUBCASE("secondary tag handle") {
         auto input = GENERATE(fkyaml::detail::str_view("%TAG !! foo"), fkyaml::detail::str_view("%TAG\t!!\tfoo"));
         fkyaml::detail::lexical_analyzer lexer(input);
         lexer.set_document_state(true);
@@ -98,7 +98,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("named tag handle") {
+    SUBCASE("named tag handle") {
         auto input = GENERATE(
             fkyaml::detail::str_view("%TAG !va1id-ta9! foo"), fkyaml::detail::str_view("%TAG\t!va1id-ta9!\tfoo"));
         fkyaml::detail::lexical_analyzer lexer(input);
@@ -112,7 +112,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("invalid TAG directive") {
+    SUBCASE("invalid TAG directive") {
         auto buffer = GENERATE(
             fkyaml::detail::str_view("%TUB"), fkyaml::detail::str_view("%TAC"), fkyaml::detail::str_view("%TAGE"));
 
@@ -125,7 +125,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("invalid tag handle") {
+    SUBCASE("invalid tag handle") {
         auto input = GENERATE(
             fkyaml::detail::str_view("%TAG foo bar"),
             fkyaml::detail::str_view("%TAG !!abc bar"),
@@ -144,7 +144,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("invalid tag prefix") {
+    SUBCASE("invalid tag prefix") {
         auto input = GENERATE(
             fkyaml::detail::str_view("%TAG ! [invalid"),
             fkyaml::detail::str_view("%TAG !! ]invalid"),
@@ -219,7 +219,7 @@ TEST_CASE("LexicalAnalyzer_EndOfDirectives") {
 TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("valid document end marker") {
+    SUBCASE("valid document end marker") {
         fkyaml::detail::lexical_analyzer lexer("%YAML 1.2\n---\n...");
         lexer.set_document_state(true);
 
@@ -237,7 +237,7 @@ TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("invalid document end marker") {
+    SUBCASE("invalid document end marker") {
         fkyaml::detail::lexical_analyzer lexer("...invalid");
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
@@ -246,7 +246,7 @@ TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
 TEST_CASE("LexicalAnalyzer_Comment") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("valid comments") {
+    SUBCASE("valid comments") {
         auto input = GENERATE(
             fkyaml::detail::str_view("# comment"),
             fkyaml::detail::str_view(" # comment"),
@@ -257,7 +257,7 @@ TEST_CASE("LexicalAnalyzer_Comment") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("valid tab comments") {
+    SUBCASE("valid tab comments") {
         fkyaml::detail::str_view input("a #comment");
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -270,7 +270,7 @@ TEST_CASE("LexicalAnalyzer_Comment") {
     }
 
     // regression test for https://github.com/fktn-k/fkYAML/pull/469
-    SECTION("invalid comments") {
+    SUBCASE("invalid comments") {
         fkyaml::detail::str_view input("\'foo\'#invalid");
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -283,56 +283,56 @@ TEST_CASE("LexicalAnalyzer_Comment") {
 TEST_CASE("LexicalAnalyzer_Colon") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("colon with half-width space") {
+    SUBCASE("colon with half-width space") {
         fkyaml::detail::lexical_analyzer lexer(": ");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with LF newline code") {
+    SUBCASE("colon with LF newline code") {
         fkyaml::detail::lexical_analyzer lexer(":\n");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with the end of the buffer") {
+    SUBCASE("colon with the end of the buffer") {
         fkyaml::detail::lexical_analyzer lexer(":");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with a comment and a LF newline code") {
+    SUBCASE("colon with a comment and a LF newline code") {
         fkyaml::detail::lexical_analyzer lexer(": # comment\n");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with a comment and no newline code") {
+    SUBCASE("colon with a comment and no newline code") {
         fkyaml::detail::lexical_analyzer lexer(": # comment");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with many spaces and a LF newline code") {
+    SUBCASE("colon with many spaces and a LF newline code") {
         fkyaml::detail::lexical_analyzer lexer(":                         \n");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with many spaces and no newline code") {
+    SUBCASE("colon with many spaces and no newline code") {
         fkyaml::detail::lexical_analyzer lexer(":                         ");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
 
-    SECTION("colon with an always-safe character (block)") {
+    SUBCASE("colon with an always-safe character (block)") {
         fkyaml::detail::lexical_analyzer lexer(":test");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(token.str == ":test");
     }
 
-    SECTION("colon with an always-safe character (flow)") {
+    SUBCASE("colon with an always-safe character (flow)") {
         fkyaml::detail::lexical_analyzer lexer("[:test]");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
@@ -347,7 +347,7 @@ TEST_CASE("LexicalAnalyzer_Colon") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("colon with a flow indicator in a non-flow context") {
+    SUBCASE("colon with a flow indicator in a non-flow context") {
         auto input = GENERATE(
             fkyaml::detail::str_view(":,"),
             fkyaml::detail::str_view(":{"),
@@ -360,7 +360,7 @@ TEST_CASE("LexicalAnalyzer_Colon") {
         REQUIRE(token.str == input);
     }
 
-    SECTION("colon with a flow indicator in a flow context") {
+    SUBCASE("colon with a flow indicator in a flow context") {
         auto input = GENERATE(
             fkyaml::detail::str_view("{:,"),
             fkyaml::detail::str_view("{:{"),
@@ -392,7 +392,7 @@ TEST_CASE("LexicalAnalzer_BlockSequenceEntryPrefix") {
 TEST_CASE("LexicalAnalyzer_PlainScalar") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("single line") {
+    SUBCASE("single line") {
         auto input = GENERATE(
             fkyaml::detail::str_view("test"),
             fkyaml::detail::str_view("test "),
@@ -453,7 +453,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.begin() + input.find_last_not_of(' ') + 1);
     }
 
-    SECTION("multiline without final newline") {
+    SUBCASE("multiline without final newline") {
         fkyaml::detail::str_view input = "  foo\n"
                                          "   bar\n"
                                          "     baz";
@@ -465,7 +465,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end());
     }
 
-    SECTION("multiline with final newline") {
+    SUBCASE("multiline with final newline") {
         fkyaml::detail::str_view input = "  foo\n"
                                          "   bar\n"
                                          "     baz\n";
@@ -477,7 +477,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end() - 1);
     }
 
-    SECTION("multiline as an implicit mapping value") {
+    SUBCASE("multiline as an implicit mapping value") {
         fkyaml::detail::str_view input = "  foo: foo\n"
                                          "   bar\n"
                                          "     baz\n"
@@ -503,7 +503,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end());
     }
 
-    SECTION("multiline as a block sequence item") {
+    SUBCASE("multiline as a block sequence item") {
         fkyaml::detail::str_view input = "  - foo\n"
                                          "   bar\n"
                                          "     baz";
@@ -518,7 +518,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end());
     }
 
-    SECTION("multiline as a block sequence item and an implicit mapping value") {
+    SUBCASE("multiline as a block sequence item and an implicit mapping value") {
         fkyaml::detail::str_view input = "  - -foo: bar\n"
                                          "     baz\n"
                                          "   baz";
@@ -546,7 +546,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end());
     }
 
-    SECTION("multiline as an explicit mapping key") {
+    SUBCASE("multiline as an explicit mapping key") {
         fkyaml::detail::str_view input = "  ? foo\n"
                                          "   bar\n"
                                          "     baz";
@@ -561,7 +561,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end());
     }
 
-    SECTION("multiline as an explicit mapping key and an implicit mapping value") {
+    SUBCASE("multiline as an explicit mapping key and an implicit mapping value") {
         fkyaml::detail::str_view input = "  ? ?foo: bar\n"
                                          "     baz\n"
                                          "   baz";
@@ -589,7 +589,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end());
     }
 
-    SECTION("multiline as an explicit mapping value") {
+    SUBCASE("multiline as an explicit mapping value") {
         fkyaml::detail::str_view input = "  : foo\n"
                                          "   bar\n"
                                          "     baz";
@@ -604,7 +604,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end());
     }
 
-    SECTION("multiline as an explicit mapping value and an implicit mapping value") {
+    SUBCASE("multiline as an explicit mapping value and an implicit mapping value") {
         fkyaml::detail::str_view input = "  : :foo: bar\n"
                                          "     bar\n"
                                          "   baz";
@@ -632,7 +632,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end());
     }
 
-    SECTION("multiline as a block sequence item and an explicit mapping value") {
+    SUBCASE("multiline as a block sequence item and an explicit mapping value") {
         fkyaml::detail::str_view input = "  ? - foo\n"
                                          "     bar\n"
                                          "     baz";
@@ -650,7 +650,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end());
     }
 
-    SECTION("multiline with less indented line") {
+    SUBCASE("multiline with less indented line") {
         fkyaml::detail::str_view input = "  foo\n"
                                          "   bar\n"
                                          " baz";
@@ -662,7 +662,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end() - 5);
     }
 
-    SECTION("multiline with equally indented line") {
+    SUBCASE("multiline with equally indented line") {
         fkyaml::detail::str_view input = "  foo\n"
                                          "   bar\n"
                                          "  baz";
@@ -674,7 +674,7 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end() - 6);
     }
 
-    SECTION("multiline with empty line") {
+    SUBCASE("multiline with empty line") {
         fkyaml::detail::str_view input = "  foo\n"
                                          " \t   \n"
                                          "   bar\n"
@@ -883,18 +883,18 @@ TEST_CASE("LexicalAnalyzer_UnescapedControlCharacter") {
     std::string buffer("test");
     buffer.push_back(unescaped_char);
 
-    SECTION("plain scalar") {
+    SUBCASE("plain scalar") {
         fkyaml::detail::lexical_analyzer lexer(buffer);
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("single quoted scalar") {
+    SUBCASE("single quoted scalar") {
         std::string single_quoted = "\'" + buffer + "\'";
         fkyaml::detail::lexical_analyzer lexer(single_quoted);
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("double quoted scalar") {
+    SUBCASE("double quoted scalar") {
         std::string double_quoted = "\"" + buffer + "\"";
         fkyaml::detail::lexical_analyzer lexer(double_quoted);
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
@@ -904,7 +904,7 @@ TEST_CASE("LexicalAnalyzer_UnescapedControlCharacter") {
 TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("empty literal string scalar with strip chomping") {
+    SUBCASE("empty literal string scalar with strip chomping") {
         const char input[] = "|-\n"
                              "  \n";
         fkyaml::detail::lexical_analyzer lexer(input);
@@ -920,7 +920,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("empty literal string scalar with clip chomping") {
+    SUBCASE("empty literal string scalar with clip chomping") {
         const char input[] = "|\n"
                              "  \n";
         fkyaml::detail::lexical_analyzer lexer(input);
@@ -936,7 +936,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("empty literal string scalar with keep chomping") {
+    SUBCASE("empty literal string scalar with keep chomping") {
         const char input[] = "|+\n"
                              "  \n";
         fkyaml::detail::lexical_analyzer lexer(input);
@@ -952,7 +952,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with 0 indent level.") {
+    SUBCASE("literal string scalar with 0 indent level.") {
         const char input[] = "|0\n"
                              "foo";
 
@@ -960,7 +960,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("a leading empty line is more indented") {
+    SUBCASE("a leading empty line is more indented") {
         const char input[] = "|\n"
                              "   \n"
                              "  foo";
@@ -969,7 +969,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("a leading empty line contains a tab") {
+    SUBCASE("a leading empty line contains a tab") {
         const char input[] = "|\n"
                              "  \t \n"
                              "  foo";
@@ -986,7 +986,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("a following content line is less indented") {
+    SUBCASE("a following content line is less indented") {
         const char input[] = "|\n"
                              "  foo\n"
                              " bar";
@@ -995,7 +995,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("less indented literal string scalar") {
+    SUBCASE("less indented literal string scalar") {
         const char input[] = "|2\n"
                              " foo";
 
@@ -1003,7 +1003,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("less indented literal string scalar with preceding empty line") {
+    SUBCASE("less indented literal string scalar with preceding empty line") {
         const char input[] = "|2\n"
                              "\n"
                              " foo\n";
@@ -1012,7 +1012,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("literal scalar with no newline on first and last content line") {
+    SUBCASE("literal scalar with no newline on first and last content line") {
         const char input[] = "|\n"
                              "  foo";
 
@@ -1028,7 +1028,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal scalar with the first line being more indented than the indicated level") {
+    SUBCASE("literal scalar with the first line being more indented than the indicated level") {
         const char input[] = "|2\n"
                              "\n"
                              "    foo\n"
@@ -1046,7 +1046,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar") {
+    SUBCASE("literal string scalar") {
         const char input[] = "|\n"
                              "  foo\n"
                              "  bar\n";
@@ -1063,7 +1063,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with implicit indentation and strip chomping") {
+    SUBCASE("literal string scalar with implicit indentation and strip chomping") {
         const char input[] = "|-\n"
                              "\n"
                              "  foo\n"
@@ -1084,7 +1084,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with explicit indentation and strip chomping") {
+    SUBCASE("literal string scalar with explicit indentation and strip chomping") {
         const char input[] = "|-2\n"
                              "  foo\n"
                              "    bar\n"
@@ -1104,7 +1104,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with implicit indentation and clip chomping") {
+    SUBCASE("literal string scalar with implicit indentation and clip chomping") {
         const char input[] = "|\n"
                              "\n"
                              "  foo\n"
@@ -1125,7 +1125,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with explicit indentation and clip chomping") {
+    SUBCASE("literal string scalar with explicit indentation and clip chomping") {
         const char input[] = "|2\n"
                              "  foo\n"
                              "    bar\n"
@@ -1145,7 +1145,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with clip chomping and no trailing newlines") {
+    SUBCASE("literal string scalar with clip chomping and no trailing newlines") {
         const char input[] = "|2\n"
                              "  foo\n"
                              "    bar\n"
@@ -1164,7 +1164,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with implicit indentation and keep chomping") {
+    SUBCASE("literal string scalar with implicit indentation and keep chomping") {
         const char input[] = "|+\n"
                              "\n"
                              "  foo\n"
@@ -1185,7 +1185,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with explicit indentation and keep chomping") {
+    SUBCASE("literal string scalar with explicit indentation and keep chomping") {
         const char input[] = "|+2\n"
                              "  foo\n"
                              "    bar\n"
@@ -1205,7 +1205,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with trailing spaces/tabs after the block scalar header.") {
+    SUBCASE("literal string scalar with trailing spaces/tabs after the block scalar header.") {
         auto input = GENERATE(
             fkyaml::detail::str_view("|2  \n  foo\n"),
             fkyaml::detail::str_view("|2\t\t\n  foo\n"),
@@ -1223,7 +1223,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("literal string scalar with invalid block scalar headers") {
+    SUBCASE("literal string scalar with invalid block scalar headers") {
         auto input = GENERATE(
             fkyaml::detail::str_view("|++2\n  foo"),
             fkyaml::detail::str_view("|--2\n  foo"),
@@ -1241,7 +1241,7 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
 TEST_CASE("LexicalAnalyzer_FoldedString") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("empty folded string scalar with strip chomping") {
+    SUBCASE("empty folded string scalar with strip chomping") {
         const char input[] = ">-\n"
                              "  \n";
         fkyaml::detail::lexical_analyzer lexer(input);
@@ -1257,7 +1257,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("empty folded string scalar with clip chomping") {
+    SUBCASE("empty folded string scalar with clip chomping") {
         const char input[] = ">\n"
                              "  \n";
         fkyaml::detail::lexical_analyzer lexer(input);
@@ -1273,7 +1273,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("empty folded string scalar with keep chomping") {
+    SUBCASE("empty folded string scalar with keep chomping") {
         const char input[] = ">+\n"
                              "  \n";
         fkyaml::detail::lexical_analyzer lexer(input);
@@ -1289,7 +1289,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("folded string scalar with 0 indent level") {
+    SUBCASE("folded string scalar with 0 indent level") {
         const char input[] = ">0\n"
                              "foo";
 
@@ -1297,7 +1297,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("a leading empty line is more indented") {
+    SUBCASE("a leading empty line is more indented") {
         const char input[] = ">\n"
                              "   \n"
                              "  foo";
@@ -1306,7 +1306,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("a leading empty line contains a tab") {
+    SUBCASE("a leading empty line contains a tab") {
         const char input[] = ">\n"
                              "  \t \n"
                              "  foo";
@@ -1323,7 +1323,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("a following content line is less indented") {
+    SUBCASE("a following content line is less indented") {
         const char input[] = ">\n"
                              "  foo\n"
                              " bar";
@@ -1332,7 +1332,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("less indented folded string scalar") {
+    SUBCASE("less indented folded string scalar") {
         const char input[] = ">2\n"
                              " foo";
 
@@ -1340,7 +1340,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SECTION("folded string scalar with the first line being more indented than the indicated level") {
+    SUBCASE("folded string scalar with the first line being more indented than the indicated level") {
         const char input[] = ">2\n"
                              "    foo\n"
                              "  bar\n";
@@ -1357,7 +1357,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("folded string scalar with the non-first line being more indented than the indicated level") {
+    SUBCASE("folded string scalar with the non-first line being more indented than the indicated level") {
         const char input[] = ">2\n"
                              "  foo\n"
                              "    bar\n";
@@ -1374,7 +1374,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("folded string scalar") {
+    SUBCASE("folded string scalar") {
         const char input[] = ">\n"
                              "  foo\n"
                              "  \n"
@@ -1394,7 +1394,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("folded string scalar with implicit indentation and strip chomping") {
+    SUBCASE("folded string scalar with implicit indentation and strip chomping") {
         const char input[] = ">-\n"
                              "  foo\n"
                              "  bar\n"
@@ -1413,7 +1413,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("folded string scalar with implicit indentation and clip chomping") {
+    SUBCASE("folded string scalar with implicit indentation and clip chomping") {
         const char input[] = ">\n"
                              "  foo\n"
                              "  bar\n"
@@ -1432,7 +1432,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("folded string scalar with implicit indentation and keep chomping") {
+    SUBCASE("folded string scalar with implicit indentation and keep chomping") {
         const char input[] = ">+\n"
                              "  foo\n"
                              "  bar\n"
@@ -1451,7 +1451,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("folded string scalar with trailing spaces/tabs/comments after the block scalar header.") {
+    SUBCASE("folded string scalar with trailing spaces/tabs/comments after the block scalar header.") {
         auto input = GENERATE(
             fkyaml::detail::str_view(">2  \n  foo\n"),
             fkyaml::detail::str_view(">2\t\t\n  foo\n"),
@@ -1469,7 +1469,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("folded string scalar with invalid block scalar headers") {
+    SUBCASE("folded string scalar with invalid block scalar headers") {
         auto input = GENERATE(
             fkyaml::detail::str_view(">++2\n  foo"),
             fkyaml::detail::str_view(">--2\n  foo"),
@@ -1487,7 +1487,7 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
 TEST_CASE("LexicalAnalyzer_Anchor") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("valid anchor name") {
+    SUBCASE("valid anchor name") {
         using test_data_t = std::pair<fkyaml::detail::str_view, fkyaml::detail::str_view>;
         auto test_data = GENERATE(
             test_data_t {"&anchor", "anchor"},
@@ -1509,7 +1509,7 @@ TEST_CASE("LexicalAnalyzer_Anchor") {
         REQUIRE(token.str == test_data.second);
     }
 
-    SECTION("invalid anchor name") {
+    SUBCASE("invalid anchor name") {
         auto input = GENERATE(
             fkyaml::detail::str_view("&"),
             fkyaml::detail::str_view("& "),
@@ -1529,7 +1529,7 @@ TEST_CASE("LexicalAnalyzer_Anchor") {
 TEST_CASE("LexicalAnalyzer_Alias") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("valid anchor name") {
+    SUBCASE("valid anchor name") {
         using test_data_t = std::pair<fkyaml::detail::str_view, fkyaml::detail::str_view>;
         auto test_data = GENERATE(
             test_data_t {"*anchor", "anchor"},
@@ -1551,7 +1551,7 @@ TEST_CASE("LexicalAnalyzer_Alias") {
         REQUIRE_NOTHROW(token.str == test_data.second);
     }
 
-    SECTION("invalid anchor name") {
+    SUBCASE("invalid anchor name") {
         auto input = GENERATE(
             fkyaml::detail::str_view("*"),
             fkyaml::detail::str_view("* "),
@@ -1571,7 +1571,7 @@ TEST_CASE("LexicalAnalyzer_Alias") {
 TEST_CASE("LexicalAnalyzer_Tag") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("valid tag names") {
+    SUBCASE("valid tag names") {
         auto input = GENERATE(
             fkyaml::detail::str_view("! tag"),
             fkyaml::detail::str_view("!\ntag"),
@@ -1595,7 +1595,7 @@ TEST_CASE("LexicalAnalyzer_Tag") {
         REQUIRE(token.str == "tag");
     }
 
-    SECTION("valid tag name (not followed by a value)") {
+    SUBCASE("valid tag name (not followed by a value)") {
         auto input = GENERATE(
             fkyaml::detail::str_view("!"),
             fkyaml::detail::str_view("!!foo"),
@@ -1608,7 +1608,7 @@ TEST_CASE("LexicalAnalyzer_Tag") {
         REQUIRE(token.str == input);
     }
 
-    SECTION("invalid tag names") {
+    SUBCASE("invalid tag names") {
         auto input = GENERATE(
             fkyaml::detail::str_view("!!f!oo tag"),
             fkyaml::detail::str_view("!<!f!oo> tag"),
@@ -1724,7 +1724,7 @@ TEST_CASE("LexicalAnalyzer_KeyStringValuePair") {
 TEST_CASE("LexicalAnalyzer_FlowSequence") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("simple flow sequence") {
+    SUBCASE("simple flow sequence") {
         fkyaml::detail::lexical_analyzer lexer("test: [ foo, bar ]");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1757,7 +1757,7 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("flow sequence with flow mapping child nodes") {
+    SUBCASE("flow sequence with flow mapping child nodes") {
         fkyaml::detail::lexical_analyzer lexer("test: [ { foo: one, bar: false }, { foo: two, bar: true } ]");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1848,7 +1848,7 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
 TEST_CASE("LexicalAnalyzer_FlowMapping") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("simple flow mapping") {
+    SUBCASE("simple flow mapping") {
         fkyaml::detail::lexical_analyzer lexer("test: { bool : true, foo :b: bar, pi: 3.14 }");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1909,7 +1909,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("flow maping with a child mapping node") {
+    SUBCASE("flow maping with a child mapping node") {
         fkyaml::detail::lexical_analyzer lexer("test: {foo: bar baz}");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1942,7 +1942,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("\':\' is preceded by JSON-like keys and followed by values adjacent to it") {
+    SUBCASE("\':\' is preceded by JSON-like keys and followed by values adjacent to it") {
         fkyaml::detail::str_view input = "{\n"
                                          "  \"foo\":123,\n"
                                          "  \'bar\':true,\n"
@@ -2041,7 +2041,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
 TEST_CASE("LexicalAnalyzer_BlockSequence") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("simple block sequence") {
+    SUBCASE("simple block sequence") {
         fkyaml::detail::lexical_analyzer lexer("test:\n  - foo\n  - bar");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -2069,7 +2069,7 @@ TEST_CASE("LexicalAnalyzer_BlockSequence") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("block sequence with block mapping child nodes") {
+    SUBCASE("block sequence with block mapping child nodes") {
         fkyaml::detail::lexical_analyzer lexer("test:\n  - foo: one\n    bar: false\n  - foo: two\n    bar: true");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -2137,7 +2137,7 @@ TEST_CASE("LexicalAnalyzer_BlockSequence") {
 TEST_CASE("LexicalAnalyzer_BlockMapping") {
     fkyaml::detail::lexical_token token;
 
-    SECTION("simple block mapping") {
+    SUBCASE("simple block mapping") {
         fkyaml::detail::lexical_analyzer lexer("test:\n  bool: true\n  foo: \'bar\'\n  pi: 3.14");
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -2184,7 +2184,7 @@ TEST_CASE("LexicalAnalyzer_BlockMapping") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("block mapping with a literal string scalar value") {
+    SUBCASE("block mapping with a literal string scalar value") {
         char input[] = "test: |\n  a block literal scalar.\nfoo: \'bar\'\npi: 3.14";
         fkyaml::detail::lexical_analyzer lexer(input);
 
@@ -2228,7 +2228,7 @@ TEST_CASE("LexicalAnalyzer_BlockMapping") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SECTION("block mapping with a folded string scalar value") {
+    SUBCASE("block mapping with a folded string scalar value") {
         char input[] = "test: >\n  a block folded scalar.\nfoo: \'bar\'\npi: 3.14";
         fkyaml::detail::lexical_analyzer lexer(input);
 
