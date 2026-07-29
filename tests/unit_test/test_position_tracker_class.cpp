@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
@@ -25,7 +25,7 @@ TEST_CASE("PositionTracker_InitialState") {
 TEST_CASE("PositionTracker_MultipleLines") {
     fkyaml::detail::position_tracker pos_tracker {};
 
-    SECTION("first character is not a newline code") {
+    SUBCASE("first character is not a newline code") {
         fkyaml::detail::str_view input = "test\nfoo";
         pos_tracker.set_target_buffer(input);
 
@@ -59,7 +59,7 @@ TEST_CASE("PositionTracker_MultipleLines") {
         REQUIRE(pos_tracker.get_lines_read() == 1);
     }
 
-    SECTION("first character is a newline code") {
+    SUBCASE("first character is a newline code") {
         fkyaml::detail::str_view input = "\ntest\nfoo";
         pos_tracker.set_target_buffer(input);
 

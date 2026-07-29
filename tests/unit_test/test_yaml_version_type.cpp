@@ -8,7 +8,7 @@
 
 #include <utility>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 

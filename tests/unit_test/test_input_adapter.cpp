@@ -11,7 +11,7 @@
 #include <sstream>
 #include <string>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
@@ -33,51 +33,51 @@
 TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
     char input[] = "test";
 
-    SECTION("C-style char array") {
+    SUBCASE("C-style char array") {
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
     }
 
-    SECTION("char pointers for beginning/end") {
+    SUBCASE("char pointers for beginning/end") {
         auto input_adapter = fkyaml::detail::input_adapter(&input[0], &input[sizeof(input) - 1]);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
     }
 
 #if FK_YAML_HAS_CHAR8_T
-    SECTION("C-style char8_t array") {
+    SUBCASE("C-style char8_t array") {
         char8_t input8[] = u8"test";
         auto input_adapter = fkyaml::detail::input_adapter(input8);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char8_t*>>::value);
     }
 #endif
 
-    SECTION("C-style char16_t array") {
+    SUBCASE("C-style char16_t array") {
         char16_t input16[] = u"test";
         auto input_adapter = fkyaml::detail::input_adapter(input16);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
     }
 
-    SECTION("C-style char32_t array") {
+    SUBCASE("C-style char32_t array") {
         char32_t intput32[] = U"test";
         auto input_adapter = fkyaml::detail::input_adapter(intput32);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
     }
 
-    SECTION("std::string") {
+    SUBCASE("std::string") {
         std::string input_str(input);
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
         using iterator_type = typename std::string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
-    SECTION("std::u16string") {
+    SUBCASE("std::u16string") {
         std::u16string input_str(u"test");
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
         using iterator_type = typename std::u16string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
-    SECTION("std::u32string") {
+    SUBCASE("std::u32string") {
         std::u32string input_str(U"test");
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
         using iterator_type = typename std::u32string::const_iterator;
@@ -85,14 +85,14 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
     }
 
 #ifdef FK_YAML_HAS_CXX_17
-    SECTION("std::string_view") {
+    SUBCASE("std::string_view") {
         std::string_view input_str_view(input);
         auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
         using iterator_type = typename std::string_view::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
-    SECTION("std::u16string_view") {
+    SUBCASE("std::u16string_view") {
         using namespace std::string_view_literals;
         std::u16string_view input_str_view = u"test"sv;
         auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
@@ -100,7 +100,7 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
-    SECTION("std::u32string_view") {
+    SUBCASE("std::u32string_view") {
         using namespace std::string_view_literals;
         std::u32string_view input_str_view = U"test"sv;
         auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
@@ -110,14 +110,14 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
 #endif
 
 #if FK_YAML_HAS_CHAR8_T
-    SECTION("std::u8string") {
+    SUBCASE("std::u8string") {
         std::u8string input_str(u8"test");
         auto input_adapter = fkyaml::detail::input_adapter(input_str);
         using iterator_type = typename std::u8string::const_iterator;
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<iterator_type>>::value);
     }
 
-    SECTION("std::u8string_view") {
+    SUBCASE("std::u8string_view") {
         using namespace std::string_view_literals;
         std::u8string_view input_str_view = u8"test"sv;
         auto input_adapter = fkyaml::detail::input_adapter(input_str_view);
@@ -128,12 +128,12 @@ TEST_CASE("InputAdapter_IteratorInputAdapterProvider") {
 }
 
 TEST_CASE("InputAdapter_FileInputAdapterProvider") {
-    SECTION("invalid FILE object pointer") {
+    SUBCASE("invalid FILE object pointer") {
         FILE* p_file = nullptr;
         REQUIRE_THROWS_AS(fkyaml::detail::input_adapter(p_file), fkyaml::exception);
     }
 
-    SECTION("valid FILE object pointer") {
+    SUBCASE("valid FILE object pointer") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt", "r");
         ENABLE_C4996
@@ -147,12 +147,12 @@ TEST_CASE("InputAdapter_FileInputAdapterProvider") {
 }
 
 TEST_CASE("InputAdapter_StreamInputAdapterProvider") {
-    SECTION("invalid stream") {
+    SUBCASE("invalid stream") {
         std::ifstream ifs("");
         REQUIRE_THROWS_AS(fkyaml::detail::input_adapter(ifs), fkyaml::exception);
     }
 
-    SECTION("valid stream") {
+    SUBCASE("valid stream") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data.txt");
         REQUIRE(ifs);
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
@@ -161,7 +161,7 @@ TEST_CASE("InputAdapter_StreamInputAdapterProvider") {
 }
 
 TEST_CASE("InputAdapter_EmptyInput") {
-    SECTION("C-style char array") {
+    SUBCASE("C-style char array") {
         char input[] = "";
         auto input_adapter = fkyaml::detail::input_adapter(input);
         auto view = input_adapter.get_buffer_view();
@@ -169,7 +169,7 @@ TEST_CASE("InputAdapter_EmptyInput") {
     }
 
 #if FK_YAML_HAS_CHAR8_T
-    SECTION("C-style char8_t array") {
+    SUBCASE("C-style char8_t array") {
         char8_t input[] = u8"";
         auto input_adapter = fkyaml::detail::input_adapter(input);
         auto view = input_adapter.get_buffer_view();
@@ -177,14 +177,14 @@ TEST_CASE("InputAdapter_EmptyInput") {
     }
 #endif
 
-    SECTION("C-style char16_t array") {
+    SUBCASE("C-style char16_t array") {
         char16_t input[] = u"";
         auto input_adapter = fkyaml::detail::input_adapter(input);
         auto view = input_adapter.get_buffer_view();
         REQUIRE(view.empty());
     }
 
-    SECTION("C-style char32_t array") {
+    SUBCASE("C-style char32_t array") {
         char32_t input[] = U"";
         auto input_adapter = fkyaml::detail::input_adapter(input);
         auto view = input_adapter.get_buffer_view();
@@ -193,21 +193,21 @@ TEST_CASE("InputAdapter_EmptyInput") {
 
     ////////////////////////////////////////////////////////
 
-    SECTION("std::string") {
+    SUBCASE("std::string") {
         std::string input {};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         auto view = input_adapter.get_buffer_view();
         REQUIRE(view.empty());
     }
 
-    SECTION("std::u16string") {
+    SUBCASE("std::u16string") {
         std::u16string input {};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         auto view = input_adapter.get_buffer_view();
         REQUIRE(view.empty());
     }
 
-    SECTION("std::u32string") {
+    SUBCASE("std::u32string") {
         std::u32string input {};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         auto view = input_adapter.get_buffer_view();
@@ -215,14 +215,14 @@ TEST_CASE("InputAdapter_EmptyInput") {
     }
 
 #ifdef FK_YAML_HAS_CXX_17
-    SECTION("std::string_view") {
+    SUBCASE("std::string_view") {
         std::string_view input {};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         auto view = input_adapter.get_buffer_view();
         REQUIRE(view.empty());
     }
 
-    SECTION("std::u16string_view") {
+    SUBCASE("std::u16string_view") {
         using namespace std::string_view_literals;
         std::u16string_view input = u""sv;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -230,7 +230,7 @@ TEST_CASE("InputAdapter_EmptyInput") {
         REQUIRE(view.empty());
     }
 
-    SECTION("std::u32string_view") {
+    SUBCASE("std::u32string_view") {
         using namespace std::string_view_literals;
         std::u32string_view input = U""sv;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -240,14 +240,14 @@ TEST_CASE("InputAdapter_EmptyInput") {
 #endif
 
 #if FK_YAML_HAS_CHAR8_T
-    SECTION("std::u8string") {
+    SUBCASE("std::u8string") {
         std::u8string input {};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         auto view = input_adapter.get_buffer_view();
         REQUIRE(view.empty());
     }
 
-    SECTION("std::u8string_view") {
+    SUBCASE("std::u8string_view") {
         using namespace std::string_view_literals;
         std::u8string_view input = u8""sv;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -256,7 +256,7 @@ TEST_CASE("InputAdapter_EmptyInput") {
     }
 #endif
 
-    SECTION("FILE object pointer") {
+    SUBCASE("FILE object pointer") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_empty.txt", "r");
         ENABLE_C4996
@@ -269,7 +269,7 @@ TEST_CASE("InputAdapter_EmptyInput") {
         std::fclose(p_file);
     }
 
-    SECTION("input stream") {
+    SUBCASE("input stream") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_empty.txt");
         REQUIRE(ifs);
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
@@ -279,7 +279,7 @@ TEST_CASE("InputAdapter_EmptyInput") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF8N") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = "test source.";
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -301,7 +301,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8N") {
         REQUIRE(buffer[11] == '.');
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         std::string input = "test source.";
         auto input_adapter = fkyaml::detail::input_adapter(input);
         using itr_type = typename std::string::const_iterator;
@@ -324,7 +324,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8N") {
         REQUIRE(buffer[11] == '.');
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n.txt", "r");
         ENABLE_C4996
@@ -347,7 +347,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8N") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -367,7 +367,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8N") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF8BOM") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = {
             char(0xEFu), char(0xBBu), char(0xBFu), 't', 'e', 's', 't', ' ', 's', 'o', 'u', 'r', 'c', 'e', '.', 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -390,7 +390,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8BOM") {
         REQUIRE(buffer[11] == '.');
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         char raw_input[] = {
             char(0xEFu), char(0xBBu), char(0xBFu), 't', 'e', 's', 't', ' ', 's', 'o', 'u', 'r', 'c', 'e', '.', 0};
         std::string input = raw_input;
@@ -415,7 +415,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8BOM") {
         REQUIRE(buffer[11] == '.');
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8bom.txt", "r");
         ENABLE_C4996
@@ -438,7 +438,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8BOM") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8bom.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -458,7 +458,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8BOM") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF16BEN") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = {0, 0x61, 0x30, 0x42, char(0xD8u), 0x40, char(0xDCu), 0x0B, 0, 0x52, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -477,7 +477,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEN") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         std::string input {0, 0x61, 0x30, 0x42, char(0xD8u), 0x40, char(0xDCu), 0x0B, 0, 0x52, 0, 0x5A};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         using itr_type = typename std::string::const_iterator;
@@ -498,7 +498,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEN") {
         REQUIRE(buffer[9] == char(0x5Au));
     }
 
-    SECTION("iterator_input_adapter with a char16_t array") {
+    SUBCASE("iterator_input_adapter with a char16_t array") {
         char16_t input[] = {0x0061u, 0x3042u, 0xD840u, 0xDC0Bu, 0x0052u, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
@@ -517,7 +517,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEN") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with std::u16string") {
+    SUBCASE("iterator_input_adapter with std::u16string") {
         char16_t raw_input[] = {0x0061u, 0x3042u, 0xD840u, 0xDC0Bu, 0x0052u, 0x005Au, 0};
         std::u16string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -539,21 +539,21 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEN") {
         REQUIRE(buffer[9] == char(0x5Au));
     }
 
-    SECTION("iterator_input_adapter with truncated UTF-16 bytes") {
+    SUBCASE("iterator_input_adapter with truncated UTF-16 bytes") {
         std::string input {0, 0x61, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
 
         REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
-    SECTION("iterator_input_adapter with a dangling high surrogate after a surrogate pair") {
+    SUBCASE("iterator_input_adapter with a dangling high surrogate after a surrogate pair") {
         std::u16string input {char16_t(0x0061u), char16_t(0xD840u), char16_t(0xDC0Bu), char16_t(0xD840u)};
         auto input_adapter = fkyaml::detail::input_adapter(input);
 
         REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16ben.txt", "r");
         ENABLE_C4996
@@ -577,7 +577,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEN") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16ben.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -598,7 +598,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEN") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = {
             char(0xFEu), char(0xFFu), 0, 0x61, 0x30, 0x42, char(0xD8u), 0x40, char(0xDCu), 0x0B, 0, 0x52, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -618,7 +618,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         std::string input {
             char(0xFEu), char(0xFFu), 0, 0x61, 0x30, 0x42, char(0xD8u), 0x40, char(0xDCu), 0x0B, 0, 0x52};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -639,7 +639,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with a char16_t array") {
+    SUBCASE("iterator_input_adapter with a char16_t array") {
         char16_t input[] = {0xFEFFu, 0x0061u, 0x3042u, 0xD840u, 0xDC0Bu, 0x0052u, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
@@ -658,7 +658,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with std::u16string") {
+    SUBCASE("iterator_input_adapter with std::u16string") {
         char16_t raw_input[] = {0xFEFFu, 0x0061u, 0x3042u, 0xD840u, 0xDC0Bu, 0x0052u, 0};
         std::u16string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -679,7 +679,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16bebom.txt", "r");
         ENABLE_C4996
@@ -703,7 +703,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         std::fclose(p_file);
     }
 
-    SECTION("file_input_adapter with only a BOM") {
+    SUBCASE("file_input_adapter with only a BOM") {
         DISABLE_C4996
         FILE* p_file = std::tmpfile();
         ENABLE_C4996
@@ -723,7 +723,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         std::fclose(p_file);
     }
 
-    SECTION("file_input_adapter with truncated UTF-16 bytes after a BOM") {
+    SUBCASE("file_input_adapter with truncated UTF-16 bytes after a BOM") {
         DISABLE_C4996
         FILE* p_file = std::tmpfile();
         ENABLE_C4996
@@ -741,7 +741,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16bebom.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -759,7 +759,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("stream_input_adapter with only a BOM") {
+    SUBCASE("stream_input_adapter with only a BOM") {
         std::stringstream ss(std::string {char(0xFEu), char(0xFFu)});
         auto input_adapter = fkyaml::detail::input_adapter(ss);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -769,7 +769,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
         REQUIRE(buffer.empty());
     }
 
-    SECTION("stream_input_adapter with truncated UTF-16 bytes after a BOM") {
+    SUBCASE("stream_input_adapter with truncated UTF-16 bytes after a BOM") {
         std::stringstream ss(std::string {char(0xFEu), char(0xFFu), 0});
         auto input_adapter = fkyaml::detail::input_adapter(ss);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -779,7 +779,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BEBOM") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF16LEN") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = {0x61, 0, 0x42, 0x30, 0x40, char(0xD8u), 0x0B, char(0xDCu), 0x52, 0, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -798,7 +798,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEN") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         std::string input {0x61, 0, 0x42, 0x30, 0x40, char(0xD8u), 0x0B, char(0xDCu), 0x52, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         using itr_type = typename std::string::const_iterator;
@@ -818,7 +818,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEN") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with a char16_t array") {
+    SUBCASE("iterator_input_adapter with a char16_t array") {
         char16_t input[] = {0x6100u, 0x4230u, 0x40D8u, 0x0BDCu, 0x5200u, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
@@ -837,7 +837,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEN") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with std::u16string") {
+    SUBCASE("iterator_input_adapter with std::u16string") {
         char16_t raw_input[] = {0x6100u, 0x4230u, 0x40D8u, 0x0BDCu, 0x5200u, 0};
         std::u16string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -858,7 +858,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEN") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16len.txt", "r");
         ENABLE_C4996
@@ -882,7 +882,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEN") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16len.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -903,7 +903,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEN") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF16LEBOM") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = {
             char(0xFFu), char(0xFEu), 0x61, 0, 0x42, 0x30, 0x40, char(0xD8u), 0x0B, char(0xDCu), 0x52, 0, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -923,7 +923,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEBOM") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         std::string input {
             char(0xFFu), char(0xFEu), 0x61, 0, 0x42, 0x30, 0x40, char(0xD8u), 0x0B, char(0xDCu), 0x52, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -944,7 +944,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEBOM") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with a char16_t array") {
+    SUBCASE("iterator_input_adapter with a char16_t array") {
         char16_t input[] = {0xFFFEu, 0x6100u, 0x4230u, 0x40D8u, 0x0BDCu, 0x5200u, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char16_t*>>::value);
@@ -963,7 +963,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEBOM") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("iterator_input_adapter with std::u16string") {
+    SUBCASE("iterator_input_adapter with std::u16string") {
         char16_t raw_input[] = {0xFFFEu, 0x6100u, 0x4230u, 0x40D8u, 0x0BDCu, 0x5200u, 0};
         std::u16string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -984,7 +984,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEBOM") {
         REQUIRE(buffer[8] == char(0x52u));
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16lebom.txt", "r");
         ENABLE_C4996
@@ -1008,7 +1008,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEBOM") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16lebom.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1029,7 +1029,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16LEBOM") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF32BEN") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = {0, 0, 0, 0x61, 0, 0, 0x30, 0x42, 0, 0x02, 0, 0x0B, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1047,7 +1047,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEN") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         std::string input {0, 0, 0, 0x61, 0, 0, 0x30, 0x42, 0, 0x02, 0, 0x0B};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         using itr_type = typename std::string::const_iterator;
@@ -1066,14 +1066,14 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEN") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with truncated UTF-32 bytes") {
+    SUBCASE("iterator_input_adapter with truncated UTF-32 bytes") {
         std::string input {0, 0, 0, 0x61, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
 
         REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
-    SECTION("iterator_input_adapter with a char32_t array") {
+    SUBCASE("iterator_input_adapter with a char32_t array") {
         char32_t input[] = {0x00000061u, 0x00003042u, 0x0002000Bu, 0x00000000};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
@@ -1091,7 +1091,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEN") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with std::u32string") {
+    SUBCASE("iterator_input_adapter with std::u32string") {
         char32_t raw_input[] = {0x00000061u, 0x00003042u, 0x0002000Bu, 0x00000000};
         std::u32string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1111,7 +1111,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEN") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32ben.txt", "r");
         ENABLE_C4996
@@ -1134,7 +1134,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEN") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32ben.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1154,7 +1154,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEN") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = {0, 0, char(0xFEu), char(0xFFu), 0, 0, 0, 0x61, 0, 0, 0x30, 0x42, 0, 0x02, 0, 0x0B, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1172,7 +1172,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         std::string input {0, 0, char(0xFEu), char(0xFFu), 0, 0, 0, 0x61, 0, 0, 0x30, 0x42, 0, 0x02, 0, 0x0B};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         using itr_type = typename std::string::const_iterator;
@@ -1191,7 +1191,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with a char32_t array") {
+    SUBCASE("iterator_input_adapter with a char32_t array") {
         char32_t input[] = {0x0000FEFFu, 0x00000061u, 0x00003042u, 0x0002000Bu, 0x00000000};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
@@ -1209,7 +1209,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with std::u32string") {
+    SUBCASE("iterator_input_adapter with std::u32string") {
         char32_t raw_input[] = {0x0000FEFFu, 0x00000061u, 0x00003042u, 0x0002000Bu, 0x00000000};
         std::u32string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1229,7 +1229,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32bebom.txt", "r");
         ENABLE_C4996
@@ -1252,7 +1252,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
         std::fclose(p_file);
     }
 
-    SECTION("file_input_adapter with truncated UTF-32 bytes after a BOM") {
+    SUBCASE("file_input_adapter with truncated UTF-32 bytes after a BOM") {
         DISABLE_C4996
         FILE* p_file = std::tmpfile();
         ENABLE_C4996
@@ -1270,7 +1270,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32bebom.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1288,7 +1288,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("stream_input_adapter with truncated UTF-32 bytes after a BOM") {
+    SUBCASE("stream_input_adapter with truncated UTF-32 bytes after a BOM") {
         std::stringstream ss(std::string {0, 0, char(0xFEu), char(0xFFu), 0});
         auto input_adapter = fkyaml::detail::input_adapter(ss);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1298,7 +1298,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BEBOM") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF32LEN") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = {0x61, 0, 0, 0, 0x42, 0x30, 0, 0, 0x0B, 0, 0x02, 0, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1316,7 +1316,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEN") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         std::string input {0x61, 0, 0, 0, 0x42, 0x30, 0, 0, 0x0B, 0, 0x02, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         using itr_type = typename std::string::const_iterator;
@@ -1335,7 +1335,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEN") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with a char32_t array") {
+    SUBCASE("iterator_input_adapter with a char32_t array") {
         char32_t input[] = {0x61000000u, 0x42300000u, 0x0B000200u, 0x00000000};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
@@ -1353,7 +1353,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEN") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with std::u32string") {
+    SUBCASE("iterator_input_adapter with std::u32string") {
         char32_t raw_input[] = {0x61000000u, 0x42300000u, 0x0B000200u, 0x00000000};
         std::u32string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1373,7 +1373,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEN") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32len.txt", "r");
         ENABLE_C4996
@@ -1396,7 +1396,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEN") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32len.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1416,7 +1416,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEN") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF32LEBOM") {
-    SECTION("iterator_input_adapter with a char array") {
+    SUBCASE("iterator_input_adapter with a char array") {
         char input[] = {char(0xFFu), char(0xFEu), 0, 0, 0x61, 0, 0, 0, 0x42, 0x30, 0, 0, 0x0B, 0, 0x02, 0, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1434,7 +1434,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEBOM") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with std::string") {
+    SUBCASE("iterator_input_adapter with std::string") {
         std::string input {char(0xFFu), char(0xFEu), 0, 0, 0x61, 0, 0, 0, 0x42, 0x30, 0, 0, 0x0B, 0, 0x02, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         using itr_type = typename std::string::const_iterator;
@@ -1453,7 +1453,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEBOM") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with a char32_t array") {
+    SUBCASE("iterator_input_adapter with a char32_t array") {
         char32_t input[] = {0xFFFE0000u, 0x61000000u, 0x42300000u, 0x0B000200u, 0x00000000};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char32_t*>>::value);
@@ -1471,7 +1471,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEBOM") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("iterator_input_adapter with std::u32string") {
+    SUBCASE("iterator_input_adapter with std::u32string") {
         char32_t raw_input[] = {0xFFFE0000u, 0x61000000u, 0x42300000u, 0x0B000200u, 0x00000000};
         std::u32string input = raw_input;
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1491,7 +1491,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEBOM") {
         REQUIRE(buffer[7] == char(0x8Bu));
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32lebom.txt", "r");
         ENABLE_C4996
@@ -1514,7 +1514,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32LEBOM") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32lebom.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1538,7 +1538,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
     //   UTF-8 1-Byte Characters   //
     /////////////////////////////////
 
-    SECTION("iterator_input_adapter with valid 1-byte UTF-8 encodings") {
+    SUBCASE("iterator_input_adapter with valid 1-byte UTF-8 encodings") {
         char input[] = {0x5A, 0x30, 0x61, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1551,7 +1551,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE(buffer[2] == char(0x61u));
     }
 
-    SECTION("iterator_input_adapter with invalid 1-byte UTF-8 encodings") {
+    SUBCASE("iterator_input_adapter with invalid 1-byte UTF-8 encodings") {
         char input[] = {char(0x81u), char(0x82u), char(0x83u), 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1559,7 +1559,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
-    SECTION("file_input_adapter with valid 1-byte UTF-8 encodings") {
+    SUBCASE("file_input_adapter with valid 1-byte UTF-8 encodings") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_1byte_char.txt", "r");
         ENABLE_C4996
@@ -1577,7 +1577,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         std::fclose(p_file);
     }
 
-    SECTION("file_input_adapter with invalid 1-byte UTF-8 encodings") {
+    SUBCASE("file_input_adapter with invalid 1-byte UTF-8 encodings") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_1byte_char.txt", "r");
         ENABLE_C4996
@@ -1590,7 +1590,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter with valid 1-byte UTF-8 encodings") {
+    SUBCASE("stream_input_adapter with valid 1-byte UTF-8 encodings") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_1byte_char.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1603,7 +1603,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE(buffer[2] == char(0x61u));
     }
 
-    SECTION("stream_input_adapter with invalid 1-byte UTF-8 encodings") {
+    SUBCASE("stream_input_adapter with invalid 1-byte UTF-8 encodings") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_1byte_char.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1615,7 +1615,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
     //   UTF-8 2-Byte Characters   //
     /////////////////////////////////
 
-    SECTION("iterator_input_adapter with valid 2-byte UTF-8 encodings") {
+    SUBCASE("iterator_input_adapter with valid 2-byte UTF-8 encodings") {
         char input[] = {char(0xC2u), char(0x80u), char(0xDFu), char(0xBFu), 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1629,7 +1629,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE(buffer[3] == char(0xBFu));
     }
 
-    SECTION("iterator_input_adapter with invalid 2-byte UTF-8 encodings") {
+    SUBCASE("iterator_input_adapter with invalid 2-byte UTF-8 encodings") {
         char input[] = {char(0xC1u), char(0x80u), char(0xC2u), 0x7F, 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1637,7 +1637,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
-    SECTION("file_input_adapter with valid 2-byte UTF-8 encodings") {
+    SUBCASE("file_input_adapter with valid 2-byte UTF-8 encodings") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_2byte_char.txt", "r");
         ENABLE_C4996
@@ -1656,7 +1656,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         std::fclose(p_file);
     }
 
-    SECTION("file_input_adapter with invalid 2-byte UTF-8 encodings") {
+    SUBCASE("file_input_adapter with invalid 2-byte UTF-8 encodings") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_2byte_char.txt", "r");
         ENABLE_C4996
@@ -1669,7 +1669,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter with valid 2-byte UTF-8 encodings") {
+    SUBCASE("stream_input_adapter with valid 2-byte UTF-8 encodings") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_2byte_char.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1683,7 +1683,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE(buffer[3] == char(0xBFu));
     }
 
-    SECTION("stream_input_adapter with invalid 2-byte UTF-8 encodings") {
+    SUBCASE("stream_input_adapter with invalid 2-byte UTF-8 encodings") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_2byte_char.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1695,7 +1695,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
     //   UTF-8 3-Byte Characters   //
     /////////////////////////////////
 
-    SECTION("iterator_input_adapter with valid 3-byte UTF-8 encodings") {
+    SUBCASE("iterator_input_adapter with valid 3-byte UTF-8 encodings") {
         char input[] = {char(0xE0u), char(0x80u), char(0x80u), char(0xECu), char(0xBFu), char(0xBFu), 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1711,7 +1711,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE(buffer[5] == char(0xBFu));
     }
 
-    SECTION("iterator_input_adapter with invalid 3-byte UTF-8 encodings") {
+    SUBCASE("iterator_input_adapter with invalid 3-byte UTF-8 encodings") {
         char input[] = {char(0xE0u), 0x6A, char(0x80u), char(0xEDu), char(0xA0u), char(0xC0u), 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1719,7 +1719,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
-    SECTION("file_input_adapter with valid 3-byte UTF-8 encodings") {
+    SUBCASE("file_input_adapter with valid 3-byte UTF-8 encodings") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_3byte_char.txt", "r");
         ENABLE_C4996
@@ -1740,7 +1740,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         std::fclose(p_file);
     }
 
-    SECTION("file_input_adapter with invalid 3-byte UTF-8 encodings") {
+    SUBCASE("file_input_adapter with invalid 3-byte UTF-8 encodings") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_3byte_char.txt", "r");
         ENABLE_C4996
@@ -1753,7 +1753,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter with valid 3-byte UTF-8 encodings") {
+    SUBCASE("stream_input_adapter with valid 3-byte UTF-8 encodings") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_3byte_char.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1769,7 +1769,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE(buffer[5] == char(0xBFu));
     }
 
-    SECTION("stream_input_adapter with invalid 3-byte UTF-8 encodings") {
+    SUBCASE("stream_input_adapter with invalid 3-byte UTF-8 encodings") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_3byte_char.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1781,7 +1781,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
     //   UTF-8 4-Byte Characters   //
     /////////////////////////////////
 
-    SECTION("iterator_input_adapter with valid 4-byte UTF-8 encodings") {
+    SUBCASE("iterator_input_adapter with valid 4-byte UTF-8 encodings") {
         char input[] = {
             char(0xF0u), char(0x90u), char(0x80u), char(0x80u), char(0xF2u), char(0xBFu), char(0x80u), char(0x80u), 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
@@ -1800,7 +1800,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE(buffer[7] == char(0x80u));
     }
 
-    SECTION("iterator_input_adapter with invalid 4-byte UTF-8 encodings") {
+    SUBCASE("iterator_input_adapter with invalid 4-byte UTF-8 encodings") {
         char input[] = {char(0xF0u), char(0x80u), 0x70, 0x70, char(0xF4u), char(0xC0u), char(0xC0u), 0};
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1808,7 +1808,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
-    SECTION("file_input_adapter with valid 4-byte UTF-8 encodings") {
+    SUBCASE("file_input_adapter with valid 4-byte UTF-8 encodings") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_4byte_char.txt", "r");
         ENABLE_C4996
@@ -1831,7 +1831,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         std::fclose(p_file);
     }
 
-    SECTION("file_input_adapter with invalid 4-byte UTF-8 encodings") {
+    SUBCASE("file_input_adapter with invalid 4-byte UTF-8 encodings") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_4byte_char.txt", "r");
         ENABLE_C4996
@@ -1844,7 +1844,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter with valid 4-byte UTF-8 encodings") {
+    SUBCASE("stream_input_adapter with valid 4-byte UTF-8 encodings") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_valid_4byte_char.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1862,7 +1862,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE(buffer[7] == char(0x80u));
     }
 
-    SECTION("stream_input_adapter with invalid 4-byte UTF-8 encodings") {
+    SUBCASE("stream_input_adapter with invalid 4-byte UTF-8 encodings") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n_invalid_4byte_char.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1870,7 +1870,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
     }
 
-    SECTION("iterator_input_adapter with truncated multi-byte UTF-8 encodings") {
+    SUBCASE("iterator_input_adapter with truncated multi-byte UTF-8 encodings") {
         std::string input {char(0xE3u), char(0x81u)};
         auto input_adapter = fkyaml::detail::input_adapter(input);
 
@@ -1878,7 +1878,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
     }
 
 #if FK_YAML_HAS_CHAR8_T
-    SECTION("iterator_input_adapter with truncated multi-byte UTF-8 encodings using char8_t") {
+    SUBCASE("iterator_input_adapter with truncated multi-byte UTF-8 encodings using char8_t") {
         std::u8string input {char8_t(0xE3u), char8_t(0x81u)};
         auto input_adapter = fkyaml::detail::input_adapter(input);
 
@@ -1886,7 +1886,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
     }
 #endif
 
-    SECTION("file_input_adapter with truncated multi-byte UTF-8 encodings") {
+    SUBCASE("file_input_adapter with truncated multi-byte UTF-8 encodings") {
         DISABLE_C4996
         FILE* p_file = std::tmpfile();
         ENABLE_C4996
@@ -1904,7 +1904,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter with truncated multi-byte UTF-8 encodings") {
+    SUBCASE("stream_input_adapter with truncated multi-byte UTF-8 encodings") {
         std::stringstream ss(std::string {char(0xE3u), char(0x81u)});
         auto input_adapter = fkyaml::detail::input_adapter(ss);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -1914,7 +1914,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
-    SECTION("iterator_input_adapter (char)") {
+    SUBCASE("iterator_input_adapter (char)") {
         char input[] = "test\r\ndata\r\n";
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char*>>::value);
@@ -1935,7 +1935,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
     }
 
 #if FK_YAML_HAS_CHAR8_T
-    SECTION("iterator_input_adapter (char)") {
+    SUBCASE("iterator_input_adapter (char)") {
         char8_t input[] = u8"test\r\ndata\r\n";
         auto input_adapter = fkyaml::detail::input_adapter(input);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::iterator_input_adapter<char8_t*>>::value);
@@ -1956,7 +1956,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
     }
 #endif
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8_crlf.txt", "r");
         ENABLE_C4996
@@ -1981,7 +1981,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8_crlf.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -2003,7 +2003,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
-    SECTION("iterator_input_adapter (char) with a standalone CR") {
+    SUBCASE("iterator_input_adapter (char) with a standalone CR") {
         std::string input {0, char(0x0D)};
         auto input_adapter = fkyaml::detail::input_adapter(input);
 
@@ -2012,7 +2012,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
         REQUIRE(buffer.empty());
     }
 
-    SECTION("iterator_input_adapter (char16_t) with a standalone CR") {
+    SUBCASE("iterator_input_adapter (char16_t) with a standalone CR") {
         std::u16string input {char16_t(0x000Du)};
         auto input_adapter = fkyaml::detail::input_adapter(input);
 
@@ -2021,7 +2021,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
         REQUIRE(buffer.empty());
     }
 
-    SECTION("iterator_input_adapter (char)") {
+    SUBCASE("iterator_input_adapter (char)") {
         char input[] = {0, char(0x74), 0, char(0x65), 0, char(0x73), 0, char(0x74), 0, char(0x0D),
                         0, char(0x0A), 0, char(0x64), 0, char(0x61), 0, char(0x74), 0, char(0x61),
                         0, char(0x0D), 0, char(0x0A), 0};
@@ -2043,7 +2043,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
         REQUIRE(buffer[9] == '\n');
     }
 
-    SECTION("iterator_input_adapter (char16_t)") {
+    SUBCASE("iterator_input_adapter (char16_t)") {
         char16_t input[] = {
             0x0074u,
             0x0065u,
@@ -2076,7 +2076,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
         REQUIRE(buffer[9] == '\n');
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16be_crlf.txt", "r");
         ENABLE_C4996
@@ -2101,7 +2101,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16be_crlf.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);
@@ -2123,7 +2123,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
 }
 
 TEST_CASE("InputAdapter_GetBufferView_UTF32BENewlineCodeNormalization") {
-    SECTION("iterator_input_adapter (char)") {
+    SUBCASE("iterator_input_adapter (char)") {
         char input[] = {0, 0, 0, char(0x74), 0, 0, 0, char(0x65), 0, 0, 0, char(0x73), 0, 0, 0, char(0x74),
                         0, 0, 0, char(0x0D), 0, 0, 0, char(0x0A), 0, 0, 0, char(0x64), 0, 0, 0, char(0x61),
                         0, 0, 0, char(0x74), 0, 0, 0, char(0x61), 0, 0, 0, char(0x0D), 0, 0, 0, char(0x0A),
@@ -2146,7 +2146,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BENewlineCodeNormalization") {
         REQUIRE(buffer[9] == '\n');
     }
 
-    SECTION("iterator_input_adapter (char32_t)") {
+    SUBCASE("iterator_input_adapter (char32_t)") {
         char32_t input[] = {
             0x00000074u,
             0x00000065u,
@@ -2179,7 +2179,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BENewlineCodeNormalization") {
         REQUIRE(buffer[9] == '\n');
     }
 
-    SECTION("file_input_adapter") {
+    SUBCASE("file_input_adapter") {
         DISABLE_C4996
         FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32be_crlf.txt", "r");
         ENABLE_C4996
@@ -2204,7 +2204,7 @@ TEST_CASE("InputAdapter_GetBufferView_UTF32BENewlineCodeNormalization") {
         std::fclose(p_file);
     }
 
-    SECTION("stream_input_adapter") {
+    SUBCASE("stream_input_adapter") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32be_crlf.txt");
         auto input_adapter = fkyaml::detail::input_adapter(ifs);
         REQUIRE(std::is_same<decltype(input_adapter), fkyaml::detail::stream_input_adapter>::value);

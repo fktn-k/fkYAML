@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
@@ -16,7 +16,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_null") {
     fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::PLAIN_SCALAR};
     fkyaml::detail::tag_t tag_type {fkyaml::detail::tag_t::NONE};
 
-    SECTION("not tagged") {
+    SUBCASE("not tagged") {
         auto token = GENERATE(
             fkyaml::detail::str_view("null"),
             fkyaml::detail::str_view("Null"),
@@ -27,7 +27,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_null") {
         REQUIRE(node.is_null());
     }
 
-    SECTION("tagged") {
+    SUBCASE("tagged") {
         tag_type = fkyaml::detail::tag_t::NULL_VALUE;
 
         auto token = GENERATE(
@@ -49,7 +49,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_boolean") {
 
     using test_data_t = std::pair<fkyaml::detail::str_view, bool>;
 
-    SECTION("not tagged") {
+    SUBCASE("not tagged") {
         auto test_data = GENERATE(
             test_data_t("true", true),
             test_data_t("True", true),
@@ -63,7 +63,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_boolean") {
         REQUIRE(node.get_value<bool>() == test_data.second);
     }
 
-    SECTION("tagged") {
+    SUBCASE("tagged") {
         tag_type = fkyaml::detail::tag_t::BOOLEAN;
 
         auto test_data = GENERATE(
@@ -88,7 +88,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_integer") {
 
     using test_data_t = std::pair<fkyaml::detail::str_view, int>;
 
-    SECTION("not tagged") {
+    SUBCASE("not tagged") {
         auto test_data =
             GENERATE(test_data_t("123", 123), test_data_t("-123", -123), test_data_t("0", 0), test_data_t("+456", 456));
 
@@ -97,7 +97,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_integer") {
         REQUIRE(node.get_value<int>() == test_data.second);
     }
 
-    SECTION("tagged") {
+    SUBCASE("tagged") {
         tag_type = fkyaml::detail::tag_t::INTEGER;
 
         auto test_data = GENERATE(
@@ -122,7 +122,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_float") {
 
     using test_data_t = std::pair<fkyaml::detail::str_view, float>;
 
-    SECTION("normal values: not tagged") {
+    SUBCASE("normal values: not tagged") {
         auto test_data = GENERATE(
             test_data_t("1.23", 1.23f),
             test_data_t("-1.23", -1.23f),
@@ -149,7 +149,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_float") {
         REQUIRE(node.get_value<float>() == test_data.second);
     }
 
-    SECTION("infinities: not tagged") {
+    SUBCASE("infinities: not tagged") {
         auto token = GENERATE(
             fkyaml::detail::str_view(".inf"),
             fkyaml::detail::str_view("+.inf"),
@@ -166,7 +166,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_float") {
         REQUIRE(std::isinf(node.get_value<float>()));
     }
 
-    SECTION("NaNs: not tagged") {
+    SUBCASE("NaNs: not tagged") {
         auto token = GENERATE(
             fkyaml::detail::str_view(".nan"), fkyaml::detail::str_view(".NaN"), fkyaml::detail::str_view(".NAN"));
 
@@ -175,7 +175,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_float") {
         REQUIRE(std::isnan(node.get_value<float>()));
     }
 
-    SECTION("normal values: tagged") {
+    SUBCASE("normal values: tagged") {
         tag_type = fkyaml::detail::tag_t::FLOATING_NUMBER;
 
         auto test_data = GENERATE(
@@ -204,7 +204,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
     fkyaml::detail::scalar_parser<fkyaml::node> scalar_parser {0, 0};
     fkyaml::detail::tag_t tag_type {fkyaml::detail::tag_t::NONE};
 
-    SECTION("plain: single line contents") {
+    SUBCASE("plain: single line contents") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::PLAIN_SCALAR};
 
         auto token = GENERATE(
@@ -260,7 +260,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
         REQUIRE(node.as_str() == token);
     }
 
-    SECTION("plain: multiline contents") {
+    SUBCASE("plain: multiline contents") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::PLAIN_SCALAR};
         using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
         auto test_data = GENERATE(
@@ -274,7 +274,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
         REQUIRE(node.as_str() == test_data.second);
     }
 
-    SECTION("single quoted: single line contents") {
+    SUBCASE("single quoted: single line contents") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR};
         using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
         auto test_data = GENERATE(
@@ -294,7 +294,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
         REQUIRE(node.as_str() == test_data.second);
     }
 
-    SECTION("single quoted: multiline contents") {
+    SUBCASE("single quoted: multiline contents") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::SINGLE_QUOTED_SCALAR};
         using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
         auto test_data = GENERATE(
@@ -310,7 +310,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
         REQUIRE(node.as_str() == test_data.second);
     }
 
-    SECTION("double quoted: single line contents") {
+    SUBCASE("double quoted: single line contents") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR};
         using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
         auto test_data = GENERATE(
@@ -329,7 +329,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
         REQUIRE(node.as_str() == test_data.second);
     }
 
-    SECTION("double quoted: multiline contents") {
+    SUBCASE("double quoted: multiline contents") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR};
         using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
         auto test_data = GENERATE(
@@ -347,12 +347,12 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
         REQUIRE(node.as_str() == test_data.second);
     }
 
-    SECTION("double quoted: escaped unicode characters") {
+    SUBCASE("double quoted: escaped unicode characters") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR};
         using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
         auto to_char = [](int c) { return std::char_traits<char>::to_char_type(c); };
 
-        auto test_data = GENERATE_REF(
+        auto test_data = GENERATE(
             test_data_t("\\x00", {to_char(0x00)}),
             test_data_t("\\x40", {to_char(0x40)}),
             test_data_t("\\x7F", {to_char(0x7F)}),
@@ -383,7 +383,7 @@ TEST_CASE("ScalarParser_FlowPlainScalar_string") {
         REQUIRE(node.as_str() == test_data.second);
     }
 
-    SECTION("double quoted: invalid unicode escapings") {
+    SUBCASE("double quoted: invalid unicode escapings") {
         fkyaml::detail::lexical_token_t lex_type {fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR};
         auto token = GENERATE(
             fkyaml::detail::str_view("\\xw"),
@@ -404,7 +404,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
     fkyaml::detail::tag_t tag_type {fkyaml::detail::tag_t::NONE};
     fkyaml::detail::block_scalar_header header {};
 
-    SECTION("empty block literal scalar token.") {
+    SUBCASE("empty block literal scalar token.") {
         fkyaml::detail::str_view token = "";
         header.chomp = fkyaml::detail::chomping_indicator_t::STRIP;
         header.indent = 0;
@@ -414,7 +414,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "");
     }
 
-    SECTION("empty literal string scalar with strip chomping") {
+    SUBCASE("empty literal string scalar with strip chomping") {
         fkyaml::detail::str_view token = "  \n";
         header.chomp = fkyaml::detail::chomping_indicator_t::STRIP;
         header.indent = 2;
@@ -424,7 +424,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "");
     }
 
-    SECTION("empty literal string scalar with clip chomping") {
+    SUBCASE("empty literal string scalar with clip chomping") {
         fkyaml::detail::str_view token = "  \n";
         header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
         header.indent = 2;
@@ -434,7 +434,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "");
     }
 
-    SECTION("empty literal string scalar with keep chomping") {
+    SUBCASE("empty literal string scalar with keep chomping") {
         fkyaml::detail::str_view token = "  \n";
         header.chomp = fkyaml::detail::chomping_indicator_t::KEEP;
         header.indent = 2;
@@ -444,7 +444,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "\n");
     }
 
-    SECTION("a leading empty line contains a tab") {
+    SUBCASE("a leading empty line contains a tab") {
         fkyaml::detail::str_view token = "  \t \n"
                                          "  foo";
         header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
@@ -455,7 +455,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "\t \nfoo");
     }
 
-    SECTION("literal scalar with the first line being more indented than the indicated level") {
+    SUBCASE("literal scalar with the first line being more indented than the indicated level") {
         fkyaml::detail::str_view token = "    foo\n"
                                          "  bar\n";
         header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
@@ -466,7 +466,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "  foo\nbar\n");
     }
 
-    SECTION("literal string scalar") {
+    SUBCASE("literal string scalar") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "  bar\n";
         header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
@@ -477,7 +477,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "foo\nbar\n");
     }
 
-    SECTION("literal string scalar with implicit indentation and strip chomping") {
+    SUBCASE("literal string scalar with implicit indentation and strip chomping") {
         fkyaml::detail::str_view token = "\n"
                                          "  foo\n"
                                          "  bar\n"
@@ -492,7 +492,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "\nfoo\nbar\n\nbaz");
     }
 
-    SECTION("literal string scalar with explicit indentation and strip chomping") {
+    SUBCASE("literal string scalar with explicit indentation and strip chomping") {
         fkyaml::detail::str_view token = "\n"
                                          "  foo\n"
                                          "    bar\n"
@@ -507,7 +507,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "\nfoo\n  bar\n\nbaz");
     }
 
-    SECTION("literal string scalar with implicit indentation and clip chomping") {
+    SUBCASE("literal string scalar with implicit indentation and clip chomping") {
         fkyaml::detail::str_view token = "\n"
                                          "  foo\n"
                                          "  bar\n"
@@ -522,7 +522,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "\nfoo\nbar\n\nbaz\n");
     }
 
-    SECTION("literal string scalar with explicit indentation and clip chomping") {
+    SUBCASE("literal string scalar with explicit indentation and clip chomping") {
         fkyaml::detail::str_view token = "\n"
                                          "  foo\n"
                                          "    bar\n"
@@ -537,7 +537,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "\nfoo\n  bar\n\nbaz");
     }
 
-    SECTION("literal string scalar with clip chomping and no trailing newlines") {
+    SUBCASE("literal string scalar with clip chomping and no trailing newlines") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "  bar\n"
                                          "\n"
@@ -550,7 +550,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "foo\nbar\n\nbaz");
     }
 
-    SECTION("literal string scalar with implicit indentation and keep chomping") {
+    SUBCASE("literal string scalar with implicit indentation and keep chomping") {
         fkyaml::detail::str_view token = "\n"
                                          "  foo\n"
                                          "  bar\n"
@@ -565,7 +565,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "\nfoo\nbar\n\nbaz\n\n");
     }
 
-    SECTION("literal string scalar with explicit indentation and keep chomping") {
+    SUBCASE("literal string scalar with explicit indentation and keep chomping") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "    bar\n"
                                          "\n"
@@ -587,7 +587,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
     fkyaml::detail::tag_t tag_type {fkyaml::detail::tag_t::NONE};
     fkyaml::detail::block_scalar_header header {};
 
-    SECTION("empty block folded scalar token.") {
+    SUBCASE("empty block folded scalar token.") {
         fkyaml::detail::str_view token = "";
         header.chomp = fkyaml::detail::chomping_indicator_t::STRIP;
         header.indent = 0;
@@ -597,7 +597,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "");
     }
 
-    SECTION("empty folded string scalar with strip chomping") {
+    SUBCASE("empty folded string scalar with strip chomping") {
         fkyaml::detail::str_view token = "  \n";
 
         header.chomp = fkyaml::detail::chomping_indicator_t::STRIP;
@@ -608,7 +608,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "");
     }
 
-    SECTION("empty folded string scalar with clip chomping") {
+    SUBCASE("empty folded string scalar with clip chomping") {
         fkyaml::detail::str_view token = "  \n";
 
         header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
@@ -619,7 +619,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "");
     }
 
-    SECTION("empty folded string scalar with keep chomping") {
+    SUBCASE("empty folded string scalar with keep chomping") {
         fkyaml::detail::str_view token = "  \n";
 
         header.chomp = fkyaml::detail::chomping_indicator_t::KEEP;
@@ -630,7 +630,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "\n");
     }
 
-    SECTION("a leading empty line contains a tab") {
+    SUBCASE("a leading empty line contains a tab") {
         fkyaml::detail::str_view token = "  \t \n"
                                          "  foo";
         header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
@@ -641,7 +641,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "\n\t \nfoo");
     }
 
-    SECTION("folded string scalar with the first line being more indented than the indicated level") {
+    SUBCASE("folded string scalar with the first line being more indented than the indicated level") {
         fkyaml::detail::str_view token = "    foo\n"
                                          "  bar\n";
 
@@ -653,7 +653,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "  foo\nbar\n");
     }
 
-    SECTION("folded string scalar with the non-first line being more indented than the indicated level") {
+    SUBCASE("folded string scalar with the non-first line being more indented than the indicated level") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "    bar\n";
 
@@ -665,7 +665,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "foo\n  bar\n");
     }
 
-    SECTION("folded string scalar") {
+    SUBCASE("folded string scalar") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "  \n"
                                          "\n"
@@ -680,7 +680,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "foo\n\nbar\n");
     }
 
-    SECTION("folded string scalar with implicit indentation and strip chomping") {
+    SUBCASE("folded string scalar with implicit indentation and strip chomping") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "  bar\n"
                                          " \n"
@@ -694,7 +694,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "foo bar");
     }
 
-    SECTION("folded string scalar with implicit indentation and clip chomping") {
+    SUBCASE("folded string scalar with implicit indentation and clip chomping") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "  bar\n"
                                          "  \n"
@@ -708,7 +708,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "foo bar\n");
     }
 
-    SECTION("folded string scalar with implicit indentation and keep chomping") {
+    SUBCASE("folded string scalar with implicit indentation and keep chomping") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "  bar\n"
                                          " \n"
@@ -722,7 +722,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "foo bar\n\n");
     }
 
-    SECTION("block folded scalar with no newline at the last content line and strip chomping.") {
+    SUBCASE("block folded scalar with no newline at the last content line and strip chomping.") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "  bar\n"
                                          "\n"
@@ -735,7 +735,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "foo bar\nbaz");
     }
 
-    SECTION("block folded scalar with no newline at the last content line and clip chomping.") {
+    SUBCASE("block folded scalar with no newline at the last content line and clip chomping.") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "  bar\n"
                                          "\n"
@@ -748,7 +748,7 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE(node.as_str() == "foo bar\nbaz");
     }
 
-    SECTION("block folded scalar with no newline at the last more-indented content line.") {
+    SUBCASE("block folded scalar with no newline at the last more-indented content line.") {
         fkyaml::detail::str_view token = "  foo\n"
                                          "  bar\n"
                                          "\n"

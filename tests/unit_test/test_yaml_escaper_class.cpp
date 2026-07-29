@@ -8,12 +8,12 @@
 
 #include <utility>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
 TEST_CASE("YamlEscaper_Unescape") {
-    SECTION("valid escape sequence") {
+    SUBCASE("valid escape sequence") {
         using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
         auto test_data = GENERATE(
             test_data_t {"\\a", "\a"},
@@ -50,7 +50,7 @@ TEST_CASE("YamlEscaper_Unescape") {
         REQUIRE(buff == test_data.second);
     }
 
-    SECTION("invalid escape sequence") {
+    SUBCASE("invalid escape sequence") {
         auto input = GENERATE(
             fkyaml::detail::str_view("\\Q"),
             fkyaml::detail::str_view("\\xw"),
@@ -65,7 +65,7 @@ TEST_CASE("YamlEscaper_Unescape") {
         REQUIRE_FALSE(fkyaml::detail::yaml_escaper::unescape(begin_itr, end_itr, buff));
     }
 
-    SECTION("invalid UTF encoding") {
+    SUBCASE("invalid UTF encoding") {
         fkyaml::detail::str_view input = "\\U00110000";
         auto begin_itr = input.cbegin();
         auto end_itr = input.cend();

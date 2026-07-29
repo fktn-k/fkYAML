@@ -8,7 +8,7 @@
 
 #include <fstream>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
@@ -90,7 +90,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
     //   char iterators   //
     ////////////////////////
 
-    SECTION("char iterators encoded in the UTF-8") {
+    SUBCASE("char iterators encoded in the UTF-8") {
         std::string input {char(0x60u), char(0x61u), char(0x62u), char(0x63u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -100,7 +100,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char iterators encoded in the UTF-8(BOM)") {
+    SUBCASE("char iterators encoded in the UTF-8(BOM)") {
         std::string input {char(0xEFu), char(0xBBu), char(0xBFu), char(0x60u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -110,7 +110,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 3);
     }
 
-    SECTION("char iterators encoded in the UTF-16BE") {
+    SUBCASE("char iterators encoded in the UTF-16BE") {
         std::string input {0, char(0x60u), 0, char(0x61u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -120,7 +120,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char iterators encoded in the UTF-16BE(BOM)") {
+    SUBCASE("char iterators encoded in the UTF-16BE(BOM)") {
         std::string input {char(0xFEu), char(0xFFu), 0, char(0x60u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -130,7 +130,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 2);
     }
 
-    SECTION("char iterators encoded in the UTF-16LE") {
+    SUBCASE("char iterators encoded in the UTF-16LE") {
         std::string input {char(0x60u), 0, char(0x61u), 0};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -140,7 +140,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char iterators encoded in the UTF-16LE(BOM)") {
+    SUBCASE("char iterators encoded in the UTF-16LE(BOM)") {
         std::string input {char(0xFFu), char(0xFEu), char(0x60u), 0};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -150,7 +150,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 2);
     }
 
-    SECTION("char iterators encoded in the UTF-32BE") {
+    SUBCASE("char iterators encoded in the UTF-32BE") {
         std::string input {0, 0, 0, char(0x60u), 0, 0, 0, char(0x61u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -160,7 +160,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char iterators encoded in the UTF-32BE(BOM)") {
+    SUBCASE("char iterators encoded in the UTF-32BE(BOM)") {
         std::string input {0, 0, char(0xFEu), char(0xFFu), 0, 0, 0, char(0x60u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -170,7 +170,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 4);
     }
 
-    SECTION("char iterators encoded in the UTF-32LE") {
+    SUBCASE("char iterators encoded in the UTF-32LE") {
         std::string input {char(0x60u), 0, 0, 0, char(0x61u), 0, 0, 0};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -180,7 +180,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char iterators encoded in the UTF-32LE(BOM)") {
+    SUBCASE("char iterators encoded in the UTF-32LE(BOM)") {
         std::string input {char(0xFFu), char(0xFEu), 0, 0, char(0x60u), 0, 0, 0};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -190,7 +190,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 4);
     }
 
-    SECTION("empty char iterators") {
+    SUBCASE("empty char iterators") {
         std::string input = "";
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -206,7 +206,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
 
 #if FK_YAML_HAS_CHAR8_T
 
-    SECTION("char8_t iterators encoded in the UTF-8") {
+    SUBCASE("char8_t iterators encoded in the UTF-8") {
         std::u8string input {char8_t(0x60u), char8_t(0x61u), char8_t(0x62u), char8_t(0x63u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -216,7 +216,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char8_t iterators encoded in the UTF-8(BOM)") {
+    SUBCASE("char8_t iterators encoded in the UTF-8(BOM)") {
         std::u8string input {char8_t(0xEFu), char8_t(0xBBu), char8_t(0xBFu), char8_t(0x60u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -226,7 +226,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 3);
     }
 
-    SECTION("empty char8_t iterators") {
+    SUBCASE("empty char8_t iterators") {
         std::u8string input = u8"";
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -236,7 +236,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char8_t iterators with invalid encoding") {
+    SUBCASE("char8_t iterators with invalid encoding") {
         std::u8string input {char8_t(0x00u), char8_t(0x00u), char8_t(0xFEu), char8_t(0xFFu)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -250,7 +250,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
     //   char16_t iterators   //
     ////////////////////////////
 
-    SECTION("char16_t iterators encoded in the UTF-16BE") {
+    SUBCASE("char16_t iterators encoded in the UTF-16BE") {
         std::u16string input {char16_t(0x0060u), char16_t(0x0061u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -260,7 +260,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char16_t iterators encoded in the UTF-16BE(BOM)") {
+    SUBCASE("char16_t iterators encoded in the UTF-16BE(BOM)") {
         std::u16string input {char16_t(0xFEFFu), char16_t(0x0060u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -270,7 +270,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 1);
     }
 
-    SECTION("char16_t iterators encoded in the UTF-16LE") {
+    SUBCASE("char16_t iterators encoded in the UTF-16LE") {
         std::u16string input {char16_t(0x6000u), char16_t(0x6100u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -280,7 +280,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char16_t iterators encoded in the UTF-16LE(BOM)") {
+    SUBCASE("char16_t iterators encoded in the UTF-16LE(BOM)") {
         std::u16string input {char16_t(0xFFFEu), char16_t(0x6000u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -290,7 +290,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 1);
     }
 
-    SECTION("empty char16_t iterators") {
+    SUBCASE("empty char16_t iterators") {
         std::u16string input = u"";
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -300,7 +300,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char16_t iterators with invalid encoding") {
+    SUBCASE("char16_t iterators with invalid encoding") {
         std::u16string input {char16_t(0x0000u), char16_t(0xFEFFu)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -312,7 +312,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
     //   char32_t iterators   //
     ////////////////////////////
 
-    SECTION("char32_t iterators encoded in the UTF-32BE") {
+    SUBCASE("char32_t iterators encoded in the UTF-32BE") {
         std::u32string input {char32_t(0x00000060u), char32_t(0x00000061u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -322,7 +322,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char32_t iterators encoded in the UTF-32BE(BOM)") {
+    SUBCASE("char32_t iterators encoded in the UTF-32BE(BOM)") {
         std::u32string input {char32_t(0x0000FEFFu), char32_t(0x00000060u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -332,7 +332,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 1);
     }
 
-    SECTION("char32_t iterators encoded in the UTF-32LE") {
+    SUBCASE("char32_t iterators encoded in the UTF-32LE") {
         std::u32string input {char32_t(0x60000000u), char32_t(0x61000000u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -342,7 +342,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char32_t iterators encoded in the UTF-32LE(BOM)") {
+    SUBCASE("char32_t iterators encoded in the UTF-32LE(BOM)") {
         std::u32string input {char32_t(0xFFFE0000u), char32_t(0x60000000u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -352,7 +352,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input) + 1);
     }
 
-    SECTION("empty char32_t iterators") {
+    SUBCASE("empty char32_t iterators") {
         std::u32string input = U"";
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -362,7 +362,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         REQUIRE(begin == std::begin(input));
     }
 
-    SECTION("char32_t iterators with invalid encoding") {
+    SUBCASE("char32_t iterators with invalid encoding") {
         std::u32string input {char32_t(0xFEFF0060u), char32_t(0x00610062u)};
         auto begin = std::begin(input);
         auto end = std::end(input);
@@ -374,7 +374,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
     //   FILE* object   //
     //////////////////////
 
-    SECTION("FILE* object with UTF-8 encoding") {
+    SUBCASE("FILE* object with UTF-8 encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n.txt", "r");
         ENABLE_C4996
@@ -387,7 +387,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with UTF-8(BOM) encoding") {
+    SUBCASE("FILE* object with UTF-8(BOM) encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8bom.txt", "r");
         ENABLE_C4996
@@ -400,7 +400,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with UTF-16BE encoding") {
+    SUBCASE("FILE* object with UTF-16BE encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16ben.txt", "r");
         ENABLE_C4996
@@ -413,7 +413,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with UTF-16BE(BOM) encoding") {
+    SUBCASE("FILE* object with UTF-16BE(BOM) encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16bebom.txt", "r");
         ENABLE_C4996
@@ -426,7 +426,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with UTF-16LE encoding") {
+    SUBCASE("FILE* object with UTF-16LE encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16len.txt", "r");
         ENABLE_C4996
@@ -439,7 +439,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with UTF-16LE(BOM) encoding") {
+    SUBCASE("FILE* object with UTF-16LE(BOM) encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16lebom.txt", "r");
         ENABLE_C4996
@@ -452,7 +452,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with UTF-32BE encoding") {
+    SUBCASE("FILE* object with UTF-32BE encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32ben.txt", "r");
         ENABLE_C4996
@@ -465,7 +465,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with UTF-32BE(BOM) encoding") {
+    SUBCASE("FILE* object with UTF-32BE(BOM) encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32bebom.txt", "r");
         ENABLE_C4996
@@ -478,7 +478,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with UTF-32LE encoding") {
+    SUBCASE("FILE* object with UTF-32LE encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32len.txt", "r");
         ENABLE_C4996
@@ -491,7 +491,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with UTF-32LE(BOM) encoding") {
+    SUBCASE("FILE* object with UTF-32LE(BOM) encoding") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32lebom.txt", "r");
         ENABLE_C4996
@@ -504,7 +504,7 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
         std::fclose(p_file);
     }
 
-    SECTION("FILE* object with an empty input file") {
+    SUBCASE("FILE* object with an empty input file") {
         DISABLE_C4996
         std::FILE* p_file = std::fopen(FK_YAML_TEST_DATA_DIR "/single_char_byte_input.txt", "r");
         ENABLE_C4996
@@ -521,77 +521,77 @@ TEST_CASE("UTFEncodeDetector_DetectEncodingAndSkipBom") {
     //   std::istream object   //
     /////////////////////////////
 
-    SECTION("std::istream with UTF-8 encoding") {
+    SUBCASE("std::istream with UTF-8 encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8n.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(ifs.tellg() == 0);
     }
 
-    SECTION("std::istream with UTF-8(BOM) encoding") {
+    SUBCASE("std::istream with UTF-8(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf8bom.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
         REQUIRE(ifs.tellg() == 3);
     }
 
-    SECTION("std::istream with UTF-16BE encoding") {
+    SUBCASE("std::istream with UTF-16BE encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16ben.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(ifs.tellg() == 0);
     }
 
-    SECTION("std::istream with UTF-16BE(BOM) encoding") {
+    SUBCASE("std::istream with UTF-16BE(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16bebom.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16BE);
         REQUIRE(ifs.tellg() == 2);
     }
 
-    SECTION("std::istream with UTF-16LE encoding") {
+    SUBCASE("std::istream with UTF-16LE encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16len.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(ifs.tellg() == 0);
     }
 
-    SECTION("std::istream with UTF-16LE(BOM) encoding") {
+    SUBCASE("std::istream with UTF-16LE(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf16lebom.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_16LE);
         REQUIRE(ifs.tellg() == 2);
     }
 
-    SECTION("std::istream with UTF-32BE encoding") {
+    SUBCASE("std::istream with UTF-32BE encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32ben.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(ifs.tellg() == 0);
     }
 
-    SECTION("std::istream with UTF-32BE(BOM) encoding") {
+    SUBCASE("std::istream with UTF-32BE(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32bebom.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32BE);
         REQUIRE(ifs.tellg() == 4);
     }
 
-    SECTION("std::istream with UTF-32LE encoding") {
+    SUBCASE("std::istream with UTF-32LE encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32len.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(ifs.tellg() == 0);
     }
 
-    SECTION("std::istream with UTF-32LE(BOM) encoding") {
+    SUBCASE("std::istream with UTF-32LE(BOM) encoding") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/input_adapter_test_data_utf32lebom.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_32LE);
         REQUIRE(ifs.tellg() == 4);
     }
 
-    SECTION("std::istream with an empty input file") {
+    SUBCASE("std::istream with an empty input file") {
         std::ifstream ifs(FK_YAML_TEST_DATA_DIR "/single_char_byte_input.txt");
         fkyaml::detail::utf_encode_t ret = fkyaml::detail::stream_utf_encode_detector::detect(ifs);
         REQUIRE(ret == fkyaml::detail::utf_encode_t::UTF_8);
