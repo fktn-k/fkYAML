@@ -14378,24 +14378,33 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name) {
         if (is_anchor()) {
+            if (anchor_name == m_prop.anchor) {
+                // No need to do anything if the anchor name is the same as the current one.
+                return;
+            }
+
             m_attrs.clear(detail::node_attr_mask::anchoring);
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, m_attrs.get_anchor_offset());
+            m_prop.anchor.clear();
+            m_prop.tag.clear();
             mp_meta.reset();
             itr->second.swap(*this);
-            mp_meta->anchor_table.erase(itr);
+            // DO NOT erase the anchor from the table here
+            // to avoid invaliating the offset of other anchors with the same name.
+            // The anchor will be erased when all the nodes are destroyed.
         }
 
         auto p_meta = mp_meta;
 
         basic_node node;
         node.swap(*this);
+        const auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name));
         p_meta->anchor_table.emplace(anchor_name, std::move(node));
 
         m_attrs.clear(detail::node_attr_mask::anchoring);
         m_attrs.set(detail::node_attr_bits::anchor_bit);
         mp_meta = p_meta;
-        const auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         m_attrs.set_anchor_offset(offset);
         m_prop.anchor = anchor_name;
     }
@@ -14406,12 +14415,22 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name) {
         if (is_anchor()) {
+            if (anchor_name == m_prop.anchor) {
+                // No need to do anything if the anchor name is the same as the current one.
+                return;
+            }
+
             m_attrs.clear(detail::node_attr_mask::anchoring);
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, m_attrs.get_anchor_offset());
+            m_prop.anchor.clear();
+            m_prop.tag.clear();
             mp_meta.reset();
             itr->second.swap(*this);
             mp_meta->anchor_table.erase(itr);
+            // DO NOT erase the anchor from the table here
+            // to avoid invaliating the offset of other anchors with the same name.
+            // The anchor will be erased when all the nodes are destroyed.
         }
 
         auto p_meta = mp_meta;

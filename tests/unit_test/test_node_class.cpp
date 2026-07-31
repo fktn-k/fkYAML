@@ -2942,19 +2942,37 @@ TEST_CASE("Node_AddAnchorName") {
 
     SUBCASE("overwrite an existing anchor name with lvalue anchor name") {
         node.add_anchor_name(anchor_name);
-        std::string overwritten_name = "overwritten_name";
-        node.add_anchor_name(overwritten_name);
-        REQUIRE_NOTHROW(node.get_anchor_name());
-        REQUIRE_FALSE(node.get_anchor_name().compare("anchor_name") == 0);
-        REQUIRE(node.get_anchor_name().compare("overwritten_name") == 0);
+
+        SUBCASE("with a different anchor name") {
+            std::string overwritten_name = "overwritten_name";
+            node.add_anchor_name(overwritten_name);
+            REQUIRE_NOTHROW(node.get_anchor_name());
+            REQUIRE_FALSE(node.get_anchor_name().compare("anchor_name") == 0);
+            REQUIRE(node.get_anchor_name().compare("overwritten_name") == 0);
+        }
+
+        SUBCASE("with the same name") {
+            node.add_anchor_name(anchor_name);
+            REQUIRE_NOTHROW(node.get_anchor_name());
+            REQUIRE(node.get_anchor_name().compare("anchor_name") == 0);
+        }
     }
 
     SUBCASE("overwrite an existing anchor name with rvalue anchor name") {
         node.add_anchor_name(anchor_name);
-        node.add_anchor_name("overwritten_name");
-        REQUIRE_NOTHROW(node.get_anchor_name());
-        REQUIRE_FALSE(node.get_anchor_name().compare("anchor_name") == 0);
-        REQUIRE(node.get_anchor_name().compare("overwritten_name") == 0);
+
+        SUBCASE("with a different name") {
+            node.add_anchor_name("overwritten_name");
+            REQUIRE_NOTHROW(node.get_anchor_name());
+            REQUIRE_FALSE(node.get_anchor_name().compare("anchor_name") == 0);
+            REQUIRE(node.get_anchor_name().compare("overwritten_name") == 0);
+        }
+
+        SUBCASE("with the same name") {
+            node.add_anchor_name(anchor_name);
+            REQUIRE_NOTHROW(node.get_anchor_name());
+            REQUIRE(node.get_anchor_name().compare("anchor_name") == 0);
+        }
     }
 }
 
