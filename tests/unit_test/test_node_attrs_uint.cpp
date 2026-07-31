@@ -45,11 +45,11 @@ TEST_CASE("NodeAttrs_UintBit_InteractsWithIntBit") {
     }
 }
 
-TEST_CASE("NodeAttrs_UintBit_FromNodeTypeNeverSetsIt") {
-    // from_node_type has no knowledge of uint_bit; it must not accidentally set it.
-    fkyaml::detail::node_attr_t bits = fkyaml::detail::node_attr_bits::from_node_type(fkyaml::node_type::INTEGER);
-    REQUIRE(bits == fkyaml::detail::node_attr_bits::int_bit);
-    REQUIRE((bits & fkyaml::detail::node_attr_bits::uint_bit) == 0u);
+TEST_CASE("NodeAttrs_UintBit_CtorWithNodeTypeNeverSetsIt") {
+    // node_attrs constructor with node_type does not take care of uint_bit; it must not accidentally set it.
+    fkyaml::detail::node_attrs attrs {fkyaml::node_type::INTEGER};
+    REQUIRE(attrs.has(fkyaml::detail::node_attr_bits::int_bit));
+    REQUIRE(!attrs.has(fkyaml::detail::node_attr_bits::uint_bit));
 }
 
 TEST_CASE("NodeAttrs_UintBit_ToNodeTypeStillReturnsInteger") {
@@ -57,5 +57,5 @@ TEST_CASE("NodeAttrs_UintBit_ToNodeTypeStillReturnsInteger") {
     // when both int_bit and uint_bit are present.
     const fkyaml::detail::node_attr_t attrs =
         fkyaml::detail::node_attr_bits::int_bit | fkyaml::detail::node_attr_bits::uint_bit;
-    REQUIRE(fkyaml::detail::node_attr_bits::to_node_type(attrs) == fkyaml::node_type::INTEGER);
+    REQUIRE(fkyaml::detail::node_attrs(attrs).to_node_type() == fkyaml::node_type::INTEGER);
 }

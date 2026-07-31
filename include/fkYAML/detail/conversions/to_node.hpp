@@ -36,32 +36,32 @@ struct external_node_constructor {
     template <typename... Args>
     static void sequence(BasicNodeType& n, Args&&... args) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::seq_bit;
+        n.m_attrs.set(node_attr_bits::seq_bit);
         n.m_value.p_seq = create_object<typename BasicNodeType::sequence_type>(std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     static void mapping(BasicNodeType& n, Args&&... args) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::map_bit;
+        n.m_attrs.set(node_attr_bits::map_bit);
         n.m_value.p_map = create_object<typename BasicNodeType::mapping_type>(std::forward<Args>(args)...);
     }
 
     static void null_scalar(BasicNodeType& n, std::nullptr_t) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::null_bit;
+        n.m_attrs.set(node_attr_bits::null_bit);
         n.m_value.p_map = nullptr;
     }
 
     static void boolean_scalar(BasicNodeType& n, const typename BasicNodeType::boolean_type b) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::bool_bit;
+        n.m_attrs.set(node_attr_bits::bool_bit);
         n.m_value.boolean = b;
     }
 
     static void integer_scalar(BasicNodeType& n, const typename BasicNodeType::integer_type i) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::int_bit;
+        n.m_attrs.set(node_attr_bits::int_bit);
         n.m_value.integer = i;
     }
 
@@ -70,30 +70,30 @@ struct external_node_constructor {
     /// get_value<uint64_t>() / as_uint() can recover the original unsigned value.
     static void unsigned_integer_scalar(BasicNodeType& n, const typename BasicNodeType::integer_type i) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::int_bit;
-        n.m_attrs |= node_attr_bits::uint_bit;
+        n.m_attrs.set(node_attr_bits::int_bit);
+        n.m_attrs.set(node_attr_bits::uint_bit);
         n.m_value.integer = i;
     }
 
     static void float_scalar(BasicNodeType& n, const typename BasicNodeType::float_number_type f) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::float_bit;
+        n.m_attrs.set(node_attr_bits::float_bit);
         n.m_value.float_val = f;
     }
 
     template <typename... Args>
     static void string_scalar(BasicNodeType& n, Args&&... args) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::string_bit;
+        n.m_attrs.set(node_attr_bits::string_bit);
         n.m_value.p_str = create_object<typename BasicNodeType::string_type>(std::forward<Args>(args)...);
     }
 
 private:
     static void destroy(BasicNodeType& n) {
-        n.m_value.destroy(n.m_attrs & node_attr_mask::value);
+        n.m_value.destroy(n.m_attrs.value().get());
         // Clear both the value-type bits and the uint_bit style flag so that any
         // subsequent reassignment starts from a clean state.
-        n.m_attrs &= ~(node_attr_mask::value | node_attr_bits::uint_bit);
+        n.m_attrs.clear(node_attr_mask::value | node_attr_bits::uint_bit);
     }
 };
 
