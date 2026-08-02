@@ -5438,10 +5438,8 @@ constexpr node_attr_t value = 0x0000FFFFu;
 constexpr node_attr_t style = 0x00FF0000u;
 /// The bit mask for node property related bits.
 constexpr node_attr_t props = 0xFF000000u;
-/// The bit mask for anchor/alias node type bits.
-constexpr node_attr_t anchoring = 0x03000000u;
 /// The bit mask for anchor offset value bits.
-constexpr node_attr_t anchor_offset = 0xFC000000u;
+constexpr node_attr_t anchor_offset = 0xFF000000u;
 /// The bit mask for all the bits for node attributes.
 constexpr node_attr_t all = std::numeric_limits<node_attr_t>::max();
 
@@ -5464,19 +5462,21 @@ constexpr node_attr_t int_bit = 1u << 4;
 constexpr node_attr_t float_bit = 1u << 5;
 /// The string scalar node bit.
 constexpr node_attr_t string_bit = 1u << 6;
+/// The anchor node bit.
+constexpr node_attr_t anchor_bit = 1u << 7;
+/// The alias node bit.
+constexpr node_attr_t alias_bit = 1u << 8;
 
 /// A utility bit set to filter scalar node bits.
 constexpr node_attr_t scalar_bits = null_bit | bool_bit | int_bit | float_bit | string_bit;
+
+/// A utility bit set to filter anchor/alias node bits.
+constexpr node_attr_t anchoring_bits = anchor_bit | alias_bit;
 
 /// The unsigned integer flag bit.
 /// Set on INTEGER nodes whose stored int64_t value represents a uint64_t that exceeds INT64_MAX.
 /// This allows values such as xxHash/UUID results to round-trip correctly through get_value<uint64_t>().
 constexpr node_attr_t uint_bit = 1u << 16; // lives in the style bits area (0x00FF0000)
-
-/// The anchor node bit.
-constexpr node_attr_t anchor_bit = 0x01000000u;
-/// The alias node bit.
-constexpr node_attr_t alias_bit = 0x02000000u;
 
 /// A utility bit set for initialization.
 constexpr node_attr_t default_bits = null_bit;
@@ -5635,14 +5635,14 @@ public:
     /// @brief Gets the anchor offset used to reference an anchor node.
     /// @return The anchor offset value.
     uint32_t get_anchor_offset() const noexcept {
-        return (m_attrs & node_attr_mask::anchor_offset) >> 26;
+        return (m_attrs & node_attr_mask::anchor_offset) >> 24;
     }
 
     /// @brief Sets an anchor offset value to the appropriate bits.
     /// @param offset The anchor offset value.
     void set_anchor_offset(uint32_t offset) noexcept {
         clear(node_attr_mask::anchor_offset);
-        set((offset & 0x3Fu) << 26);
+        set((offset & 0xFFu) << 24);
     }
 
 private:
@@ -7580,8 +7580,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 struct node_property {
-    /// The tag name property.
-    std::string tag {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
     /// The anchor name property.
     std::string anchor {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
 };
@@ -13421,7 +13419,8 @@ public:
     basic_node(const basic_node& rhs)
         : m_attrs(rhs.m_attrs),
           mp_meta(rhs.mp_meta),
-          m_prop(rhs.m_prop) {
+          m_prop(rhs.m_prop),
+          mp_tag(rhs.mp_tag ? std::make_unique<std::string>(*rhs.mp_tag) : nullptr) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs.value().get()) {
             case detail::node_attr_bits::seq_bit:
@@ -13457,7 +13456,8 @@ public:
     basic_node(basic_node&& rhs) noexcept
         : m_attrs(rhs.m_attrs),
           mp_meta(std::move(rhs.mp_meta)),
-          m_prop(std::move(rhs.m_prop)) {
+          m_prop(std::move(rhs.m_prop)),
+          mp_tag(std::move(rhs.mp_tag)) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs.value().get()) {
             case detail::node_attr_bits::seq_bit:
@@ -14387,7 +14387,7 @@ public:
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, m_attrs.get_anchor_offset());
             m_prop.anchor.clear();
-            m_prop.tag.clear();
+            mp_tag.reset();
             mp_meta.reset();
             itr->second.swap(*this);
             // DO NOT erase the anchor from the table here
@@ -14424,7 +14424,7 @@ public:
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
             std::advance(itr, m_attrs.get_anchor_offset());
             m_prop.anchor.clear();
-            m_prop.tag.clear();
+            mp_tag.reset();
             mp_meta.reset();
             itr->second.swap(*this);
             mp_meta->anchor_table.erase(itr);
@@ -14451,7 +14451,7 @@ public:
     /// @return true if ths basic_node has a tag name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
     bool has_tag_name() const noexcept {
-        return !m_prop.tag.empty();
+        return mp_tag != nullptr;
     }
 
     /// @brief Get the tag name associated with this basic_node object.
@@ -14463,7 +14463,7 @@ public:
         if FK_YAML_UNLIKELY (!has_tag_name()) {
             throw fkyaml::exception("No tag name has been set.");
         }
-        return m_prop.tag;
+        return *mp_tag;
     }
 
     /// @brief Add a tag name to this basic_node object.
@@ -14471,7 +14471,7 @@ public:
     /// @param[in] tag_name A tag name to get associated with this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
     void add_tag_name(const std::string& tag_name) {
-        m_prop.tag = tag_name;
+        mp_tag = std::make_unique<std::string>(tag_name);
     }
 
     /// @brief Add a tag name to this basic_node object.
@@ -14479,7 +14479,7 @@ public:
     /// @param[in] tag_name A tag name to get associated with this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
     void add_tag_name(std::string&& tag_name) {
-        m_prop.tag = std::move(tag_name);
+        mp_tag = std::make_unique<std::string>(std::move(tag_name));
     }
 
     /// @brief Get the node value object converted into a given type.
@@ -14794,7 +14794,7 @@ public:
         std::memcpy(&m_value, &rhs.m_value, sizeof(node_value));
         std::memcpy(&rhs.m_value, &tmp, sizeof(node_value));
 
-        swap(m_prop.tag, rhs.m_prop.tag);
+        swap(mp_tag, rhs.mp_tag);
         swap(m_prop.anchor, rhs.m_prop.anchor);
     }
 
@@ -15206,6 +15206,8 @@ private:
     node_value m_value {};
     /// The property set of this node.
     detail::node_property m_prop {};
+    /// The tag of this node.
+    std::unique_ptr<std::string> mp_tag {};
 };
 
 /// @brief Swap function for basic_node objects.

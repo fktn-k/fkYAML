@@ -27,12 +27,8 @@ namespace node_attr_mask {
 constexpr node_attr_t value = 0x0000FFFFu;
 /// The bit mask for node style type bits. (bits are not yet defined.)
 constexpr node_attr_t style = 0x00FF0000u;
-/// The bit mask for node property related bits.
-constexpr node_attr_t props = 0xFF000000u;
-/// The bit mask for anchor/alias node type bits.
-constexpr node_attr_t anchoring = 0x03000000u;
 /// The bit mask for anchor offset value bits.
-constexpr node_attr_t anchor_offset = 0xFC000000u;
+constexpr node_attr_t anchor_offset = 0xFF000000u;
 /// The bit mask for all the bits for node attributes.
 constexpr node_attr_t all = std::numeric_limits<node_attr_t>::max();
 
@@ -55,19 +51,21 @@ constexpr node_attr_t int_bit = 1u << 4;
 constexpr node_attr_t float_bit = 1u << 5;
 /// The string scalar node bit.
 constexpr node_attr_t string_bit = 1u << 6;
+/// The anchor node bit.
+constexpr node_attr_t anchor_bit = 1u << 7;
+/// The alias node bit.
+constexpr node_attr_t alias_bit = 1u << 8;
 
 /// A utility bit set to filter scalar node bits.
 constexpr node_attr_t scalar_bits = null_bit | bool_bit | int_bit | float_bit | string_bit;
+
+/// A utility bit set to filter anchor/alias node bits.
+constexpr node_attr_t anchoring_bits = anchor_bit | alias_bit;
 
 /// The unsigned integer flag bit.
 /// Set on INTEGER nodes whose stored int64_t value represents a uint64_t that exceeds INT64_MAX.
 /// This allows values such as xxHash/UUID results to round-trip correctly through get_value<uint64_t>().
 constexpr node_attr_t uint_bit = 1u << 16; // lives in the style bits area (0x00FF0000)
-
-/// The anchor node bit.
-constexpr node_attr_t anchor_bit = 0x01000000u;
-/// The alias node bit.
-constexpr node_attr_t alias_bit = 0x02000000u;
 
 /// A utility bit set for initialization.
 constexpr node_attr_t default_bits = null_bit;
@@ -226,14 +224,14 @@ public:
     /// @brief Gets the anchor offset used to reference an anchor node.
     /// @return The anchor offset value.
     uint32_t get_anchor_offset() const noexcept {
-        return (m_attrs & node_attr_mask::anchor_offset) >> 26;
+        return (m_attrs & node_attr_mask::anchor_offset) >> 24;
     }
 
     /// @brief Sets an anchor offset value to the appropriate bits.
     /// @param offset The anchor offset value.
     void set_anchor_offset(uint32_t offset) noexcept {
         clear(node_attr_mask::anchor_offset);
-        set((offset & 0x3Fu) << 26);
+        set((offset & 0xFFu) << 24);
     }
 
 private:

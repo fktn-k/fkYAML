@@ -38,13 +38,13 @@ TEST_CASE("NodeAttrs_ToNodeType") {
 
 TEST_CASE("NodeAttrs_GetAnchorOffset") {
     using test_data_t = std::pair<fkyaml::detail::node_attr_t, uint32_t>;
-    auto test_data = GENERATE(test_data_t {0, 0}, test_data_t {0xA0000000u, 0x28u}, test_data_t {0xFC000000u, 0x3Fu});
+    auto test_data = GENERATE(test_data_t {0, 0}, test_data_t {0x88000000u, 0x88u}, test_data_t {0xFF000000u, 0xFFu});
     REQUIRE(fkyaml::detail::node_attrs(test_data.first).get_anchor_offset() == test_data.second);
 }
 
 TEST_CASE("NodeAttrs_SetAnchorOffset") {
     using test_data_t = std::pair<uint32_t, fkyaml::detail::node_attr_t>;
-    auto test_data = GENERATE(test_data_t {0, 0}, test_data_t {0x28u, 0xA0000000u}, test_data_t {0x3Fu, 0xFC000000u});
+    auto test_data = GENERATE(test_data_t {0, 0}, test_data_t {0x88u, 0x88000000u}, test_data_t {0xFFu, 0xFF000000u});
     fkyaml::detail::node_attrs attrs {0};
     attrs.set_anchor_offset(test_data.first);
     REQUIRE(attrs.get() == test_data.second);

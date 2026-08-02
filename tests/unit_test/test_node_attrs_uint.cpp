@@ -18,7 +18,6 @@ TEST_CASE("NodeAttrs_UintBit_LivesInStyleArea") {
     // uint_bit must live in 0x00FF0000 so it is orthogonal to the value-type area.
     REQUIRE((fkyaml::detail::node_attr_bits::uint_bit & fkyaml::detail::node_attr_mask::style) != 0u);
     REQUIRE((fkyaml::detail::node_attr_bits::uint_bit & fkyaml::detail::node_attr_mask::value) == 0u);
-    REQUIRE((fkyaml::detail::node_attr_bits::uint_bit & fkyaml::detail::node_attr_mask::anchoring) == 0u);
 }
 
 TEST_CASE("NodeAttrs_UintBit_NotInScalarBits") {
