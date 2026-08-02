@@ -1052,6 +1052,22 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_META_NODE_TRAITS_HPP */
 
+// #include <fkYAML/detail/types/version_type.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_TYPES_VERSION_TYPE_HPP
+#define FK_YAML_DETAIL_TYPES_VERSION_TYPE_HPP
+
+#include <cstdint>
+
+// #include <fkYAML/detail/macros/define_macros.hpp>
+
 // #include <fkYAML/yaml_version_type.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -1096,13 +1112,52 @@ FK_YAML_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+/// @brief Definition of YAML version types.
+enum class version_type : std::uint8_t {
+    NOT_SPECIFIED, //!< YAML version is not specified.
+    VERSION_1_1,   //!< YAML version 1.1
+    VERSION_1_2,   //!< YAML version 1.2
+};
+
+/// @brief Convert a yaml_version_type to a version_type.
+/// @param t The YAML version type to convert.
+/// @return The corresponding version_type value.
+inline version_type convert_from_yaml_version_type(yaml_version_type t) noexcept {
+    switch (t) {
+    case yaml_version_type::VERSION_1_1:
+        return version_type::VERSION_1_1;
+    case yaml_version_type::VERSION_1_2:
+    default:
+        return version_type::VERSION_1_2;
+    }
+}
+
+/// @brief Convert a version_type to a yaml_version_type.
+/// @param t The version_type value to convert.
+/// @return The corresponding yaml_version_type value.
+inline yaml_version_type convert_to_yaml_version_type(version_type t) noexcept {
+    switch (t) {
+    case version_type::VERSION_1_1:
+        return yaml_version_type::VERSION_1_1;
+    case version_type::NOT_SPECIFIED: // 1.2 is the default version when not specified.
+    case version_type::VERSION_1_2:
+    default:
+        return yaml_version_type::VERSION_1_2;
+    }
+}
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_TYPES_VERSION_TYPE_HPP */
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
 /// @brief The set of directives for a YAML document.
 template <typename BasicNodeType, typename = enable_if_t<is_basic_node<BasicNodeType>::value>>
 struct document_metainfo {
     /// The YAML version used for the YAML document.
-    yaml_version_type version {yaml_version_type::VERSION_1_2};
-    /// Whether the YAML version has been specified.
-    bool is_version_specified {false};
+    version_type version {version_type::NOT_SPECIFIED};
     /// The prefix of the primary handle.
     std::string primary_handle_prefix;
     /// The prefix of the secondary handle.
@@ -5436,8 +5491,6 @@ namespace node_attr_mask {
 constexpr node_attr_t value = 0x0000FFFFu;
 /// The bit mask for node style type bits. (bits are not yet defined.)
 constexpr node_attr_t style = 0x00FF0000u;
-/// The bit mask for node property related bits.
-constexpr node_attr_t props = 0xFF000000u;
 /// The bit mask for anchor offset value bits.
 constexpr node_attr_t anchor_offset = 0xFF000000u;
 /// The bit mask for all the bits for node attributes.
@@ -7560,34 +7613,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/node_attrs.hpp>
 
-// #include <fkYAML/detail/node_property.hpp>
-//  _______   __ __   __  _____   __  __  __
-// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
-// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-//
-// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
-// SPDX-License-Identifier: MIT
-
-#ifndef FK_YAML_DETAIL_NODE_PROPERTY_HPP
-#define FK_YAML_DETAIL_NODE_PROPERTY_HPP
-
-#include <string>
-
-// #include <fkYAML/detail/macros/define_macros.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-struct node_property {
-    /// The anchor name property.
-    std::string anchor {}; // NOLINT(readability-redundant-member-init) necessary for older compilers
-};
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_NODE_PROPERTY_HPP */
-
 // #include <fkYAML/detail/types/lexical_token_t.hpp>
 
 // #include <fkYAML/exception.hpp>
@@ -7889,7 +7914,7 @@ private:
 
             switch (token.type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
-                if FK_YAML_UNLIKELY (mp_meta->is_version_specified) {
+                if FK_YAML_UNLIKELY (mp_meta->version != version_type::NOT_SPECIFIED) {
                     throw parse_error(
                         "YAML version cannot be specified more than once.",
                         lexer.get_lines_processed(),
@@ -7897,7 +7922,6 @@ private:
                 }
 
                 mp_meta->version = convert_yaml_version(lexer.get_yaml_version());
-                mp_meta->is_version_specified = true;
                 lacks_end_of_directives_marker = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
@@ -8564,7 +8588,7 @@ private:
 
                 basic_node_type node {};
                 node.m_attrs.set(detail::node_attr_bits::alias_bit);
-                node.m_prop.anchor = anchor_name;
+                node.mp_anchor = std::make_unique<std::string>(anchor_name);
                 node.m_attrs.set_anchor_offset(anchor_counts - 1);
 
                 apply_directive_set(node);
@@ -9037,8 +9061,8 @@ private:
 
     /// @brief Update the target YAML version with an input string.
     /// @param version_str A YAML version string.
-    yaml_version_type convert_yaml_version(str_view version_str) noexcept {
-        return (version_str.compare("1.1") == 0) ? yaml_version_type::VERSION_1_1 : yaml_version_type::VERSION_1_2;
+    version_type convert_yaml_version(str_view version_str) noexcept {
+        return (version_str.compare("1.1") == 0) ? version_type::VERSION_1_1 : version_type::VERSION_1_2;
     }
 
 private:
@@ -11301,8 +11325,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/node_attrs.hpp>
 
-// #include <fkYAML/detail/node_property.hpp>
-
 // #include <fkYAML/detail/node_ref_storage.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -11609,17 +11631,18 @@ private:
         const auto& p_meta = node.mp_meta;
         bool needs_directive_end = false;
 
-        if (p_meta->is_version_specified) {
-            str += "%YAML ";
-            switch (p_meta->version) {
-            case yaml_version_type::VERSION_1_1:
-                str += "1.1\n";
-                break;
-            case yaml_version_type::VERSION_1_2:
-                str += "1.2\n";
-                break;
-            }
+        switch (p_meta->version) {
+        case version_type::VERSION_1_1:
+            str += "%YAML 1.1\n";
             needs_directive_end = true;
+            break;
+        case version_type::VERSION_1_2:
+            str += "%YAML 1.2\n";
+            needs_directive_end = true;
+            break;
+        case version_type::NOT_SPECIFIED:
+        default:
+            break;
         }
 
         if (!p_meta->primary_handle_prefix.empty()) {
@@ -12230,7 +12253,12 @@ enum class yaml_version_t : std::uint8_t {
     VER_1_2, //!< YAML version 1.2
 };
 
-inline yaml_version_t convert_from_yaml_version_type(yaml_version_type t) noexcept {
+/// @brief A namespace for conversion functions between yaml_version_t and yaml_version_type.
+/// @note This namespace is for internal use only until `basic_node::yaml_version_t` is removed from the public API
+/// to avoid name collision with conversion functions for `detail::version_type`.
+namespace yaml_version_t_impl {
+
+inline yaml_version_t from_yaml_version_type(yaml_version_type t) noexcept {
     switch (t) {
     case yaml_version_type::VERSION_1_1:
         return yaml_version_t::VER_1_1;
@@ -12240,7 +12268,7 @@ inline yaml_version_t convert_from_yaml_version_type(yaml_version_type t) noexce
     }
 }
 
-inline yaml_version_type convert_to_yaml_version_type(yaml_version_t t) noexcept {
+inline yaml_version_type to_yaml_version_type(yaml_version_t t) noexcept {
     switch (t) {
     case yaml_version_t::VER_1_1:
         return yaml_version_type::VERSION_1_1;
@@ -12249,6 +12277,8 @@ inline yaml_version_type convert_to_yaml_version_type(yaml_version_t t) noexcept
         return yaml_version_type::VERSION_1_2;
     }
 }
+
+} /* namespace yaml_version_t_impl */
 
 FK_YAML_DETAIL_NAMESPACE_END
 
@@ -13419,7 +13449,7 @@ public:
     basic_node(const basic_node& rhs)
         : m_attrs(rhs.m_attrs),
           mp_meta(rhs.mp_meta),
-          m_prop(rhs.m_prop),
+          mp_anchor(rhs.mp_anchor ? std::make_unique<std::string>(*rhs.mp_anchor) : nullptr),
           mp_tag(rhs.mp_tag ? std::make_unique<std::string>(*rhs.mp_tag) : nullptr) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs.value().get()) {
@@ -13456,7 +13486,7 @@ public:
     basic_node(basic_node&& rhs) noexcept
         : m_attrs(rhs.m_attrs),
           mp_meta(std::move(rhs.mp_meta)),
-          m_prop(std::move(rhs.m_prop)),
+          mp_anchor(std::move(rhs.mp_anchor)),
           mp_tag(std::move(rhs.mp_tag)) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs.value().get()) {
@@ -13575,9 +13605,9 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/destructor/
     ~basic_node() noexcept // NOLINT(bugprone-exception-escape)
     {
-        if (m_attrs.has(detail::node_attr_mask::anchoring)) {
+        if (m_attrs.has_any(detail::node_attr_bits::anchoring_bits)) {
             if (m_attrs.is_anchor()) {
-                auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+                auto itr = mp_meta->anchor_table.equal_range(*mp_anchor).first;
                 std::advance(itr, m_attrs.get_anchor_offset());
                 itr->second.m_value.destroy(itr->second.m_attrs.value().get());
                 itr->second.m_attrs = detail::node_attrs {};
@@ -13731,7 +13761,7 @@ public:
         }
 
         basic_node node = anchor_node;
-        node.m_attrs.clear(detail::node_attr_mask::anchoring);
+        node.m_attrs.clear(detail::node_attr_bits::anchoring_bits);
         node.m_attrs.set(detail::node_attr_bits::alias_bit);
         return node;
     } // LCOV_EXCL_LINE
@@ -14323,15 +14353,14 @@ public:
     /// @return The YAML version if already set, `yaml_version_type::VERSION_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version_type/
     yaml_version_type get_yaml_version_type() const noexcept {
-        return mp_meta->is_version_specified ? mp_meta->version : yaml_version_type::VERSION_1_2;
+        return detail::convert_to_yaml_version_type(mp_meta->version);
     }
 
     /// @brief Set the YAML version for this basic_node object.
     /// @param[in] version The target YAML version.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version_type/
     void set_yaml_version_type(const yaml_version_type version) noexcept {
-        mp_meta->version = version;
-        mp_meta->is_version_specified = true;
+        mp_meta->version = detail::convert_from_yaml_version_type(version);
     }
 
     /// @brief Get the YAML version for this basic_node object.
@@ -14341,7 +14370,7 @@ public:
     FK_YAML_DEPRECATED("Since 0.3.12; Use get_yaml_version_type()")
     yaml_version_t get_yaml_version() const noexcept {
         yaml_version_type tmp_type = get_yaml_version_type();
-        return detail::convert_from_yaml_version_type(tmp_type);
+        return detail::yaml_version_t_impl::from_yaml_version_type(tmp_type);
     }
 
     /// @brief Set the YAML version for this basic_node object.
@@ -14350,14 +14379,15 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     FK_YAML_DEPRECATED("Since 0.3.12; Use set_yaml_version_type(const yaml_version_type)")
     void set_yaml_version(const yaml_version_t version) noexcept {
-        set_yaml_version_type(detail::convert_to_yaml_version_type(version));
+        yaml_version_type tmp_type = detail::yaml_version_t_impl::to_yaml_version_type(version);
+        set_yaml_version_type(tmp_type);
     }
 
     /// @brief Check whether this basic_node object has already had any anchor name.
     /// @return true if ths basic_node has an anchor name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
     bool has_anchor_name() const noexcept {
-        return m_attrs.has_any(detail::node_attr_mask::anchoring) && !m_prop.anchor.empty();
+        return m_attrs.has_any(detail::node_attr_bits::anchoring_bits) && !mp_anchor->empty();
     }
 
     /// @brief Get the anchor name associated with this basic_node object.
@@ -14369,7 +14399,7 @@ public:
         if FK_YAML_UNLIKELY (!has_anchor_name()) {
             throw fkyaml::exception("No anchor name has been set.");
         }
-        return m_prop.anchor;
+        return *mp_anchor;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -14378,15 +14408,15 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name) {
         if (is_anchor()) {
-            if (anchor_name == m_prop.anchor) {
+            if (anchor_name == *mp_anchor) {
                 // No need to do anything if the anchor name is the same as the current one.
                 return;
             }
 
-            m_attrs.clear(detail::node_attr_mask::anchoring);
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            m_attrs.clear(detail::node_attr_bits::anchoring_bits);
+            auto itr = mp_meta->anchor_table.equal_range(*mp_anchor).first;
             std::advance(itr, m_attrs.get_anchor_offset());
-            m_prop.anchor.clear();
+            mp_anchor.reset();
             mp_tag.reset();
             mp_meta.reset();
             itr->second.swap(*this);
@@ -14402,11 +14432,11 @@ public:
         const auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name));
         p_meta->anchor_table.emplace(anchor_name, std::move(node));
 
-        m_attrs.clear(detail::node_attr_mask::anchoring);
+        m_attrs.clear(detail::node_attr_bits::anchoring_bits);
         m_attrs.set(detail::node_attr_bits::anchor_bit);
         mp_meta = p_meta;
         m_attrs.set_anchor_offset(offset);
-        m_prop.anchor = anchor_name;
+        mp_anchor = std::make_unique<std::string>(anchor_name);
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -14415,15 +14445,15 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name) {
         if (is_anchor()) {
-            if (anchor_name == m_prop.anchor) {
+            if (anchor_name == *mp_anchor) {
                 // No need to do anything if the anchor name is the same as the current one.
                 return;
             }
 
-            m_attrs.clear(detail::node_attr_mask::anchoring);
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            m_attrs.clear(detail::node_attr_bits::anchoring_bits);
+            auto itr = mp_meta->anchor_table.equal_range(*mp_anchor).first;
             std::advance(itr, m_attrs.get_anchor_offset());
-            m_prop.anchor.clear();
+            mp_anchor.reset();
             mp_tag.reset();
             mp_meta.reset();
             itr->second.swap(*this);
@@ -14439,12 +14469,12 @@ public:
         node.swap(*this);
         p_meta->anchor_table.emplace(anchor_name, std::move(node));
 
-        m_attrs.clear(detail::node_attr_mask::anchoring);
+        m_attrs.clear(detail::node_attr_bits::anchoring_bits);
         m_attrs.set(detail::node_attr_bits::anchor_bit);
         mp_meta = p_meta;
         auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         m_attrs.set_anchor_offset(offset);
-        m_prop.anchor = std::move(anchor_name);
+        mp_anchor = std::make_unique<std::string>(std::move(anchor_name));
     }
 
     /// @brief Check whether this basic_node object has already had any tag name.
@@ -14794,8 +14824,8 @@ public:
         std::memcpy(&m_value, &rhs.m_value, sizeof(node_value));
         std::memcpy(&rhs.m_value, &tmp, sizeof(node_value));
 
+        swap(mp_anchor, rhs.mp_anchor);
         swap(mp_tag, rhs.mp_tag);
-        swap(m_prop.anchor, rhs.m_prop.anchor);
     }
 
     /// @brief Returns an iterator to the first element of a container node (sequence or mapping).
@@ -14990,14 +15020,15 @@ private:
     /// @return Reference to an actual value node.
     basic_node& resolve_reference() {
         if FK_YAML_UNLIKELY (has_anchor_name()) {
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            const auto& anchor_name = *mp_anchor;
+            auto itr = mp_meta->anchor_table.equal_range(anchor_name).first;
             auto offset = m_attrs.get_anchor_offset();
             std::advance(itr, offset);
             auto& anchor = itr->second;
 
             // Checks for cyclic references in the child nodes of the anchor node.
             // If it does, throws an exception to prevent infinite recursion and stack overflow.
-            const bool contains_self_ref = anchor.contains_self_referential_alias(m_prop.anchor, offset);
+            const bool contains_self_ref = anchor.contains_self_referential_alias(anchor_name, offset);
             if FK_YAML_UNLIKELY (contains_self_ref) {
                 throw fkyaml::exception("Cyclic reference detected during anchor/alias resolving.");
             }
@@ -15011,14 +15042,15 @@ private:
     /// @return Const reference to an actual value node.
     const basic_node& resolve_reference() const {
         if FK_YAML_UNLIKELY (has_anchor_name()) {
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            const auto& anchor_name = *mp_anchor;
+            auto itr = mp_meta->anchor_table.equal_range(anchor_name).first;
             auto offset = m_attrs.get_anchor_offset();
             std::advance(itr, offset);
             const auto& anchor = itr->second;
 
             // Checks for cyclic references in the child nodes of the anchor node.
             // If it does, throws an exception to prevent infinite recursion and stack overflow.
-            const bool contains_self_ref = anchor.contains_self_referential_alias(m_prop.anchor, offset);
+            const bool contains_self_ref = anchor.contains_self_referential_alias(anchor_name, offset);
             if FK_YAML_UNLIKELY (contains_self_ref) {
                 throw fkyaml::exception("Cyclic reference detected during anchor/alias resolving.");
             }
@@ -15204,8 +15236,8 @@ private:
         std::shared_ptr<detail::document_metainfo<basic_node>>(new detail::document_metainfo<basic_node>())};
     /// The current node value.
     node_value m_value {};
-    /// The property set of this node.
-    detail::node_property m_prop {};
+    /// The anchor name of this node.
+    std::unique_ptr<std::string> mp_anchor {};
     /// The tag of this node.
     std::unique_ptr<std::string> mp_tag {};
 };

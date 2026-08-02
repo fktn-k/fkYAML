@@ -14,7 +14,7 @@
 
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
-#include <fkYAML/yaml_version_type.hpp>
+#include <fkYAML/detail/types/version_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
@@ -22,9 +22,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 template <typename BasicNodeType, typename = enable_if_t<is_basic_node<BasicNodeType>::value>>
 struct document_metainfo {
     /// The YAML version used for the YAML document.
-    yaml_version_type version {yaml_version_type::VERSION_1_2};
-    /// Whether the YAML version has been specified.
-    bool is_version_specified {false};
+    version_type version {version_type::NOT_SPECIFIED};
     /// The prefix of the primary handle.
     std::string primary_handle_prefix;
     /// The prefix of the secondary handle.

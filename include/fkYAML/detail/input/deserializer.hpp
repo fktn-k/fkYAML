@@ -321,7 +321,7 @@ private:
 
             switch (token.type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
-                if FK_YAML_UNLIKELY (mp_meta->is_version_specified) {
+                if FK_YAML_UNLIKELY (mp_meta->version != version_type::NOT_SPECIFIED) {
                     throw parse_error(
                         "YAML version cannot be specified more than once.",
                         lexer.get_lines_processed(),
@@ -329,7 +329,6 @@ private:
                 }
 
                 mp_meta->version = convert_yaml_version(lexer.get_yaml_version());
-                mp_meta->is_version_specified = true;
                 lacks_end_of_directives_marker = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
@@ -1469,8 +1468,8 @@ private:
 
     /// @brief Update the target YAML version with an input string.
     /// @param version_str A YAML version string.
-    yaml_version_type convert_yaml_version(str_view version_str) noexcept {
-        return (version_str.compare("1.1") == 0) ? yaml_version_type::VERSION_1_1 : yaml_version_type::VERSION_1_2;
+    version_type convert_yaml_version(str_view version_str) noexcept {
+        return (version_str.compare("1.1") == 0) ? version_type::VERSION_1_1 : version_type::VERSION_1_2;
     }
 
 private:

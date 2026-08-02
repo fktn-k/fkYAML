@@ -1165,15 +1165,14 @@ public:
     /// @return The YAML version if already set, `yaml_version_type::VERSION_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version_type/
     yaml_version_type get_yaml_version_type() const noexcept {
-        return mp_meta->is_version_specified ? mp_meta->version : yaml_version_type::VERSION_1_2;
+        return detail::convert_to_yaml_version_type(mp_meta->version);
     }
 
     /// @brief Set the YAML version for this basic_node object.
     /// @param[in] version The target YAML version.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version_type/
     void set_yaml_version_type(const yaml_version_type version) noexcept {
-        mp_meta->version = version;
-        mp_meta->is_version_specified = true;
+        mp_meta->version = detail::convert_from_yaml_version_type(version);
     }
 
     /// @brief Get the YAML version for this basic_node object.
@@ -1183,7 +1182,7 @@ public:
     FK_YAML_DEPRECATED("Since 0.3.12; Use get_yaml_version_type()")
     yaml_version_t get_yaml_version() const noexcept {
         yaml_version_type tmp_type = get_yaml_version_type();
-        return detail::convert_from_yaml_version_type(tmp_type);
+        return detail::yaml_version_t_impl::from_yaml_version_type(tmp_type);
     }
 
     /// @brief Set the YAML version for this basic_node object.
@@ -1192,7 +1191,8 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     FK_YAML_DEPRECATED("Since 0.3.12; Use set_yaml_version_type(const yaml_version_type)")
     void set_yaml_version(const yaml_version_t version) noexcept {
-        set_yaml_version_type(detail::convert_to_yaml_version_type(version));
+        yaml_version_type tmp_type = detail::yaml_version_t_impl::to_yaml_version_type(version);
+        set_yaml_version_type(tmp_type);
     }
 
     /// @brief Check whether this basic_node object has already had any anchor name.

@@ -22,7 +22,12 @@ enum class yaml_version_t : std::uint8_t {
     VER_1_2, //!< YAML version 1.2
 };
 
-inline yaml_version_t convert_from_yaml_version_type(yaml_version_type t) noexcept {
+/// @brief A namespace for conversion functions between yaml_version_t and yaml_version_type.
+/// @note This namespace is for internal use only until `basic_node::yaml_version_t` is removed from the public API
+/// to avoid name collision with conversion functions for `detail::version_type`.
+namespace yaml_version_t_impl {
+
+inline yaml_version_t from_yaml_version_type(yaml_version_type t) noexcept {
     switch (t) {
     case yaml_version_type::VERSION_1_1:
         return yaml_version_t::VER_1_1;
@@ -32,7 +37,7 @@ inline yaml_version_t convert_from_yaml_version_type(yaml_version_type t) noexce
     }
 }
 
-inline yaml_version_type convert_to_yaml_version_type(yaml_version_t t) noexcept {
+inline yaml_version_type to_yaml_version_type(yaml_version_t t) noexcept {
     switch (t) {
     case yaml_version_t::VER_1_1:
         return yaml_version_type::VERSION_1_1;
@@ -41,6 +46,8 @@ inline yaml_version_type convert_to_yaml_version_type(yaml_version_t t) noexcept
         return yaml_version_type::VERSION_1_2;
     }
 }
+
+} /* namespace yaml_version_t_impl */
 
 FK_YAML_DETAIL_NAMESPACE_END
 

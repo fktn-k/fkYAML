@@ -85,17 +85,18 @@ private:
         const auto& p_meta = node.mp_meta;
         bool needs_directive_end = false;
 
-        if (p_meta->is_version_specified) {
-            str += "%YAML ";
-            switch (p_meta->version) {
-            case yaml_version_type::VERSION_1_1:
-                str += "1.1\n";
-                break;
-            case yaml_version_type::VERSION_1_2:
-                str += "1.2\n";
-                break;
-            }
+        switch (p_meta->version) {
+        case version_type::VERSION_1_1:
+            str += "%YAML 1.1\n";
             needs_directive_end = true;
+            break;
+        case version_type::VERSION_1_2:
+            str += "%YAML 1.2\n";
+            needs_directive_end = true;
+            break;
+        case version_type::NOT_SPECIFIED:
+        default:
+            break;
         }
 
         if (!p_meta->primary_handle_prefix.empty()) {
