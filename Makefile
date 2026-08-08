@@ -73,6 +73,11 @@ valgrind:
 	cmake --build build_valgrind --config Debug -j $(JOBS)
 	ctest -C Debug -T memcheck --test-dir build_valgrind --output-on-failure -j $(JOBS)
 
+# pre-requisites: clang
+fuzz-test:
+	CXX=clang++ cmake -B build_fuzz_test -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_FUZZ_TEST=ON
+	cmake --build build_fuzz_test --target run_fuzz_test
+
 ###########################
 #   Source Amalgamation   #
 ###########################
