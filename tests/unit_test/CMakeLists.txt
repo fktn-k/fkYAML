@@ -40,37 +40,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(doctest)
 include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 
-############################################
-#   configure C++ standard for unit test   #
-############################################
-
-# determine C++ standard used in unit test app.
-if("${FK_YAML_TEST_TARGET_CXX_STANDARD}" STREQUAL "")
-  # Apply minimum required C++ standard checked by default.
-  set(FK_YAML_TEST_TARGET_CXX_STANDARD 11)
-endif()
-
-# detect C++ standards supported by the compiler.
-foreach(feature ${CMAKE_CXX_COMPILE_FEATURES})
-  if(${feature} STREQUAL cxx_std_11)
-    set(FK_YAML_COMPILER_SUPPORTS_CXX_11 ON)
-  elseif(${feature} STREQUAL cxx_std_14)
-    set(FK_YAML_COMPILER_SUPPORTS_CXX_14 ON)
-  elseif(${feature} STREQUAL cxx_std_17)
-    set(FK_YAML_COMPILER_SUPPORTS_CXX_17 ON)
-  elseif(${feature} STREQUAL cxx_std_20)
-    set(FK_YAML_COMPILER_SUPPORTS_CXX_20 ON)
-  elseif(${feature} STREQUAL cxx_std_23)
-    set(FK_YAML_COMPILER_SUPPORTS_CXX_23 ON)
-  endif()
-endforeach()
-
-# check if the determined C++ standard is supported by the compiler.
-if(NOT FK_YAML_COMPILER_SUPPORTS_CXX_${FK_YAML_TEST_TARGET_CXX_STANDARD})
-  message(WARNING "The target compiler does not support C++${FK_YAML_TEST_TARGET_CXX_STANDARD}. Stop configuring unit test app.")
-  return()
-endif()
-
 ######################################
 #   Prepare to use test data files   #
 ######################################
@@ -93,26 +62,6 @@ target_include_directories(
   INTERFACE
     "${CMAKE_CURRENT_BINARY_DIR}/include"
     "${doctest_SOURCE_DIR}"
-)
-target_link_libraries(
-  unit_test_config
-  INTERFACE
-    ${FK_YAML_TARGET_NAME}
-)
-target_compile_features(
-  unit_test_config
-  INTERFACE
-    cxx_std_${FK_YAML_TEST_TARGET_CXX_STANDARD}
-)
-set_target_properties(
-  unit_test_config
-  PROPERTIES
-    CXX_EXTENTIONS OFF
-)
-target_compile_definitions(
-  unit_test_config
-  INTERFACE
-    $<$<CONFIG:Release>:NDEBUG>
 )
 
 # Configure compile options according to the target compiler.
@@ -266,7 +215,12 @@ add_executable(
   main.cpp
 )
 
-target_link_libraries(${TEST_TARGET} PRIVATE unit_test_config)
+target_link_libraries(
+  ${TEST_TARGET}
+  PRIVATE
+    common_test_config
+    unit_test_config
+)
 
 doctest_discover_tests(${TEST_TARGET})
 

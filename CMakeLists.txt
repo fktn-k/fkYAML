@@ -126,7 +126,7 @@ endif()
 #   Build the test apps   #
 ###########################
 
-if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
+if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_FUZZ_TEST OR FK_YAML_BUILD_ALL_TEST)
   include(CTest)
   enable_testing()
   add_subdirectory(tests)
