@@ -47,16 +47,48 @@ TEST_CASE("Deserializer_KeySeparator") {
         REQUIRE(root[""].is_string());
         REQUIRE(root[""].as_str() == "foo");
     }
+
+    SUBCASE("invalid explicit mapping key separator after root scalar") {
+        const std::string input_str = "foo\n: bar";
+
+        bool thrown = false;
+        try {
+            root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str));
+        }
+        catch (const fkyaml::parse_error& e) {
+            thrown = true;
+            const std::string msg(e.what());
+            REQUIRE(msg.find("invalid explicit mapping key separator is found.") != std::string::npos);
+        }
+
+        REQUIRE(thrown);
+    }
 }
 
 TEST_CASE("Deserializer_ValueSeparator") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
 
-    auto input_str = GENERATE(std::string("test: [ foo, bar ]"), std::string("test: { foo: bar, buz: val }"));
-    REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)));
-    REQUIRE(root.is_mapping());
-    REQUIRE(root.size() == 1);
+    SUBCASE("valid separators in flow context") {
+        auto input_str = GENERATE(std::string("test: [ foo, bar ]"), std::string("test: { foo: bar, buz: val }"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+    }
+
+    SUBCASE("invalid separator outside flow context") {
+        auto input_str = GENERATE(std::string(","), std::string(" ,"));
+        REQUIRE_THROWS_AS(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
+    }
+}
+
+TEST_CASE("Deserializer_InvalidStructureAfterRootScalar") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    auto input_str = GENERATE(std::string("ke\n["), std::string("ke\n{"), std::string("ke\n]"), std::string("ke\n}"));
+    REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
 }
 
 TEST_CASE("Deserializer_NullValue") {

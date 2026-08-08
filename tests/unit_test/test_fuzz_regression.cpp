@@ -1,0 +1,67 @@
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#include <doctest/doctest.h>
+#include <fkYAML/node.hpp>
+
+TEST_CASE("FuzzRegression") {
+    fkyaml::node root;
+    const char* p_begin = nullptr;
+    const char* p_end = nullptr;
+
+    SUBCASE("malformed UTF-16 input") {
+        uint8_t input[] = {0x01, 0x00, 0x0a};
+        p_begin = reinterpret_cast<const char*>(input);
+        p_end = p_begin + sizeof(input);
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::invalid_encoding);
+    }
+
+    SUBCASE("invalid context transition") {
+        const char input[] = "o- 1\n"
+                             "- trueot:\n"
+                             "  ch\n"
+                             "i";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("invalid block sequence entry") {
+        const char input[] = "- 1\n"
+                             "- two\n"
+                             "- tru 1\n"
+                             "- two\n"
+                             "-e";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("invalid flow sequence after scalar root") {
+        const char input[] = "ke\n[";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("mismatched flow endings") {
+        const char input[] = "{a: 1,  [2 b:,3}\n";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("invalid block scalar indentation") {
+        const char input[] = "root:\n"
+                             "  c]h:di     |- \n"
+                             " a  ) - b\n";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+}
