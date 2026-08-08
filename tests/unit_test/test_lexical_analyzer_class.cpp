@@ -1236,6 +1236,28 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
     }
+
+    SUBCASE("literal string scalar with invalid header position") {
+        const char input[] = "root:\n"
+                             "  c]h:di     |- \n"
+                             " a  ) - b\n";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == &input[0]); // "root"
+        REQUIRE(token.str.end() == &input[4]);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == &input[8]); // "c]h:di"
+        REQUIRE(token.str.end() == &input[14]);
+
+        REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("LexicalAnalyzer_FoldedString") {

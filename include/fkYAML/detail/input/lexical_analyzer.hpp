@@ -1003,7 +1003,9 @@ private:
         }
 
         if (indicated_indent == 0) {
-            FK_YAML_ASSERT(base_indent < cur_indent);
+            if FK_YAML_UNLIKELY (base_indent >= cur_indent) {
+                emit_error("The first non-empty line in the block scalar is less indented.");
+            }
             indicated_indent = cur_indent - base_indent;
         }
         else if FK_YAML_UNLIKELY (cur_indent < base_indent + indicated_indent) {

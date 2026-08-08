@@ -641,7 +641,9 @@ private:
                 // ```
                 continue;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
-                FK_YAML_ASSERT(!m_context_stack.empty());
+                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                    throw parse_error("invalid block sequence entry is found.", line, indent);
+                }
                 const uint32_t parent_indent = m_context_stack.back().indent;
                 if (indent == parent_indent) {
                     // If the previous block sequence entry is empty, just move to the parent context.
@@ -688,6 +690,10 @@ private:
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
                 if (m_flow_context_depth == 0) {
                     lexer.set_context_state(true);
+
+                    if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                        throw parse_error("invalid flow sequence beginning is found.", line, indent);
+                    }
 
                     if (indent <= m_context_stack.back().indent) {
                         pop_to_parent_node(line, indent, [indent](const parse_context& c) {
@@ -745,22 +751,10 @@ private:
                     lexer.set_context_state(false);
                 }
 
-                // find the corresponding flow sequence beginning.
-                auto itr = std::find_if( // LCOV_EXCL_LINE
-                    m_context_stack.rbegin(),
-                    m_context_stack.rend(),
-                    [](const parse_context& c) {
-                        switch (c.state) {
-                        case context_state_t::FLOW_SEQUENCE_KEY:
-                        case context_state_t::FLOW_SEQUENCE:
-                            return true;
-                        default:
-                            return false;
-                        }
-                    });
-
-                const bool is_valid = itr != m_context_stack.rend();
-                if FK_YAML_UNLIKELY (!is_valid) {
+                const bool has_valid_beginning =
+                    !m_context_stack.empty() && (m_context_stack.back().state == context_state_t::FLOW_SEQUENCE ||
+                                                 m_context_stack.back().state == context_state_t::FLOW_SEQUENCE_KEY);
+                if FK_YAML_UNLIKELY (!has_valid_beginning) {
                     throw parse_error("No corresponding flow sequence beginning is found.", line, indent);
                 }
 
@@ -811,6 +805,10 @@ private:
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 if (m_flow_context_depth == 0) {
                     lexer.set_context_state(true);
+
+                    if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                        throw parse_error("invalid flow mapping beginning is found.", line, indent);
+                    }
 
                     if (indent <= m_context_stack.back().indent) {
                         pop_to_parent_node(line, indent, [indent](const parse_context& c) {
@@ -871,22 +869,10 @@ private:
                     lexer.set_context_state(false);
                 }
 
-                // find the corresponding flow mapping beginning.
-                auto itr = std::find_if( // LCOV_EXCL_LINE
-                    m_context_stack.rbegin(),
-                    m_context_stack.rend(),
-                    [](const parse_context& c) {
-                        switch (c.state) {
-                        case context_state_t::FLOW_MAPPING_KEY:
-                        case context_state_t::FLOW_MAPPING:
-                            return true;
-                        default:
-                            return false;
-                        }
-                    });
-
-                const bool is_valid = itr != m_context_stack.rend();
-                if FK_YAML_UNLIKELY (!is_valid) {
+                const bool has_valid_beginning =
+                    !m_context_stack.empty() && (m_context_stack.back().state == context_state_t::FLOW_MAPPING ||
+                                                 m_context_stack.back().state == context_state_t::FLOW_MAPPING_KEY);
+                if FK_YAML_UNLIKELY (!has_valid_beginning) {
                     throw parse_error("No corresponding flow mapping beginning is found.", line, indent);
                 }
 
@@ -935,7 +921,9 @@ private:
                 continue;
             }
             case lexical_token_t::VALUE_SEPARATOR:
-                FK_YAML_ASSERT(m_flow_context_depth > 0);
+                if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
+                    throw parse_error("invalid value separator is found.", line, indent);
+                }
                 if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
@@ -1144,7 +1132,9 @@ private:
     /// @param node_value A rvalue basic_node_type object to be assigned to the current node.
     void assign_node_value(basic_node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
-            FK_YAML_ASSERT(m_flow_context_depth > 0);
+            if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
+                throw parse_error("invalid block sequence entry is found.", line, indent);
+            }
 
             if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
                 // Flow sequence entries are not allowed to be empty.
@@ -1208,6 +1198,10 @@ private:
                 assign_node_value(std::move(node), line, indent);
                 indent = lexer.get_last_token_begin_pos();
                 line = lexer.get_lines_processed();
+
+                if (m_context_stack.empty()) {
+                    throw parse_error("invalid explicit mapping key separator is found.", line, indent);
+                }
 
                 if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
                     pop_to_parent_node(line, indent, [indent](const parse_context& c) {
