@@ -3470,7 +3470,11 @@ public:
         case '>': {
             const str_view sv {m_token_begin_itr, m_end_itr};
             const std::size_t header_end_pos = sv.find('\n');
-            FK_YAML_ASSERT(header_end_pos != str_view::npos);
+            if FK_YAML_UNLIKELY (header_end_pos == str_view::npos) {
+                emit_error(
+                    "Invalid block scalar header found. The header must be followed by a line break and its content.");
+            }
+
             const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
 
             const lexical_token_t type = *m_token_begin_itr == '|' ? lexical_token_t::BLOCK_LITERAL_SCALAR
@@ -8021,7 +8025,9 @@ private:
                 }
 
                 // handle explicit mapping key separators.
-                FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY);
+                if FK_YAML_UNLIKELY (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                    throw parse_error("Unexpected explicit mapping key separator is found.", line, indent);
+                }
 
                 basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
@@ -8708,7 +8714,9 @@ private:
     /// @param indent The indentation level of the target parent block mapping.
     template <typename Pred>
     void pop_to_parent_node(uint32_t line, uint32_t indent, Pred&& pred) {
-        FK_YAML_ASSERT(!m_context_stack.empty());
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent block mapping is found.", line, indent);
+        }
 
         // LCOV_EXCL_START
         auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));

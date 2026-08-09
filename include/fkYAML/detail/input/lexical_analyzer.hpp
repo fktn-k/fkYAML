@@ -242,7 +242,11 @@ public:
         case '>': {
             const str_view sv {m_token_begin_itr, m_end_itr};
             const std::size_t header_end_pos = sv.find('\n');
-            FK_YAML_ASSERT(header_end_pos != str_view::npos);
+            if FK_YAML_UNLIKELY (header_end_pos == str_view::npos) {
+                emit_error(
+                    "Invalid block scalar header found. The header must be followed by a line break and its content.");
+            }
+
             const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
 
             const lexical_token_t type = *m_token_begin_itr == '|' ? lexical_token_t::BLOCK_LITERAL_SCALAR
