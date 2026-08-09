@@ -302,7 +302,7 @@ The library itself depends only on C++ standards and licensed under the MIT lice
 fkYAML is distributed under the [MIT License](https://opensource.org/license/mit/):  
 
 ```
-Copyright (c) 2023-2025 Kensuke Fukutani
+Copyright (c) 2023-2026 Kensuke Fukutani
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
