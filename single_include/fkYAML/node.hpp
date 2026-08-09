@@ -8717,9 +8717,11 @@ private:
     /// @param indent The indentation level of the target parent block mapping.
     template <typename Pred>
     void pop_to_parent_node(uint32_t line, uint32_t indent, Pred&& pred) {
+        // LCOV_EXCL_START
         if FK_YAML_UNLIKELY (m_context_stack.empty()) {
             throw parse_error("No parent block mapping is found.", line, indent);
         }
+        // LCOV_EXCL_STOP
 
         // LCOV_EXCL_START
         auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
