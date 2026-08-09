@@ -408,6 +408,9 @@ private:
         do {
             switch (token.type) {
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
+                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                    throw parse_error("An explicit key is not allowed in this context.", line, indent);
+                }
                 const bool needs_to_move_back = indent == 0 || indent < m_context_stack.back().indent;
                 if (needs_to_move_back) {
                     pop_to_parent_node(line, indent, [indent](const parse_context& c) {

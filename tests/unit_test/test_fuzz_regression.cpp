@@ -87,4 +87,11 @@ TEST_CASE("FuzzRegression") {
         p_end = input + sizeof(input) - 1;
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
     }
+
+    SUBCASE("explicit key indicator without a parent context") {
+        const char input[] = "a  ? a";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
 }
