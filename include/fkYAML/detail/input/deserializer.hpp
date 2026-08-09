@@ -602,7 +602,9 @@ private:
                 }
 
                 // handle explicit mapping key separators.
-                FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY);
+                if FK_YAML_UNLIKELY (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                    throw parse_error("Unexpected explicit mapping key separator is found.", line, indent);
+                }
 
                 basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
@@ -1289,7 +1291,9 @@ private:
     /// @param indent The indentation level of the target parent block mapping.
     template <typename Pred>
     void pop_to_parent_node(uint32_t line, uint32_t indent, Pred&& pred) {
-        FK_YAML_ASSERT(!m_context_stack.empty());
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent block mapping is found.", line, indent);
+        }
 
         // LCOV_EXCL_START
         auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
