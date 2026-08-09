@@ -3,15 +3,11 @@ name: Coverage
 on:
   push:
     branches:
+      # Run coverage workflows on all the commits pushed to the following branches
+      # following the recommended CI configurations for Coveralls.
+      # https://docs.coveralls.io/build-types#recommended-ci-configurations
       - develop
       - main
-    paths:
-      - .github/workflows/coverage.yml
-      - cmake/**
-      - include/**
-      - tests/**
-      - CMakeLists.txt
-      - Makefile
   # Run on pull requests from both branches and forks.
   pull_request:
     paths:
