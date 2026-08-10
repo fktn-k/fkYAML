@@ -7831,6 +7831,9 @@ private:
         do {
             switch (token.type) {
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
+                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                    throw parse_error("An explicit key is not allowed in this context.", line, indent);
+                }
                 const bool needs_to_move_back = indent == 0 || indent < m_context_stack.back().indent;
                 if (needs_to_move_back) {
                     pop_to_parent_node(line, indent, [indent](const parse_context& c) {
@@ -8714,9 +8717,11 @@ private:
     /// @param indent The indentation level of the target parent block mapping.
     template <typename Pred>
     void pop_to_parent_node(uint32_t line, uint32_t indent, Pred&& pred) {
+        // LCOV_EXCL_START
         if FK_YAML_UNLIKELY (m_context_stack.empty()) {
             throw parse_error("No parent block mapping is found.", line, indent);
         }
+        // LCOV_EXCL_STOP
 
         // LCOV_EXCL_START
         auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
