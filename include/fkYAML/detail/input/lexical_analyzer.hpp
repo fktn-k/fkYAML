@@ -554,6 +554,11 @@ private:
         // extract a tag prefix.
         //
 
+        // skip_white_spaces() above may have consumed the rest of the input buffer.
+        if FK_YAML_UNLIKELY (m_cur_itr == m_end_itr) {
+            emit_error("invalid TAG directive is found.");
+        }
+
         m_token_begin_itr = m_cur_itr;
         const char* p_tag_prefix_begin = m_cur_itr;
         switch (*m_cur_itr) {
@@ -684,7 +689,9 @@ private:
         case '<':
             // Verbatim tags (!<TAG>)
             is_verbatim = true;
-            ++m_cur_itr;
+            if FK_YAML_UNLIKELY (++m_cur_itr == m_end_itr) {
+                emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
+            }
             break;
         default:
             // Either local tags (!suffix) or named handles (!tag!suffix)
@@ -816,12 +823,18 @@ private:
                 // * even number of backslashes -> double quotation mark IS NOT escaped (e.g., "\\"")
                 uint32_t backslash_counts = 0;
                 const char* p = m_token_begin_itr + (pos - 1);
-                do {
-                    if (*p-- != '\\') {
+                for (;;) {
+                    if (*p != '\\') {
                         break;
                     }
                     ++backslash_counts;
-                } while (p != m_token_begin_itr);
+                    if (p == m_token_begin_itr) {
+                        // the first character of the token has just been counted. Stopping here
+                        // also keeps `p` from being decremented past the beginning of the token.
+                        break;
+                    }
+                    --p;
+                }
                 is_closed = ((backslash_counts & 1u) == 0); // true: even, false: odd
             }
 

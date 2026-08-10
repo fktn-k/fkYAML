@@ -37,6 +37,11 @@ public:
                     return false;
                 }
 
+                // validate_octets() advances `current` past the last octet it consumed. Without
+                // moving it back, the loop's own ++current skips the character which follows the
+                // escape sequence, and, when the escape ends the sequence, moves `current` one
+                // past `end` so that the loop condition never holds and reads out of bounds.
+                --current;
                 continue;
             }
 
