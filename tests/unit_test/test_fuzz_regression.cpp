@@ -109,4 +109,13 @@ TEST_CASE("FuzzRegression") {
         p_end = p_begin + sizeof(input);
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
     }
+
+    SUBCASE("truncated UTF-16 BOM") {
+        // A lone 0xFE spuriously matched the UTF-16BE BOM against the detector's padding bytes,
+        // then advancing past the BOM moved the read position past the end of the input.
+        uint8_t input[] = {0xFE};
+        p_begin = reinterpret_cast<const char*>(input);
+        p_end = p_begin + sizeof(input);
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::invalid_encoding);
+    }
 }
