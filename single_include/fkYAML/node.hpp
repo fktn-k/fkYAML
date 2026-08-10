@@ -7898,6 +7898,9 @@ private:
                 continue;
             }
             case lexical_token_t::KEY_SEPARATOR: {
+                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                    throw parse_error("A key separator is not allowed in this context.", line, indent);
+                }
                 if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
                     // empty mapping keys are not supported.
                     // ```yaml
@@ -8519,6 +8522,9 @@ private:
     /// @param indent The indentation width in the current line where the key is found.
     void add_new_key(basic_node_type&& key, const uint32_t line, const uint32_t indent) {
         if (m_flow_context_depth == 0) {
+            if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                throw parse_error("A mapping key is not allowed in this context.", line, indent);
+            }
             if FK_YAML_UNLIKELY (m_context_stack.back().indent < indent) {
                 // bad indentation like the following YAML:
                 // ```yaml
