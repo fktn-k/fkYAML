@@ -94,4 +94,19 @@ TEST_CASE("FuzzRegression") {
         p_end = input + sizeof(input) - 1;
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
     }
+
+    SUBCASE("key separator without a parent context") {
+        uint8_t input[] = {0x0D, 0x3B, 0x00, 0x0A, 0x0A, 0x4A, 0x0A, 0x0A, 0x26, 0x7C, 0x0A, 0x3A};
+        p_begin = reinterpret_cast<const char*>(input);
+        p_end = p_begin + sizeof(input);
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("mapping key without a parent context") {
+        uint8_t input[] = {0x26, 0x78, 0x00, 0x61, 0x5B, 0x5D, 0x0A, 0x70, 0x72, 0x6F, 0x7B, 0x64, 0x2B,
+                           0x3A, 0x20, 0x3E, 0x72, 0x6F, 0x7B, 0x64, 0x2B, 0x3A, 0x7B, 0x32, 0x6A};
+        p_begin = reinterpret_cast<const char*>(input);
+        p_end = p_begin + sizeof(input);
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
 }
