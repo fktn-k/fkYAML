@@ -104,27 +104,40 @@ struct utf_encode_detector<ItrType, enable_if_t<is_iterator_of<ItrType, char>::v
         std::array<uint8_t, 4> bytes {{}};
         bytes.fill(0xFFu);
         auto current = begin;
+        int num_read = 0;
         for (int i = 0; i < 4 && current != end; i++, ++current) {
             bytes[i] = static_cast<uint8_t>(*current); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+            ++num_read;
         }
 
         bool has_bom = false;
         const utf_encode_t encode_type = detect_encoding_type(bytes, has_bom);
 
         if (has_bom) {
-            // skip reading the BOM.
+            // Skip reading the BOM, but only when it is fully present in the input. The probe above pads
+            // unread positions with 0xFF, so an input shorter than the BOM (e.g. a lone 0xFE) can spuriously
+            // match a BOM pattern; advancing past the bytes actually read would move `begin` past `end`.
+            int bom_size = 0;
             switch (encode_type) {
             case utf_encode_t::UTF_8:
-                std::advance(begin, 3);
+                bom_size = 3;
                 break;
             case utf_encode_t::UTF_16BE:
             case utf_encode_t::UTF_16LE:
-                std::advance(begin, 2);
+                bom_size = 2;
                 break;
             case utf_encode_t::UTF_32BE:
             case utf_encode_t::UTF_32LE:
-                std::advance(begin, 4);
+                bom_size = 4;
                 break;
+            }
+            if (num_read >= bom_size) {
+                std::advance(begin, bom_size);
+            }
+            else {
+                // The match was against the padding, not a real BOM; treat the input as UTF-8 so the
+                // spurious encoding is not propagated.
+                return utf_encode_t::UTF_8;
             }
         }
 
