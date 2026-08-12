@@ -118,4 +118,39 @@ TEST_CASE("FuzzRegression") {
         p_end = p_begin + sizeof(input);
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::invalid_encoding);
     }
+
+    SUBCASE("verbatim tag which ends the input buffer") {
+        const char input[] = "!<";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("TAG directive without a tag prefix") {
+        const char input[] = "%TAG !  ";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("percent escape at the end of a tag URI") {
+        const char input[] = "!!a%41";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_NOTHROW(root = fkyaml::node::deserialize(p_begin, p_end));
+    }
+
+    SUBCASE("invalid URI character right after a percent escape") {
+        const char input[] = "!!a%41^";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("double quoted scalar closed by an escaped quotation mark") {
+        const char input[] = "\"\\\\\\\"";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
 }
