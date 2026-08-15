@@ -587,19 +587,35 @@ private:
                     }
 
                     if (indent <= m_context_stack.back().indent) {
-                        FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::MAPPING_VALUE);
+                        if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                            // An explicit key can omit its value as well, in which case the entry must still be
+                            // added to the parent mapping.
+                            // ```yaml
+                            // ? foo
+                            // :
+                            // bar: baz
+                            // # -> {foo: null, bar: baz}
+                            // ```
+                            basic_node_type key_node = std::move(*m_context_stack.back().p_node);
+                            m_context_stack.pop_back();
+                            m_context_stack.back().p_node->as_map().emplace(std::move(key_node), basic_node_type());
+                            mp_current_node = m_context_stack.back().p_node;
+                        }
+                        else {
+                            FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::MAPPING_VALUE);
 
-                        // Mapping values can be omitted and are considered to be null.
-                        // ```yaml
-                        // foo:
-                        // bar:
-                        //   baz:
-                        // qux:
-                        // # -> {foo: null, bar: {baz: null}, qux: null}
-                        // ```
-                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
-                            return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
-                        });
+                            // Mapping values can be omitted and are considered to be null.
+                            // ```yaml
+                            // foo:
+                            // bar:
+                            //   baz:
+                            // qux:
+                            // # -> {foo: null, bar: {baz: null}, qux: null}
+                            // ```
+                            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
+                            });
+                        }
                     }
 
                     // defer checking the existence of a key separator after the following scalar until the next

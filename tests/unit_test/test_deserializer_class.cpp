@@ -1680,6 +1680,34 @@ TEST_CASE("Deserializer_ExplicitBlockMapping") {
         REQUIRE(key2_1_node.as_str() == "qux");
     }
 
+    SUBCASE("explicit mapping keys with omitted values") {
+        std::string input = "? foo\n"
+                            ":\n"
+                            "bar: baz\n"
+                            "qux:\n"
+                            "  ? corge\n"
+                            "  :\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 3);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_null());
+
+        REQUIRE(root.contains("bar"));
+        fkyaml::node& bar_node = root["bar"];
+        REQUIRE(bar_node.is_string());
+        REQUIRE(bar_node.as_str() == "baz");
+
+        REQUIRE(root.contains("qux"));
+        fkyaml::node& qux_node = root["qux"];
+        REQUIRE(qux_node.is_mapping());
+        REQUIRE(qux_node.size() == 1);
+        REQUIRE(qux_node.contains("corge"));
+        REQUIRE(qux_node["corge"].is_null());
+    }
+
     SUBCASE("Explicit block mapping as block sequence entry") {
         std::string input = "- ? foo: 123\n"
                             "  : true: 3.14\n"
