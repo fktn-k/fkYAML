@@ -947,22 +947,34 @@ private:
                     throw parse_error("Anchor cannot be specified to an alias node.", line, indent);
                 }
 
-                std::string token_str = std::string(token.str.begin(), token.str.end());
+                const std::string anchor_name = std::string(token.str.begin(), token.str.end());
 
-                const auto anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
+                const auto anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name));
                 if FK_YAML_UNLIKELY (anchor_counts == 0) {
                     throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
                 }
 
                 basic_node_type node {};
                 node.m_attrs |= detail::node_attr_bits::alias_bit;
-                node.m_prop.anchor = std::move(token_str);
+                node.m_prop.anchor = anchor_name;
                 detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
 
                 apply_directive_set(node);
                 apply_node_properties(node);
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
+
+                // Check if the alias node is self-referential.
+                // If so, throw a parse error to avoid infinite recursion and stack overflow during deserialization.
+                auto itr = mp_meta->anchor_table.equal_range(anchor_name).first;
+                std::advance(itr, anchor_counts - 1);
+                const auto& anchor = itr->second;
+                const bool is_self_referential = anchor.contains_self_referential_alias(anchor_name, anchor_counts - 1);
+                if FK_YAML_UNLIKELY (is_self_referential) {
+                    const std::string msg = format("Self-referential alias (*%s) is found.", anchor_name.c_str());
+                    throw parse_error(msg.c_str(), line, indent);
+                }
+
                 continue;
             }
             case lexical_token_t::PLAIN_SCALAR:
