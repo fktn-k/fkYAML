@@ -6,5 +6,8 @@
 /docs/site/
 /docs/venv/
 
+# test data
+/tests/unit_test/test_data.hpp
+
 # natvis generator
 /tools/natvis_generator/venv/

@@ -45,12 +45,12 @@ include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 ######################################
 
 # While executing CTest on Windows, just specifying a relative path seems not working.
-# This is a workaround to resolve the issue. (Delete it when a better solution is found.)
-set(TEST_DATA_HEADER "${CMAKE_CURRENT_BINARY_DIR}/include/test_data.hpp")
-file(WRITE  ${TEST_DATA_HEADER} "#ifndef FK_YAML_TEST_TEST_DATA_HPP_\n")
-file(APPEND ${TEST_DATA_HEADER} "#define FK_YAML_TEST_TEST_DATA_HPP_\n\n")
-file(APPEND ${TEST_DATA_HEADER} "#define FK_YAML_TEST_DATA_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/test_data\"\n\n")
-file(APPEND ${TEST_DATA_HEADER} "#endif /* FK_YAML_TEST_TEST_DATA_HPP_ */\n")
+# So, define the absolute path in this file to open test data files.
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/test_data.hpp.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/test_data.hpp"
+  @ONLY
+)
 
 #################################
 #   Configure compile options   #
@@ -60,7 +60,7 @@ add_library(unit_test_config INTERFACE)
 target_include_directories(
   unit_test_config
   INTERFACE
-    "${CMAKE_CURRENT_BINARY_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}"
     "${doctest_SOURCE_DIR}"
 )
 
