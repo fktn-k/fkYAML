@@ -624,7 +624,15 @@ private:
                         // # -> {foo: null, bar: baz}
                         // ```
                         if (!add_explicit_key_with_null_value()) {
-                            FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::MAPPING_VALUE);
+                            if FK_YAML_UNLIKELY (m_context_stack.back().state != context_state_t::MAPPING_VALUE) {
+                                // The key separator does not follow a mapping key, for example:
+                                // ```yaml
+                                // ? foo
+                                // :
+                                // :
+                                // ```
+                                throw parse_error("A key separator is not allowed in this context.", line, indent);
+                            }
 
                             // Mapping values can be omitted and are considered to be null.
                             // ```yaml

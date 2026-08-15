@@ -63,6 +63,24 @@ TEST_CASE("Deserializer_KeySeparator") {
 
         REQUIRE(thrown);
     }
+
+    SUBCASE("key separator which does not follow a mapping key") {
+        const std::string input_str = "? foo\n"
+                                      ":\n"
+                                      ":\n";
+
+        bool thrown = false;
+        try {
+            root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str));
+        }
+        catch (const fkyaml::parse_error& e) {
+            thrown = true;
+            const std::string msg(e.what());
+            REQUIRE(msg.find("A key separator is not allowed in this context.") != std::string::npos);
+        }
+
+        REQUIRE(thrown);
+    }
 }
 
 TEST_CASE("Deserializer_ValueSeparator") {
