@@ -22,7 +22,7 @@ on:
 jobs:
   coverage:
     timeout-minutes: 10
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: write
@@ -38,7 +38,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y lcov
-        lcov -v
+        lcov --version
 
     - name: Generate coverage
       run: make html-coverage
