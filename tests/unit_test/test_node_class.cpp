@@ -1353,6 +1353,31 @@ TEST_CASE("Node_AliasNodeFactory") {
         REQUIRE(alias.is_string());
         REQUIRE(alias.as_str().compare("alias_test") == 0);
     }
+
+    SUBCASE("anchor contains a self-referential alias in its children") {
+        anchor = fkyaml::node::sequence();
+        anchor.add_anchor_name("anchor_name");
+        fkyaml::node alias = fkyaml::node::alias_of(anchor);
+        REQUIRE(alias.is_alias());
+        // `anchor` now contains a self-referential alias in its children.
+        anchor.as_seq().emplace_back(std::move(alias));
+        // The anchor/alias resolving is performed inside `as_seq()`,
+        // which throws an exception against the cyclic reference.
+        REQUIRE_THROWS_AS(anchor.as_seq(), fkyaml::exception);
+        REQUIRE_THROWS_AS(anchor.size(), fkyaml::exception);
+    }
+
+    SUBCASE("anchor contains an alias which is not self-referential") {
+        anchor = fkyaml::node::sequence();
+        anchor.add_anchor_name("anchor_name");
+        fkyaml::node anchor2 = true;
+        anchor2.add_anchor_name("anchor_name_2");
+        fkyaml::node alias = fkyaml::node::alias_of(anchor2);
+        REQUIRE(alias.is_alias());
+        anchor.as_seq().emplace_back(std::move(alias));
+        REQUIRE_NOTHROW(anchor.as_seq());
+        REQUIRE_NOTHROW(anchor.size());
+    }
 }
 
 //

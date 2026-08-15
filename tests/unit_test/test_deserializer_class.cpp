@@ -3330,6 +3330,16 @@ TEST_CASE("Deserializer_NodeProperties") {
         REQUIRE(foo_node.is_string());
         REQUIRE(foo_node.as_str() == "bar");
     }
+
+    SUBCASE("self referential alias") {
+        auto input = GENERATE(
+            std::string("&x [*x]"),
+            std::string("{&x [*x]: 0}"),
+            std::string("&x {a: *x}"),
+            std::string("{&x [*x]: 0, &y [*y]: 1}"),
+            std::string("&x {a: {b: *x}}"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_NoMachingAnchor") {
