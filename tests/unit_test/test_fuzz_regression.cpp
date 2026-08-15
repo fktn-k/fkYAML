@@ -153,4 +153,22 @@ TEST_CASE("FuzzRegression") {
         p_end = input + sizeof(input) - 1;
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
     }
+
+    SUBCASE("flow mapping beginning without a parent context") {
+        // The third "{" is processed in the default branch of the flow mapping beginning handler, which
+        // increments the flow context depth without pushing a parse context. The following "}"s then pop
+        // the context stack empty while the depth is still positive, so the last "{" is processed with no
+        // parent context left.
+        const char input[] = "{{{}},{";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("flow sequence beginning without a parent context") {
+        const char input[] = "{{{}},[";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
 }
