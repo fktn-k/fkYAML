@@ -1708,6 +1708,80 @@ TEST_CASE("Deserializer_ExplicitBlockMapping") {
         REQUIRE(qux_node["corge"].is_null());
     }
 
+    SUBCASE("explicit mapping keys without values") {
+        std::string input = "? foo\n"
+                            "? bar\n"
+                            "baz: 123\n"
+                            "qux:\n"
+                            "  ? corge\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 4);
+
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_null());
+
+        REQUIRE(root.contains("bar"));
+        REQUIRE(root["bar"].is_null());
+
+        REQUIRE(root.contains("baz"));
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_integer());
+        REQUIRE(baz_node.get_value<int>() == 123);
+
+        REQUIRE(root.contains("qux"));
+        fkyaml::node& qux_node = root["qux"];
+        REQUIRE(qux_node.is_mapping());
+        REQUIRE(qux_node.size() == 1);
+        REQUIRE(qux_node.contains("corge"));
+        REQUIRE(qux_node["corge"].is_null());
+    }
+
+    SUBCASE("explicit mapping keys whose values begin on the following lines") {
+        std::string input = "? foo\n"
+                            ":\n"
+                            "  bar\n"
+                            "? baz\n"
+                            ":\n"
+                            "  - 123\n"
+                            "? qux\n"
+                            ":\n"
+                            "- 456\n"
+                            "? corge\n"
+                            ":\n"
+                            "  ? grault\n"
+                            "  :\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 4);
+
+        REQUIRE(root.contains("foo"));
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_string());
+        REQUIRE(foo_node.as_str() == "bar");
+
+        REQUIRE(root.contains("baz"));
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_sequence());
+        REQUIRE(baz_node.size() == 1);
+        REQUIRE(baz_node[0].get_value<int>() == 123);
+
+        REQUIRE(root.contains("qux"));
+        fkyaml::node& qux_node = root["qux"];
+        REQUIRE(qux_node.is_sequence());
+        REQUIRE(qux_node.size() == 1);
+        REQUIRE(qux_node[0].get_value<int>() == 456);
+
+        REQUIRE(root.contains("corge"));
+        fkyaml::node& corge_node = root["corge"];
+        REQUIRE(corge_node.is_mapping());
+        REQUIRE(corge_node.size() == 1);
+        REQUIRE(corge_node.contains("grault"));
+        REQUIRE(corge_node["grault"].is_null());
+    }
+
     SUBCASE("Explicit block mapping as block sequence entry") {
         std::string input = "- ? foo: 123\n"
                             "  : true: 3.14\n"
