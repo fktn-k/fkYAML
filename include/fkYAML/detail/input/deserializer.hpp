@@ -614,8 +614,9 @@ private:
 
                 basic_node_type key_node = std::move(*m_context_stack.back().p_node);
                 m_context_stack.pop_back();
-                m_context_stack.back().p_node->as_map().emplace(key_node, basic_node_type());
-                mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
+                basic_node_type* p_parent_node = current_context(line, indent).p_node;
+                p_parent_node->as_map().emplace(key_node, basic_node_type());
+                mp_current_node = &(p_parent_node->operator[](std::move(key_node)));
                 m_context_stack.emplace_back(
                     old_line, old_indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
 
@@ -721,7 +722,7 @@ private:
 
                 ++m_flow_context_depth;
 
-                switch (m_context_stack.back().state) {
+                switch (current_context(line, indent).state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
                     mp_current_node->as_seq().emplace_back(basic_node_type::sequence());
@@ -836,7 +837,7 @@ private:
 
                 ++m_flow_context_depth;
 
-                switch (m_context_stack.back().state) {
+                switch (current_context(line, indent).state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
                     mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
@@ -1146,7 +1147,7 @@ private:
         }
 
         mp_current_node = &(itr.first->second);
-        const parse_context& key_context = m_context_stack.back();
+        const parse_context& key_context = current_context(line, indent);
         m_context_stack.emplace_back(
             key_context.line, key_context.indent, context_state_t::MAPPING_VALUE, mp_current_node);
     }
@@ -1181,7 +1182,7 @@ private:
 
         if FK_YAML_LIKELY (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
             m_context_stack.pop_back();
-            mp_current_node = m_context_stack.back().p_node;
+            mp_current_node = current_context(line, indent).p_node;
 
             if (m_flow_context_depth > 0) {
                 m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
@@ -1304,6 +1305,21 @@ private:
 
         indent = lexer.get_last_token_begin_pos();
         line = lexer.get_lines_processed();
+    }
+
+    /// @brief Returns the parse context on the top of the context stack.
+    /// @note
+    /// Accessing an empty context stack is undefined behavior. Malformed input can empty the stack in the middle of
+    /// deserialization, so the emptiness must be checked before the access. This function throws a parse_error for
+    /// such input instead of letting the callers dereference an invalid iterator.
+    /// @param line The current line count.
+    /// @param indent The current indentation width.
+    /// @return The parse context on the top of the context stack.
+    parse_context& current_context(const uint32_t line, const uint32_t indent) {
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent context is found.", line, indent);
+        }
+        return m_context_stack.back();
     }
 
     /// @brief Pops parent contexts to a block mapping with the given indentation.
