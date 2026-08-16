@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <memory>
 #include <vector>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
@@ -64,11 +65,15 @@ class basic_deserializer {
     };
 
     /// @brief Context information set for parsing.
+    /// @note
+    /// A context either borrows a node which the result tree already owns, or owns a node of its own until that
+    /// node is grafted into the tree. Ownership is held by the owned_node member rather than derived from the
+    /// state member, which the parsing code rewrites while a node is still owned.
     struct parse_context {
         /// @brief Construct a new parse_context object.
         parse_context() = default;
 
-        /// @brief Construct a new parse_context object with non-default values for each parameter.
+        /// @brief Construct a new parse_context object which borrows a node owned by the result tree.
         /// @param line The current line. (count from zero)
         /// @param indent The indentation width in the current line. (count from zero)
         /// @param state The parse context type.
@@ -80,23 +85,26 @@ class basic_deserializer {
               p_node(p_node) {
         }
 
-        parse_context(const parse_context&) noexcept = default;
-        parse_context& operator=(const parse_context&) noexcept = default;
+        /// @brief Construct a new parse_context object which owns its node.
+        /// @param line The current line. (count from zero)
+        /// @param indent The indentation width in the current line. (count from zero)
+        /// @param state The parse context type.
+        /// @param node The node owned by this context.
+        parse_context(
+            uint32_t line, uint32_t indent, context_state_t state, std::unique_ptr<basic_node_type> node) noexcept
+            : line(line),
+              indent(indent),
+              state(state),
+              p_node(node.get()),
+              owned_node(std::move(node)) {
+        }
+
+        // Parse contexts are move-only so that the ownership of an owned node cannot be duplicated.
+        parse_context(const parse_context&) = delete;
+        parse_context& operator=(const parse_context&) = delete;
         parse_context(parse_context&&) noexcept = default;
         parse_context& operator=(parse_context&&) noexcept = default;
-
-        ~parse_context() {
-            switch (state) {
-            case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
-            case context_state_t::FLOW_SEQUENCE_KEY:
-            case context_state_t::FLOW_MAPPING_KEY:
-                delete p_node;
-                p_node = nullptr;
-                break;
-            default:
-                break;
-            }
-        }
+        ~parse_context() = default;
 
         /// The current line. (count from zero)
         uint32_t line {0};
@@ -106,6 +114,8 @@ class basic_deserializer {
         context_state_t state {context_state_t::BLOCK_MAPPING};
         /// The pointer to the associated node to this context.
         basic_node_type* p_node {nullptr};
+        /// The node owned by this context, if any. Empty if p_node is owned by the result tree.
+        std::unique_ptr<basic_node_type> owned_node {};
     };
 
     /// @brief Definitions of state types for expected flow token hints.
@@ -186,15 +196,13 @@ private:
                 apply_node_properties(root);
             }
 
-            parse_context context(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
-            m_context_stack.emplace_back(context);
+            const uint32_t seq_line = lexer.get_lines_processed();
+            const uint32_t seq_indent = lexer.get_last_token_begin_pos();
+            m_context_stack.emplace_back(seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE, &root);
 
             mp_current_node = &(root.as_seq().back());
             apply_directive_set(*mp_current_node);
-            context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
-            context.p_node = mp_current_node;
-            m_context_stack.emplace_back(std::move(context));
+            m_context_stack.emplace_back(seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
 
             token = lexer.get_next_token();
             line = lexer.get_lines_processed();
@@ -455,31 +463,32 @@ private:
 
                 token = lexer.get_next_token();
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                    // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
-                    auto* p_node = new basic_node_type(node_type::SEQUENCE);
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, p_node);
+                    // The key node is owned by its context until the corresponding KEY_SEPARATOR event.
+                    std::unique_ptr<basic_node_type> key_node(new basic_node_type(node_type::SEQUENCE));
+                    basic_node_type* p_node = key_node.get();
+                    m_context_stack.emplace_back(
+                        line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, std::move(key_node));
 
                     apply_directive_set(*p_node);
-                    parse_context context(
-                        lexer.get_lines_processed(),
-                        lexer.get_last_token_begin_pos(),
-                        context_state_t::BLOCK_SEQUENCE,
-                        p_node);
-                    m_context_stack.emplace_back(context);
+                    const uint32_t seq_line = lexer.get_lines_processed();
+                    const uint32_t seq_indent = lexer.get_last_token_begin_pos();
+                    m_context_stack.emplace_back(seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE, p_node);
 
                     p_node->as_seq().emplace_back(basic_node_type());
                     mp_current_node = &(p_node->as_seq().back());
                     apply_directive_set(*mp_current_node);
-                    context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
-                    context.p_node = mp_current_node;
-                    m_context_stack.emplace_back(std::move(context));
+                    m_context_stack.emplace_back(
+                        seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
 
                     break;
                 }
 
-                // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
+                // The key node is owned by its context until the corresponding KEY_SEPARATOR event.
                 m_context_stack.emplace_back(
-                    line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, new basic_node_type());
+                    line,
+                    indent,
+                    context_state_t::BLOCK_MAPPING_EXPLICIT_KEY,
+                    std::unique_ptr<basic_node_type>(new basic_node_type()));
                 mp_current_node = m_context_stack.back().p_node;
                 apply_directive_set(*mp_current_node);
                 indent = lexer.get_last_token_begin_pos();
@@ -575,10 +584,8 @@ private:
 
                         mp_current_node = &(mp_current_node->as_seq().back());
                         apply_directive_set(*mp_current_node);
-                        parse_context entry_context = cur_context;
-                        entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
-                        entry_context.p_node = mp_current_node;
-                        m_context_stack.emplace_back(std::move(entry_context));
+                        m_context_stack.emplace_back(
+                            line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
 
                         token = lexer.get_next_token();
                         line = lexer.get_lines_processed();
@@ -668,10 +675,7 @@ private:
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
 
                     mp_current_node = &(mp_current_node->as_seq().back());
-                    parse_context entry_context = m_context_stack.back();
-                    entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
-                    entry_context.p_node = mp_current_node;
-                    m_context_stack.emplace_back(std::move(entry_context));
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
                     break;
                 }
 
@@ -772,9 +776,12 @@ private:
                     break;
                 case context_state_t::BLOCK_MAPPING:
                 case context_state_t::FLOW_MAPPING:
-                    // heap-allocated node will be freed in handling the corresponding SEQUENCE_FLOW_END event.
+                    // The key node is owned by its context until the corresponding SEQUENCE_FLOW_END event.
                     m_context_stack.emplace_back(
-                        line, indent, context_state_t::FLOW_SEQUENCE_KEY, new basic_node_type(node_type::SEQUENCE));
+                        line,
+                        indent,
+                        context_state_t::FLOW_SEQUENCE_KEY,
+                        std::unique_ptr<basic_node_type>(new basic_node_type(node_type::SEQUENCE)));
                     mp_current_node = m_context_stack.back().p_node;
                     break;
                 default: {
@@ -811,16 +818,17 @@ private:
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
-                last_context.p_node = nullptr;
                 indent = last_context.indent;
-                const context_state_t state = last_context.state;
+                // The node stays alive until its value is either moved into the tree below or dropped here.
+                std::unique_ptr<basic_node_type> owned_node = std::move(last_context.owned_node);
                 m_context_stack.pop_back();
 
-                // handle cases where the flow sequence is a mapping key node.
+                // handle cases where the flow sequence is a mapping key node. A context owns its node only
+                // while that node is a key which has not been added to its parent mapping yet.
 
-                if (!m_context_stack.empty() && state == context_state_t::FLOW_SEQUENCE_KEY) {
+                if (!m_context_stack.empty() && owned_node != nullptr) {
                     basic_node_type key_node = std::move(*mp_current_node);
-                    delete mp_current_node;
+                    owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
@@ -887,9 +895,12 @@ private:
                     break;
                 case context_state_t::BLOCK_MAPPING:
                 case context_state_t::FLOW_MAPPING:
-                    // heap-allocated node will be freed in handling the corresponding MAPPING_FLOW_END event.
+                    // The key node is owned by its context until the corresponding MAPPING_FLOW_END event.
                     m_context_stack.emplace_back(
-                        line, indent, context_state_t::FLOW_MAPPING_KEY, new basic_node_type(node_type::MAPPING));
+                        line,
+                        indent,
+                        context_state_t::FLOW_MAPPING_KEY,
+                        std::unique_ptr<basic_node_type>(new basic_node_type(node_type::MAPPING)));
                     mp_current_node = m_context_stack.back().p_node;
                     break;
                 default: {
@@ -929,16 +940,17 @@ private:
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
-                last_context.p_node = nullptr;
                 indent = last_context.indent;
-                const context_state_t state = last_context.state;
+                // The node stays alive until its value is either moved into the tree below or dropped here.
+                std::unique_ptr<basic_node_type> owned_node = std::move(last_context.owned_node);
                 m_context_stack.pop_back();
 
-                // handle cases where the flow mapping is a mapping key node.
+                // handle cases where the flow mapping is a mapping key node. A context owns its node only
+                // while that node is a key which has not been added to its parent mapping yet.
 
-                if (!m_context_stack.empty() && state == context_state_t::FLOW_MAPPING_KEY) {
+                if (!m_context_stack.empty() && owned_node != nullptr) {
                     basic_node_type key_node = std::move(*mp_current_node);
-                    delete mp_current_node;
+                    owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
