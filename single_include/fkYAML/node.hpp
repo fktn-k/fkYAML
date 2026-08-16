@@ -7732,6 +7732,13 @@ private:
             last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
             last_type == lexical_token_t::END_OF_DOCUMENT);
 
+        // An explicit key at the end of a document has no value either.
+        // ```yaml
+        // ? foo
+        // # -> {foo: null}
+        // ```
+        add_explicit_key_with_null_value();
+
         // reset parameters for the next call.
         mp_current_node = nullptr;
         mp_meta.reset();
@@ -7852,6 +7859,12 @@ private:
                 if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                     throw parse_error("An explicit key is not allowed in this context.", line, indent);
                 }
+
+                if (indent == m_context_stack.back().indent) {
+                    // The preceding explicit key, if any, has no value at this point.
+                    add_explicit_key_with_null_value();
+                }
+
                 const bool needs_to_move_back = indent == 0 || indent < m_context_stack.back().indent;
                 if (needs_to_move_back) {
                     pop_to_parent_node(line, indent, [indent](const parse_context& c) {
@@ -7956,6 +7969,21 @@ private:
                 }
 
                 if (line > old_line) {
+                    const bool is_explicit_value_begin =
+                        m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY &&
+                        (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX ||
+                         indent > m_context_stack.back().indent);
+                    if (is_explicit_value_begin) {
+                        // The value of an explicit key can begin on a line after its key separator.
+                        // ```yaml
+                        // ? foo
+                        // :
+                        //   bar
+                        // # -> {foo: bar}
+                        // ```
+                        add_explicit_key_with_empty_value(old_line, old_indent);
+                    }
+
                     if (m_needs_tag_impl) {
                         const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
                         if (tag_type == tag_t::MAPPING || tag_type == tag_t::CUSTOM_TAG) {
@@ -8028,19 +8056,37 @@ private:
                     }
 
                     if (indent <= m_context_stack.back().indent) {
-                        FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::MAPPING_VALUE);
-
-                        // Mapping values can be omitted and are considered to be null.
+                        // An explicit key can omit its value as well, in which case the entry must still be
+                        // added to the parent mapping.
                         // ```yaml
-                        // foo:
-                        // bar:
-                        //   baz:
-                        // qux:
-                        // # -> {foo: null, bar: {baz: null}, qux: null}
+                        // ? foo
+                        // :
+                        // bar: baz
+                        // # -> {foo: null, bar: baz}
                         // ```
-                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
-                            return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
-                        });
+                        if (!add_explicit_key_with_null_value()) {
+                            if FK_YAML_UNLIKELY (m_context_stack.back().state != context_state_t::MAPPING_VALUE) {
+                                // The key separator does not follow a mapping key, for example:
+                                // ```yaml
+                                // ? foo
+                                // :
+                                // :
+                                // ```
+                                throw parse_error("A key separator is not allowed in this context.", line, indent);
+                            }
+
+                            // Mapping values can be omitted and are considered to be null.
+                            // ```yaml
+                            // foo:
+                            // bar:
+                            //   baz:
+                            // qux:
+                            // # -> {foo: null, bar: {baz: null}, qux: null}
+                            // ```
+                            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
+                            });
+                        }
                     }
 
                     // defer checking the existence of a key separator after the following scalar until the next
@@ -8053,13 +8099,7 @@ private:
                     throw parse_error("Unexpected explicit mapping key separator is found.", line, indent);
                 }
 
-                basic_node_type key_node = std::move(*m_context_stack.back().p_node);
-                m_context_stack.pop_back();
-                basic_node_type* p_parent_node = current_context(line, indent).p_node;
-                p_parent_node->as_map().emplace(key_node, basic_node_type());
-                mp_current_node = &(p_parent_node->operator[](std::move(key_node)));
-                m_context_stack.emplace_back(
-                    old_line, old_indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
+                add_explicit_key_with_empty_value(old_line, old_indent);
 
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     *mp_current_node = basic_node_type::sequence({basic_node_type()});
@@ -8681,6 +8721,22 @@ private:
                     parse_context& cur_context = m_context_stack.back();
                     switch (cur_context.state) {
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
+                        if (cur_context.indent == indent) {
+                            // A mapping entry which follows an explicit key without its value, for example:
+                            // ```yaml
+                            // ? foo
+                            // bar: 123
+                            // # -> {foo: null, bar: 123}
+                            // ```
+                            add_explicit_key_with_null_value();
+                            add_new_key(std::move(node), line, indent);
+                            indent = lexer.get_last_token_begin_pos();
+                            line = lexer.get_lines_processed();
+                            return;
+                        }
+
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        break;
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         break;
@@ -8761,6 +8817,45 @@ private:
             throw parse_error("No parent context is found.", line, indent);
         }
         return m_context_stack.back();
+    }
+
+    /// @brief Adds an entry for an explicit key and makes its value node the current node.
+    /// @note The current context must be the context of the explicit key.
+    /// @param line The line where the value of the explicit key begins.
+    /// @param indent The indentation width where the value of the explicit key begins.
+    void add_explicit_key_with_empty_value(const uint32_t line, const uint32_t indent) {
+        FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY);
+
+        basic_node_type key_node = std::move(*m_context_stack.back().p_node);
+        m_context_stack.pop_back();
+        basic_node_type* p_parent_node = current_context(line, indent).p_node;
+        p_parent_node->as_map().emplace(key_node, basic_node_type());
+        mp_current_node = &(p_parent_node->operator[](std::move(key_node)));
+        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
+    }
+
+    /// @brief Adds an entry with a null value for an explicit key which is not followed by its value.
+    /// @note
+    /// An explicit key is kept in its own context until its value is found. If no value follows the key, the
+    /// entry must still be added to the parent mapping since an omitted value is a null value.
+    /// ```yaml
+    /// ? foo
+    /// ? bar
+    /// # -> {foo: null, bar: null}
+    /// ```
+    /// @return true if an entry has been added, false if the current context is not an explicit key.
+    bool add_explicit_key_with_null_value() {
+        const bool is_explicit_key =
+            m_context_stack.size() > 1 && m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY;
+        if (!is_explicit_key) {
+            return false;
+        }
+
+        basic_node_type key_node = std::move(*m_context_stack.back().p_node);
+        m_context_stack.pop_back();
+        m_context_stack.back().p_node->as_map().emplace(std::move(key_node), basic_node_type());
+        mp_current_node = m_context_stack.back().p_node;
+        return true;
     }
 
     /// @brief Pops parent contexts to a block mapping with the given indentation.
