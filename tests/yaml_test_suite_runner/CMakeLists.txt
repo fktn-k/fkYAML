@@ -41,8 +41,16 @@ foreach(event_file ${YAML_TEST_SUITE_EVENT_FILES})
   endif()
 
   string(REPLACE "/" "-" test_id "${case_dir}")
-  string(APPEND YAML_TEST_SUITE_CASES_CONTENTS
-    "TEST_CASE(\"yaml_test_suite_${test_id}\") { run_yaml_test_suite_case(\"${case_dir}\", \"${test_id}\"); }\n")
+
+  if(EXISTS "${yaml-test-suite_SOURCE_DIR}/${case_dir}/in.yaml")
+    string(APPEND YAML_TEST_SUITE_CASES_CONTENTS
+      "TEST_CASE(\"yaml_test_suite_${test_id}_YAML\") { run_yaml_test_suite_case(\"${case_dir}\", \"${test_id}\", input_format::YAML); }\n")
+  endif()
+
+  if(EXISTS "${yaml-test-suite_SOURCE_DIR}/${case_dir}/in.json" AND NOT EXISTS "${yaml-test-suite_SOURCE_DIR}/${case_dir}/error")
+    string(APPEND YAML_TEST_SUITE_CASES_CONTENTS
+      "TEST_CASE(\"yaml_test_suite_${test_id}_JSON\") { run_yaml_test_suite_case(\"${case_dir}\", \"${test_id}\", input_format::JSON); }\n")
+  endif()
 endforeach()
 
 configure_file(

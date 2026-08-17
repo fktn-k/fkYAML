@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <deque>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -26,6 +27,11 @@
 #include "validator.hpp"
 
 namespace yaml_test_suite_runner {
+
+enum class validation_mode {
+    YAML,
+    JSON,
+};
 
 namespace detail {
 
@@ -92,7 +98,10 @@ bool try_convert_float(const std::string& value, T& converted_value) {
 template <typename T>
 class validation_compositor {
 public:
-    validation_compositor() = default;
+    explicit validation_compositor(validation_mode mode = validation_mode::YAML)
+        : m_mode(mode) {
+    }
+
     ~validation_compositor() = default;
 
     void handle_event(event&& evt) {
@@ -373,6 +382,26 @@ private:
     }
 
     std::unique_ptr<validator<T>> compile_validator(const expected_node& node) const {
+        std::map<std::string, const expected_node*> anchor_registry;
+        return compile_validator(node, anchor_registry);
+    }
+
+    std::unique_ptr<validator<T>> compile_validator(
+        const expected_node& node, std::map<std::string, const expected_node*>& anchor_registry) const {
+        if (node.kind != expected_node_kind::ALIAS && !node.anchor_name.empty()) {
+            anchor_registry[node.anchor_name] = &node;
+        }
+
+        if (m_mode == validation_mode::JSON && node.kind == expected_node_kind::ALIAS) {
+            typename std::map<std::string, const expected_node*>::const_iterator anchor_itr =
+                anchor_registry.find(node.anchor_name);
+            if (anchor_itr == anchor_registry.end()) {
+                throw validation_error("Alias validation failed: unknown anchor name " + node.anchor_name);
+            }
+
+            return compile_validator(*anchor_itr->second, anchor_registry);
+        }
+
         std::vector<std::unique_ptr<validator<T>>> validators;
 
         switch (node.kind) {
@@ -380,16 +409,16 @@ private:
             validators.emplace_back(new type_validator<T>(fkyaml::node_type::SEQUENCE));
             validators.emplace_back(new size_validator<T>(node.sequence_items.size()));
             for (std::size_t index = 0; index < node.sequence_items.size(); ++index) {
-                validators.emplace_back(
-                    new sequence_item_validator<T>(index, compile_validator(node.sequence_items[index])));
+                validators.emplace_back(new sequence_item_validator<T>(
+                    index, compile_validator(node.sequence_items[index], anchor_registry)));
             }
             break;
         case expected_node_kind::MAPPING:
             validators.emplace_back(new type_validator<T>(fkyaml::node_type::MAPPING));
             validators.emplace_back(new size_validator<T>(node.mapping_entries.size()));
             for (const auto& entry : node.mapping_entries) {
-                validators.emplace_back(
-                    new mapping_entry_validator<T>(compile_validator(*entry.key), compile_validator(*entry.value)));
+                validators.emplace_back(new mapping_entry_validator<T>(
+                    compile_validator(*entry.key, anchor_registry), compile_validator(*entry.value, anchor_registry)));
             }
             break;
         case expected_node_kind::ALIAS:
@@ -404,10 +433,10 @@ private:
         }
         }
 
-        if (!node.tag_name.empty()) {
+        if (m_mode == validation_mode::YAML && !node.tag_name.empty()) {
             validators.emplace_back(new tag_validator<T>(node.tag_name));
         }
-        if (!node.anchor_name.empty() && node.kind != expected_node_kind::ALIAS) {
+        if (m_mode == validation_mode::YAML && !node.anchor_name.empty() && node.kind != expected_node_kind::ALIAS) {
             validators.emplace_back(
                 new anchor_validator<T>(std::unique_ptr<validator<T>>(new anchor_name_validator<T>(node.anchor_name))));
         }
@@ -500,6 +529,7 @@ private:
     bool m_stream_ended {false};
     std::deque<frame> m_frames {};
     std::vector<std::unique_ptr<validator<T>>> m_document_validators {};
+    validation_mode m_mode {validation_mode::YAML};
 };
 
 } // namespace yaml_test_suite_runner
