@@ -32,6 +32,7 @@ enum class event_param_type {
     VALUE,
     ANCHOR,
     TAG,
+    ALIAS,
 };
 
 using event_param = std::pair<event_param_type, std::string>;

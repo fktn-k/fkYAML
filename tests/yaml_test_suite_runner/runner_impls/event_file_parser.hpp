@@ -24,6 +24,10 @@ public:
         prepare_event_queue(file);
     }
 
+    bool empty() const noexcept {
+        return m_event_queue.empty();
+    }
+
     event get_next_event() {
         if (m_event_queue.empty()) {
             throw std::runtime_error("No more events to read.");
@@ -112,7 +116,7 @@ private:
             return {}; // No parameters
         }
 
-        std::size_t pos = 6; // Start after "+SEQ " or "+MAP "
+        std::size_t pos = 5; // Start after "+SEQ" or "+MAP"
         std::vector<event_param> params {};
 
         parse_anchor_param(line, pos, params);
@@ -126,13 +130,10 @@ private:
             throw std::runtime_error("Malformed SCALAR event line: " + line);
         }
 
-        std::size_t pos = 6; // Start after "=VAL "
+        std::size_t pos = 5; // Start after "=VAL"
         std::vector<event_param> params {};
 
         parse_anchor_param(line, pos, params);
-        if (pos == std::string::npos) {
-            throw std::runtime_error("Malformed SCALAR event line: " + line);
-        }
         parse_tag_param(line, pos, params);
         parse_value_param(line, pos, params);
 
@@ -144,7 +145,7 @@ private:
             throw std::runtime_error("Malformed ALIAS event line: " + line);
         }
 
-        std::size_t pos = 6; // Start after "=ALI "
+        std::size_t pos = 5; // Start after "=ALI"
         std::vector<event_param> params {};
 
         parse_alias_param(line, pos, params);
@@ -152,35 +153,49 @@ private:
         return params;
     }
 
+    void skip_spaces(const std::string& line, std::size_t& pos) {
+        while (pos < line.size() && line[pos] == ' ') {
+            ++pos;
+        }
+    }
+
     void parse_anchor_param(const std::string& line, std::size_t& pos, std::vector<event_param>& params) {
-        std::size_t anchor_start_pos = line.find('&', pos);
-        if (anchor_start_pos != std::string::npos) {
+        skip_spaces(line, pos);
+        if (pos < line.size() && line[pos] == '&') {
+            std::size_t anchor_start_pos = pos;
             std::size_t anchor_end_pos = line.find(' ', anchor_start_pos);
-            std::string anchor_value = line.substr(anchor_start_pos + 1);
+            std::string anchor_value = (anchor_end_pos == std::string::npos)
+                                           ? line.substr(anchor_start_pos + 1)
+                                           : line.substr(anchor_start_pos + 1, anchor_end_pos - anchor_start_pos - 1);
             params.emplace_back(event_param_type::ANCHOR, std::move(anchor_value));
-            pos = anchor_end_pos; // Move past the "&anchor" indicator
+            pos = (anchor_end_pos == std::string::npos) ? line.size() : anchor_end_pos;
         }
     }
 
     void parse_tag_param(const std::string& line, std::size_t& pos, std::vector<event_param>& params) {
-        std::size_t tag_start_pos = line.find('<', pos);
-        if (tag_start_pos != std::string::npos) {
+        skip_spaces(line, pos);
+        if (pos < line.size() && line[pos] == '<') {
+            std::size_t tag_start_pos = pos;
             std::size_t tag_end_pos = line.find('>', tag_start_pos + 1);
             if (tag_end_pos == std::string::npos) {
                 throw std::runtime_error("Malformed tag parameter in event line: " + line);
             }
             std::string tag_value = line.substr(tag_start_pos + 1, tag_end_pos - (tag_start_pos + 1));
             params.emplace_back(event_param_type::TAG, std::move(tag_value));
-            pos = tag_end_pos + 1; // Move past the "<tag:...>" indicator
+            pos = tag_end_pos + 1;
         }
     }
 
     void parse_value_param(const std::string& line, std::size_t& pos, std::vector<event_param>& params) {
-        std::size_t value_start_pos = line.find_first_of(":\'\"|>", pos);
-        if (value_start_pos == std::string::npos) {
+        skip_spaces(line, pos);
+        if (pos >= line.size()) {
             throw std::runtime_error("Malformed value parameter in event line: " + line);
         }
-        std::string tmp_value = line.substr(value_start_pos);
+        if (line[pos] != ':' && line[pos] != '\'' && line[pos] != '"' && line[pos] != '|' && line[pos] != '>') {
+            throw std::runtime_error("Malformed value parameter in event line: " + line);
+        }
+
+        std::string tmp_value = line.substr(pos);
         std::string value;
         for (std::size_t i = 0; i < tmp_value.size(); ++i) {
             if (tmp_value[i] == '\\') {
@@ -217,10 +232,10 @@ private:
     }
 
     void parse_alias_param(const std::string& line, std::size_t& pos, std::vector<event_param>& params) {
-        std::size_t alias_start_pos = line.find('*', pos);
-        if (alias_start_pos != std::string::npos) {
-            std::string alias_value = line.substr(alias_start_pos + 1);
-            params.emplace_back(event_param_type::ANCHOR, std::move(alias_value));
+        skip_spaces(line, pos);
+        if (pos < line.size() && line[pos] == '*') {
+            std::string alias_value = line.substr(pos + 1);
+            params.emplace_back(event_param_type::ALIAS, std::move(alias_value));
         }
     }
 

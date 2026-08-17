@@ -8,6 +8,7 @@
 
 # test data
 /tests/unit_test/test_data.hpp
+/tests/yaml_test_suite_runner/generated_yaml_test_suite_cases.hpp
 /tests/yaml_test_suite_runner/yaml_test_suite_dir.hpp
 
 # natvis generator

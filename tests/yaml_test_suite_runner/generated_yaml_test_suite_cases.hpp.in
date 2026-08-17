@@ -6,9 +6,8 @@
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef FK_YAML_TEST_SUITE_RUNNER_YAML_TEST_SUITE_DIR_HPP
-#define FK_YAML_TEST_SUITE_RUNNER_YAML_TEST_SUITE_DIR_HPP
+// This file is auto-generated from generated_yaml_test_suite_cases.hpp.in.
 
-#define FK_YAML_YAML_TEST_SUITE_ROOT_DIR "@yaml-test-suite_SOURCE_DIR@"
-
-#endif /* FK_YAML_TEST_SUITE_RUNNER_YAML_TEST_SUITE_DIR_HPP */
+// clang-format off
+@YAML_TEST_SUITE_CASES_CONTENTS@
+    // clang-format on
