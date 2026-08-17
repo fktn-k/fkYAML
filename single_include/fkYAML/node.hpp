@@ -8064,7 +8064,8 @@ private:
                         // bar: baz
                         // # -> {foo: null, bar: baz}
                         // ```
-                        if (!add_explicit_key_with_null_value()) {
+                        const bool is_entry_added = add_explicit_key_with_null_value();
+                        if (!is_entry_added) {
                             if FK_YAML_UNLIKELY (m_context_stack.back().state != context_state_t::MAPPING_VALUE) {
                                 // The key separator does not follow a mapping key, for example:
                                 // ```yaml
@@ -14312,13 +14313,61 @@ public:
     /// @brief Get the tag name associated with this basic_node object.
     /// @note Some tag name must be set before calling this method. Call has_tag_name() to see if this basic_node
     /// object has any tag name.
-    /// @return The tag name associated with the node. It may be empty.
+    /// @return The tag name associated with the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_tag_name/
     const std::string& get_tag_name() const {
         if FK_YAML_UNLIKELY (!has_tag_name()) {
             throw fkyaml::exception("No tag name has been set.");
         }
         return m_prop.tag;
+    }
+
+    /// @brief Get the resolved tag name associated with this basic_node object.
+    /// @note Some tag name must be set before calling this method. Call has_tag_name() to see if this basic_node object
+    /// has any tag name.
+    /// @return The resolved tag name associated with the node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_resolved_tag_name/
+    std::string get_resolved_tag_name() const {
+        if FK_YAML_UNLIKELY (!has_tag_name()) {
+            throw fkyaml::exception("No tag name has been set.");
+        }
+
+        const auto& tag = m_prop.tag;
+
+        // non-specific tag
+        if (tag == "!") {
+            return tag;
+        }
+
+        // secondary tag handle
+        if (tag.rfind("!!", 0) == 0) {
+            if (mp_meta->secondary_handle_prefix.empty()) {
+                return "tag:yaml.org,2002:" + tag.substr(2);
+            }
+            return mp_meta->secondary_handle_prefix + tag.substr(2);
+        }
+
+        // named handles
+        for (const auto& named_handle_itr : mp_meta->named_handle_map) {
+            if (tag.rfind(named_handle_itr.first, 0) == 0) {
+                return named_handle_itr.second + tag.substr(named_handle_itr.first.size());
+            }
+        }
+
+        // vertabim tags
+        const bool is_verbatim = tag.rfind("!<", 0) == 0 && tag.back() == '>';
+        if (is_verbatim) {
+            // Verbatim tags (!<...>) are not subject to tag resolution.
+            // Anything in ... must not be expanded.
+            // https://yaml.org/spec/1.2.2/#691-node-tags
+            return tag.substr(2, tag.size() - 3);
+        }
+
+        // primary tag handle
+        if (mp_meta->primary_handle_prefix.empty()) {
+            return "!" + tag.substr(1);
+        }
+        return mp_meta->primary_handle_prefix + tag.substr(1);
     }
 
     /// @brief Add a tag name to this basic_node object.
