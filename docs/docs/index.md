@@ -206,7 +206,7 @@ Testing of the library with [the YAML test suite](https://github.com/yaml/yaml-t
 
 ## Benchmarking
 
-Though efficiency is not everything, speed and memory consumption are very important characteristics for C++ developers. Regarding speed, benchmarking scores are now available with [the dedicated benchmarking tool](./tool/benchmark/README.md) for the parsing.  
+Though efficiency is not everything, speed and memory consumption are very important characteristics for C++ developers. Regarding speed, benchmarking scores are now available with [the dedicated benchmarking tool](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/README.md) for the parsing.  
 The following tables are created from the benchmarking results in the following environment:  
 
 * CPU: AMD Ryzen 7 5800H @3.20GHz
