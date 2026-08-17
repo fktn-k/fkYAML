@@ -623,7 +623,8 @@ private:
                         // bar: baz
                         // # -> {foo: null, bar: baz}
                         // ```
-                        if (!add_explicit_key_with_null_value()) {
+                        const bool is_entry_added = add_explicit_key_with_null_value();
+                        if (!is_entry_added) {
                             if FK_YAML_UNLIKELY (m_context_stack.back().state != context_state_t::MAPPING_VALUE) {
                                 // The key separator does not follow a mapping key, for example:
                                 // ```yaml

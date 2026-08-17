@@ -2989,6 +2989,41 @@ TEST_CASE("Node_GetTagName") {
     }
 }
 
+TEST_CASE("Node_GetResolvedTagName") {
+    fkyaml::node node;
+
+    SUBCASE("node without tag name.") {
+        REQUIRE_THROWS_AS(node.get_resolved_tag_name(), fkyaml::exception);
+    }
+
+    SUBCASE("node with tag name.") {
+        std::string input = "- !!str foo\n"
+                            "- ! bar\n"
+                            "- !local baz\n"
+                            "- !<tag:example.com,2026:verbatim/str> qux\n";
+        node = fkyaml::node::deserialize(input);
+        REQUIRE(node.at(0).get_resolved_tag_name() == "tag:yaml.org,2002:str");
+        REQUIRE(node.at(1).get_resolved_tag_name() == "!");
+        REQUIRE(node.at(2).get_resolved_tag_name() == "!local");
+        REQUIRE(node.at(3).get_resolved_tag_name() == "tag:example.com,2026:verbatim/str");
+
+        std::string input2 = "%TAG ! tag:example.com,2026:primary/\n"
+                             "%TAG !! tag:example.com,2026:secondary/\n"
+                             "%TAG !a! tag:example.com,2026:named/a/\n"
+                             "%TAG !b! tag:example.com,2026:named/b/\n"
+                             "---\n"
+                             "- !!str foo\n"
+                             "- !str bar\n"
+                             "- !a!str baz\n"
+                             "- !b!str qux\n";
+        node = fkyaml::node::deserialize(input2);
+        REQUIRE(node.at(0).get_resolved_tag_name() == "tag:example.com,2026:secondary/str");
+        REQUIRE(node.at(1).get_resolved_tag_name() == "tag:example.com,2026:primary/str");
+        REQUIRE(node.at(2).get_resolved_tag_name() == "tag:example.com,2026:named/a/str");
+        REQUIRE(node.at(3).get_resolved_tag_name() == "tag:example.com,2026:named/b/str");
+    }
+}
+
 TEST_CASE("Node_AddTagName") {
     fkyaml::node node;
     std::string tag_name = "tag_name";
