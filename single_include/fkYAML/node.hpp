@@ -7737,12 +7737,20 @@ private:
             last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
             last_type == lexical_token_t::END_OF_DOCUMENT);
 
-        // An explicit key at the end of a document has no value either.
+        // An explicit key at the end of a document has no value either. Its own contents may have left
+        // more contexts on the stack, so those are unwound first.
         // ```yaml
         // ? foo
-        // # -> {foo: null}
+        // ? bar: baz
+        // # -> {foo: null, {bar: baz}: null}
         // ```
-        add_explicit_key_with_null_value();
+        while (!m_context_stack.empty()) {
+            if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                add_explicit_key_with_null_value();
+                continue;
+            }
+            m_context_stack.pop_back();
+        }
 
         // reset parameters for the next call.
         mp_current_node = nullptr;
@@ -7955,6 +7963,26 @@ private:
                     continue;
                 }
 
+                {
+                    const parse_context& cur_context = m_context_stack.back();
+                    const bool is_explicit_key_content =
+                        cur_context.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && cur_context.line == line;
+                    if (is_explicit_key_content) {
+                        // The contents of an explicit key begin with a key separator, so the key is a mapping
+                        // whose first entry has an empty key. Whether that entry has a value, and whether the
+                        // explicit key itself has one, is not known yet.
+                        // ```yaml
+                        // ? : foo
+                        // #  ^ this key separator begins the contents of the explicit key
+                        // ```
+                        *mp_current_node = basic_node_type::mapping();
+                        apply_directive_set(*mp_current_node);
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        add_empty_key_entry(lexer, token, line, indent);
+                        continue;
+                    }
+                }
+
                 if (m_flow_context_depth > 0) {
                     if (m_context_stack.back().state != context_state_t::MAPPING_VALUE) {
                         // No key precedes this separator, so the entry has an empty key.
@@ -8117,8 +8145,25 @@ private:
                 }
 
                 // handle explicit mapping key separators.
-                if FK_YAML_UNLIKELY (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-                    throw parse_error("Unexpected explicit mapping key separator is found.", line, indent);
+                if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                    // The contents of the explicit key may have left their own contexts on the stack.
+                    // ```yaml
+                    // ? :
+                    // : v
+                    // # -> {{null: null}: v}
+                    // ```
+                    // old_indent is the position of this key separator, while indent already refers to the
+                    // token which follows it.
+                    const auto is_key_context = [old_indent](const parse_context& c) {
+                        return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && old_indent == c.indent;
+                    };
+                    const bool has_key_context =
+                        std::any_of(m_context_stack.rbegin(), m_context_stack.rend(), is_key_context);
+                    if FK_YAML_UNLIKELY (!has_key_context) {
+                        throw parse_error("Unexpected explicit mapping key separator is found.", line, indent);
+                    }
+
+                    pop_to_parent_node(old_line, old_indent, is_key_context);
                 }
 
                 add_explicit_key_with_empty_value(old_line, old_indent);
