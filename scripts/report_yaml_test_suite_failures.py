@@ -157,7 +157,7 @@ def parse_failures(lines: Iterable[str]) -> List[FailureRecord]:
 
         error_match = ERROR_RE.match(stripped)
         if error_match and not current.error_message:
-            current.error_message = normalize_whitespace(error_match.group("message"))
+            current.error_message = strip_path_prefixes(normalize_whitespace(error_match.group("message")))
             continue
 
         input_format_match = INPUT_FORMAT_RE.search(stripped)
@@ -173,8 +173,6 @@ def detect_yaml_test_suite_root(workspace: pathlib.Path, test_dir: str) -> Optio
     candidate_dirs = [
         workspace / test_dir_path / "tests" / "yaml_test_suite_runner" / "yaml-test-suite-src",
         workspace / test_dir_path / "_deps" / "yaml-test-suite-src",
-        workspace / "build_yaml_test_suite" / "tests" / "yaml_test_suite_runner" / "yaml-test-suite-src",
-        workspace / "build_yaml_test_suite" / "_deps" / "yaml-test-suite-src",
     ]
 
     for candidate in candidate_dirs:
@@ -217,6 +215,16 @@ def attach_input_data_to_failures(
 
 def normalize_whitespace(text: str) -> str:
     return " ".join(text.split())
+
+
+def strip_path_prefixes(text: str) -> str:
+    # Keep only the basename when file paths appear in error messages.
+    with_line = re.compile(r"(?P<path>(?:[A-Za-z]:)?(?:[\\/][^\\/:\s]+)+[\\/](?P<file>[^\\/:\s]+))(?=:\d+)")
+    without_line = re.compile(r"(?P<path>(?:[A-Za-z]:)?(?:[\\/][^\\/:\s]+)+[\\/](?P<file>[^\\/:\s]+))")
+
+    text = with_line.sub(lambda match: match.group("file"), text)
+    text = without_line.sub(lambda match: match.group("file"), text)
+    return text
 
 
 def escape_markdown(text: str) -> str:
@@ -296,11 +304,13 @@ def render_report(failures: List[FailureRecord], command_description: str) -> st
         if failure.input_data:
             lines.append("")
             lines.append(f"```{fenced_code_block_language(failure.format_name)}")
-            lines.append(failure.input_data.rstrip("\n"))
+            lines.append(failure.input_data)
             lines.append("```")
         else:
             lines.append("")
-            lines.append("(input data unavailable)")
+            lines.append("```")
+            lines.append("(empty input)")
+            lines.append("```")
 
         lines.append("")
         lines.append("Error:")
