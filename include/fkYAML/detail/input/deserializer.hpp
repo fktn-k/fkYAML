@@ -827,7 +827,7 @@ private:
                 // while that node is a key which has not been added to its parent mapping yet.
 
                 if (!m_context_stack.empty() && owned_node != nullptr) {
-                    basic_node_type key_node = std::move(*mp_current_node);
+                    basic_node_type key_node = std::move(*owned_node);
                     owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
@@ -949,7 +949,7 @@ private:
                 // while that node is a key which has not been added to its parent mapping yet.
 
                 if (!m_context_stack.empty() && owned_node != nullptr) {
-                    basic_node_type key_node = std::move(*mp_current_node);
+                    basic_node_type key_node = std::move(*owned_node);
                     owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
