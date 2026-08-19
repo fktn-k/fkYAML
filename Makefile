@@ -47,7 +47,7 @@ all:
 yaml-test-suite:
 	cmake -B build_yaml_test_suite -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
 	cmake --build build_yaml_test_suite --config Debug
-	ctest -C Debug --test-dir build_yaml_test_suite --output-on-failure
+	ctest -C Debug --test-dir build_yaml_test_suite --output-on-failure -R yaml_test_suite_
 
 #############################
 #   Static Code Analyzers   #

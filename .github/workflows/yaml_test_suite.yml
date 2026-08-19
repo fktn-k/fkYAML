@@ -1,0 +1,60 @@
+name: YAML Test Suite
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - release/*
+  pull_request:
+    paths:
+      - .github/workflows/yaml_test_suite.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - tests/**
+      - CMakeLists.txt
+  workflow_dispatch:
+
+jobs:
+  yaml-test-suite:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    env:
+      JOBS: 2
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config Debug -j ${{env.JOBS}}
+
+    - name: Test
+      run: ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -j ${{env.JOBS}}
+      # This allows the workflow to continue even if some tests fail, so we can generate a report of the failures.
+      continue-on-error: true
+
+    - name: Decide the artifact_name
+      id: artifact_naming
+      env:
+        PR_NUMBER: ${{github.event.pull_request.head.sha || github.sha}}
+      run: |
+        echo "artifact name: fkYAML_yaml_test_suite_failures.${{env.PR_NUMBER}}.md"
+        echo "artifact_name=fkYAML_yaml_test_suite_failures.pr${{env.PR_NUMBER}}.md" >> $GITHUB_OUTPUT
+
+    - name: Report Failures
+      run: |
+        echo "Generating YAML Test Suite Failures Report..."
+        python3 ${{github.workspace}}/scripts/report_yaml_test_suite_failures.py --test-dir build --output ${{github.workspace}}/${{steps.artifact_naming.outputs.artifact_name}}
+
+    - name: Upload Failures Report as an Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{steps.artifact_naming.outputs.artifact_name}}
+        path: ${{github.workspace}}/${{steps.artifact_naming.outputs.artifact_name}}
+        overwrite: true
