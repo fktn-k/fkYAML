@@ -42,7 +42,7 @@ public:
 template <typename T>
 class composite_validator : public validator<T> {
 public:
-    composite_validator(std::vector<std::unique_ptr<validator<T>>>&& validators)
+    explicit composite_validator(std::vector<std::unique_ptr<validator<T>>>&& validators)
         : m_validators(std::move(validators)) {
     }
 
@@ -61,7 +61,7 @@ private:
 template <typename T>
 class size_validator : public validator<T> {
 public:
-    size_validator(std::size_t expected_size)
+    explicit size_validator(std::size_t expected_size)
         : m_expected_size(expected_size) {
     }
 
@@ -82,7 +82,7 @@ private:
 template <typename T>
 class type_validator : public validator<T> {
 public:
-    type_validator(fkyaml::node_type expected_type)
+    explicit type_validator(fkyaml::node_type expected_type)
         : m_expected_type(expected_type) {
     }
 
@@ -103,7 +103,7 @@ private:
 template <typename T, typename ValueType>
 class value_validator : public validator<T> {
 public:
-    value_validator(const ValueType& expected_value)
+    explicit value_validator(const ValueType& expected_value)
         : m_expected_value(expected_value) {
     }
 
@@ -124,7 +124,7 @@ private:
 template <typename T>
 class tag_validator : public validator<T> {
 public:
-    tag_validator(const std::string& expected_tag)
+    explicit tag_validator(const std::string& expected_tag)
         : m_expected_tag(expected_tag) {
     }
 
@@ -147,7 +147,7 @@ private:
 template <typename T>
 class anchor_name_validator : public validator<T> {
 public:
-    anchor_name_validator(const std::string& expected_anchor_name)
+    explicit anchor_name_validator(const std::string& expected_anchor_name)
         : m_expected_anchor_name(expected_anchor_name) {
     }
 
@@ -171,7 +171,7 @@ private:
 template <typename T>
 class anchor_validator : public validator<T> {
 public:
-    anchor_validator(std::unique_ptr<validator<T>> anchor_name_validator)
+    explicit anchor_validator(std::unique_ptr<validator<T>> anchor_name_validator)
         : m_anchor_name_validator(std::move(anchor_name_validator)) {
     }
 
@@ -191,7 +191,7 @@ private:
 template <typename T>
 class alias_validator : public validator<T> {
 public:
-    alias_validator(std::unique_ptr<validator<T>> anchor_name_validator)
+    explicit alias_validator(std::unique_ptr<validator<T>> anchor_name_validator)
         : m_anchor_name_validator(std::move(anchor_name_validator)) {
     }
 

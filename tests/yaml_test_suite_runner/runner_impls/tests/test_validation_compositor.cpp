@@ -177,9 +177,8 @@ TEST_CASE("validation_compositor_json_mode_normalizes_zero_fraction_float_litera
     validation_compositor<fkyaml::node> compositor(validation_mode::JSON);
     compositor.handle_event(event(event_type::STREAM_START));
     compositor.handle_event(event(event_type::DOCUMENT_START));
-    compositor.handle_event(make_event(
-        event_type::SCALAR,
-        {{event_param_type::VALUE, "450.00"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "450.00"}, {event_param_type::STYLE, ":"}}));
     compositor.handle_event(event(event_type::DOCUMENT_END));
     compositor.handle_event(event(event_type::STREAM_END));
 

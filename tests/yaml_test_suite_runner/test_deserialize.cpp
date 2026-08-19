@@ -83,8 +83,24 @@ std::vector<std::unique_ptr<yaml_test_suite_runner::validator<fkyaml::node>>> lo
 
 bool should_skip_json_case(const std::string& test_id, std::string& reason) {
     static const char* const malformed_input_cases[] = {
-        "35KP", "5TYM", "6WLZ", "6XDY", "6ZKB", "7Z25", "9DXL", "9KAX", "9WXW", "JHB9", "KSS4",
-        "L383", "M7A3", "PUW8", "RZT7", "U9NS", "UT92", "W4TN",
+        "35KP",
+        "5TYM",
+        "6WLZ",
+        "6XDY",
+        "6ZKB",
+        "7Z25",
+        "9DXL",
+        "9KAX",
+        "9WXW",
+        "JHB9",
+        "KSS4",
+        "L383",
+        "M7A3",
+        "PUW8",
+        "RZT7",
+        "U9NS",
+        "UT92",
+        "W4TN",
     };
     static const char* const false_error_cases[] = {
         "DK95-01",

@@ -39,7 +39,7 @@ enum class event_param_type {
 using event_param = std::pair<event_param_type, std::string>;
 
 struct event {
-    event(event_type t) noexcept
+    explicit event(event_type t) noexcept
         : type(t) {
     }
 

@@ -20,7 +20,7 @@ namespace yaml_test_suite_runner {
 
 class event_file_parser {
 public:
-    event_file_parser(std::ifstream& file) {
+    explicit event_file_parser(std::ifstream& file) {
         prepare_event_queue(file);
     }
 
