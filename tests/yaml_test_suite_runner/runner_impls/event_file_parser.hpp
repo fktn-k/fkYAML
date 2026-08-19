@@ -191,20 +191,27 @@ private:
         if (pos >= line.size()) {
             throw std::runtime_error("Malformed value parameter in event line: " + line);
         }
-        if (line[pos] != ':' && line[pos] != '\'' && line[pos] != '"' && line[pos] != '|' && line[pos] != '>') {
+        switch (line[pos]) {
+        case ':':
+        case '\'':
+        case '"':
+        case '|':
+        case '>':
+            params.emplace_back(event_param_type::STYLE, std::string(&line[pos], 1));
+            break;
+        default:
             throw std::runtime_error("Malformed value parameter in event line: " + line);
         }
 
-        std::string tmp_value = line.substr(pos);
         std::string value;
-        for (std::size_t i = 0; i < tmp_value.size(); ++i) {
-            if (tmp_value[i] == '\\') {
-                if (i + 1 >= tmp_value.size()) {
+        for (std::size_t i = pos + 1; i < line.size(); ++i) {
+            if (line[i] == '\\') {
+                if (i + 1 >= line.size()) {
                     throw std::runtime_error("Malformed escape sequence in value parameter: " + line);
                 }
                 ++i;
 
-                switch (tmp_value[i]) {
+                switch (line[i]) {
                 case 'b':
                     value += '\b';
                     break;
@@ -225,7 +232,7 @@ private:
                 }
             }
             else {
-                value += tmp_value[i];
+                value += line[i];
             }
         }
         params.emplace_back(event_param_type::VALUE, std::move(value));

@@ -32,7 +32,8 @@ TEST_CASE("validation_compositor_builds_implicit_integer_validator") {
     validation_compositor<fkyaml::node> compositor;
     compositor.handle_event(event(event_type::STREAM_START));
     compositor.handle_event(event(event_type::DOCUMENT_START));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":42"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "42"}, {event_param_type::STYLE, ":"}}));
     compositor.handle_event(event(event_type::DOCUMENT_END));
     compositor.handle_event(event(event_type::STREAM_END));
 
@@ -49,7 +50,10 @@ TEST_CASE("validation_compositor_validates_tagged_scalar_with_normalized_tag_nam
     compositor.handle_event(event(event_type::STREAM_START));
     compositor.handle_event(event(event_type::DOCUMENT_START));
     compositor.handle_event(make_event(
-        event_type::SCALAR, {{event_param_type::TAG, "tag:yaml.org,2002:str"}, {event_param_type::VALUE, ":42"}}));
+        event_type::SCALAR,
+        {{event_param_type::TAG, "tag:yaml.org,2002:str"},
+         {event_param_type::VALUE, "42"},
+         {event_param_type::STYLE, ":"}}));
     compositor.handle_event(event(event_type::DOCUMENT_END));
     compositor.handle_event(event(event_type::STREAM_END));
 
@@ -60,6 +64,28 @@ TEST_CASE("validation_compositor_validates_tagged_scalar_with_normalized_tag_nam
     CHECK_NOTHROW(validator_ptr->validate(tagged_scalar));
 }
 
+TEST_CASE("validation_compositor_does_not_treat_explicit_string_tagged_empty_scalar_as_null") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor;
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(make_event(
+        event_type::SCALAR,
+        {{event_param_type::TAG, "tag:yaml.org,2002:str"},
+         {event_param_type::VALUE, ""},
+         {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    fkyaml::node tagged_empty_scalar(std::string(""));
+    tagged_empty_scalar.add_tag_name("!!str");
+    CHECK_NOTHROW(validator_ptr->validate(tagged_empty_scalar));
+    CHECK_THROWS_AS(validator_ptr->validate(fkyaml::node(nullptr)), validation_error);
+}
+
 TEST_CASE("validation_compositor_validates_nested_collections_and_aliases") {
     using namespace yaml_test_suite_runner;
 
@@ -67,12 +93,16 @@ TEST_CASE("validation_compositor_validates_nested_collections_and_aliases") {
     compositor.handle_event(event(event_type::STREAM_START));
     compositor.handle_event(event(event_type::DOCUMENT_START));
     compositor.handle_event(event(event_type::MAPPING_START));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":items"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "items"}, {event_param_type::STYLE, ":"}}));
     compositor.handle_event(make_event(event_type::SEQUENCE_START, {{event_param_type::ANCHOR, "seq"}}));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":1"}}));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, "\"two"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "1"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "two"}, {event_param_type::STYLE, "\""}}));
     compositor.handle_event(event(event_type::SEQUENCE_END));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":ref"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "ref"}, {event_param_type::STYLE, ":"}}));
     compositor.handle_event(make_event(event_type::ALIAS, {{event_param_type::ALIAS, "seq"}}));
     compositor.handle_event(event(event_type::MAPPING_END));
     compositor.handle_event(event(event_type::DOCUMENT_END));
@@ -101,10 +131,13 @@ TEST_CASE("validation_compositor_validates_non_scalar_mapping_keys") {
     compositor.handle_event(event(event_type::DOCUMENT_START));
     compositor.handle_event(event(event_type::MAPPING_START));
     compositor.handle_event(event(event_type::SEQUENCE_START));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":a"}}));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":b"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "a"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "b"}, {event_param_type::STYLE, ":"}}));
     compositor.handle_event(event(event_type::SEQUENCE_END));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":pair"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "pair"}, {event_param_type::STYLE, ":"}}));
     compositor.handle_event(event(event_type::MAPPING_END));
     compositor.handle_event(event(event_type::DOCUMENT_END));
     compositor.handle_event(event(event_type::STREAM_END));
@@ -128,7 +161,8 @@ TEST_CASE("validation_compositor_json_mode_ignores_yaml_specific_metadata") {
         event_type::SCALAR,
         {{event_param_type::ANCHOR, "a"},
          {event_param_type::TAG, "tag:yaml.org,2002:str"},
-         {event_param_type::VALUE, ":42"}}));
+         {event_param_type::VALUE, "42"},
+         {event_param_type::STYLE, ":"}}));
     compositor.handle_event(event(event_type::DOCUMENT_END));
     compositor.handle_event(event(event_type::STREAM_END));
 
@@ -144,12 +178,16 @@ TEST_CASE("validation_compositor_json_mode_expands_aliases") {
     compositor.handle_event(event(event_type::STREAM_START));
     compositor.handle_event(event(event_type::DOCUMENT_START));
     compositor.handle_event(event(event_type::MAPPING_START));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":items"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "items"}, {event_param_type::STYLE, ":"}}));
     compositor.handle_event(make_event(event_type::SEQUENCE_START, {{event_param_type::ANCHOR, "seq"}}));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":1"}}));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, "\"two"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "1"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "two"}, {event_param_type::STYLE, "\""}}));
     compositor.handle_event(event(event_type::SEQUENCE_END));
-    compositor.handle_event(make_event(event_type::SCALAR, {{event_param_type::VALUE, ":ref"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "ref"}, {event_param_type::STYLE, ":"}}));
     compositor.handle_event(make_event(event_type::ALIAS, {{event_param_type::ALIAS, "seq"}}));
     compositor.handle_event(event(event_type::MAPPING_END));
     compositor.handle_event(event(event_type::DOCUMENT_END));

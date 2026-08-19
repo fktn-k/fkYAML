@@ -142,6 +142,7 @@ private:
         std::string anchor_name {};
         std::string tag_name {};
         std::string scalar_value {};
+        std::string scalar_style {};
         std::vector<expected_node> sequence_items {};
         std::vector<expected_mapping_entry> mapping_entries {};
 
@@ -286,9 +287,18 @@ private:
         if (const std::string* anchor_name = detail::find_event_param(params, event_param_type::ANCHOR)) {
             node.anchor_name = *anchor_name;
         }
+
         if (const std::string* tag_name = detail::find_event_param(params, event_param_type::TAG)) {
             node.tag_name = *tag_name;
         }
+
+        if (const std::string* scalar_style = detail::find_event_param(params, event_param_type::STYLE)) {
+            node.scalar_style = *scalar_style;
+        }
+        else {
+            throw std::runtime_error("Scalar event is missing a style parameter.");
+        }
+
         if (const std::string* scalar_value = detail::find_event_param(params, event_param_type::VALUE)) {
             node.scalar_value = *scalar_value;
         }
@@ -367,7 +377,7 @@ private:
             typename std::map<std::string, const expected_node*>::const_iterator anchor_itr =
                 anchor_registry.find(node.anchor_name);
             if (anchor_itr == anchor_registry.end()) {
-                throw validation_error("Alias validation failed: unknown anchor name " + node.anchor_name);
+                throw std::runtime_error("Alias validation failed: unknown anchor name " + node.anchor_name);
             }
 
             return compile_validator(*anchor_itr->second, anchor_registry);
@@ -416,12 +426,8 @@ private:
     }
 
     scalar_expectation make_scalar_expectation(const expected_node& node) const {
-        if (node.scalar_value.empty()) {
-            throw std::runtime_error("Scalar event must include a style marker.");
-        }
-
         scalar_expectation scalar;
-        scalar.value = node.scalar_value.substr(1);
+        scalar.value = node.scalar_value;
 
         if (node.tag_name == "tag:yaml.org,2002:null") {
             scalar.type = fkyaml::node_type::NULL_OBJECT;
@@ -444,9 +450,15 @@ private:
             return scalar;
         }
 
-        const char style = node.scalar_value[0];
-        if (style != ':') {
+        if (node.scalar_style != ":") {
             scalar.type = fkyaml::node_type::STRING;
+            return scalar;
+        }
+
+        // In yaml-test-suite event files, an empty plain scalar (`=VAL :`) represents an empty node,
+        // which resolves to null in YAML core schema when no explicit tag is present.
+        if (scalar.value.empty()) {
+            scalar.type = fkyaml::node_type::NULL_OBJECT;
             return scalar;
         }
 
@@ -459,7 +471,7 @@ private:
         const scalar_expectation& scalar, std::vector<std::unique_ptr<validator<T>>>& validators) const {
         switch (scalar.type) {
         case fkyaml::node_type::NULL_OBJECT:
-            if (!detail::try_convert_null(scalar.value)) {
+            if (!scalar.value.empty() && !detail::try_convert_null(scalar.value)) {
                 throw validation_error("Failed to interpret expected scalar as null: " + scalar.value);
             }
             break;

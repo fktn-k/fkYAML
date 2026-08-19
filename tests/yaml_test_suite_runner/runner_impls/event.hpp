@@ -30,6 +30,7 @@ enum class event_type {
 
 enum class event_param_type {
     VALUE,
+    STYLE,
     ANCHOR,
     TAG,
     ALIAS,
