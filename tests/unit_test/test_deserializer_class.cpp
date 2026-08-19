@@ -79,6 +79,37 @@ TEST_CASE("Deserializer_KeySeparator") {
         REQUIRE(root[nullptr].as_str() == "empty key");
     }
 
+    SUBCASE("empty mapping key whose value is omitted") {
+        std::string input = ":\n"
+                            "bar: baz\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root[nullptr].is_null());
+
+        REQUIRE(root.contains("bar"));
+        REQUIRE(root["bar"].as_str() == "baz");
+    }
+
+    SUBCASE("empty mapping key whose value begins on the following line") {
+        std::string input = ":\n"
+                            "  bar: baz\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains(nullptr));
+
+        fkyaml::node& value_node = root[nullptr];
+        REQUIRE(value_node.is_mapping());
+        REQUIRE(value_node.size() == 1);
+        REQUIRE(value_node.contains("bar"));
+        REQUIRE(value_node["bar"].as_str() == "baz");
+    }
+
     SUBCASE("empty mapping key in a flow mapping") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("{key: value, : empty key}")));
         REQUIRE(root.is_mapping());
