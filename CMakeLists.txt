@@ -33,8 +33,15 @@ endif()
 
 if(FK_YAML_BUILD_ALL_TEST)
   set(FK_YAML_BUILD_TEST ON)
+  if (CXX_COMPILER_ID STREQUAL "Clang")
+    set(FK_YAML_BUILD_FUZZ_TEST ON)
+  else()
+    message(WARNING "FK_YAML_BUILD_FUZZ_TEST is only supported with Clang. It will be disabled.")
+    set(FK_YAML_BUILD_FUZZ_TEST OFF)
+  endif()
   set(FK_YAML_BUILD_FUZZ_TEST ON)
   set(FK_YAML_USE_YAML_TEST_SUITE ON)
+  set(FK_YAML_BUILD_CMAKE_INTEGRATION_TEST ON)
 endif()
 
 ###########################################
@@ -128,7 +135,7 @@ endif()
 #   Build the test apps   #
 ###########################
 
-if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_FUZZ_TEST OR FK_YAML_USE_YAML_TEST_SUITE OR FK_YAML_BUILD_ALL_TEST)
+if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_FUZZ_TEST OR FK_YAML_USE_YAML_TEST_SUITE OR FK_YAML_BUILD_ALL_TEST OR FK_YAML_BUILD_CMAKE_INTEGRATION_TEST)
   include(CTest)
   enable_testing()
   add_subdirectory(tests)

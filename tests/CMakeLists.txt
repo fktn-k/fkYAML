@@ -75,16 +75,7 @@ endif()
 #   Configure common compile options   #
 ########################################
 
-add_library(
-  common_test_config
-  OBJECT
-    main.cpp
-)
-target_include_directories(
-  common_test_config
-  PUBLIC
-    "${doctest_SOURCE_DIR}"
-)
+add_library(common_test_config INTERFACE)
 target_link_libraries(
   common_test_config
   INTERFACE
@@ -216,6 +207,22 @@ if(FK_YAML_CODE_COVERAGE)
   endif()
 endif()
 
+add_library(
+  common_test_config_with_main
+  OBJECT
+    main.cpp
+)
+target_link_libraries(
+  common_test_config_with_main
+  PUBLIC
+    common_test_config
+)
+target_include_directories(
+  common_test_config_with_main
+  PUBLIC
+    "${doctest_SOURCE_DIR}"
+)
+
 add_dependencies(common_test_config ${FK_YAML_TARGET_NAME})
 
 #######################
@@ -234,7 +241,7 @@ if(FK_YAML_BUILD_FUZZ_TEST)
   add_subdirectory(fuzz_test)
 endif()
 
-if(FK_YAML_BUILD_ALL_TEST)
+if(FK_YAML_BUILD_CMAKE_INTEGRATION_TEST)
   add_subdirectory(cmake_add_subdirectory_test)
   add_subdirectory(cmake_fetch_content_test)
   add_subdirectory(cmake_find_package_test)

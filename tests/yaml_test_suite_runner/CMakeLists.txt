@@ -71,7 +71,7 @@ add_executable(
 target_link_libraries(
   yaml_test_suite
   PRIVATE
-    common_test_config
+    common_test_config_with_main
 )
 target_include_directories(
   yaml_test_suite

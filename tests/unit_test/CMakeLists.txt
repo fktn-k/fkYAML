@@ -78,7 +78,7 @@ target_compile_options(
 target_link_libraries(
   unit_test
   PRIVATE
-    common_test_config
+    common_test_config_with_main
     unit_test_config
 )
 doctest_discover_tests(unit_test)
