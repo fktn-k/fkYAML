@@ -252,6 +252,8 @@ private:
         if (const std::string* tag_name = detail::find_event_param(params, event_param_type::TAG)) {
             next_frame.tag_name = *tag_name;
         }
+        // Note:
+        // The STYLE parameter is intentionally ignored for container start events, as it is not relevant to validation.
 
         m_frames.emplace_back(std::move(next_frame));
     }

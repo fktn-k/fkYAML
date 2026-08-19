@@ -119,10 +119,19 @@ private:
         std::size_t pos = 5; // Start after "+SEQ" or "+MAP"
         std::vector<event_param> params {};
 
+        parse_collection_style_param(line, pos, params);
         parse_anchor_param(line, pos, params);
         parse_tag_param(line, pos, params);
 
         return params;
+    }
+
+    void parse_collection_style_param(const std::string& line, std::size_t& pos, std::vector<event_param>& params) {
+        skip_spaces(line, pos);
+        if (pos < line.size() && (line.rfind("{}", pos) == pos || line.rfind("[]", pos) == pos)) {
+            params.emplace_back(event_param_type::STYLE, std::string(&line[pos], 2));
+            pos += 2;
+        }
     }
 
     std::vector<event_param> parse_scalar_params(const std::string& line) {
