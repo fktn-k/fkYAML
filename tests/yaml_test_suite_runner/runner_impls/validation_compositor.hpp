@@ -44,35 +44,6 @@ inline const std::string* find_event_param(const std::vector<event_param>& param
     return nullptr;
 }
 
-inline std::string normalize_tag_name(const std::string& tag_name) {
-    if (tag_name == "tag:yaml.org,2002:seq") {
-        return "!!seq";
-    }
-    if (tag_name == "tag:yaml.org,2002:map") {
-        return "!!map";
-    }
-    if (tag_name == "tag:yaml.org,2002:null") {
-        return "!!null";
-    }
-    if (tag_name == "tag:yaml.org,2002:bool") {
-        return "!!bool";
-    }
-    if (tag_name == "tag:yaml.org,2002:int") {
-        return "!!int";
-    }
-    if (tag_name == "tag:yaml.org,2002:float") {
-        return "!!float";
-    }
-    if (tag_name == "tag:yaml.org,2002:str") {
-        return "!!str";
-    }
-    if (tag_name.rfind("tag:", 0) == 0) {
-        return "!<" + tag_name + ">";
-    }
-
-    return tag_name;
-}
-
 inline bool try_convert_null(const std::string& value) {
     std::nullptr_t null = nullptr;
     return fkyaml::detail::aton(value.c_str(), value.c_str() + value.size(), null);
@@ -278,7 +249,7 @@ private:
             next_frame.anchor_name = *anchor_name;
         }
         if (const std::string* tag_name = detail::find_event_param(params, event_param_type::TAG)) {
-            next_frame.tag_name = detail::normalize_tag_name(*tag_name);
+            next_frame.tag_name = *tag_name;
         }
 
         m_frames.emplace_back(std::move(next_frame));
@@ -316,7 +287,7 @@ private:
             node.anchor_name = *anchor_name;
         }
         if (const std::string* tag_name = detail::find_event_param(params, event_param_type::TAG)) {
-            node.tag_name = detail::normalize_tag_name(*tag_name);
+            node.tag_name = *tag_name;
         }
         if (const std::string* scalar_value = detail::find_event_param(params, event_param_type::VALUE)) {
             node.scalar_value = *scalar_value;
@@ -452,23 +423,23 @@ private:
         scalar_expectation scalar;
         scalar.value = node.scalar_value.substr(1);
 
-        if (node.tag_name == "!!null") {
+        if (node.tag_name == "tag:yaml.org,2002:null") {
             scalar.type = fkyaml::node_type::NULL_OBJECT;
             return scalar;
         }
-        if (node.tag_name == "!!bool") {
+        if (node.tag_name == "tag:yaml.org,2002:bool") {
             scalar.type = fkyaml::node_type::BOOLEAN;
             return scalar;
         }
-        if (node.tag_name == "!!int") {
+        if (node.tag_name == "tag:yaml.org,2002:int") {
             scalar.type = fkyaml::node_type::INTEGER;
             return scalar;
         }
-        if (node.tag_name == "!!float") {
+        if (node.tag_name == "tag:yaml.org,2002:float") {
             scalar.type = fkyaml::node_type::FLOAT;
             return scalar;
         }
-        if (node.tag_name == "!!str") {
+        if (node.tag_name == "tag:yaml.org,2002:str") {
             scalar.type = fkyaml::node_type::STRING;
             return scalar;
         }

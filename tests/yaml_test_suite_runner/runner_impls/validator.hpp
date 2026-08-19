@@ -29,33 +29,6 @@ std::string debug_string(const ValueType& value) {
     return oss.str();
 }
 
-inline bool is_verbatim_tag(const std::string& tag) {
-    return tag.size() >= 4 && tag[0] == '!' && tag[1] == '<' && tag[tag.size() - 1] == '>';
-}
-
-inline bool tags_equivalent(const std::string& expected_tag, const std::string& actual_tag) {
-    if (expected_tag == actual_tag) {
-        return true;
-    }
-
-    const std::size_t actual_handle_pos = actual_tag.find('!', 1);
-    if (actual_handle_pos != std::string::npos && actual_handle_pos + 1 < actual_tag.size()) {
-        const std::string actual_suffix = actual_tag.substr(actual_handle_pos + 1);
-
-        if (is_verbatim_tag(expected_tag)) {
-            const std::string expanded = expected_tag.substr(2, expected_tag.size() - 3);
-            return expanded.size() >= actual_suffix.size() &&
-                   expanded.compare(expanded.size() - actual_suffix.size(), actual_suffix.size(), actual_suffix) == 0;
-        }
-
-        return expected_tag.size() >= actual_suffix.size() &&
-               expected_tag.compare(expected_tag.size() - actual_suffix.size(), actual_suffix.size(), actual_suffix) ==
-                   0;
-    }
-
-    return false;
-}
-
 } // namespace detail
 
 template <typename T>
@@ -118,8 +91,8 @@ public:
     void validate(const T& value) const override {
         if (value.get_type() != m_expected_type) {
             throw validation_error(
-                "Type validation failed: expected " + std::to_string(static_cast<int>(m_expected_type)) + ", got " +
-                std::to_string(static_cast<int>(value.get_type())));
+                "Type validation failed: expected " + std::string(fkyaml::to_string(m_expected_type)) + ", got " +
+                std::string(fkyaml::to_string(value.get_type())));
         }
     }
 
@@ -161,9 +134,9 @@ public:
         if (!value.has_tag_name()) {
             throw validation_error("Tag validation failed: expected " + m_expected_tag + ", but no tag found");
         }
-        if (!detail::tags_equivalent(m_expected_tag, value.get_tag_name())) {
+        if (value.get_resolved_tag_name() != m_expected_tag) {
             throw validation_error(
-                "Tag validation failed: expected " + m_expected_tag + ", got " + value.get_tag_name());
+                "Tag validation failed: expected " + m_expected_tag + ", got " + value.get_resolved_tag_name());
         }
     }
 
