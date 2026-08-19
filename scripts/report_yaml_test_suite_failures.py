@@ -11,8 +11,12 @@ from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Tuple
 
 
-FAILED_TEST_LINE_RE = re.compile(r"^\s*\d+/\d+ Test\s+#(?P<ctest_id>\d+):\s+(?P<name>\S+)\s+.*\*\*\*Failed")
-SUMMARY_LINE_RE = re.compile(r"^\s*(?P<ctest_id>\d+)\s+-\s+(?P<name>\S+)\s+\(Failed\)$")
+# Matches the per-test progress line for any non-Passed status (Failed, Subprocess aborted,
+# Not Run, Timeout, etc.), since ctest only omits "***"/status text for passing tests.
+TEST_RESULT_LINE_RE = re.compile(
+    r"^\s*\d+/\d+ Test\s+#(?P<ctest_id>\d+):\s+(?P<name>\S+)\s+\.+(?P<status>.+?)\s+[\d.]+\s*sec\s*$"
+)
+SUMMARY_LINE_RE = re.compile(r"^\s*(?P<ctest_id>\d+)\s+-\s+(?P<name>\S+)\s+\((?P<status>[^)]+)\)$")
 LABEL_RE = re.compile(r"^label:\s+(?P<label>.+)$")
 TEST_CASE_RE = re.compile(r"^TEST CASE:\s+(?P<name>\S+)\s*$")
 ERROR_RE = re.compile(r"^(?P<message>.+(?:ERROR|FATAL ERROR):.+)$")
@@ -126,9 +130,9 @@ def parse_failures(lines: Iterable[str]) -> List[FailureRecord]:
     for raw_line in lines:
         line = raw_line.rstrip("\n")
 
-        failed_match = FAILED_TEST_LINE_RE.match(line)
-        if failed_match:
-            current = FailureRecord(failed_match.group("ctest_id"), failed_match.group("name"))
+        result_match = TEST_RESULT_LINE_RE.match(line)
+        if result_match and result_match.group("status").strip() != "Passed":
+            current = FailureRecord(result_match.group("ctest_id"), result_match.group("name"))
             failures.append(current)
             continue
 
