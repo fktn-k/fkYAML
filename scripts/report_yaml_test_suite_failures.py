@@ -301,6 +301,12 @@ def render_report(failures: List[FailureRecord], command_description: str) -> st
         else:
             lines.append("")
             lines.append("(input data unavailable)")
+
+        lines.append("")
+        lines.append("Error:")
+        lines.append("```")
+        lines.append(f"Error: {escape_markdown(failure.error_message or '(summary only)')}")
+        lines.append("```")
         lines.append("")
 
     lines.append("")
