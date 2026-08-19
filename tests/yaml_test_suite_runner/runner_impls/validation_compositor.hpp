@@ -451,6 +451,11 @@ private:
             scalar.type = fkyaml::node_type::STRING;
             return scalar;
         }
+        if (node.tag_name == "!") {
+            // A scalar with the non-specific tag must resolve to a string
+            scalar.type = fkyaml::node_type::STRING;
+            return scalar;
+        }
 
         if (node.scalar_style != ":") {
             scalar.type = fkyaml::node_type::STRING;
