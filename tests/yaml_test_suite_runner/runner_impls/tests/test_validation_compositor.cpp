@@ -171,6 +171,24 @@ TEST_CASE("validation_compositor_json_mode_ignores_yaml_specific_metadata") {
     CHECK_NOTHROW(validator_ptr->validate(fkyaml::node(std::string("42"))));
 }
 
+TEST_CASE("validation_compositor_json_mode_normalizes_zero_fraction_float_literals") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor(validation_mode::JSON);
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(make_event(
+        event_type::SCALAR,
+        {{event_param_type::VALUE, "450.00"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    CHECK_NOTHROW(validator_ptr->validate(fkyaml::node(450)));
+    CHECK_THROWS_AS(validator_ptr->validate(fkyaml::node(450.0)), validation_error);
+}
+
 TEST_CASE("validation_compositor_json_mode_expands_aliases") {
     using namespace yaml_test_suite_runner;
 

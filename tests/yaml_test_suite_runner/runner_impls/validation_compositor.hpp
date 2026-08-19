@@ -471,7 +471,34 @@ private:
 
         scalar.type =
             fkyaml::detail::scalar_scanner::scan(scalar.value.c_str(), scalar.value.c_str() + scalar.value.size());
+
+        if (m_mode == validation_mode::JSON && node.tag_name.empty()) {
+            normalize_json_float_literal(scalar);
+        }
         return scalar;
+    }
+
+    // In JSON mode, a float literal with only zeroes after the decimal point is treated as an integer.
+    // This is because the JSON schema does not distinguish between float and integer types, and the YAML test suite
+    // uses this convention for testing.
+    void normalize_json_float_literal(scalar_expectation& scalar) const {
+        if (scalar.type != fkyaml::node_type::FLOAT) {
+            return;
+        }
+
+        std::size_t dot_pos = scalar.value.find('.');
+        if (dot_pos == std::string::npos) {
+            return;
+        }
+
+        for (std::size_t index = dot_pos + 1; index < scalar.value.size(); ++index) {
+            if (scalar.value[index] != '0') {
+                return;
+            }
+        }
+
+        scalar.type = fkyaml::node_type::INTEGER;
+        scalar.value = scalar.value.substr(0, dot_pos);
     }
 
     void append_scalar_value_validator(
