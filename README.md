@@ -202,7 +202,14 @@ If you encounter a problem regarding compilers, please let us know by [creating 
 
 ## Test suite status
 
-Testing of the library with [the YAML test suite](https://github.com/yaml/yaml-test-suite) is currently a work in progress.
+Testing fkYAML with [the YAML test suite](https://github.com/yaml/yaml-test-suite) is available.  
+Run the following commands to see the current coverage of the test suite.  
+```bash
+$ cd /path/to/fkYAML
+$ cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+$ cmake --build build --config Debug
+$ ctest -C Debug --test-dir build --output-on-failure -R yaml_test_suite_
+```
 
 ## Benchmarking
 
