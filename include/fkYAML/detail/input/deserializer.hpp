@@ -1378,16 +1378,19 @@ private:
 
     /// @brief Returns the parse context on the top of the context stack.
     /// @note
-    /// Accessing an empty context stack is undefined behavior. Malformed input can empty the stack in the middle of
-    /// deserialization, so the emptiness must be checked before the access. This function throws a parse_error for
-    /// such input instead of letting the callers dereference an invalid iterator.
+    /// Accessing an empty context stack is undefined behavior, so the emptiness is checked before the access.
+    /// No known input reaches the throw now that a parse context owns its key node, which is why it is left out
+    /// of the coverage measurement. The check stays because the alternative for a caller is dereferencing an
+    /// invalid iterator.
     /// @param line The current line count.
     /// @param indent The current indentation width.
     /// @return The parse context on the top of the context stack.
     parse_context& current_context(const uint32_t line, const uint32_t indent) {
+        // LCOV_EXCL_START
         if FK_YAML_UNLIKELY (m_context_stack.empty()) {
             throw parse_error("No parent context is found.", line, indent);
         }
+        // LCOV_EXCL_STOP
         return m_context_stack.back();
     }
 
