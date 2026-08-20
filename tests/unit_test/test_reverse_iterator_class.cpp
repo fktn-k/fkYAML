@@ -1,13 +1,12 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
@@ -15,14 +14,14 @@ TEST_CASE("ReverseIterator_Ctor") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    SECTION("with base iterator") {
+    SUBCASE("with base iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit = sequence.begin();
         REQUIRE(rit.base() == sequence.begin());
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit2 = mapping.begin();
         REQUIRE(rit2.base() == mapping.begin());
     }
 
-    SECTION("with compatible reverse_iterator") {
+    SUBCASE("with compatible reverse_iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> rit = sequence.rbegin();
         REQUIRE(rit.base() == sequence.end());
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> rit2 = mapping.rbegin();
@@ -34,7 +33,7 @@ TEST_CASE("ReverseIterator_AssignmentOperator") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    SECTION("with compatible reverse_iterator") {
+    SUBCASE("with compatible reverse_iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rit2 = mapping.rbegin();
 
@@ -182,7 +181,7 @@ TEST_CASE("ReverseIterator_EqualToOperator") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    SECTION("sequence iterator") {
+    SUBCASE("sequence iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> lhs = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rhs = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> clhs = sequence.rbegin();
@@ -194,7 +193,7 @@ TEST_CASE("ReverseIterator_EqualToOperator") {
         REQUIRE(clhs == rhs);
     }
 
-    SECTION("sequence iterator") {
+    SUBCASE("sequence iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> lhs = mapping.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rhs = mapping.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> clhs = mapping.rbegin();
@@ -206,7 +205,7 @@ TEST_CASE("ReverseIterator_EqualToOperator") {
         REQUIRE(clhs == rhs);
     }
 
-    SECTION("equality check between different type reverse iterators") {
+    SUBCASE("equality check between different type reverse iterators") {
         REQUIRE_THROWS_AS(sequence.rbegin() == mapping.rbegin(), fkyaml::exception);
     }
 }
@@ -215,7 +214,7 @@ TEST_CASE("ReverseIterator_NotEqualToOperator") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    SECTION("sequence iterator") {
+    SUBCASE("sequence iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> lhs = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rhs = sequence.rbegin() + 1;
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> clhs = sequence.rbegin();
@@ -227,7 +226,7 @@ TEST_CASE("ReverseIterator_NotEqualToOperator") {
         REQUIRE(clhs != rhs);
     }
 
-    SECTION("mapping iterator") {
+    SUBCASE("mapping iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> lhs = mapping.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rhs = mapping.rbegin() + 1;
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> clhs = mapping.rbegin();
@@ -239,7 +238,7 @@ TEST_CASE("ReverseIterator_NotEqualToOperator") {
         REQUIRE(clhs != rhs);
     }
 
-    SECTION("equality check between different type reverse iterators") {
+    SUBCASE("equality check between different type reverse iterators") {
         REQUIRE_THROWS_AS(sequence.rbegin() != mapping.rbegin(), fkyaml::exception);
     }
 }
@@ -248,7 +247,7 @@ TEST_CASE("ReverseIterator_LessThanOperator") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    SECTION("sequence iterator") {
+    SUBCASE("sequence iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> lhs = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rhs = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> clhs = sequence.rbegin();
@@ -266,11 +265,11 @@ TEST_CASE("ReverseIterator_LessThanOperator") {
         REQUIRE(clhs < rhs);
     }
 
-    SECTION("mapping iterator") {
+    SUBCASE("mapping iterator") {
         REQUIRE_THROWS_AS(mapping.rbegin() < mapping.rbegin() + 1, fkyaml::exception);
     }
 
-    SECTION("equality check between different type reverse iterators") {
+    SUBCASE("equality check between different type reverse iterators") {
         REQUIRE_THROWS_AS(sequence.rbegin() < mapping.rbegin(), fkyaml::exception);
     }
 }
@@ -279,7 +278,7 @@ TEST_CASE("ReverseIterator_LessThanOrEqualToOperator") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    SECTION("sequence iterator") {
+    SUBCASE("sequence iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> lhs = sequence.rbegin() + 1;
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rhs = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> clhs = sequence.rbegin() + 1;
@@ -303,11 +302,11 @@ TEST_CASE("ReverseIterator_LessThanOrEqualToOperator") {
         REQUIRE(clhs <= rhs);
     }
 
-    SECTION("mapping iterator") {
+    SUBCASE("mapping iterator") {
         REQUIRE_THROWS_AS(mapping.rbegin() <= mapping.rbegin() + 1, fkyaml::exception);
     }
 
-    SECTION("equality check between different type reverse iterators") {
+    SUBCASE("equality check between different type reverse iterators") {
         REQUIRE_THROWS_AS(sequence.rbegin() <= mapping.rbegin(), fkyaml::exception);
     }
 }
@@ -316,7 +315,7 @@ TEST_CASE("ReverseIterator_GreaterThanOperator") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    SECTION("sequence iterator") {
+    SUBCASE("sequence iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> lhs = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rhs = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> clhs = sequence.rbegin();
@@ -334,11 +333,11 @@ TEST_CASE("ReverseIterator_GreaterThanOperator") {
         REQUIRE(clhs > rhs);
     }
 
-    SECTION("mapping iterator") {
+    SUBCASE("mapping iterator") {
         REQUIRE_THROWS_AS(mapping.rbegin() + 1 > mapping.rbegin(), fkyaml::exception);
     }
 
-    SECTION("equality check between different type reverse iterators") {
+    SUBCASE("equality check between different type reverse iterators") {
         REQUIRE_THROWS_AS(sequence.rbegin() > mapping.rbegin(), fkyaml::exception);
     }
 }
@@ -347,7 +346,7 @@ TEST_CASE("ReverseIterator_GreaterThanOrEqualToOperator") {
     fkyaml::node sequence = {nullptr, 123};
     fkyaml::node mapping = {{"foo", 123}, {"bar", true}};
 
-    SECTION("sequence iterator") {
+    SUBCASE("sequence iterator") {
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> lhs = sequence.rbegin();
         fkyaml::detail::reverse_iterator<fkyaml::node::iterator> rhs = sequence.rbegin() + 1;
         fkyaml::detail::reverse_iterator<fkyaml::node::const_iterator> clhs = sequence.rbegin();
@@ -371,11 +370,11 @@ TEST_CASE("ReverseIterator_GreaterThanOrEqualToOperator") {
         REQUIRE(clhs >= rhs);
     }
 
-    SECTION("mapping iterator") {
+    SUBCASE("mapping iterator") {
         REQUIRE_THROWS_AS(mapping.rbegin() + 1 >= mapping.rbegin(), fkyaml::exception);
     }
 
-    SECTION("equality check between different type reverse iterators") {
+    SUBCASE("equality check between different type reverse iterators") {
         REQUIRE_THROWS_AS(sequence.rbegin() >= mapping.rbegin(), fkyaml::exception);
     }
 }

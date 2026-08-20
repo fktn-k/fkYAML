@@ -1,5 +1,73 @@
 # Releases
 
+## **fkYAML version 0.4.4**
+
+!!! abstract "Release Packages"
+
+    * CMake package of the multiple header version
+        * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML.zip)
+        * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML.tgz)
+    * CMake package of the single header version
+        * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML_single_header.zip)
+        * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML_single_header.tgz)
+    * minimum repository contents for CMake
+        * [fkYAML_min.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML_min.zip)
+        * [fkYAML_min.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML_min.tgz)
+    * single headers
+        * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/node.hpp)
+        * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkyaml_fwd.hpp)
+
+### What's Changed
+
+#### :sparkles: New Features
+- Add fuzz test for parsing YAML inputs [\#537](https://github.com/fktn-k/fkYAML/pull/537) ([fktn-k](https://github.com/fktn-k))
+    - Currently, it can only built with a Clang compiler. With GCC or MSVC compilers, the build fails.
+    - You can run the fuzz test with sanitizers enabled by running the following commands.  
+      ```bash
+      $ cd /path/to/fkYAML
+      $ cmake -B build -S . -DFK_YAML_BUILD_TYPE=Debug -DFK_YAML_BUILD_FUZZ_TEST=ON
+      $ cmake --build build --target run_fuzz_test
+        # The results will be output to the `build/tests/fuzz_tests/corpus` directory.
+      ```
+- Add get\_resolved\_tag\_name API to basic\_node [\#559](https://github.com/fktn-k/fkYAML/pull/559) ([fktn-k](https://github.com/fktn-k))
+    - This method returns a resolved tag name by replacing a tag shorthand (`!!` or `!e!`) with the prefix defined in the %TAG directive.
+    - This would be useful if you would like to perform some special operation based on tag properties associated to the target node, given that the pre-existing `get_tag_name` returns an unresolved tag name.
+    - See [the API reference page](https://fktn-k.github.io/fkYAML/api/basic_node/get_resolved_tag_name) for more details.
+
+#### :zap: Improvements
+- Harden input adapter against truncated encoded input [\#533](https://github.com/fktn-k/fkYAML/pull/533) ([sndth](https://github.com/sndth))
+
+#### :bug: Bug Fixes
+Most bug are reported in or related to the issue [\#536](https://github.com/fktn-k/fkYAML/issues/536).
+
+- Fix crashes and memory leaks found during fuzz test [\#538](https://github.com/fktn-k/fkYAML/pull/538) ([fktn-k](https://github.com/fktn-k))
+- Fix more crashes caused by fuzz test [\#540](https://github.com/fktn-k/fkYAML/pull/540) ([fktn-k](https://github.com/fktn-k))
+- Fix out-of-bounds read on an explicit key without a parent context [\#543](https://github.com/fktn-k/fkYAML/pull/543) ([AlexandrKhromov2005](https://github.com/AlexandrKhromov2005))
+- Guard empty context stack in the key-separator and add\_new\_key paths [\#544](https://github.com/fktn-k/fkYAML/pull/544) ([AlexandrKhromov2005](https://github.com/AlexandrKhromov2005))
+- Prevent stack overflow by a self-referential alias [\#549](https://github.com/fktn-k/fkYAML/pull/549) ([fktn-k](https://github.com/fktn-k))
+- Fix out-of-bounds read from a truncated BOM in the char encoding detector [\#545](https://github.com/fktn-k/fkYAML/pull/545) ([AlexandrKhromov2005](https://github.com/AlexandrKhromov2005))
+- Fix four out-of-bounds reads in the lexer and tag URI validation [\#547](https://github.com/fktn-k/fkYAML/pull/547) ([sndth](https://github.com/sndth))
+- Guard the context stack access behind a checked accessor [\#552](https://github.com/fktn-k/fkYAML/pull/552) ([sndth](https://github.com/sndth))
+- Complete explicit mapping keys which are not followed by a value on the same line [\#554](https://github.com/fktn-k/fkYAML/pull/554) ([sndth](https://github.com/sndth))
+- Hold parse context node ownership in a unique\_ptr [\#563](https://github.com/fktn-k/fkYAML/pull/563) ([sndth](https://github.com/sndth))
+
+#### :robot: CI
+- Fix comment posting failures to the PRs from forks [\#555](https://github.com/fktn-k/fkYAML/pull/555) ([fktn-k](https://github.com/fktn-k))
+- Update coverage options for lcov v2.x [\#551](https://github.com/fktn-k/fkYAML/pull/551) ([fktn-k](https://github.com/fktn-k))
+- Migrate to doctest [\#535](https://github.com/fktn-k/fkYAML/pull/535) ([fktn-k](https://github.KLcom/fktn-k))
+- Send coverage report to Coveralls on all commits in main/develop branches [\#541](https://github.com/fktn-k/fkYAML/pull/541) ([fktn-k](https://github.com/fktn-k))
+- Change the way to generate test\_data.hpp for unit tests [\#550](https://github.com/fktn-k/fkYAML/pull/550) ([fktn-k](https://github.com/fktn-k))
+
+#### :jigsaw: Miscellaneous
+- Harden SPDX copyright against duplicate entries [\#534](https://github.com/fktn-k/fkYAML/pull/534) ([sndth](https://github.com/sndth))
+- Remove unused BSL-1.0 license file [\#539](https://github.com/fktn-k/fkYAML/pull/539) ([fktn-k](https://github.com/fktn-k))
+- Update the copyright year in LICENSE.txt [\#542](https://github.com/fktn-k/fkYAML/pull/542) ([fktn-k](https://github.com/fktn-k))
+
+### Full Changelog
+https://github.com/fktn-k/fkYAML/compare/v0.4.3...v0.4.4
+
+---
+
 ## **fkYAML version 0.4.3**
 
 !!! abstract "Release Packages"

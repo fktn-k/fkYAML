@@ -1,20 +1,19 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <utility>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
 TEST_CASE("YamlEscaper_Unescape") {
-    SECTION("valid escape sequence") {
+    SUBCASE("valid escape sequence") {
         using test_data_t = std::pair<fkyaml::detail::str_view, std::string>;
         auto test_data = GENERATE(
             test_data_t {"\\a", "\a"},
@@ -51,7 +50,7 @@ TEST_CASE("YamlEscaper_Unescape") {
         REQUIRE(buff == test_data.second);
     }
 
-    SECTION("invalid escape sequence") {
+    SUBCASE("invalid escape sequence") {
         auto input = GENERATE(
             fkyaml::detail::str_view("\\Q"),
             fkyaml::detail::str_view("\\xw"),
@@ -66,7 +65,7 @@ TEST_CASE("YamlEscaper_Unescape") {
         REQUIRE_FALSE(fkyaml::detail::yaml_escaper::unescape(begin_itr, end_itr, buff));
     }
 
-    SECTION("invalid UTF encoding") {
+    SUBCASE("invalid UTF encoding") {
         fkyaml::detail::str_view input = "\\U00110000";
         auto begin_itr = input.cbegin();
         auto end_itr = input.cend();

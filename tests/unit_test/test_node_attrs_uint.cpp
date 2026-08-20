@@ -1,13 +1,12 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
@@ -31,14 +30,14 @@ TEST_CASE("NodeAttrs_UintBit_NotInScalarBits") {
 TEST_CASE("NodeAttrs_UintBit_InteractsWithIntBit") {
     fkyaml::detail::node_attr_t attrs = 0u;
 
-    SECTION("both bits can be set simultaneously") {
+    SUBCASE("both bits can be set simultaneously") {
         attrs |= fkyaml::detail::node_attr_bits::int_bit;
         attrs |= fkyaml::detail::node_attr_bits::uint_bit;
         REQUIRE((attrs & fkyaml::detail::node_attr_bits::int_bit) != 0u);
         REQUIRE((attrs & fkyaml::detail::node_attr_bits::uint_bit) != 0u);
     }
 
-    SECTION("clearing uint_bit leaves int_bit intact") {
+    SUBCASE("clearing uint_bit leaves int_bit intact") {
         attrs = fkyaml::detail::node_attr_bits::int_bit | fkyaml::detail::node_attr_bits::uint_bit;
         attrs &= ~fkyaml::detail::node_attr_bits::uint_bit;
         REQUIRE((attrs & fkyaml::detail::node_attr_bits::int_bit) != 0u);

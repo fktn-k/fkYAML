@@ -1,9 +1,8 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -243,7 +242,11 @@ public:
         case '>': {
             const str_view sv {m_token_begin_itr, m_end_itr};
             const std::size_t header_end_pos = sv.find('\n');
-            FK_YAML_ASSERT(header_end_pos != str_view::npos);
+            if FK_YAML_UNLIKELY (header_end_pos == str_view::npos) {
+                emit_error(
+                    "Invalid block scalar header found. The header must be followed by a line break and its content.");
+            }
+
             const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
 
             const lexical_token_t type = *m_token_begin_itr == '|' ? lexical_token_t::BLOCK_LITERAL_SCALAR
@@ -551,6 +554,11 @@ private:
         // extract a tag prefix.
         //
 
+        // skip_white_spaces() above may have consumed the rest of the input buffer.
+        if FK_YAML_UNLIKELY (m_cur_itr == m_end_itr) {
+            emit_error("invalid TAG directive is found.");
+        }
+
         m_token_begin_itr = m_cur_itr;
         const char* p_tag_prefix_begin = m_cur_itr;
         switch (*m_cur_itr) {
@@ -681,7 +689,9 @@ private:
         case '<':
             // Verbatim tags (!<TAG>)
             is_verbatim = true;
-            ++m_cur_itr;
+            if FK_YAML_UNLIKELY (++m_cur_itr == m_end_itr) {
+                emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
+            }
             break;
         default:
             // Either local tags (!suffix) or named handles (!tag!suffix)
@@ -813,12 +823,18 @@ private:
                 // * even number of backslashes -> double quotation mark IS NOT escaped (e.g., "\\"")
                 uint32_t backslash_counts = 0;
                 const char* p = m_token_begin_itr + (pos - 1);
-                do {
-                    if (*p-- != '\\') {
+                for (;;) {
+                    if (*p != '\\') {
                         break;
                     }
                     ++backslash_counts;
-                } while (p != m_token_begin_itr);
+                    if (p == m_token_begin_itr) {
+                        // the first character of the token has just been counted. Stopping here
+                        // also keeps `p` from being decremented past the beginning of the token.
+                        break;
+                    }
+                    --p;
+                }
                 is_closed = ((backslash_counts & 1u) == 0); // true: even, false: odd
             }
 
@@ -1004,7 +1020,9 @@ private:
         }
 
         if (indicated_indent == 0) {
-            FK_YAML_ASSERT(base_indent < cur_indent);
+            if FK_YAML_UNLIKELY (base_indent >= cur_indent) {
+                emit_error("The first non-empty line in the block scalar is less indented.");
+            }
             indicated_indent = cur_indent - base_indent;
         }
         else if FK_YAML_UNLIKELY (cur_indent < base_indent + indicated_indent) {

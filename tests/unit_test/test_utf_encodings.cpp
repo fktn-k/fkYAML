@@ -1,9 +1,8 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -11,12 +10,12 @@
 #include <cstdint>
 #include <tuple>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
 TEST_CASE("UTF8_GetNumBytes") {
-    SECTION("valid bytes") {
+    SUBCASE("valid bytes") {
         using test_value_pair_t = std::pair<uint8_t, uint32_t>;
         auto pair = GENERATE(
             test_value_pair_t(uint8_t(0u), 1u),
@@ -33,14 +32,14 @@ TEST_CASE("UTF8_GetNumBytes") {
         REQUIRE(fkyaml::detail::utf8::get_num_bytes(pair.first) == pair.second);
     }
 
-    SECTION("invalid bytes") {
+    SUBCASE("invalid bytes") {
         uint8_t byte = GENERATE(uint8_t(0x80u), uint8_t(0xF8u));
         REQUIRE_THROWS_AS(fkyaml::detail::utf8::get_num_bytes(byte), fkyaml::invalid_encoding);
     }
 }
 
 TEST_CASE("UTF8_Validate") {
-    SECTION("1 byte character encoded in UTF-8") {
+    SUBCASE("1 byte character encoded in UTF-8") {
         REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0x00u)));
         REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0x01u)));
         REQUIRE(fkyaml::detail::utf8::validate(uint8_t(0x02u)));
@@ -51,7 +50,7 @@ TEST_CASE("UTF8_Validate") {
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0x81u)));
     }
 
-    SECTION("2 byte characters encoded in UTF-8") {
+    SUBCASE("2 byte characters encoded in UTF-8") {
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xC0u), uint8_t(0x80u)));
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xC1u), uint8_t(0x80u)));
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xC2u), uint8_t(0x7Eu)));
@@ -67,7 +66,7 @@ TEST_CASE("UTF8_Validate") {
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE1u), uint8_t(0xBFu)));
     }
 
-    SECTION("3 byte characters encoded in UTF-8") {
+    SUBCASE("3 byte characters encoded in UTF-8") {
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDEu), uint8_t(0x80u), uint8_t(0x80u)));
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDFu), uint8_t(0x80u), uint8_t(0x80u)));
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x7Eu), uint8_t(0x80u)));
@@ -119,7 +118,7 @@ TEST_CASE("UTF8_Validate") {
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xF1u), uint8_t(0xBFu), uint8_t(0xBFu)));
     }
 
-    SECTION("4 byte characters encoded in UTF-8") {
+    SUBCASE("4 byte characters encoded in UTF-8") {
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDEu), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)));
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xDFu), uint8_t(0x90u), uint8_t(0x80u), uint8_t(0x80u)));
         REQUIRE_FALSE(fkyaml::detail::utf8::validate(uint8_t(0xE0u), uint8_t(0x8Eu), uint8_t(0x80u), uint8_t(0x80u)));
@@ -195,7 +194,7 @@ struct utf16_test_params {
 };
 
 TEST_CASE("UTF8_FromUTF16") {
-    SECTION("valid UTF-16 character(s)") {
+    SUBCASE("valid UTF-16 character(s)") {
         auto params = GENERATE(
             utf16_test_params {{{char16_t(0x00u)}}, {{uint8_t(0x00u)}}, 1, 1},
             utf16_test_params {{{char16_t(0x01u)}}, {{uint8_t(0x01u)}}, 1, 1},
@@ -254,7 +253,7 @@ TEST_CASE("UTF8_FromUTF16") {
         REQUIRE(encoded_size == params.encoded_size);
     }
 
-    SECTION("invalid UTF-16 character(s)") {
+    SUBCASE("invalid UTF-16 character(s)") {
         auto utf16 = GENERATE(
             std::array<char16_t, 2> {{char16_t(0xDC00u), char16_t(0xDC00u)}},
             std::array<char16_t, 2> {{char16_t(0xDBFFu), char16_t(0xDBFFu)}},
@@ -276,7 +275,7 @@ struct utf32_test_params {
 };
 
 TEST_CASE("UTF8_FromUTF32") {
-    SECTION("valid UTF-32 character") {
+    SUBCASE("valid UTF-32 character") {
         auto params = GENERATE(
             utf32_test_params {0x00u, {{uint8_t(0x00u)}}, 1},
             utf32_test_params {0x01u, {{uint8_t(0x01u)}}, 1},
@@ -303,7 +302,7 @@ TEST_CASE("UTF8_FromUTF32") {
         REQUIRE(size == params.size);
     }
 
-    SECTION("invalid UTF-32 character") {
+    SUBCASE("invalid UTF-32 character") {
         char32_t utf32 = 0x110000u;
         std::array<uint8_t, 4> utf8_bytes;
         uint32_t encoded_size;

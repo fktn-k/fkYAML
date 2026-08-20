@@ -1,9 +1,8 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -11,25 +10,25 @@
 #include <limits>
 #include <string>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
 TEST_CASE("Node_IsUint_ReturnsFalseForNonIntegerTypes") {
-    SECTION("null") {
+    SUBCASE("null") {
         fkyaml::node n;
         REQUIRE(n.is_uint() == false);
     }
 
-    SECTION("boolean") {
+    SUBCASE("boolean") {
         REQUIRE(fkyaml::node::deserialize("v: true")["v"].is_uint() == false);
     }
 
-    SECTION("float") {
+    SUBCASE("float") {
         REQUIRE(fkyaml::node::deserialize("v: 3.14")["v"].is_uint() == false);
     }
 
-    SECTION("string") {
+    SUBCASE("string") {
         REQUIRE(fkyaml::node::deserialize("v: hello")["v"].is_uint() == false);
     }
 }
@@ -77,19 +76,19 @@ TEST_CASE("Node_AsUint_ThrowsForNegativeIntegers") {
 }
 
 TEST_CASE("Node_AsUint_ThrowsForNonIntegerNodes") {
-    SECTION("null") {
+    SUBCASE("null") {
         REQUIRE_THROWS_AS(fkyaml::node().as_uint(), fkyaml::type_error);
     }
 
-    SECTION("boolean") {
+    SUBCASE("boolean") {
         REQUIRE_THROWS_AS(fkyaml::node::deserialize("v: true")["v"].as_uint(), fkyaml::type_error);
     }
 
-    SECTION("float") {
+    SUBCASE("float") {
         REQUIRE_THROWS_AS(fkyaml::node::deserialize("v: 3.14")["v"].as_uint(), fkyaml::type_error);
     }
 
-    SECTION("string") {
+    SUBCASE("string") {
         REQUIRE_THROWS_AS(fkyaml::node::deserialize("v: hello")["v"].as_uint(), fkyaml::type_error);
     }
 }

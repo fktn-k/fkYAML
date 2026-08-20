@@ -140,6 +140,7 @@ nav:
     - 'end, cend': api/basic_node/end.md
     - erase: api/basic_node/erase.md
     - get_anchor_name: api/basic_node/get_anchor_name.md
+    - get_resolved_tag_name: api/basic_node/get_resolved_tag_name.md
     - get_tag_name: api/basic_node/get_tag_name.md
     - get_type: api/basic_node/get_type.md
     - get_value: api/basic_node/get_value.md

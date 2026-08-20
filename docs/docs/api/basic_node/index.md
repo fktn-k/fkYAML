@@ -56,8 +56,8 @@ This class provides features to handle YAML nodes.
 | difference_type                               | [`std::ptrdiff_t`](https://en.cppreference.com/w/cpp/types/ptrdiff_t)                                     |
 | [iterator](iterator.md)                       | [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator)          |
 | [const_iterator](iterator.md)                 | constant [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator) |
-| [reverse_iterator](reverse_iterator.md)       | reverse iterator derived from `iterator`          |
-| [const_reverse_iterator](reverse_iterator.md) | reverse iterator derived from `const_iterator` |
+| [reverse_iterator](reverse_iterator.md)       | reverse iterator derived from `iterator`                                                                  |
+| [const_reverse_iterator](reverse_iterator.md) | reverse iterator derived from `const_iterator`                                                            |
 
 ### Miscellaneous
 | Name                                            | Description                                                         |
@@ -152,16 +152,17 @@ This class provides features to handle YAML nodes.
 | [operator>=](operator_ge.md) | comparison: greater than or equal |
 
 ### Manipulations for Node Properties
-| Name                                  | Description                                              |
-| ------------------------------------- | -------------------------------------------------------- |
-| [is_alias](is_alias.md)               | checks if a basic_node is an alias node.                 |
-| [is_anchor](is_anchor.md)             | checks if a basic_node is an anchor node.                |
-| [add_anchor_name](add_anchor_name.md) | registers an anchor name to a basic_node object.         |
-| [get_anchor_name](get_anchor_name.md) | gets an anchor name associated with a basic_node object. |
-| [has_anchor_name](has_anchor_name.md) | checks if a basic_node has any anchor name.              |
-| [add_tag_name](add_tag_name.md)       | registers a tag name to a basic_node object.             |
-| [get_tag_name](get_tag_name.md)       | gets a tag name associated with a basic_node object.     |
-| [has_tag_name](has_tag_name.md)       | checks if a basic_node has any tag name.                 |
+| Name                                              | Description                                                   |
+| ------------------------------------------------- | ------------------------------------------------------------- |
+| [is_alias](is_alias.md)                           | checks if a basic_node is an alias node.                      |
+| [is_anchor](is_anchor.md)                         | checks if a basic_node is an anchor node.                     |
+| [add_anchor_name](add_anchor_name.md)             | registers an anchor name to a basic_node object.              |
+| [get_anchor_name](get_anchor_name.md)             | gets an anchor name associated with a basic_node object.      |
+| [has_anchor_name](has_anchor_name.md)             | checks if a basic_node has any anchor name.                   |
+| [add_tag_name](add_tag_name.md)                   | registers a tag name to a basic_node object.                  |
+| [get_tag_name](get_tag_name.md)                   | gets a tag name associated with a basic_node object.          |
+| [get_resolved_tag_name](get_resolved_tag_name.md) | gets a resolved tag name associated with a basic_node object. |
+| [has_tag_name](has_tag_name.md)                   | checks if a basic_node has any tag name.                      |
 
 ### Manipulations for Document Properties
 | Name                                              | Description                                                               |

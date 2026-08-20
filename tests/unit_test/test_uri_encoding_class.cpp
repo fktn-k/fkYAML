@@ -1,18 +1,17 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
 TEST_CASE("URIEncoding_Validate") {
-    SECTION("valid URI characters") {
+    SUBCASE("valid URI characters") {
         auto input = GENERATE(
             std::string(""),
             std::string("%00%99%AF%af"),
@@ -25,7 +24,7 @@ TEST_CASE("URIEncoding_Validate") {
         REQUIRE(fkyaml::detail::uri_encoding::validate(input.c_str(), input.c_str() + input.size()));
     }
 
-    SECTION("invalid URI characters") {
+    SUBCASE("invalid URI characters") {
         auto input = GENERATE(
             std::string("%//"),
             std::string("%::"),

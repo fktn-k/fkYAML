@@ -7,7 +7,7 @@
 # list of source files in the include directory.
 SRCS = $(shell find include -type f -name '*.hpp' | sort)
 # list of sources in the tests directory.
-TEST_SRCS = $(shell find tests -type f -name '*.hpp' -o -name '*.cpp' | sort)
+TEST_SRCS = $(shell find tests -type f -name '*.hpp' -o -name '*.cpp' -o -name '*.hpp.in' | sort)
 # list of sources in the examples directory.
 EXAMPLE_SRCS = $(shell find examples -type f -name '*.cpp' | sort)
 # list of sources in the tools directory.
@@ -16,7 +16,7 @@ TOOL_SRCS = $(shell find tools -type f -name '*.cpp' | sort)
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 4
-TARGET_PATCH_VERSION := 3
+TARGET_PATCH_VERSION := 4
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 
@@ -72,6 +72,11 @@ valgrind:
 	cmake -B build_valgrind -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_VALGRIND=ON
 	cmake --build build_valgrind --config Debug -j $(JOBS)
 	ctest -C Debug -T memcheck --test-dir build_valgrind --output-on-failure -j $(JOBS)
+
+# pre-requisites: clang
+fuzz-test:
+	CXX=clang++ cmake -B build_fuzz_test -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_FUZZ_TEST=ON
+	cmake --build build_fuzz_test --target run_fuzz_test
 
 ###########################
 #   Source Amalgamation   #
@@ -129,11 +134,11 @@ update-project-version:
 # pre-requisites: pipx, reuse(>=v4.0.0, confirmed with v4.0.3)
 reuse: update-reuse-templates
 	pipx run reuse annotate $(SRCS) --template fkYAML \
-		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year "2023-2026" --style cppsingle
+		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" \
+		--license MIT --year "2023-2026" --style cppsingle --merge-copyrights
 	pipx run reuse annotate $(TEST_SRCS) $(EXAMPLE_SRCS) $(TOOL_SRCS) --template fkYAML_support \
-		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" --copyright-style spdx \
-		--license MIT --year "2023-2026" --style cppsingle
+		--copyright "Kensuke Fukutani <fktn.dev@gmail.com>" \
+		--license MIT --year "2023-2026" --style cppsingle --merge-copyrights
 	pipx run reuse lint
 
 update-sources: reuse update-version-macros

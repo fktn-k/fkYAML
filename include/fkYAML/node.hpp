@@ -1,9 +1,8 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -722,7 +721,7 @@ public:
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true if both types and values are equal, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_eq/
-    bool operator==(const basic_node& rhs) const noexcept {
+    bool operator==(const basic_node& rhs) const {
         const basic_node& lhs = resolve_reference();
         const basic_node& act_rhs = rhs.resolve_reference();
 
@@ -776,7 +775,7 @@ public:
     /// @param rhs A basic_node object to be compared with this basic_node object.
     /// @return true this basic_node object is less than `rhs`.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/operator_lt/
-    bool operator<(const basic_node& rhs) const noexcept {
+    bool operator<(const basic_node& rhs) const {
         if (operator==(rhs)) {
             return false;
         }
@@ -1282,13 +1281,61 @@ public:
     /// @brief Get the tag name associated with this basic_node object.
     /// @note Some tag name must be set before calling this method. Call has_tag_name() to see if this basic_node
     /// object has any tag name.
-    /// @return The tag name associated with the node. It may be empty.
+    /// @return The tag name associated with the node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_tag_name/
     const std::string& get_tag_name() const {
         if FK_YAML_UNLIKELY (!has_tag_name()) {
             throw fkyaml::exception("No tag name has been set.");
         }
         return m_prop.tag;
+    }
+
+    /// @brief Get the resolved tag name associated with this basic_node object.
+    /// @note Some tag name must be set before calling this method. Call has_tag_name() to see if this basic_node object
+    /// has any tag name.
+    /// @return The resolved tag name associated with the node.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_resolved_tag_name/
+    std::string get_resolved_tag_name() const {
+        if FK_YAML_UNLIKELY (!has_tag_name()) {
+            throw fkyaml::exception("No tag name has been set.");
+        }
+
+        const auto& tag = m_prop.tag;
+
+        // non-specific tag
+        if (tag == "!") {
+            return tag;
+        }
+
+        // secondary tag handle
+        if (tag.rfind("!!", 0) == 0) {
+            if (mp_meta->secondary_handle_prefix.empty()) {
+                return "tag:yaml.org,2002:" + tag.substr(2);
+            }
+            return mp_meta->secondary_handle_prefix + tag.substr(2);
+        }
+
+        // named handles
+        for (const auto& named_handle_itr : mp_meta->named_handle_map) {
+            if (tag.rfind(named_handle_itr.first, 0) == 0) {
+                return named_handle_itr.second + tag.substr(named_handle_itr.first.size());
+            }
+        }
+
+        // vertabim tags
+        const bool is_verbatim = tag.rfind("!<", 0) == 0 && tag.back() == '>';
+        if (is_verbatim) {
+            // Verbatim tags (!<...>) are not subject to tag resolution.
+            // Anything in ... must not be expanded.
+            // https://yaml.org/spec/1.2.2/#691-node-tags
+            return tag.substr(2, tag.size() - 3);
+        }
+
+        // primary tag handle
+        if (mp_meta->primary_handle_prefix.empty()) {
+            return "!" + tag.substr(1);
+        }
+        return mp_meta->primary_handle_prefix + tag.substr(1);
     }
 
     /// @brief Add a tag name to this basic_node object.
@@ -1801,7 +1848,8 @@ public:
 
         auto& map = *act_node.m_value.p_map;
         for (auto itr = map.begin(); itr != map.end(); ++itr) {
-            if (itr->first == key_node) {
+            bool key_found = itr->first == key_node;
+            if (key_found) {
                 map.erase(itr);
                 return size_type {1};
             }
@@ -1815,8 +1863,18 @@ private:
     basic_node& resolve_reference() {
         if FK_YAML_UNLIKELY (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
-            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            return itr->second;
+            auto offset = detail::node_attr_bits::get_anchor_offset(m_attrs);
+            std::advance(itr, offset);
+            auto& anchor = itr->second;
+
+            // Checks for cyclic references in the child nodes of the anchor node.
+            // If it does, throws an exception to prevent infinite recursion and stack overflow.
+            const bool contains_self_ref = anchor.contains_self_referential_alias(m_prop.anchor, offset);
+            if FK_YAML_UNLIKELY (contains_self_ref) {
+                throw fkyaml::exception("Cyclic reference detected during anchor/alias resolving.");
+            }
+
+            return anchor;
         }
         return *this;
     }
@@ -1826,10 +1884,55 @@ private:
     const basic_node& resolve_reference() const {
         if FK_YAML_UNLIKELY (has_anchor_name()) {
             auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
-            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            return itr->second;
+            auto offset = detail::node_attr_bits::get_anchor_offset(m_attrs);
+            std::advance(itr, offset);
+            const auto& anchor = itr->second;
+
+            // Checks for cyclic references in the child nodes of the anchor node.
+            // If it does, throws an exception to prevent infinite recursion and stack overflow.
+            const bool contains_self_ref = anchor.contains_self_referential_alias(m_prop.anchor, offset);
+            if FK_YAML_UNLIKELY (contains_self_ref) {
+                throw fkyaml::exception("Cyclic reference detected during anchor/alias resolving.");
+            }
+
+            return anchor;
         }
         return *this;
+    }
+
+    /// @brief Checks if this node contains any alias node which references itself in its child nodes, which would cause
+    /// infinite recursion and then stack overflow.
+    ///
+    /// @param anchor_name The anchor name of the node to check.
+    /// @param anchor_offset The anchor offset of the node to check.
+    bool contains_self_referential_alias(const std::string& anchor_name, uint32_t anchor_offset) const {
+        std::vector<const basic_node*> stack {this};
+        while (!stack.empty()) {
+            const auto* node = stack.back();
+            stack.pop_back();
+            if (node->is_alias()) {
+                const auto& alias = *node;
+                const bool references_self =
+                    (alias.get_anchor_name() == anchor_name &&
+                     detail::node_attr_bits::get_anchor_offset(alias.m_attrs) == anchor_offset);
+                if (references_self) {
+                    return true;
+                }
+            }
+            else if (node->is_sequence()) {
+                for (const auto& child : node->as_seq()) {
+                    stack.push_back(&child);
+                }
+            }
+            else if (node->is_mapping()) {
+                for (const auto& entry : node->as_map()) {
+                    stack.push_back(&entry.first);
+                    stack.push_back(&entry.second);
+                }
+            }
+        }
+
+        return false;
     }
 
     bool is_sequence_impl() const noexcept {

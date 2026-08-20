@@ -1,15 +1,14 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <string>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
@@ -26,7 +25,7 @@ TEST_CASE("PositionTracker_InitialState") {
 TEST_CASE("PositionTracker_MultipleLines") {
     fkyaml::detail::position_tracker pos_tracker {};
 
-    SECTION("first character is not a newline code") {
+    SUBCASE("first character is not a newline code") {
         fkyaml::detail::str_view input = "test\nfoo";
         pos_tracker.set_target_buffer(input);
 
@@ -60,7 +59,7 @@ TEST_CASE("PositionTracker_MultipleLines") {
         REQUIRE(pos_tracker.get_lines_read() == 1);
     }
 
-    SECTION("first character is a newline code") {
+    SUBCASE("first character is a newline code") {
         fkyaml::detail::str_view input = "\ntest\nfoo";
         pos_tracker.set_target_buffer(input);
 
