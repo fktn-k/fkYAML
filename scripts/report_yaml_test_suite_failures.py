@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Tuple
 
 
-# Matches the per-test progress line for any non-Passed status (Failed, Subprocess aborted,
-# Not Run, Timeout, etc.), since ctest only omits "***"/status text for passing tests.
+# Matches the per-test progress line with an explicit status text.
+# We filter which statuses are treated as failures in parse_failures().
 TEST_RESULT_LINE_RE = re.compile(
     r"^\s*\d+/\d+ Test\s+#(?P<ctest_id>\d+):\s+(?P<name>\S+)\s+\.+(?P<status>.+?)\s+[\d.]+\s*sec\s*$"
 )
@@ -135,7 +135,7 @@ def parse_failures(lines: Iterable[str]) -> List[FailureRecord]:
         line = raw_line.rstrip("\n")
 
         result_match = TEST_RESULT_LINE_RE.match(line)
-        if result_match and result_match.group("status").strip() != "Passed":
+        if result_match and result_match.group("status").strip() not in {"Passed", "Skipped"}:
             current = FailureRecord(result_match.group("ctest_id"), result_match.group("name"))
             failures.append(current)
             continue
