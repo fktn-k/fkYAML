@@ -7,7 +7,7 @@
 # list of source files in the include directory.
 SRCS = $(shell find include -type f -name '*.hpp' | sort)
 # list of sources in the tests directory.
-TEST_SRCS = $(shell find tests -type f -name '*.hpp' -o -name '*.cpp' | sort)
+TEST_SRCS = $(shell find tests -type f -name '*.hpp' -o -name '*.cpp' -o -name '*.hpp.in' | sort)
 # list of sources in the examples directory.
 EXAMPLE_SRCS = $(shell find examples -type f -name '*.cpp' | sort)
 # list of sources in the tools directory.
@@ -16,7 +16,7 @@ TOOL_SRCS = $(shell find tools -type f -name '*.cpp' | sort)
 # target version definition
 TARGET_MAJOR_VERSION := 0
 TARGET_MINOR_VERSION := 4
-TARGET_PATCH_VERSION := 3
+TARGET_PATCH_VERSION := 4
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 

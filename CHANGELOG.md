@@ -1,5 +1,32 @@
 # Changelog
 
+## [v0.4.4](https://github.com/fktn-k/fkYAML/releases/tag/v0.4.4) (2026-08-20)
+
+[Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.4.3...v0.4.4)
+
+- Hold parse context node ownership in a unique\_ptr [\#563](https://github.com/fktn-k/fkYAML/pull/563) ([sndth](https://github.com/sndth))
+- Complete explicit mapping keys which are not followed by a value on the same line [\#554](https://github.com/fktn-k/fkYAML/pull/554) ([sndth](https://github.com/sndth))
+- Guard the context stack access behind a checked accessor [\#552](https://github.com/fktn-k/fkYAML/pull/552) ([sndth](https://github.com/sndth))
+- Prevent stack overflow by a self-referential alias [\#549](https://github.com/fktn-k/fkYAML/pull/549) ([fktn-k](https://github.com/fktn-k))
+- Fix four out-of-bounds reads in the lexer and tag URI validation [\#547](https://github.com/fktn-k/fkYAML/pull/547) ([sndth](https://github.com/sndth))
+- Fix out-of-bounds read from a truncated BOM in the char encoding detector [\#545](https://github.com/fktn-k/fkYAML/pull/545) ([AlexandrKhromov2005](https://github.com/AlexandrKhromov2005))
+- Guard empty context stack in the key-separator and add\_new\_key paths [\#544](https://github.com/fktn-k/fkYAML/pull/544) ([AlexandrKhromov2005](https://github.com/AlexandrKhromov2005))
+- Fix out-of-bounds read on an explicit key without a parent context [\#543](https://github.com/fktn-k/fkYAML/pull/543) ([AlexandrKhromov2005](https://github.com/AlexandrKhromov2005))
+- Fix more crashes caused by fuzz test [\#540](https://github.com/fktn-k/fkYAML/pull/540) ([fktn-k](https://github.com/fktn-k))
+- Fix crashes and memory leaks found during fuzz test [\#538](https://github.com/fktn-k/fkYAML/pull/538) ([fktn-k](https://github.com/fktn-k))
+
+- Add get\_resolved\_tag\_name API to basic\_node [\#559](https://github.com/fktn-k/fkYAML/pull/559) ([fktn-k](https://github.com/fktn-k))
+- Fix comment posting failures to the PRs from forks [\#555](https://github.com/fktn-k/fkYAML/pull/555) ([fktn-k](https://github.com/fktn-k))
+- Update coverage options for lcov v2.x [\#551](https://github.com/fktn-k/fkYAML/pull/551) ([fktn-k](https://github.com/fktn-k))
+- Change the way to generate test\_data.hpp for unit tests [\#550](https://github.com/fktn-k/fkYAML/pull/550) ([fktn-k](https://github.com/fktn-k))
+- Update the copyright year in LICENSE.txt [\#542](https://github.com/fktn-k/fkYAML/pull/542) ([fktn-k](https://github.com/fktn-k))
+- Send coverage report to Coveralls on all commits in main/develop branches [\#541](https://github.com/fktn-k/fkYAML/pull/541) ([fktn-k](https://github.com/fktn-k))
+- Remove unused BSL-1.0 license file [\#539](https://github.com/fktn-k/fkYAML/pull/539) ([fktn-k](https://github.com/fktn-k))
+- Add fuzz test for parsing YAML inputs [\#537](https://github.com/fktn-k/fkYAML/pull/537) ([fktn-k](https://github.com/fktn-k))
+- Migrate to doctest [\#535](https://github.com/fktn-k/fkYAML/pull/535) ([fktn-k](https://github.com/fktn-k))
+- Harden SPDX copyright against duplicate entries [\#534](https://github.com/fktn-k/fkYAML/pull/534) ([sndth](https://github.com/sndth))
+- Harden input adapter against truncated encoded input [\#533](https://github.com/fktn-k/fkYAML/pull/533) ([sndth](https://github.com/sndth))
+
 ## [v0.4.3](https://github.com/fktn-k/fkYAML/releases/tag/v0.4.3) (2026-07-18)
 
 [Full Changelog](https://github.com/fktn-k/fkYAML/compare/v0.4.2...v0.4.3)
