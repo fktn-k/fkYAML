@@ -154,6 +154,32 @@ TEST_CASE("FuzzRegression") {
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
     }
 
+    SUBCASE("key nodes owned by a parse context are released") {
+        // These inputs leave a key node owned by its parse context on a path where the context state is
+        // later rewritten, which used to leak the node. They are kept here so the sanitizer builds cover
+        // that ownership, the parse results themselves are secondary.
+        auto input = GENERATE(std::string("{{{"), std::string("? ["));
+        REQUIRE_NOTHROW(root = fkyaml::node::deserialize(input));
+    }
+
+    SUBCASE("key node owned by a parse context is released on an error path") {
+        const char input[] = "? []";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("explicit key whose value is a block sequence") {
+        // The shape which turned the leaks into use-after-free when ownership was tracked in a mutable
+        // flag instead of being held by the context itself.
+        const char input[] = "? a\n"
+                             ":\n"
+                             "- 1\n";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_NOTHROW(root = fkyaml::node::deserialize(p_begin, p_end));
+    }
+
     SUBCASE("flow mapping beginning without a parent context") {
         // The third "{" is processed in the default branch of the flow mapping beginning handler, which
         // increments the flow context depth without pushing a parse context. The following "}"s then pop
