@@ -99,6 +99,10 @@ def build_argument_parser() -> argparse.ArgumentParser:
             "If ommitted, common build locations are auto-detected."
         ),
     )
+    parser.add_argument(
+        "--names-output",
+        help="Write the sorted, unique list of failing test names (one per line) to this file.",
+    )
     return parser
 
 
@@ -353,6 +357,10 @@ def main() -> int:
         yaml_test_suite_root = detect_yaml_test_suite_root(workspace, args.test_dir)
 
     attach_input_data_to_failures(failures, yaml_test_suite_root)
+
+    if args.names_output:
+        names = sorted({failure.name for failure in failures})
+        pathlib.Path(args.names_output).write_text("\n".join(names) + ("\n" if names else ""), encoding="utf-8")
 
     report = render_report(failures, command_description)
 
