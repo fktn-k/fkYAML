@@ -156,7 +156,7 @@ jobs:
         rm -rf ${{github.workspace}}/build_for_package
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_BUILD_CMAKE_INTEGRATION_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
 
     - name: Build & Test
       run: |
@@ -186,7 +186,7 @@ jobs:
         rm -rf ${{github.workspace}}/build_for_package
 
     - name: Configure CMake and Ninja
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_BUILD_CMAKE_INTEGRATION_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
 
     - name: Build & Test
       run: |
@@ -228,7 +228,7 @@ jobs:
         rm -rf ${{github.workspace}}/build_for_package
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
 
     - name: Build & Test
       run: |
@@ -270,7 +270,7 @@ jobs:
         rm -rf ${{github.workspace}}/build_for_package
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
 
     - name: Build & Test
       run: |

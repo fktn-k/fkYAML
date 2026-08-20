@@ -1,0 +1,220 @@
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.3
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include <doctest/doctest.h>
+
+#include <fkYAML/node.hpp>
+
+#include "event.hpp"
+#include "validation_compositor.hpp"
+
+namespace {
+
+yaml_test_suite_runner::event make_event(
+    yaml_test_suite_runner::event_type type, std::initializer_list<yaml_test_suite_runner::event_param> params = {}) {
+    return yaml_test_suite_runner::event(type, std::vector<yaml_test_suite_runner::event_param>(params));
+}
+
+} // namespace
+
+TEST_CASE("validation_compositor_builds_implicit_integer_validator") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor;
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "42"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    CHECK_NOTHROW(validator_ptr->validate(fkyaml::node(42)));
+    CHECK_THROWS_AS(validator_ptr->validate(fkyaml::node(std::string("42"))), validation_error);
+}
+
+TEST_CASE("validation_compositor_validates_tagged_scalar_with_normalized_tag_name") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor;
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(make_event(
+        event_type::SCALAR,
+        {{event_param_type::TAG, "tag:yaml.org,2002:str"},
+         {event_param_type::VALUE, "42"},
+         {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    fkyaml::node tagged_scalar(std::string("42"));
+    tagged_scalar.add_tag_name("!!str");
+    CHECK_NOTHROW(validator_ptr->validate(tagged_scalar));
+}
+
+TEST_CASE("validation_compositor_does_not_treat_explicit_string_tagged_empty_scalar_as_null") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor;
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(make_event(
+        event_type::SCALAR,
+        {{event_param_type::TAG, "tag:yaml.org,2002:str"},
+         {event_param_type::VALUE, ""},
+         {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    fkyaml::node tagged_empty_scalar(std::string(""));
+    tagged_empty_scalar.add_tag_name("!!str");
+    CHECK_NOTHROW(validator_ptr->validate(tagged_empty_scalar));
+    CHECK_THROWS_AS(validator_ptr->validate(fkyaml::node(nullptr)), validation_error);
+}
+
+TEST_CASE("validation_compositor_validates_nested_collections_and_aliases") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor;
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(event(event_type::MAPPING_START));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "items"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(make_event(event_type::SEQUENCE_START, {{event_param_type::ANCHOR, "seq"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "1"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "two"}, {event_param_type::STYLE, "\""}}));
+    compositor.handle_event(event(event_type::SEQUENCE_END));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "ref"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(make_event(event_type::ALIAS, {{event_param_type::ALIAS, "seq"}}));
+    compositor.handle_event(event(event_type::MAPPING_END));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    fkyaml::node items = fkyaml::node::sequence({fkyaml::node(1), fkyaml::node(std::string("two"))});
+    items.add_anchor_name("seq");
+
+    fkyaml::node root = fkyaml::node::mapping();
+    root["items"] = items;
+    root["ref"] = fkyaml::node::alias_of(root["items"]);
+
+    CHECK_NOTHROW(validator_ptr->validate(root));
+
+    root["ref"] = fkyaml::node(std::string("not-an-alias"));
+    CHECK_THROWS_AS(validator_ptr->validate(root), validation_error);
+}
+
+TEST_CASE("validation_compositor_validates_non_scalar_mapping_keys") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor;
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(event(event_type::MAPPING_START));
+    compositor.handle_event(event(event_type::SEQUENCE_START));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "a"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "b"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(event(event_type::SEQUENCE_END));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "pair"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(event(event_type::MAPPING_END));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    fkyaml::node key = fkyaml::node::sequence({fkyaml::node(std::string("a")), fkyaml::node(std::string("b"))});
+    fkyaml::node root = fkyaml::node::mapping();
+    root[key] = fkyaml::node(std::string("pair"));
+
+    CHECK_NOTHROW(validator_ptr->validate(root));
+}
+
+TEST_CASE("validation_compositor_json_mode_ignores_yaml_specific_metadata") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor(validation_mode::JSON);
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(make_event(
+        event_type::SCALAR,
+        {{event_param_type::ANCHOR, "a"},
+         {event_param_type::TAG, "tag:yaml.org,2002:str"},
+         {event_param_type::VALUE, "42"},
+         {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    CHECK_NOTHROW(validator_ptr->validate(fkyaml::node(std::string("42"))));
+}
+
+TEST_CASE("validation_compositor_json_mode_normalizes_zero_fraction_float_literals") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor(validation_mode::JSON);
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "450.00"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    CHECK_NOTHROW(validator_ptr->validate(fkyaml::node(450)));
+    CHECK_THROWS_AS(validator_ptr->validate(fkyaml::node(450.0)), validation_error);
+}
+
+TEST_CASE("validation_compositor_json_mode_expands_aliases") {
+    using namespace yaml_test_suite_runner;
+
+    validation_compositor<fkyaml::node> compositor(validation_mode::JSON);
+    compositor.handle_event(event(event_type::STREAM_START));
+    compositor.handle_event(event(event_type::DOCUMENT_START));
+    compositor.handle_event(event(event_type::MAPPING_START));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "items"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(make_event(event_type::SEQUENCE_START, {{event_param_type::ANCHOR, "seq"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "1"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "two"}, {event_param_type::STYLE, "\""}}));
+    compositor.handle_event(event(event_type::SEQUENCE_END));
+    compositor.handle_event(
+        make_event(event_type::SCALAR, {{event_param_type::VALUE, "ref"}, {event_param_type::STYLE, ":"}}));
+    compositor.handle_event(make_event(event_type::ALIAS, {{event_param_type::ALIAS, "seq"}}));
+    compositor.handle_event(event(event_type::MAPPING_END));
+    compositor.handle_event(event(event_type::DOCUMENT_END));
+    compositor.handle_event(event(event_type::STREAM_END));
+
+    std::unique_ptr<validator<fkyaml::node>> validator_ptr = compositor.take_validator();
+
+    fkyaml::node root = fkyaml::node::mapping();
+    root["items"] = fkyaml::node::sequence({fkyaml::node(1), fkyaml::node(std::string("two"))});
+    root["ref"] = fkyaml::node::sequence({fkyaml::node(1), fkyaml::node(std::string("two"))});
+
+    CHECK_NOTHROW(validator_ptr->validate(root));
+}

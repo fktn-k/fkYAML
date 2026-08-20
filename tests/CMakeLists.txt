@@ -1,8 +1,50 @@
-############################################
-#   configure C++ standard for unit test   #
-############################################
+###############################
+#   Prepare dependent tools   #
+###############################
 
-# determine C++ standard used in unit test app.
+# find lcov tool for coverage data.
+if(FK_YAML_CODE_COVERAGE)
+  find_program(LCOV_TOOL NAMES lcov REQUIRED)
+  execute_process(
+    COMMAND ${LCOV_TOOL} --version
+    OUTPUT_VARIABLE LCOV_TOOL_VERSION
+    ERROR_VARIABLE LCOV_TOOL_VERSION
+  )
+  string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" LCOV_TOOL_VERSION "${LCOV_TOOL_VERSION}")
+  message(STATUS "Found lcov. version: ${LCOV_TOOL_VERSION} path: ${LCOV_TOOL}")
+endif()
+
+# find Valgrind & prepare to use it as the target memory check tool.
+if(FK_YAML_RUN_VALGRIND)
+  find_program(MEMORYCHECK_COMMAND valgrind REQUIRED)
+  execute_process(
+    COMMAND ${MEMORYCHECK_COMMAND} --version
+    OUTPUT_VARIABLE VALGRIND_VERSION
+    ERROR_VARIABLE  VALGRIND_VERSION
+  )
+  set(REGEX MATCH "[0-9]+(\\.[0-9]+)+" VALGRIND_VERSION ${VALGRIND_VERSION})
+  message(STATUS "Found Valgrind. version: ${VALGRIND_VERSION} path: ${MEMORYCHECK_COMMAND}")
+  set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1")
+endif()
+
+################################
+#   Set up doctest framework   #
+################################
+
+include(FetchContent)
+FetchContent_Declare(
+  doctest
+  GIT_REPOSITORY https://github.com/doctest/doctest.git
+  GIT_TAG        v2.5.3
+)
+FetchContent_MakeAvailable(doctest)
+include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
+
+######################################
+#   Detect available C++ standards   #
+######################################
+
+# determine C++ standard used in tests.
 if("${FK_YAML_TEST_TARGET_CXX_STANDARD}" STREQUAL "")
   # Apply minimum required C++ standard checked by default.
   set(FK_YAML_TEST_TARGET_CXX_STANDARD 11)
@@ -29,9 +71,9 @@ if(NOT FK_YAML_COMPILER_SUPPORTS_CXX_${FK_YAML_TEST_TARGET_CXX_STANDARD})
   return()
 endif()
 
-############################################################
-#   Configure common compile options for unit/fuzz tests   #
-############################################################
+########################################
+#   Configure common compile options   #
+########################################
 
 add_library(common_test_config INTERFACE)
 target_link_libraries(
@@ -54,20 +96,174 @@ target_compile_definitions(
   INTERFACE
     $<$<CONFIG:Release>:NDEBUG>
 )
+# Configure compile options according to the target compiler.
+target_compile_options(
+  common_test_config
+  INTERFACE
+    # MSVC
+    $<$<CXX_COMPILER_ID:MSVC>:
+      /W4 /WX /EHsc /utf-8 /permissive-
+      /wd4709 # comma operator within array index expression
+      /wd4996 # for testing deprecated functions
+      /w44800 # https://github.com/fktn-k/fkYAML/issues/429
+      $<$<CONFIG:Debug>:/Z7>
+      $<$<CONFIG:Release>:/Od>
+    >
+    # GNU
+    $<$<CXX_COMPILER_ID:GNU>:
+      -Wall -Wextra -Werror -pedantic -Wpedantic -Wdeprecated --all-warnings --extra-warnings
+      -Wno-deprecated-declarations # for testing deprecated functions
+      -Wold-style-cast # regression test for https://github.com/fktn-k/fkYAML/issues/495
+    >
+    # Clang
+    $<$<CXX_COMPILER_ID:Clang>:
+      -Wall -Wextra -Werror -pedantic -Wdeprecated
+      -Wno-c++98-compat -Wno-c++98-compat-pedantic
+      -Wno-deprecated-declarations # for testing deprecated functions
+      -Wno-unused-comparison # for testing throwable operators
+      -Wno-unused-variable # for testing against old compilers
+    >
+    # AppleClang
+    $<$<CXX_COMPILER_ID:AppleClang>:
+      -Wall -Wextra -Werror -pedantic -Wdeprecated
+      -Wno-deprecated-declarations # for testing deprecated functions
+      -Wno-unused-comparison # for testing throwable operators
+    >
+    # IntelLLVM
+    $<$<CXX_COMPILER_ID:IntelLLVM>:
+      # IntelLLVM warns the usage of nans and infinities due to its over-estimation.
+      # fkYAML, however, uses them as YAML node values, not as calculation.
+      # To disable too aggressive warnings, `-fp-model=precise` is used in the test as a workaround.
+      -fp-model=precise
+      $<$<CONFIG:Debug>:-O0 -g>
+      $<$<CONFIG:Release>:-O2>
+    >
+)
+target_link_options(
+  common_test_config
+  INTERFACE
+    $<$<CXX_COMPILER_ID:IntelLLVM>:
+      $<$<CONFIG:Debug>:-O0 -g>
+      $<$<CONFIG:Release>:-O2>
+    >
+)
 
-#############################
-#   Register test targets   #
-#############################
+# additional compile options for Clang Sanitizers.
+if(FK_YAML_RUN_CLANG_SANITIZERS)
+  target_compile_options(
+    common_test_config
+    INTERFACE
+      -O0
+      -g
+      -fno-omit-frame-pointer
+      -fsanitize=address,undefined,bounds,integer,nullability
+      -fno-sanitize-recover=all
+      -fno-sanitize=signed-integer-overflow,implicit-conversion
+  )
 
-add_subdirectory(unit_test)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(
+      common_test_config
+      INTERFACE
+        -fno-omit-frame-pointer
+        -fsanitize=address,undefined,bounds,integer,nullability
+        -fno-sanitize-recover=all
+        -fno-sanitize=signed-integer-overflow,implicit-conversion
+    )
+  else()
+    target_link_libraries(
+      common_test_config
+      INTERFACE
+        -fno-omit-frame-pointer
+        -fsanitize=address,undefined,bounds,integer,nullability
+        -fno-sanitize-recover=all
+        -fno-sanitize=signed-integer-overflow,implicit-conversion
+    )
+  endif()
+endif()
+
+# additional compile options for coverage.
+if(FK_YAML_CODE_COVERAGE)
+  target_compile_options(
+    common_test_config
+    INTERFACE
+      -O0        # no optimization
+      -g         # generate debug info
+      --coverage # set all required flags to generate code coverage data
+  )
+
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(
+      common_test_config
+      INTERFACE
+        --coverage
+    )
+  else()
+    target_link_libraries(
+      common_test_config
+        INTERFACE
+          --coverage
+    )
+  endif()
+endif()
+
+add_library(
+  common_test_config_with_main
+  OBJECT
+    main.cpp
+)
+target_link_libraries(
+  common_test_config_with_main
+  PUBLIC
+    common_test_config
+)
+target_include_directories(
+  common_test_config_with_main
+  PUBLIC
+    "${doctest_SOURCE_DIR}"
+)
+
+add_dependencies(common_test_config ${FK_YAML_TARGET_NAME})
+
+#######################
+#   build test apps   #
+#######################
+
+if(FK_YAML_BUILD_TEST)
+  add_subdirectory(unit_test)
+endif()
+
+if(FK_YAML_USE_YAML_TEST_SUITE)
+  add_subdirectory(yaml_test_suite_runner)
+endif()
 
 if(FK_YAML_BUILD_FUZZ_TEST)
   add_subdirectory(fuzz_test)
 endif()
 
-if(FK_YAML_BUILD_ALL_TEST)
+if(FK_YAML_BUILD_CMAKE_INTEGRATION_TEST)
   add_subdirectory(cmake_add_subdirectory_test)
   add_subdirectory(cmake_fetch_content_test)
   add_subdirectory(cmake_find_package_test)
   add_subdirectory(cmake_target_include_directories_test)
+endif()
+
+############################################
+#   Configure custom target for coverage   #
+############################################
+
+if(FK_YAML_CODE_COVERAGE)
+  file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/include/fkYAML/*.hpp)
+
+  add_custom_target(
+    generate_test_coverage
+    COMMAND ${CMAKE_CTEST_COMMAND} -C ${CMAKE_BUILD_TYPE} --output-on-failure
+    COMMAND cd ${PROJECT_BINARY_DIR}/tests/unit_test/CMakeFiles/unit_test.dir
+    COMMAND ${LCOV_TOOL} --directory . --capture --output-file ${PROJECT_NAME}.info --rc branch_coverage=1 --rc geninfo_unexecuted_blocks=1 --ignore-errors mismatch,mismatch
+    COMMAND ${LCOV_TOOL} -e ${PROJECT_NAME}.info ${SRC_FILES} --output-file ${PROJECT_NAME}.info.filtered --rc branch_coverage=1 --ignore-errors unused,unused
+    COMMAND ${PROJECT_SOURCE_DIR}/thirdparty/imapdl/filterbr.py ${PROJECT_NAME}.info.filtered > ${PROJECT_NAME}.info.filtered.noexcept
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.info.filtered.noexcept ${PROJECT_BINARY_DIR}/coverage/fkYAML.info
+    DEPENDS unit_test
+    COMMENT "Execute unit test app with code coverage."
+  )
 endif()

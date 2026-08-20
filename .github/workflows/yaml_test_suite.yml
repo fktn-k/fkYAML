@@ -1,0 +1,151 @@
+name: YAML Test Suite
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - release/*
+  pull_request:
+    paths:
+      - .github/workflows/yaml_test_suite.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - tests/**
+      - CMakeLists.txt
+  workflow_dispatch:
+
+jobs:
+  yaml-test-suite:
+    # Builds and tests both the current ref and a baseline ref (PR base branch, or the
+    # previous commit on push) to detect newly introduced failures.
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    env:
+      JOBS: 2
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config Debug -j ${{env.JOBS}}
+
+    - name: Test
+      id: test
+      run: ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -j ${{env.JOBS}}
+      # This allows the workflow to continue even if some tests fail, so we can generate a report of the failures.
+      continue-on-error: true
+
+    - name: Decide the artifact_name
+      if: steps.test.outcome == 'failure'
+      id: artifact_naming
+      env:
+        PR_NUMBER: ${{github.event.pull_request.head.sha || github.sha}}
+      run: |
+        echo "artifact name: fkYAML_yaml_test_suite_failures.${{env.PR_NUMBER}}.md"
+        echo "artifact_name=fkYAML_yaml_test_suite_failures.pr${{env.PR_NUMBER}}.md" >> $GITHUB_OUTPUT
+
+    - name: Report Failures
+      if: steps.test.outcome == 'failure'
+      run: |
+        echo "Generating YAML Test Suite Failures Report..."
+        python3 ${{github.workspace}}/scripts/report_yaml_test_suite_failures.py --test-dir build \
+          --output ${{github.workspace}}/${{steps.artifact_naming.outputs.artifact_name}} \
+          --names-output ${{github.workspace}}/current_failures.txt
+
+    - name: Upload Failures Report as an Artifact
+      if: steps.test.outcome == 'failure'
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{steps.artifact_naming.outputs.artifact_name}}
+        path: ${{github.workspace}}/${{steps.artifact_naming.outputs.artifact_name}}
+        overwrite: true
+
+    - name: Determine baseline ref
+      if: steps.test.outcome == 'failure'
+      id: baseline_ref
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "ref=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+        elif [ "${{ github.event_name }}" = "push" ]; then
+          before="${{ github.event.before }}"
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            # No previous commit to compare against (e.g. a new branch's first push).
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=$before" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+        else
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Checkout baseline
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true'
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ steps.baseline_ref.outputs.ref }}
+        path: baseline
+        fetch-depth: 0
+
+    - name: Configure CMake (baseline)
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true'
+      run: cmake -B ${{github.workspace}}/baseline/build -S ${{github.workspace}}/baseline -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+
+    - name: Build (baseline)
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true'
+      run: cmake --build ${{github.workspace}}/baseline/build --config Debug -j ${{env.JOBS}}
+
+    - name: Check baseline has yaml_test_suite tests
+      # A baseline ref predating the yaml_test_suite integration has no matching tests at all, so
+      # every current failure would incorrectly look "new"; detect that and skip the comparison.
+      id: baseline_availability
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true'
+      run: |
+        if ctest --test-dir ${{github.workspace}}/baseline/build -N -R 'yaml_test_suite_' 2>&1 | grep -q "Total Tests: 0"; then
+          echo "Baseline (${{ steps.baseline_ref.outputs.ref }}) has no yaml_test_suite tests; skipping new-failure comparison."
+          echo "present=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "present=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Test (baseline)
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_availability.outputs.present == 'true'
+      run: ctest --test-dir ${{github.workspace}}/baseline/build -C Debug --output-on-failure -j ${{env.JOBS}}
+      continue-on-error: true
+
+    - name: Report Failures (baseline)
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_availability.outputs.present == 'true'
+      run: |
+        python3 ${{github.workspace}}/scripts/report_yaml_test_suite_failures.py --workspace ${{github.workspace}}/baseline --test-dir build \
+          --names-output ${{github.workspace}}/baseline_failures.txt
+
+    - name: Fail on new failing cases
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_availability.outputs.present == 'true'
+      run: |
+        # Ensure the failure lists exists in case there are no failures in either the current or baseline runs.
+        touch current_failures.txt baseline_failures.txt
+
+        # Sort the failure lists since `comm` requires sorted input.
+        sort -u current_failures.txt -o current_failures.txt
+        sort -u baseline_failures.txt -o baseline_failures.txt
+
+        # Compare the current failures against the baseline failures to detect any new failing cases.
+        comm -13 baseline_failures.txt current_failures.txt > new_failures.txt
+
+        # If there are any new failing cases, print them and fail the workflow.
+        if [ -s new_failures.txt ]; then
+          echo "New failing yaml_test_suite cases compared to baseline (${{ steps.baseline_ref.outputs.ref }}):"
+          cat new_failures.txt
+          exit 1
+        fi
+
+        # If there are no new failing cases, print a message indicating that.
+        echo "No new failing yaml_test_suite cases compared to baseline (${{ steps.baseline_ref.outputs.ref }})."
