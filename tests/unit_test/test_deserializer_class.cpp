@@ -33,19 +33,91 @@ TEST_CASE("Deserializer_KeySeparator") {
         REQUIRE(root.size() == 1);
     }
 
-    SUBCASE("empty mapping key in block sequences is unsupported") {
-        auto input_str = GENERATE(std::string("- : foo"), std::string("- - : foo"));
-        REQUIRE_THROWS_AS(
-            root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
+    SUBCASE("empty mapping key in a block sequence entry") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("- : foo")));
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 1);
+
+        fkyaml::node& entry_node = root[0];
+        REQUIRE(entry_node.is_mapping());
+        REQUIRE(entry_node.size() == 1);
+        REQUIRE(entry_node.contains(nullptr));
+        REQUIRE(entry_node[nullptr].as_str() == "foo");
+    }
+
+    SUBCASE("empty mapping key in a nested block sequence entry") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("- - : foo")));
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root[0].is_sequence());
+        REQUIRE(root[0].size() == 1);
+
+        fkyaml::node& entry_node = root[0][0];
+        REQUIRE(entry_node.is_mapping());
+        REQUIRE(entry_node.contains(nullptr));
+        REQUIRE(entry_node[nullptr].as_str() == "foo");
     }
 
     SUBCASE("empty root mapping key") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(": foo")));
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
-        REQUIRE(root.contains(""));
-        REQUIRE(root[""].is_string());
-        REQUIRE(root[""].as_str() == "foo");
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root[nullptr].is_string());
+        REQUIRE(root[nullptr].as_str() == "foo");
+    }
+
+    SUBCASE("empty mapping key after a normal entry") {
+        std::string input = "key: value\n"
+                            ": empty key\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("key"));
+        REQUIRE(root["key"].as_str() == "value");
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root[nullptr].as_str() == "empty key");
+    }
+
+    SUBCASE("empty mapping key whose value is omitted") {
+        std::string input = ":\n"
+                            "bar: baz\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root[nullptr].is_null());
+
+        REQUIRE(root.contains("bar"));
+        REQUIRE(root["bar"].as_str() == "baz");
+    }
+
+    SUBCASE("empty mapping key whose value begins on the following line") {
+        std::string input = ":\n"
+                            "  bar: baz\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains(nullptr));
+
+        fkyaml::node& value_node = root[nullptr];
+        REQUIRE(value_node.is_mapping());
+        REQUIRE(value_node.size() == 1);
+        REQUIRE(value_node.contains("bar"));
+        REQUIRE(value_node["bar"].as_str() == "baz");
+    }
+
+    SUBCASE("empty mapping key in a flow mapping") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("{key: value, : empty key}")));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("key"));
+        REQUIRE(root["key"].as_str() == "value");
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root[nullptr].as_str() == "empty key");
     }
 
     SUBCASE("invalid explicit mapping key separator after root scalar") {
@@ -1754,6 +1826,54 @@ TEST_CASE("Deserializer_ExplicitBlockMapping") {
         REQUIRE(qux_node.size() == 1);
         REQUIRE(qux_node.contains("corge"));
         REQUIRE(qux_node["corge"].is_null());
+    }
+
+    SUBCASE("explicit mapping key whose contents begin with a key separator") {
+        // The contents of the explicit key are a mapping entry with an empty key.
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("? :")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+
+        fkyaml::node key = {{nullptr, nullptr}};
+        REQUIRE(root.contains(key));
+        REQUIRE(root[key].is_null());
+    }
+
+    SUBCASE("explicit mapping key with an empty key and a value") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("? : foo")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+
+        fkyaml::node key = {{nullptr, "foo"}};
+        REQUIRE(root.contains(key));
+        REQUIRE(root[key].is_null());
+    }
+
+    SUBCASE("explicit mapping key which is a mapping without a value") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("? foo: bar")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+
+        fkyaml::node key = {{"foo", "bar"}};
+        REQUIRE(root.contains(key));
+        REQUIRE(root[key].is_null());
+    }
+
+    SUBCASE("explicit mapping key with an empty key and its own value") {
+        std::string input = "? :\n"
+                            ": baz\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+
+        fkyaml::node key = {{nullptr, nullptr}};
+        REQUIRE(root.contains(key));
+        REQUIRE(root[key].is_string());
+        REQUIRE(root[key].as_str() == "baz");
     }
 
     SUBCASE("explicit mapping keys whose values begin on the following lines") {

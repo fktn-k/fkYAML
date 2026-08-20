@@ -7694,10 +7694,7 @@ private:
             apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
-            add_new_key(basic_node_type(""), line, indent);
-            token = lexer.get_next_token();
-            line = lexer.get_lines_processed();
-            indent = lexer.get_last_token_begin_pos();
+            add_empty_key_entry(lexer, token, line, indent);
             break;
         case lexical_token_t::BLOCK_LITERAL_SCALAR:
         case lexical_token_t::BLOCK_FOLDED_SCALAR:
@@ -7740,12 +7737,20 @@ private:
             last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
             last_type == lexical_token_t::END_OF_DOCUMENT);
 
-        // An explicit key at the end of a document has no value either.
+        // An explicit key at the end of a document has no value either. Its own contents may have left
+        // more contexts on the stack, so those are unwound first.
         // ```yaml
         // ? foo
-        // # -> {foo: null}
+        // ? bar: baz
+        // # -> {foo: null, {bar: baz}: null}
         // ```
-        add_explicit_key_with_null_value();
+        while (!m_context_stack.empty()) {
+            if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                add_explicit_key_with_null_value();
+                continue;
+            }
+            m_context_stack.pop_back();
+        }
 
         // reset parameters for the next call.
         mp_current_node = nullptr;
@@ -7941,15 +7946,52 @@ private:
                 if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                     throw parse_error("A key separator is not allowed in this context.", line, indent);
                 }
-                if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
-                    // empty mapping keys are not supported.
+                if (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
+                    // The entry is a mapping whose first key is empty.
                     // ```yaml
                     // - : foo
+                    // # -> [{null: foo}]
                     // ```
-                    throw parse_error("mapping key should not be empty.", line, indent);
+                    *mp_current_node = basic_node_type::mapping();
+                    apply_directive_set(*mp_current_node);
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    add_new_key(basic_node_type(), line, indent);
+
+                    token = lexer.get_next_token();
+                    indent = lexer.get_last_token_begin_pos();
+                    line = lexer.get_lines_processed();
+                    continue;
+                }
+
+                {
+                    const parse_context& cur_context = m_context_stack.back();
+                    const bool is_explicit_key_content =
+                        cur_context.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && cur_context.line == line;
+                    if (is_explicit_key_content) {
+                        // The contents of an explicit key begin with a key separator, so the key is a mapping
+                        // whose first entry has an empty key. Whether that entry has a value, and whether the
+                        // explicit key itself has one, is not known yet.
+                        // ```yaml
+                        // ? : foo
+                        // #  ^ this key separator begins the contents of the explicit key
+                        // ```
+                        *mp_current_node = basic_node_type::mapping();
+                        apply_directive_set(*mp_current_node);
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        add_empty_key_entry(lexer, token, line, indent);
+                        continue;
+                    }
                 }
 
                 if (m_flow_context_depth > 0) {
+                    if (m_context_stack.back().state != context_state_t::MAPPING_VALUE) {
+                        // No key precedes this separator, so the entry has an empty key.
+                        // ```yaml
+                        // { : foo }
+                        // # -> {null: foo}
+                        // ```
+                        add_new_key(basic_node_type(), line, indent);
+                    }
                     break;
                 }
 
@@ -8103,8 +8145,25 @@ private:
                 }
 
                 // handle explicit mapping key separators.
-                if FK_YAML_UNLIKELY (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
-                    throw parse_error("Unexpected explicit mapping key separator is found.", line, indent);
+                if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                    // The contents of the explicit key may have left their own contexts on the stack.
+                    // ```yaml
+                    // ? :
+                    // : v
+                    // # -> {{null: null}: v}
+                    // ```
+                    // old_indent is the position of this key separator, while indent already refers to the
+                    // token which follows it.
+                    const auto is_key_context = [old_indent](const parse_context& c) {
+                        return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && old_indent == c.indent;
+                    };
+                    const bool has_key_context =
+                        std::any_of(m_context_stack.rbegin(), m_context_stack.rend(), is_key_context);
+                    if FK_YAML_UNLIKELY (!has_key_context) {
+                        throw parse_error("Unexpected explicit mapping key separator is found.", line, indent);
+                    }
+
+                    pop_to_parent_node(old_line, old_indent, is_key_context);
                 }
 
                 add_explicit_key_with_empty_value(old_line, old_indent);
@@ -8722,6 +8781,18 @@ private:
                 }
 
                 if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                    const parse_context& cur_context = m_context_stack.back();
+                    if (cur_context.state == context_state_t::BLOCK_MAPPING && cur_context.indent == indent) {
+                        // A key separator which begins a line belongs to an entry with an empty key.
+                        // ```yaml
+                        // foo: bar
+                        // : baz
+                        // # -> {foo: bar, null: baz}
+                        // ```
+                        add_empty_key_entry(lexer, token, line, indent);
+                        return;
+                    }
+
                     pop_to_parent_node(line, indent, [indent](const parse_context& c) {
                         return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
                     });
@@ -8833,6 +8904,35 @@ private:
         }
         // LCOV_EXCL_STOP
         return m_context_stack.back();
+    }
+
+    /// @brief Adds a mapping entry whose key is empty and moves to the token which follows it.
+    /// @note
+    /// An empty key is a null node. Its value can be omitted as well, in which case the following token
+    /// belongs to the parent mapping rather than to this entry.
+    /// ```yaml
+    /// :
+    /// foo: bar
+    /// # -> {null: null, foo: bar}
+    /// ```
+    /// @param lexer The lexical analyzer to be used.
+    /// @param token The storage for the token which follows the key separator.
+    /// @param line The line of the key separator. Updated to the line of the following token.
+    /// @param indent The indentation width of the key separator. Updated for the following token.
+    void add_empty_key_entry(lexer_type& lexer, lexical_token& token, uint32_t& line, uint32_t& indent) {
+        const uint32_t key_line = line;
+        const uint32_t key_indent = indent;
+        add_new_key(basic_node_type(), line, indent);
+
+        token = lexer.get_next_token();
+        line = lexer.get_lines_processed();
+        indent = lexer.get_last_token_begin_pos();
+
+        if (line > key_line && indent <= key_indent) {
+            pop_to_parent_node(line, indent, [key_indent](const parse_context& c) {
+                return c.state == context_state_t::BLOCK_MAPPING && key_indent == c.indent;
+            });
+        }
     }
 
     /// @brief Adds an entry for an explicit key and makes its value node the current node.
