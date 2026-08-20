@@ -16,6 +16,9 @@ from typing import Dict, Iterable, List, Optional, Tuple
 TEST_RESULT_LINE_RE = re.compile(
     r"^\s*\d+/\d+ Test\s+#(?P<ctest_id>\d+):\s+(?P<name>\S+)\s+\.+(?P<status>.+?)\s+[\d.]+\s*sec\s*$"
 )
+# Broad matcher for ctest progress lines. Used to detect lines that should carry a
+# status but failed to match TEST_RESULT_LINE_RE.
+TEST_PROGRESS_LINE_RE = re.compile(r"^\s*\d+/\d+ Test\s+#\d+:")
 SUMMARY_LINE_RE = re.compile(r"^\s*(?P<ctest_id>\d+)\s+-\s+(?P<name>\S+)\s+\((?P<status>[^)]+)\)$")
 LABEL_RE = re.compile(r"^label:\s+(?P<label>.+)$")
 TEST_CASE_RE = re.compile(r"^TEST CASE:\s+(?P<name>\S+)\s*$")
@@ -127,17 +130,25 @@ def run_ctest(workspace: pathlib.Path, test_dir: str, regex: str) -> str:
     return completed.stdout
 
 
-def parse_failures(lines: Iterable[str]) -> List[FailureRecord]:
+def parse_failures(lines: Iterable[str]) -> Tuple[List[FailureRecord], List[str]]:
     failures: List[FailureRecord] = []
+    unrecognized_progress_lines: List[str] = []
     current: Optional[FailureRecord] = None
 
     for raw_line in lines:
         line = raw_line.rstrip("\n")
 
         result_match = TEST_RESULT_LINE_RE.match(line)
-        if result_match and result_match.group("status").strip() not in {"Passed", "Skipped"}:
-            current = FailureRecord(result_match.group("ctest_id"), result_match.group("name"))
-            failures.append(current)
+        if result_match:
+            if result_match.group("status").strip() not in {"Passed", "Skipped"}:
+                current = FailureRecord(result_match.group("ctest_id"), result_match.group("name"))
+                failures.append(current)
+            # Progress lines that matched the expected pattern are recognized,
+            # regardless of whether the status is failure or success.
+            continue
+
+        if TEST_PROGRESS_LINE_RE.match(line):
+            unrecognized_progress_lines.append(line)
             continue
 
         summary_match = SUMMARY_LINE_RE.match(line)
@@ -173,7 +184,7 @@ def parse_failures(lines: Iterable[str]) -> List[FailureRecord]:
             current.input_format = input_format_match.group("value")
             continue
 
-    return failures
+    return failures, unrecognized_progress_lines
 
 
 def detect_yaml_test_suite_root(workspace: pathlib.Path, test_dir: str) -> Optional[pathlib.Path]:
@@ -346,7 +357,20 @@ def main() -> int:
         if args.write_log:
             pathlib.Path(args.write_log).write_text(output, encoding="utf-8")
 
-    failures = parse_failures(output.splitlines())
+    failures, unrecognized_progress_lines = parse_failures(output.splitlines())
+
+    if unrecognized_progress_lines:
+        max_lines = 20
+        reported_lines = "\n".join(unrecognized_progress_lines[:max_lines])
+        omitted = len(unrecognized_progress_lines) - max_lines
+        sys.stderr.write(
+            "ERROR: Unrecognized ctest progress line(s) detected while parsing test output.\n"
+            "These lines matched a test progress prefix but not the expected status pattern:\n"
+            f"{reported_lines}\n"
+        )
+        if omitted > 0:
+            sys.stderr.write(f"... and {omitted} more unrecognized line(s).\n")
+        return 2
 
     if args.yaml_test_suite_root:
         yaml_test_suite_root = pathlib.Path(args.yaml_test_suite_root)
