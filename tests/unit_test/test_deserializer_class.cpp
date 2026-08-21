@@ -3450,6 +3450,15 @@ TEST_CASE("Deserializer_Tag") {
         auto input = GENERATE(std::string("foo: !!map !!map\n  bar: baz"), std::string("!!str !!bool true: 123"));
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SUBCASE("collection tag applied to a scalar node") {
+        auto input = GENERATE(
+            std::string("foo: !!seq bar"),
+            std::string("foo: !!map |\n  bar"),
+            std::string("- !!map\n  key: value"),
+            std::string("key: &anchor\n !!map\n  foo: bar"));
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_NodeProperties") {

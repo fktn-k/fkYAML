@@ -8615,10 +8615,7 @@ private:
             case lexical_token_t::PLAIN_SCALAR:
             case lexical_token_t::SINGLE_QUOTED_SCALAR:
             case lexical_token_t::DOUBLE_QUOTED_SCALAR: {
-                tag_t tag_type {tag_t::NONE};
-                if (m_needs_tag_impl) {
-                    tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-                }
+                const tag_t tag_type = resolve_scalar_tag(line, indent);
 
                 basic_node_type node = scalar_parser_type(line, indent).parse_flow(token.type, tag_type, token.str);
                 apply_directive_set(node);
@@ -8629,10 +8626,7 @@ private:
             }
             case lexical_token_t::BLOCK_LITERAL_SCALAR:
             case lexical_token_t::BLOCK_FOLDED_SCALAR: {
-                tag_t tag_type {tag_t::NONE};
-                if (m_needs_tag_impl) {
-                    tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-                }
+                const tag_t tag_type = resolve_scalar_tag(line, indent);
 
                 basic_node_type node =
                     scalar_parser_type(line, indent)
@@ -9114,6 +9108,26 @@ private:
             m_context_stack.pop_back();
             mp_current_node = current_context(line, indent).p_node;
         }
+    }
+
+    /// @brief Resolves the tag for a scalar node, if any is pending.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    /// @return The resolved tag type, or tag_t::NONE if no tag is pending.
+    tag_t resolve_scalar_tag(const uint32_t line, const uint32_t indent) const {
+        if (!m_needs_tag_impl) {
+            return tag_t::NONE;
+        }
+
+        const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
+
+        // A collection tag denotes a sequence or a mapping, so it cannot apply to a scalar node.
+        // Such an input is a syntax error rather than an internal inconsistency.
+        if FK_YAML_UNLIKELY (tag_type == tag_t::SEQUENCE || tag_type == tag_t::MAPPING) {
+            throw parse_error("A sequence or mapping tag cannot be specified to a scalar node.", line, indent);
+        }
+
+        return tag_type;
     }
 
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
