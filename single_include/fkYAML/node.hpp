@@ -8386,6 +8386,8 @@ private:
                     lexer.set_context_state(false);
                 }
 
+                close_single_pair_mapping(line, indent);
+
                 const bool has_valid_beginning =
                     !m_context_stack.empty() && (m_context_stack.back().state == context_state_t::FLOW_SEQUENCE ||
                                                  m_context_stack.back().state == context_state_t::FLOW_SEQUENCE_KEY);
@@ -8567,6 +8569,7 @@ private:
                 if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
+                close_single_pair_mapping(line, indent);
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX: {
@@ -9089,6 +9092,28 @@ private:
     /// @param node A basic_node_type object to be set YAML directive properties.
     void apply_directive_set(basic_node_type& node) noexcept {
         node.mp_meta = mp_meta;
+    }
+
+    /// @brief Closes the implicit single pair mapping wrapping a flow sequence entry, if one is open.
+    /// @note
+    /// A flow sequence entry may be a mapping entry written without braces, e.g. `[foo: 1]` meaning
+    /// `[{foo: 1}]`. Such an entry is wrapped in a mapping when its key separator is found, and that
+    /// wrapper must be closed once the entry ends, either at a separator or at the sequence suffix.
+    /// Block content cannot appear inside a flow collection, so a block mapping context found here can
+    /// only be that wrapper.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    void close_single_pair_mapping(const uint32_t line, const uint32_t indent) {
+        // LCOV_EXCL_START
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            return;
+        }
+        // LCOV_EXCL_STOP
+
+        if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING) {
+            m_context_stack.pop_back();
+            mp_current_node = current_context(line, indent).p_node;
+        }
     }
 
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
