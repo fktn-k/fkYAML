@@ -3636,7 +3636,8 @@ TEST_CASE("Deserializer_MultipleDocuments") {
                             "---\n"
                             "- !foo bar\n"
                             "- 3.14\n"
-                            "- Null";
+                            "- Null\n"
+                            "...\n";
 
         SUBCASE("parse only the first document") {
             REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
@@ -3651,6 +3652,7 @@ TEST_CASE("Deserializer_MultipleDocuments") {
 
         SUBCASE("parse all documents") {
             REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
+            CAPTURE(docs);
             REQUIRE(docs.size() == 2);
 
             fkyaml::node& root0 = docs[0];
