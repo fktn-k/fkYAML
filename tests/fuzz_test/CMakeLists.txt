@@ -27,6 +27,11 @@ target_compile_options(
   fuzz_test
   PRIVATE
     -fsanitize=fuzzer,address,undefined
+    # UBSan checks are recoverable by default: without this they print a diagnostic and the
+    # run continues, so libFuzzer never sees a crash and never saves the offending input.
+    -fno-sanitize-recover=all
+    # Excluded for the same reason the unit test configuration excludes it.
+    -fno-sanitize=signed-integer-overflow
     -g
     -O1
 )
