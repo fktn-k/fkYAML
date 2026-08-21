@@ -2294,3 +2294,27 @@ TEST_CASE("LexicalAnalyzer_BlockMapping") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 }
+
+TEST_CASE("LexicalAnalyzer_PeekNextToken") {
+    char input[] = "  test: true";
+    fkyaml::detail::lexical_analyzer lexer(input);
+    fkyaml::detail::lexical_token token {};
+
+    REQUIRE_NOTHROW(token = lexer.peek_next_token());
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+    REQUIRE(token.str == "test");
+    REQUIRE(lexer.get_last_token_begin_pos() == 0);
+    REQUIRE(lexer.get_lines_processed() == 0);
+
+    REQUIRE_NOTHROW(token = lexer.peek_next_token());
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+    REQUIRE(token.str == "test");
+    REQUIRE(lexer.get_last_token_begin_pos() == 0);
+    REQUIRE(lexer.get_lines_processed() == 0);
+
+    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+    REQUIRE(token.str == "test");
+    REQUIRE(lexer.get_last_token_begin_pos() == 2);
+    REQUIRE(lexer.get_lines_processed() == 0);
+}

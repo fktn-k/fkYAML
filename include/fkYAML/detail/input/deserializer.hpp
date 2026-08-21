@@ -161,6 +161,21 @@ public:
 
         do {
             nodes.emplace_back(deserialize_document(lexer, type));
+            // Break the loop if the last end-of-document marker is followed by the end-of-buffer token,
+            // which indicates that there are no more documents to parse.
+            // ```yaml
+            // foo: bar
+            // ... # the last end-of-document marker
+            // # no more documents after this line
+            // ```
+            if (type == lexical_token_t::END_OF_DOCUMENT) {
+                // A next document may start from the directive part. Ensure '%' is lexed as a directive token
+                // during the lookahead; otherwise it can be cached as a plain scalar and break parsing.
+                lexer.set_document_state(true);
+                if (lexer.peek_next_token().type == lexical_token_t::END_OF_BUFFER) {
+                    break;
+                }
+            }
         } while (type != lexical_token_t::END_OF_BUFFER);
 
         return nodes;
