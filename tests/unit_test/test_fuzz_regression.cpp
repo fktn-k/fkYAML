@@ -65,11 +65,13 @@ TEST_CASE("FuzzRegression") {
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
     }
 
-    SUBCASE("invalid block scalar header") {
+    SUBCASE("a block scalar with only a header and no content lines") {
         auto input = GENERATE(std::string(">"), std::string("|"));
         p_begin = input.data();
         p_end = input.data() + input.size();
-        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+        REQUIRE_NOTHROW(root = fkyaml::node::deserialize(p_begin, p_end));
+        REQUIRE(root.is_string());
+        REQUIRE(root.as_str().empty());
     }
 
     SUBCASE("invalid colons") {

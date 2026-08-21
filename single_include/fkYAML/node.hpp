@@ -3584,17 +3584,21 @@ private:
         }
         case '|':
         case '>': {
+            const lexical_token_t type = *m_token_begin_itr == '|' ? lexical_token_t::BLOCK_LITERAL_SCALAR
+                                                                   : lexical_token_t::BLOCK_FOLDED_SCALAR;
             const str_view sv {m_token_begin_itr, m_end_itr};
             const std::size_t header_end_pos = sv.find('\n');
+
             if FK_YAML_UNLIKELY (header_end_pos == str_view::npos) {
-                emit_error(
-                    "Invalid block scalar header found. The header must be followed by a line break and its content.");
+                m_block_scalar_header = convert_to_block_scalar_header(sv.substr(1));
+                // If the block scalar header is not followed by a newline code, its content is empty.
+                m_cur_itr = m_token_begin_itr = m_end_itr;
+                info.token = {type, {m_token_begin_itr, 0}};
+                return info;
             }
 
             const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
 
-            const lexical_token_t type = *m_token_begin_itr == '|' ? lexical_token_t::BLOCK_LITERAL_SCALAR
-                                                                   : lexical_token_t::BLOCK_FOLDED_SCALAR;
             const str_view header_line = sv.substr(1, header_end_pos - 1);
             m_block_scalar_header = convert_to_block_scalar_header(header_line);
 
