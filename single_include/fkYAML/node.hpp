@@ -4227,6 +4227,16 @@ private:
                     case '\n':
                         ends_loop = true;
                         break;
+                    case ',':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                        // A flow indicator is not "safe" to follow a ":" in a flow context, so the ":" ends
+                        // the plain scalar and becomes a mapping value indicator instead.
+                        // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                        ends_loop = ((m_state & flow_context_bit) != 0);
+                        break;
                     default:
                         break;
                     }
@@ -8510,6 +8520,8 @@ private:
                     lexer.set_context_state(false);
                 }
 
+                close_omitted_mapping_value(line, indent);
+
                 const bool has_valid_beginning =
                     !m_context_stack.empty() && (m_context_stack.back().state == context_state_t::FLOW_MAPPING ||
                                                  m_context_stack.back().state == context_state_t::FLOW_MAPPING_KEY);
@@ -8566,6 +8578,7 @@ private:
                 if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
+                close_omitted_mapping_value(line, indent);
                 if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
@@ -9113,6 +9126,28 @@ private:
         if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING) {
             m_context_stack.pop_back();
             mp_current_node = current_context(line, indent).p_node;
+        }
+    }
+
+    /// @brief Completes a flow mapping entry whose value was omitted, if one is pending.
+    /// @note
+    /// A flow mapping entry may leave its value empty, in which case the value is null, e.g. `{foo: }`
+    /// meaning `{foo: null}`. The value node is already null since `add_new_key` default constructs it,
+    /// so the entry only needs its context closed once it ends, either at a separator or at the mapping
+    /// suffix.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    void close_omitted_mapping_value(const uint32_t line, const uint32_t indent) {
+        // LCOV_EXCL_START
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent flow collection is found.", line, indent);
+        }
+        // LCOV_EXCL_STOP
+
+        if (m_context_stack.back().state == context_state_t::MAPPING_VALUE) {
+            m_context_stack.pop_back();
+            mp_current_node = current_context(line, indent).p_node;
+            m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
         }
     }
 

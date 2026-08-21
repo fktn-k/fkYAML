@@ -2568,6 +2568,47 @@ TEST_CASE("Deserializer_UnclosedFlowCollection") {
     }
 }
 
+TEST_CASE("Deserializer_OmittedFlowMappingValue") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SUBCASE("the only entry has no value") {
+        auto input = GENERATE(std::string("{foo: }"), std::string("{foo:}"), std::string("{\"foo\": }"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_null());
+    }
+
+    SUBCASE("the first entry has no value") {
+        std::string input = "{foo: , bar: 1}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].is_null());
+        REQUIRE(root["bar"].get_value<int>() == 1);
+    }
+
+    SUBCASE("the last entry has no value") {
+        std::string input = "{foo: 1, bar: }";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].get_value<int>() == 1);
+        REQUIRE(root["bar"].is_null());
+    }
+
+    SUBCASE("an empty entry is still rejected") {
+        auto input =
+            GENERATE(std::string("{foo: 1,, bar: 2}"), std::string("{,}"), std::string("[a,,b]"), std::string("[,]"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+}
+
 TEST_CASE("Deserializer_BadIndentation") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
