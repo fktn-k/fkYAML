@@ -27,8 +27,12 @@ if(FK_YAML_CODE_COVERAGE OR FK_YAML_RUN_VALGRIND OR FK_YAML_RUN_CLANG_SANITIZERS
     message(FATAL_ERROR "Compiler must be clang when FK_YAML_RUN_CLANG_SANITIZERS is enabled.")
   endif()
 
-  # Generating code coverage depends on the unit test app. So force build it.
-  set(FK_YAML_BUILD_TEST ON)
+  # Generating code coverage depends on the unit tests and the YAML test suite.
+  # So force build them.
+  if(FK_YAML_CODE_COVERAGE)
+    set(FK_YAML_BUILD_TEST ON)
+    set(FK_YAML_USE_YAML_TEST_SUITE ON)
+  endif()
 endif()
 
 if(FK_YAML_BUILD_ALL_TEST)
