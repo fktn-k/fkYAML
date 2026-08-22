@@ -3,11 +3,12 @@
 ###########################
 
 include(FetchContent)
-FetchContent_Populate(
+FetchContent_Declare(
   yaml-test-suite
   GIT_REPOSITORY https://github.com/yaml/yaml-test-suite.git
   GIT_TAG data-2022-01-17
 )
+FetchContent_MakeAvailable(yaml-test-suite)
 
 #############################################################################
 #   Configure the header file to embed the yaml-test-suite directory path   #
