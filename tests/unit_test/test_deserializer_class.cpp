@@ -2189,6 +2189,54 @@ TEST_CASE("Deserializer_FlowSequence") {
     }
 }
 
+TEST_CASE("Deserializer_SinglePairMappingInFlowSequence") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SUBCASE("a single entry without braces") {
+        std::string input = "[foo: 1]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root[0].is_mapping());
+        REQUIRE(root[0].size() == 1);
+        REQUIRE(root[0].contains("foo"));
+        REQUIRE(root[0]["foo"].get_value<int>() == 1);
+    }
+
+    SUBCASE("each entry becomes its own mapping") {
+        std::string input = "[foo: 1, bar: 2]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root[0].is_mapping());
+        REQUIRE(root[0].size() == 1);
+        REQUIRE(root[0]["foo"].get_value<int>() == 1);
+        REQUIRE(root[1].is_mapping());
+        REQUIRE(root[1].size() == 1);
+        REQUIRE(root[1]["bar"].get_value<int>() == 2);
+    }
+
+    SUBCASE("nested in a flow mapping value") {
+        std::string input = "{a: [b: 1]}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root["a"].is_sequence());
+        REQUIRE(root["a"].size() == 1);
+        REQUIRE(root["a"][0].is_mapping());
+        REQUIRE(root["a"][0]["b"].get_value<int>() == 1);
+    }
+
+    SUBCASE("the explicit brace form is unaffected") {
+        auto input = GENERATE(std::string("[{foo: 1}]"), std::string("[a, b]"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_sequence());
+    }
+}
+
 TEST_CASE("Deserializer_FlowMapping") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
