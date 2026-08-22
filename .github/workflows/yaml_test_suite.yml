@@ -32,12 +32,37 @@ jobs:
       fail-fast: false
     env:
       JOBS: 2
+      YAML_TEST_SUITE_TAG: data-2022-01-17
+      YAML_TEST_SUITE_DIR: ${{github.workspace}}/yaml-test-suite
 
     steps:
     - uses: actions/checkout@v7
 
+    - name: Restore YAML Test Suite cache
+      id: yaml_test_suite_cache_restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{env.YAML_TEST_SUITE_DIR}}
+        key: yaml-test-suite-${{ env.YAML_TEST_SUITE_TAG }}
+
+    - name: Install the YAML Test Suite
+      run: |
+        # On cache miss, download the pinned test-suite tag as plain data and strip VCS metadata.
+        if [ "${{steps.yaml_test_suite_cache_restore.outputs.cache-hit}}" != "true" ]; then
+          rm -rf "${{env.YAML_TEST_SUITE_DIR}}"
+          git clone --depth 1 --branch "${{env.YAML_TEST_SUITE_TAG}}" https://github.com/yaml/yaml-test-suite.git "${{env.YAML_TEST_SUITE_DIR}}"
+          rm -rf "${{env.YAML_TEST_SUITE_DIR}}/.git"
+        fi
+
+    - name: Save YAML Test Suite cache
+      if: steps.yaml_test_suite_cache_restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{env.YAML_TEST_SUITE_DIR}}
+        key: yaml-test-suite-${{ env.YAML_TEST_SUITE_TAG }}
+
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON -DFETCHCONTENT_SOURCE_DIR-YAML-TEST-SUITE=${{env.YAML_TEST_SUITE_DIR}}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config Debug -j ${{env.JOBS}}
@@ -115,7 +140,7 @@ jobs:
 
     - name: Configure CMake (baseline)
       if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
-      run: cmake -B ${{github.workspace}}/baseline/build -S ${{github.workspace}}/baseline -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+      run: cmake -B ${{github.workspace}}/baseline/build -S ${{github.workspace}}/baseline -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON -DFETCHCONTENT_SOURCE_DIR-YAML-TEST-SUITE=${{env.YAML_TEST_SUITE_DIR}}
 
     - name: Build (baseline)
       if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
