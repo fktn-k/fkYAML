@@ -94,7 +94,10 @@ void bm_libfyaml_parse(benchmark::State& st) {
 
 // rapidyaml (in place)
 void bm_rapidyaml_parse_inplace(benchmark::State& st) {
-    std::string in_place_buff(test_src.size(), '\0');
+    // Initialize from the source so the view below spans the real contents. Constructing the buffer
+    // filled with '\0' instead would make trimr('\0') strip all of it, leaving an empty view and
+    // making the benchmark parse nothing.
+    std::string in_place_buff(test_src);
     c4::substr c4_test_src = c4::to_substr(in_place_buff).trimr('\0');
 
     for (auto _ : st) {
