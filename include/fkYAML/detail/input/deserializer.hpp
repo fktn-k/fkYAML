@@ -191,7 +191,9 @@ private:
 
         basic_node_type root;
         mp_current_node = &root;
-        mp_meta = root.mp_meta;
+        // One metainfo object is created per document and shared by all of its nodes.
+        mp_meta = std::make_shared<doc_metainfo_type>();
+        root.mp_meta = mp_meta;
 
         // parse directives first.
         deserialize_directives(lexer, token);

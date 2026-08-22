@@ -3022,6 +3022,24 @@ TEST_CASE("Node_GetResolvedTagName") {
         REQUIRE(node.at(2).get_resolved_tag_name() == "tag:example.com,2026:named/a/str");
         REQUIRE(node.at(3).get_resolved_tag_name() == "tag:example.com,2026:named/b/str");
     }
+
+    SUBCASE("node with tag name but without document metainfo.") {
+        fkyaml::node secondary(std::string("foo"));
+        secondary.add_tag_name("!!str");
+        REQUIRE(secondary.get_resolved_tag_name() == "tag:yaml.org,2002:str");
+
+        fkyaml::node non_specific(std::string("bar"));
+        non_specific.add_tag_name("!");
+        REQUIRE(non_specific.get_resolved_tag_name() == "!");
+
+        fkyaml::node primary(std::string("baz"));
+        primary.add_tag_name("!local");
+        REQUIRE(primary.get_resolved_tag_name() == "!local");
+
+        fkyaml::node verbatim(std::string("qux"));
+        verbatim.add_tag_name("!<tag:example.com,2026:verbatim/str>");
+        REQUIRE(verbatim.get_resolved_tag_name() == "tag:example.com,2026:verbatim/str");
+    }
 }
 
 TEST_CASE("Node_AddTagName") {

@@ -1166,15 +1166,16 @@ public:
     /// @return The YAML version if already set, `yaml_version_type::VERSION_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version_type/
     yaml_version_type get_yaml_version_type() const noexcept {
-        return mp_meta->is_version_specified ? mp_meta->version : yaml_version_type::VERSION_1_2;
+        return (mp_meta && mp_meta->is_version_specified) ? mp_meta->version : yaml_version_type::VERSION_1_2;
     }
 
     /// @brief Set the YAML version for this basic_node object.
     /// @param[in] version The target YAML version.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version_type/
     void set_yaml_version_type(const yaml_version_type version) noexcept {
-        mp_meta->version = version;
-        mp_meta->is_version_specified = true;
+        auto& directives = *meta();
+        directives.version = version;
+        directives.is_version_specified = true;
     }
 
     /// @brief Get the YAML version for this basic_node object.
@@ -1229,7 +1230,7 @@ public:
             mp_meta->anchor_table.erase(itr);
         }
 
-        auto p_meta = mp_meta;
+        auto p_meta = meta();
 
         basic_node node;
         node.swap(*this);
@@ -1257,7 +1258,7 @@ public:
             mp_meta->anchor_table.erase(itr);
         }
 
-        auto p_meta = mp_meta;
+        auto p_meta = meta();
 
         basic_node node;
         node.swap(*this);
@@ -1307,16 +1308,19 @@ public:
             return tag;
         }
 
+        static const detail::document_metainfo<basic_node> NO_DIRECTIVES {};
+        const auto& directives = mp_meta ? *mp_meta : NO_DIRECTIVES;
+
         // secondary tag handle
         if (tag.rfind("!!", 0) == 0) {
-            if (mp_meta->secondary_handle_prefix.empty()) {
+            if (directives.secondary_handle_prefix.empty()) {
                 return "tag:yaml.org,2002:" + tag.substr(2);
             }
-            return mp_meta->secondary_handle_prefix + tag.substr(2);
+            return directives.secondary_handle_prefix + tag.substr(2);
         }
 
         // named handles
-        for (const auto& named_handle_itr : mp_meta->named_handle_map) {
+        for (const auto& named_handle_itr : directives.named_handle_map) {
             if (tag.rfind(named_handle_itr.first, 0) == 0) {
                 return named_handle_itr.second + tag.substr(named_handle_itr.first.size());
             }
@@ -1332,10 +1336,10 @@ public:
         }
 
         // primary tag handle
-        if (mp_meta->primary_handle_prefix.empty()) {
+        if (directives.primary_handle_prefix.empty()) {
             return "!" + tag.substr(1);
         }
-        return mp_meta->primary_handle_prefix + tag.substr(1);
+        return directives.primary_handle_prefix + tag.substr(1);
     }
 
     /// @brief Add a tag name to this basic_node object.
@@ -1935,6 +1939,15 @@ private:
         return false;
     }
 
+    /// @brief Returns the metainfo of the document this node belongs to, creating it on first use.
+    /// @return The shared document metainfo.
+    const std::shared_ptr<detail::document_metainfo<basic_node>>& meta() const {
+        if (!mp_meta) {
+            mp_meta = std::make_shared<detail::document_metainfo<basic_node>>();
+        }
+        return mp_meta;
+    }
+
     bool is_sequence_impl() const noexcept {
         return m_attrs & detail::node_attr_bits::seq_bit;
     }
@@ -2072,9 +2085,8 @@ private:
     /// The current node attributes.
     detail::node_attr_t m_attrs {detail::node_attr_bits::default_bits};
     /// The shared set of YAML directives applied to this node.
-    mutable std::shared_ptr<detail::document_metainfo<basic_node>> mp_meta {
-        // NOLINTNEXTLINE(bugprone-unhandled-exception-at-new)
-        std::shared_ptr<detail::document_metainfo<basic_node>>(new detail::document_metainfo<basic_node>())};
+    /// It is created on first use, since most nodes never need it, and then shared by the nodes of a document.
+    mutable std::shared_ptr<detail::document_metainfo<basic_node>> mp_meta {};
     /// The current node value.
     node_value m_value {};
     /// The property set of this node.

@@ -83,6 +83,11 @@ private:
     /// @return bool true if any directive is serialized, false otherwise.
     bool serialize_directives(const BasicNodeType& node, std::string& str) {
         const auto& p_meta = node.mp_meta;
+        if (!p_meta) {
+            // A node which was never part of a parsed document carries no directives.
+            return false;
+        }
+
         bool needs_directive_end = false;
 
         if (p_meta->is_version_specified) {
