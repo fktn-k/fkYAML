@@ -62,7 +62,7 @@ jobs:
         key: yaml-test-suite-${{ env.YAML_TEST_SUITE_TAG }}
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON -DFETCHCONTENT_SOURCE_DIR-YAML-TEST-SUITE=${{env.YAML_TEST_SUITE_DIR}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON -DFETCHCONTENT_SOURCE_DIR_YAML-TEST-SUITE=${{env.YAML_TEST_SUITE_DIR}}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config Debug -j ${{env.JOBS}}
@@ -146,7 +146,7 @@ jobs:
 
     - name: Configure CMake (baseline)
       if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
-      run: cmake -B ${{github.workspace}}/baseline/build -S ${{github.workspace}}/baseline -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON -DFETCHCONTENT_SOURCE_DIR-YAML-TEST-SUITE=${{env.YAML_TEST_SUITE_DIR}}
+      run: cmake -B ${{github.workspace}}/baseline/build -S ${{github.workspace}}/baseline -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON -DFETCHCONTENT_SOURCE_DIR_YAML-TEST-SUITE=${{env.YAML_TEST_SUITE_DIR}}
 
     - name: Build (baseline)
       if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
