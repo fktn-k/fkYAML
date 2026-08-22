@@ -9,8 +9,8 @@
 #ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
 #define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
 
-#include <cctype>
 #include <string>
+#include <fkYAML/detail/char_class.hpp>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
 
@@ -65,18 +65,9 @@ private:
                 return false;
             }
 
-            // Normalize a character for a-f/A-F comparison
-            const int octet = std::tolower(*begin);
-
-            if ('0' <= octet && octet <= '9') {
-                continue;
+            if (!is_xdigit(*begin)) {
+                return false;
             }
-
-            if ('a' <= octet && octet <= 'f') {
-                continue;
-            }
-
-            return false;
         }
 
         return true;
@@ -120,7 +111,7 @@ private:
             return true;
         default:
             // alphabets and numbers are also allowed.
-            return static_cast<bool>(std::isalnum(c));
+            return is_alnum(c);
         }
     }
 };

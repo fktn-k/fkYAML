@@ -75,7 +75,15 @@ TEST_CASE("URIEncoding_Validate") {
             std::string("^"),
             std::string("`"),
             std::string("|"),
-            std::string("\x7F"));
+            std::string("\x7F"),
+            // Bytes outside the ASCII range, i.e. any byte of a multi-byte UTF-8 sequence. These are a
+            // negative char where char is signed, which used to be passed to <cctype> functions.
+            std::string("\x80"),
+            std::string("\xC3"),
+            std::string("\xC3\xA9"),
+            std::string("\xFF"),
+            std::string("%\xC3\xA9"),
+            std::string("%0\xC3"));
         REQUIRE_FALSE(fkyaml::detail::uri_encoding::validate(input.c_str(), input.c_str() + input.size()));
     }
 }

@@ -137,7 +137,11 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
             fkyaml::detail::str_view("%TAG !invalid\tbar"),
             fkyaml::detail::str_view("%TAG !inv@lid! bar"),
             fkyaml::detail::str_view("%TAG !invalid!tag bar"),
-            fkyaml::detail::str_view("%TAG !invalid"));
+            fkyaml::detail::str_view("%TAG !invalid"),
+            // A byte outside the ASCII range is a negative char where char is signed, which used to be
+            // passed to <cctype> as-is. A named handle allows only [0-9A-Za-z-].
+            fkyaml::detail::str_view("%TAG !\xC3\xA9! bar"),
+            fkyaml::detail::str_view("%TAG !a\xFF! bar"));
 
         fkyaml::detail::lexical_analyzer lexer(input);
         lexer.set_document_state(true);

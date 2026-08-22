@@ -10,12 +10,12 @@
 #define FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
 
 #include <algorithm>
-#include <cctype>
 #include <cstdlib>
 #include <deque>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
+#include <fkYAML/detail/char_class.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/input/block_scalar_header.hpp>
@@ -592,7 +592,7 @@ private:
                 case '-':
                     break;
                 default:
-                    if FK_YAML_UNLIKELY (!isalnum(*m_cur_itr)) {
+                    if FK_YAML_UNLIKELY (!is_alnum(*m_cur_itr)) {
                         // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
                         emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
                     }
