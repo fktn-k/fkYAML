@@ -1263,13 +1263,60 @@ FK_YAML_DETAIL_NAMESPACE_END
 #define FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
 
 #include <algorithm>
-#include <cctype>
 #include <cstdlib>
 #include <deque>
 
 // #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/assert.hpp>
+
+// #include <fkYAML/detail/char_class.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_CHAR_CLASS_HPP
+#define FK_YAML_DETAIL_CHAR_CLASS_HPP
+
+// #include <fkYAML/detail/macros/define_macros.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+// The functions below replace their <cctype> counterparts, which must not be used on the characters of
+// an input buffer. Those take an int whose value has to be representable as an unsigned char or equal
+// to EOF, so passing a char is undefined behavior for any byte of a multi-byte UTF-8 sequence on a
+// platform where char is signed. They also depend on the current locale, while both YAML syntax and
+// URI syntax allow exactly the ASCII ranges spelled out here.
+
+/// @brief Check if the given character is a digit.
+/// @param c A character to be checked.
+/// @return true if the given character is a digit, false otherwise.
+inline bool is_digit(char c) noexcept {
+    return ('0' <= c && c <= '9');
+}
+
+/// @brief Check if the given character is a hex-digit.
+/// @param c A character to be checked.
+/// @return true if the given character is a hex-digit, false otherwise.
+inline bool is_xdigit(char c) noexcept {
+    return is_digit(c) || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f');
+}
+
+/// @brief Check if the given character is an alphabet or a digit.
+/// @param c A character to be checked.
+/// @return true if the given character is an alphabet or a digit, false otherwise.
+inline bool is_alnum(char c) noexcept {
+    return is_digit(c) || ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_CHAR_CLASS_HPP */
 
 // #include <fkYAML/detail/encodings/uri_encoding.hpp>
 //  _______   __ __   __  _____   __  __  __
@@ -1283,8 +1330,9 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
 #define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
 
-#include <cctype>
 #include <string>
+// #include <fkYAML/detail/char_class.hpp>
+
 
 // #include <fkYAML/detail/macros/define_macros.hpp>
 
@@ -1340,18 +1388,9 @@ private:
                 return false;
             }
 
-            // Normalize a character for a-f/A-F comparison
-            const int octet = std::tolower(*begin);
-
-            if ('0' <= octet && octet <= '9') {
-                continue;
+            if (!is_xdigit(*begin)) {
+                return false;
             }
-
-            if ('a' <= octet && octet <= 'f') {
-                continue;
-            }
-
-            return false;
         }
 
         return true;
@@ -1395,7 +1434,7 @@ private:
             return true;
         default:
             // alphabets and numbers are also allowed.
-            return static_cast<bool>(std::isalnum(c));
+            return is_alnum(c);
         }
     }
 };
@@ -3826,7 +3865,7 @@ private:
                 case '-':
                     break;
                 default:
-                    if FK_YAML_UNLIKELY (!isalnum(*m_cur_itr)) {
+                    if FK_YAML_UNLIKELY (!is_alnum(*m_cur_itr)) {
                         // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
                         emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
                     }
@@ -6305,6 +6344,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/assert.hpp>
 
+// #include <fkYAML/detail/char_class.hpp>
+
 // #include <fkYAML/node_type.hpp>
 
 
@@ -6597,24 +6638,6 @@ private:
             return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::INTEGER;
         }
         return node_type::STRING;
-    }
-
-    /// @brief Check if the given character is a digit.
-    /// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with
-    /// MSVC.
-    /// @param c A character to be checked.
-    /// @return true if the given character is a digit, false otherwise.
-    static bool is_digit(char c) {
-        return ('0' <= c && c <= '9');
-    }
-
-    /// @brief Check if the given character is a hex-digit.
-    /// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with
-    /// MSVC.
-    /// @param c A character to be checked.
-    /// @return true if the given character is a hex-digit, false otherwise.
-    static bool is_xdigit(char c) {
-        return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
     }
 };
 

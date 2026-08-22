@@ -14,6 +14,7 @@
 
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
+#include <fkYAML/detail/char_class.hpp>
 #include <fkYAML/node_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -305,24 +306,6 @@ private:
             return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::INTEGER;
         }
         return node_type::STRING;
-    }
-
-    /// @brief Check if the given character is a digit.
-    /// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with
-    /// MSVC.
-    /// @param c A character to be checked.
-    /// @return true if the given character is a digit, false otherwise.
-    static bool is_digit(char c) {
-        return ('0' <= c && c <= '9');
-    }
-
-    /// @brief Check if the given character is a hex-digit.
-    /// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with
-    /// MSVC.
-    /// @param c A character to be checked.
-    /// @return true if the given character is a hex-digit, false otherwise.
-    static bool is_xdigit(char c) {
-        return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
     }
 };
 
