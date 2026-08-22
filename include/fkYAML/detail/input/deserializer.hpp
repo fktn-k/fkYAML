@@ -1160,6 +1160,10 @@ private:
             line = lexer.get_lines_processed();
         } while (token.type != lexical_token_t::END_OF_BUFFER);
 
+        if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
+            throw parse_error("An unclosed flow collection found at the end of input", line, indent);
+        }
+
         last_type = token.type;
     }
 

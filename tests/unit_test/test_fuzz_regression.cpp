@@ -159,9 +159,10 @@ TEST_CASE("FuzzRegression") {
     SUBCASE("key nodes owned by a parse context are released") {
         // These inputs leave a key node owned by its parse context on a path where the context state is
         // later rewritten, which used to leak the node. They are kept here so the sanitizer builds cover
-        // that ownership, the parse results themselves are secondary.
+        // that ownership. Both leave a flow collection unclosed, so the parse is rejected at the end of
+        // input, which happens after the contexts have been built and rewritten.
         auto input = GENERATE(std::string("{{{"), std::string("? ["));
-        REQUIRE_NOTHROW(root = fkyaml::node::deserialize(input));
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(input), fkyaml::parse_error);
     }
 
     SUBCASE("key node owned by a parse context is released on an error path") {

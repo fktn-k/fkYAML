@@ -2505,6 +2505,21 @@ TEST_CASE("Deserializer_FlowMapping") {
     }
 }
 
+TEST_CASE("Deserializer_UnclosedFlowCollection") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SUBCASE("flow collection left unclosed at the end of input") {
+        auto input = GENERATE(
+            std::string("{{{"),
+            std::string("? ["),
+            std::string("[foo, bar"),
+            std::string("{foo: bar"),
+            std::string("---\n[ [ a, b, c ]"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+}
+
 TEST_CASE("Deserializer_BadIndentation") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
