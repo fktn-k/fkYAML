@@ -93,6 +93,7 @@ jobs:
         echo "Generating YAML Test Suite Failures Report..."
         python3 ${{github.workspace}}/scripts/report_yaml_test_suite_failures.py --test-dir build \
           --log-file ${{github.workspace}}/current_ctest.log \
+          --yaml-test-suite-root ${{env.YAML_TEST_SUITE_DIR}} \
           --output ${{github.workspace}}/${{steps.artifact_naming.outputs.artifact_name}} \
           --names-output ${{github.workspace}}/current_failures.txt
 
@@ -180,6 +181,7 @@ jobs:
       run: |
         python3 ${{github.workspace}}/scripts/report_yaml_test_suite_failures.py --workspace ${{github.workspace}}/baseline --test-dir build \
           --log-file ${{github.workspace}}/baseline_ctest.log \
+          --yaml-test-suite-root ${{env.YAML_TEST_SUITE_DIR}} \
           --names-output ${{github.workspace}}/baseline_failures.txt
 
     - name: Populate baseline cache
