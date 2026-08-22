@@ -690,6 +690,17 @@ TEST_CASE("Node_AliasCopyCtor") {
     REQUIRE(alias.as_bool() == true);
 }
 
+TEST_CASE("Node_TaggedCopyCtor") {
+    fkyaml::node copied = "test";
+    copied.add_tag_name("!!str");
+    fkyaml::node node(copied);
+    REQUIRE(node.has_tag_name());
+    REQUIRE(node.get_tag_name() == "!!str");
+
+    copied.add_tag_name("!overwritten");
+    REQUIRE(node.get_tag_name() == "!!str");
+}
+
 TEST_CASE("Node_SequenceMoveCtor") {
     fkyaml::node moved = {true, "test"};
     fkyaml::node node(std::move(moved));

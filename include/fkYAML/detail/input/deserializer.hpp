@@ -1096,7 +1096,7 @@ private:
 
                 basic_node_type node {};
                 node.m_attrs |= detail::node_attr_bits::alias_bit;
-                node.m_prop.anchor = anchor_name;
+                node.prop().anchor = anchor_name;
                 detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
 
                 apply_directive_set(node);
