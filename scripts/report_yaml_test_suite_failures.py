@@ -25,6 +25,14 @@ TEST_CASE_RE = re.compile(r"^TEST CASE:\s+(?P<name>\S+)\s*$")
 ERROR_RE = re.compile(r"^(?P<message>.+(?:ERROR|FATAL ERROR):.+)$")
 INPUT_FORMAT_RE = re.compile(r"logged:\s+Input format:\s+(?P<value>.+)$")
 
+# ctest prefixes every non-passed status with "***", so the status captured from a progress line
+# reads "***Skipped" rather than "Skipped". Summary lines carry the bare status instead.
+SUCCESS_STATUSES = {"Passed", "Skipped", "Disabled", "Not Run (Disabled)"}
+
+
+def normalize_status(status: str) -> str:
+    return status.strip().lstrip("*").strip()
+
 
 @dataclass
 class FailureRecord:
@@ -140,7 +148,7 @@ def parse_failures(lines: Iterable[str]) -> Tuple[List[FailureRecord], List[str]
 
         result_match = TEST_RESULT_LINE_RE.match(line)
         if result_match:
-            if result_match.group("status").strip() not in {"Passed", "Skipped"}:
+            if normalize_status(result_match.group("status")) not in SUCCESS_STATUSES:
                 current = FailureRecord(result_match.group("ctest_id"), result_match.group("name"))
                 failures.append(current)
             # Progress lines that matched the expected pattern are recognized,
@@ -153,6 +161,8 @@ def parse_failures(lines: Iterable[str]) -> Tuple[List[FailureRecord], List[str]
 
         summary_match = SUMMARY_LINE_RE.match(line)
         if summary_match:
+            if normalize_status(summary_match.group("status")) in SUCCESS_STATUSES:
+                continue
             if not any(
                 failure.ctest_id == summary_match.group("ctest_id") and failure.name == summary_match.group("name")
                 for failure in failures
