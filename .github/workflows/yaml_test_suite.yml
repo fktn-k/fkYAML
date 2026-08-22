@@ -67,13 +67,16 @@ jobs:
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config Debug -j ${{env.JOBS}}
 
+    - name: Test validation compositor
+      run: ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -j -R 'validation_compositor_' ${{env.JOBS}}
+
     - name: Test
       id: test
       # Save the test results to a log file to avoid duplicate ctest runs in the next step.
       # The `pipefail` option ensures that the `ctest` exit code is propagated through the `tee` command.
       run: |
         set -o pipefail
-        ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -j ${{env.JOBS}} \
+        ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -R 'yaml_test_suite_' -j ${{env.JOBS}} \
           | tee ${{github.workspace}}/current_ctest.log
       # This allows the workflow to continue even if some tests fail, so we can generate a report of the failures.
       continue-on-error: true
@@ -172,7 +175,7 @@ jobs:
       # The `pipefail` option ensures that the `ctest` exit code is propagated through the `tee` command.
       run: |
         set -o pipefail
-        ctest --test-dir ${{github.workspace}}/baseline/build -C Debug --output-on-failure -j ${{env.JOBS}} \
+        ctest --test-dir ${{github.workspace}}/baseline/build -C Debug --output-on-failure -R 'yaml_test_suite_' -j ${{env.JOBS}} \
           | tee ${{github.workspace}}/baseline_ctest.log
       continue-on-error: true
 
