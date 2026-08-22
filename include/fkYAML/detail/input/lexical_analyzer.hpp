@@ -993,6 +993,16 @@ private:
                     case '\n':
                         ends_loop = true;
                         break;
+                    case ',':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                        // A flow indicator is not "safe" to follow a ":" in a flow context, so the ":" ends
+                        // the plain scalar and becomes a mapping value indicator instead.
+                        // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                        ends_loop = ((m_state & flow_context_bit) != 0);
+                        break;
                     default:
                         break;
                     }
