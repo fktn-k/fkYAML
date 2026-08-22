@@ -9106,7 +9106,7 @@ private:
     void close_single_pair_mapping(const uint32_t line, const uint32_t indent) {
         // LCOV_EXCL_START
         if FK_YAML_UNLIKELY (m_context_stack.empty()) {
-            return;
+            throw parse_error("No parent flow collection is found.", line, indent);
         }
         // LCOV_EXCL_STOP
 
