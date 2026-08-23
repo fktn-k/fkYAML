@@ -3,7 +3,7 @@
 # <small>fkyaml::basic_node::</small>set_yaml_version_type
 
 ```cpp
-void set_yaml_version_type(const yaml_version_type version) noexcept;
+void set_yaml_version_type(const yaml_version_type version);
 ```
 
 Sets a target YAML specification version to the `basic_node` object.  

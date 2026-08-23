@@ -14522,7 +14522,7 @@ public:
     /// @brief Set the YAML version for this basic_node object.
     /// @param[in] version The target YAML version.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version_type/
-    void set_yaml_version_type(const yaml_version_type version) noexcept {
+    void set_yaml_version_type(const yaml_version_type version) {
         auto& directives = *meta();
         directives.version = version;
         directives.is_version_specified = true;
@@ -14543,7 +14543,7 @@ public:
     /// @param[in] version The target YAML version.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     FK_YAML_DEPRECATED("Since 0.3.12; Use set_yaml_version_type(const yaml_version_type)")
-    void set_yaml_version(const yaml_version_t version) noexcept {
+    void set_yaml_version(const yaml_version_t version) {
         set_yaml_version_type(detail::convert_to_yaml_version_type(version));
     }
 
