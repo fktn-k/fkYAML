@@ -125,7 +125,7 @@ scripts/run_clang_format.sh
 
 ## Note
 
-When you open a pull request, fkYAML will automatically be built/tested with (1) various combinations of compilers and operating systems and (2) analyzers such as [Valgrind](https://valgrind.org/) and [Clang Sanitizers](https://clang.llvm.org/docs/index.html) to detect runtime issues (e.g., memory leaks), on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
+When you open a pull request, fkYAML will automatically be built/tested with (1) various combinations of compilers and operating systems and (2) analyzers such as [Valgrind](https://valgrind.org/), [Clang Sanitizers](https://clang.llvm.org/docs/index.html) and [MSVC AddressSanitizer](https://learn.microsoft.com/cpp/sanitizers/asan) to detect runtime issues (e.g., memory leaks), on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
 These can result in failing builds and/or unit tests which run successfully on your local environment.  
 As a policy of this project, however, all the workflow checks must be passed before merging.  
 You can run tests with those tools locally by executing the following commands:  
@@ -142,6 +142,14 @@ ctest -C Debug -T memcheck --test-dir build --output-on-failure
 ```bash
 cd path/to/fkYAML
 CXX=clang++ cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_CLANG_SANITIZERS=ON
+cmake --build build --config Debug
+ctest -C Debug --test-dir build --output-on-failure
+```
+
+**MSVC Sanitizers** (assuming Visual Studio with the C++ AddressSanitizer component is already installed.)
+```bash
+cd path/to/fkYAML
+cmake -B build -S . -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_MSVC_SANITIZERS=ON
 cmake --build build --config Debug
 ctest -C Debug --test-dir build --output-on-failure
 ```

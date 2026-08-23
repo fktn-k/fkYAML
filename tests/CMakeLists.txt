@@ -182,6 +182,34 @@ if(FK_YAML_RUN_CLANG_SANITIZERS)
   endif()
 endif()
 
+# additional compile options for MSVC sanitizers.
+if(FK_YAML_RUN_MSVC_SANITIZERS)
+  # MSVC silently ignores /fsanitize=undefined (warning D9002): AddressSanitizer is the only
+  # sanitizer available here, so the recover and exclusion flags above have no equivalent.
+  target_compile_options(
+    common_test_config
+    INTERFACE
+      /fsanitize=address
+      /Zi
+  )
+
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(
+      common_test_config
+      INTERFACE
+        /DEBUG
+        /INCREMENTAL:NO
+    )
+  else()
+    target_link_libraries(
+      common_test_config
+      INTERFACE
+        /DEBUG
+        /INCREMENTAL:NO
+    )
+  endif()
+endif()
+
 # additional compile options for coverage.
 if(FK_YAML_CODE_COVERAGE)
   target_compile_options(
