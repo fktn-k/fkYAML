@@ -2556,6 +2556,27 @@ TEST_CASE("Deserializer_FlowMapping") {
         REQUIRE(foo_node.is_mapping());
         REQUIRE(foo_node.empty());
     }
+
+    SUBCASE("key separator on the line after the key") {
+        auto input =
+            GENERATE(std::string("{\"foo\"\n: bar}"), std::string("{foo\n: bar}"), std::string("{foo\n:\nbar}"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].as_str() == "bar");
+    }
+
+    SUBCASE("quoted key spanning multiple lines") {
+        auto input = GENERATE(std::string("{ \"multi\n  line\": value }"), std::string("{ 'multi\n  line': value }"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("multi line"));
+        REQUIRE(root["multi line"].as_str() == "value");
+    }
 }
 
 TEST_CASE("Deserializer_UnclosedFlowCollection") {
@@ -2611,6 +2632,42 @@ TEST_CASE("Deserializer_OmittedFlowMappingValue") {
         auto input =
             GENERATE(std::string("{foo: 1,, bar: 2}"), std::string("{,}"), std::string("[a,,b]"), std::string("[,]"));
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+}
+
+TEST_CASE("Deserializer_FlowContentIndentation") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SUBCASE("flow contents less indented than the parent block context") {
+        auto input =
+            GENERATE(std::string("foo: [bar,\nbaz]"), std::string("foo: {\nbar: baz\n}"), std::string("- [a,\nb]"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("flow contents more indented than the parent block context") {
+        std::string input = "foo: [bar,\n  baz]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_sequence());
+        REQUIRE(foo_node.size() == 2);
+        REQUIRE(foo_node[0].as_str() == "bar");
+        REQUIRE(foo_node[1].as_str() == "baz");
+    }
+
+    SUBCASE("flow contents at the document level are not constrained") {
+        std::string input = "[foo,\nbar]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root[0].as_str() == "foo");
+        REQUIRE(root[1].as_str() == "bar");
     }
 }
 

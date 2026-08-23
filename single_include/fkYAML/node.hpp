@@ -7882,6 +7882,7 @@ private:
         m_needs_tag_impl = false;
         m_needs_anchor_impl = false;
         m_flow_context_depth = 0;
+        m_flow_base_indent = -1;
         m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
         m_context_stack.clear();
 
@@ -7991,6 +7992,23 @@ private:
         uint32_t indent = first_indent;
 
         do {
+            if (m_flow_base_indent >= 0) {
+                // The contents of a flow context nested in a block context must be more indented than the block
+                // context it belongs to.
+                // ```yaml
+                // foo: [bar,
+                // baz]
+                // # ^ this line is not indented enough.
+                // ```
+                const auto token_indent = static_cast<int32_t>(lexer.get_last_token_begin_pos());
+                if FK_YAML_UNLIKELY (token_indent <= m_flow_base_indent) {
+                    throw parse_error(
+                        "Contents of a flow context must be more indented than its parent block context.",
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos());
+                }
+            }
+
             switch (token.type) {
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
                 if FK_YAML_UNLIKELY (m_context_stack.empty()) {
@@ -8388,6 +8406,8 @@ private:
                             }
                         });
                     }
+
+                    m_flow_base_indent = static_cast<int32_t>(current_context(line, indent).indent);
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("Flow sequence beginning is found without separated with a comma.", line, indent);
@@ -8434,6 +8454,7 @@ private:
 
                 if (--m_flow_context_depth == 0) {
                     lexer.set_context_state(false);
+                    m_flow_base_indent = -1;
                 }
 
                 close_single_pair_mapping(line, indent);
@@ -8509,6 +8530,8 @@ private:
                             }
                         });
                     }
+
+                    m_flow_base_indent = static_cast<int32_t>(current_context(line, indent).indent);
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("Flow mapping beginning is found without separated with a comma.", line, indent);
@@ -8558,6 +8581,7 @@ private:
 
                 if (--m_flow_context_depth == 0) {
                     lexer.set_context_state(false);
+                    m_flow_base_indent = -1;
                 }
 
                 close_omitted_mapping_value(line, indent);
@@ -8886,8 +8910,14 @@ private:
         lexer_type& lexer, basic_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {
         token = lexer.get_next_token();
         if (mp_current_node->is_mapping()) {
-            const bool is_key_sep_followed =
-                (token.type == lexical_token_t::KEY_SEPARATOR) && (line == lexer.get_lines_processed());
+            // An implicit key in the block context must be followed by the ":" indicator on the same line, while in
+            // the flow context the two can be separated by line breaks.
+            // ```yaml
+            // {"foo"
+            // : "bar"}
+            // ```
+            const bool is_key_sep_followed = (token.type == lexical_token_t::KEY_SEPARATOR) &&
+                                             (line == lexer.get_lines_processed() || m_flow_context_depth > 0);
             if FK_YAML_UNLIKELY (!is_key_sep_followed) {
                 throw parse_error(
                     "The \":\" mapping value indicator must be followed after a mapping key.",
@@ -9234,6 +9264,8 @@ private:
     std::deque<parse_context> m_context_stack {};
     /// The current depth of flow contexts.
     uint32_t m_flow_context_depth {0};
+    /// The indentation the contents of the outermost flow context must exceed, or -1 if unconstrained.
+    int32_t m_flow_base_indent {-1};
     /// The set of YAML directives.
     std::shared_ptr<doc_metainfo_type> mp_meta {};
     /// A flag to determine the need for YAML anchor node implementation.
