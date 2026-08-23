@@ -68,7 +68,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config Debug -j ${{env.JOBS}}
 
     - name: Test validation compositor
-      run: ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -j -R 'validation_compositor_' ${{env.JOBS}}
+      run: ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -R 'validation_compositor_' -j ${{env.JOBS}}
 
     - name: Test
       id: test
