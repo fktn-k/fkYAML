@@ -275,6 +275,19 @@ private:
                 m_cur_itr += 2;
                 info.token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
                 return info;
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+                // "-" cannot start a plain scalar if it is followed by a flow indicator in a flow context.
+                // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                if (m_state & flow_context_bit) {
+                    ++m_cur_itr;
+                    info.token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                    return info;
+                }
+                break;
             default:
                 break;
             }
