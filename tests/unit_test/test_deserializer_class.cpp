@@ -3491,6 +3491,19 @@ TEST_CASE("Deserializer_Tag") {
         auto input = GENERATE(std::string("foo: !!map !!map\n  bar: baz"), std::string("!!str !!bool true: 123"));
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SUBCASE("collection tag applied to a scalar node") {
+        // Only inputs where the tag really does apply to a scalar belong here. A `!!map` which precedes
+        // a block mapping, as in the `735Y` and `BU8L` suite cases, is valid YAML and must not be added.
+        auto input = GENERATE(
+            std::string("foo: !!seq bar"),
+            std::string("foo: !!seq \"bar\""),
+            std::string("foo: !!map 'bar'"),
+            std::string("foo: !!map |\n  bar"),
+            std::string("foo: !!seq >\n  bar"),
+            std::string("!!map foo"));
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_NodeProperties") {
