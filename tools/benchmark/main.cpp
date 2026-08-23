@@ -103,8 +103,11 @@ void bm_rapidyaml_parse_inplace(benchmark::State& st) {
     for (auto _ : st) {
         // ryml::parse_in_place() modifies the contents of `in_place_buff` during parsing.
         // Without the following copy, the second (and subsequent) parsing would fail.
+        // The timer is paused around the copy so that only the parsing is measured.
+        st.PauseTiming();
         assert(in_place_buff.size() == test_src.size());
         std::memcpy(&in_place_buff[0], &test_src[0], in_place_buff.size());
+        st.ResumeTiming();
 
         ryml::Tree tree = ryml::parse_in_place(c4_test_src);
     }
