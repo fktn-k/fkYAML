@@ -16,6 +16,12 @@ on:
       - CMakeLists.txt
   workflow_dispatch:
 
+concurrency:
+  # Cancel a superseded run on the same branch/PR so we don't waste CI time fully
+  # building/testing a commit that's no longer the latest.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   yaml-test-suite:
     # Builds and tests both the current ref and a baseline ref (PR base branch, or the
@@ -26,19 +32,52 @@ jobs:
       fail-fast: false
     env:
       JOBS: 2
+      YAML_TEST_SUITE_TAG: data-2022-01-17
+      YAML_TEST_SUITE_DIR: ${{github.workspace}}/yaml-test-suite
 
     steps:
     - uses: actions/checkout@v7
 
+    - name: Restore YAML Test Suite cache
+      id: yaml_test_suite_cache_restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{env.YAML_TEST_SUITE_DIR}}
+        key: yaml-test-suite-${{ env.YAML_TEST_SUITE_TAG }}
+
+    - name: Install the YAML Test Suite
+      run: |
+        # On cache miss, download the pinned test-suite tag as plain data and strip VCS metadata.
+        if [ "${{steps.yaml_test_suite_cache_restore.outputs.cache-hit}}" != "true" ]; then
+          rm -rf "${{env.YAML_TEST_SUITE_DIR}}"
+          git clone --depth 1 --branch "${{env.YAML_TEST_SUITE_TAG}}" https://github.com/yaml/yaml-test-suite.git "${{env.YAML_TEST_SUITE_DIR}}"
+          rm -rf "${{env.YAML_TEST_SUITE_DIR}}/.git"
+        fi
+
+    - name: Save YAML Test Suite cache
+      if: steps.yaml_test_suite_cache_restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{env.YAML_TEST_SUITE_DIR}}
+        key: yaml-test-suite-${{ env.YAML_TEST_SUITE_TAG }}
+
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON -DFETCHCONTENT_SOURCE_DIR_YAML-TEST-SUITE=${{env.YAML_TEST_SUITE_DIR}}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config Debug -j ${{env.JOBS}}
 
+    - name: Test validation compositor
+      run: ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -R 'validation_compositor_' -j ${{env.JOBS}}
+
     - name: Test
       id: test
-      run: ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -j ${{env.JOBS}}
+      # Save the test results to a log file to avoid duplicate ctest runs in the next step.
+      # The `pipefail` option ensures that the `ctest` exit code is propagated through the `tee` command.
+      run: |
+        set -o pipefail
+        ctest --test-dir ${{github.workspace}}/build -C Debug --output-on-failure -R 'yaml_test_suite_' -j ${{env.JOBS}} \
+          | tee ${{github.workspace}}/current_ctest.log
       # This allows the workflow to continue even if some tests fail, so we can generate a report of the failures.
       continue-on-error: true
 
@@ -56,6 +95,8 @@ jobs:
       run: |
         echo "Generating YAML Test Suite Failures Report..."
         python3 ${{github.workspace}}/scripts/report_yaml_test_suite_failures.py --test-dir build \
+          --log-file ${{github.workspace}}/current_ctest.log \
+          --yaml-test-suite-root ${{env.YAML_TEST_SUITE_DIR}} \
           --output ${{github.workspace}}/${{steps.artifact_naming.outputs.artifact_name}} \
           --names-output ${{github.workspace}}/current_failures.txt
 
@@ -87,8 +128,20 @@ jobs:
           echo "skip=true" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Checkout baseline
+    - name: Restore baseline cache
+      # Baseline results only depend on the baseline commit and this report script, so cache them
+      # by ref to skip re-building/re-testing an already-evaluated baseline on repeated runs. Uses
+      # the split restore/save actions (instead of the combined action) because this same
+      # `baseline_cache` directory is later reused to cache this run's own commit for future PRs.
+      id: baseline_cache_restore
       if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: baseline_cache
+        key: yaml-test-suite-baseline-${{ steps.baseline_ref.outputs.ref }}-${{ hashFiles('scripts/report_yaml_test_suite_failures.py') }}
+
+    - name: Checkout baseline
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
       uses: actions/checkout@v7
       with:
         ref: ${{ steps.baseline_ref.outputs.ref }}
@@ -96,18 +149,18 @@ jobs:
         fetch-depth: 0
 
     - name: Configure CMake (baseline)
-      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true'
-      run: cmake -B ${{github.workspace}}/baseline/build -S ${{github.workspace}}/baseline -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
+      run: cmake -B ${{github.workspace}}/baseline/build -S ${{github.workspace}}/baseline -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON -DFETCHCONTENT_SOURCE_DIR_YAML-TEST-SUITE=${{env.YAML_TEST_SUITE_DIR}}
 
     - name: Build (baseline)
-      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true'
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
       run: cmake --build ${{github.workspace}}/baseline/build --config Debug -j ${{env.JOBS}}
 
     - name: Check baseline has yaml_test_suite tests
       # A baseline ref predating the yaml_test_suite integration has no matching tests at all, so
       # every current failure would incorrectly look "new"; detect that and skip the comparison.
       id: baseline_availability
-      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true'
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
       run: |
         if ctest --test-dir ${{github.workspace}}/baseline/build -N -R 'yaml_test_suite_' 2>&1 | grep -q "Total Tests: 0"; then
           echo "Baseline (${{ steps.baseline_ref.outputs.ref }}) has no yaml_test_suite tests; skipping new-failure comparison."
@@ -117,18 +170,61 @@ jobs:
         fi
 
     - name: Test (baseline)
-      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_availability.outputs.present == 'true'
-      run: ctest --test-dir ${{github.workspace}}/baseline/build -C Debug --output-on-failure -j ${{env.JOBS}}
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true' && steps.baseline_availability.outputs.present == 'true'
+      # Save the baseline's test results to a log file to avoid duplicate ctest runs in the next step.
+      # The `pipefail` option ensures that the `ctest` exit code is propagated through the `tee` command.
+      run: |
+        set -o pipefail
+        ctest --test-dir ${{github.workspace}}/baseline/build -C Debug --output-on-failure -R 'yaml_test_suite_' -j ${{env.JOBS}} \
+          | tee ${{github.workspace}}/baseline_ctest.log
       continue-on-error: true
 
     - name: Report Failures (baseline)
-      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_availability.outputs.present == 'true'
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true' && steps.baseline_availability.outputs.present == 'true'
       run: |
         python3 ${{github.workspace}}/scripts/report_yaml_test_suite_failures.py --workspace ${{github.workspace}}/baseline --test-dir build \
+          --log-file ${{github.workspace}}/baseline_ctest.log \
+          --yaml-test-suite-root ${{env.YAML_TEST_SUITE_DIR}} \
           --names-output ${{github.workspace}}/baseline_failures.txt
 
+    - name: Populate baseline cache
+      # Persist this run's freshly-computed baseline results so a later run against the same
+      # baseline ref can restore them via the cache above instead of rebuilding it.
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p baseline_cache
+        echo "${{ steps.baseline_availability.outputs.present }}" > baseline_cache/present.txt
+        touch baseline_failures.txt
+        cp baseline_failures.txt baseline_cache/failures.txt
+
+    - name: Save baseline cache
+      # Saved explicitly now (rather than relying on the combined action's implicit end-of-job
+      # save) because `baseline_cache` is reused below to cache this run's own commit, which would
+      # otherwise overwrite this snapshot before the implicit save could run.
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_cache_restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: baseline_cache
+        key: yaml-test-suite-baseline-${{ steps.baseline_ref.outputs.ref }}-${{ hashFiles('scripts/report_yaml_test_suite_failures.py') }}
+
+    - name: Load baseline results
+      # Unifies the cache-hit and freshly-computed paths into a single output/file for the next step.
+      id: baseline_result
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true'
+      run: |
+        if [ -f baseline_cache/present.txt ]; then
+          echo "present=$(cat baseline_cache/present.txt)" >> "$GITHUB_OUTPUT"
+        else
+          echo "present=false" >> "$GITHUB_OUTPUT"
+        fi
+        if [ -f baseline_cache/failures.txt ]; then
+          cp baseline_cache/failures.txt baseline_failures.txt
+        else
+          touch baseline_failures.txt
+        fi
+
     - name: Fail on new failing cases
-      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_availability.outputs.present == 'true'
+      if: steps.test.outcome == 'failure' && steps.baseline_ref.outputs.skip != 'true' && steps.baseline_result.outputs.present == 'true'
       run: |
         # Ensure the failure lists exists in case there are no failures in either the current or baseline runs.
         touch current_failures.txt baseline_failures.txt
@@ -149,3 +245,23 @@ jobs:
 
         # If there are no new failing cases, print a message indicating that.
         echo "No new failing yaml_test_suite cases compared to baseline (${{ steps.baseline_ref.outputs.ref }})."
+
+    - name: Prepare this commit's results for future baselines
+      # On push events (to main/develop/release/*), this commit may later become a PR's base
+      # branch tip; caching its own results here lets that future PR's baseline restore step hit
+      # this cache instead of rebuilding and re-testing it. This commit always has yaml_test_suite,
+      # so "present" is unconditionally true.
+      if: github.event_name == 'push'
+      run: |
+        touch current_failures.txt
+        rm -rf baseline_cache
+        mkdir -p baseline_cache
+        echo true > baseline_cache/present.txt
+        cp current_failures.txt baseline_cache/failures.txt
+
+    - name: Save this commit's cache
+      if: github.event_name == 'push'
+      uses: actions/cache/save@v4
+      with:
+        path: baseline_cache
+        key: yaml-test-suite-baseline-${{ github.sha }}-${{ hashFiles('scripts/report_yaml_test_suite_failures.py') }}
