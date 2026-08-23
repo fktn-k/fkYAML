@@ -381,16 +381,36 @@ TEST_CASE("LexicalAnalyzer_Colon") {
 }
 
 TEST_CASE("LexicalAnalzer_BlockSequenceEntryPrefix") {
-    auto input = GENERATE(
-        fkyaml::detail::str_view("- foo"), fkyaml::detail::str_view("-\tfoo"), fkyaml::detail::str_view("-\n  foo"));
-
     fkyaml::detail::lexical_token token;
-    fkyaml::detail::lexical_analyzer lexer(input);
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
-    REQUIRE(token.str == fkyaml::detail::str_view("foo"));
+
+    SUBCASE("followed by a whitespace character") {
+        auto input = GENERATE(
+            fkyaml::detail::str_view("- foo"),
+            fkyaml::detail::str_view("-\tfoo"),
+            fkyaml::detail::str_view("-\n  foo"));
+
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == fkyaml::detail::str_view("foo"));
+    }
+
+    SUBCASE("followed by a flow indicator in a flow context") {
+        auto input = GENERATE(
+            fkyaml::detail::str_view("{-,"),
+            fkyaml::detail::str_view("{-{"),
+            fkyaml::detail::str_view("{-}"),
+            fkyaml::detail::str_view("{-["),
+            fkyaml::detail::str_view("{-]"));
+        fkyaml::detail::lexical_analyzer lexer(input);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
+        lexer.set_context_state(true);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
+    }
 }
 
 TEST_CASE("LexicalAnalyzer_PlainScalar") {
@@ -443,6 +463,12 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
             fkyaml::detail::str_view(".nanValue"),
             fkyaml::detail::str_view(".NaNValue"),
             fkyaml::detail::str_view(".NAN_VALUE"),
+            // "-" followed by a flow indicator can start a plain scalar if it is not in a flow context.
+            fkyaml::detail::str_view("-{"),
+            fkyaml::detail::str_view("-}"),
+            fkyaml::detail::str_view("-["),
+            fkyaml::detail::str_view("-]"),
+            fkyaml::detail::str_view("-,"),
 
             // "---" and "..." not at the beginning of a line is a scalar
             fkyaml::detail::str_view(" ---"),

@@ -769,6 +769,10 @@ private:
                 // ```
                 continue;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
+                if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
+                    throw parse_error("A block sequence entry is not allowed in the flow context.", line, indent);
+                }
+
                 if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                     throw parse_error("invalid block sequence entry is found.", line, indent);
                 }

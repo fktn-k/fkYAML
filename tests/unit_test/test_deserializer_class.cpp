@@ -849,6 +849,11 @@ TEST_CASE("Deserializer_BlockSequence") {
 
         REQUIRE(root[1].is_null());
     }
+
+    SUBCASE("block sequence cannot be used in a flow mapping") {
+        std::string input = "{\n  foo:\n   - bar\n}";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMapping") {
