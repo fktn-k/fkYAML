@@ -1240,7 +1240,16 @@ private:
             FK_YAML_ASSERT(last_newline_pos < cur_line_content_begin_pos);
             cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
             if (cur_indent < content_indent && sv[cur_line_content_begin_pos] != '\n') {
-                if FK_YAML_UNLIKELY (cur_indent > base_indent) {
+                // Trailing comments may be less indented than the contents, so they end the block scalar
+                // instead of being part of it.
+                // ```yaml
+                // foo: |
+                //   text
+                //  # comment
+                // ```
+                // https://yaml.org/spec/1.2.2/#8112-block-chomping-indicator
+                const bool begins_comment = sv[cur_line_content_begin_pos] == '#';
+                if FK_YAML_UNLIKELY (!begins_comment && cur_indent > base_indent) {
                     // This path assumes an input like the following:
                     // ```yaml
                     // foo: |
