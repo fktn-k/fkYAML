@@ -250,7 +250,7 @@ The following tables are created from the benchmarking results in the following 
 | rapidyaml<br>(with immutable buff) | 53.6708Mi/s                          |
 | yaml-cpp                           | 7.4989Mi/s                           |
 
-Although [rapidyaml](https://github.com/biojppm/rapidyaml) is about 2x faster than fkYAML as it focuses on high performance, fkYAML is in general 70% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also about 6.5x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) is 1.2x to 2.5x faster than fkYAML as it focuses on high performance, fkYAML is in general 70-90% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also more than 5x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
 Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some use cases since there is no need for string manipulations upon data queries.  
 
 ## Community Support
