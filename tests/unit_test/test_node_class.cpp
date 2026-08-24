@@ -690,6 +690,17 @@ TEST_CASE("Node_AliasCopyCtor") {
     REQUIRE(alias.as_bool() == true);
 }
 
+TEST_CASE("Node_TaggedCopyCtor") {
+    fkyaml::node copied = "test";
+    copied.add_tag_name("!!str");
+    fkyaml::node node(copied);
+    REQUIRE(node.has_tag_name());
+    REQUIRE(node.get_tag_name() == "!!str");
+
+    copied.add_tag_name("!overwritten");
+    REQUIRE(node.get_tag_name() == "!!str");
+}
+
 TEST_CASE("Node_SequenceMoveCtor") {
     fkyaml::node moved = {true, "test"};
     fkyaml::node node(std::move(moved));
@@ -3021,6 +3032,24 @@ TEST_CASE("Node_GetResolvedTagName") {
         REQUIRE(node.at(1).get_resolved_tag_name() == "tag:example.com,2026:primary/str");
         REQUIRE(node.at(2).get_resolved_tag_name() == "tag:example.com,2026:named/a/str");
         REQUIRE(node.at(3).get_resolved_tag_name() == "tag:example.com,2026:named/b/str");
+    }
+
+    SUBCASE("node with tag name but without document metainfo.") {
+        fkyaml::node secondary(std::string("foo"));
+        secondary.add_tag_name("!!str");
+        REQUIRE(secondary.get_resolved_tag_name() == "tag:yaml.org,2002:str");
+
+        fkyaml::node non_specific(std::string("bar"));
+        non_specific.add_tag_name("!");
+        REQUIRE(non_specific.get_resolved_tag_name() == "!");
+
+        fkyaml::node primary(std::string("baz"));
+        primary.add_tag_name("!local");
+        REQUIRE(primary.get_resolved_tag_name() == "!local");
+
+        fkyaml::node verbatim(std::string("qux"));
+        verbatim.add_tag_name("!<tag:example.com,2026:verbatim/str>");
+        REQUIRE(verbatim.get_resolved_tag_name() == "tag:example.com,2026:verbatim/str");
     }
 }
 

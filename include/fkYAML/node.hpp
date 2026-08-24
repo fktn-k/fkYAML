@@ -262,7 +262,7 @@ public:
     basic_node(const basic_node& rhs)
         : m_attrs(rhs.m_attrs),
           mp_meta(rhs.mp_meta),
-          m_prop(rhs.m_prop) {
+          mp_prop(rhs.mp_prop ? new detail::node_property(*rhs.mp_prop) : nullptr) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs & detail::node_attr_mask::value) {
             case detail::node_attr_bits::seq_bit:
@@ -298,7 +298,7 @@ public:
     basic_node(basic_node&& rhs) noexcept
         : m_attrs(rhs.m_attrs),
           mp_meta(std::move(rhs.mp_meta)),
-          m_prop(std::move(rhs.m_prop)) {
+          mp_prop(std::move(rhs.mp_prop)) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
             switch (m_attrs & detail::node_attr_mask::value) {
             case detail::node_attr_bits::seq_bit:
@@ -418,7 +418,7 @@ public:
     {
         if (m_attrs & detail::node_attr_mask::anchoring) {
             if (m_attrs & detail::node_attr_bits::anchor_bit) {
-                auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+                auto itr = mp_meta->anchor_table.equal_range(anchor_prop()).first;
                 std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
                 itr->second.m_value.destroy(itr->second.m_attrs & detail::node_attr_mask::value);
                 itr->second.m_attrs = detail::node_attr_bits::default_bits;
@@ -1166,15 +1166,16 @@ public:
     /// @return The YAML version if already set, `yaml_version_type::VERSION_1_2` otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version_type/
     yaml_version_type get_yaml_version_type() const noexcept {
-        return mp_meta->is_version_specified ? mp_meta->version : yaml_version_type::VERSION_1_2;
+        return (mp_meta && mp_meta->is_version_specified) ? mp_meta->version : yaml_version_type::VERSION_1_2;
     }
 
     /// @brief Set the YAML version for this basic_node object.
     /// @param[in] version The target YAML version.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version_type/
-    void set_yaml_version_type(const yaml_version_type version) noexcept {
-        mp_meta->version = version;
-        mp_meta->is_version_specified = true;
+    void set_yaml_version_type(const yaml_version_type version) {
+        auto& directives = *meta();
+        directives.version = version;
+        directives.is_version_specified = true;
     }
 
     /// @brief Get the YAML version for this basic_node object.
@@ -1192,7 +1193,7 @@ public:
     /// @param[in] version The target YAML version.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
     FK_YAML_DEPRECATED("Since 0.3.12; Use set_yaml_version_type(const yaml_version_type)")
-    void set_yaml_version(const yaml_version_t version) noexcept {
+    void set_yaml_version(const yaml_version_t version) {
         set_yaml_version_type(detail::convert_to_yaml_version_type(version));
     }
 
@@ -1200,7 +1201,7 @@ public:
     /// @return true if ths basic_node has an anchor name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
     bool has_anchor_name() const noexcept {
-        return (m_attrs & detail::node_attr_mask::anchoring) && !m_prop.anchor.empty();
+        return (m_attrs & detail::node_attr_mask::anchoring) && mp_prop && !mp_prop->anchor.empty();
     }
 
     /// @brief Get the anchor name associated with this basic_node object.
@@ -1212,7 +1213,7 @@ public:
         if FK_YAML_UNLIKELY (!has_anchor_name()) {
             throw fkyaml::exception("No anchor name has been set.");
         }
-        return m_prop.anchor;
+        return mp_prop->anchor;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -1222,14 +1223,14 @@ public:
     void add_anchor_name(const std::string& anchor_name) {
         if (is_anchor()) {
             m_attrs &= ~detail::node_attr_mask::anchoring;
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            auto itr = mp_meta->anchor_table.equal_range(anchor_prop()).first;
             std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
             mp_meta.reset();
             itr->second.swap(*this);
             mp_meta->anchor_table.erase(itr);
         }
 
-        auto p_meta = mp_meta;
+        auto p_meta = meta();
 
         basic_node node;
         node.swap(*this);
@@ -1240,7 +1241,7 @@ public:
         mp_meta = p_meta;
         const auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
-        m_prop.anchor = anchor_name;
+        prop().anchor = anchor_name;
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -1250,14 +1251,14 @@ public:
     void add_anchor_name(std::string&& anchor_name) {
         if (is_anchor()) {
             m_attrs &= ~detail::node_attr_mask::anchoring;
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            auto itr = mp_meta->anchor_table.equal_range(anchor_prop()).first;
             std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
             mp_meta.reset();
             itr->second.swap(*this);
             mp_meta->anchor_table.erase(itr);
         }
 
-        auto p_meta = mp_meta;
+        auto p_meta = meta();
 
         basic_node node;
         node.swap(*this);
@@ -1268,14 +1269,14 @@ public:
         mp_meta = p_meta;
         auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
         detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
-        m_prop.anchor = std::move(anchor_name);
+        prop().anchor = std::move(anchor_name);
     }
 
     /// @brief Check whether this basic_node object has already had any tag name.
     /// @return true if ths basic_node has a tag name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_tag_name/
     bool has_tag_name() const noexcept {
-        return !m_prop.tag.empty();
+        return mp_prop && !mp_prop->tag.empty();
     }
 
     /// @brief Get the tag name associated with this basic_node object.
@@ -1287,7 +1288,7 @@ public:
         if FK_YAML_UNLIKELY (!has_tag_name()) {
             throw fkyaml::exception("No tag name has been set.");
         }
-        return m_prop.tag;
+        return mp_prop->tag;
     }
 
     /// @brief Get the resolved tag name associated with this basic_node object.
@@ -1300,23 +1301,26 @@ public:
             throw fkyaml::exception("No tag name has been set.");
         }
 
-        const auto& tag = m_prop.tag;
+        const auto& tag = mp_prop->tag;
 
         // non-specific tag
         if (tag == "!") {
             return tag;
         }
 
+        static const detail::document_metainfo<basic_node> NO_DIRECTIVES {};
+        const auto& directives = mp_meta ? *mp_meta : NO_DIRECTIVES;
+
         // secondary tag handle
         if (tag.rfind("!!", 0) == 0) {
-            if (mp_meta->secondary_handle_prefix.empty()) {
+            if (directives.secondary_handle_prefix.empty()) {
                 return "tag:yaml.org,2002:" + tag.substr(2);
             }
-            return mp_meta->secondary_handle_prefix + tag.substr(2);
+            return directives.secondary_handle_prefix + tag.substr(2);
         }
 
         // named handles
-        for (const auto& named_handle_itr : mp_meta->named_handle_map) {
+        for (const auto& named_handle_itr : directives.named_handle_map) {
             if (tag.rfind(named_handle_itr.first, 0) == 0) {
                 return named_handle_itr.second + tag.substr(named_handle_itr.first.size());
             }
@@ -1332,10 +1336,10 @@ public:
         }
 
         // primary tag handle
-        if (mp_meta->primary_handle_prefix.empty()) {
+        if (directives.primary_handle_prefix.empty()) {
             return "!" + tag.substr(1);
         }
-        return mp_meta->primary_handle_prefix + tag.substr(1);
+        return directives.primary_handle_prefix + tag.substr(1);
     }
 
     /// @brief Add a tag name to this basic_node object.
@@ -1343,7 +1347,7 @@ public:
     /// @param[in] tag_name A tag name to get associated with this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
     void add_tag_name(const std::string& tag_name) {
-        m_prop.tag = tag_name;
+        prop().tag = tag_name;
     }
 
     /// @brief Add a tag name to this basic_node object.
@@ -1351,7 +1355,7 @@ public:
     /// @param[in] tag_name A tag name to get associated with this basic_node object.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_tag_name/
     void add_tag_name(std::string&& tag_name) {
-        m_prop.tag = std::move(tag_name);
+        prop().tag = std::move(tag_name);
     }
 
     /// @brief Get the node value object converted into a given type.
@@ -1666,8 +1670,7 @@ public:
         std::memcpy(&m_value, &rhs.m_value, sizeof(node_value));
         std::memcpy(&rhs.m_value, &tmp, sizeof(node_value));
 
-        swap(m_prop.tag, rhs.m_prop.tag);
-        swap(m_prop.anchor, rhs.m_prop.anchor);
+        swap(mp_prop, rhs.mp_prop);
     }
 
     /// @brief Returns an iterator to the first element of a container node (sequence or mapping).
@@ -1862,14 +1865,14 @@ private:
     /// @return Reference to an actual value node.
     basic_node& resolve_reference() {
         if FK_YAML_UNLIKELY (has_anchor_name()) {
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            auto itr = mp_meta->anchor_table.equal_range(anchor_prop()).first;
             auto offset = detail::node_attr_bits::get_anchor_offset(m_attrs);
             std::advance(itr, offset);
             auto& anchor = itr->second;
 
             // Checks for cyclic references in the child nodes of the anchor node.
             // If it does, throws an exception to prevent infinite recursion and stack overflow.
-            const bool contains_self_ref = anchor.contains_self_referential_alias(m_prop.anchor, offset);
+            const bool contains_self_ref = anchor.contains_self_referential_alias(anchor_prop(), offset);
             if FK_YAML_UNLIKELY (contains_self_ref) {
                 throw fkyaml::exception("Cyclic reference detected during anchor/alias resolving.");
             }
@@ -1883,14 +1886,14 @@ private:
     /// @return Const reference to an actual value node.
     const basic_node& resolve_reference() const {
         if FK_YAML_UNLIKELY (has_anchor_name()) {
-            auto itr = mp_meta->anchor_table.equal_range(m_prop.anchor).first;
+            auto itr = mp_meta->anchor_table.equal_range(anchor_prop()).first;
             auto offset = detail::node_attr_bits::get_anchor_offset(m_attrs);
             std::advance(itr, offset);
             const auto& anchor = itr->second;
 
             // Checks for cyclic references in the child nodes of the anchor node.
             // If it does, throws an exception to prevent infinite recursion and stack overflow.
-            const bool contains_self_ref = anchor.contains_self_referential_alias(m_prop.anchor, offset);
+            const bool contains_self_ref = anchor.contains_self_referential_alias(anchor_prop(), offset);
             if FK_YAML_UNLIKELY (contains_self_ref) {
                 throw fkyaml::exception("Cyclic reference detected during anchor/alias resolving.");
             }
@@ -1933,6 +1936,33 @@ private:
         }
 
         return false;
+    }
+
+    /// @brief Returns the metainfo of the document this node belongs to, creating it on first use.
+    /// @return The shared document metainfo.
+    const std::shared_ptr<detail::document_metainfo<basic_node>>& meta() const {
+        if (!mp_meta) {
+            mp_meta = std::make_shared<detail::document_metainfo<basic_node>>();
+        }
+        return mp_meta;
+    }
+
+    /// @brief Returns the properties of this node, creating them on first use.
+    /// @return The node properties.
+    detail::node_property& prop() {
+        if (!mp_prop) {
+            // std::make_unique is C++14, while this library targets C++11.
+            // NOLINTNEXTLINE(modernize-make-unique)
+            mp_prop.reset(new detail::node_property());
+        }
+        return *mp_prop;
+    }
+
+    /// @brief Returns the anchor name of this node, which must have one.
+    /// @return The anchor name.
+    const std::string& anchor_prop() const noexcept {
+        FK_YAML_ASSERT(mp_prop != nullptr);
+        return mp_prop->anchor;
     }
 
     bool is_sequence_impl() const noexcept {
@@ -2072,13 +2102,13 @@ private:
     /// The current node attributes.
     detail::node_attr_t m_attrs {detail::node_attr_bits::default_bits};
     /// The shared set of YAML directives applied to this node.
-    mutable std::shared_ptr<detail::document_metainfo<basic_node>> mp_meta {
-        // NOLINTNEXTLINE(bugprone-unhandled-exception-at-new)
-        std::shared_ptr<detail::document_metainfo<basic_node>>(new detail::document_metainfo<basic_node>())};
+    /// It is created on first use, since most nodes never need it, and then shared by the nodes of a document.
+    mutable std::shared_ptr<detail::document_metainfo<basic_node>> mp_meta {};
     /// The current node value.
     node_value m_value {};
-    /// The property set of this node.
-    detail::node_property m_prop {};
+    /// The property set of this node. It is created on first use since most nodes have neither an
+    /// anchor name nor a tag name.
+    std::unique_ptr<detail::node_property> mp_prop;
 };
 
 /// @brief Swap function for basic_node objects.

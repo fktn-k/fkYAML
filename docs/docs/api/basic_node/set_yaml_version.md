@@ -3,7 +3,7 @@
 # <small>fkyaml::basic_node::</small>set_yaml_version
 
 ```cpp
-void set_yaml_version(const yaml_version_t version) noexcept;
+void set_yaml_version(const yaml_version_t version);
 ```
 
 !!! warning "Deprecation"
