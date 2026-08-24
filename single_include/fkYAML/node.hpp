@@ -9026,11 +9026,20 @@ private:
             // ```
             const bool is_key_sep_followed = (token.type == lexical_token_t::KEY_SEPARATOR) &&
                                              (line == lexer.get_lines_processed() || m_flow_context_depth > 0);
-            if FK_YAML_UNLIKELY (!is_key_sep_followed) {
-                throw parse_error(
-                    "The \":\" mapping value indicator must be followed after a mapping key.",
-                    lexer.get_lines_processed(),
-                    lexer.get_last_token_begin_pos());
+            if (!is_key_sep_followed) {
+                // A flow mapping entry may consist of a key alone, with both the ":" indicator and the
+                // value omitted. The entry then ends at the separator or the suffix which follows it.
+                // ```yaml
+                // {foo, bar: baz}
+                // ```
+                const bool ends_omitted_entry = (token.type == lexical_token_t::VALUE_SEPARATOR) ||
+                                                (token.type == lexical_token_t::MAPPING_FLOW_END);
+                if FK_YAML_UNLIKELY (!ends_omitted_entry) {
+                    throw parse_error(
+                        "The \":\" mapping value indicator must be followed after a mapping key.",
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos());
+                }
             }
             add_new_key(std::move(node), line, indent);
         }

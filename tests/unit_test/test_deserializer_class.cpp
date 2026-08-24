@@ -2694,6 +2694,31 @@ TEST_CASE("Deserializer_OmittedFlowMappingValue") {
         REQUIRE(root["foo"].is_null());
     }
 
+    SUBCASE("the only entry omits the value indicator as well") {
+        auto input = GENERATE(std::string("{foo}"), std::string("{\"foo\"}"), std::string("{foo, }"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].is_null());
+    }
+
+    SUBCASE("an entry omitting the value indicator is followed by a complete one") {
+        auto input = GENERATE(std::string("{foo, bar: baz}"), std::string("{\"foo\", bar: baz}"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].is_null());
+        REQUIRE(root["bar"].as_str() == "baz");
+    }
+
+    SUBCASE("a key followed by anything else is still rejected") {
+        auto input = GENERATE(std::string("{foo [bar]}"), std::string("{foo {bar}}"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
     SUBCASE("the first entry has no value") {
         std::string input = "{foo: , bar: 1}";
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
