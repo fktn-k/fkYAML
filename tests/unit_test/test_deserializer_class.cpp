@@ -437,6 +437,38 @@ TEST_CASE("Deserializer_BlockFoldedScalar") {
     }
 }
 
+TEST_CASE("Deserializer_DocumentLevelBlockScalar") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SUBCASE("contents of a root block scalar may begin at the first column") {
+        auto input = GENERATE(std::string("--- >\nline1\nline2\n"), std::string(">\nline1\nline2\n"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_string());
+        REQUIRE(root.as_str() == "line1 line2\n");
+    }
+
+    SUBCASE("a root block scalar may still be indented") {
+        std::string input = "--- |\n  line1\n  line2\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_string());
+        REQUIRE(root.as_str() == "line1\nline2\n");
+    }
+
+    SUBCASE("contents of a nested block scalar must still be more indented than its parent") {
+        auto input = GENERATE(std::string("foo: >\nline1\n"), std::string("- |\nline1\n"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("a block scalar nested after the document start marker is not document-level") {
+        auto input = GENERATE(
+            std::string("--- foo: >\nline1\n"), std::string("--- -x: >\nline1\n"), std::string("--- --x: >\nline1\n"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+}
+
 TEST_CASE("Deserializer_ScalarConversionErrorHandling") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
