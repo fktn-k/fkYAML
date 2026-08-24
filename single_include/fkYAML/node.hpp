@@ -3703,6 +3703,48 @@ private:
         return true;
     }
 
+    /// @brief Checks if the given position is a white space, a line break or the end of the buffer.
+    /// @note Tabs count as white space here, as in the definition of c-forbidden.
+    /// https://yaml.org/spec/1.2.2/#912-document-markers
+    /// @param sv The buffer contents being scanned.
+    /// @param pos The position to inspect.
+    /// @return true if nothing, a white space or a line break follows, false otherwise.
+    static bool is_followed_by_white_space(str_view sv, std::size_t pos) noexcept {
+        return (pos == sv.size()) || (sv[pos] == ' ') || (sv[pos] == '\t') || (sv[pos] == '\n');
+    }
+
+    /// @brief Checks if the given position begins something a plain scalar cannot continue into.
+    /// @param sv The buffer contents being scanned.
+    /// @param pos The position of the first non-space character in a line.
+    /// @param is_first_column Whether the position is at the beginning of its line.
+    /// @return true if a document marker or a block structure indicator begins there.
+    static bool begins_non_scalar_content(str_view sv, std::size_t pos, bool is_first_column) noexcept {
+        switch (sv[pos]) {
+        case ':':
+        case '?':
+            // These can never appear in a plain scalar, whatever their indentation. Others such as
+            // "- " can, when they are indented deeply enough to be content.
+            // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+            return is_followed_by_white_space(sv, pos + 1);
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+            // A flow collection beginning a line starts a node of its own.
+            return true;
+        default:
+            break;
+        }
+
+        // Document markers are only recognized at the beginning of a line.
+        if (!is_first_column) {
+            return false;
+        }
+
+        const bool begins_marker = (sv.compare(pos, 3, "---") == 0) || (sv.compare(pos, 3, "...") == 0);
+        return begins_marker && is_followed_by_white_space(sv, pos + 3);
+    }
+
     uint32_t get_current_indent_level(const char* p_line_end) {
         // get the beginning position of the current line.
         std::size_t line_begin_pos = str_view(m_begin_itr, p_line_end - 1).find_last_of('\n');
@@ -4249,12 +4291,18 @@ private:
 
         bool ends_loop = false;
         uint32_t indent = std::numeric_limits<uint32_t>::max();
+        bool begins_own_line = false;
         do {
             FK_YAML_ASSERT(pos < sv.size());
             switch (sv[pos]) {
             case '\n': {
                 if (indent == std::numeric_limits<uint32_t>::max()) {
                     indent = get_current_indent_level(&sv[pos]);
+                    // The scalar begins a line of its own if its column is the indentation of that line.
+                    // Only meaningful in a block context: in a flow context the surrounding collection
+                    // owns the following lines, so a scalar must not extend into them.
+                    begins_own_line =
+                        ((m_state & flow_context_bit) == 0) && (m_pos_tracker.get_cur_pos_in_line() == indent);
                 }
 
                 constexpr str_view space_filter {" \t\n"};
@@ -4262,7 +4310,25 @@ private:
                 const std::size_t last_newline_pos = sv.find_last_of('\n', non_space_pos);
                 FK_YAML_ASSERT(last_newline_pos != str_view::npos);
 
-                if (non_space_pos == str_view::npos || non_space_pos - last_newline_pos - 1 <= indent) {
+                // A plain scalar which begins a line of its own can be continued by lines at the same
+                // indentation, since nothing else on that line owns it:
+                // ```yaml
+                // foo:
+                //   first line
+                //   second line
+                // ```
+                // One which follows a key on the same line must be continued by more indented lines,
+                // because a line at the key's indentation belongs to the parent mapping instead.
+                const uint32_t min_continuation_indent = begins_own_line ? indent : indent + 1;
+
+                if (non_space_pos == str_view::npos) {
+                    ends_loop = true;
+                    break;
+                }
+
+                const std::size_t cur_line_indent = non_space_pos - last_newline_pos - 1;
+                const bool ends_scalar = begins_non_scalar_content(sv, non_space_pos, cur_line_indent == 0);
+                if (cur_line_indent < min_continuation_indent || ends_scalar) {
                     ends_loop = true;
                     break;
                 }
