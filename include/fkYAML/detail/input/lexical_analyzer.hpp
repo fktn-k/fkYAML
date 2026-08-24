@@ -267,6 +267,11 @@ private:
             // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
             break;
         case '-': {
+            if (m_cur_itr + 1 == m_end_itr) {
+                ++m_cur_itr;
+                info.token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                return info;
+            }
             switch (*(m_cur_itr + 1)) {
             case ' ':
             case '\t':
