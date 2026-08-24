@@ -224,31 +224,31 @@ The following tables are created from the benchmarking results in the following 
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 62.5049Mi/s                          |
-| libfyaml                           | 39.235Mi/s                           |
-| rapidyaml<br>(with mutable buff)   | 22.007Gi/s                           |
-| rapidyaml<br>(with immutable buff) | 133.311Mi/s                          |
-| yaml-cpp                           | 9.07876Mi/s                          |
+| fkYAML                             | 60.6026Mi/s                          |
+| libfyaml                           | 35.4699Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 152.795Mi/s                          |
+| rapidyaml<br>(with immutable buff) | 136.538Mi/s                          |
+| yaml-cpp                           | 10.3192Mi/s                          |
 
 ### Parsing [citm_catalog.json](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/cases/citm_catalog.json)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 97.216Mi/s                           |
-| libfyaml                           | 57.3021Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 37.9026Gi/s                          |
-| rapidyaml<br>(with immutable buff) | 140.375Mi/s                          |
-| yaml-cpp                           | 14.3192Mi/s                          |
+| fkYAML                             | 97.4616Mi/s                          |
+| libfyaml                           | 50.3768Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 120.381Mi/s                          |
+| rapidyaml<br>(with immutable buff) | 119.205Mi/s                          |
+| yaml-cpp                           | 16.7686Mi/s                          |
 
 ### Parsing [citm_catalog.yml](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/cases/citm_catalog.yml)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 38.7563Mi/s                          |
-| libfyaml                           | 24.7526Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 37.9676Gi/s                          |
-| rapidyaml<br>(with immutable buff) | 68.4245Mi/s                          |
-| yaml-cpp                           | 6.47003Mi/s                          |
+| fkYAML                             | 41.4116Mi/s                          |
+| libfyaml                           | 22.3071Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 54.1632Mi/s                          |
+| rapidyaml<br>(with immutable buff) | 53.6708Mi/s                          |
+| yaml-cpp                           | 7.4989Mi/s                           |
 
 Although [rapidyaml](https://github.com/biojppm/rapidyaml) is about 2x faster than fkYAML as it focuses on high performance, fkYAML is in general 70% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also about 6.5x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
 Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some use cases since there is no need for string manipulations upon data queries.  
