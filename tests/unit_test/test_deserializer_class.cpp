@@ -4009,4 +4009,38 @@ TEST_CASE("Deserializer_MultipleDocuments") {
             REQUIRE(d_node.as_str() == "e");
         }
     }
+
+    SUBCASE("stream which contains no document") {
+        auto input = GENERATE(std::string(""), std::string("# comment only\n"), std::string("...\n"));
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
+        REQUIRE(docs.empty());
+    }
+
+    SUBCASE("comments between document end markers are not a document") {
+        std::string input = "foo: 123\n"
+                            "...\n"
+                            "# comment\n"
+                            "...\n"
+                            "bar: 456\n";
+
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
+        REQUIRE(docs.size() == 2);
+
+        REQUIRE(docs[0].is_mapping());
+        REQUIRE(docs[0]["foo"].get_value<int>() == 123);
+        REQUIRE(docs[1].is_mapping());
+        REQUIRE(docs[1]["bar"].get_value<int>() == 456);
+    }
+
+    SUBCASE("a trailing directives end marker begins an empty document") {
+        std::string input = "foo: 123\n"
+                            "---\n";
+
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
+        REQUIRE(docs.size() == 2);
+
+        REQUIRE(docs[0].is_mapping());
+        REQUIRE(docs[0]["foo"].get_value<int>() == 123);
+        REQUIRE(docs[1].is_null());
+    }
 }

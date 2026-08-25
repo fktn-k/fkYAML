@@ -158,9 +158,15 @@ public:
 
         std::vector<basic_node_type> nodes {};
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
+        bool begun_by_marker = false;
 
         do {
-            nodes.emplace_back(deserialize_document(lexer, type));
+            basic_node_type doc = deserialize_document(lexer, type);
+            if (m_has_document || begun_by_marker) {
+                nodes.emplace_back(std::move(doc));
+            }
+            // A "---" which ends a document begins the next one, even if that one is empty.
+            begun_by_marker = (type == lexical_token_t::END_OF_DIRECTIVES);
             // Break the loop if the last end-of-document marker is followed by the end-of-buffer token,
             // which indicates that there are no more documents to parse.
             // ```yaml
@@ -189,6 +195,8 @@ private:
     basic_node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
         lexical_token token {};
 
+        m_has_document = false;
+
         basic_node_type root;
         mp_current_node = &root;
         // One metainfo object is created per document and shared by all of its nodes.
@@ -202,6 +210,11 @@ private:
         uint32_t line = lexer.get_lines_processed();
         uint32_t indent = lexer.get_last_token_begin_pos();
         const bool found_props = deserialize_node_properties(lexer, token, line, indent);
+
+        // A stream which only holds comments, white spaces or a bare "..." contains no document.
+        if (token.type != lexical_token_t::END_OF_BUFFER && token.type != lexical_token_t::END_OF_DOCUMENT) {
+            m_has_document = true;
+        }
 
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
@@ -416,6 +429,7 @@ private:
                 break;
             case lexical_token_t::END_OF_DIRECTIVES:
                 lacks_end_of_directives_marker = false;
+                m_has_document = true;
                 break;
             default:
                 if FK_YAML_UNLIKELY (lacks_end_of_directives_marker) {
@@ -1720,6 +1734,8 @@ private:
     int32_t m_flow_base_indent {-1};
     /// The set of YAML directives.
     std::shared_ptr<doc_metainfo_type> mp_meta {};
+    /// Whether the document being parsed exists at all: it has contents or an explicit "---".
+    bool m_has_document {false};
     /// A flag to determine the need for YAML anchor node implementation.
     bool m_needs_anchor_impl {false};
     /// A flag to determine the need for a corresponding node with the last YAML tag.
