@@ -692,16 +692,17 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.end() == input.end() - 5);
     }
 
-    SUBCASE("multiline with equally indented line") {
+    SUBCASE("multiline continued by an equally indented line") {
         fkyaml::detail::str_view input = "  foo\n"
                                          "   bar\n"
                                          "  baz";
         fkyaml::detail::lexical_analyzer lexer(input);
 
+        // The scalar begins a line of its own, so a line at the same indentation continues it.
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(token.str.begin() == input.begin() + 2);
-        REQUIRE(token.str.end() == input.end() - 6);
+        REQUIRE(token.str.end() == input.end());
     }
 
     SUBCASE("multiline with empty line") {

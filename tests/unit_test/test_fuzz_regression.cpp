@@ -42,6 +42,13 @@ TEST_CASE("FuzzRegression") {
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
     }
 
+    SUBCASE("block sequence entry after a scalar root") {
+        const char input[] = "'a'-";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
     SUBCASE("invalid flow sequence after scalar root") {
         const char input[] = "ke\n[";
         p_begin = input;
@@ -101,6 +108,15 @@ TEST_CASE("FuzzRegression") {
         uint8_t input[] = {0x0D, 0x3B, 0x00, 0x0A, 0x0A, 0x4A, 0x0A, 0x0A, 0x26, 0x7C, 0x0A, 0x3A};
         p_begin = reinterpret_cast<const char*>(input);
         p_end = p_begin + sizeof(input);
+        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+    }
+
+    SUBCASE("key separator after node properties without a parent context") {
+        const char input[] = "!\n"
+                             "!\n"
+                             ":";
+        p_begin = input;
+        p_end = input + sizeof(input) - 1;
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
     }
 

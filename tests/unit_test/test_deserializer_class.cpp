@@ -469,6 +469,60 @@ TEST_CASE("Deserializer_DocumentLevelBlockScalar") {
     }
 }
 
+TEST_CASE("Deserializer_MultilinePlainScalarInBlockContext") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SUBCASE("a scalar on its own line is continued by equally indented lines") {
+        std::string input = "foo:\n  first line\n  second line\nbar: baz";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].as_str() == "first line second line");
+        REQUIRE(root["bar"].as_str() == "baz");
+    }
+
+    SUBCASE("a scalar following its key needs more indented lines") {
+        std::string input = "foo: first line\n  second line\nbar: baz";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].as_str() == "first line second line");
+        REQUIRE(root["bar"].as_str() == "baz");
+    }
+
+    SUBCASE("a document marker ends the scalar") {
+        // The marker may be followed by a space, a tab or a line break alike.
+        auto input = GENERATE(
+            std::string("foo:\n  first line\n  second line\n---\nbar"),
+            std::string("foo:\n  first line\n  second line\n--- bar"),
+            std::string("foo:\n  first line\n  second line\n---\tbar"));
+        std::vector<fkyaml::node> docs;
+        REQUIRE_NOTHROW(docs = fkyaml::node::deserialize_docs(input));
+
+        REQUIRE(docs.size() == 2);
+        REQUIRE(docs[0]["foo"].as_str() == "first line second line");
+        REQUIRE(docs[1].as_str() == "bar");
+    }
+
+    SUBCASE("a document end marker ends the scalar") {
+        std::string input = "foo:\n  first line\n  second line\n...\n";
+        std::vector<fkyaml::node> docs;
+        REQUIRE_NOTHROW(docs = fkyaml::node::deserialize_docs(input));
+
+        REQUIRE(docs.size() == 1);
+        REQUIRE(docs[0]["foo"].as_str() == "first line second line");
+    }
+
+    SUBCASE("a mapping value indicator ends the scalar") {
+        auto input = GENERATE(
+            std::string("foo\n: bar"), std::string("foo\n:\tbar"), std::string("foo\n:"), std::string("foo\n:\n"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+}
+
 TEST_CASE("Deserializer_ScalarConversionErrorHandling") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
