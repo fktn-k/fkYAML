@@ -13370,8 +13370,8 @@ FK_YAML_NAMESPACE_BEGIN
 /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
 template <
     typename Key, typename Value, typename IgnoredCompare = std::less<Key>,
-    typename Allocator = std::allocator<std::pair<const Key, Value>>>
-class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator> {
+    typename Allocator = std::allocator<std::pair<Key, Value>>>
+class ordered_map : public std::vector<std::pair<Key, Value>, Allocator> {
 public:
     /// @brief A type for keys.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
@@ -13383,7 +13383,7 @@ public:
 
     /// @brief A type for internal key-value containers.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
-    using Container = std::vector<std::pair<const Key, Value>, Allocator>;
+    using Container = std::vector<std::pair<Key, Value>, Allocator>;
 
     /// @brief A type for key-value pairs.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
