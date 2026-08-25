@@ -3655,6 +3655,8 @@ private:
             }
 
             const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
+            // Must be checked before m_token_begin_itr is moved to the beginning of the contents below.
+            const bool is_document_root = begins_document_level_node();
 
             const str_view header_line = sv.substr(1, header_end_pos - 1);
             m_block_scalar_header = convert_to_block_scalar_header(header_line);
@@ -3664,7 +3666,7 @@ private:
             info.token = {
                 type,
                 determine_block_scalar_content_range(
-                    base_indent, m_block_scalar_header.indent, m_block_scalar_header.indent)};
+                    base_indent, m_block_scalar_header.indent, is_document_root, m_block_scalar_header.indent)};
             return info;
         }
         default:
@@ -3673,6 +3675,32 @@ private:
 
         info.token = {lexical_token_t::PLAIN_SCALAR, determine_plain_scalar_range()};
         return info;
+    }
+
+    /// @brief Checks if the token which begins at m_token_begin_itr is the root node of a document.
+    /// @note Such a node has no parent, so its contents may begin at the first column.
+    /// @return true if nothing but a document start marker precedes the token on its line, false otherwise.
+    bool begins_document_level_node() const {
+        const char* p_line_begin = m_token_begin_itr;
+        while (p_line_begin != m_begin_itr && *(p_line_begin - 1) != '\n') {
+            --p_line_begin;
+        }
+
+        if (p_line_begin == m_token_begin_itr) {
+            return true;
+        }
+
+        const char* cur_itr = p_line_begin;
+        if (m_token_begin_itr - cur_itr < 3 || !std::equal(cur_itr, cur_itr + 3, "---")) {
+            return false;
+        }
+
+        for (cur_itr += 3; cur_itr != m_token_begin_itr; ++cur_itr) {
+            if (*cur_itr != ' ') {
+                return false;
+            }
+        }
+        return true;
     }
 
     uint32_t get_current_indent_level(const char* p_line_end) {
@@ -4327,10 +4355,11 @@ private:
     /// @brief Scan a block style string token either in the literal or folded style.
     /// @param base_indent The base indent level of the block scalar.
     /// @param indicated_indent The indicated indent level in the block scalar header. 0 means it's not indicated.
+    /// @param is_document_root Whether the block scalar is the root node of a document.
     /// @param token Storage for the scanned block scalar range.
     /// @return The content indentation level of the block scalar.
     str_view determine_block_scalar_content_range(
-        uint32_t base_indent, uint32_t indicated_indent, uint32_t& content_indent) {
+        uint32_t base_indent, uint32_t indicated_indent, bool is_document_root, uint32_t& content_indent) {
         const str_view sv {m_token_begin_itr, m_end_itr};
         const std::size_t remain_input_len = sv.size();
 
@@ -4382,7 +4411,13 @@ private:
         }
 
         if (indicated_indent == 0) {
-            if FK_YAML_UNLIKELY (base_indent >= cur_indent) {
+            // A block scalar which is the root node of a document has no parent node to be more indented than, so
+            // its contents may begin at the first column.
+            // ```yaml
+            // --- >
+            // line1
+            // ```
+            if FK_YAML_UNLIKELY (!is_document_root && base_indent >= cur_indent) {
                 emit_error("The first non-empty line in the block scalar is less indented.");
             }
             indicated_indent = cur_indent - base_indent;
