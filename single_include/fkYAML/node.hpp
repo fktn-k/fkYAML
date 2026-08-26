@@ -12020,6 +12020,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP
 #define FK_YAML_DETAIL_OUTPUT_SERIALIZER_HPP
 
+#include <algorithm>
 #include <cmath>
 #include <sstream>
 #include <string>
@@ -12130,6 +12131,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/meta/node_traits.hpp>
 
+// #include <fkYAML/detail/node_attrs.hpp>
+
 // #include <fkYAML/exception.hpp>
 
 // #include <fkYAML/node_type.hpp>
@@ -12144,6 +12147,20 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 template <typename BasicNodeType>
 class basic_serializer {
     static_assert(detail::is_basic_node<BasicNodeType>::value, "basic_serializer only accepts basic_node<...>");
+
+    using map_iterator = typename BasicNodeType::const_map_range::const_iterator;
+
+    struct anchor_reference {
+        anchor_reference(std::string name, const uint32_t offset, const std::size_t position)
+            : name(std::move(name)),
+              offset(offset),
+              position(position) {
+        }
+
+        std::string name;
+        uint32_t offset {0};
+        std::size_t position {0};
+    };
 
 public:
     /// @brief Construct a new basic_serializer object.
@@ -12302,7 +12319,7 @@ private:
                 str += "{}\n";
                 return;
             }
-            for (auto itr : node.map_items()) {
+            for (const auto& itr : get_mapping_items_in_serialization_order(node)) {
                 insert_indentation(cur_indent, str);
 
                 // serialize a mapping key node.
@@ -12346,7 +12363,7 @@ private:
                 try_append_anchor(value_node, true, str);
                 try_append_tag(value_node, true, str);
 
-                const bool is_scalar = itr->is_scalar();
+                const bool is_scalar = value_node.is_scalar();
                 if (is_scalar) {
                     str += " ";
                     serialize_node(value_node, cur_indent, str);
@@ -12354,7 +12371,7 @@ private:
                     continue;
                 }
 
-                const bool is_empty = itr->empty();
+                const bool is_empty = value_node.empty();
                 if (is_empty) {
                     str += " ";
                 }
@@ -12411,6 +12428,212 @@ private:
             }
             break;
         }
+        }
+    }
+
+    /// @brief Check whether two anchor references identify the same anchor.
+    /// @param lhs The first anchor reference.
+    /// @param rhs The second anchor reference.
+    /// @return true if both references identify the same anchor, false otherwise.
+    static bool is_same_anchor(const anchor_reference& lhs, const anchor_reference& rhs) noexcept {
+        return lhs.name == rhs.name && lhs.offset == rhs.offset;
+    }
+
+    /// @brief Check whether an anchor is present in a collection.
+    /// @param anchors The collection of anchor references.
+    /// @param target The anchor reference to find.
+    /// @return true if the target is present, false otherwise.
+    static bool has_anchor(const std::vector<anchor_reference>& anchors, const anchor_reference& target) {
+        for (const auto& anchor : anchors) {
+            if (is_same_anchor(anchor, target)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// @brief Check whether an anchor was defined earlier in the same mapping item.
+    /// @param anchors The anchor references in the mapping item.
+    /// @param target The anchor reference whose preceding definition is checked.
+    /// @return true if a preceding definition exists, false otherwise.
+    static bool has_prior_anchor_definition(
+        const std::vector<anchor_reference>& anchors, const anchor_reference& target) {
+        for (const auto& anchor : anchors) {
+            if (anchor.position < target.position && is_same_anchor(anchor, target)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// @brief Check whether an earlier anchor required by an item remains unemitted.
+    /// @param anchors The anchor references in the mapping item.
+    /// @param anchors_in_mapping The anchor references that have not been emitted.
+    /// @return true if an earlier anchor definition remains unemitted, false otherwise.
+    bool has_unemitted_prior_anchor_definition(
+        const std::vector<anchor_reference>& anchors, const std::vector<anchor_reference>& anchors_in_mapping) const {
+        for (const auto& anchor : anchors) {
+            for (const auto& mapping_anchor : anchors_in_mapping) {
+                if (mapping_anchor.name == anchor.name && mapping_anchor.offset < anchor.offset) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /// @brief Check whether an alias requires an anchor definition that remains unemitted.
+    /// @param anchors The anchor references in the mapping item.
+    /// @param aliases The alias references in the mapping item.
+    /// @param anchors_in_mapping The anchor references that have not been emitted.
+    /// @return true if an aliased anchor remains unemitted, false otherwise.
+    bool has_unemitted_anchor_definition(
+        const std::vector<anchor_reference>& anchors, const std::vector<anchor_reference>& aliases,
+        const std::vector<anchor_reference>& anchors_in_mapping) const {
+        for (const auto& alias : aliases) {
+            if (!has_prior_anchor_definition(anchors, alias) && has_anchor(anchors_in_mapping, alias)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// @brief Check whether a mapping item can be emitted without violating anchor dependencies.
+    /// @param anchors The anchor references in the mapping item.
+    /// @param aliases The alias references in the mapping item.
+    /// @param anchors_in_mapping The anchor references that have not been emitted.
+    /// @return true if the mapping item is ready to be emitted, false otherwise.
+    bool is_ready_to_emit(
+        const std::vector<anchor_reference>& anchors, const std::vector<anchor_reference>& aliases,
+        const std::vector<anchor_reference>& anchors_in_mapping) const {
+        return !has_unemitted_prior_anchor_definition(anchors, anchors_in_mapping) &&
+               !has_unemitted_anchor_definition(anchors, aliases, anchors_in_mapping);
+    }
+
+    /// @brief Remove the anchors defined by an emitted mapping item.
+    /// @param anchors The anchor references defined by the emitted mapping item.
+    /// @param anchors_in_mapping The anchor references that have not been emitted.
+    static void remove_anchors(
+        const std::vector<anchor_reference>& anchors, std::vector<anchor_reference>& anchors_in_mapping) {
+        for (const auto& anchor : anchors) {
+            auto itr = anchors_in_mapping.begin();
+            while (itr != anchors_in_mapping.end()) {
+                itr = is_same_anchor(*itr, anchor) ? anchors_in_mapping.erase(itr) : std::next(itr);
+            }
+        }
+    }
+
+    /// @brief Reorder mapping items so that their anchor dependencies are emitted first.
+    /// @note This function uses stable topological sorting and thus changes the order of mapping items only when
+    /// necessary to satisfy anchor dependencies.
+    /// @param items The mapping items to reorder.
+    /// @param item_anchors The anchor references grouped by mapping item.
+    /// @param item_aliases The alias references grouped by mapping item.
+    /// @return The mapping items in dependency-respecting serialization order.
+    std::vector<map_iterator> reorder_mapping_items_by_dependencies(
+        const std::vector<map_iterator>& items, const std::vector<std::vector<anchor_reference>>& item_anchors,
+        const std::vector<std::vector<anchor_reference>>& item_aliases) const {
+        std::vector<bool> emitted(items.size(), false);
+        std::vector<map_iterator> ordered_items;
+        ordered_items.reserve(items.size());
+
+        std::vector<anchor_reference> anchors_in_mapping;
+        for (const auto& anchors : item_anchors) {
+            anchors_in_mapping.insert(anchors_in_mapping.end(), anchors.begin(), anchors.end());
+        }
+
+        std::size_t emitted_count = 0;
+        while (emitted_count < items.size()) {
+            std::size_t ready_item_index = items.size();
+            for (std::size_t i = 0; i < items.size(); ++i) {
+                const bool is_item_emitted = emitted[i];
+                if (is_item_emitted) {
+                    continue;
+                }
+
+                const bool is_item_ready = is_ready_to_emit(item_anchors[i], item_aliases[i], anchors_in_mapping);
+                if (is_item_ready) {
+                    ready_item_index = i;
+                    break;
+                }
+            }
+
+            if (ready_item_index == items.size()) {
+                break;
+            }
+
+            emitted[ready_item_index] = true;
+            ordered_items.emplace_back(items[ready_item_index]);
+            remove_anchors(item_anchors[ready_item_index], anchors_in_mapping);
+            ++emitted_count;
+        }
+
+        for (std::size_t i = 0; i < items.size(); ++i) {
+            const bool is_item_emitted = emitted[i];
+            if (!is_item_emitted) {
+                ordered_items.emplace_back(items[i]);
+            }
+        }
+
+        return ordered_items;
+    }
+
+    std::vector<map_iterator> get_mapping_items_in_serialization_order(const BasicNodeType& node) const {
+        std::vector<map_iterator> items;
+        std::vector<std::vector<anchor_reference>> item_anchors;
+        std::vector<std::vector<anchor_reference>> item_aliases;
+        bool has_any_anchor = false;
+        bool has_any_alias = false;
+
+        for (auto itr : node.map_items()) {
+            items.emplace_back(itr);
+            item_anchors.emplace_back();
+            item_aliases.emplace_back();
+            std::size_t position = 0;
+            collect_anchor_alias_names(itr.key(), item_anchors.back(), item_aliases.back(), position);
+            collect_anchor_alias_names(itr.value(), item_anchors.back(), item_aliases.back(), position);
+            has_any_anchor = has_any_anchor || !item_anchors.back().empty();
+            has_any_alias = has_any_alias || !item_aliases.back().empty();
+        }
+
+        // If there are no anchors (no resolving needed) or aliases (no anchor is referenced), return the items in the
+        // order `node.map_items()` returns them.
+        if (!has_any_anchor || !has_any_alias) {
+            return items;
+        }
+
+        return reorder_mapping_items_by_dependencies(items, item_anchors, item_aliases);
+    }
+
+    void collect_anchor_alias_names(
+        const BasicNodeType& node, std::vector<anchor_reference>& anchors, std::vector<anchor_reference>& aliases,
+        std::size_t& position) const {
+        if (node.is_alias()) {
+            anchor_reference alias_ref(
+                node.get_anchor_name(), detail::node_attr_bits::get_anchor_offset(node.m_attrs), position++);
+            aliases.emplace_back(std::move(alias_ref));
+            return;
+        }
+        if (node.is_anchor()) {
+            anchor_reference anchor_ref(
+                node.get_anchor_name(), detail::node_attr_bits::get_anchor_offset(node.m_attrs), position++);
+            anchors.emplace_back(std::move(anchor_ref));
+        }
+
+        switch (node.get_type()) {
+        case node_type::SEQUENCE:
+            for (const auto& item : node) {
+                collect_anchor_alias_names(item, anchors, aliases, position);
+            }
+            break;
+        case node_type::MAPPING:
+            for (auto itr : node.map_items()) {
+                collect_anchor_alias_names(itr.key(), anchors, aliases, position);
+                collect_anchor_alias_names(itr.value(), anchors, aliases, position);
+            }
+            break;
+        default:
+            break;
         }
     }
 
