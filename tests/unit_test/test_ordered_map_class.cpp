@@ -98,3 +98,38 @@ TEST_CASE("OrderedMap_ConstFind") {
     REQUIRE(map__.find("foo")->second == true);
     REQUIRE(map__.find("bar") == map__.end());
 }
+
+TEST_CASE("OrderedMap_InsertionOrderSurvivesGrowth") {
+    // The entries must keep their insertion order across the reallocations which growing causes.
+    fkyaml::ordered_map<std::string, int> map;
+    constexpr int entry_count = 64;
+    for (int i = 0; i < entry_count; i++) {
+        map.emplace(std::to_string(i), i);
+    }
+
+    REQUIRE(map.size() == entry_count);
+
+    int index = 0;
+    for (const auto& entry : map) {
+        REQUIRE(entry.first == std::to_string(index));
+        REQUIRE(entry.second == index);
+        ++index;
+    }
+}
+
+TEST_CASE("OrderedMap_AsMappingTypeKeepsKeyOrder") {
+    using ordered_node = fkyaml::basic_node<std::vector, fkyaml::ordered_map>;
+
+    // An alias must not be emitted before the anchor it refers to, which is what reordering the keys
+    // would cause. See https://github.com/fktn-k/fkYAML/issues/584.
+    const std::string input = "foo: &anchor 123\nbar: *anchor\n";
+    ordered_node root;
+    REQUIRE_NOTHROW(root = ordered_node::deserialize(input));
+
+    std::string output;
+    REQUIRE_NOTHROW(output = ordered_node::serialize(root));
+    REQUIRE(output == input);
+
+    // The emitted document must be parsable again.
+    REQUIRE_NOTHROW(ordered_node::deserialize(output));
+}
