@@ -368,6 +368,35 @@ TEST_CASE("Deserializer_BlockLiteralScalar") {
         REQUIRE(root.is_string());
         REQUIRE(root.as_str() == "first sentence.\nsecond sentence.\nlast sentence.\n");
     }
+
+    SUBCASE("a less indented trailing comment ends the scalar") {
+        std::string input = "foo: |\n"
+                            "  text\n"
+                            " # comment\n"
+                            "bar: 123\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].as_str() == "text\n");
+        REQUIRE(root["bar"].as_int() == 123);
+    }
+
+    SUBCASE("a comment at the content indentation is still content") {
+        std::string input = "foo: |\n"
+                            "  # text\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root["foo"].as_str() == "# text\n");
+    }
+
+    SUBCASE("a less indented line which is not a comment is still rejected") {
+        std::string input = "foo: |\n"
+                            "  text\n"
+                            " invalid\n";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_BlockFoldedScalar") {
