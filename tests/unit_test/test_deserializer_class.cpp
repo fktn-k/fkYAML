@@ -4098,3 +4098,96 @@ TEST_CASE("Deserializer_MultipleDocuments") {
         REQUIRE(docs[1].is_null());
     }
 }
+
+TEST_CASE("Deserializer_TabInIndentation") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SUBCASE("a tab cannot indent a block collection") {
+        auto input = GENERATE(
+            std::string("-\t-\n"),        // a nested sequence after the entry indicator
+            std::string("- \t-\n"),       // ... with the tab following a space
+            std::string("?\t-\n"),        // a sequence as an explicit key
+            std::string("?\tkey:\n"),     // a mapping as an explicit key
+            std::string("? -\n:\t-\n"),   // a sequence as an explicit value
+            std::string("a:\n\tb: 1\n")); // a mapping entry indented with a tab
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("a tab which only separates tokens is valid") {
+        SUBCASE("before a scalar entry") {
+            std::string input = "-\t-1\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root.is_sequence());
+            REQUIRE(root.size() == 1);
+            REQUIRE(root[0].get_value<int>() == -1);
+        }
+
+        SUBCASE("after the indentation of a mapping value") {
+            std::string input = "foo:\n \tbar\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar");
+        }
+
+        SUBCASE("after a mapping value indicator") {
+            std::string input = "foo:\t bar\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar");
+        }
+
+        SUBCASE("after an explicit key indicator") {
+            std::string input = "?\tfoo\n: bar\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar");
+        }
+
+        SUBCASE("on an otherwise empty line") {
+            std::string input = "foo: 1\n\t\nbar: 2\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root.size() == 2);
+        }
+    }
+
+    SUBCASE("a tab cannot indent a continuation line") {
+        auto input = GENERATE(
+            std::string("foo: \"bar\n\tbaz\"\n"),    // of a multi-line quoted scalar
+            std::string("- [\n\tfoo,\n foo\n ]\n")); // of a multi-line flow collection
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("a tab after the indentation of a continuation line is valid") {
+        SUBCASE("in a quoted scalar") {
+            std::string input = "foo: \"bar\n  \tbaz\"\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar baz");
+        }
+
+        SUBCASE("in a quoted scalar which contains an empty line") {
+            // An empty line may hold white space of any kind, tabs included.
+            std::string input = "foo: \"bar\n\n  \tbaz\"\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar\nbaz");
+        }
+
+        SUBCASE("in a quoted scalar which ends with a white space only line") {
+            std::string input = "foo: \"bar\n\t\"\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar ");
+        }
+
+        SUBCASE("in a flow collection") {
+            std::string input = "- [\n\t\n foo\n ]\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root[0][0].as_str() == "foo");
+        }
+
+        SUBCASE("in a scalar which is the whole document") {
+            // The node begins the line, so it owns that indentation and needs no more.
+            std::string input = "\"1st\n\t2nd\"\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root.as_str() == "1st 2nd");
+        }
+    }
+}
