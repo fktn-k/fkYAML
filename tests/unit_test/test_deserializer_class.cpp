@@ -4321,9 +4321,9 @@ TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
         REQUIRE(top_node.is_anchor());
         REQUIRE(top_node.get_anchor_name() == "map");
 
-        const fkyaml::node& key = top_node.begin().key();
-        REQUIRE(key.is_anchor());
-        REQUIRE(key.get_anchor_name() == "key");
+        auto itr = top_node.begin();
+        REQUIRE(itr.key().is_anchor());
+        REQUIRE(itr.key().get_anchor_name() == "key");
     }
 
     SUBCASE("nothing follows them but the next entry") {
