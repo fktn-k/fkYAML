@@ -1277,10 +1277,11 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
         REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
     }
 
-    SUBCASE("literal string scalar with invalid header position") {
+    SUBCASE("a block scalar header which follows contents belongs to them") {
+        // A header indicator only begins a block scalar where a node does. Anywhere else it is an
+        // ordinary character of the plain scalar which is already being read.
         const char input[] = "root:\n"
-                             "  c]h:di     |- \n"
-                             " a  ) - b\n";
+                             "  c]h:di     |- \n";
         fkyaml::detail::lexical_analyzer lexer(input);
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
@@ -1293,10 +1294,8 @@ TEST_CASE("LexicalAnalyzer_LiteralStringScalar") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
-        REQUIRE(token.str.begin() == &input[8]); // "c]h:di"
-        REQUIRE(token.str.end() == &input[14]);
-
-        REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
+        REQUIRE(token.str.begin() == &input[8]); // "c]h:di     |-"
+        REQUIRE(token.str.end() == &input[21]);
     }
 }
 

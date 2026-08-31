@@ -1162,39 +1162,40 @@ private:
                 break;
             }
             case ' ':
-            case '\t':
-                if FK_YAML_UNLIKELY (pos == sv.size() - 1) {
-                    // trim trailing space.
+            case '\t': {
+                // Any number of white spaces may separate the characters of a plain scalar, so the whole
+                // run of them belongs to it and what follows the run decides whether it ends.
+                // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                const std::size_t next_pos = sv.find_first_not_of(" \t", pos + 1);
+                if FK_YAML_UNLIKELY (next_pos == str_view::npos) {
+                    // trim trailing white space.
                     ends_loop = true;
                     break;
                 }
 
-                // Allow a space in a plain scalar only if the space is surrounded by non-space characters, but not
-                // followed by the comment prefix " #".
-                // Also, flow indicators are not allowed to be followed after a space in a flow context.
-                // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                switch (sv[pos + 1]) {
-                case ' ':
-                case '\t':
+                // White space is not allowed to be followed by the comment prefix " #", and flow
+                // indicators are not allowed to follow it in a flow context.
+                switch (sv[next_pos]) {
                 case '\n':
                 case '#':
                     ends_loop = true;
                     break;
                 case ':':
                     // " :" is permitted in a plain style string token, but not when followed by a space.
-                    ends_loop = (pos < sv.size() - 2) && (sv[pos + 2] == ' ');
+                    ends_loop = (next_pos + 1 < sv.size()) && (sv[next_pos + 1] == ' ');
                     break;
                 case '{':
                 case '}':
                 case '[':
                 case ']':
                 case ',':
-                    ends_loop = (m_state & flow_context_bit);
+                    ends_loop = ((m_state & flow_context_bit) != 0);
                     break;
                 default:
                     break;
                 }
                 break;
+            }
             case ':':
                 if FK_YAML_LIKELY (pos + 1 < sv.size()) {
                     switch (sv[pos + 1]) {

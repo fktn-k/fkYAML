@@ -97,11 +97,14 @@ TEST_CASE("FuzzRegression") {
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
     }
 
-    SUBCASE("explicit key indicator without a parent context") {
+    SUBCASE("an explicit key indicator inside a plain scalar") {
+        // White space may separate the characters of a plain scalar, so the indicator is part of
+        // its contents rather than the beginning of an entry.
         const char input[] = "a  ? a";
         p_begin = input;
         p_end = input + sizeof(input) - 1;
-        REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
+        REQUIRE_NOTHROW(root = fkyaml::node::deserialize(p_begin, p_end));
+        REQUIRE(root.as_str() == "a  ? a");
     }
 
     SUBCASE("key separator without a parent context") {

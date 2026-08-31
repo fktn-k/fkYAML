@@ -2195,7 +2195,7 @@ TEST_CASE("Deserializer_FlowSequence") {
     }
 
     SUBCASE("lack the beginning of a flow sequence") {
-        auto input = GENERATE(std::string("test: {]}"), std::string("test: {foo: bar]}"), std::string("test: bar  ]"));
+        auto input = GENERATE(std::string("test: {]}"), std::string("test: {foo: bar]}"));
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 
@@ -2304,12 +2304,13 @@ TEST_CASE("Deserializer_FlowSequence") {
     }
 
     SUBCASE("missing value separators") {
+        // White space alone does not separate entries, since it may appear within a plain scalar. A
+        // missing separator is only detectable where the next entry cannot continue the current one.
         auto input = GENERATE(
-            std::string("[123  true, 3.14]"),
-            std::string("[123, true  3.14]"),
-            // std::string("[123  [true, 3.14]]"),
-            std::string("[123, [true  3.14]]"),
-            // std::string("[123  {foo: true, bar: 3.14}]"),
+            std::string("[[1] [2]]"),
+            std::string("[\"a\" \"b\"]"),
+            std::string("[123  [true, 3.14]]"),
+            std::string("[123  {foo: true, bar: 3.14}]"),
             std::string("[123, {foo: true  bar: 3.14}]"));
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
@@ -2439,7 +2440,7 @@ TEST_CASE("Deserializer_FlowMapping") {
     }
 
     SUBCASE("lack the beginning of a flow mapping") {
-        auto input = GENERATE(std::string("test: [}]"), std::string("test: [true}]"), std::string("test: foo  }"));
+        auto input = GENERATE(std::string("test: [}]"), std::string("test: [true}]"));
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 
@@ -4359,5 +4360,74 @@ TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
         REQUIRE(itr.key().is_string());
         REQUIRE(itr.key().get_tag_name() == "!!str");
         REQUIRE(itr.value().get_value<bool>());
+    }
+}
+
+TEST_CASE("Deserializer_WhiteSpaceInsidePlainScalar") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SUBCASE("any number of white spaces may separate its characters") {
+        SUBCASE("two spaces") {
+            std::string input = "foo: bar  baz\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar  baz");
+        }
+
+        SUBCASE("more than two, and more than once") {
+            std::string input = "foo: bar   baz  qux\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar   baz  qux");
+        }
+
+        SUBCASE("tabs count as white space too") {
+            std::string input = "foo: bar \t baz\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar \t baz");
+        }
+
+        SUBCASE("a following indicator is an ordinary character in a block context") {
+            auto input = GENERATE(
+                std::string("foo: bar  ]\n"),
+                std::string("foo: bar  }\n"),
+                std::string("foo: bar  ? baz\n"),
+                std::string("foo: bar  |- baz\n"));
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str().find("bar  ") == 0);
+        }
+
+        SUBCASE("in a flow context") {
+            std::string input = "[foo  bar, baz]";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root[0].as_str() == "foo  bar");
+            REQUIRE(root[1].as_str() == "baz");
+        }
+    }
+
+    SUBCASE("white space still ends it where it used to") {
+        SUBCASE("before the comment prefix") {
+            std::string input = "foo: bar  # baz\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar");
+        }
+
+        SUBCASE("at the end of a line") {
+            std::string input = "foo: bar  \n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar");
+        }
+
+        SUBCASE("before a value indicator") {
+            std::string input = "foo  : bar\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root["foo"].as_str() == "bar");
+        }
+
+        SUBCASE("before a flow indicator in a flow context") {
+            std::string input = "[foo  ]";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+            REQUIRE(root.size() == 1);
+            REQUIRE(root[0].as_str() == "foo");
+        }
     }
 }
