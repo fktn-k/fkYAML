@@ -661,27 +661,6 @@ private:
                         add_explicit_key_with_empty_value(old_line, old_indent);
                     }
 
-                    if (m_needs_tag_impl) {
-                        const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-                        if (tag_type == tag_t::MAPPING || tag_type == tag_t::CUSTOM_TAG) {
-                            // set YAML node properties here to distinguish them from those for the first key node
-                            // as shown in the following snippet:
-                            //
-                            // ```yaml
-                            // foo: !!map
-                            //   !!str 123: true
-                            //   ^
-                            //   this !!str tag overwrites the preceding !!map tag.
-                            // ```
-                            *mp_current_node = basic_node_type::mapping();
-                            apply_directive_set(*mp_current_node);
-                            apply_deferred_properties(*mp_current_node);
-                            apply_node_properties(*mp_current_node);
-                            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                            continue;
-                        }
-                    }
-
                     if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                         // a key separator preceding block sequence entries
                         *mp_current_node = basic_node_type::sequence({basic_node_type()});

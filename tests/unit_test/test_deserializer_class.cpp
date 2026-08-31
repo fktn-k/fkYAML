@@ -4346,4 +4346,18 @@ TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
         REQUIRE(root["foo"].is_mapping());
         REQUIRE(root["foo"].get_tag_name() == "!!map");
     }
+
+    SUBCASE("a tag on the first key does not take the one for its mapping") {
+        std::string input = "foo: !!map\n  !!str 123: true\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.get_tag_name() == "!!map");
+
+        auto itr = foo_node.begin();
+        REQUIRE(itr.key().is_string());
+        REQUIRE(itr.key().get_tag_name() == "!!str");
+        REQUIRE(itr.value().get_value<bool>());
+    }
 }
