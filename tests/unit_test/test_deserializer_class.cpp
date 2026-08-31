@@ -496,6 +496,30 @@ TEST_CASE("Deserializer_DocumentLevelBlockScalar") {
             std::string("--- foo: >\nline1\n"), std::string("--- -x: >\nline1\n"), std::string("--- --x: >\nline1\n"));
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SUBCASE("a block scalar content is terminated by a directive end marker") {
+        std::string input = "--- >\nline1\nline2\n---\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_string());
+        REQUIRE(root.as_str() == "line1 line2\n");
+    }
+
+    SUBCASE("a block scalar content is terminated by an end-of-document marker") {
+        std::string input = "--- |\nline1\nline2\n...\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_string());
+        REQUIRE(root.as_str() == "line1\nline2\n");
+    }
+
+    SUBCASE("a block scalar content is not terminated by \"---\" followed by non-space characters") {
+        std::string input = "--- |\nline1\nline2\n---foo\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_string());
+        REQUIRE(root.as_str() == "line1\nline2\n---foo\n");
+    }
 }
 
 TEST_CASE("Deserializer_MultilinePlainScalarInBlockContext") {
