@@ -3765,6 +3765,14 @@ private:
             return false;
         }
 
+        return begins_document_marker(sv, pos);
+    }
+
+    /// @brief Checks if the given position begins a document marker (`---` or `...`).
+    /// @param sv The buffer contents being scanned.
+    /// @param pos The position to inspect.
+    /// @return true if a document marker begins at the given position.
+    static bool begins_document_marker(str_view sv, std::size_t pos) noexcept {
         const bool begins_marker = (sv.compare(pos, 3, "---") == 0) || (sv.compare(pos, 3, "...") == 0);
         return begins_marker && is_followed_by_white_space(sv, pos + 3);
     }
@@ -4608,6 +4616,15 @@ private:
 
             FK_YAML_ASSERT(last_newline_pos < cur_line_content_begin_pos);
             cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
+
+            const bool line_starts_with_document_marker =
+                is_document_root && cur_indent == 0 && begins_document_marker(sv, cur_line_content_begin_pos);
+            if (line_starts_with_document_marker) {
+                // The content lines are forbidden to begin with document markers (`---` or `...`).
+                // https://yaml.org/spec/1.2.2/#912-document-markers
+                break;
+            }
+
             if (cur_indent < content_indent && sv[cur_line_content_begin_pos] != '\n') {
                 // Trailing comments may be less indented than the contents, so they end the block scalar
                 // instead of being part of it.
