@@ -58,6 +58,7 @@ class lexical_analyzer {
         lexical_token token;
         uint32_t begin_pos {0};
         uint32_t begin_line {0};
+        const char* begin_itr {nullptr};
     };
 
     // whether the current context is flow(1) or block(0)
@@ -71,7 +72,8 @@ public:
     explicit lexical_analyzer(str_view input_buffer) noexcept
         : m_begin_itr(input_buffer.begin()),
           m_cur_itr(input_buffer.begin()),
-          m_end_itr(input_buffer.end()) {
+          m_end_itr(input_buffer.end()),
+          m_last_token_begin_itr(input_buffer.begin()) {
         m_pos_tracker.set_target_buffer(input_buffer);
     }
 
@@ -89,6 +91,7 @@ public:
 
         m_last_token_begin_pos = info.begin_pos;
         m_last_token_begin_line = info.begin_line;
+        m_last_token_begin_itr = info.begin_itr;
         return info.token;
     }
 
@@ -107,6 +110,16 @@ public:
     /// @return uint32_t The beginning position of a last token.
     uint32_t get_last_token_begin_pos() const noexcept {
         return m_last_token_begin_pos;
+    }
+
+    /// @brief Check whether a tab character is used within the indentation of the last token line.
+    /// @note Indentation must consist of spaces only, so a tab which appears before the given width
+    /// cannot be part of it. A tab which follows the indentation is valid separation white space.
+    /// https://yaml.org/spec/1.2.2/#61-indentation-spaces
+    /// @param indent The indentation width required at the beginning of the last token line.
+    /// @return true if a tab appears before the required indentation, false otherwise.
+    bool has_tab_in_indentation(uint32_t indent) const noexcept {
+        return has_tab_before(m_last_token_begin_itr, indent);
     }
 
     /// @brief Get the number of lines already processed.
@@ -145,6 +158,9 @@ public:
         m_state &= ~flow_context_bit;
         if (is_flow_context) {
             m_state |= flow_context_bit;
+            // The outermost flow collection owns the indentation which its lines must have. Only that
+            // one reaches here, since the deserializer enters the flow context from the block one alone.
+            m_flow_required_indent = get_required_continuation_indent();
         }
     }
 
@@ -166,10 +182,16 @@ private:
         token_info info {};
         info.begin_pos = m_pos_tracker.get_cur_pos_in_line();
         info.begin_line = m_pos_tracker.get_lines_read();
+        info.begin_itr = m_token_begin_itr;
 
         if (m_cur_itr == m_end_itr) {
             info.token.type = lexical_token_t::END_OF_BUFFER;
             return info;
+        }
+
+        const bool continues_flow_line = (m_state & flow_context_bit) != 0 && info.begin_line > m_last_token_begin_line;
+        if FK_YAML_UNLIKELY (continues_flow_line && has_tab_before(m_token_begin_itr, m_flow_required_indent)) {
+            emit_error("A tab character cannot be used as indentation.");
         }
 
         switch (*m_cur_itr) {
@@ -179,7 +201,9 @@ private:
                 return info;
             }
 
-            if (*m_cur_itr == ' ') {
+            // Any separation white space may follow the explicit key indicator, just like the block
+            // sequence entry indicator. https://yaml.org/spec/1.2.2/#rule-c-l-block-map-explicit-key
+            if (*m_cur_itr == ' ' || *m_cur_itr == '\t') {
                 info.token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
                 return info;
             }
@@ -928,6 +952,76 @@ private:
         return tag_name;
     }
 
+    /// @brief Check that the continuation lines of a multi-line token are indented with spaces.
+    /// @note A node continues on lines which are indented at least as deep as itself, and indentation
+    /// consists of spaces only. A tab which follows that indentation is valid separation white space,
+    /// and a line which holds nothing but white space is empty.
+    /// https://yaml.org/spec/1.2.2/#rule-s-flow-line-prefix
+    /// @param content The token contents, which may span multiple lines.
+    void check_continuation_indent(str_view content) {
+        const uint32_t required = get_required_continuation_indent();
+
+        for (std::size_t pos = content.find('\n'); pos != str_view::npos; pos = content.find('\n', pos + 1)) {
+            const std::size_t line_begin_pos = pos + 1;
+            const std::size_t content_pos = content.find_first_not_of(" \t", line_begin_pos);
+            const bool is_empty_line = (content_pos == str_view::npos) || content[content_pos] == '\n';
+            if (is_empty_line) {
+                continue;
+            }
+
+            const std::size_t tab_pos = content.find('\t', line_begin_pos);
+            if FK_YAML_UNLIKELY (tab_pos < content_pos && tab_pos - line_begin_pos < required) {
+                m_cur_itr = content.begin() + content_pos;
+                emit_error("A tab character cannot be used as indentation.");
+            }
+        }
+    }
+
+    /// @brief Get the indentation which the continuation lines of the current token must have.
+    /// @note A token which begins a line is the node at that indentation, so its continuation lines only
+    /// need the same one. A token preceded by something else on its line, a mapping value for instance,
+    /// belongs to a collection which owns that indentation, so its own contents must be indented deeper.
+    /// ```yaml
+    /// "1st          # the scalar is the node at column 0, so 0 is required
+    /// 2nd"
+    /// foo: "1st     # the scalar belongs to a mapping at column 0, so 1 is required
+    ///  2nd"
+    /// ```
+    /// @return uint32_t The indentation width required for the continuation lines.
+    uint32_t get_required_continuation_indent() const noexcept {
+        const char* p_line_begin = find_line_begin(m_token_begin_itr);
+
+        uint32_t indent = 0;
+        while (p_line_begin + indent < m_token_begin_itr && p_line_begin[indent] == ' ') {
+            ++indent;
+        }
+
+        // The token of a quoted scalar begins just after its opening quotation mark, which is the real
+        // beginning of the node, so one extra column still counts as beginning the line.
+        const bool begins_the_line = (m_token_begin_itr <= p_line_begin + indent + 1);
+        return begins_the_line ? indent : indent + 1;
+    }
+
+    /// @brief Check whether a tab appears before the given column on the line of `p_token_begin`.
+    /// @param p_token_begin The beginning of the token whose line is inspected.
+    /// @param indent The indentation width required at the beginning of that line.
+    /// @return true if a tab appears before the required indentation, false otherwise.
+    bool has_tab_before(const char* p_token_begin, uint32_t indent) const noexcept {
+        const char* p_line_begin = find_line_begin(p_token_begin);
+        const str_view line_head {p_line_begin, static_cast<std::size_t>(p_token_begin - p_line_begin)};
+        return line_head.find('\t') < indent;
+    }
+
+    /// @brief Get the beginning of the line which contains the given position.
+    /// @param p The position to start from.
+    /// @return const char* The beginning of its line.
+    const char* find_line_begin(const char* p) const noexcept {
+        while (p != m_begin_itr && *(p - 1) != '\n') {
+            --p;
+        }
+        return p;
+    }
+
     /// @brief Determines the range of single quoted scalar by scanning remaining input buffer contents.
     /// @return A single quoted scalar.
     str_view determine_single_quoted_scalar_range() {
@@ -941,6 +1035,7 @@ private:
                 m_cur_itr = m_token_begin_itr + (pos + 1);
                 str_view single_quoted_scalar {m_token_begin_itr, pos};
                 check_scalar_content(single_quoted_scalar);
+                check_continuation_indent(single_quoted_scalar);
                 return single_quoted_scalar;
             }
 
@@ -992,6 +1087,7 @@ private:
                 m_cur_itr = m_token_begin_itr + (pos + 1);
                 str_view double_quoted_scalar {m_token_begin_itr, pos};
                 check_scalar_content(double_quoted_scalar);
+                check_continuation_indent(double_quoted_scalar);
                 return double_quoted_scalar;
             }
 
@@ -1478,6 +1574,10 @@ private:
     str_view m_tag_prefix;
     /// The last block scalar header.
     block_scalar_header m_block_scalar_header {};
+    /// The beginning of the last lexical token, used to inspect the indentation of its line.
+    const char* m_last_token_begin_itr;
+    /// The indentation which the lines of the current flow collection must have.
+    uint32_t m_flow_required_indent {0};
     /// The beginning position of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)

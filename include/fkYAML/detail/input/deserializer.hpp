@@ -218,6 +218,7 @@ private:
 
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
+            check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
             root = basic_node_type::sequence({basic_node_type()});
             apply_directive_set(root);
             if (found_props) {
@@ -517,6 +518,8 @@ private:
 
                 token = lexer.get_next_token();
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
+                    check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
+
                     // The key node is owned by its context until the corresponding KEY_SEPARATOR event.
                     std::unique_ptr<basic_node_type> key_node(new basic_node_type(node_type::SEQUENCE));
                     basic_node_type* p_node = key_node.get();
@@ -803,6 +806,7 @@ private:
                 // ```
                 continue;
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
+                check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
                 if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
                     throw parse_error("A block sequence entry is not allowed in the flow context.", line, indent);
                 }
@@ -1281,6 +1285,22 @@ private:
         return prop_specified;
     }
 
+    /// @brief Reject a tab character used as the indentation of a block collection.
+    /// @note Indentation must consist of spaces only, while a tab which follows it is valid separation
+    /// white space. See https://yaml.org/spec/1.2.2/#61-indentation-spaces for more details.
+    /// ```yaml
+    /// -\t-    # the nested sequence is indented with a tab, which is an error
+    /// -\t-1   # the tab only separates the entry from its scalar, which is valid
+    /// ```
+    /// @param lexer The lexical analyzer to be used.
+    /// @param line The line of the node which begins the block collection.
+    /// @param indent The indentation width of the node which begins the block collection.
+    void check_tab_in_indentation(lexer_type& lexer, const uint32_t line, const uint32_t indent) const {
+        if FK_YAML_UNLIKELY (m_flow_context_depth == 0 && lexer.has_tab_in_indentation(indent)) {
+            throw parse_error("A tab character cannot be used as indentation.", line, indent);
+        }
+    }
+
     /// @brief Add new key string to the current YAML node.
     /// @param key a key string to be added to the current YAML node.
     /// @param line The line where the key is found.
@@ -1399,6 +1419,7 @@ private:
                         lexer.get_last_token_begin_pos());
                 }
             }
+            check_tab_in_indentation(lexer, line, indent);
             add_new_key(std::move(node), line, indent);
         }
         else if (token.type == lexical_token_t::KEY_SEPARATOR) {
@@ -1450,6 +1471,7 @@ private:
                             // # -> {foo: null, bar: 123}
                             // ```
                             add_explicit_key_with_null_value();
+                            check_tab_in_indentation(lexer, line, indent);
                             add_new_key(std::move(node), line, indent);
                             indent = lexer.get_last_token_begin_pos();
                             line = lexer.get_lines_processed();
@@ -1475,6 +1497,7 @@ private:
                             pop_to_parent_node(line, indent, [indent](const parse_context& c) {
                                 return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
                             });
+                            check_tab_in_indentation(lexer, line, indent);
                             add_new_key(std::move(node), line, indent);
                             indent = lexer.get_last_token_begin_pos();
                             line = lexer.get_lines_processed();
@@ -1515,6 +1538,7 @@ private:
                     }
                 }
             }
+            check_tab_in_indentation(lexer, line, indent);
             add_new_key(std::move(node), line, indent);
         }
         else {
