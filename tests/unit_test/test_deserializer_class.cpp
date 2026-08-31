@@ -4312,6 +4312,31 @@ TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 
+    SUBCASE("the node which follows may carry properties of its own") {
+        std::string input = "top: &map\n  &key bar: baz\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        fkyaml::node& top_node = root["top"];
+        REQUIRE(top_node.is_mapping());
+        REQUIRE(top_node.is_anchor());
+        REQUIRE(top_node.get_anchor_name() == "map");
+
+        const fkyaml::node& key = top_node.begin().key();
+        REQUIRE(key.is_anchor());
+        REQUIRE(key.get_anchor_name() == "key");
+    }
+
+    SUBCASE("nothing follows them but the next entry") {
+        std::string input = "foo: &anchor\nbar: 1\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_null());
+        REQUIRE(foo_node.is_anchor());
+        REQUIRE(foo_node.get_anchor_name() == "anchor");
+        REQUIRE_FALSE(root["bar"].is_anchor());
+    }
+
     SUBCASE("a collection tag is not rejected as a scalar one") {
         // The tag is for the mapping which begins on the next line, so it never reaches the key as a
         // scalar tag. See https://github.com/fktn-k/fkYAML/issues/594.
