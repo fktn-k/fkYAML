@@ -241,8 +241,17 @@ TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
+    SUBCASE("document end marker followed by a comment") {
+        fkyaml::detail::lexical_analyzer lexer("... # comment");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DOCUMENT);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
     SUBCASE("invalid document end marker") {
-        fkyaml::detail::lexical_analyzer lexer("...invalid");
+        auto input = GENERATE(std::string("...invalid"), std::string("... invalid"));
+        fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 }

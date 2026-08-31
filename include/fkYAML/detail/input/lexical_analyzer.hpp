@@ -368,21 +368,15 @@ private:
                 if FK_YAML_LIKELY (rem_size > 2) {
                     const bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
                     if (is_doc_end) {
-                        if (rem_size > 3) {
-                            switch (*(m_cur_itr + 3)) {
-                            case ' ':
-                            case '\t':
-                            case '\n':
-                                m_cur_itr += 4;
-                                break;
-                            default:
-                                // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
-                                emit_error("The document end marker \"...\" must not be followed by non-ws char.");
-                            }
+                        const char* cur_itr = m_cur_itr + 3;
+                        while (cur_itr != m_end_itr && (*cur_itr == ' ' || *cur_itr == '\t')) {
+                            ++cur_itr;
                         }
-                        else {
-                            m_cur_itr += 3;
+                        if FK_YAML_UNLIKELY (cur_itr != m_end_itr && *cur_itr != '\n' && *cur_itr != '#') {
+                            // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
+                            emit_error("The document end marker \"...\" must not be followed by non-ws char.");
                         }
+                        m_cur_itr = cur_itr;
                         info.token.type = lexical_token_t::END_OF_DOCUMENT;
                         return info;
                     }
