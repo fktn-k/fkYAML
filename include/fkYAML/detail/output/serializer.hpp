@@ -360,7 +360,9 @@ private:
     static bool has_prior_anchor_definition(
         const std::vector<anchor_reference>& anchors, const anchor_reference& target) {
         for (const auto& anchor : anchors) {
-            if (anchor.position < target.position && is_same_anchor(anchor, target)) {
+            const bool is_anchor_defined_prior_to_target =
+                anchor.position < target.position && is_same_anchor(anchor, target);
+            if (is_anchor_defined_prior_to_target) {
                 return true;
             }
         }
@@ -430,18 +432,15 @@ private:
     /// @param items The mapping items to reorder.
     /// @param item_anchors The anchor references grouped by mapping item.
     /// @param item_aliases The alias references grouped by mapping item.
+    /// @param anchors_in_mapping The anchor references defined in the mapping.
     /// @return The mapping items in dependency-respecting serialization order.
     std::vector<map_iterator> reorder_mapping_items_by_dependencies(
         const std::vector<map_iterator>& items, const std::vector<std::vector<anchor_reference>>& item_anchors,
-        const std::vector<std::vector<anchor_reference>>& item_aliases) const {
+        const std::vector<std::vector<anchor_reference>>& item_aliases,
+        std::vector<anchor_reference> anchors_in_mapping) const {
         std::vector<bool> emitted(items.size(), false);
         std::vector<map_iterator> ordered_items;
         ordered_items.reserve(items.size());
-
-        std::vector<anchor_reference> anchors_in_mapping;
-        for (const auto& anchors : item_anchors) {
-            anchors_in_mapping.insert(anchors_in_mapping.end(), anchors.begin(), anchors.end());
-        }
 
         std::size_t emitted_count = 0;
         while (emitted_count < items.size()) {
@@ -459,21 +458,10 @@ private:
                 }
             }
 
-            if (ready_item_index == items.size()) {
-                break;
-            }
-
             emitted[ready_item_index] = true;
             ordered_items.emplace_back(items[ready_item_index]);
             remove_anchors(item_anchors[ready_item_index], anchors_in_mapping);
             ++emitted_count;
-        }
-
-        for (std::size_t i = 0; i < items.size(); ++i) {
-            const bool is_item_emitted = emitted[i];
-            if (!is_item_emitted) {
-                ordered_items.emplace_back(items[i]);
-            }
         }
 
         return ordered_items;
@@ -499,11 +487,29 @@ private:
 
         // If there are no anchors (no resolving needed) or aliases (no anchor is referenced), return the items in the
         // order `node.map_items()` returns them.
-        if (!has_any_anchor || !has_any_alias) {
+        const bool needs_reordering = has_any_anchor && has_any_alias;
+        if (!needs_reordering) {
             return items;
         }
 
-        return reorder_mapping_items_by_dependencies(items, item_anchors, item_aliases);
+        std::vector<anchor_reference> anchors_in_mapping;
+        for (const auto& anchors : item_anchors) {
+            anchors_in_mapping.insert(anchors_in_mapping.end(), anchors.begin(), anchors.end());
+        }
+
+        for (std::size_t i = 0; i < items.size(); ++i) {
+            for (const auto& alias : item_aliases[i]) {
+                const bool is_anchor_defined_in_different_item =
+                    has_anchor(anchors_in_mapping, alias) && !has_anchor(item_anchors[i], alias);
+                if (is_anchor_defined_in_different_item) {
+                    return reorder_mapping_items_by_dependencies(
+                        items, item_anchors, item_aliases, std::move(anchors_in_mapping));
+                }
+            }
+        }
+
+        // Reordering is only needed when an alias refers to an anchor in another mapping item.
+        return items;
     }
 
     void collect_anchor_alias_names(

@@ -403,6 +403,41 @@ TEST_CASE("Serializer_AnchorDefinitionOrderDiffersFromMapOrder") {
     REQUIRE(root["a_second_ref"].get_value<int>() == 456);
 }
 
+TEST_CASE("Serializer_AliasAfterAnchorInSameMappingEntry") {
+    const std::string input = "root:\n"
+                              "  &anchor z_key: *anchor\n"
+                              "  a_reference: *anchor\n";
+    const fkyaml::node node = fkyaml::node::deserialize(input);
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+
+    const std::string output = serializer.serialize(node);
+    REQUIRE(output == input);
+
+    const fkyaml::node serialized_node = fkyaml::node::deserialize(output);
+    REQUIRE(serialized_node["root"]["z_key"].get_value<std::string>() == "z_key");
+    REQUIRE(serialized_node["root"]["a_reference"].get_value<std::string>() == "z_key");
+}
+
+TEST_CASE("Serializer_ExternalAliasesDoNotRequireMappingReordering") {
+    const std::string input = "external: &external 123\n"
+                              "root:\n"
+                              "  z_local: &local 456\n"
+                              "  a_external_ref: *external\n";
+    const fkyaml::node node = fkyaml::node::deserialize(input);
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+
+    const std::string output = serializer.serialize(node);
+    REQUIRE(
+        output == "external: &external 123\n"
+                  "root:\n"
+                  "  a_external_ref: *external\n"
+                  "  z_local: &local 456\n");
+
+    const fkyaml::node serialized_node = fkyaml::node::deserialize(output);
+    REQUIRE(serialized_node["root"]["a_external_ref"].get_value<int>() == 123);
+    REQUIRE(serialized_node["root"]["z_local"].get_value<int>() == 456);
+}
+
 TEST_CASE("Serializer_TaggedNode") {
     fkyaml::node root = fkyaml::node::mapping();
     fkyaml::node str_node("foo");
