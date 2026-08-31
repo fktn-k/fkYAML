@@ -207,7 +207,9 @@ private:
                 return;
             }
 
-            if (m_has_anchor_table) {
+            // If there is any anchor defined for this document and the mapping has more than one entry,
+            // reorder the mapping entries so the anchor resolution order is preserved.
+            if (m_has_anchor_table && node.size() > 1) {
                 for (const auto& itr : get_mapping_items_in_serialization_order(node)) {
                     serialize_mapping_entry(itr, cur_indent, str);
                 }
