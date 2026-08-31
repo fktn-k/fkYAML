@@ -236,19 +236,13 @@ TEST_CASE("Serializer_AnchorNode") {
 }
 
 TEST_CASE("Serializer_AliasNode") {
-    fkyaml::node node = {{"foo", 123}};
-    node["foo"].add_anchor_name("A");
-    node.as_map().emplace(true, fkyaml::node::alias_of(node["foo"]));
-    node.as_map().emplace(fkyaml::node::alias_of(node["foo"]), 3.14);
-    node[nullptr] = {"bar", fkyaml::node::alias_of(node["foo"])};
-
     std::string expected = "foo: &A 123\n"
                            "null:\n"
                            "  - bar\n"
                            "  - *A\n"
                            "true: *A\n"
                            "*A : 3.14\n";
-
+    const fkyaml::node node = fkyaml::node::deserialize(expected);
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node) == expected);
 }

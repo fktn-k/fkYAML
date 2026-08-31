@@ -12192,6 +12192,8 @@ public:
 
 private:
     void serialize_document(const BasicNodeType& node, std::string& str) {
+        m_has_anchor_table = (node.mp_meta && !node.mp_meta->anchor_table.empty());
+
         const bool dirs_serialized = serialize_directives(node, str);
 
         // the root node cannot be an alias node.
@@ -12319,66 +12321,16 @@ private:
                 str += "{}\n";
                 return;
             }
-            for (const auto& itr : get_mapping_items_in_serialization_order(node)) {
-                insert_indentation(cur_indent, str);
 
-                // serialize a mapping key node.
-                const auto& key_node = itr.key();
-
-                bool is_appended = try_append_alias(key_node, false, str);
-                if (is_appended) {
-                    // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
-                    str += " ";
+            if (m_has_anchor_table) {
+                for (const auto& itr : get_mapping_items_in_serialization_order(node)) {
+                    serialize_mapping_entry(itr, cur_indent, str);
                 }
-                else {
-                    const bool is_anchor_appended = try_append_anchor(key_node, false, str);
-                    const bool is_tag_appended = try_append_tag(key_node, is_anchor_appended, str);
-                    if (is_anchor_appended || is_tag_appended) {
-                        str += " ";
-                    }
-
-                    const bool is_container = !key_node.is_scalar();
-                    if (is_container) {
-                        str += "? ";
-                    }
-                    const auto indent = static_cast<uint32_t>(get_cur_indent(str));
-                    serialize_node(key_node, indent, str);
-                    if (is_container) {
-                        // a newline code is already inserted in the above serialize_node() call.
-                        insert_indentation(indent - 2, str);
-                    }
+            }
+            else {
+                for (const auto& itr : node.map_items()) {
+                    serialize_mapping_entry(itr, cur_indent, str);
                 }
-
-                str += ":";
-
-                // serialize a mapping value node.
-                const auto& value_node = itr.value();
-
-                is_appended = try_append_alias(value_node, true, str);
-                if (is_appended) {
-                    str += "\n";
-                    continue;
-                }
-
-                try_append_anchor(value_node, true, str);
-                try_append_tag(value_node, true, str);
-
-                const bool is_scalar = value_node.is_scalar();
-                if (is_scalar) {
-                    str += " ";
-                    serialize_node(value_node, cur_indent, str);
-                    str += "\n";
-                    continue;
-                }
-
-                const bool is_empty = value_node.empty();
-                if (is_empty) {
-                    str += " ";
-                }
-                else {
-                    str += "\n";
-                }
-                serialize_node(value_node, cur_indent + 2, str);
             }
             break;
         case node_type::NULL_OBJECT:
@@ -12429,6 +12381,68 @@ private:
             break;
         }
         }
+    }
+
+    void serialize_mapping_entry(const map_iterator& itr, const uint32_t cur_indent, std::string& str) {
+        insert_indentation(cur_indent, str);
+
+        // serialize a mapping key node.
+        const auto& key_node = itr.key();
+
+        bool is_appended = try_append_alias(key_node, false, str);
+        if (is_appended) {
+            // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
+            str += " ";
+        }
+        else {
+            const bool is_anchor_appended = try_append_anchor(key_node, false, str);
+            const bool is_tag_appended = try_append_tag(key_node, is_anchor_appended, str);
+            if (is_anchor_appended || is_tag_appended) {
+                str += " ";
+            }
+
+            const bool is_container = !key_node.is_scalar();
+            if (is_container) {
+                str += "? ";
+            }
+            const auto indent = static_cast<uint32_t>(get_cur_indent(str));
+            serialize_node(key_node, indent, str);
+            if (is_container) {
+                // a newline code is already inserted in the above serialize_node() call.
+                insert_indentation(indent - 2, str);
+            }
+        }
+
+        str += ":";
+
+        // serialize a mapping value node.
+        const auto& value_node = itr.value();
+
+        is_appended = try_append_alias(value_node, true, str);
+        if (is_appended) {
+            str += "\n";
+            return;
+        }
+
+        try_append_anchor(value_node, true, str);
+        try_append_tag(value_node, true, str);
+
+        const bool is_scalar = value_node.is_scalar();
+        if (is_scalar) {
+            str += " ";
+            serialize_node(value_node, cur_indent, str);
+            str += "\n";
+            return;
+        }
+
+        const bool is_empty = value_node.empty();
+        if (is_empty) {
+            str += " ";
+        }
+        else {
+            str += "\n";
+        }
+        serialize_node(value_node, cur_indent + 2, str);
     }
 
     /// @brief Check whether two anchor references identify the same anchor.
@@ -12753,6 +12767,9 @@ private:
     }
 
 private:
+    /// Indicates whether any anchor is present in the YAML document.
+    bool m_has_anchor_table {false};
+
     /// A temporal buffer for conversion from a scalar to a string.
     std::string m_tmp_str_buff;
 };
