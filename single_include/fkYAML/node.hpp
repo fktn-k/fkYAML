@@ -8396,6 +8396,16 @@ private:
                     continue;
                 }
 
+                if (found_props) {
+                    // The properties belong to whatever begins on the following line, which the token
+                    // after it decides.
+                    // ```yaml
+                    // foo: &anchor
+                    //   bar: baz   # the anchor is for the mapping, not for the "bar" key.
+                    // ```
+                    m_defers_props = true;
+                }
+
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
 
@@ -8569,8 +8579,23 @@ private:
                 continue;
             }
             case lexical_token_t::ANCHOR_PREFIX:
-            case lexical_token_t::TAG_PREFIX:
+            case lexical_token_t::TAG_PREFIX: {
+                const uint32_t props_line = lexer.get_lines_processed();
                 deserialize_node_properties(lexer, token, line, indent);
+
+                if (lexer.get_lines_processed() > props_line) {
+                    // The properties belong to whatever begins on the following line. Which node that
+                    // is depends on the token after it, so the binding waits until that is known.
+                    // ```yaml
+                    // - !circle
+                    //   center: 1   # the tag is for the mapping, not for the "center" key.
+                    // ```
+                    m_defers_props = true;
+                    line = lexer.get_lines_processed();
+                    indent = lexer.get_last_token_begin_pos();
+                    continue;
+                }
+
                 // Skip updating the current indent to avoid stacking a wrong indentation.
                 // Note that node properties for block sequences as a mapping value are processed when a
                 // `lexical_token_t::KEY_SEPARATOR` token is processed.
@@ -8581,6 +8606,7 @@ private:
                 // the correct indent width for the "bar" node key.
                 // ```
                 continue;
+            }
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
                 check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
                 if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
@@ -8896,12 +8922,13 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX: {
-                // An alias node must not specify any properties (tag, anchor).
+                // An alias node must not specify any properties (tag, anchor), but deferred ones are
+                // for the collection which this alias begins rather than for the alias itself.
                 // https://yaml.org/spec/1.2.2/#71-alias-nodes
-                if FK_YAML_UNLIKELY (m_needs_tag_impl) {
+                if FK_YAML_UNLIKELY (m_needs_tag_impl && !m_defers_props) {
                     throw parse_error("Tag cannot be specified to an alias node", line, indent);
                 }
-                if FK_YAML_UNLIKELY (m_needs_anchor_impl) {
+                if FK_YAML_UNLIKELY (m_needs_anchor_impl && !m_defers_props) {
                     throw parse_error("Anchor cannot be specified to an alias node.", line, indent);
                 }
 
@@ -8918,7 +8945,9 @@ private:
                 detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
 
                 apply_directive_set(node);
-                apply_node_properties(node);
+                if (!m_defers_props) {
+                    apply_node_properties(node);
+                }
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
 
@@ -8942,7 +8971,9 @@ private:
 
                 basic_node_type node = scalar_parser_type(line, indent).parse_flow(token.type, tag_type, token.str);
                 apply_directive_set(node);
-                apply_node_properties(node);
+                if (!m_defers_props) {
+                    apply_node_properties(node);
+                }
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
@@ -8955,7 +8986,9 @@ private:
                     scalar_parser_type(line, indent)
                         .parse_block(token.type, tag_type, token.str, lexer.get_block_scalar_header());
                 apply_directive_set(node);
-                apply_node_properties(node);
+                if (!m_defers_props) {
+                    apply_node_properties(node);
+                }
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
@@ -9294,6 +9327,11 @@ private:
 
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                    if (m_defers_props) {
+                        // The scalar turned out to be a key, so the deferred properties are for the
+                        // mapping which it begins.
+                        apply_node_properties(*mp_current_node);
+                    }
                 }
                 else {
                     // root mapping node
@@ -9318,6 +9356,16 @@ private:
             add_new_key(std::move(node), line, indent);
         }
         else {
+            if (m_defers_props) {
+                // No key separator follows, so the node is a value and owns the deferred properties.
+                // An alias node must not carry any, which is only known once it turns out not to be a
+                // key of the mapping the properties belong to.
+                // https://yaml.org/spec/1.2.2/#71-alias-nodes
+                if FK_YAML_UNLIKELY (node.is_alias()) {
+                    throw parse_error("Node properties cannot be specified to an alias node.", line, indent);
+                }
+                apply_node_properties(node);
+            }
             assign_node_value(std::move(node), line, indent);
         }
 
@@ -9495,7 +9543,8 @@ private:
     /// @param indent Current indentation.
     /// @return The resolved tag type, or tag_t::NONE if no tag is pending.
     tag_t resolve_scalar_tag(const uint32_t line, const uint32_t indent) const {
-        if (!m_needs_tag_impl) {
+        if (!m_needs_tag_impl || m_defers_props) {
+            // A deferred tag belongs to the collection which this scalar begins, not to the scalar.
             return tag_t::NONE;
         }
 
@@ -9513,6 +9562,7 @@ private:
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
     /// @param node A node type object to be set YAML node properties.
     void apply_node_properties(basic_node_type& node) {
+        m_defers_props = false;
         if (m_needs_anchor_impl) {
             node.add_anchor_name(std::string(m_anchor_name.begin(), m_anchor_name.end()));
             m_needs_anchor_impl = false;
@@ -9545,6 +9595,8 @@ private:
     std::shared_ptr<doc_metainfo_type> mp_meta {};
     /// Whether the document being parsed exists at all: it has contents or an explicit "---".
     bool m_has_document {false};
+    /// Whether the pending node properties precede their node and are not bound yet.
+    bool m_defers_props {false};
     /// A flag to determine the need for YAML anchor node implementation.
     bool m_needs_anchor_impl {false};
     /// A flag to determine the need for a corresponding node with the last YAML tag.

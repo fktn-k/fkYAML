@@ -4215,3 +4215,110 @@ TEST_CASE("Deserializer_TabInIndentation") {
         }
     }
 }
+
+TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
+    fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
+    fkyaml::node root;
+
+    SUBCASE("properties belong to the mapping which begins on the next line") {
+        SUBCASE("an anchor for a mapping as a mapping value") {
+            std::string input = "foo: &anchor\n  bar: baz\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+            fkyaml::node& foo_node = root["foo"];
+            REQUIRE(foo_node.is_mapping());
+            REQUIRE(foo_node.is_anchor());
+            REQUIRE(foo_node.get_anchor_name() == "anchor");
+            REQUIRE_FALSE(foo_node.begin().key().is_anchor());
+        }
+
+        SUBCASE("an anchor for a mapping as a sequence entry") {
+            std::string input = "- &anchor\n  bar: baz\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+            fkyaml::node& entry = root[0];
+            REQUIRE(entry.is_mapping());
+            REQUIRE(entry.is_anchor());
+            REQUIRE(entry.get_anchor_name() == "anchor");
+        }
+
+        SUBCASE("a tag for a mapping as a sequence entry") {
+            std::string input = "- !circle\n  center: 1\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+            fkyaml::node& entry = root[0];
+            REQUIRE(entry.is_mapping());
+            REQUIRE(entry.has_tag_name());
+            REQUIRE(entry.get_tag_name() == "!circle");
+            REQUIRE_FALSE(entry.begin().key().has_tag_name());
+        }
+
+        SUBCASE("an alias key does not take the properties") {
+            std::string input = "a: &key foo\nb: &node\n  *key : bar\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+            fkyaml::node& b_node = root["b"];
+            REQUIRE(b_node.is_mapping());
+            REQUIRE(b_node.is_anchor());
+            REQUIRE(b_node.get_anchor_name() == "node");
+        }
+    }
+
+    SUBCASE("properties on the same line still belong to the node which follows them") {
+        SUBCASE("a key") {
+            std::string input = "&key foo: bar\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+            REQUIRE(root.begin().key().is_anchor());
+            REQUIRE(root.begin().key().get_anchor_name() == "key");
+            REQUIRE_FALSE(root.is_anchor());
+        }
+
+        SUBCASE("a scalar value") {
+            std::string input = "foo: &value bar\n";
+            REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+            REQUIRE(root["foo"].is_anchor());
+            REQUIRE(root["foo"].get_anchor_name() == "value");
+        }
+    }
+
+    SUBCASE("a block sequence on the next line keeps taking them") {
+        std::string input = "foo: &anchor\n  - 1\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_sequence());
+        REQUIRE(foo_node.is_anchor());
+        REQUIRE(foo_node.get_anchor_name() == "anchor");
+    }
+
+    SUBCASE("a block scalar on the next line takes them") {
+        auto input = GENERATE(std::string("foo: &anchor\n  |\n    text\n"), std::string("- &anchor\n  |\n    text\n"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        const fkyaml::node& value = root.is_mapping() ? root["foo"] : root[0];
+        REQUIRE(value.is_string());
+        REQUIRE(value.as_str() == "text\n");
+        REQUIRE(value.is_anchor());
+        REQUIRE(value.get_anchor_name() == "anchor");
+    }
+
+    SUBCASE("an alias node cannot take them") {
+        // The alias is the whole value rather than a key of the mapping the properties belong to,
+        // so it would be carrying them itself, which is not allowed.
+        auto input = GENERATE(std::string("a: &x 1\nb: !!str\n  *x\n"), std::string("a: &x 1\nb: &y\n  *x\n"));
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("a collection tag is not rejected as a scalar one") {
+        // The tag is for the mapping which begins on the next line, so it never reaches the key as a
+        // scalar tag. See https://github.com/fktn-k/fkYAML/issues/594.
+        std::string input = "foo: !!map\n  bar: baz\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root["foo"].is_mapping());
+        REQUIRE(root["foo"].get_tag_name() == "!!map");
+    }
+}
