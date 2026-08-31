@@ -9464,9 +9464,10 @@ private:
 
         const auto pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
 
-        if (pop_num > 0 && defers_props() && mp_current_node->is_null()) {
+        if (pop_num > 0 && defers_props()) {
             // The entry which the properties preceded ends here without a node of its own, so they
-            // belong to its empty value.
+            // belong to its empty value. Any node which did follow them would have taken them before
+            // its context could be popped, so the current node is still the empty one.
             // ```yaml
             // foo: &anchor
             // bar: 1        # the anchor is for the empty value of "foo".
