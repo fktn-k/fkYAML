@@ -11,7 +11,7 @@ set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
   gbench
-  URL https://github.com/google/benchmark/archive/refs/tags/v1.9.5.zip
+  URL https://github.com/google/benchmark/archive/refs/tags/v1.8.4.zip
 )
 FetchContent_MakeAvailable(gbench)
 
