@@ -8000,6 +8000,7 @@ private:
             if (found_props) {
                 // If node properties are found before the block sequence entry prefix, the properties belong to the
                 // root sequence node.
+                apply_deferred_properties(root);
                 apply_node_properties(root);
             }
 
@@ -8021,6 +8022,7 @@ private:
             lexer.set_context_state(true);
             root = basic_node_type::sequence();
             apply_directive_set(root);
+            apply_deferred_properties(root);
             apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_SEQUENCE, &root);
@@ -8033,6 +8035,7 @@ private:
             lexer.set_context_state(true);
             root = basic_node_type::mapping();
             apply_directive_set(root);
+            apply_deferred_properties(root);
             apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
@@ -8046,6 +8049,7 @@ private:
             // No get_next_token() call here to handle the token event in the deserialize_node() function.
             root = basic_node_type::mapping();
             apply_directive_set(root);
+            apply_deferred_properties(root);
             apply_node_properties(root);
             parse_context context(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
@@ -8057,6 +8061,7 @@ private:
         case lexical_token_t::KEY_SEPARATOR:
             root = basic_node_type::mapping();
             apply_directive_set(root);
+            apply_deferred_properties(root);
             apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
@@ -8396,6 +8401,16 @@ private:
                     continue;
                 }
 
+                if (found_props) {
+                    // The properties belong to whatever begins on the following line, which the token
+                    // after it decides.
+                    // ```yaml
+                    // foo: &anchor
+                    //   bar: baz   # the anchor is for the mapping, not for the "bar" key.
+                    // ```
+                    defer_node_properties();
+                }
+
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
 
@@ -8422,30 +8437,11 @@ private:
                         add_explicit_key_with_empty_value(old_line, old_indent);
                     }
 
-                    if (m_needs_tag_impl) {
-                        const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-                        if (tag_type == tag_t::MAPPING || tag_type == tag_t::CUSTOM_TAG) {
-                            // set YAML node properties here to distinguish them from those for the first key node
-                            // as shown in the following snippet:
-                            //
-                            // ```yaml
-                            // foo: !!map
-                            //   !!str 123: true
-                            //   ^
-                            //   this !!str tag overwrites the preceding !!map tag.
-                            // ```
-                            *mp_current_node = basic_node_type::mapping();
-                            apply_directive_set(*mp_current_node);
-                            apply_node_properties(*mp_current_node);
-                            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                            continue;
-                        }
-                    }
-
                     if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                         // a key separator preceding block sequence entries
                         *mp_current_node = basic_node_type::sequence({basic_node_type()});
                         apply_directive_set(*mp_current_node);
+                        apply_deferred_properties(*mp_current_node);
                         apply_node_properties(*mp_current_node);
                         auto& cur_context = m_context_stack.back();
                         cur_context.line = line;
@@ -8485,6 +8481,7 @@ private:
                             m_context_stack.emplace_back(
                                 line_after_props, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                             apply_directive_set(*mp_current_node);
+                            apply_deferred_properties(*mp_current_node);
                             apply_node_properties(*mp_current_node);
                         }
 
@@ -8558,6 +8555,7 @@ private:
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
                     *mp_current_node = basic_node_type::sequence({basic_node_type()});
                     apply_directive_set(*mp_current_node);
+                    apply_deferred_properties(*mp_current_node);
                     apply_node_properties(*mp_current_node);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
 
@@ -8569,8 +8567,23 @@ private:
                 continue;
             }
             case lexical_token_t::ANCHOR_PREFIX:
-            case lexical_token_t::TAG_PREFIX:
+            case lexical_token_t::TAG_PREFIX: {
+                const uint32_t props_line = lexer.get_lines_processed();
                 deserialize_node_properties(lexer, token, line, indent);
+
+                if (lexer.get_lines_processed() > props_line) {
+                    // The properties belong to whatever begins on the following line. Which node that
+                    // is depends on the token after it, so the binding waits until that is known.
+                    // ```yaml
+                    // - !circle
+                    //   center: 1   # the tag is for the mapping, not for the "center" key.
+                    // ```
+                    defer_node_properties();
+                    line = lexer.get_lines_processed();
+                    indent = lexer.get_last_token_begin_pos();
+                    continue;
+                }
+
                 // Skip updating the current indent to avoid stacking a wrong indentation.
                 // Note that node properties for block sequences as a mapping value are processed when a
                 // `lexical_token_t::KEY_SEPARATOR` token is processed.
@@ -8581,6 +8594,7 @@ private:
                 // the correct indent width for the "bar" node key.
                 // ```
                 continue;
+            }
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
                 check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
                 if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
@@ -8623,6 +8637,7 @@ private:
                     *mp_current_node = basic_node_type::sequence();
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
                     apply_directive_set(*mp_current_node);
+                    apply_deferred_properties(*mp_current_node);
                     apply_node_properties(*mp_current_node);
                 }
 
@@ -8689,6 +8704,7 @@ private:
                 }
 
                 apply_directive_set(*mp_current_node);
+                apply_deferred_properties(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
@@ -8813,6 +8829,7 @@ private:
                 }
 
                 apply_directive_set(*mp_current_node);
+                apply_deferred_properties(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
                 line = lexer.get_lines_processed();
@@ -8896,7 +8913,8 @@ private:
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX: {
-                // An alias node must not specify any properties (tag, anchor).
+                // An alias node must not specify any properties (tag, anchor), but deferred ones are
+                // for the collection which this alias begins rather than for the alias itself.
                 // https://yaml.org/spec/1.2.2/#71-alias-nodes
                 if FK_YAML_UNLIKELY (m_needs_tag_impl) {
                     throw parse_error("Tag cannot be specified to an alias node", line, indent);
@@ -9294,6 +9312,9 @@ private:
 
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                    // The scalar turned out to be a key, so any deferred properties are for the mapping
+                    // which it begins rather than for the key itself.
+                    apply_deferred_properties(*mp_current_node);
                 }
                 else {
                     // root mapping node
@@ -9318,6 +9339,16 @@ private:
             add_new_key(std::move(node), line, indent);
         }
         else {
+            if (defers_props()) {
+                // No key separator follows, so the node is a value and owns the deferred properties.
+                // An alias node must not carry any, which is only known once it turns out not to be a
+                // key of the mapping the properties belong to.
+                // https://yaml.org/spec/1.2.2/#71-alias-nodes
+                if FK_YAML_UNLIKELY (node.is_alias()) {
+                    throw parse_error("Node properties cannot be specified to an alias node.", line, indent);
+                }
+                apply_deferred_properties(node);
+            }
             assign_node_value(std::move(node), line, indent);
         }
 
@@ -9433,6 +9464,17 @@ private:
 
         const auto pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
 
+        if (pop_num > 0 && defers_props()) {
+            // The entry which the properties preceded ends here without a node of its own, so they
+            // belong to its empty value. Any node which did follow them would have taken them before
+            // its context could be popped, so the current node is still the empty one.
+            // ```yaml
+            // foo: &anchor
+            // bar: 1        # the anchor is for the empty value of "foo".
+            // ```
+            apply_deferred_properties(*mp_current_node);
+        }
+
         // move back to the parent block mapping.
         for (uint32_t i = 0; i < pop_num; i++) {
             m_context_stack.pop_back();
@@ -9510,6 +9552,50 @@ private:
         return tag_type;
     }
 
+    /// @brief Move the pending node properties aside until the node they belong to is known.
+    /// @note They precede their node by a line, so the node which follows may carry properties of its
+    /// own. Keeping the two apart lets both be bound to the right node.
+    /// ```yaml
+    /// foo: &map
+    ///   &key bar: baz   # &map is for the mapping, &key is for the "bar" key.
+    /// ```
+    void defer_node_properties() {
+        if (m_needs_anchor_impl) {
+            m_deferred_anchor_name = m_anchor_name;
+            m_defers_anchor = true;
+            m_needs_anchor_impl = false;
+            m_anchor_name = {};
+        }
+        if (m_needs_tag_impl) {
+            m_deferred_tag_name = m_tag_name;
+            m_defers_tag = true;
+            m_needs_tag_impl = false;
+            m_tag_name = {};
+        }
+    }
+
+    /// @brief Check whether any node properties are waiting to be bound.
+    /// @return true if properties precede a node whose kind is not known yet, false otherwise.
+    bool defers_props() const noexcept {
+        return m_defers_anchor || m_defers_tag;
+    }
+
+    /// @brief Set the node properties which precede their node to the given node.
+    /// @param node A node type object the deferred properties belong to.
+    void apply_deferred_properties(basic_node_type& node) {
+        if (m_defers_anchor) {
+            node.add_anchor_name(std::string(m_deferred_anchor_name.begin(), m_deferred_anchor_name.end()));
+            m_defers_anchor = false;
+            m_deferred_anchor_name = {};
+        }
+
+        if (m_defers_tag) {
+            node.add_tag_name(std::string(m_deferred_tag_name.begin(), m_deferred_tag_name.end()));
+            m_defers_tag = false;
+            m_deferred_tag_name = {};
+        }
+    }
+
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
     /// @param node A node type object to be set YAML node properties.
     void apply_node_properties(basic_node_type& node) {
@@ -9545,6 +9631,14 @@ private:
     std::shared_ptr<doc_metainfo_type> mp_meta {};
     /// Whether the document being parsed exists at all: it has contents or an explicit "---".
     bool m_has_document {false};
+    /// Whether the pending node properties precede their node and are not bound yet.
+    bool m_defers_anchor {false};
+    /// Whether a tag which precedes its node is waiting to be bound.
+    bool m_defers_tag {false};
+    /// The anchor name which precedes its node.
+    str_view m_deferred_anchor_name;
+    /// The tag name which precedes its node.
+    str_view m_deferred_tag_name;
     /// A flag to determine the need for YAML anchor node implementation.
     bool m_needs_anchor_impl {false};
     /// A flag to determine the need for a corresponding node with the last YAML tag.
