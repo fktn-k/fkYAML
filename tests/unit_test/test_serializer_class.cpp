@@ -418,6 +418,21 @@ TEST_CASE("Serializer_AliasAfterAnchorInSameMappingEntry") {
     REQUIRE(serialized_node["root"]["a_reference"].get_value<std::string>() == "z_key");
 }
 
+TEST_CASE("Serializer_AliasAfterAnchorInFirstMappingEntry") {
+    const std::string input = "root:\n"
+                              "  &anchor a_key: *anchor\n"
+                              "  b_reference: *anchor\n";
+    const fkyaml::node node = fkyaml::node::deserialize(input);
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+
+    const std::string output = serializer.serialize(node);
+    REQUIRE(output == input);
+
+    const fkyaml::node serialized_node = fkyaml::node::deserialize(output);
+    REQUIRE(serialized_node["root"]["a_key"].get_value<std::string>() == "a_key");
+    REQUIRE(serialized_node["root"]["b_reference"].get_value<std::string>() == "a_key");
+}
+
 TEST_CASE("Serializer_ExternalAliasesDoNotRequireMappingReordering") {
     const std::string input = "external: &external 123\n"
                               "root:\n"
