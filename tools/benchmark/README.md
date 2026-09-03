@@ -1,6 +1,6 @@
 # Benchmark
 
-This tool runs benchmarking of deserialization performance with [the Google Benchmark library](https://github.com/google/benchmark/) (tag: [v1.8.4](https://github.com/google/benchmark/releases/tag/v1.8.4), the latest version supporting C++11) against fkYAML and some C++ YAML library.  
+This tool runs benchmarking of deserialization performance with [the Google Benchmark library](https://github.com/google/benchmark/) (tag: [v1.9.5](https://github.com/google/benchmark/releases/tag/v1.9.5), which requires C++17 to build although it can be used from C++11 code) against fkYAML and some C++ YAML library.  
 
 ## Used YAML library for Comparison
 
@@ -46,4 +46,4 @@ bm_fkyaml_parse                 xxxxx ns        xxxxx ns        xxxxx bytes_per_
 ...
 ```
 
-Visit [the user guide](https://github.com/google/benchmark/blob/v1.8.4/docs/user_guide.md) in the Google Benchmark repository for more information on the output format.  
+Visit [the user guide](https://github.com/google/benchmark/blob/v1.9.5/docs/user_guide.md) in the Google Benchmark repository for more information on the output format.  
