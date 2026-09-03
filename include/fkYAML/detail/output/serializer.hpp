@@ -111,6 +111,13 @@ private:
         m_mapping_item_references.clear();
         m_anchor_reference_cache.clear();
 
+        // Collect the anchor/alias events of the whole document once. Only mappings which do contain
+        // any are cached, so a mapping missing from the cache needs no reordering at all.
+        if (m_has_anchor_table) {
+            std::size_t position = 0;
+            collect_anchor_alias_names(node, position);
+        }
+
         const bool dirs_serialized = serialize_directives(node, str);
 
         // the root node cannot be an alias node.
@@ -242,14 +249,17 @@ private:
             // If there is any anchor defined for this document and the mapping has more than one entry,
             // reorder the mapping entries so the anchor resolution order is preserved.
             if (m_has_anchor_table && node.size() > 1) {
-                for (const auto& itr : get_mapping_items_in_serialization_order(node)) {
-                    serialize_mapping_entry(itr, cur_indent, str);
+                std::vector<map_iterator> ordered_items;
+                if (get_mapping_items_in_serialization_order(node, ordered_items)) {
+                    for (const auto& itr : ordered_items) {
+                        serialize_mapping_entry(itr, cur_indent, str);
+                    }
+                    break;
                 }
             }
-            else {
-                for (const auto& itr : node.map_items()) {
-                    serialize_mapping_entry(itr, cur_indent, str);
-                }
+
+            for (const auto& itr : node.map_items()) {
+                serialize_mapping_entry(itr, cur_indent, str);
             }
             break;
         case node_type::NULL_OBJECT:
@@ -369,7 +379,8 @@ private:
     /// @param rhs The second anchor reference.
     /// @return true if both references identify the same anchor, false otherwise.
     static bool is_same_anchor(const anchor_reference_event& lhs, const anchor_reference_event& rhs) noexcept {
-        return lhs.name == rhs.name && lhs.offset == rhs.offset;
+        // Compare the offset first, since it rules out most candidates without touching the name.
+        return lhs.offset == rhs.offset && lhs.name == rhs.name;
     }
 
     /// @brief Check whether an anchor is present in a collection.
@@ -501,9 +512,11 @@ private:
         ordered_items.reserve(items.size());
 
         std::size_t emitted_count = 0;
+        // Every item before this index has already been emitted, so the scan below can skip them.
+        std::size_t first_unemitted_index = 0;
         while (emitted_count < items.size()) {
             std::size_t ready_item_index = items.size();
-            for (std::size_t i = 0; i < items.size(); ++i) {
+            for (std::size_t i = first_unemitted_index; i < items.size(); ++i) {
                 const bool is_item_emitted = emitted[i];
                 if (is_item_emitted) {
                     continue;
@@ -520,28 +533,31 @@ private:
             ordered_items.emplace_back(items[ready_item_index]);
             remove_anchors(item_references[ready_item_index], anchor_indices);
             ++emitted_count;
+            while (first_unemitted_index < items.size() && emitted[first_unemitted_index]) {
+                ++first_unemitted_index;
+            }
         }
 
         return ordered_items;
     }
 
-    std::vector<map_iterator> get_mapping_items_in_serialization_order(const BasicNodeType& node) {
-        mapping_item_span mapping_reference {};
-        anchor_reference_span mapping_event_reference {};
+    /// @brief Collect the mapping items in the order they have to be serialized in.
+    /// @param node The mapping to serialize.
+    /// @param ordered_items Receives the reordered items, untouched unless reordering is needed.
+    /// @return true if the items were reordered, false if the mapping keeps its own order.
+    bool get_mapping_items_in_serialization_order(const BasicNodeType& node, std::vector<map_iterator>& ordered_items) {
         const auto mapping_reference_itr = m_anchor_reference_cache.find(&node);
         if (mapping_reference_itr == m_anchor_reference_cache.end()) {
-            std::size_t position = 0;
-            mapping_event_reference = collect_anchor_alias_names(node, position, false, &mapping_reference);
+            return false;
         }
-        else {
-            mapping_reference = mapping_reference_itr->second;
-            const auto& first_item_reference = m_mapping_item_references[mapping_reference.first_item_reference_index];
-            const auto& last_item_reference = m_mapping_item_references
-                [mapping_reference.first_item_reference_index + mapping_reference.item_count - 1];
-            mapping_event_reference = anchor_reference_span {
-                first_item_reference.first_index,
-                last_item_reference.first_index + last_item_reference.count - first_item_reference.first_index};
-        }
+
+        const mapping_item_span mapping_reference = mapping_reference_itr->second;
+        const auto& first_item_reference = m_mapping_item_references[mapping_reference.first_item_reference_index];
+        const auto& last_item_reference =
+            m_mapping_item_references[mapping_reference.first_item_reference_index + mapping_reference.item_count - 1];
+        const anchor_reference_span mapping_event_reference {
+            first_item_reference.first_index,
+            last_item_reference.first_index + last_item_reference.count - first_item_reference.first_index};
 
         bool has_any_anchor = false;
         bool has_any_alias = false;
@@ -555,12 +571,7 @@ private:
         // order `node.map_items()` returns them.
         const bool needs_reordering = has_any_anchor && has_any_alias;
         if (!needs_reordering) {
-            std::vector<map_iterator> items;
-            items.reserve(mapping_reference.item_count);
-            for (auto itr : node.map_items()) {
-                items.emplace_back(itr);
-            }
-            return items;
+            return false;
         }
 
         std::vector<map_iterator> items;
@@ -594,18 +605,18 @@ private:
                 const bool is_anchor_defined_in_different_item =
                     has_anchor(anchor_indices, alias) && !has_anchor(item_reference, alias);
                 if (is_anchor_defined_in_different_item) {
-                    return reorder_mapping_items_by_dependencies(items, item_references, std::move(anchor_indices));
+                    ordered_items =
+                        reorder_mapping_items_by_dependencies(items, item_references, std::move(anchor_indices));
+                    return true;
                 }
             }
         }
 
         // Reordering is only needed when an alias refers to an anchor in another mapping item.
-        return items;
+        return false;
     }
 
-    anchor_reference_span collect_anchor_alias_names(
-        const BasicNodeType& node, std::size_t& position, const bool cache_mapping = true,
-        mapping_item_span* p_mapping_reference = nullptr) {
+    anchor_reference_span collect_anchor_alias_names(const BasicNodeType& node, std::size_t& position) {
         const auto first_event_index = static_cast<uint32_t>(m_anchor_reference_events.size());
         if (node.is_alias()) {
             anchor_reference_event alias_event(
@@ -640,11 +651,8 @@ private:
                     m_mapping_item_references.end(), item_references.begin(), item_references.end());
                 const mapping_item_span reference {
                     first_item_reference_index, static_cast<uint32_t>(item_references.size())};
-                if (cache_mapping) {
+                if (m_anchor_reference_events.size() > first_event_index) {
                     m_anchor_reference_cache.emplace(&node, reference);
-                }
-                if (p_mapping_reference != nullptr) {
-                    *p_mapping_reference = reference;
                 }
                 break;
             }
