@@ -248,14 +248,9 @@ private:
 
             // If there is any anchor defined for this document and the mapping has more than one entry,
             // reorder the mapping entries so the anchor resolution order is preserved.
-            if (m_has_anchor_table && node.size() > 1) {
-                std::vector<map_iterator> ordered_items;
-                if (get_mapping_items_in_serialization_order(node, ordered_items)) {
-                    for (const auto& itr : ordered_items) {
-                        serialize_mapping_entry(itr, cur_indent, str);
-                    }
-                    break;
-                }
+            // Only a document which defines an anchor can ever need its mapping entries reordered.
+            if (m_has_anchor_table && node.size() > 1 && serialize_reordered_mapping(node, cur_indent, str)) {
+                break;
             }
 
             for (const auto& itr : node.map_items()) {
@@ -541,6 +536,22 @@ private:
         return ordered_items;
     }
 
+    /// @brief Serialize a mapping whose entries have to be reordered for anchor resolution.
+    /// @param node The mapping to serialize.
+    /// @param cur_indent The current indent width.
+    /// @param str A string to hold the serialization result.
+    /// @return true if the mapping was serialized here, false if it needs no reordering.
+    bool serialize_reordered_mapping(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
+        std::vector<map_iterator> ordered_items;
+        if (!get_mapping_items_in_serialization_order(node, ordered_items)) {
+            return false;
+        }
+
+        for (const auto& itr : ordered_items) {
+            serialize_mapping_entry(itr, cur_indent, str);
+        }
+        return true;
+    }
     /// @brief Collect the mapping items in the order they have to be serialized in.
     /// @param node The mapping to serialize.
     /// @param ordered_items Receives the reordered items, untouched unless reordering is needed.
