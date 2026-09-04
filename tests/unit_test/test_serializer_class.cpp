@@ -375,6 +375,29 @@ TEST_CASE("Serializer_ShouldPreserveAnchorAliasResolutionOrder") {
         const std::string output = serializer.serialize(node);
         REQUIRE(output == input);
     }
+
+    SUBCASE("Serialization doesn't reorder mapping entries if no anchors/aliases are present") {
+        const std::string input = "root:\n"
+                                  "  a:\n"
+                                  "    z: 1\n"
+                                  "    a: 2\n"
+                                  "  b: &A\n"
+                                  "    z: 3\n"
+                                  "    a: 4\n"
+                                  "  c: *A\n";
+        const fkyaml::node node = fkyaml::node::deserialize(input);
+        fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+        const std::string output = serializer.serialize(node);
+        REQUIRE(
+            output == "root:\n"
+                      "  a:\n"
+                      "    a: 2\n"
+                      "    z: 1\n"
+                      "  b: &A\n"
+                      "    a: 4\n"
+                      "    z: 3\n"
+                      "  c: *A\n");
+    }
 }
 
 TEST_CASE("Serializer_AnchorDefinitionOrderDiffersFromMapOrder") {

@@ -543,7 +543,8 @@ private:
     /// @return true if the mapping was serialized here, false if it needs no reordering.
     bool serialize_reordered_mapping(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
         std::vector<map_iterator> ordered_items;
-        if (!get_mapping_items_in_serialization_order(node, ordered_items)) {
+        const bool is_reordered = get_mapping_items_in_serialization_order(node, ordered_items);
+        if (!is_reordered) {
             return false;
         }
 
