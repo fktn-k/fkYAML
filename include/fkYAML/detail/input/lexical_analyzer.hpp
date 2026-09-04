@@ -858,6 +858,13 @@ private:
         case '\n':
             // Just "!" is a non-specific tag.
             return {m_token_begin_itr, m_cur_itr};
+        case '}':
+        case ']':
+        case ',':
+            if ((m_state & flow_context_bit) != 0) {
+                return {m_token_begin_itr, m_cur_itr};
+            }
+            break;
         case '!':
             // Secondary tag handles (!!suffix)
             break;
@@ -875,6 +882,7 @@ private:
         }
 
         bool is_named_handle = false;
+        bool is_in_verbatim_uri = is_verbatim;
         bool ends_loop = false;
         do {
             if (++m_cur_itr == m_end_itr) {
@@ -888,6 +896,10 @@ private:
             case '\n':
                 ends_loop = true;
                 break;
+            case '>':
+                // End of a verbatim tag (!<TAG>)
+                is_in_verbatim_uri = false;
+                break;
             case '!':
                 if FK_YAML_UNLIKELY (!allows_another_tag_prefix) {
                     emit_error("invalid tag prefix (!) is found.");
@@ -896,6 +908,16 @@ private:
                 is_named_handle = true;
                 // tag prefix must not appear three times.
                 allows_another_tag_prefix = false;
+                break;
+            case '}':
+            case ']':
+            case ',':
+                // Since these indicators can terminate a flow collection or its entry in a flow context,
+                // the trailing part is cut off so that the tag only includes the part before the flow indicator.
+                // ```yaml
+                // {foo: !!str, bar: !<tag:yaml.org,2002:str>}
+                // ```
+                ends_loop = !is_in_verbatim_uri && (m_state & flow_context_bit) != 0;
                 break;
             default:
                 break;
