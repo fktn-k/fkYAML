@@ -1669,6 +1669,56 @@ TEST_CASE("LexicalAnalyzer_Tag") {
         REQUIRE(token.str == input);
     }
 
+    SUBCASE("tag can be terminated by flow indicators in flow context") {
+        std::string input = "[!!str, !, {foo: !<tag:yaml.org,2002:str>}, !foo!bar]";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
+        lexer.set_context_state(true);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_PREFIX);
+        REQUIRE(token.str == "!!str");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_PREFIX);
+        REQUIRE(token.str == "!");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == "foo");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_PREFIX);
+        REQUIRE(token.str == "!<tag:yaml.org,2002:str>");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_END);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::VALUE_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_PREFIX);
+        REQUIRE(token.str == "!foo!bar");
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_END);
+    }
+
     SUBCASE("invalid tag names") {
         auto input = GENERATE(
             fkyaml::detail::str_view("!!f!oo tag"),
@@ -1677,6 +1727,7 @@ TEST_CASE("LexicalAnalyzer_Tag") {
             fkyaml::detail::str_view("!<> tag"),
             fkyaml::detail::str_view("!<%f:oo> tag"),
             fkyaml::detail::str_view("!<!%f:oo> tag"),
+            fkyaml::detail::str_view("!<foo>bar tag"),
             fkyaml::detail::str_view("!foo! tag"),
             fkyaml::detail::str_view("!foo!%f:oo tag"),
             fkyaml::detail::str_view("!foo{ tag"),
@@ -1689,11 +1740,15 @@ TEST_CASE("LexicalAnalyzer_Tag") {
             fkyaml::detail::str_view("!!foo[ tag"),
             fkyaml::detail::str_view("!!foo] tag"),
             fkyaml::detail::str_view("!!foo, tag"),
+            // flow indicators are not allowed in a block context
             fkyaml::detail::str_view("!foo!bar{ tag"),
             fkyaml::detail::str_view("!foo!bar} tag"),
             fkyaml::detail::str_view("!foo!bar[ tag"),
             fkyaml::detail::str_view("!foo!bar] tag"),
-            fkyaml::detail::str_view("!foo!bar, tag"));
+            fkyaml::detail::str_view("!foo!bar, tag"),
+            fkyaml::detail::str_view("!}"),
+            fkyaml::detail::str_view("!]"),
+            fkyaml::detail::str_view("!,"));
 
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_THROWS_AS(token = lexer.get_next_token(), fkyaml::parse_error);
