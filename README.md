@@ -224,33 +224,33 @@ The following tables are created from the benchmarking results in the following 
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 77.8628Mi/s                          |
-| libfyaml                           | 34.7381Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 150.988Mi/s                          |
-| rapidyaml<br>(with immutable buff) | 135.589Mi/s                          |
-| yaml-cpp                           | 10.1239Mi/s                          |
+| fkYAML                             | 76.1277Mi/s                          |
+| libfyaml                           | 35.9803Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 151.126Mi/s                          |
+| rapidyaml<br>(with immutable buff) | 132.36Mi/s                           |
+| yaml-cpp                           | 10.122Mi/s                           |
 
 ### Parsing [citm_catalog.json](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/cases/citm_catalog.json)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 126.783Mi/s                          |
-| libfyaml                           | 49.9466Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 120.681Mi/s                          |
-| rapidyaml<br>(with immutable buff) | 118.728Mi/s                          |
-| yaml-cpp                           | 16.5976Mi/s                          |
+| fkYAML                             | 121.04Mi/s                          |
+| libfyaml                           | 50.7076Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 109.535Mi/s                          |
+| rapidyaml<br>(with immutable buff) | 113.083Mi/s                          |
+| yaml-cpp                           | 16.6685Mi/s                          |
 
 ### Parsing [citm_catalog.yml](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/cases/citm_catalog.yml)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 55.9384Mi/s                          |
-| libfyaml                           | 21.6074Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 54.2151Mi/s                          |
-| rapidyaml<br>(with immutable buff) | 53.7195Mi/s                          |
-| yaml-cpp                           | 7.0331Mi/s                           |
+| fkYAML                             | 56.0765Mi/s                          |
+| libfyaml                           | 21.9363Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 53.6721Mi/s                          |
+| rapidyaml<br>(with immutable buff) | 53.3632Mi/s                          |
+| yaml-cpp                           | 7.30883Mi/s                           |
 
-Although [rapidyaml](https://github.com/biojppm/rapidyaml) focuses on high performance and can be up to about 1.9x faster than fkYAML depending on the input, fkYAML is in general 2.2x to 2.6x faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also more than 7x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) focuses on high performance and can be up to about 2x faster than fkYAML depending on the input, fkYAML is in general 2.1x to 2.6x faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also more than 7x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).
 Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some use cases since there is no need for string manipulations upon data queries.  
 
 ## Community Support
