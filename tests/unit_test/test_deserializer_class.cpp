@@ -1394,6 +1394,53 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root["baz"].is_null());
     }
 
+    SUBCASE("omitted mapping values with a tag") {
+        std::string input = "foo: !!str\n"
+                            "bar: {foo: !!str}\n"
+                            "baz: [foo: !!str]\n"
+                            "? foo: !!str\n"
+                            ": foo: !!str\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        CAPTURE(root);
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 4);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("bar"));
+        REQUIRE(root.contains("baz"));
+        auto map_key = fkyaml::node {{"foo", ""}};
+        REQUIRE(root.contains(map_key));
+
+        REQUIRE(root["foo"].is_string());
+        REQUIRE(root["foo"].as_str().empty());
+        REQUIRE(root["foo"].get_tag_name() == "!!str");
+
+        REQUIRE(root["bar"].is_mapping());
+        REQUIRE(root["bar"].size() == 1);
+        REQUIRE(root["bar"].contains("foo"));
+        REQUIRE(root["bar"]["foo"].is_string());
+        REQUIRE(root["bar"]["foo"].as_str().empty());
+        REQUIRE(root["bar"]["foo"].get_tag_name() == "!!str");
+
+        REQUIRE(root["baz"].is_sequence());
+        REQUIRE(root["baz"].size() == 1);
+        REQUIRE(root["baz"][0].is_mapping());
+        REQUIRE(root["baz"][0].size() == 1);
+        REQUIRE(root["baz"][0].contains("foo"));
+        REQUIRE(root["baz"][0]["foo"].is_string());
+        REQUIRE(root["baz"][0]["foo"].as_str().empty());
+        REQUIRE(root["baz"][0]["foo"].get_tag_name() == "!!str");
+
+        REQUIRE(root[map_key].is_mapping());
+        REQUIRE(root[map_key].size() == 1);
+        REQUIRE(root[map_key].contains("foo"));
+        REQUIRE(root[map_key]["foo"].is_string());
+        REQUIRE(root[map_key]["foo"].as_str().empty());
+        REQUIRE(root[map_key]["foo"].get_tag_name() == "!!str");
+    }
+
     // regression test for https://github.com/fktn-k/fkYAML/issues/487
     SUBCASE("block mapping after an empty block sequence entry (same indentation)") {
         std::string input = "test:\n"

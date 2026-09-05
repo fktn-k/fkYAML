@@ -8511,7 +8511,17 @@ private:
                         continue;
                     }
 
-                    if (indent <= m_context_stack.back().indent) {
+                    // A property for an omitted value inside an explicit key is deferred until the
+                    // key context is closed:
+                    // ```yaml
+                    // ? foo: !!str # the tag belongs to this omitted value
+                    // : foo: !!str # this separator begins the explicit key's value
+                    // ```
+                    // Processing the second separator here would close the explicit key
+                    // with a null value before the tag determines the type of the inner mapping's
+                    // omitted value.
+                    if ((token.type != lexical_token_t::KEY_SEPARATOR || !defers_props()) &&
+                        indent <= m_context_stack.back().indent) {
                         // An explicit key can omit its value as well, in which case the entry must still be
                         // added to the parent mapping.
                         // ```yaml
@@ -8742,6 +8752,7 @@ private:
                     m_flow_base_indent = -1;
                 }
 
+                close_omitted_mapping_value(line, indent);
                 close_single_pair_mapping(line, indent);
 
                 const bool has_valid_beginning =
@@ -9495,6 +9506,11 @@ private:
             // foo: &anchor
             // bar: 1        # the anchor is for the empty value of "foo".
             // ```
+            if (m_defers_tag) {
+                const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+                ensure_scalar_tag(tag_type, line, indent);
+                materialize_tagged_empty_node(tag_type, line, indent);
+            }
             apply_deferred_properties(*mp_current_node);
         }
 
@@ -9549,9 +9565,36 @@ private:
         // LCOV_EXCL_STOP
 
         if (m_context_stack.back().state == context_state_t::MAPPING_VALUE) {
+            if (m_needs_tag_impl) {
+                tag_t tag_type = resolve_scalar_tag(line, indent);
+                materialize_tagged_empty_node(tag_type, line, indent);
+            }
+            apply_directive_set(*mp_current_node);
+            apply_node_properties(*mp_current_node);
             m_context_stack.pop_back();
             mp_current_node = current_context(line, indent).p_node;
             m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+        }
+    }
+
+    /// @brief Materializes an empty node with the specified tag type.
+    /// @param tag_type The tag type to apply to the empty node.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    void materialize_tagged_empty_node(tag_t tag_type, const uint32_t line, const uint32_t indent) {
+        switch (tag_type) {
+        case tag_t::STRING:
+        case tag_t::NON_SPECIFIC:
+            *mp_current_node = BasicNodeType(typename BasicNodeType::string_type());
+            break;
+        case tag_t::NULL_VALUE:
+            // A null value is already represented by a default-constructed node.
+            break;
+        default: {
+            auto msg = format("Unsupported tag (%s) for an empty node.", m_tag_name.data());
+            throw parse_error(msg.c_str(), line, indent);
+            break;
+        }
         }
     }
 
@@ -9565,14 +9608,21 @@ private:
         }
 
         const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
+        ensure_scalar_tag(tag_type, line, indent);
 
+        return tag_type;
+    }
+
+    /// @brief Ensure that the given tag type is valid for a scalar node.
+    /// @param tag_type The tag type to check.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    static void ensure_scalar_tag(tag_t tag_type, const uint32_t line, const uint32_t indent) {
         // A collection tag denotes a sequence or a mapping, so it cannot apply to a scalar node.
         // Such an input is a syntax error rather than an internal inconsistency.
         if FK_YAML_UNLIKELY (tag_type == tag_t::SEQUENCE || tag_type == tag_t::MAPPING) {
             throw parse_error("A sequence or mapping tag cannot be specified to a scalar node.", line, indent);
         }
-
-        return tag_type;
     }
 
     /// @brief Move the pending node properties aside until the node they belong to is known.
