@@ -1394,24 +1394,31 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root["baz"].is_null());
     }
 
-    SUBCASE("omitted mapping values with a tag") {
+    SUBCASE("tagged empty nodes in various contexts") {
         std::string input = "!!str : !!str\n"
                             "bar: {!!str : !!str}\n"
                             "baz: [!!str : !!str]\n"
+                            "qux:\n"
+                            "- !!str : !!str\n"
+                            "- !!str\n"
                             "? !!str : !!str\n"
-                            ": !!str : !!str\n";
+                            ": !!str : !!str\n"
+                            "!!null :\n"
+                            "- ? !!null\n";
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
 
         CAPTURE(root);
 
         REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 4);
+        REQUIRE(root.size() == 6);
         REQUIRE(root.contains(""));
         REQUIRE(root.contains("bar"));
         REQUIRE(root.contains("baz"));
+        REQUIRE(root.contains("qux"));
         auto map_key = fkyaml::node {{"", ""}};
         REQUIRE(root.contains(map_key));
+        REQUIRE(root.contains(nullptr));
 
         auto itr = root.as_map().find("");
         const auto& empty_key = itr->first;
@@ -1447,6 +1454,24 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root["baz"][0][""].as_str().empty());
         REQUIRE(root["baz"][0][""].get_tag_name() == "!!str");
 
+        REQUIRE(root["qux"].is_sequence());
+        REQUIRE(root["qux"].size() == 2);
+        REQUIRE(root["qux"][0].is_mapping());
+        REQUIRE(root["qux"][0].size() == 1);
+        REQUIRE(root["qux"][0].contains(""));
+
+        auto qux_itr = root["qux"][0].as_map().find("");
+        const auto& qux_empty_key = qux_itr->first;
+        REQUIRE(qux_empty_key.get_tag_name() == "!!str");
+
+        REQUIRE(root["qux"][0][""].is_string());
+        REQUIRE(root["qux"][0][""].as_str().empty());
+        REQUIRE(root["qux"][0][""].get_tag_name() == "!!str");
+
+        REQUIRE(root["qux"][1].is_string());
+        REQUIRE(root["qux"][1].as_str().empty());
+        REQUIRE(root["qux"][1].get_tag_name() == "!!str");
+
         auto map_key_itr = root.as_map().find(map_key);
         const auto& map_empty_key = map_key_itr->first;
         REQUIRE(map_empty_key.is_mapping());
@@ -1472,6 +1497,22 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(root[map_key][""].is_string());
         REQUIRE(root[map_key][""].as_str().empty());
         REQUIRE(root[map_key][""].get_tag_name() == "!!str");
+
+        auto null_itr = root.as_map().find(nullptr);
+        auto null_key = null_itr->first;
+        REQUIRE(null_key.get_tag_name() == "!!null");
+
+        REQUIRE(root[nullptr].is_sequence());
+        REQUIRE(root[nullptr].size() == 1);
+        REQUIRE(root[nullptr][0].is_mapping());
+        REQUIRE(root[nullptr][0].size() == 1);
+        REQUIRE(root[nullptr][0].contains(nullptr));
+
+        auto null_inner_itr = root[nullptr][0].as_map().find(nullptr);
+        const auto& null_inner_key = null_inner_itr->first;
+        REQUIRE(null_inner_key.get_tag_name() == "!!null");
+
+        REQUIRE(root[nullptr][0][nullptr].is_null());
     }
 
     // regression test for https://github.com/fktn-k/fkYAML/issues/487

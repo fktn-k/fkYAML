@@ -562,6 +562,17 @@ private:
                 if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                     throw parse_error("A key separator is not allowed in this context.", line, indent);
                 }
+                if ((m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY ||
+                     m_context_stack.back().state == context_state_t::MAPPING_VALUE) &&
+                    (m_needs_tag_impl || m_needs_anchor_impl) && m_context_stack.back().line != line &&
+                    indent <= m_context_stack.back().indent) {
+                    pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                        return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                    });
+                    add_empty_key_entry(lexer, token, line, indent);
+                    continue;
+                }
+
                 if (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
                     // The entry is a mapping whose first key is empty.
                     // ```yaml
@@ -571,11 +582,7 @@ private:
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                    add_new_key(basic_node_type(), line, indent);
-
-                    token = lexer.get_next_token();
-                    indent = lexer.get_last_token_begin_pos();
-                    line = lexer.get_lines_processed();
+                    add_empty_key_entry(lexer, token, line, indent);
                     continue;
                 }
 
@@ -672,20 +679,16 @@ private:
                     }
 
                     if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                        // a key separator preceding block sequence entries
-                        *mp_current_node = basic_node_type::sequence({basic_node_type()});
-                        apply_directive_set(*mp_current_node);
-                        apply_deferred_properties(*mp_current_node);
-                        apply_node_properties(*mp_current_node);
-                        auto& cur_context = m_context_stack.back();
-                        cur_context.line = line;
-                        cur_context.indent = indent;
-                        cur_context.state = context_state_t::BLOCK_SEQUENCE;
+                        if (m_context_stack.back().state == context_state_t::MAPPING_VALUE && defers_props() &&
+                            indent < m_context_stack.back().indent) {
+                            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                return c.state == context_state_t::BLOCK_SEQUENCE && indent == c.indent;
+                            });
+                            continue;
+                        }
 
-                        mp_current_node = &(mp_current_node->as_seq().back());
-                        apply_directive_set(*mp_current_node);
-                        m_context_stack.emplace_back(
-                            line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
+                        // a key separator preceding block sequence entries
+                        initialize_block_sequence_value(line, indent, true);
 
                         token = lexer.get_next_token();
                         line = lexer.get_lines_processed();
@@ -797,14 +800,7 @@ private:
                 add_explicit_key_with_empty_value(old_line, old_indent);
 
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                    *mp_current_node = basic_node_type::sequence({basic_node_type()});
-                    apply_directive_set(*mp_current_node);
-                    apply_deferred_properties(*mp_current_node);
-                    apply_node_properties(*mp_current_node);
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
-
-                    mp_current_node = &(mp_current_node->as_seq().back());
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
+                    initialize_block_sequence_value(line, indent, false);
                     break;
                 }
 
@@ -1649,11 +1645,42 @@ private:
         line = lexer.get_lines_processed();
         indent = lexer.get_last_token_begin_pos();
 
+        if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX && line > key_line && indent <= key_indent) {
+            initialize_block_sequence_value(line, indent, false);
+
+            token = lexer.get_next_token();
+            line = lexer.get_lines_processed();
+            indent = lexer.get_last_token_begin_pos();
+            return;
+        }
+
         if (line > key_line && indent <= key_indent) {
             pop_to_parent_node(line, indent, [key_indent](const parse_context& c) {
                 return c.state == context_state_t::BLOCK_MAPPING && key_indent == c.indent;
             });
         }
+    }
+
+    /// @brief Initializes a block sequence as the current mapping value.
+    /// @param line The line where the sequence begins.
+    /// @param indent The indentation width where the sequence begins.
+    /// @param apply_properties Whether pending node properties belong to the sequence.
+    void initialize_block_sequence_value(const uint32_t line, const uint32_t indent, const bool apply_properties) {
+        *mp_current_node = basic_node_type::sequence({basic_node_type()});
+        apply_directive_set(*mp_current_node);
+        if (apply_properties) {
+            apply_deferred_properties(*mp_current_node);
+            apply_node_properties(*mp_current_node);
+        }
+
+        auto& cur_context = m_context_stack.back();
+        cur_context.line = line;
+        cur_context.indent = indent;
+        cur_context.state = context_state_t::BLOCK_SEQUENCE;
+
+        mp_current_node = &(mp_current_node->as_seq().back());
+        apply_directive_set(*mp_current_node);
+        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
     }
 
     /// @brief Adds an entry for an explicit key and makes its value node the current node.
@@ -1801,12 +1828,12 @@ private:
     /// @param line Current line.
     /// @param indent Current indentation.
     void materialize_tagged_empty_node(
-        BasicNodeType& node, tag_t tag_type, const uint32_t line, const uint32_t indent) {
+        basic_node_type& node, tag_t tag_type, const uint32_t line, const uint32_t indent) {
         switch (tag_type) {
         case tag_t::STRING:
         case tag_t::NON_SPECIFIC:
         case tag_t::CUSTOM_TAG:
-            node = BasicNodeType(typename BasicNodeType::string_type());
+            node = basic_node_type(typename basic_node_type::string_type());
             break;
         case tag_t::NULL_VALUE:
             // A null value is already represented by a default-constructed node.
