@@ -8085,9 +8085,8 @@ private:
             root = basic_node_type::mapping();
             apply_directive_set(root);
             apply_deferred_properties(root);
-            apply_node_properties(root);
-            m_context_stack.emplace_back(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
+            // apply_node_properties(root);
+            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, &root);
             add_empty_key_entry(lexer, token, line, indent);
             break;
         case lexical_token_t::BLOCK_LITERAL_SCALAR:
@@ -8102,20 +8101,9 @@ private:
             // Defer handling the above token events until the next call on the deserialize_scalar() function since the
             // meaning depends on subsequent events.
             if (found_props && line < lexer.get_lines_processed()) {
-                // If node properties and a followed node are on the different line, the properties belong to the root
-                // node.
-                if (m_needs_anchor_impl) {
-                    m_root_anchor_name = m_anchor_name;
-                    m_needs_anchor_impl = false;
-                    m_anchor_name = {};
-                }
-
-                if (m_needs_tag_impl) {
-                    m_root_tag_name = m_tag_name;
-                    m_needs_tag_impl = false;
-                    m_tag_name = {};
-                }
-
+                // If node properties and a followed node are on different lines, defer the properties until the root
+                // node type is known.
+                defer_node_properties();
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
             }
@@ -8130,6 +8118,18 @@ private:
         FK_YAML_ASSERT(
             last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
             last_type == lexical_token_t::END_OF_DOCUMENT);
+
+        if (m_needs_tag_impl) {
+            const tag_t tag_type = resolve_scalar_tag(line, indent);
+            materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
+        }
+        apply_node_properties(*mp_current_node);
+        if (m_defers_tag) {
+            const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+            ensure_scalar_tag(tag_type, line, indent);
+            materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
+        }
+        apply_deferred_properties(*mp_current_node);
 
         // An explicit key at the end of a document has no value either. Its own contents may have left
         // more contexts on the stack, so those are unwound first.
@@ -8378,6 +8378,14 @@ private:
                     continue;
                 }
 
+                if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE) {
+                    *mp_current_node = basic_node_type::mapping();
+                    apply_directive_set(*mp_current_node);
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    add_empty_key_entry(lexer, token, line, indent);
+                    continue;
+                }
+
                 {
                     const parse_context& cur_context = m_context_stack.back();
                     const bool is_explicit_key_content =
@@ -8405,7 +8413,8 @@ private:
                         // { : foo }
                         // # -> {null: foo}
                         // ```
-                        add_new_key(basic_node_type(), line, indent);
+                        add_empty_key_entry(lexer, token, line, indent);
+                        continue;
                     }
                     break;
                 }
@@ -8419,12 +8428,13 @@ private:
                 indent = lexer.get_last_token_begin_pos();
 
                 const bool found_props = deserialize_node_properties(lexer, token, line, indent);
-                if (found_props && line == lexer.get_lines_processed()) {
+                if (found_props && line == lexer.get_lines_processed() &&
+                    token.type != lexical_token_t::KEY_SEPARATOR) {
                     // defer applying node properties for the subsequent node on the same line.
                     continue;
                 }
 
-                if (found_props) {
+                if (found_props && token.type != lexical_token_t::KEY_SEPARATOR) {
                     // The properties belong to whatever begins on the following line, which the token
                     // after it decides.
                     // ```yaml
@@ -9289,6 +9299,17 @@ private:
             if (mp_current_node->is_scalar()) {
                 if FK_YAML_LIKELY (!m_context_stack.empty()) {
                     parse_context& cur_context = m_context_stack.back();
+                    if (cur_context.state == context_state_t::MAPPING_VALUE && cur_context.indent == indent &&
+                        defers_props()) {
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                        });
+                        check_tab_in_indentation(lexer, line, indent);
+                        add_new_key(std::move(node), line, indent);
+                        indent = lexer.get_last_token_begin_pos();
+                        line = lexer.get_lines_processed();
+                        return;
+                    }
                     switch (cur_context.state) {
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
                         if (cur_context.indent == indent) {
@@ -9356,17 +9377,7 @@ private:
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
-
-                    // apply node properties if any to the root mapping node.
-                    if (!m_root_anchor_name.empty()) {
-                        mp_current_node->add_anchor_name(
-                            std::string(m_root_anchor_name.begin(), m_root_anchor_name.end()));
-                        m_root_anchor_name = {};
-                    }
-                    if (!m_root_tag_name.empty()) {
-                        mp_current_node->add_tag_name(std::string(m_root_tag_name.begin(), m_root_tag_name.end()));
-                        m_root_tag_name = {};
-                    }
+                    apply_deferred_properties(*mp_current_node);
                 }
             }
             check_tab_in_indentation(lexer, line, indent);
@@ -9424,7 +9435,14 @@ private:
     void add_empty_key_entry(lexer_type& lexer, lexical_token& token, uint32_t& line, uint32_t& indent) {
         const uint32_t key_line = line;
         const uint32_t key_indent = indent;
-        add_new_key(basic_node_type(), line, indent);
+        basic_node_type key_node;
+        if (m_needs_tag_impl) {
+            tag_t tag_type = resolve_scalar_tag(line, indent);
+            materialize_tagged_empty_node(key_node, tag_type, line, indent);
+        }
+        apply_directive_set(key_node);
+        apply_node_properties(key_node);
+        add_new_key(std::move(key_node), line, indent);
 
         token = lexer.get_next_token();
         line = lexer.get_lines_processed();
@@ -9509,7 +9527,7 @@ private:
             if (m_defers_tag) {
                 const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
                 ensure_scalar_tag(tag_type, line, indent);
-                materialize_tagged_empty_node(tag_type, line, indent);
+                materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
             }
             apply_deferred_properties(*mp_current_node);
         }
@@ -9567,7 +9585,7 @@ private:
         if (m_context_stack.back().state == context_state_t::MAPPING_VALUE) {
             if (m_needs_tag_impl) {
                 tag_t tag_type = resolve_scalar_tag(line, indent);
-                materialize_tagged_empty_node(tag_type, line, indent);
+                materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
             }
             apply_directive_set(*mp_current_node);
             apply_node_properties(*mp_current_node);
@@ -9581,11 +9599,13 @@ private:
     /// @param tag_type The tag type to apply to the empty node.
     /// @param line Current line.
     /// @param indent Current indentation.
-    void materialize_tagged_empty_node(tag_t tag_type, const uint32_t line, const uint32_t indent) {
+    void materialize_tagged_empty_node(
+        BasicNodeType& node, tag_t tag_type, const uint32_t line, const uint32_t indent) {
         switch (tag_type) {
         case tag_t::STRING:
         case tag_t::NON_SPECIFIC:
-            *mp_current_node = BasicNodeType(typename BasicNodeType::string_type());
+        case tag_t::CUSTOM_TAG:
+            node = BasicNodeType(typename BasicNodeType::string_type());
             break;
         case tag_t::NULL_VALUE:
             // A null value is already represented by a default-constructed node.
@@ -9722,10 +9742,6 @@ private:
     str_view m_anchor_name;
     /// The last tag name.
     str_view m_tag_name;
-    /// The root YAML anchor name. (maybe empty and unused)
-    str_view m_root_anchor_name;
-    /// The root tag name. (maybe empty and unused)
-    str_view m_root_tag_name;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

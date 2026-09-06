@@ -1395,11 +1395,11 @@ TEST_CASE("Deserializer_BlockMapping") {
     }
 
     SUBCASE("omitted mapping values with a tag") {
-        std::string input = "foo: !!str\n"
-                            "bar: {foo: !!str}\n"
-                            "baz: [foo: !!str]\n"
-                            "? foo: !!str\n"
-                            ": foo: !!str\n";
+        std::string input = "!!str : !!str\n"
+                            "bar: {!!str : !!str}\n"
+                            "baz: [!!str : !!str]\n"
+                            "? !!str : !!str\n"
+                            ": !!str : !!str\n";
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
 
@@ -1407,38 +1407,71 @@ TEST_CASE("Deserializer_BlockMapping") {
 
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 4);
-        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains(""));
         REQUIRE(root.contains("bar"));
         REQUIRE(root.contains("baz"));
-        auto map_key = fkyaml::node {{"foo", ""}};
+        auto map_key = fkyaml::node {{"", ""}};
         REQUIRE(root.contains(map_key));
 
-        REQUIRE(root["foo"].is_string());
-        REQUIRE(root["foo"].as_str().empty());
-        REQUIRE(root["foo"].get_tag_name() == "!!str");
+        auto itr = root.as_map().find("");
+        const auto& empty_key = itr->first;
+        REQUIRE(empty_key.get_tag_name() == "!!str");
+
+        REQUIRE(root[""].is_string());
+        REQUIRE(root[""].as_str().empty());
+        REQUIRE(root[""].get_tag_name() == "!!str");
 
         REQUIRE(root["bar"].is_mapping());
         REQUIRE(root["bar"].size() == 1);
-        REQUIRE(root["bar"].contains("foo"));
-        REQUIRE(root["bar"]["foo"].is_string());
-        REQUIRE(root["bar"]["foo"].as_str().empty());
-        REQUIRE(root["bar"]["foo"].get_tag_name() == "!!str");
+        REQUIRE(root["bar"].contains(""));
+
+        auto bar_itr = root["bar"].as_map().find("");
+        const auto& bar_empty_key = bar_itr->first;
+        REQUIRE(bar_empty_key.get_tag_name() == "!!str");
+
+        REQUIRE(root["bar"][""].is_string());
+        REQUIRE(root["bar"][""].as_str().empty());
+        REQUIRE(root["bar"][""].get_tag_name() == "!!str");
 
         REQUIRE(root["baz"].is_sequence());
         REQUIRE(root["baz"].size() == 1);
         REQUIRE(root["baz"][0].is_mapping());
         REQUIRE(root["baz"][0].size() == 1);
-        REQUIRE(root["baz"][0].contains("foo"));
-        REQUIRE(root["baz"][0]["foo"].is_string());
-        REQUIRE(root["baz"][0]["foo"].as_str().empty());
-        REQUIRE(root["baz"][0]["foo"].get_tag_name() == "!!str");
+        REQUIRE(root["baz"][0].contains(""));
+
+        auto baz_itr = root["baz"][0].as_map().find("");
+        const auto& baz_empty_key = baz_itr->first;
+        REQUIRE(baz_empty_key.get_tag_name() == "!!str");
+
+        REQUIRE(root["baz"][0][""].is_string());
+        REQUIRE(root["baz"][0][""].as_str().empty());
+        REQUIRE(root["baz"][0][""].get_tag_name() == "!!str");
+
+        auto map_key_itr = root.as_map().find(map_key);
+        const auto& map_empty_key = map_key_itr->first;
+        REQUIRE(map_empty_key.is_mapping());
+        REQUIRE(map_empty_key.size() == 1);
+        REQUIRE(map_empty_key.contains(""));
+
+        auto map_empty_key_itr = map_empty_key.as_map().find("");
+        const auto& map_empty_key_inner = map_empty_key_itr->first;
+        REQUIRE(map_empty_key_inner.is_string());
+        REQUIRE(map_empty_key_inner.as_str().empty());
+        REQUIRE(map_empty_key_inner.get_tag_name() == "!!str");
 
         REQUIRE(root[map_key].is_mapping());
         REQUIRE(root[map_key].size() == 1);
-        REQUIRE(root[map_key].contains("foo"));
-        REQUIRE(root[map_key]["foo"].is_string());
-        REQUIRE(root[map_key]["foo"].as_str().empty());
-        REQUIRE(root[map_key]["foo"].get_tag_name() == "!!str");
+        REQUIRE(root[map_key].contains(""));
+
+        auto map_key_value_itr = root[map_key].as_map().find("");
+        const auto& map_key_value = map_key_value_itr->first;
+        REQUIRE(map_key_value.is_string());
+        REQUIRE(map_key_value.as_str().empty());
+        REQUIRE(map_key_value.get_tag_name() == "!!str");
+
+        REQUIRE(root[map_key][""].is_string());
+        REQUIRE(root[map_key][""].as_str().empty());
+        REQUIRE(root[map_key][""].get_tag_name() == "!!str");
     }
 
     // regression test for https://github.com/fktn-k/fkYAML/issues/487
