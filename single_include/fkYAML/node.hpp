@@ -7977,7 +7977,8 @@ public:
                 // A next document may start from the directive part. Ensure '%' is lexed as a directive token
                 // during the lookahead; otherwise it can be cached as a plain scalar and break parsing.
                 lexer.set_document_state(true);
-                if (lexer.peek_next_token().type == lexical_token_t::END_OF_BUFFER) {
+                const lexical_token_t next_type = lexer.peek_next_token().type;
+                if (next_type == lexical_token_t::END_OF_BUFFER) {
                     break;
                 }
             }
@@ -8533,8 +8534,10 @@ private:
                     // Processing the second separator here would close the explicit key
                     // with a null value before the tag determines the type of the inner mapping's
                     // omitted value.
-                    if ((token.type != lexical_token_t::KEY_SEPARATOR || !defers_props()) &&
-                        indent <= m_context_stack.back().indent) {
+                    const bool is_omitted_mapping_value_without_properties =
+                        (token.type != lexical_token_t::KEY_SEPARATOR || !defers_props()) &&
+                        indent <= m_context_stack.back().indent;
+                    if (is_omitted_mapping_value_without_properties) {
                         // An explicit key can omit its value as well, in which case the entry must still be
                         // added to the parent mapping.
                         // ```yaml
@@ -9295,8 +9298,11 @@ private:
             if (mp_current_node->is_scalar()) {
                 if FK_YAML_LIKELY (!m_context_stack.empty()) {
                     parse_context& cur_context = m_context_stack.back();
-                    if (cur_context.state == context_state_t::MAPPING_VALUE && cur_context.indent == indent &&
-                        defers_props()) {
+
+                    const bool is_omitted_mapping_value_with_properties =
+                        cur_context.state == context_state_t::MAPPING_VALUE && cur_context.indent == indent &&
+                        defers_props();
+                    if (is_omitted_mapping_value_with_properties) {
                         pop_to_parent_node(line, indent, [indent](const parse_context& c) {
                             return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
                         });
@@ -9306,6 +9312,7 @@ private:
                         line = lexer.get_lines_processed();
                         return;
                     }
+
                     switch (cur_context.state) {
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
                         if (cur_context.indent == indent) {
@@ -9351,6 +9358,7 @@ private:
 
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         break;
+                    case context_state_t::MAPPING_VALUE:
                     default:
                         if FK_YAML_UNLIKELY (cur_context.line == line) {
                             throw parse_error("Multiple mapping keys are specified on the same line.", line, indent);
@@ -9433,7 +9441,7 @@ private:
         const uint32_t key_indent = indent;
         basic_node_type key_node;
         if (m_needs_tag_impl) {
-            tag_t tag_type = resolve_scalar_tag(line, indent);
+            const tag_t tag_type = resolve_scalar_tag(line, indent);
             materialize_tagged_empty_node(key_node, tag_type, line, indent);
         }
         apply_directive_set(key_node);
@@ -9444,7 +9452,9 @@ private:
         line = lexer.get_lines_processed();
         indent = lexer.get_last_token_begin_pos();
 
-        if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX && line > key_line && indent <= key_indent) {
+        const bool is_block_sequence_entry =
+            token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX && line > key_line && indent <= key_indent;
+        if (is_block_sequence_entry) {
             initialize_block_sequence_value(line, indent, false);
 
             token = lexer.get_next_token();
@@ -9611,7 +9621,7 @@ private:
 
         if (m_context_stack.back().state == context_state_t::MAPPING_VALUE) {
             if (m_needs_tag_impl) {
-                tag_t tag_type = resolve_scalar_tag(line, indent);
+                const tag_t tag_type = resolve_scalar_tag(line, indent);
                 materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
             }
             apply_directive_set(*mp_current_node);
@@ -12998,7 +13008,7 @@ private:
             return false;
         }
 
-        typedef typename BasicNodeType::string_type string_type;
+        using string_type = typename BasicNodeType::string_type;
         if (s.find_first_of(" \t\n\r,[]{}") != string_type::npos) {
             return false;
         }
