@@ -4050,6 +4050,128 @@ TEST_CASE("Deserializer_NodeProperties") {
         std::string input = "!!int : bar\n";
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SUBCASE("anchored empty nodes in various contexts") {
+        std::string input = "&anchor_key1 : &anchor1\n"
+                            "b: {&anchor_key2 : &anchor2}\n"
+                            "c: [&anchor_key3 : &anchor3]\n"
+                            "d:\n"
+                            "- &anchor_key4 : &anchor4\n"
+                            "- &anchor5\n"
+                            "? &anchor_key5 : &anchor6\n"
+                            ": &anchor_key6 : &anchor7\n"
+                            "&anchor_key7 !!str :\n"
+                            "- ? &anchor_key8\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 6);
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root.contains("b"));
+        REQUIRE(root.contains("c"));
+        REQUIRE(root.contains("d"));
+        auto map_key = fkyaml::node {{nullptr, nullptr}};
+        REQUIRE(root.contains(map_key));
+        REQUIRE(root.contains(""));
+
+        auto null_key_itr = root.as_map().find(nullptr);
+        const auto& null_key = null_key_itr->first;
+        REQUIRE(null_key.get_anchor_name() == "anchor_key1");
+
+        REQUIRE(root[nullptr].is_null());
+        REQUIRE(root[nullptr].is_anchor());
+        REQUIRE(root[nullptr].get_anchor_name() == "anchor1");
+
+        REQUIRE(root["b"].is_mapping());
+        REQUIRE(root["b"].size() == 1);
+        REQUIRE(root["b"].contains(nullptr));
+
+        auto b_inner_key_itr = root["b"].as_map().find(nullptr);
+        const auto& b_inner_key = b_inner_key_itr->first;
+        REQUIRE(b_inner_key.get_anchor_name() == "anchor_key2");
+
+        REQUIRE(root["b"][nullptr].is_null());
+        REQUIRE(root["b"][nullptr].is_anchor());
+        REQUIRE(root["b"][nullptr].get_anchor_name() == "anchor2");
+
+        REQUIRE(root["c"].is_sequence());
+        REQUIRE(root["c"].size() == 1);
+
+        REQUIRE(root["c"][0].is_mapping());
+        REQUIRE(root["c"][0].size() == 1);
+        REQUIRE(root["c"][0].contains(nullptr));
+
+        auto c_inner_key_itr = root["c"][0].as_map().find(nullptr);
+        const auto& c_inner_key = c_inner_key_itr->first;
+        REQUIRE(c_inner_key.get_anchor_name() == "anchor_key3");
+
+        REQUIRE(root["c"][0][nullptr].is_anchor());
+        REQUIRE(root["c"][0][nullptr].is_null());
+        REQUIRE(root["c"][0][nullptr].get_anchor_name() == "anchor3");
+
+        REQUIRE(root["d"].is_sequence());
+        REQUIRE(root["d"].size() == 2);
+
+        REQUIRE(root["d"][0].is_mapping());
+        REQUIRE(root["d"][0].size() == 1);
+        REQUIRE(root["d"][0].contains(nullptr));
+
+        auto d_inner_key_itr = root["d"][0].as_map().find(nullptr);
+        const auto& d_inner_key = d_inner_key_itr->first;
+        REQUIRE(d_inner_key.get_anchor_name() == "anchor_key4");
+
+        REQUIRE(root["d"][0][nullptr].is_anchor());
+        REQUIRE(root["d"][0][nullptr].is_null());
+        REQUIRE(root["d"][0][nullptr].get_anchor_name() == "anchor4");
+
+        REQUIRE(root["d"][1].is_anchor());
+        REQUIRE(root["d"][1].is_null());
+        REQUIRE(root["d"][1].get_anchor_name() == "anchor5");
+
+        auto map_key_inner_itr = root.as_map().find(map_key);
+        auto map_key_inner = map_key_inner_itr->first;
+        REQUIRE(map_key_inner.is_mapping());
+        REQUIRE(map_key_inner.size() == 1);
+        REQUIRE(map_key_inner.contains(nullptr));
+
+        auto map_key_inner_key_itr = map_key_inner.as_map().find(nullptr);
+        const auto& map_key_inner_key = map_key_inner_key_itr->first;
+        REQUIRE(map_key_inner_key.get_anchor_name() == "anchor_key5");
+
+        REQUIRE(map_key_inner[nullptr].is_anchor());
+        REQUIRE(map_key_inner[nullptr].is_null());
+        REQUIRE(map_key_inner[nullptr].get_anchor_name() == "anchor6");
+
+        REQUIRE(root[map_key].is_mapping());
+        REQUIRE(root[map_key].size() == 1);
+        REQUIRE(root[map_key].contains(nullptr));
+
+        auto map_value_key_itr = root[map_key].as_map().find(nullptr);
+        const auto& map_value_key = map_value_key_itr->first;
+        REQUIRE(map_value_key.get_anchor_name() == "anchor_key6");
+
+        REQUIRE(root[map_key][nullptr].is_anchor());
+        REQUIRE(root[map_key][nullptr].is_null());
+        REQUIRE(root[map_key][nullptr].get_anchor_name() == "anchor7");
+
+        auto empty_str_key_itr = root.as_map().find("");
+        const auto& empty_str_key = empty_str_key_itr->first;
+        REQUIRE(empty_str_key.get_anchor_name() == "anchor_key7");
+        REQUIRE(empty_str_key.get_tag_name() == "!!str");
+
+        REQUIRE(root[""].is_sequence());
+        REQUIRE(root[""].size() == 1);
+        REQUIRE(root[""][0].is_mapping());
+        REQUIRE(root[""][0].size() == 1);
+        REQUIRE(root[""][0].contains(nullptr));
+
+        auto empty_str_inner_key_itr = root[""][0].as_map().find(nullptr);
+        const auto& empty_str_inner_key = empty_str_inner_key_itr->first;
+        REQUIRE(empty_str_inner_key.get_anchor_name() == "anchor_key8");
+
+        REQUIRE(root[""][0][nullptr].is_null());
+    }
 }
 
 TEST_CASE("Deserializer_NoMachingAnchor") {

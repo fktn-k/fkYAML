@@ -8124,12 +8124,15 @@ private:
             const tag_t tag_type = resolve_scalar_tag(line, indent);
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
-        apply_node_properties(*mp_current_node);
         if (m_defers_tag) {
             const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
             ensure_scalar_tag(tag_type, line, indent);
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
+        // The current node may be an empty node which never received the document metainfo. An anchor
+        // name must be registered in the shared metainfo, or aliases cannot resolve it.
+        apply_directive_set(*mp_current_node);
+        apply_node_properties(*mp_current_node);
         apply_deferred_properties(*mp_current_node);
 
         // An explicit key at the end of a document has no value either. Its own contents may have left
@@ -8438,11 +8441,14 @@ private:
                 const bool found_props = deserialize_node_properties(lexer, token, line, indent);
                 if (found_props && line == lexer.get_lines_processed() &&
                     token.type != lexical_token_t::KEY_SEPARATOR) {
+                    settle_explicit_key_value_with_props(old_line, old_indent);
                     // defer applying node properties for the subsequent node on the same line.
                     continue;
                 }
 
-                if (found_props && token.type != lexical_token_t::KEY_SEPARATOR) {
+                const bool has_explicit_key_context = has_explicit_key_context_at(old_indent);
+
+                if (found_props && token.type != lexical_token_t::KEY_SEPARATOR && !has_explicit_key_context) {
                     // The properties belong to whatever begins on the following line, which the token
                     // after it decides.
                     // ```yaml
@@ -8450,6 +8456,14 @@ private:
                     //   bar: baz   # the anchor is for the mapping, not for the "bar" key.
                     // ```
                     defer_node_properties();
+                }
+
+                if (found_props && has_explicit_key_context) {
+                    // The properties follow the separator of an explicit key, so they belong to its
+                    // value. They must not be deferred here, or they would overwrite the properties
+                    // of the key which are already deferred.
+                    settle_explicit_key_value_with_props(old_line, old_indent);
+                    continue;
                 }
 
                 line = lexer.get_lines_processed();
@@ -8525,15 +8539,28 @@ private:
                         continue;
                     }
 
-                    // A property for an omitted value inside an explicit key is deferred until the
-                    // key context is closed:
+                    // A key separator on a following line may be the value separator of an explicit
+                    // key whose contents were mapping entries, rather than a separator in the current
+                    // mapping:
                     // ```yaml
                     // ? foo: !!str # the tag belongs to this omitted value
                     // : foo: !!str # this separator begins the explicit key's value
                     // ```
-                    // Processing the second separator here would close the explicit key
-                    // with a null value before the tag determines the type of the inner mapping's
-                    // omitted value.
+                    // Defer the properties of the omitted value and leave the separator to the next
+                    // iteration, which closes the explicit key and applies them.
+                    if (token.type == lexical_token_t::KEY_SEPARATOR) {
+                        const auto is_explicit_key_at_indent = [indent](const parse_context& c) {
+                            return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
+                        };
+                        const bool closes_explicit_key =
+                            indent < m_context_stack.back().indent &&
+                            std::any_of(m_context_stack.rbegin(), m_context_stack.rend(), is_explicit_key_at_indent);
+                        if (closes_explicit_key) {
+                            defer_node_properties();
+                            continue;
+                        }
+                    }
+
                     const bool is_omitted_mapping_value_without_properties =
                         (token.type != lexical_token_t::KEY_SEPARATOR || !defers_props()) &&
                         indent <= m_context_stack.back().indent;
@@ -9492,12 +9519,44 @@ private:
         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
     }
 
+    /// @brief Checks whether an explicit key context exists at the given indentation.
+    /// @param indent The indentation width of the explicit key context to look for.
+    /// @return true if such a context is on the context stack, false otherwise.
+    bool has_explicit_key_context_at(const uint32_t indent) const noexcept {
+        const auto is_explicit_key_context = [indent](const parse_context& c) {
+            return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
+        };
+        return std::any_of(m_context_stack.rbegin(), m_context_stack.rend(), is_explicit_key_context);
+    }
+
+    /// @brief Settles an explicit key into its value context when properties follow its separator.
+    /// @note As in `? key` followed by `: &anchor`, the value context of the explicit key is settled
+    /// before its node is known so that the properties which follow the separator are bound to the
+    /// (empty) value node. Does nothing when no matching explicit key context exists.
+    /// @param line The line of the key separator.
+    /// @param indent The indentation width of the key separator.
+    void settle_explicit_key_value_with_props(const uint32_t line, const uint32_t indent) {
+        if (!has_explicit_key_context_at(indent)) {
+            return;
+        }
+        if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+            const auto is_explicit_key_context = [indent](const parse_context& c) {
+                return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
+            };
+            pop_to_parent_node(line, indent, is_explicit_key_context);
+        }
+        add_explicit_key_with_empty_value(line, indent);
+    }
+
     /// @brief Adds an entry for an explicit key and makes its value node the current node.
     /// @note The current context must be the context of the explicit key.
     /// @param line The line where the value of the explicit key begins.
     /// @param indent The indentation width where the value of the explicit key begins.
     void add_explicit_key_with_empty_value(const uint32_t line, const uint32_t indent) {
         FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY);
+
+        // Deferred properties precede the key, so they belong to the key rather than to its value.
+        apply_deferred_properties(*m_context_stack.back().p_node);
 
         basic_node_type key_node = std::move(*m_context_stack.back().p_node);
         m_context_stack.pop_back();
@@ -9524,6 +9583,9 @@ private:
             return false;
         }
 
+        // Deferred properties precede the key, so they belong to the key rather than to its value.
+        apply_deferred_properties(*m_context_stack.back().p_node);
+
         basic_node_type key_node = std::move(*m_context_stack.back().p_node);
         m_context_stack.pop_back();
         m_context_stack.back().p_node->as_map().emplace(std::move(key_node), basic_node_type());
@@ -9543,37 +9605,49 @@ private:
         }
         // LCOV_EXCL_STOP
 
-        // LCOV_EXCL_START
-        auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
-        // LCOV_EXCL_STOP
-        const bool is_indent_valid = (itr != m_context_stack.rend());
-        if FK_YAML_UNLIKELY (!is_indent_valid) {
-            throw parse_error("Detected invalid indentation.", line, indent);
-        }
-
-        const auto pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
-
-        if (pop_num > 0 && defers_props()) {
-            // The entry which the properties preceded ends here without a node of its own, so they
-            // belong to its empty value. Any node which did follow them would have taken them before
-            // its context could be popped, so the current node is still the empty one.
-            // ```yaml
-            // foo: &anchor
-            // bar: 1        # the anchor is for the empty value of "foo".
-            // ```
-            if (m_defers_tag) {
-                const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
-                ensure_scalar_tag(tag_type, line, indent);
-                materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
+        for (;;) {
+            // LCOV_EXCL_START
+            auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
+            // LCOV_EXCL_STOP
+            const bool is_indent_valid = (itr != m_context_stack.rend());
+            if FK_YAML_UNLIKELY (!is_indent_valid) {
+                throw parse_error("Detected invalid indentation.", line, indent);
             }
-            apply_deferred_properties(*mp_current_node);
-        }
 
-        // move back to the parent block mapping.
-        for (uint32_t i = 0; i < pop_num; i++) {
+            const auto pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
+            if (pop_num == 0) {
+                mp_current_node = m_context_stack.back().p_node;
+                return;
+            }
+
+            if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                // Simply popping an explicit key context would drop the entry for the `? key`
+                // entirely. Settle it as an entry with a null value before moving to the parent.
+                add_explicit_key_with_null_value();
+                continue;
+            }
+
+            if (defers_props()) {
+                // The entry which the properties preceded ends here without a node of its own, so they
+                // belong to its empty value. Any node which did follow them would have taken them before
+                // its context could be popped, so the current node is still the empty one.
+                // ```yaml
+                // foo: &anchor
+                // bar: 1        # the anchor is for the empty value of "foo".
+                // ```
+                if (m_defers_tag) {
+                    const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+                    ensure_scalar_tag(tag_type, line, indent);
+                    materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
+                }
+                // The empty node never received the document metainfo, in which an anchor name must be
+                // registered for aliases to resolve it.
+                apply_directive_set(*mp_current_node);
+                apply_deferred_properties(*mp_current_node);
+            }
+
             m_context_stack.pop_back();
         }
-        mp_current_node = m_context_stack.back().p_node;
     }
 
     /// @brief Set YAML directive properties to the given node.
