@@ -19,22 +19,23 @@ FetchContent_MakeAvailable(gbench)
 #   Set up YAML parsers   #
 ###########################
 
-# libfyaml (not implemented for Windows)
-if(NOT WIN32)
-  FetchContent_Declare(
-    libfyaml
-    GIT_REPOSITORY https://github.com/pantoniou/libfyaml
-    GIT_TAG v0.9
-  )
-  FetchContent_MakeAvailable(libfyaml)
-endif()
+# libfyaml
+# build statically so that no shared library has to be found at run time, and disable building
+# its tests, which would download the YAML and JSON test suites.
+set(BUILD_SHARED_LIBS OFF)
+set(BUILD_TESTING OFF)
+FetchContent_Declare(
+  libfyaml
+  GIT_REPOSITORY https://github.com/pantoniou/libfyaml
+  GIT_TAG v1.0.0-beta1
+)
+FetchContent_MakeAvailable(libfyaml)
 
 # rapidyaml
 FetchContent_Declare(
   rapidyaml
   GIT_REPOSITORY https://github.com/biojppm/rapidyaml
-  GIT_TAG v0.7.2
-  GIT_SUBMODULES "ext/c4core"
+  GIT_TAG v0.16.0
 )
 FetchContent_MakeAvailable(rapidyaml)
 
@@ -44,7 +45,7 @@ set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
   yaml_cpp
   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp
-  GIT_TAG 0.8.0
+  GIT_TAG yaml-cpp-0.9.0
 )
 FetchContent_MakeAvailable(yaml_cpp)
 
@@ -81,19 +82,8 @@ target_link_libraries(
   benchmarker
   PRIVATE
     fkYAML::fkYAML
+    fyaml
     ryml::ryml
     yaml-cpp::yaml-cpp
     benchmark::benchmark
 )
-if(NOT WIN32)
-  target_link_libraries(
-    benchmarker
-    PRIVATE
-      fyaml
-  )
-  target_compile_definitions(
-    benchmarker
-    PRIVATE
-      FK_YAML_BM_HAS_LIBFYAML
-  )
-endif()
