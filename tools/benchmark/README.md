@@ -5,9 +5,9 @@ This tool runs benchmarking of deserialization performance with [the Google Benc
 ## Used YAML library for Comparison
 
 Currently, the following C++ YAML libraries tagged with the specified versions respectively:  
-* [libfyaml](https://github.com/pantoniou/libfyaml) ([v0.9](https://github.com/pantoniou/libfyaml/releases/tag/v0.9))
-* [rapidyaml](https://github.com/biojppm/rapidyaml) ([v0.7.2](https://github.com/biojppm/rapidyaml/releases/tag/v0.7.2))
-* [yaml-cpp](https://github.com/jbeder/yaml-cpp) ([0.8.0](https://github.com/jbeder/yaml-cpp/releases/tag/0.8.0))
+* [libfyaml](https://github.com/pantoniou/libfyaml) ([v1.0.0-beta1](https://github.com/pantoniou/libfyaml/releases/tag/v1.0.0-beta1))
+* [rapidyaml](https://github.com/biojppm/rapidyaml) ([v0.16.0](https://github.com/biojppm/rapidyaml/releases/tag/v0.16.0))
+* [yaml-cpp](https://github.com/jbeder/yaml-cpp) ([0.9.0](https://github.com/jbeder/yaml-cpp/releases/tag/yaml-cpp-0.9.0))
 
 Currently, the following files are located in the [tools/benchmark/cases](https://github.com/fktn-k/fkYAML/tree/develop/tools/benchmark/cases) directory for benchmarking:  
 

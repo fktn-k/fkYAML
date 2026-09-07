@@ -20,9 +20,7 @@
 #include <fkYAML/node.hpp>
 #include <yaml-cpp/yaml.h>
 
-#ifdef FK_YAML_BM_HAS_LIBFYAML
 #include <libfyaml.h>
-#endif
 
 #include <ryml.hpp>
 #include <ryml_std.hpp>
@@ -76,7 +74,6 @@ void bm_yamlcpp_parse(benchmark::State& st) {
     st.SetBytesProcessed(st.iterations() * test_src.size());
 }
 
-#ifdef FK_YAML_BM_HAS_LIBFYAML
 // libfyaml
 void bm_libfyaml_parse(benchmark::State& st) {
     const char* p_test_src = test_src.c_str();
@@ -90,7 +87,6 @@ void bm_libfyaml_parse(benchmark::State& st) {
     st.SetItemsProcessed(st.iterations());
     st.SetBytesProcessed(st.iterations() * test_src.size());
 }
-#endif
 
 // rapidyaml (in place)
 void bm_rapidyaml_parse_inplace(benchmark::State& st) {
@@ -132,9 +128,7 @@ void bm_rapidyaml_parse_arena(benchmark::State& st) {
 BENCHMARK(bm_fkyaml_parse);
 BENCHMARK(bm_yamlcpp_parse);
 
-#ifdef FK_YAML_BM_HAS_LIBFYAML
 BENCHMARK(bm_libfyaml_parse);
-#endif
 
 BENCHMARK(bm_rapidyaml_parse_inplace);
 BENCHMARK(bm_rapidyaml_parse_arena);
