@@ -768,7 +768,7 @@ private:
             return false;
         }
 
-        typedef typename BasicNodeType::string_type string_type;
+        using string_type = typename BasicNodeType::string_type;
         if (s.find_first_of(" \t\n\r,[]{}") != string_type::npos) {
             return false;
         }
