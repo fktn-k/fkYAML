@@ -325,12 +325,15 @@ private:
             const tag_t tag_type = resolve_scalar_tag(line, indent);
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
-        apply_node_properties(*mp_current_node);
         if (m_defers_tag) {
             const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
             ensure_scalar_tag(tag_type, line, indent);
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
+        // The current node may be an empty node which never received the document metainfo. An anchor
+        // name must be registered in the shared metainfo, or aliases cannot resolve it.
+        apply_directive_set(*mp_current_node);
+        apply_node_properties(*mp_current_node);
         apply_deferred_properties(*mp_current_node);
 
         // An explicit key at the end of a document has no value either. Its own contents may have left
@@ -664,6 +667,30 @@ private:
                 }
 
                 if (line > old_line) {
+                    // The separator may close an explicit key whose contents were mapping entries, in
+                    // which case the contents have left their own contexts on the stack:
+                    // ```yaml
+                    // ? e:
+                    // :
+                    //   f: 1
+                    // # -> {{e: null}: {f: 1}}
+                    // ```
+                    // Pop back to the explicit key context so that the separator is handled as the
+                    // explicit key's one. Any deferred properties belong to the omitted value of the
+                    // last entry in the contents.
+                    if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY &&
+                        old_indent < m_context_stack.back().indent) {
+                        const auto is_enclosing_explicit_key = [old_indent](const parse_context& c) {
+                            return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY &&
+                                   old_indent == c.indent;
+                        };
+                        const bool has_explicit_key_context = std::any_of(
+                            m_context_stack.rbegin(), m_context_stack.rend(), is_enclosing_explicit_key);
+                        if (has_explicit_key_context) {
+                            pop_to_parent_node(old_line, old_indent, is_enclosing_explicit_key);
+                        }
+                    }
+
                     const bool is_explicit_value_begin =
                         m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY &&
                         (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX ||
@@ -726,15 +753,28 @@ private:
                         continue;
                     }
 
-                    // A property for an omitted value inside an explicit key is deferred until the
-                    // key context is closed:
+                    // A key separator on a following line may be the value separator of an explicit
+                    // key whose contents were mapping entries, rather than a separator in the current
+                    // mapping:
                     // ```yaml
                     // ? foo: !!str # the tag belongs to this omitted value
                     // : foo: !!str # this separator begins the explicit key's value
                     // ```
-                    // Processing the second separator here would close the explicit key
-                    // with a null value before the tag determines the type of the inner mapping's
-                    // omitted value.
+                    // Defer the properties of the omitted value and leave the separator to the next
+                    // iteration, which closes the explicit key and applies them.
+                    if (token.type == lexical_token_t::KEY_SEPARATOR) {
+                        const auto is_explicit_key_at_indent = [indent](const parse_context& c) {
+                            return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
+                        };
+                        const bool closes_explicit_key =
+                            indent < m_context_stack.back().indent &&
+                            std::any_of(m_context_stack.rbegin(), m_context_stack.rend(), is_explicit_key_at_indent);
+                        if (closes_explicit_key) {
+                            defer_node_properties();
+                            continue;
+                        }
+                    }
+
                     const bool is_omitted_mapping_value_without_properties =
                         (token.type != lexical_token_t::KEY_SEPARATOR || !defers_props()) &&
                         indent <= m_context_stack.back().indent;
@@ -1767,6 +1807,9 @@ private:
                 ensure_scalar_tag(tag_type, line, indent);
                 materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
             }
+            // The empty node never received the document metainfo, in which an anchor name must be
+            // registered for aliases to resolve it.
+            apply_directive_set(*mp_current_node);
             apply_deferred_properties(*mp_current_node);
         }
 
