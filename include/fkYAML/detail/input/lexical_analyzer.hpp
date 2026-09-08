@@ -459,11 +459,12 @@ private:
     }
 
     /// @brief Checks if the given position begins something a plain scalar cannot continue into.
+    /// @note Must not be static, as flow indicators only end a plain scalar within a flow context.
     /// @param sv The buffer contents being scanned.
     /// @param pos The position of the first non-space character in a line.
     /// @param is_first_column Whether the position is at the beginning of its line.
     /// @return true if a document marker or a block structure indicator begins there.
-    static bool begins_non_scalar_content(str_view sv, std::size_t pos, bool is_first_column) noexcept {
+    bool begins_non_scalar_content(str_view sv, std::size_t pos, bool is_first_column) const noexcept {
         switch (sv[pos]) {
         case ':':
         case '?':
@@ -477,6 +478,10 @@ private:
         case '}':
             // A flow collection beginning a line starts a node of its own.
             return true;
+        case ',':
+            // A separator beginning a line ends the preceding entry of a flow collection, while in a
+            // block context it is just an ordinary plain scalar character.
+            return (m_state & flow_context_bit) != 0;
         default:
             break;
         }

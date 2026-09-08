@@ -2429,6 +2429,17 @@ TEST_CASE("Deserializer_FlowMapping") {
         REQUIRE(test_pi_node.get_value<double>() == 3.14);
     }
 
+    SUBCASE("value separator beginning a line") {
+        std::string input = "{ foo: 1\n"
+                            "  , bar: 2 }";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].get_value<int>() == 1);
+        REQUIRE(root["bar"].get_value<int>() == 2);
+    }
+
     SUBCASE("Correct traversal after deserializing flow mapping value") {
         REQUIRE_NOTHROW(
             root = deserializer.deserialize(fkyaml::detail::input_adapter("test: { foo: bar }\n"
