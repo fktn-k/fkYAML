@@ -4613,7 +4613,9 @@ private:
             emit_error("The first non-empty line in the block scalar is less indented.");
         }
 
-        std::size_t last_newline_pos = sv.find('\n', cur_itr - m_token_begin_itr + 1);
+        // cur_itr already points past the first character of the first non-empty line, so the newline
+        // which ends that line is at that very position when the line holds a single character.
+        std::size_t last_newline_pos = sv.find('\n', cur_itr - m_token_begin_itr);
         if (last_newline_pos == str_view::npos) {
             last_newline_pos = remain_input_len;
         }

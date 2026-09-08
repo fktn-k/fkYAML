@@ -323,6 +323,20 @@ TEST_CASE("Deserializer_BlockLiteralScalar") {
         REQUIRE(foo_node.as_str() == "first sentence.\nsecond sentence.\nlast sentence.\n");
     }
 
+    SUBCASE("single character on the first content line") {
+        std::string input = "foo: |\n"
+                            "  a\n"
+                            "bar: 1\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].as_str() == "a\n");
+        REQUIRE(root.contains("bar"));
+        REQUIRE(root["bar"].get_value<int>() == 1);
+    }
+
     SUBCASE("tagged") {
         std::string input = "foo: !!str |\n"
                             "  first sentence.\n"
