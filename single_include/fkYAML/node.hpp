@@ -4073,8 +4073,13 @@ private:
 
         m_yaml_version = str_view {m_token_begin_itr, m_cur_itr};
 
-        if FK_YAML_UNLIKELY (m_yaml_version.compare("1.1") != 0 && m_yaml_version.compare("1.2") != 0) {
-            emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
+        // A YAML processor must reject a different major version, but should only warn about a minor
+        // version it does not know and keep parsing the document.
+        // See https://yaml.org/spec/1.2.2/#681-yaml-directives for more details.
+        const bool is_yaml_1_x = m_yaml_version.size() > 2 && m_yaml_version.substr(0, 2).compare("1.") == 0 &&
+                                 m_yaml_version.find_first_not_of("0123456789", 2) == str_view::npos;
+        if FK_YAML_UNLIKELY (!is_yaml_1_x) {
+            emit_error("Only the 1.x versions can be specified as the YAML version.");
         }
 
         return lexical_token_t::YAML_VER_DIRECTIVE;

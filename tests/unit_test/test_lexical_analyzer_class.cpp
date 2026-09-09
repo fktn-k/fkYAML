@@ -52,14 +52,25 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
-    SUBCASE("invalid YAML directive value") {
+    SUBCASE("unknown YAML 1.x minor version") {
+        // An unknown minor version must not stop the parsing of the document.
+        // See https://yaml.org/spec/1.2.2/#681-yaml-directives for more details.
         auto buffer = GENERATE(
             fkyaml::detail::str_view("%YAML 1.3\n"),
+            fkyaml::detail::str_view("%YAML 1.23"),
+            fkyaml::detail::str_view("%YAML 1.11"));
+
+        fkyaml::detail::lexical_analyzer lexer(buffer);
+        lexer.set_document_state(true);
+        REQUIRE(lexer.get_next_token().type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
+    }
+
+    SUBCASE("invalid YAML directive value") {
+        auto buffer = GENERATE(
             fkyaml::detail::str_view("%YAML 2.0\n"),
             fkyaml::detail::str_view("%YAML 12"),
             fkyaml::detail::str_view("%YAML 123"),
-            fkyaml::detail::str_view("%YAML 1.23"),
-            fkyaml::detail::str_view("%YAML 1.11"),
+            fkyaml::detail::str_view("%YAML 1."),
             fkyaml::detail::str_view("%YAML 1.A"),
             fkyaml::detail::str_view("%YAML AbC"));
 
