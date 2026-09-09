@@ -1221,27 +1221,7 @@ public:
     /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(const std::string& anchor_name) {
-        if (is_anchor()) {
-            m_attrs &= ~detail::node_attr_mask::anchoring;
-            auto itr = mp_meta->anchor_table.equal_range(anchor_prop()).first;
-            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            mp_meta.reset();
-            itr->second.swap(*this);
-            mp_meta->anchor_table.erase(itr);
-        }
-
-        auto p_meta = meta();
-
-        basic_node node;
-        node.swap(*this);
-        p_meta->anchor_table.emplace(anchor_name, std::move(node));
-
-        m_attrs &= ~detail::node_attr_mask::anchoring;
-        m_attrs |= detail::node_attr_bits::anchor_bit;
-        mp_meta = p_meta;
-        const auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
-        detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
-        prop().anchor = anchor_name;
+        anchor_this_node(anchor_name);
     }
 
     /// @brief Add an anchor name to this basic_node object.
@@ -1249,27 +1229,7 @@ public:
     /// @param[in] anchor_name An anchor name. This should not be empty.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/add_anchor_name/
     void add_anchor_name(std::string&& anchor_name) {
-        if (is_anchor()) {
-            m_attrs &= ~detail::node_attr_mask::anchoring;
-            auto itr = mp_meta->anchor_table.equal_range(anchor_prop()).first;
-            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
-            mp_meta.reset();
-            itr->second.swap(*this);
-            mp_meta->anchor_table.erase(itr);
-        }
-
-        auto p_meta = meta();
-
-        basic_node node;
-        node.swap(*this);
-        p_meta->anchor_table.emplace(anchor_name, std::move(node));
-
-        m_attrs &= ~detail::node_attr_mask::anchoring;
-        m_attrs |= detail::node_attr_bits::anchor_bit;
-        mp_meta = p_meta;
-        auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
-        detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
-        prop().anchor = std::move(anchor_name);
+        anchor_this_node(std::move(anchor_name));
     }
 
     /// @brief Check whether this basic_node object has already had any tag name.
@@ -1945,6 +1905,55 @@ private:
             mp_meta = std::make_shared<detail::document_metainfo<basic_node>>();
         }
         return mp_meta;
+    }
+
+    /// @brief Moves the value of this basic_node object into the anchor table and turns it into an
+    /// anchor which refers to that value.
+    /// @param anchor_name An anchor name. This should not be empty.
+    void anchor_this_node(std::string anchor_name) {
+        // A tag which has already been set belongs to the node the caller holds. The value below moves
+        // into the anchor table, so the tag moves onto the anchor which replaces it, where it would have
+        // been stored anyway had it been set after the anchor name. An anchor which is given a new name
+        // carries its tag as well, so the tag is taken before the previous anchor is resolved below.
+        const auto take_tag_name = [this]() {
+            std::string taken;
+            if (mp_prop) {
+                taken = std::move(mp_prop->tag);
+                mp_prop->tag.clear();
+            }
+            return taken;
+        };
+
+        std::string tag_name = take_tag_name();
+
+        if (is_anchor()) {
+            m_attrs &= ~detail::node_attr_mask::anchoring;
+            auto itr = mp_meta->anchor_table.equal_range(anchor_prop()).first;
+            std::advance(itr, detail::node_attr_bits::get_anchor_offset(m_attrs));
+            mp_meta.reset();
+            itr->second.swap(*this);
+            mp_meta->anchor_table.erase(itr);
+
+            if (tag_name.empty()) {
+                tag_name = take_tag_name();
+            }
+        }
+
+        auto p_meta = meta();
+
+        basic_node node;
+        node.swap(*this);
+        p_meta->anchor_table.emplace(anchor_name, std::move(node));
+
+        m_attrs &= ~detail::node_attr_mask::anchoring;
+        m_attrs |= detail::node_attr_bits::anchor_bit;
+        mp_meta = p_meta;
+        const auto offset = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name) - 1);
+        detail::node_attr_bits::set_anchor_offset(offset, m_attrs);
+        prop().anchor = std::move(anchor_name);
+        if (!tag_name.empty()) {
+            prop().tag = std::move(tag_name);
+        }
     }
 
     /// @brief Returns the properties of this node, creating them on first use.
