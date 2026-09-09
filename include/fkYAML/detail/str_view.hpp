@@ -648,15 +648,15 @@ public:
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of `s` characters, `npos` otherwise.
     size_type find_last_of(const CharT* s, size_type pos, size_type n) const noexcept {
-        if FK_YAML_LIKELY (n <= m_len) {
-            pos = std::min(m_len - n - 1, pos);
+        if FK_YAML_LIKELY (m_len > 0 && n > 0) {
+            pos = std::min(m_len - 1, pos) + 1;
 
             do {
-                const CharT* p_found = traits_type::find(s, n, mp_str[pos]);
+                const CharT* p_found = traits_type::find(s, n, mp_str[--pos]);
                 if (p_found) {
                     return pos;
                 }
-            } while (pos-- != 0);
+            } while (pos > 0);
         }
 
         return npos;
@@ -750,8 +750,8 @@ public:
     /// @param n The length of `s` character sequence used for comparison.
     /// @return The beginning position of non `s` characters, `npos` otherwise.
     size_type find_last_not_of(const CharT* s, size_type pos, size_type n) const noexcept {
-        if FK_YAML_UNLIKELY (n <= m_len) {
-            pos = std::min(m_len - n, pos) + 1;
+        if FK_YAML_LIKELY (m_len > 0) {
+            pos = std::min(m_len - 1, pos) + 1;
 
             do {
                 const CharT* p_found = traits_type::find(s, n, mp_str[--pos]);

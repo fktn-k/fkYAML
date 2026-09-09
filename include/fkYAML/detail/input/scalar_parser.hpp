@@ -433,11 +433,8 @@ private:
     /// @param newline_pos Position of the target newline code.
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
         // discard trailing white spaces which precedes the line break in the current line.
-        const std::size_t last_non_space_pos = token.substr(0, newline_pos + 1).find_last_not_of(" \t");
-        if (last_non_space_pos == str_view::npos) {
-            m_buffer.append(token.begin(), newline_pos);
-        }
-        else {
+        const std::size_t last_non_space_pos = token.substr(0, newline_pos).find_last_not_of(" \t");
+        if (last_non_space_pos != str_view::npos) {
             m_buffer.append(token.begin(), last_non_space_pos + 1);
         }
         token.remove_prefix(newline_pos + 1); // move next to the LF
