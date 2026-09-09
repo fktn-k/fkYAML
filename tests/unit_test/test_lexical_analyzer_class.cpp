@@ -197,27 +197,36 @@ TEST_CASE("LexicalAnalyzer_EmptyDirective") {
 
 TEST_CASE("LexicalAnalyzer_EndOfDirectives") {
     fkyaml::detail::lexical_token token;
-    fkyaml::detail::lexical_analyzer lexer("%YAML 1.2\n---\nfoo: bar");
-    lexer.set_document_state(true);
 
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
-    REQUIRE(lexer.get_yaml_version() == fkyaml::detail::str_view("1.2"));
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
+    SUBCASE("valid YAML with directives") {
+        fkyaml::detail::lexical_analyzer lexer("%YAML 1.2\n---\nfoo: bar");
+        lexer.set_document_state(true);
 
-    lexer.set_document_state(false);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
+        REQUIRE(lexer.get_yaml_version() == fkyaml::detail::str_view("1.2"));
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
 
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
-    REQUIRE(token.str == "foo");
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
-    REQUIRE(token.str == "bar");
-    REQUIRE_NOTHROW(token = lexer.get_next_token());
-    REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+        lexer.set_document_state(false);
+
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == "foo");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str == "bar");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
+    }
+
+    SUBCASE("only end of directives marker") {
+        fkyaml::detail::lexical_analyzer lexer("---");
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
+    }
 }
 
 TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
@@ -482,7 +491,13 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
             // "---" and "..." not at the beginning of a line is a scalar
             fkyaml::detail::str_view(" ---"),
             fkyaml::detail::str_view(" ..."),
-            fkyaml::detail::str_view(" ...this is valid"));
+            fkyaml::detail::str_view(" ...this is valid"),
+
+            // plain scalars which look like a directive end marker
+            fkyaml::detail::str_view("--"),
+            fkyaml::detail::str_view("--x"),
+            fkyaml::detail::str_view("-x-"),
+            fkyaml::detail::str_view("---foo"));
 
         fkyaml::detail::lexical_analyzer lexer(input);
 

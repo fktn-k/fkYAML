@@ -3595,13 +3595,13 @@ private:
             }
 
             if (m_pos_tracker.get_cur_pos_in_line() == 0) {
-                if ((m_end_itr - m_cur_itr) > 2) {
-                    const bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
-                    if (is_dir_end) {
-                        m_cur_itr += 3;
-                        info.token.type = lexical_token_t::END_OF_DIRECTIVES;
-                        return info;
-                    }
+                const str_view sv {m_cur_itr, m_end_itr};
+                const bool is_dir_end =
+                    sv.size() >= 3 && sv.compare(0, 3, "---") == 0 && is_followed_by_white_space(sv, 3);
+                if (is_dir_end) {
+                    m_cur_itr += 3;
+                    info.token.type = lexical_token_t::END_OF_DIRECTIVES;
+                    return info;
                 }
             }
 
