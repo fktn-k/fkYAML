@@ -4257,6 +4257,31 @@ TEST_CASE("Deserializer_MultipleDocuments") {
     fkyaml::node root;
     std::vector<fkyaml::node> docs;
 
+    SUBCASE("consecutive directives end markers") {
+        // Each "---" begins a document, so the one which the previous marker began ends here without
+        // holding any node.
+        std::string input = "---\n"
+                            "---\n"
+                            "foo\n";
+
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
+        REQUIRE(docs.size() == 2);
+        REQUIRE(docs[0].is_null());
+        REQUIRE(docs[1].is_string());
+        REQUIRE(docs[1].as_str() == "foo");
+    }
+
+    SUBCASE("a document which holds nothing but node properties") {
+        // The properties belong to an empty scalar, which is a node and therefore a document, even
+        // without a "---" marker which begins it.
+        std::string input = "!!str\n";
+
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)));
+        REQUIRE(docs.size() == 1);
+        REQUIRE(docs[0].has_tag_name());
+        REQUIRE(docs[0].get_tag_name() == "!!str");
+    }
+
     SUBCASE("both directives/document end markers") {
         std::string input = "%YAML 1.1\n"
                             "---\n"
