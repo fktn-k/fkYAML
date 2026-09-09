@@ -4437,6 +4437,7 @@ private:
         bool ends_loop = false;
         uint32_t indent = std::numeric_limits<uint32_t>::max();
         bool begins_own_line = false;
+        std::size_t trailing_white_space_pos = str_view::npos;
         do {
             FK_YAML_ASSERT(pos < sv.size());
             switch (sv[pos]) {
@@ -4467,6 +4468,9 @@ private:
                 const uint32_t min_continuation_indent = begins_own_line ? indent : indent + 1;
 
                 if (non_space_pos == str_view::npos) {
+                    if (trailing_white_space_pos != str_view::npos) {
+                        pos = trailing_white_space_pos;
+                    }
                     ends_loop = true;
                     break;
                 }
@@ -4474,10 +4478,14 @@ private:
                 const std::size_t cur_line_indent = non_space_pos - last_newline_pos - 1;
                 const bool ends_scalar = begins_non_scalar_content(sv, non_space_pos, cur_line_indent == 0);
                 if (cur_line_indent < min_continuation_indent || ends_scalar) {
+                    if (trailing_white_space_pos != str_view::npos) {
+                        pos = trailing_white_space_pos;
+                    }
                     ends_loop = true;
                     break;
                 }
 
+                trailing_white_space_pos = str_view::npos;
                 pos = non_space_pos;
                 break;
             }
@@ -4497,6 +4505,11 @@ private:
                 // indicators are not allowed to follow it in a flow context.
                 switch (sv[next_pos]) {
                 case '\n':
+                    // The following line decides whether these white spaces are trailing or precede
+                    // a continuation line. Let the newline handler make that decision.
+                    trailing_white_space_pos = pos;
+                    pos = next_pos;
+                    continue;
                 case '#':
                     ends_loop = true;
                     break;

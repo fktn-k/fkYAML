@@ -742,6 +742,32 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
         REQUIRE(token.str.begin() == input.begin() + 2);
         REQUIRE(token.str.end() == input.end());
     }
+
+    SUBCASE("multiline with trailing spaces before a line break") {
+        fkyaml::detail::str_view input = "a\n"
+                                         "b  \n"
+                                         "  c\n"
+                                         "d\n"
+                                         "\n"
+                                         "e";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin());
+        REQUIRE(token.str.end() == input.end());
+    }
+
+    SUBCASE("trailing spaces before a line break are excluded when the scalar ends") {
+        fkyaml::detail::str_view input = "  foo  \n"
+                                         " bar";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 2);
+        REQUIRE(token.str.end() == input.begin() + 5);
+    }
 }
 
 TEST_CASE("LexicalAnalyzer_SingleQuotedScalar") {
