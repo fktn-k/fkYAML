@@ -4329,9 +4329,19 @@ private:
     str_view determine_single_quoted_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        std::size_t pos = sv.find('\'');
+        const str_view filter {"\'\n"};
+        std::size_t pos = sv.find_first_of(filter);
         while (pos != str_view::npos) {
             FK_YAML_ASSERT(pos < sv.size());
+            if (sv[pos] == '\n') {
+                if FK_YAML_UNLIKELY (begins_document_marker(sv, pos + 1)) {
+                    m_cur_itr = &sv[pos + 1];
+                    emit_error("Document marker found in the scalar content.");
+                }
+                pos = sv.find_first_of(filter, pos + 1);
+                continue;
+            }
+
             if FK_YAML_LIKELY (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
                 // closing single quote is found.
                 m_cur_itr = m_token_begin_itr + (pos + 1);
@@ -4344,7 +4354,7 @@ private:
             // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
             // escaped single quotation mark. Skip the second one which would otherwise be detected as a closing
             // single quotation mark in the next loop.
-            pos = sv.find('\'', pos + 2);
+            pos = sv.find_first_of(filter, pos + 2);
         }
 
         m_cur_itr = m_end_itr; // update for error information
@@ -4356,9 +4366,19 @@ private:
     str_view determine_double_quoted_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        std::size_t pos = sv.find('\"');
+        const str_view filter {"\"\n"};
+        std::size_t pos = sv.find_first_of(filter);
         while (pos != str_view::npos) {
             FK_YAML_ASSERT(pos < sv.size());
+
+            if (sv[pos] == '\n') {
+                if FK_YAML_UNLIKELY (begins_document_marker(sv, pos + 1)) {
+                    m_cur_itr = &sv[pos + 1];
+                    emit_error("Document marker found in the scalar content.");
+                }
+                pos = sv.find_first_of(filter, pos + 1);
+                continue;
+            }
 
             bool is_closed = true;
             if FK_YAML_LIKELY (pos > 0) {
@@ -4393,7 +4413,7 @@ private:
                 return double_quoted_scalar;
             }
 
-            pos = sv.find('\"', pos + 1);
+            pos = sv.find_first_of(filter, pos + 1);
         }
 
         m_cur_itr = m_end_itr; // update for error information
