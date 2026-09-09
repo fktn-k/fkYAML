@@ -210,10 +210,11 @@ jobs:
         sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
       if: ${{ matrix.compiler == '3.4' || matrix.compiler == '3.5' || matrix.compiler == '3.6' || matrix.compiler == '3.7' || matrix.compiler == '3.8' || matrix.compiler == '3.9' || matrix.compiler == '7' || matrix.compiler == '8' || matrix.compiler == '9' || matrix.compiler == '10' }}
 
-    - name: Install git and unzip
+    - name: install git
+      if: ${{ matrix.compiler > 6 }}
       run: |
-        apt-get update
-        apt-get install -y git unzip
+        apt-get -o Acquire::Check-Valid-Until=false update
+        apt-get -o Acquire::Check-Valid-Until=false install -y git
         git --version
 
     - uses: actions/checkout@v7
@@ -251,12 +252,6 @@ jobs:
         sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
         sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
       if: ${{ matrix.compiler == '7' || matrix.compiler == '8' }}
-
-    - name: Install git and unzip
-      run: |
-        apt-get update
-        apt-get install -y git unzip
-        git --version
 
     - uses: actions/checkout@v7
 
