@@ -560,6 +560,19 @@ TEST_CASE("Deserializer_MultilinePlainScalarInBlockContext") {
         REQUIRE(root["bar"].as_str() == "baz");
     }
 
+    SUBCASE("a root scalar includes lines with trailing spaces before a line break") {
+        std::string input = "a\n"
+                            "b  \n"
+                            "  c\n"
+                            "d\n"
+                            "\n"
+                            "e";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_string());
+        REQUIRE(root.as_str() == "a b c d\ne");
+    }
+
     SUBCASE("a document marker ends the scalar") {
         // The marker may be followed by a space, a tab or a line break alike.
         auto input = GENERATE(
