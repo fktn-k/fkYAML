@@ -1762,8 +1762,8 @@ private:
         basic_node_type key_node = std::move(*m_context_stack.back().p_node);
         m_context_stack.pop_back();
         basic_node_type* p_parent_node = current_context(line, indent).p_node;
-        p_parent_node->as_map().emplace(key_node, basic_node_type());
-        mp_current_node = &(p_parent_node->operator[](std::move(key_node)));
+        auto itr = p_parent_node->as_map().emplace(std::move(key_node), basic_node_type());
+        mp_current_node = &(itr.first->second);
         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
     }
 
