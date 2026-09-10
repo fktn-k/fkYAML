@@ -337,6 +337,33 @@ TEST_CASE("Deserializer_BlockLiteralScalar") {
         REQUIRE(root["bar"].get_value<int>() == 1);
     }
 
+    SUBCASE("a leading empty line can begin with a tab at the root level") {
+        std::string input = "|\n"
+                            "\t\n"
+                            "content line.\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_scalar());
+        REQUIRE(root.as_str() == "\t\ncontent line.\n");
+    }
+
+    SUBCASE("a leading empty line cannot begin with a tab") {
+        std::string input = "foo: |\n"
+                            "\t\n"
+                            "bar: 1\n";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("a leading empty line cannot contain a tab in the parent indentation") {
+        std::string input = "foo:\n"
+                            "  bar: |\n"
+                            "  \t\n"
+                            "  baz: 1\n";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
     SUBCASE("tagged") {
         std::string input = "foo: !!str |\n"
                             "  first sentence.\n"
