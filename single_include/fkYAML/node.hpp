@@ -8048,8 +8048,15 @@ private:
         uint32_t indent = lexer.get_last_token_begin_pos();
         const bool found_props = deserialize_node_properties(lexer, token, line, indent);
 
-        // A stream which only holds comments, white spaces or a bare "..." contains no document.
-        if (token.type != lexical_token_t::END_OF_BUFFER && token.type != lexical_token_t::END_OF_DOCUMENT) {
+        // A stream which only holds comments, white spaces or a bare "..." contains no document. Node
+        // properties on their own, however, do make up one: they belong to an empty scalar.
+        // ```yaml
+        // !
+        // # -> one document holding an empty scalar tagged with the non-specific tag
+        // ```
+        const bool has_contents =
+            token.type != lexical_token_t::END_OF_BUFFER && token.type != lexical_token_t::END_OF_DOCUMENT;
+        if (has_contents || found_props) {
             m_has_document = true;
         }
 
@@ -8274,6 +8281,19 @@ private:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case lexical_token_t::END_OF_DIRECTIVES:
+                if (m_has_document) {
+                    // A "---" which follows another one ends the document that one began and begins the
+                    // next, even though the document it ends holds no node at all.
+                    // ```yaml
+                    // ---
+                    // ---
+                    // # -> two documents, both empty
+                    // ```
+                    last_token = token;
+                    lexer.set_document_state(false);
+                    return;
+                }
+
                 lacks_end_of_directives_marker = false;
                 m_has_document = true;
                 break;
