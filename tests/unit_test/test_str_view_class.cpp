@@ -313,7 +313,11 @@ TEST_CASE("StrView_FindLastOf") {
     REQUIRE(sv.find_last_of('a') == 3);
     REQUIRE(sv.find_last_of("a") == 3);
     REQUIRE(sv.find_last_of("a", 0, 1) == 0);
-    REQUIRE(sv.find_last_of("a", 0, sv.size() + 1) == fkyaml::detail::str_view::npos);
+    REQUIRE(sv.find_last_of("bc", 4, 2) == 4);
+    REQUIRE(sv.find_last_of("d", 6, 1) == fkyaml::detail::str_view::npos);
+    REQUIRE(sv.find_last_of("a", 0, 0) == fkyaml::detail::str_view::npos);
+    fkyaml::detail::str_view empty_sv = "";
+    REQUIRE(empty_sv.find_last_of("a") == fkyaml::detail::str_view::npos);
     REQUIRE(sv.find_last_of(fkyaml::detail::str_view {"aa"}) == 3);
 }
 
