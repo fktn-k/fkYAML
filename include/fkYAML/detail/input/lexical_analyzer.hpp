@@ -1334,6 +1334,9 @@ private:
                 stop_increment = true;
                 continue;
             case '\n':
+                if FK_YAML_UNLIKELY (!is_document_root && stop_increment && cur_indent <= base_indent) {
+                    emit_error("A tab character cannot be used as indentation.");
+                }
                 max_leading_indent = std::max(cur_indent, max_leading_indent);
                 cur_indent = 0;
                 stop_increment = false;
@@ -1357,6 +1360,14 @@ private:
             return sv;
         }
 
+        // A non-empty line at or below the parent indentation ends an otherwise empty block scalar.
+        if (!is_document_root && cur_indent <= base_indent) {
+            const auto content_end_pos = static_cast<std::size_t>(cur_itr - m_token_begin_itr - 1);
+            m_cur_itr = m_token_begin_itr + content_end_pos;
+            content_indent = indicated_indent == 0 ? max_leading_indent : base_indent + indicated_indent;
+            return sv.substr(0, content_end_pos);
+        }
+
         // Any leading empty line must not contain more spaces than the first non-empty line.
         if FK_YAML_UNLIKELY (cur_indent < max_leading_indent) {
             emit_error("Any leading empty line must not be more indented than the first non-empty line.");
@@ -1369,9 +1380,6 @@ private:
             // --- >
             // line1
             // ```
-            if FK_YAML_UNLIKELY (!is_document_root && base_indent >= cur_indent) {
-                emit_error("The first non-empty line in the block scalar is less indented.");
-            }
             indicated_indent = cur_indent - base_indent;
         }
         else if FK_YAML_UNLIKELY (cur_indent < base_indent + indicated_indent) {
