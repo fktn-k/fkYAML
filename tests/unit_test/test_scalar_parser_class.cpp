@@ -444,7 +444,7 @@ TEST_CASE("ScalarParser_BlockLiteralScalar") {
         REQUIRE(node.as_str() == "\n");
     }
 
-    SUBCASE("a leading empty line contains a tab") {
+    SUBCASE("a leading tab-indented line") {
         fkyaml::detail::str_view token = "  \t \n"
                                          "  foo";
         header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
@@ -638,7 +638,18 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
 
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
-        REQUIRE(node.as_str() == "\n\t \nfoo");
+        REQUIRE(node.as_str() == "\t \nfoo");
+    }
+
+    SUBCASE("a leading tab line before an implicitly indented content line") {
+        fkyaml::detail::str_view token = " \t\n"
+                                         " detected\n";
+        header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
+        header.indent = 1;
+
+        REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
+        REQUIRE(node.is_string());
+        REQUIRE(node.as_str() == "\t\ndetected\n");
     }
 
     SUBCASE("folded string scalar with the first line being more indented than the indicated level") {
@@ -678,6 +689,61 @@ TEST_CASE("ScalarParser_BlockFoldedScalar") {
         REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
         REQUIRE(node.is_string());
         REQUIRE(node.as_str() == "foo\n\nbar\n");
+    }
+
+    SUBCASE("folded string scalar with an empty line before a tab-indented line") {
+        fkyaml::detail::str_view token = "  foo \n"
+                                         " \n"
+                                         "  \t bar\n"
+                                         "\n"
+                                         "  baz\n";
+
+        header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
+        header.indent = 2;
+
+        REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
+        REQUIRE(node.is_string());
+        REQUIRE(node.as_str() == "foo \n\n\t bar\n\nbaz\n");
+    }
+
+    SUBCASE("folded string scalar with a more-indented empty line") {
+        fkyaml::detail::str_view token = "  foo\n"
+                                         "    \n"
+                                         "  bar\n";
+
+        header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
+        header.indent = 2;
+
+        REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
+        REQUIRE(node.is_string());
+        REQUIRE(node.as_str() == "foo\n  \nbar\n");
+    }
+
+    SUBCASE("folded string scalar with an empty line after a more-indented line") {
+        fkyaml::detail::str_view token = "    bullet\n"
+                                         "\n"
+                                         "    list\n";
+
+        header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
+        header.indent = 2;
+
+        REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
+        REQUIRE(node.is_string());
+        REQUIRE(node.as_str() == "  bullet\n\n  list\n");
+    }
+
+    SUBCASE("folded string scalar with leading empty lines") {
+        fkyaml::detail::str_view token = "\n"
+                                         "\n"
+                                         "   more indented\n"
+                                         "  regular\n";
+
+        header.chomp = fkyaml::detail::chomping_indicator_t::CLIP;
+        header.indent = 2;
+
+        REQUIRE_NOTHROW(node = scalar_parser.parse_block(lex_type, tag_type, token, header));
+        REQUIRE(node.is_string());
+        REQUIRE(node.as_str() == "\n\n more indented\nregular\n");
     }
 
     SUBCASE("folded string scalar with implicit indentation and strip chomping") {
