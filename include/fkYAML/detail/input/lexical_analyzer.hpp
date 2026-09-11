@@ -92,6 +92,7 @@ public:
         m_last_token_begin_pos = info.begin_pos;
         m_last_token_begin_line = info.begin_line;
         m_last_token_begin_itr = info.begin_itr;
+        m_last_token_type = info.token.type;
         return info.token;
     }
 
@@ -237,9 +238,6 @@ private:
                     info.token.type = lexical_token_t::KEY_SEPARATOR;
                     return info;
                 default:
-                    // At least '{' or '[' must precedes this token.
-                    FK_YAML_ASSERT(m_token_begin_itr != m_begin_itr);
-
                     // if a key inside a flow mapping is JSON-like (surrounded by indicators, see below), YAML allows
                     // the following value to be specified adjacent to the ":" mapping value indicator.
                     // ```yaml
@@ -251,11 +249,11 @@ private:
                     //   {[1,2,3]:null}:"baz"
                     // }
                     // ```
-                    switch (*(m_token_begin_itr - 1)) {
-                    case '\'':
-                    case '\"':
-                    case ']':
-                    case '}':
+                    switch (m_last_token_type) {
+                    case lexical_token_t::SINGLE_QUOTED_SCALAR:
+                    case lexical_token_t::DOUBLE_QUOTED_SCALAR:
+                    case lexical_token_t::SEQUENCE_FLOW_END:
+                    case lexical_token_t::MAPPING_FLOW_END:
                         info.token.type = lexical_token_t::KEY_SEPARATOR;
                         return info;
                     default:
@@ -1692,6 +1690,8 @@ private:
     uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_line {0};
+    /// The type of the last lexical token.
+    lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
     /// The current depth of flow context.
     uint32_t m_state {0};
     /// The queue of pending tokens.

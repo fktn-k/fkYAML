@@ -2134,7 +2134,8 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
 
     SUBCASE("\':\' is preceded by JSON-like keys and followed by values adjacent to it") {
         fkyaml::detail::str_view input = "{\n"
-                                         "  \"foo\":123,\n"
+                                         "  \"foo\"\n"
+                                         "  :123,\n"
                                          "  \'bar\':true,\n"
                                          "  [baz]:3.14,\n"
                                          "  {\"qux\":false}:null\n"
